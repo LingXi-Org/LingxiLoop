@@ -12,7 +12,6 @@ import { HttpError } from '../http/errors.js'
 import { createPermissionService } from '../modules/access/public.js'
 import { genUiWidgetStateSchema, type GenUiWidgetState } from '../../../src/features/chat/visualize/zcode/shared/gen-ui/contract.js'
 import { createNativeMessage, nativeMessageSchema, type NativeMessage } from './message-types.js'
-import { imMessagesApplication } from './messages-facade.js'
 import { messageAcceptanceDigest } from './messages-digest.js'
 import { acceptSend, ensureSendAcceptance, getSendAcceptance, SEND_NOT_DISPATCHED } from './messages-repository.js'
 
@@ -116,13 +115,7 @@ export async function listVisualizeModelState(input: VisualizeActor) {
   await assertVisualizeActor(pool, input)
   const rows = (await pool.query<{path: string; state: {modelContent: unknown}}>(`SELECT path,jsonb_build_object('modelContent',state->'modelContent') state
     FROM im_visualize_states WHERE company_id=$1 AND channel_id=$2 AND user_id=$3 ORDER BY path LIMIT 100`, [input.companyId, input.channelId, input.userId])).rows
-  const selected: typeof rows = []
-  for (const row of rows) {
-    if (row.state.modelContent === null) continue
-    if (Buffer.byteLength(JSON.stringify([...selected, row])) > 64 * 1024) break
-    selected.push(row)
-  }
-  return selected
+  return rows.filter(row => row.state.modelContent !== null)
 }
 function referencesPath(payload: NativeMessage, path: string) {
   return payload.content.some(part => part.type === 'text' && projectGenUiReferences(part.text, true).some(item => item.kind === 'ui' && item.reference.path === path))
@@ -131,6 +124,8 @@ export async function createVisualizePage(input: VisualizeActor & { request: unk
   const request = z.object({ path: z.string().max(4096), sourceMessageId: z.string().min(1).max(300), instanceKey: z.string().min(1).max(1024) }).strict().parse(input.request)
   await assertVisualizeActor(pool, input)
   const source = await document(pool, { ...input, path: request.path })
+  // Message admission imports Visualize before the message facade initializes.
+  const { imMessagesApplication } = await import('./messages-facade.js')
   const messages = await imMessagesApplication.readMessages({ ...input, messageIds: [request.sourceMessageId] })
   const message = messages?.find(item => item.messageId === request.sourceMessageId || item.clientMsgNo === request.sourceMessageId)
   if (!message || message.payload.role !== 'assistant' || message.payload.status.type !== 'complete' || message.fromUid !== source.agent_id || message.payload.metadata.custom.runId !== source.run_id || !referencesPath(message.payload, source.path)) throw new HttpError(403, 'Visualize requires a delivered assistant reference.')
@@ -138,8 +133,10 @@ export async function createVisualizePage(input: VisualizeActor & { request: unk
     await assertVisualizeActor(db, input); await lock(db, input)
     const current = await document(db, { ...input, path: request.path })
     if (current.version !== source.version) throw new HttpError(409, 'Visualize document changed.')
-    await db.query(`UPDATE im_visualize_pages SET revoked_at=NOW() WHERE company_id=$1 AND user_id=$2 AND revoked_at IS NULL
-      AND (expires_at<=NOW() OR (channel_id=$3 AND instance_key=$4))`, [input.companyId, input.userId, input.channelId, request.instanceKey])
+    await db.query(`UPDATE im_visualize_pages page SET revoked_at=NOW() WHERE company_id=$1 AND user_id=$2 AND revoked_at IS NULL
+      AND (expires_at<=NOW() OR (channel_id=$3 AND instance_key=$4) OR NOT EXISTS (SELECT 1 FROM im_visualize_documents doc
+        JOIN conversations room ON room.company_id=doc.company_id AND room.id=doc.channel_id WHERE doc.company_id=page.company_id
+        AND doc.channel_id=page.channel_id AND doc.path=page.path AND doc.version=page.document_version AND room.project_id IS NOT DISTINCT FROM page.project_id))`, [input.companyId, input.userId, input.channelId, request.instanceKey])
     const count = (await db.query<{count: string}>('SELECT count(*) FROM im_visualize_pages WHERE company_id=$1 AND user_id=$2 AND revoked_at IS NULL', [input.companyId, input.userId])).rows[0]
     if (Number(count.count) >= 64) throw new HttpError(429, 'Visualize page capacity reached.')
     const pageId = randomUUID(), initId = randomUUID()
@@ -231,6 +228,7 @@ export async function submitVisualizeFollowUp(input: VisualizePageActor & { requ
     return { previous: null, payload, fresh: true }
   })
   if (admission.previous?.status === 'accepted' && admission.previous.echo) return { status: 'accepted', duplicate: true, echo: admission.previous.echo }
+  const { imMessagesApplication } = await import('./messages-facade.js')
   if (!admission.fresh) {
     const messages = await imMessagesApplication.readMessages({ ...input, messageIds: [clientNonce] })
     const message = messages?.find(item => item.clientMsgNo === clientNonce)

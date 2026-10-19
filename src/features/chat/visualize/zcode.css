@@ -3,7 +3,6 @@
  --ui-font-size:14px;
  --font-sans:ui-sans-serif,system-ui,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
  font-family:var(--font-sans);
- color:var(--color-foreground);
 
   /* 修复原因：Windows 的 Consolas 不含中文字形，Tailwind 默认栈最终会让中文落到宋体。
    * 保留各平台西文等宽字体，并在通用 monospace 前显式加入各平台 CJK 无衬线字体。 */
@@ -441,3 +440,26 @@
 .zcode-visualize.rounded-lg, .zcode-visualize :where(.rounded-lg) {border-radius:.5rem}
 .zcode-visualize.rounded-xl, .zcode-visualize :where(.rounded-xl) {border-radius:.75rem}
 .zcode-visualize.rounded-2xl, .zcode-visualize :where(.rounded-2xl) {border-radius:1rem}
+
+/* Restore upstream preflight defaults inside the feature; utilities keep their
+   normal priority. Lingxi applies border-border and text-foreground globally. */
+@layer base {
+  .zcode-visualize { color:initial; }
+  .zcode-visualize, .zcode-visualize * { border-color:currentColor; }
+}
+/* The host's unlayered font:inherit reset must not suppress upstream's
+   text-ui-* utilities. Revert only this layer, preserving their normal cascade. */
+.zcode-visualize :is(button,input,textarea) { font:revert-layer; }
+/* Original upstream focus rules, limited to its own controls. */
+.zcode-visualize :is(:focus,:focus-visible) {
+  outline:none!important;
+  box-shadow:none!important;
+  -webkit-box-shadow:none!important;
+}
+/* Keep the original Textarea utilities above the host's unlayered shadcn reset. */
+:root .zcode-visualize [data-slot='textarea'] {
+  width:revert-layer;min-height:revert-layer;border:revert-layer;
+  border-radius:revert-layer;background:revert-layer;padding:revert-layer;
+  outline:revert-layer;transition:revert-layer;box-shadow:revert-layer;
+  cursor:revert-layer;opacity:revert-layer;
+}

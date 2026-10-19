@@ -1,4 +1,5 @@
 import { assistantTextViolation } from '../agent-runtime/assistant-text.js'
+import { projectGenUiReferences } from '../../../src/features/chat/visualize/zcode/gen-ui/domain/references.js'
 import { z } from 'zod'
 import { productConversationId, assertFrozenAudience } from '../agent-runtime/identity.js'
 import { NoEffectError, type ActionContext, type ToolDefinition, type createLingxiOS } from '@lyyzka/lingxios'
@@ -95,6 +96,9 @@ export function createMessageTools(control: () => ReturnType<typeof createLingxi
     semanticVersion: '2',
     description: 'Send one settled conversational message now. Use distinct messages for useful lead-in thoughts, then finish with the native final response without repeating them. Keep reviewed conclusions, citations and complete deliverables in the final result. Visualize references belong in the native final response.',
     async execute(context, input) {
+      if (projectGenUiReferences(input.body, true).some(part => part.kind !== 'text')) {
+        throw new NoEffectError('Visualize references must be delivered in the native final response.', 'invalid_input')
+      }
       const result = await communication.execute(context,input)
       await recordSentMessage(context,result.value.messageId,input.body)
       return result

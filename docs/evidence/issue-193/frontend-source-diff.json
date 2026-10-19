@@ -1,6 +1,78 @@
 {
   "upstreamCommit": "0a1fc56d279fd1001f78387bd81aec1c26767411",
-  "review": "source audit during integration; functionality and visual parity require separate execution evidence",
+  "capturedAt": "2026-10-19T12:44:34+00:00",
+  "captureCompletedAt": "2026-10-19T12:44:47+00:00",
+  "productHead": "5554c0f3c21ba3350e78ed6076e639ad0124645a",
+  "worktreeHasUncommittedChanges": true,
+  "captureStableDuringRead": true,
+  "review": "Point-in-time source audit during active integration; frontend/runtime deltas may continue. Byte/line statistics do not establish interaction, security or pixel parity. Rehash every listed file against this capture after further edits.",
+  "diffMethod": "git diff --no-index --numstat; byteIdentical uses exact bytes",
+  "summary": {
+    "pairedFiles": 34,
+    "byteIdenticalFiles": 12,
+    "adaptedFiles": 22,
+    "pairedAddedLines": 152,
+    "pairedRemovedLines": 2069,
+    "additionalFingerprintFiles": 21,
+    "visualizeFrontendCodeFiles": 42
+  },
+  "provenanceVerification": {
+    "status": "passed",
+    "command": "node scripts/verify-zcode-visualize.mjs",
+    "verifiedFiles": 221,
+    "kinds": {
+      "skill": 24,
+      "source": 195,
+      "runtime": 1,
+      "license": 1
+    },
+    "skillGitTree": "87f38506cdda363267e0a73bfb2f20b4632134e1",
+    "manifestSha256": "5c82de6a3639cf42035dc66e18b21d5a317f3594fe59c1b801fff326ef320f55",
+    "runtimeFiles": 4,
+    "vendorLibraries": 4,
+    "licenses": [
+      {
+        "path": "third_party/zcode/skills/visualize/LICENSE.md",
+        "sha256": "b1733e816a7d5a8240f28e4633b37f7f6181734c9c0424836da3e768827239f4"
+      },
+      {
+        "path": "third_party/zcode/skills/visualize/assets/vendor/d3-7.9.0.min.js.LICENSE",
+        "sha256": "3e6849627f74ff73c257a3ae1efb574015d94fc1035c05ec3c15805165efcbc4"
+      },
+      {
+        "path": "third_party/zcode/skills/visualize/assets/vendor/floating-ui-core-1.7.3.min.js.LICENSE",
+        "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+      },
+      {
+        "path": "third_party/zcode/skills/visualize/assets/vendor/floating-ui-dom-1.7.4.min.js.LICENSE",
+        "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+      },
+      {
+        "path": "third_party/zcode/skills/visualize/assets/vendor/lucide-1.17.0.js.LICENSE",
+        "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+      },
+      {
+        "path": "third_party/zcode/upstream/LICENSE",
+        "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b"
+      },
+      {
+        "path": "third_party/zcode/LICENSE",
+        "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b"
+      }
+    ]
+  },
+  "runtimeBundleVerification": {
+    "status": "passed",
+    "manifest": "server/assets/visualize-runtime/manifest.json",
+    "files": {
+      "gen-ui.js": {
+        "sha256": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+        "bytes": 506205
+      }
+    },
+    "sourceInputCount": 157,
+    "allSourceHashesMatch": true
+  },
   "files": [
     {
       "upstream": "third_party/zcode/upstream/packages/ui/src/components/ai-elements/message.tsx",
@@ -8,14 +80,14 @@
       "upstreamSha256": "6c35829ed11321e850cd59e20c1c88fdd452e8e2d9b5da45f808371021aabf99",
       "productSha256": "f56f61bbd25847ad087f09000360a0765e9d3e440aac25741b2da7ad20ed9344",
       "byteIdentical": false,
-      "addedLines": 18,
-      "removedLines": 1668
+      "addedLines": 19,
+      "removedLines": 1669
     },
     {
       "upstream": "third_party/zcode/upstream/packages/ui/src/components/ui/button.tsx",
       "product": "src/features/chat/visualize/zcode/components/ui/button.tsx",
       "upstreamSha256": "3bf0b1573c940999f875a1dd5e67a32e7d9bcb3e320774fa8277f5c00748b32b",
-      "productSha256": "e54f4b6329f35e46382d9bfe9c2e105209fef58bec11edb3bb5f6488bf773197",
+      "productSha256": "77feeafdb3736cbb4ed504ac3385fcbd39501e2c98225b71cf6e5b22262fc537",
       "byteIdentical": false,
       "addedLines": 1,
       "removedLines": 1
@@ -24,7 +96,7 @@
       "upstream": "third_party/zcode/upstream/packages/ui/src/components/ui/dialog.tsx",
       "product": "src/features/chat/visualize/zcode/components/ui/dialog.tsx",
       "upstreamSha256": "fb2decab75993205ec5670acbd5b8b7dfc9b1518d3acb457ddde7edd1984d44e",
-      "productSha256": "707481c9c7f495aa0c6c13b65771c555ca1e291ba8f7a5d2315d3d98bd330f06",
+      "productSha256": "a40c3a1cb317a75e25d8c8cf2e218d70074190a21ef5b572adb5cc373171f418",
       "byteIdentical": false,
       "addedLines": 3,
       "removedLines": 3
@@ -33,7 +105,7 @@
       "upstream": "third_party/zcode/upstream/packages/ui/src/components/ui/textarea.tsx",
       "product": "src/features/chat/visualize/zcode/components/ui/textarea.tsx",
       "upstreamSha256": "a839574ce1301fbaa9ba917fdb980900eb9118bffa7c6c4e469f3293b122ed30",
-      "productSha256": "ba90d970e65c8f4fe3ef75b5ee4e2fc41abce368fd045b42e085e4ddcc083007",
+      "productSha256": "47cc53a6dc85a28c54a8aec31dc2cb4dd9e457de5d79b3736e146297d5f76a1f",
       "byteIdentical": false,
       "addedLines": 1,
       "removedLines": 1
@@ -53,8 +125,8 @@
       "upstreamSha256": "282b9ab5bb8d5c5294bc0bf0d7459ed44a8ccbedb5bab79f981547e2342807d0",
       "productSha256": "cd2d2d231dd2f882d0258507b1a3d4e552b051aef651d77c002b19e4669a21ea",
       "byteIdentical": false,
-      "addedLines": 19,
-      "removedLines": 8
+      "addedLines": 18,
+      "removedLines": 7
     },
     {
       "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/adapters/retainedPage.ts",
@@ -168,7 +240,7 @@
       "upstream": "third_party/zcode/upstream/packages/ui/src/hooks/useGenUi.ts",
       "product": "src/features/chat/visualize/zcode/hooks/useGenUi.ts",
       "upstreamSha256": "54db0282b47a374d09a29c5db0a6bad9239c392f1388bb114659b8e38d6fc6a1",
-      "productSha256": "42bcee9b3c4fb9253d193c7371bcf77dc20b6a690504894aeed703ab534ebc6a",
+      "productSha256": "be62e937ca8dc06fce5b24fe6eb1681e0b936c65bc08200a1b017d2db2f57433",
       "byteIdentical": false,
       "addedLines": 43,
       "removedLines": 79
@@ -178,6 +250,15 @@
       "product": "src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts",
       "upstreamSha256": "c64b119e46f917e2d869658559cb1113cc40caae1a89d68328b256ee4d76e09f",
       "productSha256": "c64b119e46f917e2d869658559cb1113cc40caae1a89d68328b256ee4d76e09f",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/components/lib/utils.ts",
+      "product": "src/features/chat/visualize/zcode/lib/utils.ts",
+      "upstreamSha256": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "productSha256": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
       "byteIdentical": true,
       "addedLines": 0,
       "removedLines": 0
@@ -249,9 +330,9 @@
       "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/hostPrimitives.ts",
       "product": "src/features/chat/visualize/zcode/plugin-ui/hostPrimitives.ts",
       "upstreamSha256": "2835154273d70bed3e3c598b273cc12da4ac0d6b901ecd86a67fe906c1e9c730",
-      "productSha256": "5178d6489f52cdc1e300301a4b4c895c5e4d80105490ab03269f1d5352c2d9fd",
+      "productSha256": "6dabd3472a2b1beaf1cb6f9adc7b12515f1b1896017a1153d0c622052854542b",
       "byteIdentical": false,
-      "addedLines": 12,
+      "addedLines": 14,
       "removedLines": 13
     },
     {
@@ -298,6 +379,119 @@
       "byteIdentical": true,
       "addedLines": 0,
       "removedLines": 0
+    }
+  ],
+  "adaptationFiles": [
+    {
+      "product": "package-lock.json",
+      "productSha256": "696225ecfb299b5408340162095c7476a79a00b89fc32c2facd83e10bfd20c42",
+      "bytes": 906139
+    },
+    {
+      "product": "package.json",
+      "productSha256": "49d4368f29b767d35ac2032504807e004cbd6e60308a85efea73acc3adfc534e",
+      "bytes": 9692
+    },
+    {
+      "product": "scripts/build-visualize-runtime.mjs",
+      "productSha256": "6268f2f89243f432a5bb0b8649ae74296034321f061992e344bf414e121d240e",
+      "bytes": 1704
+    },
+    {
+      "product": "server/assets/visualize-runtime/gen-ui.js",
+      "productSha256": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+      "bytes": 506205
+    },
+    {
+      "product": "server/assets/visualize-runtime/manifest.json",
+      "productSha256": "d8c6ca81a33577d1a2b3356f6ad5b6ac6750d9a93e65deab62f1f6a59fd0b1e0",
+      "bytes": 19030
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-export.ts",
+      "productSha256": "ee84b12db1bfaacf115582e9c8bb777850452a007e524ac153979e946c46b28c",
+      "bytes": 1506
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-projection.ts",
+      "productSha256": "7391d353199f87d25c90ff66ac88ab5108d33e01f8cae7ff2123d1f66ec0fe5a",
+      "bytes": 1240
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-skill.ts",
+      "productSha256": "39a81fa2c9eeb060e287a649a19ae069b9547eb47d68decd8ca9c83dbaf9a7cd",
+      "bytes": 2895
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-state-context.ts",
+      "productSha256": "bece9600e06450491450c81495bee02b8f135af7650e75fa6d7c5b997aa23d54",
+      "bytes": 474
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-tools.ts",
+      "productSha256": "a2705978aefa939095c67032bd00d611ca8f34ae98e35682a07e492c7c9058b9",
+      "bytes": 5890
+    },
+    {
+      "product": "server/src/im/visualize-router.ts",
+      "productSha256": "691b8e2015bdd31a8e9d5c18ffbe24410afba8c7f3a2d16eed5896469d3e823b",
+      "bytes": 4025
+    },
+    {
+      "product": "server/src/im/visualize.ts",
+      "productSha256": "d2240c6034d4683523174f33f49590c2137810efac19d7d4f5ac6dbeffa4fcb9",
+      "bytes": 23794
+    },
+    {
+      "product": "src/features/chat/visualize/TextOffsetContext.ts",
+      "productSha256": "c6525a322d0b4f70771c6620b9541a34215d7f3b3e4008c92909bd9b694f3357",
+      "bytes": 198
+    },
+    {
+      "product": "src/features/chat/visualize/VisualizeText.tsx",
+      "productSha256": "d069dfb34a022743a99b4901ac4218da3340f1b0ed0f7420239fdd80ef740590",
+      "bytes": 1514
+    },
+    {
+      "product": "src/features/chat/visualize/web/bootstrap.ts",
+      "productSha256": "419198bf32b8a809b1b9690e7b6838cea226984e6c45c27ca90330ef13b33087",
+      "bytes": 2784
+    },
+    {
+      "product": "src/features/chat/visualize/web/contracts.ts",
+      "productSha256": "5e158bff655052f7d65179ba499c0999ec3fb39cd2ebd5ce422d4b35d21315a6",
+      "bytes": 1426
+    },
+    {
+      "product": "src/features/chat/visualize/web/document.ts",
+      "productSha256": "5b1bc3a5379527afa549a49e3df057cab5175922c78bd32dd4c423a2886329d6",
+      "bytes": 4312
+    },
+    {
+      "product": "src/features/chat/visualize/web/dom.d.ts",
+      "productSha256": "e9c93fa0fdb28f4ae59dba9c4678d5d3114108c746f1708a18e9e3418711ae10",
+      "bytes": 182
+    },
+    {
+      "product": "src/features/chat/visualize/web/host.ts",
+      "productSha256": "c8cd43dccaf2419d1056d43afe9340e4e17aa989940bbdc824faa3e4b9133be4",
+      "bytes": 15969
+    },
+    {
+      "product": "src/features/chat/visualize/zcode.css",
+      "productSha256": "e95cdc87fa8df0428262ff8351c72958c1fead2144f1b42f02600d7686e8e9f5",
+      "bytes": 26447,
+      "upstream": "third_party/zcode/upstream/packages/ui/src/styles.css",
+      "upstreamSha256": "ae1c3575fa770258bba05afb5a0ebbeda59ecbd8b4cfa9d0355b5fbfd8dcbd8b",
+      "byteIdentical": false,
+      "addedLines": 92,
+      "removedLines": 1906,
+      "relationship": "Scoped theme/style extraction with Web host cascade isolation; not a whole-stylesheet copy"
+    },
+    {
+      "product": "src/features/chat/visualize/zcode/i18n/IntlProvider.ts",
+      "productSha256": "b735e192b150c5b68353e87dd25f30f5b6b49abb0acb55f27e34e89ede84fb73",
+      "bytes": 2172
     }
   ]
 }

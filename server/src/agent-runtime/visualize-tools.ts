@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { createHash } from 'node:crypto'
 import type { ActionContext, RunVerificationContext, ToolDefinition, VerificationRecord } from '@lyyzka/lingxios'
-import { nativeTool, authorizeAudienceRead } from '../agents/tools.js'
+import { nativeTool, authorizeAudienceRead, compareResource } from '../agents/tools.js'
 import { productConversationId } from './identity.js'
 import { readAuthorizedVisualizeDocument, saveVisualizeDocument } from '../im/visualize.js'
 import { readVisualizeReference } from './visualize-skill.js'
@@ -30,6 +30,13 @@ export const visualizeTools: ToolDefinition[] = [
       const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
         name: input.name, html: input.html, database: context.database as Queryable })
       return { ok: true, value: { path: document.path, bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex') } }
+    },
+    async verify(context, input, value) {
+      await authorize(context)
+      const saved = z.object({ path }).passthrough().parse(value)
+      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path })
+      const hash = (html: string) => createHash('sha256').update(html).digest('hex')
+      return compareResource(`visualize:${saved.path}`, { sha256: hash(input.html) }, { sha256: hash(document.html) })
     },
   }),
   nativeTool('visualize.read', z.object({ path }).strict(), {

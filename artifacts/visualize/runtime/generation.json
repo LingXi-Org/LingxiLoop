@@ -1,0 +1,12 @@
+{
+  "skillLoaded": true,
+  "completeSkillRead": true,
+  "referenceRead": true,
+  "savedAndRead": true,
+  "realOutputFile": true,
+  "delivered": true,
+  "exportedByOriginalRender": true,
+  "modelCalls": 27,
+  "ledgerCalls": 27,
+  "unauthorizedReadRejected": true
+}

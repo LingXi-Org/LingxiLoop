@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
 import path from 'node:path'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
 import { visualizeFixtureApi } from './fixture-api'
 
 const root=process.cwd()
@@ -10,6 +10,7 @@ export default defineConfig({
   plugins:[visualizeFixtureApi(),react()],
   resolve:{alias:[
     ...['button','dialog','textarea'].map(name=>({find:`@/components/ui/${name}.js`,replacement:path.join(upstream,`components/ui/${name}.tsx`)})),
+    {find:'@/lib/utils.js',replacement:path.join(upstream,'components/lib/utils.ts')},
     {find:'@/hooks/useGenUi.js',replacement:path.join(product,'hooks/useGenUi.ts')},
     {find:'@/i18n/IntlProvider.js',replacement:path.join(product,'i18n/IntlProvider.ts')},
     {find:'@/gen-ui',replacement:path.join(upstream,'gen-ui')},

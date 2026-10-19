@@ -4,15 +4,16 @@ import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { RunIdentity } from '@lyyzka/lingxios'
 import { env } from '../env.js'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
-import { syncConversationPolicy } from '../agent-runtime/conversations.js'
+import { syncProductChannel } from '../agent-runtime/conversations.js'
 import { receiveAgentRequest } from '../agent-runtime/receive.js'
 import { flushAgentWakes } from '../agent-runtime/ingress.js'
 import { visualizeReferences } from '../agent-runtime/visualize-projection.js'
+import { readVisualizeReference, visualizeSkill } from '../agent-runtime/visualize-skill.js'
 import { readAuthorizedVisualizeDocument } from '../im/visualize.js'
 import { imMessagesApplication } from '../im/messages-facade.js'
 import { createNativeMessage } from '../im/message-types.js'
@@ -23,11 +24,11 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 // missing skill/reference reads, unmetered tools, state changes starting a model
 // turn, callback forgery, incomplete continuation, or a simulated HTML export.
 test('real provider generates, adjusts, continues and exports a visualization through the production Web host', {
-  skip: process.env.LINGXIOS_LIVE_VISUALIZE !== '1', timeout: 1_200_000,
+  skip: process.env.LINGXIOS_LIVE_VISUALIZE !== '1', timeout: 1_800_000,
 }, async () => {
   assert.equal(env.OPENAI_MODEL, 'zai-org/GLM-5.3-Flash')
   assert.equal(new URL(env.OPENAI_BASE_URL).hostname, 'api.siliconflow.cn')
-  assert.equal(new URL(env.DATABASE_URL).pathname, '/lingxiloop_issue193_live_test')
+  assert.equal(new URL(env.DATABASE_URL).pathname, '/lingxiloop_issue193_model_test')
   await ensureSchemaOnce(); await resetAllTables()
   const output = process.env.E2E_VISUALIZE_LIVE_OUTPUT ?? '.e2e/visualize-live'
   await mkdir(output, { recursive: true })
@@ -43,7 +44,7 @@ test('real provider generates, adjusts, continues and exports a visualization th
     await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Visualize live',$4::jsonb)", [channelId, companyId, projectId, JSON.stringify(members)])
     await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id) VALUES($1,$2,$3::jsonb,$4)', [channelId, companyId, JSON.stringify({ channelType: 2, members }), agentId])
     const api = await lingxiOSControl()
-    await syncConversationPolicy(api, companyId, channelId)
+    await syncProductChannel({ channelId, channelType: 2, kind: 'group', title: 'Visualize live', members, leaderAgentId: agentId })
     const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN!, port: 0 })
     process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${port}`
     const identities = async (): Promise<RunIdentity[]> => (await pool.query<{ run_id: string; session_id: string; thread_id: string | null }>('SELECT run_id,session_id,thread_id FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2 ORDER BY created_at', [companyId, channelId])).rows.map(row => ({ tenantId: companyId, agentId, principalId: 'test-owner', sessionId: row.session_id, runId: row.run_id, ...(row.thread_id ? { threadId: row.thread_id } : {}) }))
@@ -64,7 +65,7 @@ test('real provider generates, adjusts, continues and exports a visualization th
     flush = setInterval(() => { if (!flushing) { flushing = true; void flushAgentWakes().catch(() => {}).finally(() => { flushing = false }) } }, 500)
     worker = await startLingxiOSWorker()
     async function settled(identity: RunIdentity) {
-      const signal = AbortSignal.timeout(360_000)
+      const signal = AbortSignal.timeout(900_000)
       while (true) {
         signal.throwIfAborted()
         const state = await api.readRunState(identity)
@@ -84,7 +85,7 @@ test('real provider generates, adjusts, continues and exports a visualization th
       assert.ok('runs' in accepted && accepted.runs[0])
       return { identity: accepted.runs[0], state: await settled(accepted.runs[0]) }
     }
-    const generated = await ask('请在对话里做一个数量与总价的交互讲解：单价固定10元，数量1到10，初始5。只要一个标注“数量”的滑杆（id=count）、实时总价和一个文字恰好为“继续讲解”的按钮。拖动后保存数量状态。按钮点击才向你追问“请根据当前数量解释总价，用一句话回答，不用新图”。请用可视化技能，阅读完整技能与页面API，保存后读回，再在最终答复展示。')
+    const generated = await ask('请在对话里做一个数量与总价的交互讲解：单价固定10元，数量1到10，初始5。只要一个标注“数量”的滑杆（id=count）、实时总价和一个文字恰好为“继续讲解”的按钮。拖动后保存数量状态。按钮点击才向你追问“请根据当前数量解释总价，用一句话回答，不用新图”。请用可视化技能，阅读完整技能、页面API和样式参考；任何截断结果都要用observations.read逐段全部读取至next=null，不能只读preview。保存后读回，再在最终答复展示。')
     assert.ok(generated.state.message)
     path = visualizeReferences(generated.state.message.body)[0]?.reference.path ?? ''
     assert.ok(path, 'real model must produce an authorized visualize reference')
@@ -94,6 +95,41 @@ test('real provider generates, adjusts, continues and exports a visualization th
     await writeFile(`${output}/generated-fragment.html`, document.html)
     await writeFile(`${output}/manifest.json`, JSON.stringify({ companyId, projectId, agentId, channelId, path, sourceMessageId }, null, 2))
     report.generated = { runId: generated.identity.runId, path, sourceMessageId }
+    // Recover exactly the text exposed through public tool events, not private
+    // runtime tables or an invented model declaration of having read the skill.
+    const observedValues: Array<Record<string, unknown>> = []
+    const ranges = new Map<string, Array<{ start: number; end: number; characters: number; text: string }>>()
+    let eventCursor = 0
+    while (true) {
+      const page = await api.readEvents(generated.identity, eventCursor)
+      for (const event of page.events) {
+        const result = event.data.result as { value?: Record<string, unknown> } | undefined
+        const value = event.kind === 'tool.completed' ? result?.value : undefined
+        if (!value || value.truncated) continue
+        if (typeof value.actionKey === 'string' && typeof value.start === 'number' && typeof value.end === 'number'
+          && typeof value.characters === 'number' && typeof value.text === 'string') {
+          const entries = ranges.get(value.actionKey) ?? []
+          entries.push({ start: value.start, end: value.end, characters: value.characters, text: value.text }); ranges.set(value.actionKey, entries)
+        } else observedValues.push(value)
+      }
+      if (page.events.length < 100) break
+      eventCursor = page.nextSeq
+    }
+    for (const entries of ranges.values()) {
+      let end = 0, text = ''
+      for (const entry of entries.sort((a, b) => a.start - b.start)) {
+        if (entry.start < end) continue
+        if (entry.start !== end) break
+        text += entry.text; end = entry.end
+      }
+      if (end === entries[0]?.characters) observedValues.push(JSON.parse(text))
+    }
+    assert.ok(observedValues.some(value => value.body === visualizeSkill.body || value.path === 'SKILL.md' && value.text === visualizeSkill.body), 'real model must consume every original skill character')
+    for (const referencePath of ['references/api.md', 'references/styles.md']) {
+      const expected = await readVisualizeReference(referencePath)
+      assert.ok(observedValues.some(value => value.path === referencePath && value.text === expected), `real model must read complete ${referencePath}`)
+    }
+    report.completeSkill = { sha256: createHash('sha256').update(visualizeSkill.body).digest('hex'), bytes: Buffer.byteLength(visualizeSkill.body), references: ['references/api.md', 'references/styles.md'] }
     browser = spawn(process.execPath, ['e2e/visualize/run-live-browser.mjs'], { stdio: 'inherit', env: { ...process.env, E2E_VISUALIZE_LIVE_OUTPUT: output } })
     const code = await new Promise<number | null>((resolve, reject) => { browser!.once('error', reject); browser!.once('exit', resolve) })
     assert.equal(code, 0, 'official browser acceptance failed')
@@ -104,6 +140,11 @@ test('real provider generates, adjusts, continues and exports a visualization th
     assert.ok(artifact, 'real model must execute visualize.export and deliver its artifact')
     assert.match(artifact.bytes.toString(), /sandbox="allow-scripts"/)
     await writeFile(`${output}/quantity-export.html`, artifact.bytes)
+    report.export = { runId: exported.identity.runId, bytes: artifact.bytes.length, sha256: createHash('sha256').update(artifact.bytes).digest('hex') }
+    browser = spawn(process.execPath, ['e2e/visualize/run-live-export.mjs'], { stdio: 'inherit', env: { ...process.env, E2E_VISUALIZE_LIVE_OUTPUT: output } })
+    const exportCode = await new Promise<number | null>((resolve, reject) => { browser!.once('error', reject); browser!.once('exit', resolve) })
+    assert.equal(exportCode, 0, 'actual standalone HTML browser acceptance failed')
+    report.exportBrowser = JSON.parse(await readFile(`${output}/live-export-interaction.json`, 'utf8'))
     const finalStats = await stats(); assert.ok(finalStats.modelCalls > 0 && finalStats.measured)
     const toolNames = new Set<string>()
     for (const identity of await identities()) {

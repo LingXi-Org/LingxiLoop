@@ -100,7 +100,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const grants: CapabilityGrant[] = [...new Set(available.map(tool => tool.action.split('.')[0]))]
       .map(name => ({ name, methods: available.filter(tool => tool.action.startsWith(`${name}.`)).map(tool => tool.action.split('.')[1]) }))
     // Explicit context grants replace the runtime defaults, including native memory.
-    grants.push({ name: 'memory' }, { name: 'skills', methods: ['load'] })
+    grants.push({ name: 'memory' }, { name: 'skills', methods: ['load'] }, { name: 'observations', methods: ['read'] })
     return { profile, grants, canvasRun, teacherContext, homeworkContext, learningAudienceSafe }
   }
   const contextProvider: ContextProvider = { async authorizeRequest(work, request) {

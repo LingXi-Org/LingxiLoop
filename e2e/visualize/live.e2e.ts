@@ -7,7 +7,7 @@ import {mkdir,writeFile} from 'node:fs/promises'
 test('real model question → generated message → visualization → adjustment → continued explanation',async({app,browser,screen})=>{
   await app.open('/e2e/visualize/live.html')
   await expect(browser.locator('[data-testid="gen-ui-card"]').first()).toHaveAttribute('data-gen-ui-phase','ready',{timeout:90000})
-  const guest=browser.frameLocator('iframe[data-visualize-guest]').frameLocator('iframe[data-visualize-content]')
+  const guest=browser.frameLocator('iframe[data-visualize-guest]:visible').frameLocator('iframe[data-visualize-content]')
   const slider=guest.getByRole('slider').first()
   await expect(slider).toBeVisible()
   const before=await browser.evaluate(async()=>await fetch('/__visualize_live/stats').then(response=>response.json())) as {modelCalls:number;assistantCount:number;states:unknown}

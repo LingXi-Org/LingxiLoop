@@ -2,7 +2,7 @@ import * as React from "react";
 import { useZCodeIntl } from "@/features/chat/visualize/zcode/i18n/IntlProvider.js";
 import { Dialog as DialogPrimitive } from "radix-ui";
 
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import { Button } from "./button.js";
 import { XIcon } from "lucide-react";
 

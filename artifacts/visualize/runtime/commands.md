@@ -7,7 +7,7 @@ npm run test:integration -- --file visualize-runtime.test.ts --file visualize-ge
 npm run server:typecheck
 ```
 
-Real provider + official browser evidence uses the existing integration runner with `LINGXIOS_LIVE_VISUALIZE=1`, `OPENAI_MODEL=zai-org/GLM-5.3-Flash`, request timeout 180000, a dedicated `lingxiloop_issue193_live_test` database, API 5194, worker 5196, Redis /4, and the real isolated WuKong fixture. Inject the provider key with `/workspace/.lingxi-production/env.sh` and `lingxi-prod model-run`; never write or print it.
+Real provider + official browser evidence uses the existing integration runner with `LINGXIOS_LIVE_VISUALIZE=1`, `OPENAI_MODEL=zai-org/GLM-5.3-Flash`, request timeout 180000, a dedicated `lingxiloop_issue193_model_test` database, API 5194, worker 5196, Redis /4, and the real isolated WuKong fixture. Inject the provider key with `/workspace/.lingxi-production/env.sh` and `lingxi-prod model-run`; never write or print it.
 
 ```
 lingxi-prod model-run npm run test:integration -- --file visualize-live.test.ts

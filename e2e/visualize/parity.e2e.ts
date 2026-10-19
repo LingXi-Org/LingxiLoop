@@ -1,6 +1,6 @@
+import { mkdir, writeFile } from 'node:fs/promises'
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
-import { mkdir, writeFile } from 'node:fs/promises'
 
 // Acceptance contract written before Web host implementation. Both entries must
 // render the exact same fixture; only the original/product component import differs.
@@ -9,7 +9,7 @@ for (const implementation of ['upstream', 'product']) {
     test(`${implementation}: complete card interaction (${theme})`, async ({ app, browser, screen }) => {
       await app.open(`/e2e/visualize/index.html?implementation=${implementation}&theme=${theme}`)
       await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase', 'ready')
-      const guest = browser.frameLocator('iframe[data-visualize-guest]').frameLocator('iframe[data-visualize-content]')
+      const guest = browser.frameLocator('iframe[data-visualize-guest]:visible').frameLocator('iframe[data-visualize-content]')
       await expect(guest.locator('[data-fixture-ready="true"]')).toBeVisible()
       const environment = await browser.evaluate(async () => {
         await document.fonts.ready
@@ -38,9 +38,14 @@ for (const implementation of ['upstream', 'product']) {
       await browser.keyboard.press('ArrowRight')
       await screen.getByLabel('Accent',{exact:true}).fill('#c83260')
       await screen.getByRole('checkbox','Playing',{exact:true}).uncheck()
-      await screen.getByLabel('Density',{exact:true}).selectOption('compact')
+      await screen.getByLabel('Density',{exact:true}).selectOption({value:'compact'})
       await expect(guest.locator('#fixture-render')).toHaveText('radius=1; accent=#c83260; playing=false; density=compact')
       screenshots.controls = await app.screenshot(`${implementation}-${theme}-controls`)
+      const presentation=await browser.evaluate(()=>{
+        const styles=(element:Element|null)=>{if(!element)return null;const css=getComputedStyle(element),rect=element.getBoundingClientRect();return {font:css.font,fontFamily:css.fontFamily,fontSize:css.fontSize,lineHeight:css.lineHeight,color:css.color,background:css.backgroundColor,border:css.border,borderRadius:css.borderRadius,padding:css.padding,width:rect.width,height:rect.height}}
+        const panel=document.querySelector('[data-testid="gen-ui-tweaks"]')
+        return {body:styles(document.body),card:styles(document.querySelector('[data-testid="gen-ui-card"]')),panel:styles(panel),select:styles(panel?.querySelector('select')??null),buttons:Array.from(panel?.querySelectorAll('button')??[]).map(element=>({text:element.textContent,...styles(element)}))}
+      })
       await screen.getByRole('button','预览原始值',{exact:true}).tap()
       await expect(guest.locator('#fixture-render')).toHaveText('radius=18; accent=#7c3aed; playing=true; density=normal')
       await screen.getByRole('button','预览原始值',{exact:true}).tap()
@@ -66,7 +71,7 @@ for (const implementation of ['upstream', 'product']) {
       await expect(guest.getByRole('button','Saved count: 6',{exact:true})).toBeVisible()
       const output=process.env.E2E_VISUALIZE_OUTPUT??'.e2e/visualize'
       await mkdir(output,{recursive:true})
-      await writeFile(`${output}/${implementation}-${theme}-interaction.json`,JSON.stringify({implementation,theme,environment,screenshots,status:'passed',checks:['ready','height','keyboard-toolbar','groups','range','color','toggle','select','original','reset','submit','save','expand-collapse','reload']},null,2))
+      await writeFile(`${output}/${implementation}-${theme}-interaction.json`,JSON.stringify({implementation,theme,environment,presentation,screenshots,status:'passed',checks:['ready','height','keyboard-toolbar','groups','range','color','toggle','select','original','reset','submit','save','expand-collapse','reload']},null,2))
     })
   }
 }

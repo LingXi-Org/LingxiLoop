@@ -56,7 +56,7 @@ async function refreshVisible() {
     }).finally(()=>refreshing.delete(page.sandboxId))
   }
   for(const page of pendingRevocations.values()) {
-    if(page.userId!==useAuth.getState().user?.id||page.target.workspaceIdentity!==getActiveCompanyId()) {pendingRevocations.delete(page.sandboxId);continue}
+    if(page.userId!==(useAuth.getState().user?.id ?? null)||page.target.workspaceIdentity!==getActiveCompanyId()) {pendingRevocations.delete(page.sandboxId);continue}
     void http(pagePath(page),{method:'DELETE',headers:headers(page)}).then(()=>pendingRevocations.delete(page.sandboxId),()=>undefined)
   }
 }
@@ -172,6 +172,9 @@ export const webPlatform: PluginSandboxPlatformPort = {
     page.disposed = true; pages.delete(id); page.privatePort?.close(); page.rpcPort?.close()
     for (const pending of page.captures.values()) {clearTimeout(pending.timer); pending.reject(new Error('Interactive view closed'))}
     page.captures.clear()
+    page.frame?.removeAttribute('srcdoc')
+    page.frame = undefined; page.privatePort = undefined; page.rpcPort = undefined
+    page.html = ''; page.state = null
     try { await http(`${pagePath(page)}`, {method:'DELETE',headers:headers(page)}) }
     catch { pendingRevocations.set(page.sandboxId,page) }
   },

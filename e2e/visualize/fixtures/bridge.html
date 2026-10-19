@@ -1,0 +1,68 @@
+<section style="padding:24px;min-height:320px">
+  <h2>Fictional bridge acceptance</h2>
+  <button id="bridge-follow" type="button">Real follow-up</button>
+  <button id="bridge-external" type="button">Real local link</button>
+  <button id="bridge-save" type="button">Save fixture state</button>
+  <output id="bridge-follow-status">idle</output>
+  <output id="bridge-external-status">idle</output>
+  <output id="bridge-save-status">idle</output>
+  <output id="bridge-tools">pending</output>
+  <output id="bridge-files">pending</output>
+  <output id="bridge-replaced">idle</output>
+  <output id="bridge-synthetic">pending</output>
+</section>
+<script>
+(() => {
+  const show=(id,value)=>document.getElementById(id).textContent=value;
+  const link='http://127.0.0.1:5193/__visualize_fixture/external';
+  document.getElementById('bridge-follow').onclick=async()=>{
+    show('bridge-follow-status','pending');
+    try {await zcode.sendFollowUpMessage({prompt:'Explain this fictional bridge fixture'});show('bridge-follow-status','accepted')}
+    catch {show('bridge-follow-status','rejected')}
+  };
+  document.getElementById('bridge-external').onclick=async()=>{
+    show('bridge-external-status','pending');
+    try {await zcode.openExternal({href:link});show('bridge-external-status','accepted')}
+    catch {show('bridge-external-status','rejected')}
+  };
+  document.getElementById('bridge-save').onclick=async()=>{
+    show('bridge-save-status','pending');
+    try {await zcode.setWidgetState({modelContent:{syntheticComplete:true,saved:true}});show('bridge-save-status','accepted')}
+    catch {show('bridge-save-status','rejected')}
+  };
+  window.addEventListener('message',async event=>{
+    if(event.source!==parent||event.data?.method!=='fixture/replaced')return;
+    const results=await Promise.allSettled([
+      zcode.sendFollowUpMessage({prompt:'Replaced fictional page must not send'}),
+      zcode.setWidgetState({modelContent:{fictionalReplaced:true}}),
+      zcode.openExternal({href:link})
+    ]);
+    show('bridge-replaced',results.every(result=>result.status==='rejected')?'all rejected':'unexpected success');
+  });
+  const rpc=(id,method,params)=>new Promise(resolve=>{
+    const receive=event=>{
+      if(event.source!==parent||event.data?.id!==id)return;
+      window.removeEventListener('message',receive);
+      show(id,event.data.error?'rejected':'unexpected success');resolve();
+    };
+    window.addEventListener('message',receive);
+    parent.postMessage({jsonrpc:'2.0',id,method,params},'*');
+  });
+  (async()=>{
+    const already=Boolean(zcode.widgetState?.modelContent?.syntheticComplete);
+    // This supported call waits for the original runtime handshake; it supplies
+    // no gesture and cannot authorize follow-up or link actions.
+    await zcode.setWidgetState({modelContent:{syntheticComplete:true}});
+    await Promise.all([
+      rpc('bridge-tools','tools/call',{name:'fixture_forbidden_tool',arguments:{fictional:true}}),
+      rpc('bridge-files','resources/read',{uri:'file:///fictional-no-such-fixture.txt'})
+    ]);
+    if(!already){
+      parent.postMessage({type:'gesture',isTrusted:true},'*');
+      document.getElementById('bridge-external').click();
+      document.getElementById('bridge-follow').click();
+      show('bridge-synthetic','attempted without input');
+    } else show('bridge-synthetic','previously checked');
+  })().catch(()=>show('bridge-synthetic','setup rejected'));
+})();
+</script>

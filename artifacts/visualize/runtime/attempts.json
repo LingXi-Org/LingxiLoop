@@ -4,7 +4,8 @@
   "generationInitialFailure": "skills.load omitted by explicit capability resolver; fixed by granting only native skills.load whose published implementation rechecks all skill actions",
   "nativeReferenceRepair": "passed: unavailable visualization paths corrected before durable delivery",
   "nonthinkingCore": "timed out during concurrent CPU/IO load; serial rerun required",
-  "owningBatch": "stopped on coordinator request to release CPU; generation/teacher/state pending serial rerun",
-  "liveDatabase": "dedicated lingxiloop_issue193_live_test initialized through migration 0046",
-  "liveProvider": "not started; coordinator requested waiting for resource contention to clear"
+  "owningBatch": "Serial generation, teacher, render/state and protocol batch running after fixes.",
+  "liveDatabase": "Dedicated lingxiloop_issue193_model_test migrated 0001-0046; standard integration safety guard unchanged.",
+  "liveProvider": "First preflight failed before model calls due missing local runtime object-store credential variables. Second attempt deliberately stopped after four measured calls because skill output was only a preview; evidence live-incomplete-skill.json. Fresh full-range model run pending scripted pass.",
+  "generationTruncationFailure": "Published 8000-character output bound discovered; added authorized observations.read ranges. Complete skill recovery reached; then independent save verification and explicit 1M mock context declaration were required. Final owning batch pending."
 }

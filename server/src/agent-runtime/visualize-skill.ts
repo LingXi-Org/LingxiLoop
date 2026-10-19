@@ -23,6 +23,7 @@ export async function readVisualizeReference(path: string): Promise<string> {
 export function visualizeHostInstructions(directory: string) {
   return `Gen UI is available in this Web host. The authorized durable session output directory is ${JSON.stringify(directory)}. `
     + 'Use the visualize skill for inline visual explanations; load its complete unchanged body through skills.load before authoring. '
+    + 'If any tool result is truncated, use the returned observation reference with observations.read to read every remaining range before authoring. Read 2000 UTF-16 characters per range, one range per tool response, to keep each response untruncated; continue from next until it is null. Do not combine all ranges into one oversized Python output. The preview alone is not the complete skill or reference. '
     + 'Host adaptation: use visualize.read_reference for the skill-relative references, visualize.save with literal HTML fragment text to write a named file in that directory, and visualize.read to read the saved fragment back. These native tools replace shell filesystem access. '
     + 'Use only the actual absolute path returned by a successful save in the final ::visualize JSON reference. The host renders completed messages only. '
     + 'When explicitly asked for an export, use visualize.export; it executes the original render.py and returns the committed downloadable artifact. '

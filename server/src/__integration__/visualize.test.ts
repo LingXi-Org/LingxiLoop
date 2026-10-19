@@ -1,14 +1,18 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { after, before, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile, mkdtemp, symlink, unlink, readdir, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { buildGenUiModelContext } from '../../../src/features/chat/visualize/zcode/shared/gen-ui/contract.js'
 import { pool } from '../db/pool.js'
 import { createNativeMessage } from '../im/message-types.js'
 import { imMessagesApplication } from '../im/messages-facade.js'
 import { assertInteractionAdmission } from '../im/interaction-admission.js'
 import { saveVisualizeDocument, readAuthorizedVisualizeDocument, createVisualizePage, saveVisualizePageState,
   getVisualizeState, getVisualizeStateSnapshot, listVisualizeModelState, mintVisualizeGesture, submitVisualizeFollowUp, closeVisualizePage,
-  readVisualizeResource, readVisualizePageState, assertVisualizePage } from '../im/visualize.js'
+  readVisualizeResource, readVisualizePageState, assertVisualizePage, visualizeOutputDirectory } from '../im/visualize.js'
 import { wukongClient } from '../im/wukong.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
@@ -61,6 +65,11 @@ async function page(name: string) {
   const page = await createVisualizePage({ ...actor(), request: { path: doc.path, sourceMessageId, instanceKey: name } })
   return { ...doc, ...page, sourceMessageId, token: page.initId, ...actor() }
 }
+async function seedRoom(scope: {companyId:string;projectId:string;agentId:string;userId:string;channelId:string}) {
+  const members = [scope.userId, scope.agentId]
+  await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group',$1,$4::jsonb)`, [scope.channelId,scope.companyId,scope.projectId,JSON.stringify(members)])
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id) VALUES($1,$2,$3::jsonb,$4)`, [scope.channelId,scope.companyId,JSON.stringify({members,channelType:2}),scope.agentId])
+}
 const http = (path: string, method = 'GET', data?: unknown, token?: string, extraHeaders?: Record<string, string>) => fetch(`${base}${path}`, {
   method, headers: { ...headers(), ...(token ? { 'x-visualize-page-token': token } : {}), ...extraHeaders }, ...(data ? { body: JSON.stringify(data) } : {}),
 })
@@ -82,11 +91,36 @@ test('authorized output is real, bounded and delivered references are required',
   await assert.rejects(saveVisualizeDocument({ ...actor(), agentId, runId: doc.runId, name: '../escape', html: 'x' }), { status: 400 })
   await assert.rejects(saveVisualizeDocument({ ...actor(), agentId, runId: doc.runId, name: 'full-html', html: '<!doctype html><html></html>' }), { status: 400 })
   await assert.rejects(saveVisualizeDocument({ ...actor(), userId: 'visualize-peer', agentId, runId: doc.runId, name: 'forged-actor', html: '<div>x</div>' }), { status: 403 })
+  const other = await seedCompanyWithAgent({companyId:'visualize-other-tenant',agentId:'visualize-other-agent'})
+  await seedUserMembership('visualize-other-user',other.companyId)
+  await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,'visualize-other-user','TEACHER')`,[other.projectId,other.companyId])
+  const otherScope = {...other,userId:'visualize-other-user',channelId:'visualize-other-tenant-room'}
+  await seedRoom(otherScope)
+  await pool.query(`INSERT INTO agent_run_bindings(run_id,company_id,conversation_id,session_id,agent_id,principal_id,message_protocol)
+    VALUES('other-tenant-run',$1,$2,$2,$3,$4,2)`,[other.companyId,otherScope.channelId,other.agentId,otherScope.userId])
+  const otherDoc=await saveVisualizeDocument({...otherScope,runId:'other-tenant-run',name:'tenant-private',html:'<div>Other tenant</div>'})
+  assert.equal((await readAuthorizedVisualizeDocument({...otherScope,path:otherDoc.path})).html,'<div>Other tenant</div>')
+  assert.equal((await http('/document?path='+encodeURIComponent(otherDoc.path))).status,403)
+  const linkScope={...actor(),projectId,agentId,channelId:'visualize-symlink-room'}
+  await seedRoom(linkScope)
+  await pool.query(`INSERT INTO agent_run_bindings(run_id,company_id,conversation_id,session_id,agent_id,principal_id,message_protocol)
+    VALUES('symlink-run',$1,$2,$2,$3,$4,2)`,[companyId,linkScope.channelId,agentId,userId])
+  const outside=await mkdtemp(join(tmpdir(),'visualize-outside-'))
+  const link=visualizeOutputDirectory(linkScope)
+  await symlink(outside,link)
+  try {
+    await assert.rejects(saveVisualizeDocument({...linkScope,runId:'symlink-run',name:'escape',html:'<div>Escape</div>'}),{status:403})
+    assert.deepEqual(await readdir(outside),[])
+  } finally {await unlink(link);await rm(outside,{recursive:true,force:true})}
   checks.push('authorized-real-output-and-durable-reference')
 })
 
 test('state is personal and bounded, fixed resources require a live page, and closed tokens fail', async () => {
   const p = await page('personal-state')
+  const otherChannel='visualize-other-channel'
+  await seedRoom({...actor(),projectId,agentId,channelId:otherChannel})
+  const crossChannel=await fetch(base.replace(channelId,otherChannel)+`/pages/${p.pageId}/state`,{headers:{...headers(),'x-visualize-page-token':p.token}})
+  assert.equal(crossChannel.status,410)
   const state = { modelContent: { angle: 30 }, privateContent: { secret: 'private-only' } }
   assert.equal((await http(`/pages/${p.pageId}/state`, 'PUT', {state}, p.token)).status, 200)
   assert.deepEqual(await getVisualizeState({ ...actor(), path: p.path }), state)
@@ -104,6 +138,9 @@ test('state is personal and bounded, fixed resources require a live page, and cl
   assert.equal(css.status, 200); assert.equal(css.headers.get('cache-control'), 'no-store'); assert.ok((await css.text()).length > 100)
   assert.ok((await readVisualizeResource({ ...p, name: 'vendor/d3-7.9.0.min.js' })).bytes.length > 100)
   assert.ok((await readVisualizeResource({ ...p, name: 'tweak.js' })).bytes.length > 100)
+  const runtime = await readVisualizeResource({...p,name:'gen-ui.js'})
+  const manifest = JSON.parse(await readFile('server/assets/visualize-runtime/manifest.json','utf8'))
+  assert.equal(createHash('sha256').update(runtime.bytes).digest('hex'),manifest.files['gen-ui.js'].sha256)
   assert.equal((await http(`/pages/${p.pageId}/resources?name=../../env`, 'GET', undefined, p.token)).status, 403)
   await pool.query(`INSERT INTO im_visualize_documents(company_id,channel_id,path,run_id,agent_id,created_by,html,source_hash)
     SELECT company_id,channel_id,regexp_replace(path,'[^/]+$','eviction-'||i||'.html'),run_id,agent_id,created_by,html,source_hash
@@ -113,7 +150,7 @@ test('state is personal and bounded, fixed resources require a live page, and cl
     FROM im_visualize_documents WHERE company_id=$1 AND channel_id=$2 AND path LIKE '%/eviction-%.html'`, [companyId, channelId, userId])
   await saveVisualizePageState({...p, state})
   assert.equal((await pool.query('SELECT count(*)::int n FROM im_visualize_states WHERE company_id=$1 AND channel_id=$2 AND user_id=$3', [companyId,channelId,userId])).rows[0].n, 100)
-  assert.ok(Buffer.byteLength(JSON.stringify(await listVisualizeModelState(actor()))) <= 64 * 1024)
+  assert.ok(Buffer.byteLength(buildGenUiModelContext((await listVisualizeModelState(actor())).map(entry=>({...entry,state:{...entry.state,privateContent:null}})))) <= 64 * 1024 + 128)
   const removed = (await pool.query(`SELECT doc.path FROM im_visualize_documents doc LEFT JOIN im_visualize_states state
     ON state.company_id=doc.company_id AND state.channel_id=doc.channel_id AND state.path=doc.path AND state.user_id=$3
     WHERE doc.company_id=$1 AND doc.channel_id=$2 AND doc.path LIKE '%/eviction-%.html' AND state.path IS NULL LIMIT 1`, [companyId,channelId,userId])).rows[0]
@@ -132,6 +169,13 @@ test('replacement documents and revoked membership invalidate every old page cap
   await assert.rejects(saveVisualizePageState({ ...p, state: { modelContent: 1 } }), { status: 410 })
   await closeVisualizePage(p); await closeVisualizePage(p)
   assert.equal((await http('/pages', 'POST', { path: p.path, sourceMessageId: p.sourceMessageId, instanceKey: 'old-message' })).status, 403)
+  const moved=await page('moved-project')
+  const nextProject='visualize-new-project'
+  await pool.query(`INSERT INTO projects(id,company_id,kind,name,created_by) VALUES($1,$2,'INSTITUTIONAL_COURSE','Other project',$3)`,[nextProject,companyId,userId])
+  await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')`,[nextProject,companyId,userId])
+  await pool.query('UPDATE conversations SET project_id=$1 WHERE company_id=$2 AND id=$3',[nextProject,companyId,channelId])
+  try {await assert.rejects(readVisualizePageState(moved),{status:410})}
+  finally {await pool.query('UPDATE conversations SET project_id=$1 WHERE company_id=$2 AND id=$3',[projectId,companyId,channelId])}
   const current = await page('membership')
   await pool.query(`UPDATE conversations SET members=members-$3 WHERE company_id=$1 AND id=$2`, [companyId, channelId, userId])
   await assert.rejects(readVisualizePageState(current), { status: 403 })
@@ -201,9 +245,13 @@ test('document replacement waits for an admitted state transaction and capacity 
     await pool.query(`UPDATE conversations SET members=members||to_jsonb(ARRAY[$3::text]) WHERE company_id=$1 AND id=$2`, [companyId,channelId,userId])
   } finally { await authorization.query('ROLLBACK'); authorization.release() }
   const cap = await page('page-capacity')
-  await pool.query(`INSERT INTO im_visualize_pages(id,company_id,channel_id,path,user_id,token_hash,instance_key,document_version,source_message_id)
-    SELECT 'capacity-'||i,company_id,channel_id,path,user_id,token_hash,'capacity-'||i,document_version,source_message_id FROM im_visualize_pages
-    CROSS JOIN generate_series(1,64) i WHERE id=$1`, [cap.pageId])
+  await pool.query(`UPDATE im_visualize_pages SET revoked_at=NOW() WHERE company_id=$1 AND user_id=$2 AND id<>$3`,[companyId,userId,cap.pageId])
+  await pool.query(`INSERT INTO im_visualize_pages(id,company_id,channel_id,path,user_id,token_hash,instance_key,document_version,source_message_id,project_id)
+    SELECT 'capacity-'||i,company_id,channel_id,path,user_id,token_hash,'capacity-'||i,document_version,source_message_id,project_id FROM im_visualize_pages
+    CROSS JOIN generate_series(1,63) i WHERE id=$1`, [cap.pageId])
+  assert.equal((await pool.query(`SELECT count(*)::int n FROM im_visualize_pages WHERE company_id=$1 AND user_id=$2 AND revoked_at IS NULL`,[companyId,userId])).rows[0].n,64)
   await assert.rejects(createVisualizePage({...actor(), request: {path: cap.path, sourceMessageId: cap.sourceMessageId, instanceKey: 'over-capacity'}}), {status: 429})
+  await closeVisualizePage(cap)
+  await createVisualizePage({...actor(), request: {path: cap.path, sourceMessageId: cap.sourceMessageId, instanceKey: 'capacity-released'}})
   checks.push('concurrent-document-lock-and-capacity')
 })

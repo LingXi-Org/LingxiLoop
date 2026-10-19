@@ -57,5 +57,16 @@ The live entry is separate and never substitutes fixture HTML for generated cont
 ## Evidence status
 
 - `export/report.json`: official runner 0.17.0 / web engine 0.12.0, standalone export scenario passed. `export/export.html` is the independently runnable original-render.py output; `export/screenshots` contains its captured result. External HTTP(S) resource requests were denied for this run; bundled D3/calendar and state reload succeeded.
-- Presentation and live model reports are not yet acceptance passes; their final results must be attached before closing the issue.
+- `light-initial/report.json`: independent original upstream and product light interaction scenarios both passed (2/2); `light-initial/diff/diff-report.json` remains a visual failure. The initial run exposes outer theme background and control styling differences; subsequent runs fix only the outer canvas to #fafafa/#171717 as equal light/dark inputs and restore the upstream original class-merging utility alias; screenshots are preserved, without masking or changing the original source. Dark, lifecycle, capacity and bridge gates remain pending.
+- The actual-model standalone export entry `node e2e/visualize/run-live-export.mjs` reads `E2E_VISUALIZE_LIVE_OUTPUT/quantity-export.html`, serves only those delivered bytes on localhost:5198, blocks external requests, changes quantity and checks reload persistence. Its `live-export-interaction.json` records SHA-256 and screenshots. Real-model reports are not yet acceptance passes.
 - Isolated navigation PoC observations are not a substitute for production bridge authorization coverage. No complete security acceptance is claimed here.
+
+## Clipboard permission boundary
+
+The unprivileged default-browser run preserves a real `Clipboard.write` permission denial in `.e2e/visualize-recheck`. The dedicated `e2e.visualize-clipboard.config.ts` uses the official `@e2e-dev/web@0.12.0` public `BrowserProvider` contract (`dist/provider.d.ts`: attempt-scoped `acquire`/`release`, lease CDP endpoint). `e2e/visualize/clipboard-provider.ts` launches a disposable local Chromium profile from the existing official cache and uses Node's native WebSocket only for CDP `Browser.grantPermissions` / `Browser.resetPermissions`. The grant applies only to `http://127.0.0.1:5193`, with `clipboardReadWrite` and `clipboardSanitizedWrite`; no product or production setting is changed. Cleanup resets permissions, stops that leased process, and removes its profile. No `surfaceOf` or direct Playwright API is used. All navigation, input, PNG readback and screenshots remain official engine operations, without clipboard stubs.
+
+```bash
+node node_modules/e2e/dist/cli/bin.js run --config e2e.visualize-clipboard.config.ts --grep copy-image --output .e2e/visualize-clipboard
+```
+
+This entry is prepared; its result is not a pass until the dedicated report confirms it.

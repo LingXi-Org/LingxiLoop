@@ -36,7 +36,7 @@ export function useGenUi(target: GenUiCardTarget, confirm: (prompt:string)=>Prom
       if(cancelled) return
       if(retry && page.getSnapshot().phase==='error') page.retry()
       setResult({key,page})
-    }, error=>{if(!cancelled)setResult({key,page:null,error:String(error)})})
+    }, error=>{services.delete(key);if(!cancelled)setResult({key,page:null,error:String(error)})})
     return () => {cancelled=true;offActions()}
   },[key,online,retry])
   const page = online && result.key===key ? result.page : null

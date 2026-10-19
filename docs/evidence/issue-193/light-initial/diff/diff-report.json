@@ -1,0 +1,69 @@
+{
+  "policy": "exact RGBA equality; no resizing, masks, or threshold",
+  "passed": false,
+  "pairs": [
+    {
+      "name": "light-card",
+      "upstream": "docs/evidence/issue-193/light-initial/screenshots/001-upstream-light-card.png",
+      "product": "docs/evidence/issue-193/light-initial/screenshots/001-product-light-card.png",
+      "upstreamSha256": "e672e9b2d95f8e5e00166c5abd7685ce1531aaa05622ceda8de58a08e8b7180f",
+      "productSha256": "47807ed1d12c67edc416e0f28d5246296b33e874d12c0ab0b9670d3b28c55bcc",
+      "upstreamSize": [
+        1440,
+        960
+      ],
+      "productSize": [
+        1440,
+        960
+      ],
+      "passed": false,
+      "changedPixels": 949780,
+      "totalPixels": 1382400,
+      "changedFraction": 0.6870515046296296,
+      "maxChannelDelta": 5,
+      "meanChannelDelta": 3.4352575231481484
+    },
+    {
+      "name": "light-controls",
+      "upstream": "docs/evidence/issue-193/light-initial/screenshots/002-upstream-light-controls.png",
+      "product": "docs/evidence/issue-193/light-initial/screenshots/002-product-light-controls.png",
+      "upstreamSha256": "0e09ef88a0583e5f50f692dd23ee90b3460d2d98c0d35a3413e94260620afd15",
+      "productSha256": "f4026ba676dbea3cc9cf534dd6ae1d3a8ae219c5594359f9b7ec27f96ade9e36",
+      "upstreamSize": [
+        1440,
+        960
+      ],
+      "productSize": [
+        1440,
+        960
+      ],
+      "passed": false,
+      "changedPixels": 926875,
+      "totalPixels": 1382400,
+      "changedFraction": 0.6704824942129629,
+      "maxChannelDelta": 245,
+      "meanChannelDelta": 3.781650752314815
+    },
+    {
+      "name": "light-dialog",
+      "upstream": "docs/evidence/issue-193/light-initial/screenshots/003-upstream-light-dialog.png",
+      "product": "docs/evidence/issue-193/light-initial/screenshots/003-product-light-dialog.png",
+      "upstreamSha256": "8823fed20f9fa95e3917822c3613934f5ef95c2bd028a45676899ad4d09c5bb7",
+      "productSha256": "3f4052f4e93c5531662fe46ee1f405e13c005e89cae76c7d8fa6fd3b29998530",
+      "upstreamSize": [
+        1440,
+        960
+      ],
+      "productSize": [
+        1440,
+        960
+      ],
+      "passed": false,
+      "changedPixels": 508102,
+      "totalPixels": 1382400,
+      "changedFraction": 0.36755063657407405,
+      "maxChannelDelta": 255,
+      "meanChannelDelta": 1.9251198398919753
+    }
+  ]
+}

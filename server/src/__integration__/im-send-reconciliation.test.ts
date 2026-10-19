@@ -233,16 +233,20 @@ test('the maintenance CLI defaults to read-only, exits cleanly and applies only 
   if (first.kind !== 'accepted') return
   await corrupt({ ...first.echo, messageSeq: 0 })
   const before = await getSendAcceptance(pool, input), client = wukongClient()
-  const run = (args: string[]) => new Promise<{ code: number | null; stdout: string }>((resolve, reject) => {
+  const run = (args: string[]) => new Promise<{ code: number | null; signal: NodeJS.Signals | null; stdout: string; stderr: string; elapsedMs: number }>((resolve, reject) => {
+    const started = performance.now()
     const child = spawn(process.execPath, ['--import', 'tsx', 'scripts/reconcile-im-send-acceptances.ts',
       '--company', input.companyId, '--sender', input.userId, ...args], { timeout: 10_000,
       env: { ...process.env, WUKONG_API_URL: client.config.apiUrl, WUKONG_API_TOKEN: client.config.apiToken,
         WUKONG_WS_URL: client.config.wsUrl, WUKONG_WEBHOOK_SECRET: client.config.webhookSecret } })
-    let stdout = ''; child.stdout.on('data', chunk => { stdout += chunk.toString() })
-    child.once('error', reject); child.once('exit', code => resolve({ code, stdout }))
+    let stdout = '', stderr = ''
+    child.stdout.on('data', chunk => { stdout += chunk.toString() })
+    child.stderr.on('data', chunk => { stderr += chunk.toString() })
+    child.once('error', reject)
+    child.once('close', (code, signal) => resolve({ code, signal, stdout, stderr, elapsedMs: performance.now() - started }))
   })
   const inspect = await run(['--nonce', input.clientNonce])
-  assert.equal(inspect.code, 0)
+  assert.equal(inspect.code, 0, JSON.stringify({signal: inspect.signal, stderr: inspect.stderr, elapsedMs: inspect.elapsedMs}))
   assert.equal(JSON.parse(inspect.stdout.split('\n')[0]).classification, 'confirmed')
   assert.doesNotMatch(inspect.stdout, /Synthetic CLI result|cli-original-nonce/)
   assert.deepEqual(await getSendAcceptance(pool, input), before)
