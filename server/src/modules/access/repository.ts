@@ -387,7 +387,7 @@ function resourceQuery(resource: PermissionResource): {
         sql: `SELECT company_id,project_id,created_by_user_id AS created_by,
                      visibility_scope,owner_user_id,NULL::jsonb AS conversation_members,
                      NULL::text AS leader_id,status AS resource_status
-                FROM knowledge_sources WHERE id=$1 AND deleted_at IS NULL`,
+                FROM knowledge_sources WHERE id=$1 AND deleted_at IS NULL AND case_id IS NULL`,
         params: [resource.id],
         lockTarget: 'knowledge_sources',
       }

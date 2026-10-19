@@ -95,6 +95,8 @@ export const PERMISSION_POLICIES = {
   'learning:submit': { scope: 'project', entitlement: 'learning.core', projectRoles: LEARNERS, resource: 'none' },
   'learning:review': projectManage('learning.core'),
   'learning:preference': projectRead('learning.core'),
+  'cases:read': { scope: 'company', entitlement: 'knowledge.core', companyRoles: ALL_COMPANY_ROLES, resource: 'none' },
+  'cases:manage': { scope: 'company', entitlement: 'knowledge.core', companyRoles: COMPANY_MANAGERS, resource: 'none' },
   'knowledge:read': projectRead('knowledge.core'),
   'knowledge:write': projectWrite('knowledge.core'),
   'knowledge:manage': projectWrite('knowledge.core', 'creator_or_manager'),
@@ -158,7 +160,7 @@ export const PROJECT_WRITE_ACTIONS = new Set<PermissionAction>([
 const READ_ACTIONS = new Set<PermissionAction>([
   'company:list', 'company:read', 'company_member:list', 'company_invitation:list',
   'project:list', 'project:read', 'course:read', 'project_member:list', 'project_invitation:list',
-  'learning:read', 'knowledge:read', 'conversation:read', 'document:read',
+  'cases:read', 'learning:read', 'knowledge:read', 'conversation:read', 'document:read',
   'calendar:read', 'canvas:read', 'poll:read', 'email:read', 'agent:read',
   'agent_autonomy:read', 'agent_memory:read', 'agent_memory:read_company', 'agent_approval:list',
   'trust:read_l2', 'trust:read_l3_company', 'trust:read_l3_project',

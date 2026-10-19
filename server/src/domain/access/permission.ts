@@ -43,6 +43,8 @@ export const PERMISSION_ACTIONS = [
   'learning:submit',
   'learning:review',
   'learning:preference',
+  'cases:read',
+  'cases:manage',
   'knowledge:read',
   'knowledge:write',
   'knowledge:manage',

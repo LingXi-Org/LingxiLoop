@@ -1,4 +1,3 @@
-import { ProjectSourceLibrary } from '@/features/knowledge/components/ProjectSourceLibrary'
 import { createMemoNavigationState, resolveMemoDetailOrigin } from './memos/navigation'
 import { MemoDisplaySettings, useForumDisplay } from './memos/MemoDisplaySettings'
 import { checkAllTasks, uncheckAllTasks, toggleTaskAtLine } from './memos/markdown-task-actions'
@@ -34,11 +33,9 @@ import { MemoContent } from './memos/MemoContent'
 const kindLabels = { share: '自由讨论',assignment: '作业' }
 
 export function CourseForum({ space }: { space: LearningSpace }) {
-  const [resources, setResources] = useState(false)
   const selectSection = (section: ForumSection) => {
-    setResources(section === 'resources')
     if (detailId) closeDetail()
-    if (section !== 'resources') setKind(section)
+    setKind(section)
   }
   const [display,setDisplay]=useForumDisplay()
   const isMobile = useIsMobile()
@@ -76,7 +73,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   const canWrite = space.canSubmit || space.canEditContent
   useEffect(() => { setEditing(null); setReference(null); setDiscussion(null); setClosing(null); setTag(''); setSearch(''); setKind('all'); setArchived(false); setDate(undefined); setProperty('all') }, [space.courseId])
   const load = useCallback(async (offset = 0) => {
-    if (!space.courseId || resources) return
+    if (!space.courseId) return
     const request = ++epoch.current
     setLoading(true); setError('')
     try {
@@ -88,7 +85,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
       setNextOffset(result.nextOffset)
     } catch (reason) { if (request === epoch.current) setError(userFacingError(reason, '学习论坛暂时无法加载，请重试。')) }
     finally { if (request === epoch.current) setLoading(false) }
-  }, [resources,space.courseId,kind,search,tag,archived,date,property,display.order,display.timeBasis])
+  }, [space.courseId,kind,search,tag,archived,date,property,display.order,display.timeBasis])
   useEffect(() => {
     setItems([]); setNextOffset(null)
     const timer = setTimeout(() => { void load() }, 200)
@@ -188,19 +185,19 @@ export function CourseForum({ space }: { space: LearningSpace }) {
       <AlertDialog open={Boolean(deleting)} onOpenChange={open => {if(!open) setDeleting(null)}}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>删除这条内容？</AlertDialogTitle><AlertDialogDescription>删除后不再显示。已有提交的作业须关闭或归档，提交历史将保留。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction onClick={() => {if(deleting) void mutate(() => forumApi.remove(courseId,deleting)); setDeleting(null)}}>确认删除</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={Boolean(closing)} onOpenChange={open => { if (!open) setClosing(null) }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>关闭这份作业？</AlertDialogTitle><AlertDialogDescription>关闭后不再接收新的提交，已有提交与历史版本会保留。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>暂不关闭</AlertDialogCancel><AlertDialogAction onClick={() => { if (closing) void mutate(() => forumApi.close(courseId, closing)); setClosing(null) }}>确认关闭</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </div>
-  const content=resources ? <ProjectSourceLibrary key={space.projectId} projectId={space.projectId} canManage={space.canEditContent} readOnly={!canWrite} uploadVisibility={space.perspective === 'teacher' ? 'PROJECT' : 'PRIVATE'} /> : <>{feedContent}{detailId && (detailError ? <div role="alert">{detailError}<Button variant="link" onClick={closeDetail}>返回学习论坛</Button></div> : discussion?.id===detailId
+  const content=<>{feedContent}{detailId && (detailError ? <div role="alert">{detailError}<Button variant="link" onClick={closeDetail}>返回学习论坛</Button></div> : discussion?.id===detailId
     ? <MemoDetail key={`${discussion.targetType}:${discussion.id}`} space={space} item={discussion} from={resolveMemoDetailOrigin(history.state,`/?${new URLSearchParams({project:space.projectId,view:'forum'})}`)} onBack={closeDetail} onChanged={()=>void load()}/>
     : <p role="status">正在加载内容…</p>)}</>
   if (isMobile) return <section className="flex h-full min-h-0 flex-col bg-background">
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
-      <ForumSidebar kind={resources ? 'resources' : kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}} />
+      <ForumSidebar kind={kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}} />
       <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">{space.title} · 学习论坛</h1>
     </header>
     <div data-forum-scroll className="min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-3"><div data-ui-page="forum">{content}</div></div>
   </section>
   return <DashboardSectionFrame space={space} section="forum">
     <div data-ui-page="forum" className="mx-auto grid w-full max-w-6xl grid-cols-[16rem_minmax(0,1fr)] gap-6 @min-[56rem]/learning-grid:gap-10">
-      <ForumSidebar kind={resources ? 'resources' : kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}} />
+      <ForumSidebar kind={kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}} />
       {content}
     </div>
   </DashboardSectionFrame>

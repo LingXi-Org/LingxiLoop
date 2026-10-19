@@ -1,3 +1,4 @@
+import { canReadCaseFile } from '../cases/application.js'
 import { Router } from 'express'
 import { pool } from '../../db/pool.js'
 import { safe } from '../../http/async-handler.js'
@@ -15,6 +16,8 @@ filesRouter.get('/files', safe(async (req, res) => {
   const userId = requireAuth(req)
   const key = typeof req.query.key === 'string' ? normalizeStorageKey(req.query.key) : null
   if (!key) throw new HttpError(400, 'invalid file key')
+  const caseAccess = await canReadCaseFile(pool, key, userId)
+  if (caseAccess === false) throw new HttpError(404, 'file not found')
   const learningAccess = await canReadLearningFile(pool, key, userId)
   const { rows } = await pool.query<{ type: PermissionResource['type']; id: string; action: PermissionAction }>(`
     SELECT 'document' AS type,document_id AS id,'document:read' AS action FROM uploaded_files WHERE storage_key=$1 AND document_id IS NOT NULL
@@ -28,7 +31,7 @@ filesRouter.get('/files', safe(async (req, res) => {
       JOIN presentations p ON p.id=v.presentation_id WHERE v.storage_key=$1
         AND (p.visibility_scope='PROJECT' OR p.authorization_user_id=$2)
   `, [key,userId,learningAccess === null])
-  let allowed = learningAccess === true
+  let allowed = caseAccess === true || learningAccess === true
   for (const row of rows) {
     if ((await permissionService.can({ actorUserId: userId, action: row.action, resource: { type: row.type, id: row.id } })).allowed) {
       allowed = true

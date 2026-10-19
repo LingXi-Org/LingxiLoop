@@ -67,7 +67,7 @@ export function learningSectionForView(view: ViewKey['view']): LearningDashboard
 }
 
 export function viewForWorkspace(view: ViewKey['view'], space: NavigationContext): ViewKey['view'] {
-  if (view === 'conversations' || view === 'agents') return view
+  if (view === 'conversations' || view === 'agents' || view === 'cases') return view
   const section = learningSectionForView(view)
   return isLearningDashboardSectionAvailable(section, space) ? viewForLearningSection(section) : 'learning'
 }

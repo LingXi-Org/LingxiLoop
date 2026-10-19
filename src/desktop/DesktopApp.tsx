@@ -46,6 +46,7 @@ import { WorkspaceRail } from './WorkspaceRail'
 import { useLearningSpaces } from './useLearningSpaces'
 import { AgentsPage } from '@/features/agents/components/AgentsPage'
 
+const CasesPage = lazy(() => import('@/features/cases/CasesPage').then((module) => ({ default: module.CasesPage })))
 const CanvasView = lazy(() => import('@/features/canvas/components/CanvasView').then((module) => ({ default: module.CanvasView })))
 const DocumentPeekPane = lazy(() => import('@/features/documents/components/DocumentPeekPane').then((module) => ({ default: module.DocumentPeekPane })))
 const PresentationDrawerContent = lazy(() => import('@/features/presentations/components/PresentationDrawerContent').then((module) => ({ default: module.PresentationDrawerContent })))
@@ -78,6 +79,7 @@ function persistSidebarWidth(width: number): void {
  * personal dashboard. Compact object details continue to use the shared Drawer. */
 export function DesktopApp() {
   const { theme } = useTheme()
+  const companyId = useAuth((state) => state.activeCompanyId)
   const isMobile = useIsMobile()
   const learningSpaces = useLearningSpaces()
   const workspaces = useWorkspace((state) => state.list)
@@ -227,7 +229,7 @@ export function DesktopApp() {
         </div>}
         {navigationError && <Alert variant="destructive" className="mb-2 me-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
         <div ref={pageRef} data-ui-page={view} aria-busy={navigationPending || undefined} className={`${mobileForumOpen ? '' : 'me-2 mb-2 rounded-xl border border-border'} min-h-0 min-w-0 flex-1 overflow-hidden bg-background text-foreground`}>
-          {navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" /> : !selectedWorkspaceId || dashboardOpen ? (
+          {navigationPending ? <ResourceSkeleton variant="list" label="正在打开工作区" /> : view === 'cases' ? <Suspense fallback={<ResourceSkeleton variant="list" label="正在加载案例库" />}><CasesPage key={companyId} /></Suspense> : !selectedWorkspaceId || dashboardOpen ? (
             <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
               <PersonalDashboard
                 view={view}

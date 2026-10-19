@@ -1,3 +1,4 @@
+import { ensureCaseNotebook } from './case-notebook.js'
 import { pool } from '../../db/pool.js'
 import type { Queryable } from '../../db/queryable.js'
 import { withTransaction } from '../../db/transaction.js'
@@ -51,7 +52,7 @@ import {
   openNotebookClient,
 } from './provider.js'
 import { enqueueSourceJob } from './repository.js'
-import { findKnowledgeRetrievalProject, listKnowledgeRetrievalSources } from './retrieval-repository.js'
+import { findKnowledgeRetrievalProject, listKnowledgeRetrievalSources, listCaseRetrievalSources } from './retrieval-repository.js'
 
 const LEASE_MS = 2 * 60_000
 const MAX_ATTEMPTS = 5
@@ -268,7 +269,7 @@ async function processSource(lease: IngestionLease): Promise<'ready' | 'pending'
   }
   const notebookId = await withLeaseRenewal(
     lease,
-    () => ensureProjectNotebook(source.project_id, source.company_id),
+    () => source.case_id ? ensureCaseNotebook(source.company_id) : ensureProjectNotebook(source.project_id!, source.company_id),
   )
   let external: OpenNotebookSource
   if (!source.external_source_id) {
@@ -490,37 +491,47 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
     sources = sources.filter(source => visible.has(source.id))
   }
   sources = sources.filter(source => !source.excluded)
+  const readers = [...new Set([authorizationUserId, ...(args.audienceUserIds ?? [])])]
+  const canReadCases = async () => {
+    for (const actorUserId of readers) {
+      if (!(await createPermissionService(pool).can({ actorUserId,companyId:args.companyId,action:'cases:read' })).allowed) return false
+    }
+    return true
+  }
+  const caseSources = await canReadCases() ? await listCaseRetrievalSources(pool,args.companyId) : []
+  const caseIds = new Set(caseSources.map(source => source.id))
+  sources.push(...caseSources)
   const processingSources = sources.filter(source => ['queued','processing'].includes(source.status)).length
   sources = sources.filter(source => source.status === 'ready' && source.externalSourceId)
   args.signal?.throwIfAborted()
   if (!sources.length) return { status: processingSources ? 'processing' : 'no_sources', citations: [], processingSources }
-  const notebookId = await ensureProjectNotebook(projectId, args.companyId)
-  const externalIds = sources.map((source) => source.externalSourceId!)
+  const groups: Array<{ notebookId:string; sourceIds:string[] }> = []
+  const projectSources = sources.filter(source => !caseIds.has(source.id))
+  const readyCases = sources.filter(source => caseIds.has(source.id))
+  if (projectSources.length) groups.push({ notebookId:await ensureProjectNotebook(projectId,args.companyId),sourceIds:projectSources.map(s => s.externalSourceId!) })
+  if (readyCases.length) groups.push({ notebookId:await ensureCaseNotebook(args.companyId),sourceIds:readyCases.map(s => s.externalSourceId!) })
   inc('knowledge.retrieval.queries')
   const searchStartedAt = Date.now()
   let rankedHits: OpenNotebookSearchHit[]
   try {
     const limit = Math.max(1, Math.min(8, args.limit ?? 8))
-    const [textHits, vectorHits] = await Promise.all([
-      openNotebookClient.search({
-        notebookId, sourceIds: externalIds, query: args.query,
-        limit, type: 'text', minimumScore: 0, companyId: args.companyId,
-        signal: args.signal, timeoutMs: args.searchTimeoutMs,
-      }),
-      openNotebookClient.search({
-        notebookId, sourceIds: externalIds, query: args.contextQuery?.trim() || args.query,
-        limit, type: 'vector', minimumScore: Number(process.env.OPEN_NOTEBOOK_MINIMUM_SCORE ?? 0.2),
-        companyId: args.companyId,
-        signal: args.signal, timeoutMs: args.searchTimeoutMs,
-      }),
-    ])
-    rankedHits = fuseKnowledgeSearchHits([textHits, vectorHits], limit)
+    const batches = await Promise.all(groups.flatMap(({notebookId,sourceIds}) => [
+      openNotebookClient.search({ notebookId,sourceIds,query:args.query,limit,type:'text',minimumScore:0,
+        companyId:args.companyId,signal:args.signal,timeoutMs:args.searchTimeoutMs }),
+      openNotebookClient.search({ notebookId,sourceIds,query:args.contextQuery?.trim() || args.query,limit,type:'vector',
+        minimumScore:Number(process.env.OPEN_NOTEBOOK_MINIMUM_SCORE ?? 0.2),companyId:args.companyId,
+        signal:args.signal,timeoutMs:args.searchTimeoutMs }),
+    ]))
+    rankedHits = fuseKnowledgeSearchHits(batches, limit)
   } catch (error) {
     inc('knowledge.retrieval.errors')
     throw error
   } finally {
     inc('knowledge.retrieval.latency_ms', undefined, Date.now() - searchStartedAt)
   }
+  // Recheck after the external search: an old vector must not survive publication/removal or reader revocation.
+  const currentCaseIds = new Set((await canReadCases() ? await listCaseRetrievalSources(pool,args.companyId) : []).map(s => s.id))
+  sources = sources.filter(source => !caseIds.has(source.id) || currentCaseIds.has(source.id))
   const byExternal = new Map(sources.map((source) => [source.externalSourceId, source]))
   const citations = rankedHits.flatMap((hit) => {
     const externalId = String(hit.parent_id ?? hit.id ?? '')

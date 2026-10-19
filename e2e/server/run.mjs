@@ -67,7 +67,7 @@ for (const [command, args] of commands) {
 }
 const log = readFileSync(logPath, 'utf8')
 const counts = Object.fromEntries(['tests', 'pass', 'fail', 'cancelled', 'skipped'].map((key) =>
-  [key, Number(log.match(new RegExp(`^# ${key} (\\d+)$`, 'm'))?.[1] ?? 0)]))
+  [key, Number(log.match(new RegExp(`^(?:#|ℹ) ${key} (\\d+)$`, 'm'))?.[1] ?? 0)]))
 const passed = results.length === commands.length && results.every(({ exitCode }) => exitCode === 0) && counts.pass > 0
 writeFileSync(resolve(artifacts, `${artifactName}-validation.json`), `${JSON.stringify({
   generatedAt: new Date().toISOString(),

@@ -1,3 +1,4 @@
+import { casesRouter } from '../modules/cases/router.js'
 import { filesRouter } from '../modules/platform/files-router.js'
 import { Router } from 'express'
 import { authMiddleware } from '../auth.js'
@@ -42,6 +43,7 @@ api.use(trustRouter)
 api.use(canvasRouter)
 api.use(learningRouter)
 api.use(knowledgeRouter)
+api.use(casesRouter)
 api.use(agentsRouter)
 api.use(conversationsRouter)
 api.use(contextThreadsRouter)
