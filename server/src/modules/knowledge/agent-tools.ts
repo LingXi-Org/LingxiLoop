@@ -13,6 +13,7 @@ import { agentKnowledgeSchemas as schemas } from './contracts.js'
 import { findKnowledgeRetrievalProject } from './retrieval-repository.js'
 import { getKnowledgeSourceText, retrieveKnowledgeState } from './runtime.js'
 import { OpenNotebookError } from './provider.js'
+import { readCaseEvidenceSource } from '../cases/evidence.js'
 
 const db = (context: ActionContext) => context.database as Queryable
 const application = (context: ActionContext) => createKnowledgeAgentApplication(db(context), {
@@ -21,6 +22,14 @@ const application = (context: ActionContext) => createKnowledgeAgentApplication(
 async function authorize(context: ActionContext, input: Record<string, unknown> = {}) {
   const projectId = await findKnowledgeRetrievalProject(db(context), context.work.tenantId, productConversationId(context.work), context.work.principalId!)
   if (!projectId) throw new NoEffectError('knowledge requires an authorized workspace conversation', 'forbidden')
+  // Only the read tool may use organization publications. Writes retain the
+  // ordinary project/private resource policy, which deliberately excludes cases.
+  if (context.action.action === 'knowledge.read_source' && typeof input.sourceId === 'string'
+    && await readCaseEvidenceSource(db(context), { companyId: context.work.tenantId, sourceId: input.sourceId,
+      readerUserIds: await audienceHumanIds(context) })) {
+    await authorizeAudienceRead(context, { projectId, action: 'knowledge:read' })
+    return
+  }
   await authorizeAudienceRead(context,{ projectId,action: 'knowledge:read',
     ...(typeof input.sourceId === 'string' ? { resource: { type: 'knowledge_source',id: input.sourceId } } : {}) })
   const method = context.action.action.split('.')[1]
@@ -51,6 +60,13 @@ export const knowledgeTools: ToolDefinition[] = [
       const sources = await application(context).listKnowledgeSourcesForAgent(nativeContext(context)) as Array<{ id: string; version: string }>
       const versions = new Map(sources.map(source => [source.id,source.version]))
       for (const hit of hits) {
+        const caseSource = await readCaseEvidenceSource(db(context), { companyId: context.work.tenantId, sourceId: hit.sourceId,
+          readerUserIds: await audienceHumanIds(context), sourceVersion: hit.sourceVersion })
+        if (caseSource) {
+          if (hit.sourceVersion !== caseSource.sourceVersion) throw new NoEffectError('case source changed during search','resource_conflict')
+          versions.set(hit.sourceId, caseSource.sourceVersion)
+          continue
+        }
         if (!versions.has(hit.sourceId)) throw new NoEffectError('knowledge source changed during search','resource_conflict')
         await authorizeAudienceRead(context,{ action: 'knowledge:read',resource: { type: 'knowledge_source',id: hit.sourceId } })
       }
@@ -62,6 +78,18 @@ export const knowledgeTools: ToolDefinition[] = [
     } }),
   nativeTool('knowledge.read_source', schemas.read_source, { description: 'Read a bounded range of an enabled source in this workspace. Returns actual text, version and nextOffset; continue reading when truncated. Metadata alone is not source content.',
     effect: 'read', approval: false, authorize, async execute(context, input) {
+      const caseSource = await readCaseEvidenceSource(db(context), { companyId: context.work.tenantId, sourceId: input.sourceId,
+        readerUserIds: await audienceHumanIds(context) })
+      if (caseSource) {
+        if (caseSource.status !== 'ready') return { ok: true, value: { sourceId: input.sourceId, status: caseSource.status, textAvailable: false } }
+        if (input.offset > caseSource.text.length) throw new NoEffectError('source offset exceeds text length')
+        const excerpt = caseSource.text.slice(input.offset, input.offset + input.limit), nextOffset = input.offset + excerpt.length
+        const truncated = input.offset > 0 || nextOffset < caseSource.text.length
+        const evidence = excerpt.trim() ? [{ sourceId: input.sourceId, sourceVersion: caseSource.sourceVersion, title: caseSource.title,
+          chunkId: `${input.sourceId}:${input.offset}:${nextOffset}`, excerpt, truncated, url: caseSource.url }] : []
+        return { ok: true, value: { sourceId: input.sourceId, sourceVersion: caseSource.sourceVersion, status: caseSource.status,
+          text: excerpt, offset: input.offset, nextOffset, textLength: caseSource.text.length, truncated: nextOffset < caseSource.text.length }, evidence }
+      }
       const source = await read(context,input.sourceId)
       const excluded = await db(context).query(`SELECT 1 FROM conversation_source_exclusions WHERE source_id=$1
         AND conversation_id=$2 AND user_id=ANY($3::text[]) LIMIT 1`,

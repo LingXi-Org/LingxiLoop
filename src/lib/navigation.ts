@@ -18,6 +18,11 @@ export async function retryWebNavigation(): Promise<void> {
   useApp.setState({ navigationPending: true, navigationError: null, autoSelectConversation: false, selectedConversationId: null, mobileConversationOpen: false })
   useSurface.getState().closeSurface()
   try {
+    if (destination.view === 'cases') {
+      useApp.setState({ view: 'cases', navigationReady: true, navigationPending: false, navigationError: null })
+      writeWebDestination({ projectId: destination.projectId, view: 'cases', conversationId: null }, 'replace')
+      return
+    }
     let workspace = useWorkspace.getState()
     if (!workspace.loaded || workspace.companyId !== companyId || workspace.error || (destination.projectId && !workspace.list.some((item) => item.id === destination.projectId))) {
       await workspace.load(destination.projectId ?? undefined)
@@ -70,7 +75,7 @@ export function startWebNavigation(): () => void {
     // Memos detail/list history stays within the already-authorized course shell.
     // Its own page fetch rechecks permissions; keep the feed mounted to retain
     // its filters, pagination, scroll and keyboard focus.
-    if(!destination.invalidView && destination.view==='forum' && app.view==='forum' && app.navigationReady && !app.navigationPending
+    if(!destination.invalidView && ((destination.view==='forum' && app.view==='forum') || (destination.view==='cases' && app.view==='cases')) && app.navigationReady && !app.navigationPending
       && destination.projectId===useWorkspace.getState().selectedId) return
     void retryWebNavigation()
   }

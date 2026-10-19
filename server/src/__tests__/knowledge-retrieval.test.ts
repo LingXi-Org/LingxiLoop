@@ -4,7 +4,7 @@ import { mock, test } from 'node:test'
 test('retrieval numbers distinct chunks of one PDF and preserves Markdown after hybrid deduplication', async () => {
   const access = await import('../modules/access/public.js')
   const assertCan = mock.fn(async () => {})
-  mock.module('../modules/access/public.js', { namedExports: { ...access, createPermissionService: () => ({ assertCan }) } })
+  mock.module('../modules/access/public.js', { namedExports: { ...access, createPermissionService: () => ({ assertCan, can: async () => ({ allowed:false }) }) } })
   const { pool } = await import('../db/pool.js')
   const { openNotebookClient } = await import('../modules/knowledge/provider.js')
   const { retrieveKnowledge } = await import('../modules/knowledge/runtime.js')

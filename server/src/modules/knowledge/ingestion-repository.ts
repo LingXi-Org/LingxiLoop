@@ -8,7 +8,8 @@ export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' |
 export interface IngestionSourceRow {
   id: string
   company_id: string
-  project_id: string
+  project_id: string | null
+  case_id: string | null
   conversation_id: string | null
   kind: 'file' | 'url' | 'text'
   title: string
@@ -20,7 +21,7 @@ export interface IngestionSourceRow {
   external_command_id: string | null
   status: KnowledgeSourceStatus
   stage: string
-  visibility_scope: KnowledgeVisibilityScope
+  visibility_scope: KnowledgeVisibilityScope | 'COMPANY_CASE'
   owner_user_id: string
   created_by_user_id: string
   created_via: KnowledgeCreatedVia
@@ -43,7 +44,7 @@ export interface AttachmentKnowledgeJobInput {
 
 export async function findIngestionSource(db: Queryable, sourceId: string): Promise<IngestionSourceRow | null> {
   const { rows } = await db.query<IngestionSourceRow>(
-    `SELECT id, company_id, project_id, conversation_id, kind, title, mime_type, size_bytes,
+    `SELECT id, company_id, project_id, case_id, conversation_id, kind, title, mime_type, size_bytes,
             storage_key, original_url, external_source_id, external_command_id, status, stage,
             visibility_scope, owner_user_id, created_by_user_id, created_via
        FROM knowledge_sources WHERE id=$1 AND deleted_at IS NULL`,
@@ -202,7 +203,13 @@ export async function renewIngestionLease(db: Queryable, args: {
   sourceId: string; leaseToken: string; leaseMs: number
 }): Promise<boolean> {
   const source = await findIngestionSource(db, args.sourceId)
-  if (!source || !(await createPermissionService(db).can({ actorUserId: source.owner_user_id,
+  if (!source) return false
+  if (source.case_id) {
+    const { rows } = await db.query(`SELECT 1 FROM organization_cases WHERE id=$1 AND company_id=$2 AND source_id=$3 AND status='published'`, [source.case_id,source.company_id,source.id])
+    if (!rows.length) return false
+    const { rows: company } = await db.query(`SELECT 1 FROM companies WHERE id=$1 AND status IN ('TRIAL','ACTIVE','GRACE_PERIOD','READ_ONLY','ARCHIVED')`, [source.company_id])
+    if (!company.length) return false
+  } else if (!(await createPermissionService(db).can({ actorUserId: source.owner_user_id,
     companyId: source.company_id, action: 'knowledge:read', resource: { type: 'knowledge_source', id: source.id },
   })).allowed) return false
   const { rows } = await db.query<{ source_id: string }>(

@@ -67,12 +67,19 @@ async function submit(input: { companyId: string; projectId: string; activityId:
     input.source ? { source: input.source, id: input.agentId!, workId: input.agentWorkId! } : undefined)
 }
 
-test('[integration] forum discovers existing public sources and assignments, isolating every content operation', async () => {
+test('[integration] forum discovers assignments without aggregating sources, isolating every content operation', async () => {
   const created = await forum.createPost(student, course, post)
   assert.equal(created.authorId, student.userId)
   const feed = await forum.list(student, course, {})
   assert.deepEqual(new Set(feed.items.map(item => item.id)), new Set([created.id,'forum-homework']))
   assert.equal((await forum.list(student, course, { search: 'PRIVATE' })).items.length, 0)
+  assert.equal((await forum.list(student, course, { search: 'source-PROJECT' })).items.length, 0)
+  for (const kind of ['case', 'official', 'featured', 'resource']) {
+    await assert.rejects(forum.createPost(teacher, course, { ...post, kind } as never))
+    await assert.rejects(forum.list(teacher, course, { kind } as never))
+  }
+  await assert.rejects(forum.updateFlags(teacher, course, 'post', created.id, { featured: true } as never))
+  await assert.rejects(forum.updateFlags(teacher, course, 'post', created.id, { official: true } as never))
   assert.equal((await forum.list(student, course, { tag: 'geometry' })).items[0]?.id, created.id)
   await assert.rejects(forum.list(outsider, course, {}))
   await assert.rejects(forum.detail(outsider, course, 'post', created.id))
