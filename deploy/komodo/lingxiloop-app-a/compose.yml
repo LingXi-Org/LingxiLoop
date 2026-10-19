@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:c3abc92640cf96feb42dd2b8b307df9c73b9d2e3
+  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777
   pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
@@ -30,7 +30,7 @@ x-runtime: &runtime
     WUKONG_USER_TOKEN_SECRET: ${WUKONG_USER_TOKEN_SECRET:?WUKONG_USER_TOKEN_SECRET is required}
     OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
     OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.siliconflow.cn/v1}
-    OPENAI_MODEL: ${OPENAI_MODEL:-zai-org/GLM-5.2}
+    OPENAI_MODEL: ${OPENAI_MODEL:-zai-org/GLM-5.3-Flash}
     AGENT_OS_RESPONSE_POLICY: deep
     AGENT_OS_HOMES_ROOT: /var/lib/lingxios/homes
     AGENT_OS_PYTHON: /usr/bin/python3
@@ -42,9 +42,9 @@ x-runtime: &runtime
     AGENT_OS_MAX_MODEL_TOKENS: ${AGENT_OS_MAX_MODEL_TOKENS:-1000000}
     AGENT_OS_MAX_MODEL_COST_MICROS: ${AGENT_OS_MAX_MODEL_COST_MICROS:-10000000}
     AGENT_OS_MAX_WORK_MS: ${AGENT_OS_MAX_WORK_MS:-1800000}
-    AGENT_OS_MODEL_REQUEST_TIMEOUT_MS: ${AGENT_OS_MODEL_REQUEST_TIMEOUT_MS:-90000}
-    AGENT_OS_INPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_INPUT_COST_MICROS_PER_MILLION:?AGENT_OS_INPUT_COST_MICROS_PER_MILLION is required}
-    AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION:?AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION is required}
+    AGENT_OS_MODEL_REQUEST_TIMEOUT_MS: ${AGENT_OS_MODEL_REQUEST_TIMEOUT_MS:-180000}
+    AGENT_OS_INPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_INPUT_COST_MICROS_PER_MILLION:-}
+    AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: ${AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION:-}
     SILICONFLOW_USD_CNY_RATE: ${SILICONFLOW_USD_CNY_RATE:?SILICONFLOW_USD_CNY_RATE is required}
     LINGXIOS_SERVICE_TOKEN: ${LINGXIOS_SERVICE_TOKEN:?LINGXIOS_SERVICE_TOKEN is required}
     LINGXIOS_CONTROL_HOST: 0.0.0.0
@@ -106,6 +106,7 @@ services:
 
   worker:
     <<: *runtime
+    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777
     environment:
       <<: *runtime-environment
       NODE_OPTIONS: --max-old-space-size=640
