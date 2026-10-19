@@ -1,0 +1,54 @@
+[
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/report.json",
+    "sha256": "dae59befed58b5a65bd12af046a688638213d1a399a28ac31a1089fb7af2361a"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/summary.md",
+    "sha256": "9697fb44ae8947089b260b1ef09b47c43201495ebe4b9a737a8518d68937733d"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/junit.xml",
+    "sha256": "3d4184d41a4cc0f6bdd1132ada488d87b195668a18c85e5ec57ea6af1dd56a9b"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/screenshots/001-product-light-card.png",
+    "sha256": "47807ed1d12c67edc416e0f28d5246296b33e874d12c0ab0b9670d3b28c55bcc"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/screenshots/002-product-light-controls.png",
+    "sha256": "f4026ba676dbea3cc9cf534dd6ae1d3a8ae219c5594359f9b7ec27f96ade9e36"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/screenshots/003-product-light-dialog.png",
+    "sha256": "3f4052f4e93c5531662fe46ee1f405e13c005e89cae76c7d8fa6fd3b29998530"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/screenshots/001-upstream-light-card.png",
+    "sha256": "e672e9b2d95f8e5e00166c5abd7685ce1531aaa05622ceda8de58a08e8b7180f"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/screenshots/002-upstream-light-controls.png",
+    "sha256": "0e09ef88a0583e5f50f692dd23ee90b3460d2d98c0d35a3413e94260620afd15"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/screenshots/003-upstream-light-dialog.png",
+    "sha256": "8823fed20f9fa95e3917822c3613934f5ef95c2bd028a45676899ad4d09c5bb7"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/product-light-interaction.json",
+    "sha256": "cafee91499593897f292a3a3072d2fe360dfab6aea726e0f3fea8c471264a8e7"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/upstream-light-interaction.json",
+    "sha256": "ff1573a577237e3f6a1cc25c0a925b8b80a922ba1672e9277f3a0c5ad9b5295b"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/manifest.json",
+    "sha256": "6b5e3b1f9fdcf1f3fd70ed5e1fabaa697e7a6e591419805c46a81d34c4da766c"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/light-initial/export.html",
+    "sha256": "c5a5fb0875d289435c094fc4f1f3f1250444645cd4fc84ee5d9b4f5175047570"
+  }
+]

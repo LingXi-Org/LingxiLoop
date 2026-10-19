@@ -1,0 +1,19 @@
+{
+  "status": "stopped-incomplete-skill-read",
+  "reason": "published 3.5.3 truncates tool output at 8000 characters; skill 35734 UTF8 bytes requires authorized observation ranges",
+  "ledger": {
+    "calls": 4,
+    "usd": "0.00947770"
+  },
+  "actions": [
+    {
+      "action": "skills.load"
+    },
+    {
+      "action": "visualize.read_reference"
+    },
+    {
+      "action": "visualize.read_reference"
+    }
+  ]
+}

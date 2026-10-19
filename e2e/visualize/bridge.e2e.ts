@@ -1,0 +1,94 @@
+import { mkdir,writeFile } from 'node:fs/promises'
+import { test } from '@e2e-dev/web'
+import { expect } from 'e2e'
+
+// Failure modes precede this harness in src/features/chat/visualize/FAILURES.md.
+// The guest/runtime/host are real product code. API instrumentation is a local,
+// deterministic fixture; these tests do not claim real tenancy/server coverage.
+test('bridge rejects synthetic gestures and unsupported methods, accepts real user actions',async({app,browser,screen})=>{
+  await app.open('/e2e/visualize/index.html?implementation=product&theme=light&bridge=gestures')
+  const guest=browser.frameLocator('iframe[data-visualize-guest]:visible').frameLocator('iframe[data-visualize-content]')
+  await expect(guest.locator('#bridge-tools')).toHaveText('rejected')
+  await expect(guest.locator('#bridge-files')).toHaveText('rejected')
+  await expect(guest.locator('#bridge-synthetic')).toHaveText('attempted without input')
+  await expect(guest.locator('#bridge-external-status')).toHaveText('rejected')
+  await expect(screen.getByText('交互视图请求发送消息',{exact:true})).toBeVisible()
+  const before=await browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()))
+  expect(before.follows.length).toBe(0)
+  expect(before.external.length).toBe(0)
+  expect(before.externalHits).toBe(0)
+  await screen.getByRole('button','取消',{exact:true}).tap()
+  await expect(guest.locator('#bridge-follow-status')).toHaveText('rejected')
+  await guest.getByRole('button','Real follow-up',{exact:true}).tap()
+  await expect(guest.locator('#bridge-follow-status')).toHaveText('accepted')
+  await expect(screen.getByTestId('fixture-follow-ups')).toHaveText('Explain this fictional bridge fixture')
+  await guest.getByRole('button','Real local link',{exact:true}).tap()
+  await expect(guest.locator('#bridge-external-status')).toHaveText('accepted')
+  await expect.poll(()=>browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()).then(data=>data.externalHits))).toBe(1)
+  const after=await browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()))
+  expect(after.follows.length).toBe(1)
+  expect(after.external.length).toBe(1)
+  await mkdir('.e2e/visualize/bridge',{recursive:true})
+  await writeFile('.e2e/visualize/bridge/gestures.json',JSON.stringify({before,after},null,2))
+  await app.screenshot('bridge-real-and-synthetic-actions')
+})
+
+test('stale page operations fail, explicit retry replaces the guest and scope close releases pages',async({app,browser,screen})=>{
+  await app.open('/e2e/visualize/index.html?implementation=product&theme=light&bridge=lifecycle')
+  const guest=browser.frameLocator('iframe[data-visualize-guest]:visible').frameLocator('iframe[data-visualize-content]')
+  await expect(guest.locator('#bridge-synthetic')).toHaveText('attempted without input')
+  await screen.getByRole('button','取消',{exact:true}).tap()
+  const beforeStale=await browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()))
+  // Invalidate and immediately ask the real guest to save through its public
+  // relay. This avoids per-step UI snapshots racing the 10s state poll. A 410
+  // may tear down the guest before its author-side rejection output is painted;
+  // the observable contract is no accepted mutation and host recovery UI.
+  await browser.evaluate(async()=>{
+    const frame=document.querySelector<HTMLIFrameElement>('iframe[data-visualize-guest]')
+    if(!frame?.contentWindow)throw new Error('Active guest missing')
+    await fetch('/__visualize_fixture/invalidate')
+    frame.contentWindow.postMessage({jsonrpc:'2.0',method:'fixture/stale-save'},'*')
+    return true
+  })
+  await expect.poll(()=>browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()).then(data=>data.denied.includes('state')))).toBe(true)
+  await browser.evaluate(()=>{window.dispatchEvent(new Event('focus'));return true})
+  await expect(screen.getByText('无法加载交互视图',{exact:true})).toBeVisible()
+  // Revocation clears the author document/port; the empty outer relay shell is
+  // retained for explicit retry until the whole scope is closed.
+  await expect(browser.locator('iframe[data-visualize-guest][srcdoc]')).toHaveCount(0)
+  await expect(browser.frameLocator('iframe[data-visualize-guest]').locator('iframe[data-visualize-content]')).toHaveCount(0)
+  await expect(browser.locator('[data-testid="fixture-active-pages"]')).toHaveText('0')
+  const stale=await browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()))
+  expect(stale.denied.includes('state')).toBe(true)
+  expect(stale.acceptedSaves).toBe(beforeStale.acceptedSaves)
+  expect(stale.follows.length).toBe(0)
+  expect(stale.external.length).toBe(0)
+  await screen.getByRole('button','重试',{exact:true}).tap()
+  await expect(guest.locator('#bridge-synthetic')).toHaveText('previously checked')
+  await guest.getByRole('button','Save fixture state',{exact:true}).tap()
+  await expect(guest.locator('#bridge-save-status')).toHaveText('accepted')
+  await screen.getByRole('button','Fixture replace page',{exact:true}).tap()
+  await expect(guest.locator('#bridge-synthetic')).toHaveText('previously checked')
+  // Address the old opaque frame only through its existing public message
+  // relay. No port, token, native event or private gesture is manufactured.
+  await browser.evaluate(()=>{
+    const frame=document.querySelector<HTMLIFrameElement>('[data-sandbox-page-parking] iframe[data-visualize-guest]')
+    if(!frame?.contentWindow)throw new Error('Replaced retained page missing')
+    frame.contentWindow.postMessage({jsonrpc:'2.0',method:'fixture/replaced'},'*')
+    return true
+  })
+  const replaced=browser.frameLocator('[data-sandbox-page-parking] iframe[data-visualize-guest]').frameLocator('iframe[data-visualize-content]')
+  await expect(replaced.locator('#bridge-replaced')).toHaveText('all rejected')
+
+  await guest.getByRole('button','Real follow-up',{exact:true}).tap()
+  await expect(guest.locator('#bridge-follow-status')).toHaveText('accepted')
+  await screen.getByRole('button','Fixture close scope',{exact:true}).tap()
+  await expect(browser.locator('iframe[data-visualize-guest]')).toHaveCount(0)
+  await expect(screen.getByTestId('fixture-active-pages')).toHaveText('0')
+  const closed=await browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()))
+  expect(closed.activePages).toBe(0)
+  expect(closed.closedPages).toBeGreaterThanOrEqual(3)
+  await mkdir('.e2e/visualize/bridge',{recursive:true})
+  await writeFile('.e2e/visualize/bridge/lifecycle.json',JSON.stringify({beforeStale,stale,closed},null,2))
+  await app.screenshot('bridge-scope-closed')
+})

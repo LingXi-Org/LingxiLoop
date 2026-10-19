@@ -19,6 +19,9 @@
 !tsconfig.node.json
 !postcss.config.js
 !tailwind.config.ts
+!third_party/zcode/**
+!scripts/verify-zcode-visualize.mjs
+!scripts/build-visualize-runtime.mjs
 # Don't bake source maps / built assets / huge logs into the layer.
 server/**/*.log
 server/**/dist

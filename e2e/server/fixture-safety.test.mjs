@@ -46,12 +46,3 @@ test('explicit live evaluation configuration rejects missing credentials, shared
     assert.doesNotMatch(`${result.stdout}${result.stderr}`, /fixture-sentinel|Container .*Starting|ECONNREFUSED/)
   }
 })
-
-test('the retired interactive lesson runner remains disabled independently of live homework credentials', () => {
-  const result = spawnSync(process.execPath, ['e2e/server/interactive-ui-live.mjs', '--live-generative-ui'], {
-    encoding: 'utf8', timeout: 15_000, windowsHide: true,
-  })
-  assert.notEqual(result.status, 0)
-  assert.match(result.stderr, /Interactive lessons are disabled/)
-  assert.doesNotMatch(`${result.stdout}${result.stderr}`, /Container .*Starting/)
-})

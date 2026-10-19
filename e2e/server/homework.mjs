@@ -79,7 +79,7 @@ Object.assign(env, {
   LINGXILOOP_GATEWAY_HMAC_SECRET: 'lingxiloop-homework-live-gateway-secret', LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:53198',
   R2_ENDPOINT: 'http://127.0.0.1:59020', R2_BUCKET: 'lingxiloop-homework-e2e', R2_ACCESS_KEY_ID: 'homework-e2e',
   R2_SECRET_ACCESS_KEY: 'homework-e2e-local-storage', R2_PUBLIC_BASE: 'http://127.0.0.1:59020/lingxiloop-homework-e2e', R2_URL_SIGNING_SECRET: 'homework-local-url-secret',
-  OPENUI_TELEMETRY_DISABLED: '1', E2E_TELEMETRY_DISABLED: '1', DO_NOT_TRACK: '1',
+  E2E_TELEMETRY_DISABLED: '1', DO_NOT_TRACK: '1',
   ...Object.fromEntries(Object.entries(credentials).filter(([name]) => /^EVAL_(CANDIDATE|JUDGE)_/.test(name))),
 })
 const dbUrl = new URL(env.DATABASE_URL)

@@ -14,7 +14,7 @@ import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
-import { messageLessons } from '../agent-runtime/interactive-ui-projection.js'
+import { visualizeReferences } from '../agent-runtime/visualize-projection.js'
 
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
@@ -169,14 +169,12 @@ test('production workers always expose full tools and disable thinking even with
   }
 })
 
-// Failures: disabled UI is still advertised, a valid lesson reaches IM, or bounded
-// native correction restores UI instead of producing a plain-text answer.
-test('disabled lessons are corrected into plain text before durable delivery', { timeout: 180000 }, async () => {
+// Failures: an invented executor path is delivered, or native repair leaks a reference before authorization.
+test('unavailable visualization references are repaired before durable delivery', { timeout: 180000 }, async () => {
   await resetAllTables()
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
-  const source = 'root = Lesson("预测", "先预测，再核对。", [p])\np = Prediction("prediction", "预测结果", $prediction)'
-  const invalid = `\`\`\`lingxiloop-openui-v1\n$prediction = ""\n${source}\n\`\`\``
+  const invalid = '::visualize{"path":"/unauthorized/prediction.html"}'
   const valid = '先预测，再用文字核对结果。'
   let calls = 0, correction = false
   const originalBaseUrl = env.OPENAI_BASE_URL
@@ -190,9 +188,9 @@ test('disabled lessons are corrected into plain text before durable delivery', {
       return
     }
     if (calls === 0) {
-      assert.equal(/installed interactive lesson renderer|Current lesson revisions|Declare a literal default/.test(JSON.stringify(request.messages)), false, 'disabled controls must not be advertised')
+      assert.match(JSON.stringify(request.messages), /Gen UI is available/)
     }
-    correction ||= JSON.stringify(request.messages).includes('interactive-ui:disabled')
+    correction ||= JSON.stringify(request.messages).includes('visualization path is unavailable')
     const body = ++calls === 1 ? invalid : valid
     res.writeHead(200, { 'content-type': 'text/event-stream' })
     res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content: body }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
@@ -224,11 +222,11 @@ test('disabled lessons are corrected into plain text before durable delivery', {
     assert.equal(correction, true)
     const answers = im.messages.filter(message => message.channelId === conversationId)
     assert.equal(answers.length, 1)
-    assert.deepEqual(messageLessons(answers[0].payload), [])
+    assert.deepEqual(visualizeReferences(nativeText(answers[0].payload)), [])
     assert.equal(nativeText(answers[0].payload), valid)
-    assert.equal((await pool.query('SELECT count(*)::int AS count FROM im_ui_revisions WHERE company_id=$1', [companyId])).rows[0].count, 0)
-    await mkdir('artifacts/interactive-ui', { recursive: true })
-    await writeFile('artifacts/interactive-ui/disabled-runtime.json', JSON.stringify({ passed: true, generationCalls: calls,
+    assert.equal((await pool.query('SELECT count(*)::int AS count FROM im_visualize_documents WHERE company_id=$1', [companyId])).rows[0].count, 0)
+    await mkdir('artifacts/visualize/runtime', { recursive: true })
+    await writeFile('artifacts/visualize/runtime/repaired-reference.json', JSON.stringify({ passed: true, generationCalls: calls,
       correctedToPlainText: true, durableMessages: answers.length, provider: 'scripted native worker', reasoningDisabled: true }, null, 2))
   } finally {
     await worker?.stop(); await stopLingxiOSControl()

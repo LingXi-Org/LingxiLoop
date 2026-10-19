@@ -1,0 +1,46 @@
+import { trustedBootstrap } from './bootstrap'
+import captureLibrary from 'html-to-image/dist/html-to-image.js?raw'
+import type { GenUiWidgetState } from '../zcode/shared/gen-ui'
+const STATIC_DOMAINS = 'https://cdnjs.cloudflare.com https://esm.sh https://cdn.jsdelivr.net https://unpkg.com https://fonts.googleapis.com https://fonts.gstatic.com https://fonts.bunny.net'
+const SANDBOX_CSP = `default-src 'none'; script-src 'unsafe-inline' ${STATIC_DOMAINS}; style-src 'unsafe-inline' ${STATIC_DOMAINS}; img-src data: blob: ${STATIC_DOMAINS}; font-src data: ${STATIC_DOMAINS}; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'`
+const script = (source: string) => `<script>${source.replaceAll('</script','<\\/script')}</script>`
+const vendors = [
+  ['https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js','vendor/floating-ui-core-1.7.3.min.js'],
+  ['https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js','vendor/floating-ui-dom-1.7.4.min.js'],
+  ['https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js','vendor/lucide-1.17.0.js'],
+  ['https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js','vendor/d3-7.9.0.min.js'],
+]
+/** Same ordering as ZCode service/protocol; all resources are fetched by the authorized host. */
+export async function buildWebDocument(fragment: string, state: GenUiWidgetState | null, resource: (name: string) => Promise<string>) {
+  const [css, kit, runtime, calendar] = await Promise.all([
+    resource('visualize.css'),resource('visualize.html'),resource('gen-ui.js'),
+    /\bviz-calendar\b/i.test(fragment) ? resource('calendar.js') : Promise.resolve(''),
+  ])
+  let content = fragment + kit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
+  for (const [url,name] of vendors) {
+    if (!content.includes(url)) continue
+    const source = await resource(name)
+    const escaped = url.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
+    content = content.replace(new RegExp(`<script\\b[^>]*\\bsrc=["']${escaped}["'][^>]*>\\s*</script>`, 'gi'), () => script(source))
+  }
+  const initial = JSON.stringify(state).replaceAll('<','\\u003c')
+  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${SANDBOX_CSP}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script(captureLibrary+'\n;('+trustedBootstrap.toString()+')();')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
+}
+
+/** A trusted opaque outer shell supplies an ancestor frame policy for the untrusted document. */
+export function buildWebShell(html: string) {
+  const documentJson = JSON.stringify(html).replaceAll('<','\\u003c')
+  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${SANDBOX_CSP}"><style>html,body,iframe{width:100%;height:100%;margin:0;border:0;display:block;background:transparent}html,body{overflow:hidden}</style></head><body><script>(()=>{
+    const guest=document.createElement('iframe');
+    guest.setAttribute('sandbox','allow-scripts');guest.setAttribute('title','交互视图');guest.setAttribute('referrerpolicy','no-referrer');guest.setAttribute('data-visualize-content','');
+    let privateBound=false,loads=0;
+    window.addEventListener('message',event=>{
+      if(event.source===guest.contentWindow && event.origin==='null'){
+        if(event.data?.type==='lingxi-visualize-private' && !privateBound && event.ports.length===1){privateBound=true;parent.postMessage({type:'lingxi-visualize-private'},'*',[event.ports[0]]);return;}
+        if(event.data?.jsonrpc==='2.0')parent.postMessage(event.data,'*');
+      }else if(event.source===parent && event.data?.jsonrpc==='2.0')guest.contentWindow.postMessage(event.data,'*');
+    });
+    guest.addEventListener('load',()=>{if(++loads>1)parent.postMessage({type:'lingxi-visualize-crash'},'*')});
+    guest.srcdoc=${documentJson};document.body.append(guest);
+  })();</script></body></html>`
+}

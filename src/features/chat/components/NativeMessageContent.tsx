@@ -1,3 +1,4 @@
+import { VisualizeText } from '../visualize/VisualizeText'
 import { MessagePrimitive, MessagePartPrimitive, PartByIndexProvider, useScrollLock, useAui, useAuiState, type PartState, type SourceMessagePartProps, type TextMessagePartComponent } from '@assistant-ui/react'
 import { createContext, type ReactNode, useContext, useRef, useState } from 'react'
 import { z } from 'zod'
@@ -15,7 +16,6 @@ import { MessageFooterContext, MessageFooterContents } from '@/components/assist
 import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/generative-ui'
 import { Citation } from '@/components/tool-ui/citation'
 import { generativeComponentSchemas } from '@/lib/nativeMessage'
-import { OPENUI_COMPONENT } from '@/lib/interactive-ui/catalog'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { BusinessMessagePart } from './BusinessMessagePart'
 import { MessagePartBoundary } from './MessagePartBoundary'
@@ -38,7 +38,6 @@ const generativeComponents = Object.fromEntries(Object.entries(generativeCompone
     const running = useAuiState(state => state.message.status?.type === 'running')
     const parsed = z.record(z.string(), z.unknown()).parse(schema.parse(props))
     if (name === 'agent-plan') return <AgentPlan title={String(parsed.title)} steps={parsed.steps as AgentPlanStep[]} activeIndex={Number(parsed.activeIndex)} paused={!running} />
-    if (name === OPENUI_COMPONENT) return <p className="whitespace-pre-wrap break-words text-sm">{String(parsed.fallback)}</p>
     if (name === 'calendar-event') {
       const event = parsed.event as { title: string; startAt: string }
       return <p className="whitespace-pre-wrap text-sm">{event.title} · {event.startAt}（日历功能已停止支持）</p>
@@ -87,7 +86,7 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: {
   const requestVersion = useAuiState(state => (state.message.metadata.custom.harness as RunDisplayState | undefined)?.requestVersion)
   let content: ReactNode
   switch (part.type) {
-    case 'text': content = <Text {...part} />; break
+    case 'text': content = <VisualizeText part={part} Text={Text} readOnly={readOnly} />; break
     case 'reasoning': content = <Reasoning streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning>; break
     case 'source': content = <SourcePart {...part} />; break
     case 'image': content = <AttachmentCard filename={part.filename ?? '图片'} data={part.image} mimeType="image/*" sourceType="url" />; break

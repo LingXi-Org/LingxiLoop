@@ -1,0 +1,529 @@
+{
+  "upstreamCommit": "0a1fc56d279fd1001f78387bd81aec1c26767411",
+  "capturedAt": "2026-10-19T13:25:21+00:00",
+  "captureCompletedAt": "2026-10-19T13:25:27+00:00",
+  "productHead": "54075c1af031172f768a1894c8bd29a5ce74e98f",
+  "worktreeHasUncommittedChanges": true,
+  "captureStableDuringRead": true,
+  "review": "Final requested source capture after the Web host theme correction; source bytes were stable during this read. Browser acceptance is recorded separately and is not implied by byte/line statistics. Rehash after any later code change; this is not a production-release or runtime-behavior attestation.",
+  "diffMethod": "git diff --no-index --numstat; byteIdentical uses exact bytes",
+  "summary": {
+    "pairedFiles": 34,
+    "byteIdenticalFiles": 12,
+    "adaptedFiles": 22,
+    "pairedAddedLines": 152,
+    "pairedRemovedLines": 2069,
+    "additionalFingerprintFiles": 21,
+    "visualizeFrontendCodeFiles": 42
+  },
+  "provenanceVerification": {
+    "status": "passed",
+    "command": "node scripts/verify-zcode-visualize.mjs",
+    "verifiedFiles": 223,
+    "kinds": {
+      "skill": 24,
+      "source": 197,
+      "runtime": 1,
+      "license": 1
+    },
+    "skillGitTree": "87f38506cdda363267e0a73bfb2f20b4632134e1",
+    "manifestSha256": "80d383b323806f1dd8205728ce3ea3ef789ef866deee9f15746d04030080304b",
+    "runtimeFiles": 4,
+    "vendorLibraries": 4,
+    "licenses": [
+      {
+        "path": "third_party/zcode/skills/visualize/LICENSE.md",
+        "sha256": "b1733e816a7d5a8240f28e4633b37f7f6181734c9c0424836da3e768827239f4"
+      },
+      {
+        "path": "third_party/zcode/skills/visualize/assets/vendor/d3-7.9.0.min.js.LICENSE",
+        "sha256": "3e6849627f74ff73c257a3ae1efb574015d94fc1035c05ec3c15805165efcbc4"
+      },
+      {
+        "path": "third_party/zcode/skills/visualize/assets/vendor/floating-ui-core-1.7.3.min.js.LICENSE",
+        "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+      },
+      {
+        "path": "third_party/zcode/skills/visualize/assets/vendor/floating-ui-dom-1.7.4.min.js.LICENSE",
+        "sha256": "0e4c9a9b6c71019cbbea3bdc20b01223110a9035700f9c960c8fcbf78c2325ce"
+      },
+      {
+        "path": "third_party/zcode/skills/visualize/assets/vendor/lucide-1.17.0.js.LICENSE",
+        "sha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+      },
+      {
+        "path": "third_party/zcode/upstream/LICENSE",
+        "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b"
+      },
+      {
+        "path": "third_party/zcode/LICENSE",
+        "sha256": "606c36baf38b973227273df12a74930e4b4137280eea835c5cd623aa4553c13b"
+      }
+    ]
+  },
+  "runtimeBundleVerification": {
+    "status": "passed",
+    "manifest": "server/assets/visualize-runtime/manifest.json",
+    "files": {
+      "gen-ui.js": {
+        "sha256": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+        "bytes": 506205
+      }
+    },
+    "sourceInputCount": 157,
+    "allSourceHashesMatch": true
+  },
+  "files": [
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/components/ai-elements/message.tsx",
+      "product": "src/features/chat/visualize/zcode/components/ai-elements/message.tsx",
+      "upstreamSha256": "6c35829ed11321e850cd59e20c1c88fdd452e8e2d9b5da45f808371021aabf99",
+      "productSha256": "f56f61bbd25847ad087f09000360a0765e9d3e440aac25741b2da7ad20ed9344",
+      "byteIdentical": false,
+      "addedLines": 19,
+      "removedLines": 1669
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/components/ui/button.tsx",
+      "product": "src/features/chat/visualize/zcode/components/ui/button.tsx",
+      "upstreamSha256": "3bf0b1573c940999f875a1dd5e67a32e7d9bcb3e320774fa8277f5c00748b32b",
+      "productSha256": "77feeafdb3736cbb4ed504ac3385fcbd39501e2c98225b71cf6e5b22262fc537",
+      "byteIdentical": false,
+      "addedLines": 1,
+      "removedLines": 1
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/components/ui/dialog.tsx",
+      "product": "src/features/chat/visualize/zcode/components/ui/dialog.tsx",
+      "upstreamSha256": "fb2decab75993205ec5670acbd5b8b7dfc9b1518d3acb457ddde7edd1984d44e",
+      "productSha256": "a40c3a1cb317a75e25d8c8cf2e218d70074190a21ef5b572adb5cc373171f418",
+      "byteIdentical": false,
+      "addedLines": 3,
+      "removedLines": 3
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/components/ui/textarea.tsx",
+      "product": "src/features/chat/visualize/zcode/components/ui/textarea.tsx",
+      "upstreamSha256": "a839574ce1301fbaa9ba917fdb980900eb9118bffa7c6c4e469f3293b122ed30",
+      "productSha256": "47cc53a6dc85a28c54a8aec31dc2cb4dd9e457de5d79b3736e146297d5f76a1f",
+      "byteIdentical": false,
+      "addedLines": 1,
+      "removedLines": 1
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/CONTRACT.md",
+      "product": "src/features/chat/visualize/zcode/gen-ui/CONTRACT.md",
+      "upstreamSha256": "e949899e125a5dc357c6d01daf05efe521c01c370a88df1d39e861660114fede",
+      "productSha256": "e949899e125a5dc357c6d01daf05efe521c01c370a88df1d39e861660114fede",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/adapters/page.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/adapters/page.ts",
+      "upstreamSha256": "282b9ab5bb8d5c5294bc0bf0d7459ed44a8ccbedb5bab79f981547e2342807d0",
+      "productSha256": "cd2d2d231dd2f882d0258507b1a3d4e552b051aef651d77c002b19e4669a21ea",
+      "byteIdentical": false,
+      "addedLines": 18,
+      "removedLines": 7
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/adapters/retainedPage.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/adapters/retainedPage.ts",
+      "upstreamSha256": "087a50f086d6198442f86ed6e146ee35915b6010c74fb089932b2cf6b9cb72b6",
+      "productSha256": "186eb815ab6b57cc2d66fa793fc04b98a06fb2e970c4aea9c8d4dfb73cec9ac2",
+      "byteIdentical": false,
+      "addedLines": 2,
+      "removedLines": 2
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/adapters/theme.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/adapters/theme.ts",
+      "upstreamSha256": "9608dd443b8dbf0eef2d07fa1878260b70e0ab2e72c59c0a563d05eb60bef8cb",
+      "productSha256": "7593507d08fd2f708543aea6f043d9c3f39627a7f9e81c30caa8796e0be713ef",
+      "byteIdentical": false,
+      "addedLines": 3,
+      "removedLines": 3
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/app/tweaks.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/app/tweaks.ts",
+      "upstreamSha256": "06ad14b7b24f43d316fecc9729d006a9aaed2fb6c20c7cf6e12e295a0989e125",
+      "productSha256": "50af1e04054397391b4c46237ba5b843579ab24a3b554e2220cdcbc68e7d82fc",
+      "byteIdentical": false,
+      "addedLines": 1,
+      "removedLines": 1
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/components/GenUiCard.tsx",
+      "product": "src/features/chat/visualize/zcode/gen-ui/components/GenUiCard.tsx",
+      "upstreamSha256": "ac5b0339302f7e869153e2450b91079fba2d4ebdf15e99f5390e0d96b22cae4b",
+      "productSha256": "80c5fcd1be09c0aaa86a023fa0979100ebdf454542f4e41800300f75e511ba0b",
+      "byteIdentical": false,
+      "addedLines": 7,
+      "removedLines": 7
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/components/GenUiMessageResponse.tsx",
+      "product": "src/features/chat/visualize/zcode/gen-ui/components/GenUiMessageResponse.tsx",
+      "upstreamSha256": "f20c74afa42cede4b4b500a003435b56a1db5144413c99c9990bc5193358386c",
+      "productSha256": "26d7448fbd1ec5ed441ecd2bdc7876241dde526fcb0648c608e212d6c8ed0403",
+      "byteIdentical": false,
+      "addedLines": 12,
+      "removedLines": 3
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/components/TweakPanel.tsx",
+      "product": "src/features/chat/visualize/zcode/gen-ui/components/TweakPanel.tsx",
+      "upstreamSha256": "8ae2afed842f226abd650f6cb49fbf8fdb777920ce71a50b0764e0f91edfd34e",
+      "productSha256": "4cf0b76a303f89ea3e27091d226e75c0a419ff0051125b3a10961d10902bd20d",
+      "byteIdentical": false,
+      "addedLines": 2,
+      "removedLines": 2
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/contract.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/contract.ts",
+      "upstreamSha256": "88c79e729897c03cdcc1307297d46d342fb12dbd42ff8d32f45d2b79691c0c1c",
+      "productSha256": "99c3c4250b388538a769ccd0e3ca51f868ef73210979c59ff42a7ed856b87662",
+      "byteIdentical": false,
+      "addedLines": 3,
+      "removedLines": 2
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/domain/references.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/domain/references.ts",
+      "upstreamSha256": "9f6b76e49f09f997991f4a8511743f60828c180d41923812cb53998304f85c62",
+      "productSha256": "532528c27df68c6957045a1b637ff6ee9a6b7d9bcee9b623f8072e6514d9e60c",
+      "byteIdentical": false,
+      "addedLines": 1,
+      "removedLines": 1
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/domain/sourceFiles.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/domain/sourceFiles.ts",
+      "upstreamSha256": "e528c5986012aacd6fa62d49674c444d6ca7d3e954b9a2d3a5b1d0200600e702",
+      "productSha256": "819e695d72f384b1ed102b4f8ed1071b257212d9dcde74fef78f048d33834aa9",
+      "byteIdentical": false,
+      "addedLines": 1,
+      "removedLines": 1
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/host.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/host.ts",
+      "upstreamSha256": "f53bb1129f6d9c513c6ac3e2025dece2e1a9ef33395115b223a2c4c057409f77",
+      "productSha256": "f53bb1129f6d9c513c6ac3e2025dece2e1a9ef33395115b223a2c4c057409f77",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/index.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/index.ts",
+      "upstreamSha256": "3265bafde0606369b5923a08aa41cecd1ca086515ccf4fd39a716f1c6e4cb262",
+      "productSha256": "3265bafde0606369b5923a08aa41cecd1ca086515ccf4fd39a716f1c6e4cb262",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/gen-ui/module.ts",
+      "product": "src/features/chat/visualize/zcode/gen-ui/module.ts",
+      "upstreamSha256": "01eb7b630fcd7e374c68c3eda2e32192a4d8779f41b4c8a39f32f7432d2cd334",
+      "productSha256": "01eb7b630fcd7e374c68c3eda2e32192a4d8779f41b4c8a39f32f7432d2cd334",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/hooks/useGenUi.ts",
+      "product": "src/features/chat/visualize/zcode/hooks/useGenUi.ts",
+      "upstreamSha256": "54db0282b47a374d09a29c5db0a6bad9239c392f1388bb114659b8e38d6fc6a1",
+      "productSha256": "be62e937ca8dc06fce5b24fe6eb1681e0b936c65bc08200a1b017d2db2f57433",
+      "byteIdentical": false,
+      "addedLines": 43,
+      "removedLines": 79
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/lib/assistantDirectiveParser.ts",
+      "product": "src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts",
+      "upstreamSha256": "c64b119e46f917e2d869658559cb1113cc40caae1a89d68328b256ee4d76e09f",
+      "productSha256": "c64b119e46f917e2d869658559cb1113cc40caae1a89d68328b256ee4d76e09f",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/components/lib/utils.ts",
+      "product": "src/features/chat/visualize/zcode/lib/utils.ts",
+      "upstreamSha256": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "productSha256": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/adapters/messagePortTransport.ts",
+      "product": "src/features/chat/visualize/zcode/plugin-ui/adapters/messagePortTransport.ts",
+      "upstreamSha256": "5ea615fef0f67dfc61ef842c1c9d010476f0d758d34775a0e07f9c5867ae9914",
+      "productSha256": "6b2226e27c4eac6060271fd7e7545aa0fd044c5748e2b9a92ad3ed3f9dc06915",
+      "byteIdentical": false,
+      "addedLines": 3,
+      "removedLines": 2
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/adapters/pluginUiPagePlane.ts",
+      "product": "src/features/chat/visualize/zcode/plugin-ui/adapters/pluginUiPagePlane.ts",
+      "upstreamSha256": "65b5e865cf2d262b83163dd954ea573951b32ffe3b795614b04bcf001b679952",
+      "productSha256": "0a8d04110b05d2c917e9f5e604ff547df4eb23e06fd3714c51d3f65e266d6575",
+      "byteIdentical": false,
+      "addedLines": 13,
+      "removedLines": 8
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/adapters/readPluginUiStyleVariables.ts",
+      "product": "src/features/chat/visualize/zcode/plugin-ui/adapters/readPluginUiStyleVariables.ts",
+      "upstreamSha256": "3e3fdfff63688d782d7546bdb96a23692c629db64fb78e72c484cbb08118c312",
+      "productSha256": "0e8ac0d4eed63ee9433f5a5d60be1eb7f8babbcc354efe9b663693c69ea9ae7a",
+      "byteIdentical": false,
+      "addedLines": 2,
+      "removedLines": 2
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/adapters/sandboxPageOwners.ts",
+      "product": "src/features/chat/visualize/zcode/plugin-ui/adapters/sandboxPageOwners.ts",
+      "upstreamSha256": "e16980c4c884f0cd7442e3492c9946c5e35e2c43026b96b8bf3868837dcb168d",
+      "productSha256": "e16980c4c884f0cd7442e3492c9946c5e35e2c43026b96b8bf3868837dcb168d",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/app/pluginUiPageManager.ts",
+      "product": "src/features/chat/visualize/zcode/plugin-ui/app/pluginUiPageManager.ts",
+      "upstreamSha256": "6f9aab0391716225580b55358785751772faf72bd65e0b0f6d3e709cf2f7f1a7",
+      "productSha256": "6f9aab0391716225580b55358785751772faf72bd65e0b0f6d3e709cf2f7f1a7",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/contract.ts",
+      "product": "src/features/chat/visualize/zcode/plugin-ui/contract.ts",
+      "upstreamSha256": "86909bc9401fa80321fe2aa220a61e7d0e84a949117386dc875967befe0f6f9d",
+      "productSha256": "dd125a949f2d058ad0f959097a50189aafcb86d5ba6491615debe08f8f8e63ae",
+      "byteIdentical": false,
+      "addedLines": 1,
+      "removedLines": 260
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/domain/pluginUiStyleVariables.ts",
+      "product": "src/features/chat/visualize/zcode/plugin-ui/domain/pluginUiStyleVariables.ts",
+      "upstreamSha256": "82d1c78e15baac44cbb8468ace00b8f680180cb3569f69d82c272cc6c5b66a1b",
+      "productSha256": "c44e8dd7531e478fc875952c68544f4d8a34eb11b7b4a519711f0a0faa96214b",
+      "byteIdentical": false,
+      "addedLines": 1,
+      "removedLines": 1
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/ui/src/plugin-ui/hostPrimitives.ts",
+      "product": "src/features/chat/visualize/zcode/plugin-ui/hostPrimitives.ts",
+      "upstreamSha256": "2835154273d70bed3e3c598b273cc12da4ac0d6b901ecd86a67fe906c1e9c730",
+      "productSha256": "6dabd3472a2b1beaf1cb6f9adc7b12515f1b1896017a1153d0c622052854542b",
+      "byteIdentical": false,
+      "addedLines": 14,
+      "removedLines": 13
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/shared/src/gen-ui/contract.example.ts",
+      "product": "src/features/chat/visualize/zcode/shared/gen-ui/contract.example.ts",
+      "upstreamSha256": "41fbfd962f28bff286be97e59675634c99450fb2d8de7b54f81c10140e8cea48",
+      "productSha256": "41fbfd962f28bff286be97e59675634c99450fb2d8de7b54f81c10140e8cea48",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/shared/src/gen-ui/contract.ts",
+      "product": "src/features/chat/visualize/zcode/shared/gen-ui/contract.ts",
+      "upstreamSha256": "42b26cf4971b60236d2cf6da07eea1b629fef5d4d89881e8484f268987e8020b",
+      "productSha256": "6d4b29a3a10b667ebecf7fa0b99650a4d874f7b4f147e9a2c8c7a3ab07908b92",
+      "byteIdentical": false,
+      "addedLines": 1,
+      "removedLines": 1
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/shared/src/gen-ui/index.ts",
+      "product": "src/features/chat/visualize/zcode/shared/gen-ui/index.ts",
+      "upstreamSha256": "07480618432fe5c5ed124b5809b7ed36d3d40a284e3ccb71cbd7d16de6c44605",
+      "productSha256": "07480618432fe5c5ed124b5809b7ed36d3d40a284e3ccb71cbd7d16de6c44605",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/shared/src/gen-ui/module.ts",
+      "product": "src/features/chat/visualize/zcode/shared/gen-ui/module.ts",
+      "upstreamSha256": "e2ce94c157dee72a908d44e6c39e97fb8df62f0e7d88533e7f19a75a123f115f",
+      "productSha256": "e2ce94c157dee72a908d44e6c39e97fb8df62f0e7d88533e7f19a75a123f115f",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    },
+    {
+      "upstream": "third_party/zcode/upstream/packages/shared/src/gen-ui/tweakProtocol.ts",
+      "product": "src/features/chat/visualize/zcode/shared/gen-ui/tweakProtocol.ts",
+      "upstreamSha256": "474b7bc47a6c4d6fca8620834ac5c09b056c81e8cd938a585d8565200d1cd05a",
+      "productSha256": "474b7bc47a6c4d6fca8620834ac5c09b056c81e8cd938a585d8565200d1cd05a",
+      "byteIdentical": true,
+      "addedLines": 0,
+      "removedLines": 0
+    }
+  ],
+  "adaptationFiles": [
+    {
+      "product": "package-lock.json",
+      "productSha256": "696225ecfb299b5408340162095c7476a79a00b89fc32c2facd83e10bfd20c42",
+      "bytes": 906139
+    },
+    {
+      "product": "package.json",
+      "productSha256": "49d4368f29b767d35ac2032504807e004cbd6e60308a85efea73acc3adfc534e",
+      "bytes": 9692
+    },
+    {
+      "product": "scripts/build-visualize-runtime.mjs",
+      "productSha256": "6268f2f89243f432a5bb0b8649ae74296034321f061992e344bf414e121d240e",
+      "bytes": 1704
+    },
+    {
+      "product": "server/assets/visualize-runtime/gen-ui.js",
+      "productSha256": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+      "bytes": 506205
+    },
+    {
+      "product": "server/assets/visualize-runtime/manifest.json",
+      "productSha256": "d8c6ca81a33577d1a2b3356f6ad5b6ac6750d9a93e65deab62f1f6a59fd0b1e0",
+      "bytes": 19030
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-export.ts",
+      "productSha256": "ee84b12db1bfaacf115582e9c8bb777850452a007e524ac153979e946c46b28c",
+      "bytes": 1506
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-projection.ts",
+      "productSha256": "7391d353199f87d25c90ff66ac88ab5108d33e01f8cae7ff2123d1f66ec0fe5a",
+      "bytes": 1240
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-skill.ts",
+      "productSha256": "fadd8c2ce26e03e7650d262cafa3cbede391ac8b42a3815685a76b6b2ee379a4",
+      "bytes": 2958
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-state-context.ts",
+      "productSha256": "bece9600e06450491450c81495bee02b8f135af7650e75fa6d7c5b997aa23d54",
+      "bytes": 474
+    },
+    {
+      "product": "server/src/agent-runtime/visualize-tools.ts",
+      "productSha256": "a2705978aefa939095c67032bd00d611ca8f34ae98e35682a07e492c7c9058b9",
+      "bytes": 5890
+    },
+    {
+      "product": "server/src/im/visualize-router.ts",
+      "productSha256": "691b8e2015bdd31a8e9d5c18ffbe24410afba8c7f3a2d16eed5896469d3e823b",
+      "bytes": 4025
+    },
+    {
+      "product": "server/src/im/visualize.ts",
+      "productSha256": "d2240c6034d4683523174f33f49590c2137810efac19d7d4f5ac6dbeffa4fcb9",
+      "bytes": 23794
+    },
+    {
+      "product": "src/features/chat/visualize/TextOffsetContext.ts",
+      "productSha256": "c6525a322d0b4f70771c6620b9541a34215d7f3b3e4008c92909bd9b694f3357",
+      "bytes": 198
+    },
+    {
+      "product": "src/features/chat/visualize/VisualizeText.tsx",
+      "productSha256": "d069dfb34a022743a99b4901ac4218da3340f1b0ed0f7420239fdd80ef740590",
+      "bytes": 1514
+    },
+    {
+      "product": "src/features/chat/visualize/web/bootstrap.ts",
+      "productSha256": "419198bf32b8a809b1b9690e7b6838cea226984e6c45c27ca90330ef13b33087",
+      "bytes": 2784
+    },
+    {
+      "product": "src/features/chat/visualize/web/contracts.ts",
+      "productSha256": "5e158bff655052f7d65179ba499c0999ec3fb39cd2ebd5ce422d4b35d21315a6",
+      "bytes": 1426
+    },
+    {
+      "product": "src/features/chat/visualize/web/document.ts",
+      "productSha256": "5b1bc3a5379527afa549a49e3df057cab5175922c78bd32dd4c423a2886329d6",
+      "bytes": 4312
+    },
+    {
+      "product": "src/features/chat/visualize/web/dom.d.ts",
+      "productSha256": "e9c93fa0fdb28f4ae59dba9c4678d5d3114108c746f1708a18e9e3418711ae10",
+      "bytes": 182
+    },
+    {
+      "product": "src/features/chat/visualize/web/host.ts",
+      "productSha256": "c8cd43dccaf2419d1056d43afe9340e4e17aa989940bbdc824faa3e4b9133be4",
+      "bytes": 15969
+    },
+    {
+      "product": "src/features/chat/visualize/zcode.css",
+      "productSha256": "fe485a7da5e57a47bfe51607a6bc3ef329187ac9fa0a31be0b64d43b88791ba4",
+      "bytes": 41288,
+      "upstream": "third_party/zcode/upstream/packages/ui/src/styles.css",
+      "upstreamSha256": "ae1c3575fa770258bba05afb5a0ebbeda59ecbd8b4cfa9d0355b5fbfd8dcbd8b",
+      "byteIdentical": false,
+      "addedLines": 103,
+      "removedLines": 1583,
+      "relationship": "Scoped theme/style extraction with Web host cascade isolation; not a whole-stylesheet copy"
+    },
+    {
+      "product": "src/features/chat/visualize/zcode/i18n/IntlProvider.ts",
+      "productSha256": "b735e192b150c5b68353e87dd25f30f5b6b49abb0acb55f27e34e89ede84fb73",
+      "bytes": 2172
+    }
+  ],
+  "webHostThemeVerification": {
+    "status": "passed",
+    "declarationBlocks": [
+      {
+        "theme": "light",
+        "upstreamSelector": ".theme-zai-light",
+        "productSelector": ".zcode-visualize",
+        "declarationsByteIdentical": true,
+        "blockSha256": "bb11c0da5370b25df45f5599b4d8492cd8e664adb863243519077987e13b283e"
+      },
+      {
+        "theme": "dark",
+        "upstreamSelector": ".theme-zai-dark",
+        "productSelector": ".dark .zcode-visualize",
+        "declarationsByteIdentical": true,
+        "blockSha256": "8f82f3a55e95edaba0e1993216e318e75fe0953536842c26ea8cd49d72f9fa1f"
+      }
+    ],
+    "semanticForeground": true,
+    "webEntryFontStack": true,
+    "localLightDarkColorScheme": true,
+    "scope": "Cold-start Web semantic host input; not a preserved navigation-bootstrap snapshot",
+    "sourceEvidence": "docs/evidence/issue-193/UPSTREAM-WEB-COLOR-CASCADE.md"
+  },
+  "modelInstructionVerification": {
+    "path": "server/src/agent-runtime/visualize-skill.ts",
+    "sha256": "fadd8c2ce26e03e7650d262cafa3cbede391ac8b42a3815685a76b6b2ee379a4",
+    "rangeUtf16Characters": 4000,
+    "truncatedRangeRetryUtf16Characters": 2000,
+    "oneRangePerResponse": true,
+    "scope": "Instruction source only; actual model tool/range execution requires separate evidence"
+  }
+}

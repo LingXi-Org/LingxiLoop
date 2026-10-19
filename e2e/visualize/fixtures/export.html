@@ -1,0 +1,13 @@
+<div id="export-counter"><button class="btn" id="export-increment" type="button">Count: 5</button><svg id="export-chart" viewBox="0 0 200 60" aria-label="Offline D3 chart" role="img"></svg><div id="export-calendar"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script>
+{
+  let count=5;
+  const button=document.getElementById('export-increment');
+  function restore(){count=window.zcode.widgetState?.modelContent?.count??5;button.textContent=`Count: ${count}`;}
+  restore(); window.addEventListener('zcode:set_globals',restore);
+  button.onclick=async()=>{count++;button.textContent=`Count: ${count}`;await window.zcode.setWidgetState({modelContent:{count},privateContent:null});};
+  d3.select('#export-chart').append('rect').attr('width',120).attr('height',40).attr('fill','var(--viz-series-1)');
+  const calendar=document.createElement('viz-calendar');calendar.setAttribute('date','2026-09-08');calendar.setAttribute('start','12:00');calendar.setAttribute('end','13:00');calendar.events=[{title:'Offline meeting',start:'12:00',end:'12:30'}];document.getElementById('export-calendar').append(calendar);
+}
+</script>

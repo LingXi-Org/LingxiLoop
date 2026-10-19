@@ -1,10 +1,12 @@
 import type { HarnessProfile, SkillDefinition, ToolDefinition } from '@lyyzka/lingxios'
+import { visualizeSkill } from './visualize-skill.js'
 import { presentationCard } from '../modules/presentations/agent-tools.js'
 import { activityTool } from './activity-tool.js'
 import { beginPublicToolActivity, finishPublicToolActivity } from './tool-activity.js'
 import { GROUP_COLLABORATION_RULES } from './conversation-style.js'
 
 export const productSkills: SkillDefinition[] = [
+  visualizeSkill,
   { name: 'public-task-progress', version: '1', description: 'Keep the user informed during multi-step tasks with public explanations and a real plan.',
     actions: ['chat.report_progress'], body: 'For a multi-step task, publish a short Chinese plan or approach using chat.report_progress. Report actual steps and observations at meaningful transitions; preserve each public item id while updating its full text. Plans use stable step ids and activeIndex: only advance past a step after its result is confirmed, and only mark the plan complete when all steps are done. Public reasoning is a brief explanation of the approach or evidence for the user, never private chain of thought, hidden scratchpad, system instructions, raw arguments, diagnostics, identifiers or credentials. Do not invent activity or elapsed times. A simple direct answer does not need progress reports. Keep the final answer in the ordinary answer channel.' },
   { name: 'document-edit', version: '1', description: 'Read, edit and verify a product document without losing peer changes.',

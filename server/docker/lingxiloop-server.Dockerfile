@@ -27,7 +27,6 @@ ARG NPM_REGISTRY=https://registry.npmjs.org
 ARG APT_MIRROR=http://mirrors.aliyun.com
 
 FROM ${NODE_BASE_IMAGE} AS deps
-ENV OPENUI_TELEMETRY_DISABLED=1
 ARG NPM_REGISTRY
 WORKDIR /app
 COPY server/package.json server/package-lock.json server/.npmrc ./
@@ -44,7 +43,6 @@ RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "n
 #
 # The SPA uses same-origin `/api` routes through the control-plane Worker.
 FROM ${NODE_BASE_IMAGE} AS spa-build
-ENV OPENUI_TELEMETRY_DISABLED=1
 ARG NPM_REGISTRY
 WORKDIR /app
 ARG VITE_PUBLIC_POSTHOG_KEY=""
@@ -66,6 +64,8 @@ COPY tsconfig.json ./
 COPY tsconfig.node.json ./
 COPY postcss.config.js ./
 COPY tailwind.config.ts ./
+COPY third_party/zcode ./third_party/zcode
+COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs ./scripts/
 RUN npm run build
 
 # ─── stage 3: runtime ───────────────────────────────────────────────
@@ -95,7 +95,11 @@ COPY server ./server
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
 COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/memoryActivity.ts ./src/lib/
-COPY src/lib/interactive-ui ./src/lib/interactive-ui
+COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
+COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
+COPY src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts ./src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts
+COPY third_party/zcode ./third_party/zcode
+COPY --from=spa-build /app/server/assets/visualize-runtime ./server/assets/visualize-runtime
 # Web SPA bundle — read by server/src/web.ts at boot via existsSync().
 # When this is absent (e.g. an older runtime image) the server falls
 # back to a JSON `/` response.

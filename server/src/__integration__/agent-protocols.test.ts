@@ -58,27 +58,25 @@ test('native capability registry executes cards and artifacts, gates approval, a
   assert.equal(malformed.diagnostics?.category, 'invalid_input')
   assert.equal(malformed.executionState, 'no_effect')
   assert.ok(!im.messages.some(message=>nativeText(message.payload).includes('<think>')))
-  // Failures: chat.send bypasses final lesson verification, publishes raw DSL, or rejects ordinary quoted examples.
-  const lesson = 'root = Lesson("对比", "观察共同点和区别。", [Text("观察异同")])'
-  const beforeLessonMessages = im.messages.length
+  // Failures: chat.send bypasses final visualize verification or rejects quoted examples.
+  const reference = '::visualize{"path":"/unauthorized/example.html","mode":"wide"}'
+  const beforeVisualizeMessages = im.messages.length
   const acceptanceCount = async () => (await pool.query<{ count: number }>(
     'SELECT count(*)::int AS count FROM im_send_acceptances WHERE company_id=$1', [companyId])).rows[0].count
-  const beforeLessonAcceptances = await acceptanceCount()
-  for (const body of [lesson, `\`\`\`lingxiloop-openui-v1\n${lesson}\n\`\`\``, `- ${lesson}`,
-    `$angle = 45\n${lesson}`, `\`\`\`openui-lang\n${lesson}\n\`\`\``]) {
+  const beforeVisualizeAcceptances = await acceptanceCount()
+  for (const body of [reference, `Before\n${reference}`, '::visualize{"path":', '::visualize{"path":"relative.html"}']) {
     const rejected = await call('chat.send', { body })
-    assert.equal(rejected.ok, false, 'interactive lessons must use the native final response')
+    assert.equal(rejected.ok, false, 'visualizations must use the verified native final response')
     assert.equal(rejected.code, 'invalid_arguments')
     assert.equal(rejected.diagnostics?.category, 'invalid_input')
     assert.equal(rejected.executionState, 'no_effect')
-    assert.doesNotMatch(JSON.stringify(rejected), /root =|<think>/)
-    assert.equal(im.messages.length, beforeLessonMessages)
-    assert.equal(await acceptanceCount(), beforeLessonAcceptances)
+    assert.equal(im.messages.length, beforeVisualizeMessages)
+    assert.equal(await acceptanceCount(), beforeVisualizeAcceptances)
   }
-  const examples = ['先观察两种情况。', `写法示例：\`${lesson}\``, `\`\`\`js\n${lesson}\n\`\`\``, `> ${lesson}`]
+  const examples = ['先观察两种情况。', `写法示例：\`${reference}\``, `\`\`\`js\n${reference}\n\`\`\``]
   for (const body of examples) assert.equal((await call('chat.send', { body })).ok, true)
-  assert.deepEqual(im.messages.slice(beforeLessonMessages).map(message => nativeText(message.payload)), examples)
-  assert.equal(await acceptanceCount(), beforeLessonAcceptances + examples.length)
+  assert.deepEqual(im.messages.slice(beforeVisualizeMessages).map(message => nativeText(message.payload)), examples)
+  assert.equal(await acceptanceCount(), beforeVisualizeAcceptances + examples.length)
   // Old persisted grants and actions must remain inert after retirement.
   await pool.query(`UPDATE participants SET capabilities=capabilities || '["email","calendar"]'::jsonb WHERE company_id=$1 AND id=$2`, [companyId,agentId])
   const staleContext = await host.loadContext(work)
