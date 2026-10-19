@@ -1,0 +1,13 @@
+{
+  "phase": "live",
+  "head": "ef594b8b8f0091d49ac4d618d2c221bdc54f617a",
+  "args": [
+    "docs/evidence/issue-187/live-case-agent/run.mjs",
+    "live"
+  ],
+  "startedAt": "2026-10-19T11:08:22.872Z",
+  "finishedAt": "2026-10-19T11:08:39.903Z",
+  "exitCode": 0,
+  "signal": null,
+  "historicalOutputRestored": true
+}

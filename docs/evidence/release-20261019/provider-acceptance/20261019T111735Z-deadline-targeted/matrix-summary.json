@@ -1,0 +1,13 @@
+{
+  "directory": "20261019T111735Z-deadline-targeted",
+  "exitCode": 0,
+  "counts": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "passed": true,
+  "oldEvidenceRestored": true
+}

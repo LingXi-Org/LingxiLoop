@@ -1,0 +1,89 @@
+{
+  "verifiedAt": "2026-10-19T11:10:01.695658+00:00",
+  "productCommit": "05b6fd2ed9ee53ed5c1fb07e29ba7dc730899878",
+  "runtime": {
+    "version": "3.5.3",
+    "registryGitHead": "59be37b141f41798ec03b2fffabb824d3ef50e36",
+    "integrity": "sha512-e/KhQgtBJlKQl1aM+amJGail2ax8rqGL4Bqw68ehIM+2mlUbaq0WT1FD8WQaGU1/t7TyhYk8gt2IuHlX6OKhfQ==",
+    "qualification": "exact official published package; root and server manifests/locks verified"
+  },
+  "counts": {
+    "integration": {
+      "tests": 66,
+      "pass": 66,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "server": {
+      "tests": 107,
+      "pass": 107,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "web": {
+      "tests": 92,
+      "pass": 92,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0
+    }
+  },
+  "integrationBreakdown": {
+    "owningQuestionnaireAndMessaging": 36,
+    "migration": 30
+  },
+  "browser": {
+    "tests": 8,
+    "pass": 8,
+    "fail": 0,
+    "errors": 0,
+    "skipped": 0,
+    "engine": "official @e2e-dev/web via tester-army/e2e",
+    "freshProductionBuild": {
+      "file": ".e2e/questionnaire-site/e2e/questionnaire.html",
+      "modifiedAt": "2026-10-19T11:06:45.476Z",
+      "sha256": "a193a1f980ed3f2e5c49f5c74b01c623743931d356e66c246a7f2e691435c294"
+    },
+    "report": "browser/report.json",
+    "junit": "browser/junit.xml",
+    "screenshot": "questionnaire-resume-retry.png",
+    "screenshotReviewed": true
+  },
+  "checks": {
+    "serverTypecheck": "passed",
+    "webTypecheck": "passed",
+    "e2eTypecheck": "passed",
+    "serverLint": "passed",
+    "fixtureProductionBuild": "passed"
+  },
+  "executionCorrection": {
+    "firstBrowserAttempt": {
+      "exitCode": 2,
+      "testsExecuted": 0,
+      "reason": "official e2e output directory must be inside project root"
+    },
+    "correction": "use .e2e/pr190-official-3.5.3 and copy completed reports to this evidence directory",
+    "notCountedAsTestPass": true,
+    "summaryFile": "execution-attempts.json"
+  },
+  "isolation": {
+    "productionAccess": false,
+    "liveProviders": false,
+    "sourceOrLockChanges": false,
+    "installs": false,
+    "commitsOrPushes": false,
+    "oldCandidateEvidencePreserved": true,
+    "freshPreviewStopped": true
+  },
+  "lockSha256": {
+    "package.json": "bcfffb6bc293e9751aba0c3cfc27cf6f7627e1fca5960c46c39eee072d3f191f",
+    "package-lock.json": "f3d91f01d323d4309a75dc9093bf9d0af0fd9049e5dc15a1dbcc3a4e8eca2a2e",
+    "server/package.json": "0e67ec29bea0237f140b031479efc98f7747141688d0f923b10fb261f643770c",
+    "server/package-lock.json": "9831c9e0fdaee746934a370c7ecd7e0f511e7cae8cf2494c175bdeb14f1967ca"
+  },
+  "commands": {
+    "reference": "../COMMANDS.md"
+  }
+}
