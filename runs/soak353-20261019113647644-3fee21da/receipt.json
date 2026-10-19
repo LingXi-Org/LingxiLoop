@@ -7,7 +7,7 @@
   "runtime": "3.5.3",
   "schema": 12,
   "scope": "web-worker-idle",
-  "status": "prepared",
+  "status": "failed",
   "limits": {
     "web": {
       "cpus": 0.75,
@@ -25,16 +25,75 @@
   },
   "qualification": "No 24-hour acceptance pass.",
   "completionRule": "Explicit terminal receipt, >=86400 monotonic seconds, continuous <=90s heartbeat gaps, unchanged containers/images and zero violations. Missing or stale evidence is incomplete.",
-  "violations": [],
+  "violations": [
+    "worker-livez-failed"
+  ],
   "targetSeconds": 60,
-  "elapsedSeconds": 0,
-  "samples": 0,
-  "maxGapSeconds": 0,
+  "elapsedSeconds": 1.620276456,
+  "samples": 1,
+  "maxGapSeconds": 0.464575704,
   "createdAt": "2026-10-19T11:36:47.647Z",
-  "capturedAt": "2026-10-19T11:39:54.004Z",
+  "startedAt": "2026-10-19T11:39:56.093Z",
+  "lastHeartbeatAt": "2026-10-19T11:39:56.558Z",
+  "finishedAt": "2026-10-19T11:39:57.714Z",
+  "capturedAt": "2026-10-19T11:40:01.106Z",
   "workerProbe": "namespace-available",
   "nodeVersion": "v22.23.3",
   "imageId": "sha256:b76be4097d93f5c46f0eed497983fdd887e7bdc3205fc3f97eb205aed84318e1",
   "schemaHash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a",
-  "harnessHash": "865eacc9633e525271527010fd4e0153d759d73330cd105a58dafbb0faa821e4"
+  "harnessHash": "865eacc9633e525271527010fd4e0153d759d73330cd105a58dafbb0faa821e4",
+  "lastSample": {
+    "at": "2026-10-19T11:39:56.558Z",
+    "elapsedSeconds": 0.464575704,
+    "roles": {
+      "web": {
+        "rss": 224374784,
+        "heapUsed": 103343296,
+        "heapTotal": 117780480,
+        "external": 10579086,
+        "arrayBuffers": 6551836,
+        "uptime": 34.751095266,
+        "sqlSubmitted": 447,
+        "gcCount": 148,
+        "gcMs": 753.3060940047726,
+        "poolFailed": 0,
+        "poolCompleted": 337,
+        "poolWaiting": 0,
+        "cpuUser": 5986590,
+        "cpuSystem": 827997,
+        "livez": 200,
+        "readyz": 200,
+        "restartCount": 0,
+        "running": true,
+        "oomKilled": false
+      },
+      "worker": {
+        "rss": 235954176,
+        "heapUsed": 96002320,
+        "heapTotal": 105472000,
+        "external": 13628857,
+        "arrayBuffers": 9575953,
+        "uptime": 16.065714352,
+        "sqlSubmitted": 224,
+        "gcCount": 102,
+        "gcMs": 592.6085649998859,
+        "poolFailed": 0,
+        "poolCompleted": 177,
+        "poolWaiting": 0,
+        "cpuUser": 4107514,
+        "cpuSystem": 731552,
+        "livez": 404,
+        "readyz": 200,
+        "restartCount": 0,
+        "running": true,
+        "oomKilled": false
+      }
+    },
+    "queues": {
+      "activeWork": 0,
+      "pendingResult": 0,
+      "pendingTerminal": 0,
+      "pendingDelivery": 0
+    }
+  }
 }
