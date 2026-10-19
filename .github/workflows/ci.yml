@@ -336,6 +336,7 @@ jobs:
       - run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - run: npm run verify:visualize && npm run build:visualize-runtime
       - run: npm run db:migrate
       - if: needs.changes.outputs.server != 'true'
         run: node --test scripts/test-selectors.test.mjs
