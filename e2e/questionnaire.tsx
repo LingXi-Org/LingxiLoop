@@ -50,6 +50,7 @@ window.fetch = async (input, init) => {
   reads++; refresh()
   if (mode === 'loading') await new Promise(resolve => setTimeout(resolve, 2000))
   if (mode === 'load-error' && reads === 1) return Response.json({ error: '状态暂不可用' }, { status: 503 })
+  if (mode.startsWith('resuming') && !sessionStorage.getItem(key)) return Response.json({ status: 'resuming', readOnly: true, answers: { goal: '已提交的原答案' }, retryable: mode === 'resuming-retry' })
   if (mode === 'pending' && !sessionStorage.getItem(key)) return Response.json({ status: 'pending', readOnly: true, answers: { goal: '冻结的答案' } })
   const answers = mode === 'submitted' ? { goal: '服务器已保存的目标' } : JSON.parse(sessionStorage.getItem(key) ?? 'null')
   return Response.json(answers ? { status: 'submitted', readOnly: true, answers } : { status: mode === 'unavailable' ? 'unavailable' : 'waiting', readOnly: mode === 'unavailable' || mode === 'readonly' })

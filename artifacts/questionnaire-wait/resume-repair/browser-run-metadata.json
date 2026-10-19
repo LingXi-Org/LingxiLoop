@@ -1,0 +1,18 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/questionnaire.e2e.ts",
+    "--output",
+    ".e2e/pr190-repair"
+  ],
+  "buildMode": "existing production preview via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "build": {
+    "file": ".e2e/questionnaire-site/e2e/questionnaire.html",
+    "modifiedAt": "2026-10-19T10:03:38.278Z",
+    "sha256": "dad043bcca58b5d836228d6369f007671acf51abaa37ee11e8b38687b2072e51"
+  }
+}

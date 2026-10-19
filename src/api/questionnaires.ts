@@ -6,6 +6,7 @@ export const questionnaireAnswersSchema = z.record(z.string(), z.union([z.string
 const stateSchema = z.discriminatedUnion('status', [
   z.object({ status: z.literal('waiting'), readOnly: z.boolean() }),
   z.object({ status: z.literal('submitted'), readOnly: z.literal(true), answers: questionnaireAnswersSchema }),
+  z.object({ status: z.literal('resuming'), readOnly: z.literal(true), answers: questionnaireAnswersSchema, retryable: z.boolean() }),
   z.object({ status: z.literal('pending'), readOnly: z.literal(true), answers: questionnaireAnswersSchema }),
   z.object({ status: z.literal('unavailable'), readOnly: z.literal(true) }),
 ])

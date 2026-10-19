@@ -51,7 +51,7 @@ function DurableQuestionnaire({ data, readOnly }: { data: unknown; readOnly: boo
     return () => controller.abort()
   }, [conversationId, message.id, readOnly, reload])
   useEffect(() => {
-    if (state?.status !== 'pending' || typeof conversationId !== 'string') return
+    if (state?.status !== 'pending' && state?.status !== 'resuming' || typeof conversationId !== 'string') return
     const controller = new AbortController()
     let timer: ReturnType<typeof setTimeout>
     const poll = async () => {
@@ -67,7 +67,7 @@ function DurableQuestionnaire({ data, readOnly }: { data: unknown; readOnly: boo
   }, [state?.status, conversationId, message.id])
   const disabled = readOnly || loading || busy || !state || state.readOnly || state.status !== 'waiting'
   async function submit(answers: unknown) {
-    const retrying = state?.status === 'pending' && !readOnly && !loading && !busy
+    const retrying = (state?.status === 'pending' || state?.status === 'resuming' && state.retryable) && !readOnly && !loading && !busy
     if (disabled && !retrying || inFlight.current || typeof conversationId !== 'string') return
     const controller = lifecycle.current
     inFlight.current = true; setBusy(true); setError(null)
@@ -83,13 +83,15 @@ function DurableQuestionnaire({ data, readOnly }: { data: unknown; readOnly: boo
   }
   return <div className="grid min-w-0 gap-2">
     <fieldset disabled={disabled} aria-busy={loading || busy}>
-      <ElicitationFormTool args={{ ...record(data), id: message.id, acceptedLabel: state?.status === 'pending' ? '回答已保存，正在确认提交' : undefined }}
-        result={state?.status === 'submitted' || state?.status === 'pending' ? state.answers : undefined} addResult={submit} />
+      <ElicitationFormTool args={{ ...record(data), id: message.id, acceptedLabel: state?.status === 'pending' ? '回答已保存，正在确认提交' : state?.status === 'resuming' ? '回答已提交，等待继续' : undefined }}
+        result={state?.status === 'submitted' || state?.status === 'pending' || state?.status === 'resuming' ? state.answers : undefined} addResult={submit} />
     </fieldset>
     {loading && <p role="status" className="text-xs text-muted-foreground">正在读取问卷状态…</p>}
     {busy && <p role="status" className="text-xs text-muted-foreground">正在提交…</p>}
     {state?.status === 'pending' && !readOnly && <button type="button" disabled={busy || loading}
       className="w-fit rounded px-2 py-1 text-xs underline focus-visible:outline-2" onClick={() => void submit(state.answers)}>重试提交</button>}
+    {state?.status === 'resuming' && state.retryable && !readOnly && <button type="button" disabled={busy || loading}
+      className="w-fit rounded px-2 py-1 text-xs underline focus-visible:outline-2" onClick={() => void submit(state.answers)}>重试继续</button>}
     {state?.status === 'unavailable' && <p className="text-xs text-muted-foreground">这份问卷已不可提交。</p>}
     {state?.status === 'waiting' && state.readOnly && <p className="text-xs text-muted-foreground">这份问卷仅供查看。</p>}
     {error && <><p role="alert" className="text-xs text-destructive">{error}</p>

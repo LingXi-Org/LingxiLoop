@@ -448,9 +448,9 @@ export class ChatTransport {
       // Reconcile a lost submit receipt before retrying the same durable question.
       const current = await this.readQuestionnaire(conversationId, questionId)
       if (!request.current()) throw new Error('登录或工作区已变化，请重新载入')
-      if (current.status === 'submitted') return current
-      if (current.status !== 'pending' && (current.status !== 'waiting' || current.readOnly)) throw new Error('这份问卷已不可提交')
-      const accepted = await questionnairesApi.submit(conversationId, questionId, current.status === 'pending' ? current.answers : answers, request.signal)
+      if (current.status === 'submitted' || current.status === 'resuming' && !current.retryable) return current
+      if (current.status !== 'pending' && current.status !== 'resuming' && (current.status !== 'waiting' || current.readOnly)) throw new Error('这份问卷已不可提交')
+      const accepted = await questionnairesApi.submit(conversationId, questionId, current.status === 'pending' || current.status === 'resuming' ? current.answers : answers, request.signal)
       if (!request.current()) throw new Error('登录或工作区已变化，请重新载入')
       const echo = accepted.echo
       if (echo.channelId !== conversationId || echo.fromUid !== getMeId() || echo.messageId === '0'
@@ -458,7 +458,7 @@ export class ChatTransport {
         || (echo.payload.metadata.custom.questionnaireReply as { questionId?: unknown } | undefined)?.questionId !== questionId) throw new Error('提交回执待核对')
       this.commitEnvelope(echo)
       const saved = await this.readQuestionnaire(conversationId, questionId)
-      if (saved.status !== 'submitted' && saved.status !== 'pending') throw new Error('提交状态待确认，请重试')
+      if (saved.status !== 'submitted' && saved.status !== 'pending' && saved.status !== 'resuming') throw new Error('提交状态待确认，请重试')
       return saved
     })().finally(() => { if (this.questionnaireSubmissions.get(key) === operation) this.questionnaireSubmissions.delete(key) })
     this.questionnaireSubmissions.set(key, operation)

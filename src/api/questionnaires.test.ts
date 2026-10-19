@@ -18,6 +18,8 @@ test('questionnaire API scopes URLs and validates durable state before use', asy
   }
   response = { status: 'submitted', readOnly: true, answers: { goal: 'saved' } }
   assert.deepEqual(await questionnairesApi.read('room', 'question'), response)
+  response = { status: 'resuming', readOnly: true, answers: { goal: 'frozen' }, retryable: true }
+  assert.deepEqual(await questionnairesApi.read('room', 'question'), response)
   response = { status: 'pending', readOnly: true, answers: { goal: 'frozen' } }
   assert.deepEqual(await questionnairesApi.read('room', 'question'), response)
 })

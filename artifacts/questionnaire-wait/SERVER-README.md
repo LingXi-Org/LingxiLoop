@@ -35,3 +35,14 @@ node e2e/server/run.mjs --file questionnaire-wait.test.ts --file im-conversation
 The integration runner now explicitly selects TAP. Previously this Node version emitted the spec reporter, causing the artifact parser to report zero tests despite passing test subprocesses. An adjacent regression also caught a new eager questionnaire import keeping Redis handles open in the maintenance CLI; questionnaire admission is now loaded only for questionnaire messages and the unchanged CLI timeout passes.
 
 The frontend agent's browser evidence is in this same directory. Remaining release blocker: publish the upstream runtime and qualify the product against that exact published package; candidate-only green results do not satisfy this release gate.
+
+
+## Follow-up: bounded recovery after an accepted answer
+
+Review of product head `e6a2fe53` reproduced an accepted answer whose final ingress attempt lost its lease. The wake reached 12 attempts and became failed, but replaying the same answer returned an accepted duplicate without repairing the wake. The original run remained waiting at request version 1. The preserved red evidence is in `resume-repair/before.json`.
+
+The follow-up distinguishes accepted IM (`resuming`) from a consumed continuation (`submitted`). Pending recovery displays the frozen answers and polls without sending. An authenticated manual retry can replenish only an expired failed, unconsumed canonical wake for the same payload, original principal and current waiting request version. Current room authorization is checked again. Healthy claims, completed wakes, cancelled runs and superseded request versions cannot be reset; automatic processing retains its 12-attempt bound.
+
+After the public `continueInput` API succeeds or acknowledges the same input, the receive path records consumption on the canonical product wake. This also covers a signed IM webhook reaching the runtime first. The marker preserves attempts and historical failure fields; consumers prioritize `delivered_at` and never retry it. Reads use the existing wake primary key; no runtime tables or schemas are modified by the product fix.
+
+Additional integration cases cover an expired twelfth resume attempt, concurrent explicit retries, active claim preservation, cancellation, version changes, removed room membership, a signed webhook consuming the answer first, and process loss after IM acceptance on the twelfth submission attempt. The browser regression checks frozen answers, refresh without POST, the explicit retry button and one successful retry. See `resume-repair/validation.json` and its screenshot/report for exact counts and the candidate-runtime limitation. The official published dependency pin and final release requalification remain required.

@@ -39,13 +39,13 @@ before(async () => {
 beforeEach(async () => { await resetAllTables() })
 after(async () => { await teardownAll(server); await im?.close() })
 
-for (const mode of ['current-product', 'public-defer', 'builtin-control', 'early-submit', 'crash-before-send', 'crash-after-send'] as const) {
+for (const mode of ['current-product', 'public-defer', 'builtin-control', 'early-submit', 'crash-before-send', 'crash-after-send', 'crash-final-send', 'resume-exhausted', 'resume-cancelled', 'resume-revoked', 'resume-stale', 'resume-webhook'] as const) {
   const publicDefer = mode === 'public-defer', builtin = mode === 'builtin-control'
   const product = mode !== 'public-defer' && mode !== 'builtin-control'
   const title = builtin ? 'built-in task.ask can persist and resume its own input wait exactly once'
     : publicDefer ? 'published native defer persists a questionnaire input wait' : mode === 'early-submit'
       ? 'an answer committed before wait retries the original threaded run without dispatching a new run'
-      : mode.startsWith('crash-') ? `durable submission recovery survives ${mode}` : 'chat.ask parks after one questionnaire without another model turn'
+      : mode.startsWith('resume-') ? `questionnaire recovery handles ${mode}` : mode.startsWith('crash-') ? `durable submission recovery survives ${mode}` : 'chat.ask parks after one questionnaire without another model turn'
   test(title, async t => {
     const { companyId, projectId, agentId } = await seedCompanyWithAgent()
     await seedUserMembership('test-owner', companyId)
@@ -155,16 +155,25 @@ for (const mode of ['current-product', 'public-defer', 'builtin-control', 'early
         if (mode.startsWith('crash-')) {
           const original = ImMessagesApplication.prototype.acceptUserMessage
           const stop = t.mock.method(ImMessagesApplication.prototype, 'acceptUserMessage', async function(this: ImMessagesApplication, ...args: Parameters<typeof original>) {
-            if (mode === 'crash-after-send') await original.apply(this, args)
+            if (mode !== 'crash-before-send') await original.apply(this, args)
             throw new Error('simulated process loss after durable answer admission')
           })
           await assert.rejects(submitQuestionnaire({ ...caller, request: { answers } }, api), /simulated process loss/)
           stop.mock.restore()
-          assert.deepEqual(await getQuestionnaireState(caller, api), { status: mode === 'crash-before-send' ? 'pending' : 'submitted', readOnly: true, answers })
+          if (mode === 'crash-final-send') await pool.query(`UPDATE im_questionnaires SET submission_attempts=12,submission_claim_token='lost-final-send',submission_retry_at=NOW()-INTERVAL '1 second' WHERE company_id=$1`, [companyId])
+          assert.deepEqual(await getQuestionnaireState(caller, api), { status: mode === 'crash-before-send' ? 'pending' : 'resuming', readOnly: true, answers, ...(mode !== 'crash-before-send' ? { retryable: true } : {}) })
           await assert.rejects(submitQuestionnaire({ ...caller, request: { answers: { ...answers, materials: 'no' } } }, api), { status: 409 })
           const { flushQuestionnaireSubmissions } = await import('../im/questionnaires.js')
+          if (mode === 'crash-final-send') {
+            await flushQuestionnaireSubmissions()
+            assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'resuming', readOnly: true, answers, retryable: true })
+            assert.equal((await pool.query(`SELECT count(*)::int AS count FROM lingxios_ingress_outbox wake
+              JOIN im_questionnaires q ON q.company_id=wake.company_id AND q.submission_nonce=wake.client_msg_no
+              WHERE q.company_id=$1`, [companyId])).rows[0].count, 0)
+            await submitQuestionnaire({ ...caller, request: { answers } }, api)
+          }
           await Promise.all([flushQuestionnaireSubmissions(), flushQuestionnaireSubmissions()])
-          assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'submitted', readOnly: true, answers })
+          assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'resuming', readOnly: true, answers, retryable: false })
           assert.equal(im.messages.filter(message => message.channelId === conversationId && message.payload.role === 'user').length, 1)
         }
         const submitted = mode === 'current-product' ? await (async () => {
@@ -177,7 +186,7 @@ for (const mode of ['current-product', 'public-defer', 'builtin-control', 'early
         assert.equal(submitted.status, 'accepted')
         assert.equal((await submitQuestionnaire({ ...caller, request: { answers } }, api)).duplicate, true)
         await assert.rejects(submitQuestionnaire({ ...caller, request: { answers: { ...answers, materials: 'no' } } }, api), { status: 409 })
-        assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'submitted', readOnly: true, answers })
+        assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'resuming', readOnly: true, answers, retryable: false })
         const reply = im.messages.find(message => message.channelId === conversationId && message.payload.role === 'user')!
         assert.ok(reply)
         assert.equal(reply.payload.metadata.custom.replyToClientMsgNo, mode === 'early-submit' ? 'original-thread' : undefined, 'continuation preserves the original thread')
@@ -186,7 +195,55 @@ for (const mode of ['current-product', 'public-defer', 'builtin-control', 'early
           text: reply.payload.content.flatMap(part => part.type === 'text' ? [part.text] : []).join('\n') }
         if (product) {
           if (earlyNonce) await new Promise(resolve => setTimeout(resolve, 5100))
+          if (mode.startsWith('resume-')) {
+            // Failure model: final ingress attempt dies, accepted IM and answer remain durable;
+            // only the original authorized payload may repair the expired, unconsumed wake.
+            await pool.query(`UPDATE lingxios_ingress_outbox SET attempts=12,claim_token='lost-owner',
+              claimed_until=NOW()-INTERVAL '1 second' WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])
+            assert.equal(await flushAgentWakes(`questionnaire:${reply.clientMsgNo}`), 0)
+            assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'resuming', readOnly: true, answers, retryable: true })
+            await assert.rejects(submitQuestionnaire({ ...caller, request: { answers: { ...answers, materials: 'no' } } }, api), { status: 409 })
+            if (mode === 'resume-webhook') {
+              const body = JSON.stringify([{ message_idstr: reply.messageId, channel_id: conversationId, from_uid: 'test-owner', client_msg_no: reply.clientMsgNo,
+                payload: Buffer.from(JSON.stringify({ type: 1001, ...reply.payload })).toString('base64') }])
+              const signature = createHmac('sha256', 'fixture').update(body).digest('hex')
+              const response = await fetch(`${baseUrl}/webhooks/wukong`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-wukong-signature': signature }, body })
+              assert.equal(response.status, 200, await response.clone().text())
+              assert.equal((await pool.query(`SELECT delivered_at IS NOT NULL AS delivered FROM lingxios_ingress_outbox WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])).rows[0].delivered, true, 'every successful continuation records the canonical consumption proof')
+              assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'submitted', readOnly: true, answers })
+              await submitQuestionnaire({ ...caller, request: { answers } }, api)
+              assert.deepEqual((await pool.query(`SELECT attempts,failed_at IS NOT NULL AS failed FROM lingxios_ingress_outbox WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])).rows[0], { attempts: 12, failed: true })
+              assert.equal(await flushAgentWakes(`questionnaire:${reply.clientMsgNo}`), 0, 'consumed failure is historical, never eligible for another retry')
+              assert.equal(await worker.runNext(), true)
+              assert.equal(modelCalls, 2)
+              return
+            }
+            if (mode === 'resume-cancelled') assert.equal(await api.cancel(identity), true)
+            if (mode === 'resume-stale') assert.equal(await api.revise(identity, 'A different request revision'), true)
+            if (mode === 'resume-revoked') await pool.query(`UPDATE conversations SET members=$2::jsonb WHERE id=$1`, [conversationId, JSON.stringify([agentId])])
+            if (mode !== 'resume-exhausted') {
+              await assert.rejects(submitQuestionnaire({ ...caller, request: { answers } }, api))
+              await assert.rejects(receiveAgentRequest({ companyId, agentId, channelId: conversationId, clientMsgNo: reply.clientMsgNo, authenticatedUserId: 'test-owner' }))
+              const failed = (await pool.query(`SELECT attempts,failed_at IS NOT NULL AS failed,delivered_at IS NOT NULL AS delivered
+                FROM lingxios_ingress_outbox WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])).rows[0]
+              assert.deepEqual(failed, { attempts: 12, failed: true, delivered: false })
+              if (mode !== 'resume-revoked') assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'unavailable', readOnly: true })
+              return
+            }
+            await Promise.all([submitQuestionnaire({ ...caller, request: { answers } }, api), submitQuestionnaire({ ...caller, request: { answers } }, api)])
+            assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'resuming', readOnly: true, answers, retryable: false })
+            const reset = (await pool.query(`SELECT attempts,failed_at IS NOT NULL AS failed FROM lingxios_ingress_outbox WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])).rows[0]
+            assert.deepEqual(reset, { attempts: 0, failed: false })
+            // Healthy/in-flight work must retain its attempt budget and owner across explicit retries.
+            await pool.query(`UPDATE lingxios_ingress_outbox SET attempts=3,claim_token='active-owner',claimed_until=NOW()+INTERVAL '1 minute' WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])
+            await submitQuestionnaire({ ...caller, request: { answers } }, api)
+            assert.deepEqual((await pool.query(`SELECT attempts,claim_token FROM lingxios_ingress_outbox WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])).rows[0], { attempts: 3, claim_token: 'active-owner' })
+            await pool.query(`UPDATE lingxios_ingress_outbox SET claimed_until=NOW()-INTERVAL '1 second' WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])
+          }
           assert.equal(await flushAgentWakes(`questionnaire:${reply.clientMsgNo}`), 1)
+          assert.deepEqual(await getQuestionnaireState(caller, api), { status: 'submitted', readOnly: true, answers })
+          await submitQuestionnaire({ ...caller, request: { answers } }, api)
+          assert.equal((await pool.query(`SELECT delivered_at IS NOT NULL AS delivered FROM lingxios_ingress_outbox WHERE event_id=$1`, [`questionnaire:${reply.clientMsgNo}`])).rows[0].delivered, true)
           assert.equal(await flushAgentWakes(`questionnaire:${reply.clientMsgNo}`), 0)
           const replay = await receiveAgentRequest({ companyId, agentId, channelId: conversationId, clientMsgNo: reply.clientMsgNo, authenticatedUserId: 'test-owner' })
           assert.ok('deduplicated' in replay && replay.deduplicated)
