@@ -112,11 +112,9 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
       // Memory stays inside trusted Agent execution, including summaries and maintenance.
       memory: { contextBudget: { ratio: 0.08, maxTokens: 8000, concurrency: 2, timeoutMs: 10000, optionalRecall: true },
         reflection: { afterInteractions: 5, idleMs: 600000 },
-        evolution: { benchmarkId: nativeEvolutionBenchmark.id }, async resolveScopes(work,database,signal) {
-        const scopes = await resolveMemoryScopes(work,database,signal)
-        if (scopes.length) await (await lingxiOSControl()).freezeEvolutionBenchmark(work.tenantId,nativeEvolutionBenchmark)
-        return scopes
-      } }, verifyRun: async context => [...await createCanvasRuntime(lingxiOSControl).verify(context), ...await verifyVisualizeCandidate(context)],
+        evolution: { benchmarkId: nativeEvolutionBenchmark.id, benchmark: nativeEvolutionBenchmark },
+        resolveScopes: resolveMemoryScopes,
+      }, verifyRun: async context => [...await createCanvasRuntime(lingxiOSControl).verify(context), ...await verifyVisualizeCandidate(context)],
       homesRoot: process.env.AGENT_OS_HOMES_ROOT?.trim() || '.agent-os/homes' }).catch(error => {
         previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined; control = undefined
         throw error

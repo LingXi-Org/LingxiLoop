@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-19T18:00:21.943Z",
+  "runtime": "3.5.4",
+  "node": "v22.23.3",
+  "environment": "isolated PostgreSQL; deterministic model; recording IM; no live provider",
+  "percentilePolicy": "individual samples and min/median/max only; no P95/P99 with fewer than 100 samples per cell",
+  "evidence": [
+    {
+      "label": "observer-positive-control",
+      "registryCalls": 2,
+      "poolAcquires": 2
+    },
+    {
+      "label": "scopes-0-first",
+      "elapsedMs": 18.3,
+      "spans": {
+        "pool_acquire": {
+          "calls": 13,
+          "ms": 0.64
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.84
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 10.77
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.41
+        }
+      }
+    }
+  ]
+}

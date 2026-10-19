@@ -1,0 +1,162 @@
+{
+  "environment": "isolated PostgreSQL; deterministic model; recording IM; no live provider",
+  "percentilePolicy": "individual samples and min/median/max only; no P95/P99 with fewer than 100 samples per cell",
+  "baselineRuntime": "3.5.4",
+  "candidateRuntime": "3.5.5",
+  "coldScopes": {
+    "before": {
+      "label": "scopes-0-first",
+      "elapsedMs": 27.09,
+      "spans": {
+        "pool_acquire": {
+          "calls": 13,
+          "ms": 0.59
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.28
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 19.56
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.43
+        }
+      }
+    },
+    "after": {
+      "label": "scopes-0-first",
+      "elapsedMs": 17.78,
+      "spans": {
+        "pool_acquire": {
+          "calls": 11,
+          "ms": 0.63
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 3.2
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 10.91
+        }
+      }
+    }
+  },
+  "registryLock1200ms": {
+    "before": {
+      "label": "list-unrelated-evolution-lock-1200ms",
+      "elapsedMs": 1209.01,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 1.01
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 3.82
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 10.85
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1188.03
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 3.26
+        }
+      }
+    },
+    "after": {
+      "label": "list-unrelated-evolution-lock-1200ms",
+      "elapsedMs": 19.68,
+      "spans": {
+        "pool_acquire": {
+          "calls": 12,
+          "ms": 0.43
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 4.47
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 12.29
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 1.42
+        }
+      }
+    }
+  },
+  "warmListMs": {
+    "0": {
+      "before": {
+        "samples": 19,
+        "min": 13.39,
+        "median": 24.29,
+        "max": 36.68
+      },
+      "after": {
+        "samples": 19,
+        "min": 9.61,
+        "median": 12.18,
+        "max": 18.23
+      }
+    },
+    "8": {
+      "before": {
+        "samples": 19,
+        "min": 11.29,
+        "median": 16.96,
+        "max": 26.11
+      },
+      "after": {
+        "samples": 19,
+        "min": 8.43,
+        "median": 10.09,
+        "max": 17.12
+      }
+    },
+    "1024": {
+      "before": {
+        "samples": 19,
+        "min": 10.11,
+        "median": 12.01,
+        "max": 17.18
+      },
+      "after": {
+        "samples": 19,
+        "min": 8.3,
+        "median": 11.07,
+        "max": 17.06
+      }
+    }
+  },
+  "concurrent4Ms": {
+    "0": {
+      "before": 58.44,
+      "after": 37.43
+    },
+    "8": {
+      "before": 35.5,
+      "after": 23.44
+    },
+    "1024": {
+      "before": 28.42,
+      "after": 22.19
+    }
+  },
+  "candidateOrdinaryRegistryCalls": 0,
+  "candidateObserverPositiveControl": {
+    "label": "observer-positive-control",
+    "registryCalls": 2,
+    "poolAcquires": 2
+  }
+}

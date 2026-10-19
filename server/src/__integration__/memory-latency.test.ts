@@ -25,23 +25,42 @@ const queryKind = (sql: string) => /agent_evolution_benchmarks/.test(sql) ? 'evo
   : /agent_run_bindings|project_memberships|company_memberships|participants|im_channel_bindings|conversation_policies/.test(sql) ? 'authorization'
   : /agent_run_events|agent_action_|agent_steps/.test(sql) ? 'event_and_receipt'
   : 'other_sql'
+function observeCall<T>(invoke: (args: unknown[]) => T, args: unknown[], done: () => void): T {
+  let completed = false
+  const finish = () => { if (!completed) { completed = true; done() } }
+  const callback = args.at(-1)
+  if (typeof callback === 'function') {
+    args = [...args]
+    args[args.length - 1] = function (this: unknown, ...values: unknown[]) {
+      finish()
+      return Reflect.apply(callback, this, values)
+    }
+  }
+  try {
+    const result = invoke(args)
+    if (result instanceof Promise) return result.finally(finish) as T
+    if (typeof callback !== 'function') finish()
+    return result
+  } catch (error) { finish(); throw error }
+}
 before(async () => {
   await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong()
   pool.on('connect', client => {
     client.query = new Proxy(client.query, { apply(target, receiver, args) {
       const rows = samples.getStore(), began = performance.now()
-      const result = Reflect.apply(target, receiver, args)
-      if (rows && result instanceof Promise) return result.finally(() => rows.push({ kind: queryKind(typeof args[0] === 'string' ? args[0] : args[0]?.text ?? ''), ms: performance.now() - began }))
-      return result
+      return rows ? observeCall(wrapped => Reflect.apply(target, receiver, wrapped), args,
+        () => rows.push({ kind: queryKind(typeof args[0] === 'string' ? args[0] : args[0]?.text ?? ''), ms: performance.now() - began }))
+        : Reflect.apply(target, receiver, args)
     } })
   })
   // Attach the same observer to existing idle clients by closing them before measurement.
   const clients = await Promise.all(Array.from({ length: pool.totalCount }, () => pool.connect()))
   clients.forEach(client => { client.release(true) })
   pool.connect = new Proxy(pool.connect, { apply(target, receiver, args) {
-    const rows = samples.getStore(), began = performance.now(), result = Reflect.apply(target, receiver, args)
-    if (rows && result instanceof Promise) return result.finally(() => rows.push({ kind: 'pool_acquire', ms: performance.now() - began }))
-    return result
+    const rows = samples.getStore(), began = performance.now()
+    return rows ? observeCall(wrapped => Reflect.apply(target, receiver, wrapped), args,
+      () => rows.push({ kind: 'pool_acquire', ms: performance.now() - began }))
+      : Reflect.apply(target, receiver, args)
   } })
 })
 after(async () => {
@@ -59,11 +78,30 @@ async function measured<T>(label: string, operation: () => Promise<T>) {
   const totals: Record<string, { calls: number; ms: number }> = {}
   for (const span of spans) { const cell = totals[span.kind] ??= { calls: 0, ms: 0 }; cell.calls++; cell.ms += span.ms }
   for (const cell of Object.values(totals)) cell.ms = rounded(cell.ms)
-  evidence.push({ label, elapsedMs: rounded(performance.now() - start), spans: totals })
+  const elapsedMs = rounded(performance.now() - start)
+  evidence.push({ label, elapsedMs, spans: totals })
+  if (label.startsWith('scopes-') || label.startsWith('list-') || label.startsWith('native-run-')) {
+    assert.equal(totals.evolution_registration?.calls ?? 0, 0, `${label}: ordinary memory reads must not register evolution benchmarks`)
+  }
+  if (label === 'list-unrelated-evolution-lock-1200ms') {
+    assert.ok(elapsedMs < 500, `memory read waited ${elapsedMs}ms on an unrelated benchmark lock`)
+  }
   return value
 }
 
 test('measure native memory list separately from model continuation and projection', { timeout: 180000 }, async () => {
+  const controls: Span[] = []
+  await samples.run(controls, async () => {
+    const sql = 'SELECT 1 FROM lingxios.agent_evolution_benchmarks WHERE false'
+    await pool.query(sql) // pg Pool.query calls client.query with a callback.
+    const client = await pool.connect()
+    try { await client.query(sql) } finally { client.release() }
+  })
+  const registryCalls = controls.filter(span => span.kind === 'evolution_registration').length
+  const poolAcquires = controls.filter(span => span.kind === 'pool_acquire').length
+  assert.equal(registryCalls, 2, 'observer must see direct pool and borrowed-client queries exactly once')
+  assert.equal(poolAcquires, 2, 'observer must see callback and Promise pool acquisition exactly once')
+  evidence.push({ label: 'observer-positive-control', registryCalls, poolAcquires })
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const app = await lingxiOSControl(), memory = app.memory; assert.ok(memory)
