@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="2" failures="0" errors="0" skipped="0" time="438.181">
+  <testsuite name="e2e/visualize/parity.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="438.181">
+    <testcase name="product: complete card interaction (light) [web]" classname="e2e/visualize/parity.e2e.ts" time="223.179"/>
+    <testcase name="product: complete card interaction (dark) [web]" classname="e2e/visualize/parity.e2e.ts" time="215.002"/>
+  </testsuite>
+</testsuites>

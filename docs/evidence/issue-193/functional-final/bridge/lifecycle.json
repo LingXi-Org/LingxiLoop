@@ -1,0 +1,37 @@
+{
+  "beforeStale": {
+    "follows": [],
+    "external": [],
+    "denied": [],
+    "externalHits": 0,
+    "acceptedSaves": 1,
+    "activePages": 1,
+    "closedPages": 0
+  },
+  "stale": {
+    "follows": [],
+    "external": [],
+    "denied": [
+      "state",
+      "state"
+    ],
+    "externalHits": 0,
+    "acceptedSaves": 1,
+    "activePages": 0,
+    "closedPages": 1
+  },
+  "closed": {
+    "follows": [
+      "Explain this fictional bridge fixture"
+    ],
+    "external": [],
+    "denied": [
+      "state",
+      "state"
+    ],
+    "externalHits": 0,
+    "acceptedSaves": 4,
+    "activePages": 0,
+    "closedPages": 3
+  }
+}

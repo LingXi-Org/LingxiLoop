@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="2" errors="0" skipped="0" time="483.313">
+  <testsuite name="e2e/visualize/bridge.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="101.013">
+    <testcase name="stale page operations fail, explicit retry replaces the guest and scope close releases pages [web]" classname="e2e/visualize/bridge.e2e.ts" time="101.013"/>
+  </testsuite>
+  <testsuite name="e2e/visualize/clipboard-write.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="59.107">
+    <testcase name="copy-image native write fulfills and supplies a real PNG [web]" classname="e2e/visualize/clipboard-write.e2e.ts" time="59.107">
+      <failure message="expected &quot;native-rejected&quot; to be &quot;observed&quot;" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected &quot;native-rejected&quot; to be &quot;observed&quot;</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="e2e/visualize/lifecycle.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="323.193">
+    <testcase name="page capacity reclaims hidden guests and restores the oldest saved state [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="323.193">
+      <failure message="Fixture page 41 did not become ready" type="EVALUATE_FAILED">EVALUATE_FAILED (body): Fixture page 41 did not become ready</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

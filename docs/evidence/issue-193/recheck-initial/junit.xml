@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="13" failures="6" errors="0" skipped="0" time="1520.104">
+  <testsuite name="e2e/visualize/bridge.e2e.ts" tests="2" failures="1" errors="0" skipped="0" time="147.366">
+    <testcase name="bridge rejects synthetic gestures and unsupported methods, accepts real user actions [web]" classname="e2e/visualize/bridge.e2e.ts" time="76.804"/>
+    <testcase name="stale page operations fail, explicit retry replaces the guest and scope close releases pages [web]" classname="e2e/visualize/bridge.e2e.ts" time="70.562">
+      <failure message="no frame matches iframe[data-visualize-guest]:visible: frameLocator(&quot;iframe[data-visualize-guest]:visible&quot;) &gt;&gt; frameLocator(&quot;iframe[data-visualize-content]&quot;) &gt;&gt; locator(&quot;#bridge-save-status&quot;)" type="LOCATOR_NOT_FOUND">LOCATOR_NOT_FOUND (body): no frame matches iframe[data-visualize-guest]:visible: frameLocator(&quot;iframe[data-visualize-guest]:visible&quot;) &gt;&gt; frameLocator(&quot;iframe[data-visualize-content]&quot;) &gt;&gt; locator(&quot;#bridge-save-status&quot;)</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="e2e/visualize/lifecycle.e2e.ts" tests="6" failures="3" errors="0" skipped="0" time="869.928">
+    <testcase name="variants retain local state, tabs load D3/calendar and mobile stays bounded [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="96.967"/>
+    <testcase name="session switching retains each state and host theme synchronizes in place [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="42.372"/>
+    <testcase name="failed acquisition retries explicitly [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="16.482"/>
+    <testcase name="copy-image button writes a real PNG through the host clipboard [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="19.141">
+      <failure message="Failed to execute 'read' on 'Clipboard': Read permission denied." type="EVALUATE_FAILED">EVALUATE_FAILED (body): Failed to execute 'read' on 'Clipboard': Read permission denied.</failure>
+    </testcase>
+    <testcase name="offline host exposes recovery and reconnects explicitly [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="38.296">
+      <failure message="locator matched no nodes within getByRole(&quot;button&quot;, name: &quot;重试&quot;)" type="LOCATOR_NOT_FOUND">LOCATOR_NOT_FOUND (body): locator matched no nodes within getByRole(&quot;button&quot;, name: &quot;重试&quot;)</failure>
+    </testcase>
+    <testcase name="page capacity reclaims hidden guests and restores the oldest saved state [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="656.670">
+      <failure message="test timed out after 600000 ms in phase body" type="TEST_TIMEOUT">TEST_TIMEOUT (body): test timed out after 600000 ms in phase body</failure>
+    </testcase>
+  </testsuite>
+  <testsuite name="e2e/visualize/parity.e2e.ts" tests="5" failures="2" errors="0" skipped="0" time="502.810">
+    <testcase name="upstream: complete card interaction (light) [web]" classname="e2e/visualize/parity.e2e.ts" time="72.099"/>
+    <testcase name="upstream: complete card interaction (dark) [web]" classname="e2e/visualize/parity.e2e.ts" time="113.538"/>
+    <testcase name="product: complete card interaction (light) [web]" classname="e2e/visualize/parity.e2e.ts" time="182.533">
+      <failure message="tap did not become actionable in time: locator.click: Timeout 17427ms exceeded.&#10;Call log:&#10;  - waiting for locator('iframe[data-visualize-guest]:visible').contentFrame().locator('iframe[data-visualize-content]').contentFrame().locator('e2e-roots=').getByRole('button', { name: /^[\s\p{Co}]*Saved[\s\p{Co}]+count:[\s\p{Co}]+5[\s\p{Co}]*$/u })&#10;    - locator resolved to &lt;button type=&quot;button&quot; id=&quot;fixture-count&quot;&gt;Saved count: 5&lt;/button&gt;&#10;  - attempting click action&#10;    - waiting for element to be visible, enabled and stable&#10;    - element is visible, enabled and stable&#10;    - scrolling into view if needed&#10;    - done scrolling&#10;: frameLocator(&quot;iframe[data-visualize-guest]:visible&quot;) &gt;&gt; frameLocator(&quot;iframe[data-visualize-content]&quot;) &gt;&gt; getByRole(&quot;button&quot;, name: &quot;Saved count: 5&quot;)" type="ACTION_FAILED">ACTION_FAILED (body): tap did not become actionable in time: locator.click: Timeout 17427ms exceeded.
+Call log:
+  - waiting for locator('iframe[data-visualize-guest]:visible').contentFrame().locator('iframe[data-visualize-content]').contentFrame().locator('e2e-roots=').getByRole('button', { name: /^[\s\p{Co}]*Saved[\s\p{Co}]+count:[\s\p{Co}]+5[\s\p{Co}]*$/u })
+    - locator resolved to &lt;button type=&quot;button&quot; id=&quot;fixture-count&quot;&gt;Saved count: 5&lt;/button&gt;
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+: frameLocator(&quot;iframe[data-visualize-guest]:visible&quot;) &gt;&gt; frameLocator(&quot;iframe[data-visualize-content]&quot;) &gt;&gt; getByRole(&quot;button&quot;, name: &quot;Saved count: 5&quot;)</failure>
+    </testcase>
+    <testcase name="product: complete card interaction (dark) [web]" classname="e2e/visualize/parity.e2e.ts" time="106.623">
+      <failure message="tap did not become actionable in time: locator.click: Timeout 11791ms exceeded.&#10;Call log:&#10;  - waiting for locator('iframe[data-visualize-guest]:visible').contentFrame().locator('iframe[data-visualize-content]').contentFrame().locator('e2e-roots=').getByRole('button', { name: /^[\s\p{Co}]*Show[\s\p{Co}]+detail[\s\p{Co}]*$/u })&#10;    - locator resolved to &lt;button type=&quot;button&quot; id=&quot;fixture-expand-content&quot;&gt;Show detail&lt;/button&gt;&#10;  - attempting click action&#10;    - waiting for element to be visible, enabled and stable&#10;    - element is visible, enabled and stable&#10;    - scrolling into view if needed&#10;    - done scrolling&#10;: frameLocator(&quot;iframe[data-visualize-guest]:visible&quot;) &gt;&gt; frameLocator(&quot;iframe[data-visualize-content]&quot;) &gt;&gt; getByRole(&quot;button&quot;, name: &quot;Show detail&quot;)" type="ACTION_FAILED">ACTION_FAILED (body): tap did not become actionable in time: locator.click: Timeout 11791ms exceeded.
+Call log:
+  - waiting for locator('iframe[data-visualize-guest]:visible').contentFrame().locator('iframe[data-visualize-content]').contentFrame().locator('e2e-roots=').getByRole('button', { name: /^[\s\p{Co}]*Show[\s\p{Co}]+detail[\s\p{Co}]*$/u })
+    - locator resolved to &lt;button type=&quot;button&quot; id=&quot;fixture-expand-content&quot;&gt;Show detail&lt;/button&gt;
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+    - element is visible, enabled and stable
+    - scrolling into view if needed
+    - done scrolling
+: frameLocator(&quot;iframe[data-visualize-guest]:visible&quot;) &gt;&gt; frameLocator(&quot;iframe[data-visualize-content]&quot;) &gt;&gt; getByRole(&quot;button&quot;, name: &quot;Show detail&quot;)</failure>
+    </testcase>
+    <testcase name="standalone render.py export runs offline and retains independent widget state [web]" classname="e2e/visualize/parity.e2e.ts" time="28.017"/>
+  </testsuite>
+</testsuites>

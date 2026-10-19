@@ -1,0 +1,46 @@
+[
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/functional-final/report.json",
+    "sha256": "12dd6d22e8ef0d41e1bf3507cbe6dabe0433c4b229dc2f80efdf2fda3fee1ba7"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/functional-final/summary.md",
+    "sha256": "bd50942f99daeb4d126b3d5eb7ff4c342b53cd6c0d2977bd36222103f6e186a3"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/functional-final/junit.xml",
+    "sha256": "389f8e0bd60a4211d04386948ae30e13f1775abaab951e4630256ff44c491ae7"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/functional-final/screenshots/web/e2e_visualize_bridge.e2e.ts__stale_20page_20operations_20fail_2C_20explicit_20retry_20replaces_20the_20guest_20-65d67f04/default/attempt-0/screenshots/001-bridge-scope-closed.png",
+    "sha256": "7abd1d9cc269563aaa7732deddb24e4cddc62846d1d58e2238f106a945dd5781"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/functional-final/clipboard-write-interaction.json",
+    "sha256": "6dfd976fe0149dcf0d59e176095bdf7dd00b65b7ea6232d6669f9d800ece826d"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/functional-final/manifest.json",
+    "sha256": "dbaeeee01e8a70df2db6ae632c2f9eb7945ab5cfe9da38a6886fa8f5afe8f993"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/functional-final/export.html",
+    "sha256": "c5a5fb0875d289435c094fc4f1f3f1250444645cd4fc84ee5d9b4f5175047570"
+  },
+  {
+    "path": "docs/evidence/issue-193/functional-final/bridge/lifecycle.json",
+    "sha256": "d041171d1bc593f3717cd84ab1c0a16abd22f80afcb76d9bfafd4036ad5f0b08"
+  },
+  {
+    "path": "docs/evidence/issue-193/functional-final/capacity-trace.zip",
+    "sha256": "3b54e306831bb0a515fd11196930dfa10edc1edf3396fb694058b8c072f0141a"
+  },
+  {
+    "path": "docs/evidence/issue-193/functional-final/capacity-diagnostic.json",
+    "sha256": "3b58e325a3f2282056e2db3af1e4eb67d2b9c39d0ae0411364e9ab488ce2a16f"
+  },
+  {
+    "path": "docs/evidence/issue-193/functional-final/README.md",
+    "sha256": "7fc09cf7609b73fe1596214e74ab8523cc9267ad898d84786881f18ac2319319"
+  }
+]
