@@ -182,25 +182,30 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   return projection
 }
 
-function changes(previous: AgentRunSnapshot | undefined, next: AgentRunSnapshot): AssistantTransportStateOperation[] {
-  const state = JSON.parse(JSON.stringify(next)) as ReadonlyJSONValue
+function changes(previous: ReadonlyJSONValue | undefined, next: ReadonlyJSONValue): AssistantTransportStateOperation[] {
   const operations: AssistantTransportStateOperation[] = []
   function diff(before: ReadonlyJSONValue | undefined, after: ReadonlyJSONValue, path: string[]) {
-    if (JSON.stringify(before) === JSON.stringify(after)) return
+    if (before === after) return
     if (typeof before === 'string' && typeof after === 'string' && ['text','argsText'].includes(path.at(-1) ?? '') && after.startsWith(before)) {
       operations.push({ type: 'append-text',path,value: after.slice(before.length) })
     } else if (before && after && typeof before === 'object' && typeof after === 'object'
-      && Array.isArray(before) === Array.isArray(after) && JSON.stringify(Object.keys(before)) === JSON.stringify(Object.keys(after))) {
-      for (const key of Object.keys(after)) diff(Reflect.get(before,key),Reflect.get(after,key),[...path,key])
+      && Array.isArray(before) === Array.isArray(after)) {
+      const beforeKeys = Object.keys(before), afterKeys = Object.keys(after)
+      if (beforeKeys.length === afterKeys.length && beforeKeys.every((key, index) => key === afterKeys[index])) {
+        for (const key of afterKeys) diff(Reflect.get(before,key),Reflect.get(after,key),[...path,key])
+      } else operations.push({ type: 'set',path,value: after })
     } else operations.push({ type: 'set',path,value: after })
   }
-  diff(previous ? JSON.parse(JSON.stringify(previous)) : undefined,state,[])
+  diff(previous,next,[])
   return operations
 }
 
 export function assistantRunResponse(body: ReadableStream<Uint8Array>, projection: RunStreamProjection, approvals?: { api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval' | 'readTerminal'>; identity: RunIdentity }): Response {
   async function* chunks(): AsyncGenerator<AssistantStreamChunk> {
-    let previous: AgentRunSnapshot | undefined
+    // Keep one JSON-normalized snapshot per response. It cannot be mutated by
+    // the projection or shared with another subscriber, and is already ready
+    // for the next comparison without cloning or serializing whole subtrees.
+    let previous: ReadonlyJSONValue | undefined
     for await (const item of nativeRunEvents(body)) {
       if (!item) {
         yield { type: 'update-state', path: [], operations: [] }
@@ -211,7 +216,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
       if (approvals && (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed'].includes(item.event.kind))) await projection.syncPresentation(approvals.identity)
       if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
       if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'goal.waiting')) await projection.syncQuestionnaire(approvals.identity)
-      const next = projection.snapshot
+      const next = JSON.parse(JSON.stringify(projection.snapshot)) as ReadonlyJSONValue
       const operations = changes(previous, next)
       if (operations.length) yield { type: 'update-state', path: [], operations }
       previous = next
