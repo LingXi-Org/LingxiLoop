@@ -17,6 +17,7 @@ import { imChannelsApplication } from './channels-facade.js'
 import { imMessagesApplication } from './messages-facade.js'
 import { imSessionApplication } from './session-facade.js'
 import { getUiState, saveUiState, submitUiAction } from './interactive-ui.js'
+import { getQuestionnaireState, submitQuestionnaire } from './questionnaires.js'
 import { uiReferenceSchema } from '../../../src/lib/interactive-ui/protocol.js'
 import {
   approvalResolutionRequestSchema,
@@ -327,6 +328,18 @@ imRouter.put('/channels/:id/ui/:uiId/state', safe(async (req, res) => {
 imRouter.post('/channels/:id/ui/:uiId/actions', safe(async (req, res) => {
   const caller = await uiCaller(req, 'conversation:write')
   const result = await submitUiAction({ ...caller, request: req.body })
+  res.status(result.duplicate ? 200 : 202).json(result)
+}))
+
+imRouter.get('/channels/:id/questionnaires/:questionId', safe(async (req, res) => {
+  const caller = await uiCaller(req, 'conversation:read')
+  res.setHeader('Cache-Control', 'no-store')
+  res.json(await getQuestionnaireState({ ...caller, questionId: String(req.params.questionId) }))
+}))
+
+imRouter.post('/channels/:id/questionnaires/:questionId/submit', safe(async (req, res) => {
+  const caller = await uiCaller(req, 'conversation:write')
+  const result = await submitQuestionnaire({ ...caller, questionId: String(req.params.questionId), request: req.body })
   res.status(result.duplicate ? 200 : 202).json(result)
 }))
 

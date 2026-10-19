@@ -401,7 +401,8 @@ export class ImMessagesApplication {
               WHERE member.company_id=$1 AND member.departed_at IS NULL AND channel.profile->'members' ? member.id`,
             [input.companyId,input.channelId])).rows : []
         await ensureSendAcceptance(db, { ...identity, inputDigest, channelId: input.channelId, channelType,
-          payload: input.payload.role === 'system' ? input.payload : canonicalMessageMentions(input.payload, members) })
+          payload: input.payload.role === 'system' || input.payload.metadata.custom.questionnaireReply
+            ? input.payload : canonicalMessageMentions(input.payload, members) })
         acceptance = await getSendAcceptance(db, identity)
       }
       if (!acceptance || acceptance.input_digest !== inputDigest) return { kind: 'nonce_conflict' }

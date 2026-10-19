@@ -1,4 +1,5 @@
 import { createNativeMessage, nativeText, nativeAttachments } from '@/lib/nativeMessage'
+import { questionnairesApi, type QuestionnaireAnswers, type QuestionnaireState } from '@/api/questionnaires'
 import type { AppendMessage, ThreadMessage } from '@assistant-ui/react'
 import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
 import type { ApiAttachment, WsEvent } from '@/api/contracts'
@@ -124,6 +125,7 @@ export class ChatTransport {
   private outboxRecovery: OutboxRecovery | undefined
   private readonly sends = new Map<string, { request: RequestContext; promise: Promise<boolean> }>()
   private readonly blockedRuns = new Set<string>()
+  private readonly questionnaireSubmissions = new Map<string, Promise<QuestionnaireState>>()
 
   boot(): void {
     if (this.connection.signal.aborted) this.connection = new AbortController()
@@ -147,6 +149,7 @@ export class ChatTransport {
     for (const unsubscribe of this.subscriptions) unsubscribe()
     this.subscriptions = []
     this.connection.abort()
+    this.questionnaireSubmissions.clear()
     this.cancelRecovery()
     this.workspaceIdentity = null; this.workspaceChannels = null
     chatLatency.clear()
@@ -428,14 +431,48 @@ export class ChatTransport {
     )
   }
 
-  async answerQuestionnaire(conversationId: string, questionId: string, answers: Record<string, string | string[]>): Promise<void> {
+  async readQuestionnaire(conversationId: string, questionId: string, signal?: AbortSignal): Promise<QuestionnaireState> {
+    const request = this.captureRequest()
+    if (!getMeId() || !getActiveCompanyId() || !this.includesChannel(conversationId)) throw new Error('这条消息不可回复')
+    const state = await questionnairesApi.read(conversationId, questionId, signal ? AbortSignal.any([signal, request.signal]) : request.signal)
+    if (!request.current()) throw new Error('登录或工作区已变化，请重新载入')
+    return state
+  }
+
+  answerQuestionnaire(conversationId: string, questionId: string, answers: QuestionnaireAnswers): Promise<QuestionnaireState> {
+    const request = this.captureRequest()
+    const key = JSON.stringify([request.identity, conversationId, questionId])
+    const existing = this.questionnaireSubmissions.get(key)
+    if (existing) return existing
+    const operation = (async () => {
+      // Reconcile a lost submit receipt before retrying the same durable question.
+      const current = await this.readQuestionnaire(conversationId, questionId)
+      if (!request.current()) throw new Error('登录或工作区已变化，请重新载入')
+      if (current.status === 'submitted') return current
+      if (current.status !== 'pending' && (current.status !== 'waiting' || current.readOnly)) throw new Error('这份问卷已不可提交')
+      const accepted = await questionnairesApi.submit(conversationId, questionId, current.status === 'pending' ? current.answers : answers, request.signal)
+      if (!request.current()) throw new Error('登录或工作区已变化，请重新载入')
+      const echo = accepted.echo
+      if (echo.channelId !== conversationId || echo.fromUid !== getMeId() || echo.messageId === '0'
+        || echo.clientMsgNo !== echo.payload.id
+        || (echo.payload.metadata.custom.questionnaireReply as { questionId?: unknown } | undefined)?.questionId !== questionId) throw new Error('提交回执待核对')
+      this.commitEnvelope(echo)
+      const saved = await this.readQuestionnaire(conversationId, questionId)
+      if (saved.status !== 'submitted' && saved.status !== 'pending') throw new Error('提交状态待确认，请重试')
+      return saved
+    })().finally(() => { if (this.questionnaireSubmissions.get(key) === operation) this.questionnaireSubmissions.delete(key) })
+    this.questionnaireSubmissions.set(key, operation)
+    return operation
+  }
+
+  async answerRecommendation(conversationId: string, questionId: string, answers: Record<string, string | string[]>): Promise<void> {
     const userId = getMeId(), companyId = getActiveCompanyId()
     if (!userId || !companyId) throw new Error('请先登录后回复卡片')
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify([companyId, conversationId, userId, questionId])))
     const id = 'q-' + Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
     const text = `问答卡片回复：\n${Object.entries(answers).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(', ') : value}`).join('\n')}`
     const sent = await this.send(conversationId, text, null, questionId, id, createNativeMessage({ id, role: 'user', content: [{ type: 'text', text }],
-      custom: { replyToClientMsgNo: questionId, questionnaireReply: { questionId, answers } } }))
+      custom: { replyToClientMsgNo: questionId, recommendationReply: { questionId, answers } } }))
     if (!sent) throw new Error('卡片回复尚未发送，请重试')
   }
 

@@ -13,6 +13,7 @@ import { agentMessageSchemas } from './agent-contracts.js'
 import { createNativeMessage, nativeText, type NativeMessage } from './message-types.js'
 import { appendReadReceiptAdvance } from './read-receipts-repository.js'
 import { extractLessonBlocks } from '../../../src/lib/interactive-ui/source.js'
+import { reconcileQuestionnaire, sendQuestionnaire } from './questionnaires.js'
 
 const identity = ({ work }: ActionContext) => ({ companyId: work.tenantId, userId: work.agentId, channelId: productConversationId(work) })
 const application = (context: ActionContext) => createImMessagesApplication(context.signal)
@@ -107,7 +108,15 @@ export function createMessageTools(control: () => ReturnType<typeof createLingxi
       return result
     } }),
   nativeTool('chat.recommend', agentMessageSchemas.recommend, { ...communication, description: 'Offer a learning next step as an interactive recommendation card. This is advice, not a completed action; the learner can choose to continue or request alternatives.' }),
-  nativeTool('chat.ask', agentMessageSchemas.ask, { ...communication, description: 'Send an interactive questionnaire with unique questions and choices.' }),
+  nativeTool('chat.ask', agentMessageSchemas.ask, { effect: 'uncertain', approval: false, authorize, semanticVersion: '2',
+    description: 'Ask one blocking questionnaire. Execution pauses until the original learner submits valid answers; never assume choices or continue dependent work before submission.',
+    async execute(context, input) {
+      const violation = assistantTextViolation(input.title)
+      if (violation) throw new NoEffectError(violation, 'invalid_input')
+      return sendQuestionnaire(context, input)
+    },
+    async reconcile(context) { await authorize(context); return reconcileQuestionnaire(context) },
+  }),
   nativeTool('chat.history', agentMessageSchemas.history, { description: 'Read a bounded page of messages and advance the agent’s read receipt.', effect: 'transaction', approval: false, authorize,
     async execute(context, input) {
       const messages = await application(context).history({ ...identity(context), ...input })

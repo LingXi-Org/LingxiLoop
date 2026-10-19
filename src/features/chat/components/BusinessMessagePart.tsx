@@ -1,11 +1,12 @@
 import { useAuiState, type DataMessagePartProps } from '@assistant-ui/react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
+import { questionnaireAnswersSchema, type QuestionnaireState } from '@/api/questionnaires'
 import { DocumentReference } from '@/components/assistant-ui/elements/document-reference'
 import { ProgressCard, type ProgressStep } from '@/components/assistant-ui/elements/progress-card'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
 import { userFacingError } from '@/lib/userFacingError'
-import { getMeId } from '@/stores/auth'
+import { getMeId, useAuth } from '@/stores/auth'
 import { chatTransport } from '../runtime/transport'
 import { CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
   PollFormTool, PresentationArtifactTool, RecommendationTool } from './ToolRenderers'
@@ -20,6 +21,84 @@ const activityStatus: Record<string, ProgressStep['status']> = { running: 'runni
 
 export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartProps<unknown> & { readOnly: boolean }) {
   const message = useAuiState(state => state.message)
+  const identity = useAuth(state => `${state.user?.id}:${state.activeCompanyId}`)
+  return name === 'questionnaire'
+    ? <DurableQuestionnaire key={`${identity}:${message.metadata.custom.conversationId}:${message.id}`} data={data} readOnly={readOnly} />
+    : <LegacyBusinessMessagePart name={name} data={data} readOnly={readOnly} />
+}
+
+function DurableQuestionnaire({ data, readOnly }: { data: unknown; readOnly: boolean }) {
+  const message = useAuiState(state => state.message)
+  const conversationId = message.metadata.custom.conversationId
+  const [state, setState] = useState<QuestionnaireState | null>(null)
+  const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null), [reload, setReload] = useState(0)
+  const inFlight = useRef(false), lifecycle = useRef<AbortController | null>(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    lifecycle.current = controller
+    setState(null); setLoading(true); setError(null)
+    const load = async () => {
+      try {
+        if (typeof conversationId !== 'string') throw new Error('这条消息不可回复')
+        const saved = await chatTransport.readQuestionnaire(conversationId, message.id, controller.signal)
+        if (!controller.signal.aborted) setState(saved)
+      } catch (cause) {
+        if (!controller.signal.aborted) setError(userFacingError(cause, '问卷状态加载失败，请重新载入。'))
+      } finally { if (!controller.signal.aborted) setLoading(false) }
+    }
+    void load()
+    return () => controller.abort()
+  }, [conversationId, message.id, readOnly, reload])
+  useEffect(() => {
+    if (state?.status !== 'pending' || typeof conversationId !== 'string') return
+    const controller = new AbortController()
+    let timer: ReturnType<typeof setTimeout>
+    const poll = async () => {
+      try {
+        const saved = await chatTransport.readQuestionnaire(conversationId, message.id, controller.signal)
+        if (!controller.signal.aborted && !inFlight.current) { setState(saved); setError(null) }
+      } catch (cause) {
+        if (!controller.signal.aborted) setError(userFacingError(cause, '提交状态暂未确认，可重新载入。'))
+      } finally { if (!controller.signal.aborted) timer = setTimeout(() => void poll(), 3000) }
+    }
+    timer = setTimeout(() => void poll(), 3000)
+    return () => { controller.abort(); clearTimeout(timer) }
+  }, [state?.status, conversationId, message.id])
+  const disabled = readOnly || loading || busy || !state || state.readOnly || state.status !== 'waiting'
+  async function submit(answers: unknown) {
+    const retrying = state?.status === 'pending' && !readOnly && !loading && !busy
+    if (disabled && !retrying || inFlight.current || typeof conversationId !== 'string') return
+    const controller = lifecycle.current
+    inFlight.current = true; setBusy(true); setError(null)
+    try {
+      const saved = await chatTransport.answerQuestionnaire(conversationId, message.id, questionnaireAnswersSchema.parse(answers))
+      if (!controller?.signal.aborted) setState(saved)
+    } catch (cause) {
+      if (!controller?.signal.aborted) setError(userFacingError(cause, '提交状态未确认，请重试或重新载入。'))
+    } finally {
+      inFlight.current = false
+      if (!controller?.signal.aborted) setBusy(false)
+    }
+  }
+  return <div className="grid min-w-0 gap-2">
+    <fieldset disabled={disabled} aria-busy={loading || busy}>
+      <ElicitationFormTool args={{ ...record(data), id: message.id, acceptedLabel: state?.status === 'pending' ? '回答已保存，正在确认提交' : undefined }}
+        result={state?.status === 'submitted' || state?.status === 'pending' ? state.answers : undefined} addResult={submit} />
+    </fieldset>
+    {loading && <p role="status" className="text-xs text-muted-foreground">正在读取问卷状态…</p>}
+    {busy && <p role="status" className="text-xs text-muted-foreground">正在提交…</p>}
+    {state?.status === 'pending' && !readOnly && <button type="button" disabled={busy || loading}
+      className="w-fit rounded px-2 py-1 text-xs underline focus-visible:outline-2" onClick={() => void submit(state.answers)}>重试提交</button>}
+    {state?.status === 'unavailable' && <p className="text-xs text-muted-foreground">这份问卷已不可提交。</p>}
+    {state?.status === 'waiting' && state.readOnly && <p className="text-xs text-muted-foreground">这份问卷仅供查看。</p>}
+    {error && <><p role="alert" className="text-xs text-destructive">{error}</p>
+      <button type="button" disabled={busy || loading} className="w-fit rounded px-2 py-1 text-xs underline focus-visible:outline-2" onClick={() => setReload(value => value + 1)}>重新载入</button></>}
+  </div>
+}
+
+function LegacyBusinessMessagePart({ name, data, readOnly }: Pick<DataMessagePartProps<unknown>, 'name' | 'data'> & { readOnly: boolean }) {
+  const message = useAuiState(state => state.message)
   const replies = useAuiState(state => state.thread.messages)
   const [submitted, setSubmitted] = useState<unknown>()
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null)
@@ -29,8 +108,8 @@ export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartPro
   const answer = replies.find(reply => reply.role === 'user' && reply.metadata.custom.senderId === getMeId()
     && reply.metadata.custom.delivery === 'sent' && reply.metadata.custom.conversationId === custom.conversationId
     && reply.metadata.custom.replyToClientMsgNo === message.id
-    && (reply.metadata.custom.questionnaireReply as { questionId?: string } | undefined)?.questionId === message.id)
-  const recorded = (answer?.metadata.custom.questionnaireReply as { answers?: Record<string, unknown> } | undefined)?.answers
+    && ((reply.metadata.custom.recommendationReply ?? reply.metadata.custom.questionnaireReply) as { questionId?: string } | undefined)?.questionId === message.id)
+  const recorded = ((answer?.metadata.custom.recommendationReply ?? answer?.metadata.custom.questionnaireReply) as { answers?: Record<string, unknown> } | undefined)?.answers
   const items = value.items as Array<{ name: string; required?: boolean; multiple?: boolean; input?: unknown; choices?: Array<{ value: string; disabled?: boolean }> }> | undefined
   const valid = recorded && items?.length && Object.keys(recorded).every(key => items.some(item => item.name === key))
     && items.every(item => {
@@ -51,7 +130,7 @@ export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartPro
   const submit = (answers: unknown) => perform(async () => {
     if (result !== undefined) return
     if (typeof custom.conversationId !== 'string') throw new Error('这条消息不可回复')
-    await chatTransport.answerQuestionnaire(custom.conversationId, message.id, z.record(z.string(), z.union([z.string(), z.array(z.string())])).parse(answers))
+    await chatTransport.answerRecommendation(custom.conversationId, message.id, z.record(z.string(), z.union([z.string(), z.array(z.string())])).parse(answers))
     setSubmitted(answers)
   })
 
@@ -70,7 +149,6 @@ export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartPro
         })} />
       break
     }
-    case 'questionnaire': content = <ElicitationFormTool args={{ ...value, id: message.id }} result={result} addResult={submit} />; break
     case 'recommendation': content = <MessageFooterContents inset={false}><RecommendationTool args={value} result={result} addResult={submit} /></MessageFooterContents>; break
     case 'handoff': content = <p className="whitespace-pre-wrap break-words text-sm">{[value.title, value.task, value.context, value.result, value.error].filter((part): part is string => typeof part === 'string' && Boolean(part)).join('\n') || '历史协作记录'}</p>; break
     case 'canvas': content = <>

@@ -110,7 +110,7 @@ export function RecommendationTool({ args, result, addResult }: CardProps) {
 }
 
 export function ElicitationFormTool({ args, result, addResult }: CardProps) {
-  const value = args as { id?: string; title?: string; items?: ElicitationItem[]; submitLabel?: string }
+  const value = args as { id?: string; title?: string; items?: ElicitationItem[]; submitLabel?: string; acceptedLabel?: string }
   const items = Array.isArray(value.items) ? value.items : []
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
   if (items.length === 0) throw new Error('信息补充表单协议没有问题项')
@@ -135,6 +135,7 @@ export function ElicitationFormTool({ args, result, addResult }: CardProps) {
       fields={fields}
       state={submitted ? 'accepted' : 'request'}
       acceptLabel={value.submitLabel ?? '提交'}
+      acceptedLabel={value.acceptedLabel}
       acceptDisabled={missingRequired}
       onFieldChange={(name: string, answer: ElicitationValue) => setAnswers((current) => ({
         ...current,
