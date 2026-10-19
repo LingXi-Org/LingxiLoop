@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { Session } from 'node:inspector/promises'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import { fixture, frames, stream } from './fixtures.js'
 
@@ -50,8 +52,10 @@ async function measure(counters: boolean) {
     const final = tracker.state as unknown as { message: { content: { type: string; text?: string }[]; status: { type: string } } }
     assert.equal(final.message.content.filter(part => part.type === 'text').map(part => part.text).join(''), body)
     assert.equal(final.message.status.type, 'complete')
+    global.gc?.() // retained memory diagnostic, excluded from wall/CPU timing
+    const heapRetainedBytes = process.memoryUsage().heapUsed
     return { firstStateMs, firstBodyMs, totalMs, cpuUserMs: elapsedCpu.user / 1000, cpuSystemMs: elapsedCpu.system / 1000,
-      heapStartBytes: startMemory.heapUsed, peakHeapBytes, peakRssBytes, wireBytes, chunks, wireSha256: hash.digest('hex'),
+      heapStartBytes: startMemory.heapUsed, peakHeapBytes, heapRetainedBytes, peakRssBytes, wireBytes, chunks, wireSha256: hash.digest('hex'),
       requests: 0, databaseQueries: 0, ...(counters ? { stringifyCalls, serializedChars, projections } : {}) }
   } finally {
     JSON.stringify = original
@@ -59,8 +63,16 @@ async function measure(counters: boolean) {
   }
 }
 await measure(false) // identical warmup in each fresh process
+const profiler = process.env.PERF_CPU_PROFILE ? new Session() : null
+if (profiler) { profiler.connect(); await profiler.post('Profiler.enable'); await profiler.post('Profiler.start') }
 const timing = await measure(false)
+if (profiler) {
+  const { profile } = await profiler.post('Profiler.stop')
+  writeFileSync(process.env.PERF_CPU_PROFILE!, JSON.stringify(profile))
+  profiler.disconnect()
+}
 const counts = await measure(true) // invasive instrumentation is excluded from timing
-console.log(JSON.stringify({ kind, timing, counts: { stringifyCalls: counts.stringifyCalls, serializedChars: counts.serializedChars,
+const runtimeVersion = JSON.parse(readFileSync(resolve(source, 'node_modules/@lyyzka/lingxios/package.json'), 'utf8')).version
+console.log(JSON.stringify({ kind, runtimeVersion, timing, counts: { stringifyCalls: counts.stringifyCalls, serializedChars: counts.serializedChars,
   projections: counts.projections, wireBytes: counts.wireBytes, chunks: counts.chunks },
   timingScope: 'in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint' }))

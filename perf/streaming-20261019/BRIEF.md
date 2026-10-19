@@ -18,3 +18,11 @@ Use synthetic data only. First response = first decoded protocol state; first bo
 - Benchmark fixture favors only long text, counts its own instrumentation or decoder as server-only work, reuses warm process unfairly, or mislabels synthetic response timing as real model or browser performance.
 
 Existing protocol tests and new round-trip cases must pass on baseline before code changes. Follow existing server suite and owning integration; browser uses only official @e2e-dev/web. Store raw samples, exact revisions and commands. Rollback is reverting this isolated code commit; no migration/config restoration required.
+
+## Supplemental source-control article
+
+Read [Redesigning source control at Anthropic](https://www.anthropic.com/engineering/redesigning-source-control), published 2026-10-13, updated 2026-10-15. Applicable principle: avoid work proportional to the whole state when only a small delta changes, and avoid eagerly materializing unused derived output. Here this maps to structural diff and one validated snapshot per emitted event. This is our inference across domains, not a claim that Scion solves chat latency. Use ordinary Git worktrees and share installed immutable dependencies locally; no new VCS, remote cache, IAM change or monorepo infrastructure. CI resource changes belong to the other task.
+
+## Third experiment: parser fast path, before code
+
+A measured candidate CPU profile attributes ~24% of sampled self time to visualization directive prefix/code-range scanners on ordinary long text. Hypothesis: skip the parser only when neither ASCII `:` nor Unicode `` exists. Failure cases: partially streamed bare prefixes, incomplete JSON, invalid/complete directives, escaped text, fenced/inline/HTML code ranges, supplementary Unicode, and mistakenly changing committed text. Test exact equivalence to the pinned upstream parser across these cases before editing the local server wrapper. Never modify the pinned upstream parser, schema, validation or completed-message semantics.

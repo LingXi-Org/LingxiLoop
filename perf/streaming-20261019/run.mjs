@@ -19,7 +19,7 @@ for (const kind of ['short', 'long']) {
   for (const variant of ['base', 'candidate']) {
     const rows = samples.filter(row => row.kind === kind && row.variant === variant)
     const metrics = {}
-    for (const metric of ['firstStateMs', 'firstBodyMs', 'totalMs', 'cpuUserMs', 'cpuSystemMs', 'peakHeapBytes', 'peakRssBytes']) {
+    for (const metric of ['firstStateMs', 'firstBodyMs', 'totalMs', 'cpuUserMs', 'cpuSystemMs', 'peakHeapBytes', 'heapRetainedBytes', 'peakRssBytes']) {
       const values = rows.map(row => row.timing[metric]).sort((a, b) => a - b)
       metrics[metric] = Object.fromEntries([50, 75, 95].map(q => [`p${q}`, values[Math.ceil(q / 100 * values.length) - 1]]))
     }
