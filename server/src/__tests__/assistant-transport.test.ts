@@ -134,3 +134,80 @@ test('commit handoff and tool activity preserve the live answer part', () => {
   assert.equal(final.message.content[0]?.type === 'text' && final.message.content[0].text, '最终正文')
   assert.equal(final.message.status?.type, 'complete')
 })
+
+// Performance guardrails written before optimization: every public state must
+// survive encoding, not merely the final answer. Includes duplicate/retracted
+// Unicode text, tool args/result structure changes and terminal metadata.
+test('every changing public snapshot round-trips through the actual stream decoder', async () => {
+  const events: RunStreamEvent[] = [
+    { type: 'state', state: runState() }, draft('中😀文'), draft('中😀文'),
+    { type: 'preview', preview: { kind: 'delta', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', fromSeq: 1, seq: 2, delta: '\n第二段' } },
+    { type: 'event', event: { runId: 'run', seq: 1, kind: 'tool.started', stage: 'started', visibility: 'user', data: { toolCallId: 'host:search', name: 'research.search', arguments: 'PRIVATE' } } },
+    { type: 'event', event: { runId: 'run', seq: 2, kind: 'tool.completed', stage: 'completed', visibility: 'user', data: { toolCallId: 'host:search', result: { status: 'completed', sources: [] } } } },
+    { type: 'reset', runId: 'run', reason: 'superseded' },
+    { type: 'state', state: runState('succeeded') },
+  ]
+  const reference = new RunStreamProjection('run', false)
+  const expected: AgentRunSnapshot[] = []
+  for (const event of events) {
+    const value = JSON.parse(JSON.stringify(reference.apply(event))) as AgentRunSnapshot
+    if (JSON.stringify(value) !== JSON.stringify(expected.at(-1))) expected.push(value)
+  }
+  const tracker = new AssistantTransportDeltaTracker(), actual: AgentRunSnapshot[] = []
+  for await (const chunk of AssistantStream.fromResponse(assistantRunResponse(nativeBody(events), new RunStreamProjection('run', false)), new AssistantTransportDecoder())) {
+    if (chunk.type !== 'update-state') continue
+    tracker.append(chunk.operations)
+    actual.push(JSON.parse(JSON.stringify(tracker.state)))
+  }
+  assert.deepEqual(actual, expected)
+  assert.doesNotMatch(JSON.stringify(actual), /PRIVATE/)
+})
+
+test('concurrent protocol responses retain separate prior state and control permissions', async () => {
+  const consume = async (canControl: boolean, text: string) => {
+    const tracker = new AssistantTransportDeltaTracker()
+    for await (const chunk of AssistantStream.fromResponse(assistantRunResponse(nativeBody([
+      { type: 'state', state: runState() }, draft(text),
+    ]), new RunStreamProjection('run', canControl)), new AssistantTransportDecoder())) {
+      if (chunk.type === 'update-state') tracker.append(chunk.operations)
+    }
+    return tracker.state as unknown as AgentRunSnapshot
+  }
+  const [owner, reader] = await Promise.all([consume(true, 'owner only'), consume(false, 'reader only')])
+  assert.equal(owner.message.metadata.custom.harnessControl, true)
+  assert.equal(reader.message.metadata.custom.harnessControl, false)
+  assert.doesNotMatch(JSON.stringify(owner), /reader only/)
+  assert.doesNotMatch(JSON.stringify(reader), /owner only/)
+})
+
+test('JSON normalization, structural replacements and append paths keep every wire state exact', async () => {
+  // Exercise the transport with the same JSON-shaped public boundary, including
+  // legal optional metadata and property order changes, without database access.
+  const inputs = [
+    { text: 'A😀', argsText: '{', other: 'A', nested: { optional: undefined, missing: null }, list: [1, undefined, NaN] },
+    { text: 'A😀中', argsText: '{}', other: 'AB', nested: { missing: null }, list: [1, undefined, NaN] },
+    { text: 'replacement', argsText: '', other: 'AB', nested: { added: true, missing: null }, list: [2, null] },
+    { text: '', argsText: '', other: 'AB', nested: { missing: null, added: true }, list: { '0': 2, '1': null } },
+    { text: '', argsText: '', other: 'AB', nested: { missing: null, added: true }, list: { '0': 2, '1': null } },
+    { text: '', argsText: '', other: null, nested: { '中/~': { text: 'quoted " \\ \n' } }, list: [] },
+  ]
+  let cursor = -1
+  const projection = new RunStreamProjection('run', true)
+  const advance = () => { cursor++; return inputs[cursor] as unknown as AgentRunSnapshot }
+  // Both names deliberately let this guard run on main and the candidate.
+  projection.apply = advance
+  Object.assign(projection, { advance })
+  Object.defineProperty(projection, 'snapshot', { get: () => inputs[cursor] })
+  const operations: unknown[] = [], actual: unknown[] = [], tracker = new AssistantTransportDeltaTracker()
+  for await (const chunk of AssistantStream.fromResponse(assistantRunResponse(nativeBody(inputs.map(() => ({ type: 'state', state: runState() }))), projection), new AssistantTransportDecoder())) {
+    if (chunk.type !== 'update-state') continue
+    tracker.append(chunk.operations); operations.push(...chunk.operations)
+    actual.push(JSON.parse(JSON.stringify(tracker.state)))
+  }
+  assert.deepEqual(actual, [inputs[0], inputs[1], inputs[2], inputs[3], inputs[5]].map(value => JSON.parse(JSON.stringify(value))))
+  assert.ok(operations.some(value => (value as { type: string }).type === 'append-text'))
+  assert.ok(!operations.some(value => {
+    const op = value as { type: string; path: string[] }
+    return op.type === 'append-text' && op.path.at(-1) === 'other'
+  }))
+})
