@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "runId": "soak353-20261019113647644-3fee21da",
+  "mode": "smoke",
+  "productSha": "b76c4cc00f545ddbca27bced6628e1ed191e6777",
+  "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:bd2bed74188b2893849c6e5478cc210e68efd7db91558f856143d06640508c24",
+  "runtime": "3.5.3",
+  "schema": 12,
+  "scope": "web-worker-idle",
+  "status": "prepared",
+  "limits": {
+    "web": {
+      "cpus": 0.75,
+      "memoryBytes": 671088640,
+      "oldSpaceMiB": 320,
+      "poolMax": 8
+    },
+    "worker": {
+      "cpus": 1,
+      "memoryBytes": 1073741824,
+      "oldSpaceMiB": 640,
+      "poolMax": 8,
+      "pids": 128
+    }
+  },
+  "qualification": "No 24-hour acceptance pass.",
+  "completionRule": "Explicit terminal receipt, >=86400 monotonic seconds, continuous <=90s heartbeat gaps, unchanged containers/images and zero violations. Missing or stale evidence is incomplete.",
+  "violations": [],
+  "targetSeconds": 60,
+  "elapsedSeconds": 0,
+  "samples": 0,
+  "maxGapSeconds": 0,
+  "createdAt": "2026-10-19T11:36:47.647Z",
+  "capturedAt": "2026-10-19T11:39:54.004Z",
+  "workerProbe": "namespace-available",
+  "nodeVersion": "v22.23.3",
+  "imageId": "sha256:b76be4097d93f5c46f0eed497983fdd887e7bdc3205fc3f97eb205aed84318e1",
+  "schemaHash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a",
+  "harnessHash": "865eacc9633e525271527010fd4e0153d759d73330cd105a58dafbb0faa821e4"
+}
