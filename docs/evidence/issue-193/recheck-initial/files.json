@@ -1,0 +1,106 @@
+[
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/report.json",
+    "sha256": "2fa591703f4edb85fd79a0e9a5ec49bfedcda4dd50360dde88beb063eb986088"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/summary.md",
+    "sha256": "df14a5c18d3b7bdda5227fd1180828055a9af3f125a15fb9163a298f27143072"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/junit.xml",
+    "sha256": "d0fbc8be08c053123d02ab69b1819ea881e3108f85eacd1280991c9f7de1849a"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_bridge.e2e.ts__bridge_20rejects_20synthetic_20gestures_20and_20unsupported_20methods_2C_20accepts-ce2655d8/default/attempt-0/screenshots/001-bridge-real-and-synthetic-actions.png",
+    "sha256": "3524e241364a4e09aba8922c3ce3a32c060fd988a06fdcc8579434860d6a56e9"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_bridge.e2e.ts__stale_20page_20operations_20fail_2C_20explicit_20retry_20replaces_20the_20guest_20-65d67f04/default/attempt-0/screenshots/001-failure.png",
+    "sha256": "05532225217c96d20c4a793f96d2d41f367304dde0e59107af4ab77466c1048d"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_lifecycle.e2e.ts__copy-image_20button_20writes_20a_20real_20PNG_20through_20the_20host_20clipboar-237fa4da/default/attempt-0/screenshots/001-failure.png",
+    "sha256": "fc38016616015ff6b126b93bada011f59a826f637bee3d210a4d471744839ace"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_lifecycle.e2e.ts__failed_20acquisition_20retries_20explicitly-f80dc123/default/attempt-0/screenshots/001-product-explicit-retry.png",
+    "sha256": "bf89fa677d0ed07236cded0d2b70fab01fbd1ad497c23e656a6e460bcf97bded"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_lifecycle.e2e.ts__offline_20host_20exposes_20recovery_20and_20reconnects_20explicitly-5e4bda12/default/attempt-0/screenshots/001-product-offline.png",
+    "sha256": "d97451f56dd58b1f106dc8b9995fd852cd6420d8dca9a1f5cbc93133290c5fed"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_lifecycle.e2e.ts__offline_20host_20exposes_20recovery_20and_20reconnects_20explicitly-5e4bda12/default/attempt-0/screenshots/002-failure.png",
+    "sha256": "e672e9b2d95f8e5e00166c5abd7685ce1531aaa05622ceda8de58a08e8b7180f"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_lifecycle.e2e.ts__session_20switching_20retains_20each_20state_20and_20host_20theme_20synchronize-6d7e0652/default/attempt-0/screenshots/001-product-session-theme-retention.png",
+    "sha256": "9efe532d5a266952315e2e4bfa6e4ef7849b2fabf16730a25475d44e682447c8"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_lifecycle.e2e.ts__variants_20retain_20local_20state_2C_20tabs_20load_20D3_2Fcalendar_20and_20mobi-0942138c/default/attempt-0/screenshots/001-product-calendar-d3.png",
+    "sha256": "7eac5fb4f9b97184c77ef6a20c0ea4ef0a3fd99c5842081fd6000756bfc47b45"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_lifecycle.e2e.ts__variants_20retain_20local_20state_2C_20tabs_20load_20D3_2Fcalendar_20and_20mobi-0942138c/default/attempt-0/screenshots/002-product-mobile-390.png",
+    "sha256": "d79d5c0d91e3a403a1aaae33607273b0d941d5eec7fd1cdc34ffa7bddbaa1f4c"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28dark_29-4115f4cc/default/attempt-0/screenshots/001-product-dark-card.png",
+    "sha256": "fc42da9233ea83abbfbd3c8aee175bcd2b7f627d03ce5891719a2af58b422d06"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/screenshots/001-product-light-card.png",
+    "sha256": "e672e9b2d95f8e5e00166c5abd7685ce1531aaa05622ceda8de58a08e8b7180f"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/screenshots/002-product-light-controls.png",
+    "sha256": "0e09ef88a0583e5f50f692dd23ee90b3460d2d98c0d35a3413e94260620afd15"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__standalone_20render.py_20export_20runs_20offline_20and_20retains_20independent_20w-2d86fd53/default/attempt-0/screenshots/001-standalone-export-offline.png",
+    "sha256": "ae355cf32fd43ac47ef405917317a00902ab1f158f9ae69f1e5cd27a9904d740"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__upstream_3A_20complete_20card_20interaction_20_28dark_29-4982abe1/default/attempt-0/screenshots/001-upstream-dark-card.png",
+    "sha256": "fc42da9233ea83abbfbd3c8aee175bcd2b7f627d03ce5891719a2af58b422d06"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__upstream_3A_20complete_20card_20interaction_20_28dark_29-4982abe1/default/attempt-0/screenshots/002-upstream-dark-controls.png",
+    "sha256": "7572db7ccbcb8267166d0cfb599c082375c20e00e080316fa85a5b9367dcd1b9"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__upstream_3A_20complete_20card_20interaction_20_28dark_29-4982abe1/default/attempt-0/screenshots/003-upstream-dark-dialog.png",
+    "sha256": "8dec1e61d710dae3da5d22258a1bacb8369fdae04949d5c816a47ea151480e51"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__upstream_3A_20complete_20card_20interaction_20_28light_29-03a129c5/default/attempt-0/screenshots/001-upstream-light-card.png",
+    "sha256": "e672e9b2d95f8e5e00166c5abd7685ce1531aaa05622ceda8de58a08e8b7180f"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__upstream_3A_20complete_20card_20interaction_20_28light_29-03a129c5/default/attempt-0/screenshots/002-upstream-light-controls.png",
+    "sha256": "0e09ef88a0583e5f50f692dd23ee90b3460d2d98c0d35a3413e94260620afd15"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/screenshots/web/e2e_visualize_parity.e2e.ts__upstream_3A_20complete_20card_20interaction_20_28light_29-03a129c5/default/attempt-0/screenshots/003-upstream-light-dialog.png",
+    "sha256": "8823fed20f9fa95e3917822c3613934f5ef95c2bd028a45676899ad4d09c5bb7"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/upstream-dark-interaction.json",
+    "sha256": "fe2a1bcc246dab23241ce63e994faf134d8c254dfc7b3a3be135c70bcddb238a"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/upstream-light-interaction.json",
+    "sha256": "b0a661e5e9c08187d96496a274fac21b54310aa6e2368d7bb287a06cca05573f"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/manifest.json",
+    "sha256": "e4750d97ab624d3879c2bc48975d47d5024fd7e04991095e49ffa4d369fae93d"
+  },
+  {
+    "path": "/workspace/worktrees/issue193/docs/evidence/issue-193/recheck-initial/export.html",
+    "sha256": "c5a5fb0875d289435c094fc4f1f3f1250444645cd4fc84ee5d9b4f5175047570"
+  }
+]

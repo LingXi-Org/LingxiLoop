@@ -1,0 +1,23 @@
+[97371:97371:1019/132438.893665:FATAL:content/browser/zygote_host/zygote_host_impl_linux.cc:129] No usable sandbox! If you are running on Ubuntu 23.10+ or another Linux distro that has disabled unprivileged user namespaces with AppArmor, see https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md. Otherwise see https://chromium.googlesource.com/chromium/src/+/main/docs/linux/suid_sandbox_development.md for more information on developing with the (older) SUID sandbox. If you want to live dangerously and need an immediate workaround, you can try using --no-sandbox.
+[1019/132439.074180:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq: No such file or directory (2)
+[1019/132439.075876:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:145] open /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq: No such file or directory (2)
+Received signal 6
+#0 0x5632825ebbc3 (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x6a9abc2)
+#1 0x5632872b1494 (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0xb760493)
+#2 0x7f2f233c9d70 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3fd6f)
+#3 0x56328726814d (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0xb71714c)
+#4 0x5632872680de (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0xb7170dd)
+#5 0x5632823b2603 (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x6861602)
+#6 0x56328104b1f9 (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x54fa1f8)
+#7 0x56328242e28b (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x68dd28a)
+#8 0x563286506d01 (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0xa9b5d00)
+#9 0x563281b1f687 (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x5fce686)
+#10 0x563281b1eb00 (/workspace/.lingxi-setup/cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x5fcdaff)
+#11 0x7f2f233b3ca8 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x29ca7)
+  r8: 00000ee000130265  r9: 0000000000000001 r10: 00000ee000130265 r11: 0000000000000246
+ r12: 00007ffe17bfe878 r13: 0000000000000006 r14: 0000000000000265 r15: 00007ffe17bfeda8
+  di: 0000000000017c5b  si: 0000000000017c5b  bp: 00007ffe17bfe810  bx: 0000000000017c5b
+  dx: 0000000000000006  ax: 0000000000000000  cx: 00007f2f2341e69c  sp: 00007ffe17bfe700
+  ip: 00007f2f2341e69c efl: 0000000000000246 cgf: 002b000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]

@@ -1,0 +1,360 @@
+{
+  "status": "captured",
+  "startedAt": "2026-10-19T13:56:07.450Z",
+  "readOnly": true,
+  "modelCalls": 0,
+  "apiOrigin": "https://ops.christmas1314.xyz",
+  "operations": [
+    {
+      "operation": "ListStackServices",
+      "httpStatus": 200
+    },
+    {
+      "operation": "InspectContainer",
+      "httpStatus": 200
+    },
+    {
+      "operation": "InspectContainer",
+      "httpStatus": 200
+    },
+    {
+      "operation": "ListStackServices",
+      "httpStatus": 200
+    },
+    {
+      "operation": "ListStackServices",
+      "httpStatus": 200
+    },
+    {
+      "operation": "InspectContainer",
+      "httpStatus": 200
+    },
+    {
+      "operation": "InspectContainer",
+      "httpStatus": 200
+    },
+    {
+      "operation": "ListStackServices",
+      "httpStatus": 200
+    }
+  ],
+  "containers": [
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "service": "lingxiloop",
+      "containerId": "58fe9dde87e5060d51ce267c89c7ce51a7e289646a1cb7b1491853b15748983e",
+      "containerName": "lingxiloop-app-a-lingxiloop-1",
+      "state": "running",
+      "inspectedAt": "2026-10-19T13:56:11.255Z",
+      "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777",
+      "imageId": "sha256:bd2bed74188b2893849c6e5478cc210e68efd7db91558f856143d06640508c24",
+      "configurationSource": "Komodo read/InspectContainer Config.Env",
+      "selectedEnvironment": {
+        "OPENAI_MODEL": {
+          "present": true,
+          "value": "zai-org/GLM-5.3-Flash"
+        },
+        "OPENAI_BASE_URL": {
+          "present": true,
+          "value": "https://api.siliconflow.cn/v1"
+        },
+        "AGENT_OS_MODEL_REQUEST_TIMEOUT_MS": {
+          "present": true,
+          "value": 180000
+        },
+        "AGENT_OS_MAX_MODEL_TOKENS": {
+          "present": true,
+          "value": 1000000
+        },
+        "AGENT_OS_MAX_MODEL_CALLS": {
+          "present": true,
+          "value": 128
+        },
+        "AGENT_OS_MAX_MODEL_COST_MICROS": {
+          "present": true,
+          "value": 10000000
+        },
+        "AGENT_OS_MAX_CONCURRENT_RUNS": {
+          "present": true,
+          "value": 2
+        },
+        "AGENT_OS_RESERVED_INTERACTIVE_RUNS": {
+          "present": true,
+          "value": 1
+        },
+        "AGENT_OS_MODEL_CONCURRENCY": {
+          "present": true,
+          "value": 2
+        },
+        "OPENAI_MAX_TOKENS": {
+          "present": false
+        },
+        "OPENAI_TIMEOUT_MS": {
+          "present": false
+        },
+        "OPENAI_ENABLE_THINKING": {
+          "present": false
+        },
+        "OPENAI_THINKING_BUDGET": {
+          "present": false
+        },
+        "AGENT_OS_RESPONSE_POLICY": {
+          "present": true,
+          "value": "deep"
+        }
+      }
+    },
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "service": "worker",
+      "containerId": "737667e74701f63f21b66135ebe4324e7a48f71bbbd6dd463aec3d10d5adb47d",
+      "containerName": "lingxiloop-app-a-worker-1",
+      "state": "running",
+      "inspectedAt": "2026-10-19T13:56:11.939Z",
+      "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777",
+      "imageId": "sha256:bd2bed74188b2893849c6e5478cc210e68efd7db91558f856143d06640508c24",
+      "configurationSource": "Komodo read/InspectContainer Config.Env",
+      "selectedEnvironment": {
+        "OPENAI_MODEL": {
+          "present": true,
+          "value": "zai-org/GLM-5.3-Flash"
+        },
+        "OPENAI_BASE_URL": {
+          "present": true,
+          "value": "https://api.siliconflow.cn/v1"
+        },
+        "AGENT_OS_MODEL_REQUEST_TIMEOUT_MS": {
+          "present": true,
+          "value": 180000
+        },
+        "AGENT_OS_MAX_MODEL_TOKENS": {
+          "present": true,
+          "value": 1000000
+        },
+        "AGENT_OS_MAX_MODEL_CALLS": {
+          "present": true,
+          "value": 128
+        },
+        "AGENT_OS_MAX_MODEL_COST_MICROS": {
+          "present": true,
+          "value": 10000000
+        },
+        "AGENT_OS_MAX_CONCURRENT_RUNS": {
+          "present": true,
+          "value": 2
+        },
+        "AGENT_OS_RESERVED_INTERACTIVE_RUNS": {
+          "present": true,
+          "value": 1
+        },
+        "AGENT_OS_MODEL_CONCURRENCY": {
+          "present": true,
+          "value": 2
+        },
+        "OPENAI_MAX_TOKENS": {
+          "present": false
+        },
+        "OPENAI_TIMEOUT_MS": {
+          "present": false
+        },
+        "OPENAI_ENABLE_THINKING": {
+          "present": false
+        },
+        "OPENAI_THINKING_BUDGET": {
+          "present": false
+        },
+        "AGENT_OS_RESPONSE_POLICY": {
+          "present": true,
+          "value": "deep"
+        }
+      }
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "service": "lingxiloop",
+      "containerId": "3f9078d234cebba11ccc3e9ee1676f45072c01d47b9d66ab73a3f31bfcc83134",
+      "containerName": "lingxiloop-app-b-lingxiloop-1",
+      "state": "running",
+      "inspectedAt": "2026-10-19T13:56:16.236Z",
+      "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777",
+      "imageId": "sha256:bd2bed74188b2893849c6e5478cc210e68efd7db91558f856143d06640508c24",
+      "configurationSource": "Komodo read/InspectContainer Config.Env",
+      "selectedEnvironment": {
+        "OPENAI_MODEL": {
+          "present": true,
+          "value": "zai-org/GLM-5.3-Flash"
+        },
+        "OPENAI_BASE_URL": {
+          "present": true,
+          "value": "https://api.siliconflow.cn/v1"
+        },
+        "AGENT_OS_MODEL_REQUEST_TIMEOUT_MS": {
+          "present": true,
+          "value": 180000
+        },
+        "AGENT_OS_MAX_MODEL_TOKENS": {
+          "present": true,
+          "value": 1000000
+        },
+        "AGENT_OS_MAX_MODEL_CALLS": {
+          "present": true,
+          "value": 128
+        },
+        "AGENT_OS_MAX_MODEL_COST_MICROS": {
+          "present": true,
+          "value": 10000000
+        },
+        "AGENT_OS_MAX_CONCURRENT_RUNS": {
+          "present": true,
+          "value": 2
+        },
+        "AGENT_OS_RESERVED_INTERACTIVE_RUNS": {
+          "present": true,
+          "value": 1
+        },
+        "AGENT_OS_MODEL_CONCURRENCY": {
+          "present": true,
+          "value": 2
+        },
+        "OPENAI_MAX_TOKENS": {
+          "present": false
+        },
+        "OPENAI_TIMEOUT_MS": {
+          "present": false
+        },
+        "OPENAI_ENABLE_THINKING": {
+          "present": false
+        },
+        "OPENAI_THINKING_BUDGET": {
+          "present": false
+        },
+        "AGENT_OS_RESPONSE_POLICY": {
+          "present": true,
+          "value": "deep"
+        }
+      }
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "service": "worker",
+      "containerId": "5be4123ea866be32d622d6fd5ad3f9de23622c9d31bb9828bdd9ab2173a2adb0",
+      "containerName": "lingxiloop-app-b-worker-1",
+      "state": "running",
+      "inspectedAt": "2026-10-19T13:56:16.835Z",
+      "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:b76c4cc00f545ddbca27bced6628e1ed191e6777",
+      "imageId": "sha256:bd2bed74188b2893849c6e5478cc210e68efd7db91558f856143d06640508c24",
+      "configurationSource": "Komodo read/InspectContainer Config.Env",
+      "selectedEnvironment": {
+        "OPENAI_MODEL": {
+          "present": true,
+          "value": "zai-org/GLM-5.3-Flash"
+        },
+        "OPENAI_BASE_URL": {
+          "present": true,
+          "value": "https://api.siliconflow.cn/v1"
+        },
+        "AGENT_OS_MODEL_REQUEST_TIMEOUT_MS": {
+          "present": true,
+          "value": 180000
+        },
+        "AGENT_OS_MAX_MODEL_TOKENS": {
+          "present": true,
+          "value": 1000000
+        },
+        "AGENT_OS_MAX_MODEL_CALLS": {
+          "present": true,
+          "value": 128
+        },
+        "AGENT_OS_MAX_MODEL_COST_MICROS": {
+          "present": true,
+          "value": 10000000
+        },
+        "AGENT_OS_MAX_CONCURRENT_RUNS": {
+          "present": true,
+          "value": 2
+        },
+        "AGENT_OS_RESERVED_INTERACTIVE_RUNS": {
+          "present": true,
+          "value": 1
+        },
+        "AGENT_OS_MODEL_CONCURRENCY": {
+          "present": true,
+          "value": 2
+        },
+        "OPENAI_MAX_TOKENS": {
+          "present": false
+        },
+        "OPENAI_TIMEOUT_MS": {
+          "present": false
+        },
+        "OPENAI_ENABLE_THINKING": {
+          "present": false
+        },
+        "OPENAI_THINKING_BUDGET": {
+          "present": false
+        },
+        "AGENT_OS_RESPONSE_POLICY": {
+          "present": true,
+          "value": "deep"
+        }
+      }
+    }
+  ],
+  "limitations": {
+    "runningProcessEnvironment": "Not directly read; InspectContainer Config.Env proves the startup configuration attached to the currently running container, not in-process overrides or constructed SDK options.",
+    "configuredStack": "Live stack environment/configuration is not requested. Running-container configuration is recorded instead.",
+    "sourceDefaults": "Not substituted for actual container configuration. Absent variables remain absent in selectedEnvironment."
+  },
+  "apiReference": "https://github.com/moghtech/komodo/blob/v2.3.3/client/core/rs/src/api/read/docker.rs",
+  "completedAt": "2026-10-19T13:56:18.949Z",
+  "commandOutcome": {
+    "exitCode": 0,
+    "completed": true,
+    "uncertainOperations": false,
+    "readRequests": 8,
+    "executeRequests": 0,
+    "writeRequests": 0,
+    "modelCalls": 0
+  },
+  "comparison": {
+    "allFourSelectedEnvironmentsEqual": true,
+    "allFourObservedImageSha": "b76c4cc00f545ddbca27bced6628e1ed191e6777",
+    "containerIdsStableAcrossEachStackRead": true
+  },
+  "sourceDefaultsAndConstants": {
+    "sourceCommit": "b76c4cc00f545ddbca27bced6628e1ed191e6777",
+    "evidenceKind": "Local git source at the exact observed running-image tag; not an in-process SDK/configuration introspection",
+    "nativeWorker": {
+      "source": "server/src/agent-runtime/runtime.ts:188",
+      "requestTimeoutDefaultMsForObservedModel": 180000,
+      "configuredEnvironmentOverridesDefault": true,
+      "firstByteTimeoutMs": 30000,
+      "streamIdleTimeoutMs": 30000,
+      "maxThinkingTokens": 0,
+      "parallelTools": false,
+      "siliconFlowContextWindowTokens": 1000000,
+      "recoveryMaxAttempts": 3
+    },
+    "productHelper": {
+      "sources": [
+        "server/src/llm-client.ts:6",
+        "server/src/llm.ts:61",
+        "server/src/llm.ts:127"
+      ],
+      "sdkTimeoutDefaultMs": 30000,
+      "sdkMaxRetriesDefault": 0,
+      "trackedAttemptTimeoutCapMs": 30000,
+      "trackedTotalTimeoutDefaultCapMs": 120000,
+      "trackedMaxAttemptsDefaultCap": 3,
+      "enable_thinking": false,
+      "thinking": {
+        "type": "disabled"
+      }
+    },
+    "notVerified": "Per-call max_tokens, actual SDK effective objects, mutable process.env, provider-side behavior and circuit state were not inspected or exercised."
+  }
+}

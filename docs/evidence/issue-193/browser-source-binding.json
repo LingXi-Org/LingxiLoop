@@ -1,0 +1,204 @@
+{
+  "status": "passed",
+  "sourceCommit": "3cc75c7b9c1ac22acb61c6e16226c9c220d93149",
+  "browserReportCommit": "54075c1af031172f768a1894c8bd29a5ce74e98f",
+  "manifestSha256": "dbaeeee01e8a70df2db6ae632c2f9eb7945ab5cfe9da38a6886fa8f5afe8f993",
+  "diffReportSha256": "fa650ae94bab46c813d6ca81b7fa5ce690cf98c0a782f4ccae75da35221df7ba",
+  "versionedSourceCount": 30,
+  "mismatches": [],
+  "sources": [
+    {
+      "path": "third_party/zcode/upstream/packages/ui/src/useTheme.ts",
+      "expected": "a286aa3596dd05140184d60318f014ff1cea6637d0fae104137701fc2dd1ce0e",
+      "committed": "a286aa3596dd05140184d60318f014ff1cea6637d0fae104137701fc2dd1ce0e",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/upstream/packages/web/index.html",
+      "expected": "2ae1a2e32120583ebbc8e95d2bce417a2351e2c9a2489aa1cebcd88bd6f54068",
+      "committed": "2ae1a2e32120583ebbc8e95d2bce417a2351e2c9a2489aa1cebcd88bd6f54068",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/presentation.e2e.ts",
+      "expected": "c63e71c1a63f39223455e5890df2c8e2e317658d822c245bcfcb1cc32b53a1ab",
+      "committed": "c63e71c1a63f39223455e5890df2c8e2e317658d822c245bcfcb1cc32b53a1ab",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/upstream/packages/ui/src/components/lib/utils.ts",
+      "expected": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "committed": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/zcode/lib/utils.ts",
+      "expected": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "committed": "b083c2359de5f521e00ead8c39b8c8b68934d0e052b1c83384660614198b810d",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/fixtures/bridge.html",
+      "expected": "7c7771ab108d68c28036440b626c6e14e7da74bf304dbd677a2c3d05067a0af4",
+      "committed": "7c7771ab108d68c28036440b626c6e14e7da74bf304dbd677a2c3d05067a0af4",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/bridge.e2e.ts",
+      "expected": "cd59b82bbd25bb298dd53c095b6e7a664111d35958dfbbe36babad5f58b02db2",
+      "committed": "cd59b82bbd25bb298dd53c095b6e7a664111d35958dfbbe36babad5f58b02db2",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/fixture-api.ts",
+      "expected": "9b8527cd3d017ec12033690c827984443e5f42e18117e6a00ec10e1dd079f562",
+      "committed": "9b8527cd3d017ec12033690c827984443e5f42e18117e6a00ec10e1dd079f562",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/index.tsx",
+      "expected": "21549881a65607beea9677bc9c85d628a2061fd943fdf3f338d7b53ffd486381",
+      "committed": "21549881a65607beea9677bc9c85d628a2061fd943fdf3f338d7b53ffd486381",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/fixture.css",
+      "expected": "ae79b62bedf377112784171bc818eca169d78e5f3b93b84241b8ef26182f606a",
+      "committed": "ae79b62bedf377112784171bc818eca169d78e5f3b93b84241b8ef26182f606a",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/parity.e2e.ts",
+      "expected": "757dec53d1310ebd3906b6ab368ab722d5ded5fafafc5ab448cbfbc6588fa164",
+      "committed": "757dec53d1310ebd3906b6ab368ab722d5ded5fafafc5ab448cbfbc6588fa164",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/lifecycle.e2e.ts",
+      "expected": "d8e9456b8c78152db6d8eeb6a39690c7a0ac0c673d6c8cce8306f538f6e111fe",
+      "committed": "d8e9456b8c78152db6d8eeb6a39690c7a0ac0c673d6c8cce8306f538f6e111fe",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/fixtures/acceptance.html",
+      "expected": "9f04fff672adfc3bfe621670d25545ab36147cc5845bdc0c5f2257594f98159f",
+      "committed": "9f04fff672adfc3bfe621670d25545ab36147cc5845bdc0c5f2257594f98159f",
+      "matches": true
+    },
+    {
+      "path": "e2e/visualize/fixtures/export.html",
+      "expected": "40df804b9bbf05ff14740b9c75b8f117af8d664aa45d249a570247b9a4a6140f",
+      "committed": "40df804b9bbf05ff14740b9c75b8f117af8d664aa45d249a570247b9a4a6140f",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/skills/visualize/scripts/render.py",
+      "expected": "745e04627aa949f2d6d980c0f276d836219e61c06617a511a87943580e389e10",
+      "committed": "745e04627aa949f2d6d980c0f276d836219e61c06617a511a87943580e389e10",
+      "matches": true
+    },
+    {
+      "path": "package-lock.json",
+      "expected": "696225ecfb299b5408340162095c7476a79a00b89fc32c2facd83e10bfd20c42",
+      "committed": "696225ecfb299b5408340162095c7476a79a00b89fc32c2facd83e10bfd20c42",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/upstream/packages/ui/src/gen-ui/components/GenUiCard.tsx",
+      "expected": "ac5b0339302f7e869153e2450b91079fba2d4ebdf15e99f5390e0d96b22cae4b",
+      "committed": "ac5b0339302f7e869153e2450b91079fba2d4ebdf15e99f5390e0d96b22cae4b",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/zcode/gen-ui/components/GenUiCard.tsx",
+      "expected": "80c5fcd1be09c0aaa86a023fa0979100ebdf454542f4e41800300f75e511ba0b",
+      "committed": "80c5fcd1be09c0aaa86a023fa0979100ebdf454542f4e41800300f75e511ba0b",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/upstream/packages/ui/src/gen-ui/components/TweakPanel.tsx",
+      "expected": "8ae2afed842f226abd650f6cb49fbf8fdb777920ce71a50b0764e0f91edfd34e",
+      "committed": "8ae2afed842f226abd650f6cb49fbf8fdb777920ce71a50b0764e0f91edfd34e",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/zcode/gen-ui/components/TweakPanel.tsx",
+      "expected": "4cf0b76a303f89ea3e27091d226e75c0a419ff0051125b3a10961d10902bd20d",
+      "committed": "4cf0b76a303f89ea3e27091d226e75c0a419ff0051125b3a10961d10902bd20d",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/upstream/packages/ui/src/components/ui/button.tsx",
+      "expected": "3bf0b1573c940999f875a1dd5e67a32e7d9bcb3e320774fa8277f5c00748b32b",
+      "committed": "3bf0b1573c940999f875a1dd5e67a32e7d9bcb3e320774fa8277f5c00748b32b",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/zcode/components/ui/button.tsx",
+      "expected": "77feeafdb3736cbb4ed504ac3385fcbd39501e2c98225b71cf6e5b22262fc537",
+      "committed": "77feeafdb3736cbb4ed504ac3385fcbd39501e2c98225b71cf6e5b22262fc537",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/upstream/packages/ui/src/components/ui/dialog.tsx",
+      "expected": "fb2decab75993205ec5670acbd5b8b7dfc9b1518d3acb457ddde7edd1984d44e",
+      "committed": "fb2decab75993205ec5670acbd5b8b7dfc9b1518d3acb457ddde7edd1984d44e",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/zcode/components/ui/dialog.tsx",
+      "expected": "a40c3a1cb317a75e25d8c8cf2e218d70074190a21ef5b572adb5cc373171f418",
+      "committed": "a40c3a1cb317a75e25d8c8cf2e218d70074190a21ef5b572adb5cc373171f418",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/upstream/packages/ui/src/components/ui/textarea.tsx",
+      "expected": "a839574ce1301fbaa9ba917fdb980900eb9118bffa7c6c4e469f3293b122ed30",
+      "committed": "a839574ce1301fbaa9ba917fdb980900eb9118bffa7c6c4e469f3293b122ed30",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/zcode/components/ui/textarea.tsx",
+      "expected": "47cc53a6dc85a28c54a8aec31dc2cb4dd9e457de5d79b3736e146297d5f76a1f",
+      "committed": "47cc53a6dc85a28c54a8aec31dc2cb4dd9e457de5d79b3736e146297d5f76a1f",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/web/host.ts",
+      "expected": "c8cd43dccaf2419d1056d43afe9340e4e17aa989940bbdc824faa3e4b9133be4",
+      "committed": "c8cd43dccaf2419d1056d43afe9340e4e17aa989940bbdc824faa3e4b9133be4",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/web/document.ts",
+      "expected": "5b1bc3a5379527afa549a49e3df057cab5175922c78bd32dd4c423a2886329d6",
+      "committed": "5b1bc3a5379527afa549a49e3df057cab5175922c78bd32dd4c423a2886329d6",
+      "matches": true
+    },
+    {
+      "path": "src/features/chat/visualize/zcode.css",
+      "expected": "fe485a7da5e57a47bfe51607a6bc3ef329187ac9fa0a31be0b64d43b88791ba4",
+      "committed": "fe485a7da5e57a47bfe51607a6bc3ef329187ac9fa0a31be0b64d43b88791ba4",
+      "matches": true
+    },
+    {
+      "path": "third_party/zcode/upstream/packages/ui/src/styles.css",
+      "expected": "ae1c3575fa770258bba05afb5a0ebbeda59ecbd8b4cfa9d0355b5fbfd8dcbd8b",
+      "committed": "ae1c3575fa770258bba05afb5a0ebbeda59ecbd8b4cfa9d0355b5fbfd8dcbd8b",
+      "matches": true
+    }
+  ],
+  "generatedOutputs": [
+    {
+      "path": "e2e/visualize/generated/export.html",
+      "sha256": "c5a5fb0875d289435c094fc4f1f3f1250444645cd4fc84ee5d9b4f5175047570",
+      "reason": "Generated ignored output; source hashes and build evidence are separately recorded."
+    },
+    {
+      "path": "server/assets/visualize-runtime/gen-ui.js",
+      "sha256": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+      "reason": "Generated ignored output; source hashes and build evidence are separately recorded."
+    }
+  ],
+  "meaning": "The browser run began before the final code commit; each versioned input hash is bound here to the exact committed bytes, without claiming the old report commit alone identifies dirty source."
+}

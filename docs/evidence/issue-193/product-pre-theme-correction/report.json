@@ -1,0 +1,2138 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15443-149c-7d8f-90d6-ab90c0edc5cb",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-19T13:04:17.189Z",
+    "finishedAt": "2026-10-19T13:12:10.158Z",
+    "project": {
+      "id": "lingxiloop-issue193-visualize",
+      "configDigest": "46fb3ef57d0e28663e36ceb9c363fbeeb2408bce170691ad49ee7d42b95f7b42"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "11565ba6f2b142478164171e87821983685c5bd9b7c3d82b113c61f01fb289e8",
+        "testId": "e2e/visualize/bridge.e2e.ts::bridge%20rejects%20synthetic%20gestures%20and%20unsupported%20methods%2C%20accepts%20real%20user%20actions",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "bridge rejects synthetic gestures and unsupported methods, accepts real user actions"
+        ],
+        "file": "e2e/visualize/bridge.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/bridge.e2e.ts",
+          "line": 8,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "5dc8d9a8e77ec10fe80e48e0d2772a15776f3525c8c870d7f61e8c013f4a1b15",
+        "testId": "e2e/visualize/bridge.e2e.ts::stale%20page%20operations%20fail%2C%20explicit%20retry%20replaces%20the%20guest%20and%20scope%20close%20releases%20pages",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "stale page operations fail, explicit retry replaces the guest and scope close releases pages"
+        ],
+        "file": "e2e/visualize/bridge.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/bridge.e2e.ts",
+          "line": 36,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9997a3fd53118719bfdd81fd4f96aa0b47abfa3f864e735ac2b412a07faf250a",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::variants%20retain%20local%20state%2C%20tabs%20load%20D3%2Fcalendar%20and%20mobile%20stays%20bounded",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "variants retain local state, tabs load D3/calendar and mobile stays bounded"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 8,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "5a478e9cdb1e34b4bd35d45682e933383323c1a8ca3744dc9432983235ec8f90",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::session%20switching%20retains%20each%20state%20and%20host%20theme%20synchronizes%20in%20place",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "session switching retains each state and host theme synchronizes in place"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 27,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d89d81496ea9d602d4a6410c997df1b4c40c108f02c5d518025f1a1ec83b7661",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::failed%20acquisition%20retries%20explicitly",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "failed acquisition retries explicitly"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 42,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "33f3c1b6db46b0b01dc2afa7336c871b9dfbb49a42b8f1877635ae1a6bb486d6",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::copy-image%20button%20writes%20a%20real%20PNG%20through%20the%20host%20clipboard",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "copy-image button writes a real PNG through the host clipboard"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 50,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e563a807da1d9066a702a60a69544a7f94b337496c273c596a91b6fe7bd8a06f",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::offline%20host%20exposes%20recovery%20and%20reconnects%20when%20online",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "offline host exposes recovery and reconnects when online"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 77,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "1b1084faa6141dd8e65303037c0ab422722ef439ad2537367fce96d128b34933",
+        "testId": "e2e/visualize/lifecycle.e2e.ts::page%20capacity%20reclaims%20hidden%20guests%20and%20restores%20the%20oldest%20saved%20state",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "page capacity reclaims hidden guests and restores the oldest saved state"
+        ],
+        "file": "e2e/visualize/lifecycle.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/lifecycle.e2e.ts",
+          "line": 86,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "645155e1e154184cfdb27642f629e94a035639957f90e2f4f10d2a50eb1796dc",
+        "testId": "e2e/visualize/parity.e2e.ts::upstream%3A%20complete%20card%20interaction%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "upstream: complete card interaction (light)"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "8d93a98f8938a79fb28e775dcfa5dd3d5b4f014a0dc56fabc0027b2137ba7935",
+        "testId": "e2e/visualize/parity.e2e.ts::upstream%3A%20complete%20card%20interaction%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "upstream: complete card interaction (dark)"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "cc9afb261b8e3b1690a9ff31499eee1dd739879efc78b0a31001c65332777a85",
+        "testId": "e2e/visualize/parity.e2e.ts::product%3A%20complete%20card%20interaction%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "product: complete card interaction (light)"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15443-c719-7c13-b0b1-b0ca230b1711",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T13:04:50.459Z",
+            "durationMs": 223179,
+            "artifacts": [
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15443-c719-7c13-b0b1-b0ca230b1711:5"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/screenshots/001-product-light-card.png",
+                "size": 30131,
+                "sha256": "e672e9b2d95f8e5e00166c5abd7685ce1531aaa05622ceda8de58a08e8b7180f"
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15443-c719-7c13-b0b1-b0ca230b1711:21"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/screenshots/002-product-light-controls.png",
+                "size": 44913,
+                "sha256": "0e09ef88a0583e5f50f692dd23ee90b3460d2d98c0d35a3413e94260620afd15"
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15443-c719-7c13-b0b1-b0ca230b1711:40"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/screenshots/003-product-light-dialog.png",
+                "size": 49999,
+                "sha256": "8823fed20f9fa95e3917822c3613934f5ef95c2bd028a45676899ad4d09c5bb7"
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:artifact:3",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28light_29-f00f593a/default/attempt-0/trace/trace.zip",
+                "size": 1526895,
+                "sha256": "0f7f3421f990fd9401e073659315506c4c87f1ccf3fb3f45362ae02c917d2ee1"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/index.html?implementation=product&theme=light",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:04:55.838Z",
+                "durationMs": 8752,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 10,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:05:04.634Z",
+                "durationMs": 19183,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 11,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:05:28.935Z",
+                "durationMs": 12084,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 13,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:05:41.019Z",
+                "durationMs": 189,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 14,
+                  "column": 41
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.mouse.move",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:05:41.217Z",
+                "durationMs": 362,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 23,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "product-light-card",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:05:41.588Z",
+                "durationMs": 1780,
+                "events": [],
+                "artifacts": [
+                  "01a15443-c719-7c13-b0b1-b0ca230b1711:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 25,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Show detail\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:05:43.482Z",
+                "durationMs": 16499,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 27,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByText(\"Rain, wind, birds, and distant water.\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:05:59.983Z",
+                "durationMs": 4835,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 28,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Show detail\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:05.340Z",
+                "durationMs": 7586,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 30,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"button\", name: \"调整设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:12.930Z",
+                "durationMs": 520,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 31,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:13.452Z",
+                "durationMs": 78,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 32,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:11",
+                "index": 11,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"调整设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:13.534Z",
+                "durationMs": 501,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 33,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Player settings\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:14.037Z",
+                "durationMs": 945,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 34,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Editorial settings\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:14.990Z",
+                "durationMs": 286,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 35,
+                  "column": 73
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"slider\", name: \"Corner radius (px)\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:15.288Z",
+                "durationMs": 2505,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 36,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Home",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:17.843Z",
+                "durationMs": 259,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 37,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "ArrowRight",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:18.105Z",
+                "durationMs": 251,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 38,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:17",
+                "index": 17,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"Accent\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:18.363Z",
+                "durationMs": 771,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 39,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.uncheck",
+                "label": "getByRole(\"checkbox\", name: \"Playing\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:19.138Z",
+                "durationMs": 1817,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 40,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:19",
+                "index": 19,
+                "kind": "locator",
+                "api": "locator.selectOption",
+                "label": "getByLabel(\"Density\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:20.962Z",
+                "durationMs": 483,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 41,
+                  "column": 55
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-render\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:21.454Z",
+                "durationMs": 3061,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 42,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "product-light-controls",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:24.516Z",
+                "durationMs": 503,
+                "events": [],
+                "artifacts": [
+                  "01a15443-c719-7c13-b0b1-b0ca230b1711:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 43,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:25.026Z",
+                "durationMs": 63,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 44,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"预览原始值\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:25.091Z",
+                "durationMs": 1610,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 49,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-render\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:26.701Z",
+                "durationMs": 2975,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 50,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:25",
+                "index": 25,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"预览原始值\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:29.693Z",
+                "durationMs": 1128,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:26",
+                "index": 26,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-render\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:30.840Z",
+                "durationMs": 6910,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 52,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:27",
+                "index": 27,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重置\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:37.752Z",
+                "durationMs": 1723,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 53,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-render\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:39.487Z",
+                "durationMs": 6657,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 54,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"slider\", name: \"Corner radius (px)\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:46.145Z",
+                "durationMs": 476,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 55,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "ArrowRight",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:46.624Z",
+                "durationMs": 703,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 56,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:31",
+                "index": 31,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"提交设计变更\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:47.336Z",
+                "durationMs": 2185,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 57,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-testid=\\\"fixture-follow-ups\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:49.529Z",
+                "durationMs": 236,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 58,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:33",
+                "index": 33,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-testid=\\\"fixture-follow-ups\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:49.767Z",
+                "durationMs": 315,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 59,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:34",
+                "index": 34,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 5\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:06:50.114Z",
+                "durationMs": 14403,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 60,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:04.555Z",
+                "durationMs": 4852,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 61,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:36",
+                "index": 36,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-status\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:09.409Z",
+                "durationMs": 2044,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 62,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:37",
+                "index": 37,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"放大\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:11.455Z",
+                "durationMs": 1336,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 63,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:38",
+                "index": 38,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:12.791Z",
+                "durationMs": 3871,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 64,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:16.671Z",
+                "durationMs": 4103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 65,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:40",
+                "index": 40,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "product-light-dialog",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:20.802Z",
+                "durationMs": 533,
+                "events": [],
+                "artifacts": [
+                  "01a15443-c719-7c13-b0b1-b0ca230b1711:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 66,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"收起\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:21.336Z",
+                "durationMs": 6080,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 67,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:27.423Z",
+                "durationMs": 4384,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 68,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:43",
+                "index": 43,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:31.828Z",
+                "durationMs": 22987,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 69,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:44",
+                "index": 44,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:07:54.828Z",
+                "durationMs": 7392,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 70,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15443-c719-7c13-b0b1-b0ca230b1711:45",
+                "index": 45,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:08:02.482Z",
+                "durationMs": 21488,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 71,
+                  "column": 77
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c3bea3b5e5b8221d0a02a292eca9c86daa808777f4e648c3329ae7115904e15f",
+        "testId": "e2e/visualize/parity.e2e.ts::product%3A%20complete%20card%20interaction%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "product: complete card interaction (dark)"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 9,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T13:08:33.696Z",
+            "durationMs": 215002,
+            "artifacts": [
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15447-2f18-7f61-81ec-75e11e3c1b08:5"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28dark_29-4115f4cc/default/attempt-0/screenshots/001-product-dark-card.png",
+                "size": 30694,
+                "sha256": "fc42da9233ea83abbfbd3c8aee175bcd2b7f627d03ce5891719a2af58b422d06"
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15447-2f18-7f61-81ec-75e11e3c1b08:21"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28dark_29-4115f4cc/default/attempt-0/screenshots/002-product-dark-controls.png",
+                "size": 43017,
+                "sha256": "7572db7ccbcb8267166d0cfb599c082375c20e00e080316fa85a5b9367dcd1b9"
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15447-2f18-7f61-81ec-75e11e3c1b08:40"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28dark_29-4115f4cc/default/attempt-0/screenshots/003-product-dark-dialog.png",
+                "size": 50104,
+                "sha256": "8dec1e61d710dae3da5d22258a1bacb8369fdae04949d5c816a47ea151480e51"
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:artifact:3",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_parity.e2e.ts__product_3A_20complete_20card_20interaction_20_28dark_29-4115f4cc/default/attempt-0/trace/trace.zip",
+                "size": 1506442,
+                "sha256": "c1156ddcd0aa64e62fa25c76d5ce4524f5cd5f2037b4b772039a4326d917a531"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/index.html?implementation=product&theme=dark",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:08:34.204Z",
+                "durationMs": 15593,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 10,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:08:49.835Z",
+                "durationMs": 11945,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 11,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:01.782Z",
+                "durationMs": 12384,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 13,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:14.236Z",
+                "durationMs": 571,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 14,
+                  "column": 41
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.mouse.move",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:14.884Z",
+                "durationMs": 286,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 23,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "product-dark-card",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:15.177Z",
+                "durationMs": 2795,
+                "events": [],
+                "artifacts": [
+                  "01a15447-2f18-7f61-81ec-75e11e3c1b08:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 25,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Show detail\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:18.070Z",
+                "durationMs": 13263,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 27,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByText(\"Rain, wind, birds, and distant water.\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:31.357Z",
+                "durationMs": 4034,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 28,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Show detail\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:35.584Z",
+                "durationMs": 22754,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 30,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"button\", name: \"调整设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:58.346Z",
+                "durationMs": 489,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 31,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:58.843Z",
+                "durationMs": 360,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 32,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:11",
+                "index": 11,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"调整设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:09:59.213Z",
+                "durationMs": 2400,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 33,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Player settings\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:01.618Z",
+                "durationMs": 171,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 34,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"Editorial settings\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:01.798Z",
+                "durationMs": 202,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 35,
+                  "column": 73
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"slider\", name: \"Corner radius (px)\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:02.002Z",
+                "durationMs": 495,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 36,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Home",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:02.513Z",
+                "durationMs": 461,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 37,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "ArrowRight",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:02.977Z",
+                "durationMs": 674,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 38,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:17",
+                "index": 17,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"Accent\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:03.654Z",
+                "durationMs": 876,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 39,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.uncheck",
+                "label": "getByRole(\"checkbox\", name: \"Playing\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:04.534Z",
+                "durationMs": 3066,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 40,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:19",
+                "index": 19,
+                "kind": "locator",
+                "api": "locator.selectOption",
+                "label": "getByLabel(\"Density\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:07.601Z",
+                "durationMs": 1565,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 41,
+                  "column": 55
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-render\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:09.174Z",
+                "durationMs": 7962,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 42,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "product-dark-controls",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:17.149Z",
+                "durationMs": 1514,
+                "events": [],
+                "artifacts": [
+                  "01a15447-2f18-7f61-81ec-75e11e3c1b08:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 43,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:18.665Z",
+                "durationMs": 364,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 44,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"预览原始值\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:19.037Z",
+                "durationMs": 1797,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 49,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-render\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:20.866Z",
+                "durationMs": 3126,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 50,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:25",
+                "index": 25,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"预览原始值\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:24.012Z",
+                "durationMs": 516,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:26",
+                "index": 26,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-render\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:24.543Z",
+                "durationMs": 3231,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 52,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:27",
+                "index": 27,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重置\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:27.777Z",
+                "durationMs": 1094,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 53,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-render\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:28.874Z",
+                "durationMs": 1611,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 54,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"slider\", name: \"Corner radius (px)\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:30.486Z",
+                "durationMs": 165,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 55,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "ArrowRight",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:30.651Z",
+                "durationMs": 300,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 56,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:31",
+                "index": 31,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"提交设计变更\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:30.954Z",
+                "durationMs": 636,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 57,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-testid=\\\"fixture-follow-ups\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:31.610Z",
+                "durationMs": 225,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 58,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:33",
+                "index": 33,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-testid=\\\"fixture-follow-ups\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:31.841Z",
+                "durationMs": 160,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 59,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:34",
+                "index": 34,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 5\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:32.015Z",
+                "durationMs": 13782,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 60,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:45.798Z",
+                "durationMs": 11025,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 61,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:36",
+                "index": 36,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-status\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:10:56.824Z",
+                "durationMs": 33372,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 62,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:37",
+                "index": 37,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"放大\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:30.211Z",
+                "durationMs": 6338,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 63,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:38",
+                "index": 38,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:36.606Z",
+                "durationMs": 1138,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 64,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:37.748Z",
+                "durationMs": 5105,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 65,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:40",
+                "index": 40,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "product-dark-dialog",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:42.885Z",
+                "durationMs": 3584,
+                "events": [],
+                "artifacts": [
+                  "01a15447-2f18-7f61-81ec-75e11e3c1b08:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 66,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"收起\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:46.481Z",
+                "durationMs": 3068,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 67,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:49.566Z",
+                "durationMs": 163,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 68,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:43",
+                "index": 43,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:49.736Z",
+                "durationMs": 4266,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 69,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:44",
+                "index": 44,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:54.004Z",
+                "durationMs": 3174,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 70,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15447-2f18-7f61-81ec-75e11e3c1b08:45",
+                "index": 45,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"button\", name: \"Saved count: 6\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T13:11:57.181Z",
+                "durationMs": 9593,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/parity.e2e.ts",
+                  "line": 71,
+                  "column": 77
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ff16d9ef664e4615ca6c0240a1e44d1ee04a304023938bfd737ff788276f04ca",
+        "testId": "e2e/visualize/parity.e2e.ts::standalone%20render.py%20export%20runs%20offline%20and%20retains%20independent%20widget%20state",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "standalone render.py export runs offline and retains independent widget state"
+        ],
+        "file": "e2e/visualize/parity.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/parity.e2e.ts",
+          "line": 79,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 13,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 13,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 3282195,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
