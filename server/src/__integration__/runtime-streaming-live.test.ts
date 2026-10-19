@@ -14,7 +14,8 @@ import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
 import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Failures: a real tool turn loses previews; commit clears text; the stream only
-// emits a final snapshot; final HTTP replay differs; usage is unmeasured.
+// emits a final snapshot; final HTTP replay differs; successful usage is
+// unmeasured; a recovered failed attempt disappears or masquerades as measured.
 test('real provider tool turns stream through the product projection and replay', {
   skip: process.env.LINGXIOS_LIVE_STREAMING !== '1', timeout: 540_000,
 }, async () => {
@@ -41,7 +42,10 @@ test('real provider tool turns stream through the product projection and replay'
     })
     assert.equal(hostResponse.choices[0]?.finish_reason, 'stop')
     assert.deepEqual(JSON.parse(hostResponse.choices[0]?.message.content || ''), { ok: true })
-    const hostCall = (await pool.query('SELECT model,measured,cost_usd FROM llm_calls WHERE company_id=$1 AND purpose=$2', [companyId, 'model-switch.acceptance'])).rows[0]
+    const hostAttempts = (await pool.query('SELECT model,status,measured,cost_usd FROM llm_calls WHERE company_id=$1 AND purpose=$2', [companyId, 'model-switch.acceptance'])).rows
+    const hostSuccesses = hostAttempts.filter(call => call.status === 'succeeded')
+    assert.equal(hostSuccesses.length, 1)
+    const hostCall = hostSuccesses[0]
     assert.equal(hostCall.model, env.OPENAI_MODEL)
     assert.equal(hostCall.measured, true)
     assert.ok(Number(hostCall.cost_usd) > 0)
@@ -69,29 +73,58 @@ test('real provider tool turns stream through the product projection and replay'
     assert.ok(previews.length > 5, 'real provider must expose incremental text before completion')
     assert.ok(nativeText(message).length > 200)
     assert.equal(nativeText(frames.at(-1)!.snapshot.message), nativeText(message))
-    const ledger = (await pool.query<{ calls: number; measured: boolean; cost: string }>(`SELECT count(*)::int AS calls,COALESCE(bool_and(measured),false) AS measured,
+    const ledger = (await pool.query<{ calls: number; cost: string }>(`SELECT count(*)::int AS calls,
       COALESCE(sum(cost_usd),0)::text AS cost FROM llm_calls WHERE company_id=$1 AND run_id=$2`, [companyId, identity.runId])).rows[0]
-    assert.ok(ledger.calls && ledger.measured)
+    assert.ok(ledger.calls >= 2)
     assert.ok(Number(ledger.cost) > 0 && Number(ledger.cost) <= 0.25)
     const models = (await pool.query('SELECT DISTINCT model FROM llm_calls WHERE company_id=$1', [companyId])).rows
     assert.deepEqual(models.map(row => row.model), [env.OPENAI_MODEL])
     // The API's auxiliary path must also use this model and record a real, paid call.
-    const billing = (await pool.query('SELECT purpose,model,input_tokens,cached_input_tokens,output_tokens,cost_usd,extras FROM llm_calls WHERE company_id=$1 ORDER BY created_at', [companyId])).rows
-    if (env.OPENAI_MODEL === 'zai-org/GLM-5.3-Flash') for (const call of billing) {
-      const expected = ((call.input_tokens - call.cached_input_tokens) * 0.8 + call.cached_input_tokens * 0.23 + call.output_tokens * 2.8) / 1_000_000 / Number(process.env.SILICONFLOW_USD_CNY_RATE)
-      assert.ok(Math.abs(Number(call.cost_usd) - expected) <= 5.1e-9, 'host and Agent ledger must use the Flash CN tariff')
+    const billing = (await pool.query('SELECT purpose,model,status,measured,cost_estimated,input_tokens,cached_input_tokens,output_tokens,cost_usd,extras FROM llm_calls WHERE company_id=$1 ORDER BY created_at', [companyId])).rows
+    assert.equal(billing.length, ledger.calls + hostAttempts.length, 'all Agent and host attempts must be retained')
+    assert.ok(billing.filter(call => call.purpose === 'lingxios.agent-turn' && call.status === 'succeeded').length >= 2)
+    for (const call of billing) {
+      assert.ok(Number.isFinite(Number(call.cost_usd)) && Number(call.cost_usd) >= 0)
+      if (call.status === 'succeeded') {
+        assert.equal(call.measured, true, 'successful calls must include real usage')
+        assert.ok(Number(call.cost_usd) > 0)
+      }
+      else {
+        assert.equal(call.status, 'failed')
+        assert.equal(typeof call.extras.failure?.category, 'string', 'failed attempts must retain their failure classification')
+        const logicalCallId = call.extras.logicalCallId ?? call.extras.callId
+        assert.equal(typeof logicalCallId, 'string')
+        assert.ok(billing.some(retry => retry.status === 'succeeded' && retry.purpose === call.purpose && (retry.extras.logicalCallId ?? retry.extras.callId) === logicalCallId), 'failed logical calls must recover successfully')
+      }
+      if (!call.measured) {
+        assert.equal(call.status, 'failed')
+        assert.equal(call.cost_estimated, true, 'unmeasured failures must retain their conservative cost estimate')
+        if (call.purpose.startsWith('lingxios.')) {
+          assert.equal(call.extras.costMeasurement, 'estimated')
+          assert.equal(call.extras.pricing?.currency, 'USD')
+          assert.ok(call.extras.pricing.inputMicrosPerMillion > 0 && call.extras.pricing.outputMicrosPerMillion > 0)
+        }
+      } else if (env.OPENAI_MODEL === 'zai-org/GLM-5.3-Flash') {
+        const expected = ((call.input_tokens - call.cached_input_tokens) * 0.8 + call.cached_input_tokens * 0.23 + call.output_tokens * 2.8) / 1_000_000 / Number(process.env.SILICONFLOW_USD_CNY_RATE)
+        assert.ok(Math.abs(Number(call.cost_usd) - expected) <= 5.1e-9, 'host and Agent ledger must use the Flash CN tariff')
+      }
     }
+    assert.ok(billing.reduce((sum, call) => sum + Number(call.cost_usd), 0) <= 0.25, 'recorded total includes every failed attempt')
     const retractions = frames.filter((frame, index) => index && nativeText(frames[index - 1].snapshot.message) && !nativeText(frame.snapshot.message)).length
     const finalRetractions = frames.filter((frame, index) => index && nativeText(frames[index - 1].snapshot.message) === nativeText(message) && !nativeText(frame.snapshot.message)).length
     assert.equal(finalRetractions, 0, 'a durable final answer must survive ephemeral preview cleanup')
-    await writeFile(`${output}/result.json`, JSON.stringify({ passed: true, realModel: true, timestamp: new Date().toISOString(), billing: billing.map(call => ({ purpose: call.purpose, model: call.model, inputTokens: call.input_tokens, cachedInputTokens: call.cached_input_tokens, outputTokens: call.output_tokens, costUSD: Number(call.cost_usd), reasoningTokens: call.extras.reasoningTokens })), model: process.env.OPENAI_MODEL,
-      previewFrames: previews.length, retractions, finalRetractions, measuredCalls: ledger.calls, costUSD: Number(ledger.cost), hostCall: { model: hostCall.model, measured: hostCall.measured, costUSD: Number(hostCall.cost_usd) }, finalLength: nativeText(message).length }, null, 2))
+    await writeFile(`${output}/result.json`, JSON.stringify({ passed: true, realModel: true, timestamp: new Date().toISOString(), billing: billing.map(call => ({ purpose: call.purpose, model: call.model, status: call.status, measured: call.measured, estimated: call.cost_estimated, inputTokens: call.input_tokens, cachedInputTokens: call.cached_input_tokens, outputTokens: call.output_tokens, costUSD: Number(call.cost_usd), reasoningTokens: call.extras.reasoningTokens, failure: call.extras.failure, callId: call.extras.callId, logicalCallId: call.extras.logicalCallId })), model: process.env.OPENAI_MODEL,
+      previewFrames: previews.length, retractions, finalRetractions, measuredCalls: billing.filter(call => call.purpose !== 'model-switch.acceptance' && call.measured).length,
+      recoveredFailedAttempts: billing.filter(call => call.status === 'failed').length,
+      measuredUsageCostUSD: billing.filter(call => call.measured).reduce((sum, call) => sum + Number(call.cost_usd), 0),
+      unmeasuredEstimatedCostUSD: billing.filter(call => !call.measured).reduce((sum, call) => sum + Number(call.cost_usd), 0),
+      costUSD: Number(ledger.cost), hostAttemptCount: hostAttempts.length, hostCall: { model: hostCall.model, measured: hostCall.measured, costUSD: Number(hostCall.cost_usd) }, finalLength: nativeText(message).length }, null, 2))
   } finally {
     cancellation.abort()
     try {
       await worker?.stop()
-      const diagnostics = await pool.query('SELECT purpose,model,status,measured,input_tokens,cached_input_tokens,output_tokens,cost_usd,extras FROM llm_calls WHERE company_id=$1 ORDER BY created_at', [companyId])
-      await writeFile(`${output}/diagnostics.json`, JSON.stringify({ timestamp: new Date().toISOString(), model: env.OPENAI_MODEL, frames: frames.length, finalStatus: frames.at(-1)?.snapshot.message.status, calls: diagnostics.rows.map(call => ({ purpose: call.purpose, model: call.model, status: call.status, measured: call.measured, inputTokens: call.input_tokens, cachedInputTokens: call.cached_input_tokens, outputTokens: call.output_tokens, costUSD: Number(call.cost_usd), reasoningTokens: call.extras.reasoningTokens, failure: call.extras.failure })) }, null, 2))
+      const diagnostics = await pool.query('SELECT purpose,model,status,measured,cost_estimated,input_tokens,cached_input_tokens,output_tokens,cost_usd,extras FROM llm_calls WHERE company_id=$1 ORDER BY created_at', [companyId])
+      await writeFile(`${output}/diagnostics.json`, JSON.stringify({ timestamp: new Date().toISOString(), model: env.OPENAI_MODEL, frames: frames.length, finalStatus: frames.at(-1)?.snapshot.message.status, calls: diagnostics.rows.map(call => ({ purpose: call.purpose, model: call.model, status: call.status, measured: call.measured, estimated: call.cost_estimated, inputTokens: call.input_tokens, cachedInputTokens: call.cached_input_tokens, outputTokens: call.output_tokens, costUSD: Number(call.cost_usd), reasoningTokens: call.extras.reasoningTokens, failure: call.extras.failure, callId: call.extras.callId, logicalCallId: call.extras.logicalCallId, costMeasurement: call.extras.costMeasurement, pricing: call.extras.pricing })) }, null, 2))
     } finally {
       try { await writeFile(`${output}/replay.json.gz`, gzipSync(JSON.stringify(frames))) }
       finally { await teardownAll() }

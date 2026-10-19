@@ -59,6 +59,10 @@ remain effective.
 107 server tests, 8 lifecycle tests, 19 deployment contract tests, 4 owning
 integration tests, and one 26-turn scripted context/compaction test. None skipped.
 Tests exposed the pricing and configuration failures before implementation.
+The [merged-head checks](../../../artifacts/issue-186/merged-checks.json) repeat
+the 138 affected unit/configuration/integration checks after upstream Worker
+startup cleanup was merged. Context-compaction coverage from the first validation
+remains applicable; that code was unchanged by the merge.
 
 The [successful real acceptance](../../../artifacts/issue-186/live/2026-10-19T09-42-30-278Z-15417/result.json)
 used the actual product Worker, isolated PostgreSQL, the published SDK and the
@@ -70,6 +74,32 @@ was USD 0.00405314; the utility call was USD 0.00005526. Total harness time was 
 63 seconds. This passing sample does not erase the two failures or establish a
 production latency/reliability distribution. IM/storage are fixture services;
 this is not an online production end-to-end check.
+
+After merging upstream Worker startup cleanup (`97441ba3`), the
+[next real run](../../../artifacts/issue-186/live/2026-10-19T09-47-28-128Z-22076/acceptance.json)
+completed the tool flow and final answer, but failed the original all-calls-measured
+assertion. Its [diagnostics](../../../artifacts/issue-186/live/2026-10-19T09-47-28-128Z-22076/diagnostics.json)
+retain a structured-call timeout followed by successful recovery, with an
+unmeasured USD 0.005311 conservative estimate for the failed attempt. This is
+distinct from the earlier two terminal timeouts. The test now requires measured
+usage and correct tariffs for successful calls, validates every measured call,
+and checks unmeasured failures retain their classification, estimate and successful
+logical retry; Agent failures must also retain the SDK pricing snapshot. Host
+retries are counted separately and every attempt is retained. The total recorded
+cost cap includes failed attempts. A host failure with unavailable usage has no
+known charge; its zero recorded estimate is not proof of a free provider call.
+No production retry settings were changed for this test-contract correction.
+Measured usage still yields a tariff-based cost estimate; the provider invoice
+is authoritative, so `cost_estimated` remains true even for measured calls.
+
+The [final reviewed-code acceptance](../../../artifacts/issue-186/live/2026-10-19T09-53-51-118Z-30734/result.json)
+passed in approximately 58 seconds: 37 previews, a 763-character final answer,
+tool-result continuation, durable replay and host JSON completion. All four
+calls had measured usage, costing USD 0.00470566 for the Agent and USD 0.00002246
+for the host call, with no failed attempts in this sample. The intermediate
+[75-second pass](../../../artifacts/issue-186/live/2026-10-19T09-51-54-138Z-28163/result.json)
+is also retained. The final acceptance code handles both first-attempt success
+and recovered attempts without labelling unavailable usage as measured.
 
 Reproduce from the repository root with root dependencies installed and Docker:
 
