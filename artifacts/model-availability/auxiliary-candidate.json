@@ -3,7 +3,7 @@
   "runtime": "3.5.4",
   "fixture": "local HTTP; 100ms first byte/idle, 250ms generation, 1500ms request, 3000ms logical total",
   "retryAuxiliary": false,
-  "elapsedMs": 2045,
+  "elapsedMs": 2160,
   "requests": [
     {
       "structured": false,

@@ -37,11 +37,28 @@ never memory text, credentials or provider error bodies.
   streaming succeeds at 158.44/124.66 ms. These are single fixture samples;
   success under the same deadline is the result, not a speedup percentage.
 
-Regression targets are memory list and completed-event projection below 250 ms
-under an unrelated held lock, and cancellation/terminal visibility below 1 s
-once authoritative state exists. The known optional coupling is deferred from
-this urgent model-availability repair. No target is represented as achieved
-unless its corresponding test passed.
+The projection repair is included in this candidate. Native frames proceed
+before optional display enrichment, no-tool projections skip that SQL, and
+optional reads use at most two extra connections per process with a 100 ms total
+budget and real cancellation. Required authorization, approval, questionnaire
+and terminal reads retain their failure behavior. Ten alternating baseline and
+candidate runs on the same published 3.5.3 package produced these synthetic p75s:
+
+| Boundary under a 1500 ms optional table lock | Baseline ms | Candidate ms |
+| --- | ---: | ---: |
+| Tool completion visible | 1506.05 | 8.82 |
+| Terminal visible | 1515.40 | 20.08 |
+| No-tool snapshot | 1506.16 | 17.02 |
+| IM after native terminal | 1199.03 | 102.19 |
+
+See `perf/presentation/README.md` and the paired raw artifact for the fixture,
+concurrency/cancellation budgets, and small-sample limits. The combined 3.5.4
+candidate passed 29 combined integration cases, including all 11 presentation
+cases: its single-run tool/terminal visibility was 13.32/34.05 ms and durable IM
+after terminal was 89.43 ms. The paired experiment is not relabeled as a 3.5.4
+measurement. The separate benchmark-registration lock
+coupling remains reproducible and is not claimed fixed; normal native memory
+SQL was sub-millisecond in that held-lock sample.
 
 ## Candidate behavior
 
@@ -74,7 +91,11 @@ succeeded. Both product locks contain that registry package and integrity; its
 and 14 owning integration cases passed with that installed package, including
 26 synthetic conversation turns, repeated compaction, provider failure recovery,
 authorization, revocation and deletion. The candidate artifacts distinguish
-measured usage from the one injected 503's estimated settlement.
+measured usage from the one injected 503's estimated settlement. Final combined
+validation also passed 102 server smoke tests, the separate active-socket test,
+and server typecheck/lint. Frontend lint, 65 tests and build/typecheck passed.
+See `artifacts/model-availability/product-validation.json`; exact final CI and
+production rollout are still required.
 
 There is no new migration: product migration 46, runtime schema 12 and protocol
 11 remain compatible. The ordered rollout must still run the existing explicit

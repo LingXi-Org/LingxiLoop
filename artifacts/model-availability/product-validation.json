@@ -1,0 +1,100 @@
+{
+  "at": "2026-10-19T16:52:20.074292+00:00",
+  "runtime": "3.5.4",
+  "codeCommit": "bc0101402f9fe0eead5cb60deac65886cab77dbc",
+  "base": "088e269f36f63884b44704c3b0f1e27f1a6f76fc",
+  "environment": "isolated local PostgreSQL and Redis, synthetic HTTP provider, recording WuKong; no live provider",
+  "checks": [
+    {
+      "name": "server typecheck",
+      "exitCode": 0,
+      "logSha256": "e871ba44d49be05ffe807a07098e55cc913f81ec1fae1d65efab8bd43be722a0"
+    },
+    {
+      "name": "server lint",
+      "exitCode": 0,
+      "logSha256": "ea8330d75622c395722ca2ca43ee48c8ca315174e58c5cfa7c0df050f5f44c5c"
+    },
+    {
+      "name": "server smoke tests",
+      "exitCode": 0,
+      "logSha256": "86a3ba20772edf3c9044d4ef80bd909ec07507e39b9a3c96bf056c582267dc9b",
+      "tests": 102,
+      "pass": 102,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "active socket disconnect",
+      "exitCode": 0,
+      "logSha256": "f66153ea41ced3b398dcbc8c29d4d52fad98e55e7aa164f144b83d941eca7158",
+      "tests": 1,
+      "pass": 1,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "combined 7-file integration",
+      "exitCode": 0,
+      "logSha256": "4952dc59ddd8b609a44cf42f48797e8e35d626d6532db21789fe2188b11a5bce",
+      "tests": 29,
+      "pass": 29,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "runtime 9-file integration before presentation",
+      "exitCode": 0,
+      "logSha256": "6b4b2e66c34b3d85629d3350c3c29db7f4b128b405719f6e3555dc9044c32a8d",
+      "tests": 14,
+      "pass": 14,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "frontend lint",
+      "exitCode": 0,
+      "logSha256": "324f904ad19cf21b09e49612d87b98e07813648be28ea509aa421fe207830987"
+    },
+    {
+      "name": "frontend tests",
+      "exitCode": 0,
+      "logSha256": "0c85a4200bd70013a334d0af7c1e226dc9a926694f669522cab3d568699c2ed0",
+      "tests": 65,
+      "pass": 65,
+      "fail": 0,
+      "skipped": 0
+    },
+    {
+      "name": "frontend build and typecheck",
+      "exitCode": 0,
+      "logSha256": "e05568299af8561d0228b19a3ed65657dc145b52179354e8181526fd2d68c58e"
+    }
+  ],
+  "independentReview": {
+    "remainingP1P2": 0,
+    "reviewedCodeCommit": "bc0101402f9fe0eead5cb60deac65886cab77dbc",
+    "coverage": [
+      "provider/model opt-in guard and unchanged deadlines",
+      "formal package integrity and both dependency locks",
+      "retry, tool receipt uniqueness and ledger settlement",
+      "presentation replay ordering, stale metadata and socket cancellation",
+      "authorization and mandatory-read error propagation"
+    ]
+  },
+  "release": {
+    "newProductMigration": false,
+    "productMigration": 46,
+    "runtimeSchema": 12,
+    "controlPlaneProtocol": 11,
+    "requiresExplicitRuntimeInstallationReceiptRefresh": true,
+    "extraPresentationConnectionsPerProcess": 2
+  },
+  "limitations": [
+    "No production provider request or latency SLO qualification.",
+    "Benchmark-registration lock coupling remains reproducible; presentation waiting is separately fixed.",
+    "Ordinary snapshot disconnect remains bounded by optional 100ms read budget.",
+    "Caller cancellation may settle a conservative reserved-usage estimate.",
+    "Exact final commit CI and production deployment still required."
+  ]
+}

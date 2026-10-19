@@ -110,3 +110,10 @@ and test counts only.
 - Recovery is an ordinary code rollback to the preceding validated build. There
   is no data/schema transition to undo. Verify version/health and durable receipt
   under the normal release workflow; leave the paused 3.5.3 soak untouched.
+
+The integrator reran the combined candidate on formally published **3.5.4**: all
+29 selected integration cases (including these 11 presentation cases), 102
+server smoke tests plus the active-socket test, typecheck and lint passed. See
+`artifacts/model-availability/product-validation.json` and
+`artifacts/memory-latency/presentation-3.5.4-candidate.json`. These single-run
+results do not replace the version-matched 3.5.3 paired experiment above.
