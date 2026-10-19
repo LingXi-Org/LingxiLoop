@@ -1,7 +1,7 @@
 {
   "passed": true,
-  "runtime": "3.4.7",
-  "model": "zai-org/GLM-5.2",
+  "runtime": "3.5.4",
+  "model": "zai-org/GLM-5.3-Flash",
   "realProvider": false,
   "results": [
     {
@@ -111,324 +111,404 @@
   ],
   "requests": [
     {
-      "bytes": 226947,
-      "stream": true
+      "bytes": 231389,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 181686,
-      "stream": false
+      "bytes": 182091,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 433826,
-      "stream": true
+      "bytes": 438268,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211166,
-      "stream": false
+      "bytes": 211236,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392091,
-      "stream": false
+      "bytes": 392496,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434517,
-      "stream": true
+      "bytes": 438959,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 212000,
-      "stream": false
+      "bytes": 212070,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392940,
-      "stream": false
+      "bytes": 393345,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434497,
-      "stream": true
+      "bytes": 438939,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211941,
-      "stream": false
+      "bytes": 212011,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392920,
-      "stream": false
+      "bytes": 393325,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434536,
-      "stream": true
+      "bytes": 438978,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392959,
-      "stream": false
+      "bytes": 393364,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434536,
-      "stream": true
+      "bytes": 5887,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 438978,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 392959,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 5817,
-      "stream": false
+      "bytes": 5883,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 5813,
-      "stream": false
+      "bytes": 393364,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434536,
-      "stream": true
+      "bytes": 5884,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 5814,
-      "stream": false
+      "bytes": 438978,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392959,
-      "stream": false
+      "bytes": 393364,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434536,
-      "stream": true
+      "bytes": 438978,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392959,
-      "stream": false
+      "bytes": 393364,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434536,
-      "stream": true
+      "bytes": 438978,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392959,
-      "stream": false
+      "bytes": 393364,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434536,
-      "stream": true
+      "bytes": 438978,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392959,
-      "stream": false
+      "bytes": 393364,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434536,
-      "stream": true
+      "bytes": 438978,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392959,
-      "stream": false
+      "bytes": 393364,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434536,
-      "stream": true
+      "bytes": 438978,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392959,
-      "stream": false
+      "bytes": 393364,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     },
     {
-      "bytes": 434537,
-      "stream": true
+      "bytes": 438979,
+      "stream": true,
+      "purpose": "agent-turn"
     },
     {
-      "bytes": 211980,
-      "stream": false
+      "bytes": 212050,
+      "stream": true,
+      "purpose": "compaction"
     },
     {
-      "bytes": 392961,
-      "stream": false
+      "bytes": 393366,
+      "stream": true,
+      "purpose": "structured"
     }
   ],
   "calls": [
@@ -531,62 +611,6 @@
       "error": null
     },
     {
-      "purpose": "lingxios.agent-turn",
-      "status": "succeeded",
-      "measured": true,
-      "input_tokens": 30000,
-      "error": null
-    },
-    {
-      "purpose": "lingxios.compaction",
-      "status": "succeeded",
-      "measured": true,
-      "input_tokens": 30000,
-      "error": null
-    },
-    {
-      "purpose": "lingxios.structured",
-      "status": "succeeded",
-      "measured": true,
-      "input_tokens": 30000,
-      "error": null
-    },
-    {
-      "purpose": "lingxios.structured",
-      "status": "succeeded",
-      "measured": true,
-      "input_tokens": 30000,
-      "error": null
-    },
-    {
-      "purpose": "lingxios.structured",
-      "status": "succeeded",
-      "measured": true,
-      "input_tokens": 30000,
-      "error": null
-    },
-    {
-      "purpose": "lingxios.agent-turn",
-      "status": "succeeded",
-      "measured": true,
-      "input_tokens": 30000,
-      "error": null
-    },
-    {
-      "purpose": "lingxios.structured",
-      "status": "succeeded",
-      "measured": true,
-      "input_tokens": 30000,
-      "error": null
-    },
-    {
-      "purpose": "lingxios.compaction",
-      "status": "succeeded",
-      "measured": true,
-      "input_tokens": 30000,
-      "error": null
-    },
-    {
       "purpose": "lingxios.structured",
       "status": "succeeded",
       "measured": true,
@@ -602,6 +626,20 @@
     },
     {
       "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
       "status": "succeeded",
       "measured": true,
       "input_tokens": 30000,
@@ -833,6 +871,48 @@
     },
     {
       "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.structured",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.compaction",
+      "status": "succeeded",
+      "measured": true,
+      "input_tokens": 30000,
+      "error": null
+    },
+    {
+      "purpose": "lingxios.agent-turn",
       "status": "succeeded",
       "measured": true,
       "input_tokens": 30000,
@@ -1101,7 +1181,7 @@
   ],
   "continuityFactPreserved": true,
   "deliveredOncePerTurn": true,
-  "reasoningDisabled": true,
+  "thinkingDisabledRequested": true,
   "transport": "recording WuKong fixture",
   "reproduce": "node e2e/server/model-context.mjs"
 }

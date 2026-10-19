@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createWorker } from '@lyyzka/lingxios/worker'
+import { releaseVersions } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl, stopLingxiOSControl } from '../agent-runtime/runtime.js'
 import { assistantRunResponse, readRunProjection, RunStreamProjection } from '../agent-runtime/assistant-transport.js'
@@ -45,9 +46,10 @@ before(async () => {
 })
 after(async () => {
   await worker?.stop(); await stopLingxiOSControl(); await teardownAll(); await recording?.close()
-  const label = process.env.MEMORY_LATENCY_LABEL === 'candidate' ? 'candidate' : 'baseline'
+  const label = process.env.MEMORY_LATENCY_LABEL === 'candidate' ? 'candidate'
+    : process.env.MEMORY_LATENCY_LABEL === 'main-baseline' ? 'main-baseline' : 'baseline'
   await mkdir('artifacts/memory-latency', { recursive: true })
-  await writeFile(`artifacts/memory-latency/${label}.json`, JSON.stringify({ at: new Date().toISOString(), runtime: '3.5.3', node: process.version,
+  await writeFile(`artifacts/memory-latency/${label}.json`, JSON.stringify({ at: new Date().toISOString(), runtime: releaseVersions.runtime, node: process.version,
     environment: 'isolated PostgreSQL; deterministic model; recording IM; no live provider',
     percentilePolicy: 'individual samples and min/median/max only; no P95/P99 with fewer than 100 samples per cell', evidence }, null, 2) + '\n')
 })

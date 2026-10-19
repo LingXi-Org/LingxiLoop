@@ -1,0 +1,1933 @@
+{
+  "at": "2026-10-19T14:04:52.892Z",
+  "runtime": "3.5.3",
+  "node": "v22.23.3",
+  "environment": "isolated PostgreSQL; deterministic model; recording IM; no live provider",
+  "percentilePolicy": "individual samples and min/median/max only; no P95/P99 with fewer than 100 samples per cell",
+  "evidence": [
+    {
+      "label": "scopes-0-first",
+      "elapsedMs": 17.72,
+      "spans": {
+        "pool_acquire": {
+          "calls": 13,
+          "ms": 1.36
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 3
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 8.19
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.42
+        }
+      }
+    },
+    {
+      "label": "list-0-first-0",
+      "elapsedMs": 13.84,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.71
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.62
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.46
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.82
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.98
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-1",
+      "elapsedMs": 14.18,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.67
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.71
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 8.23
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.79
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.91
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-2",
+      "elapsedMs": 11.96,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.68
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.51
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.68
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.68
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.58
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-3",
+      "elapsedMs": 12.25,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.66
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.44
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.08
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.8
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.53
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-4",
+      "elapsedMs": 19.02,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 1
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 7.56
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.85
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.68
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.62
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-5",
+      "elapsedMs": 15.88,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.64
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.93
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 9.44
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.9
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.55
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-6",
+      "elapsedMs": 12.6,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.59
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.75
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.12
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.72
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.53
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-7",
+      "elapsedMs": 11.36,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.52
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.29
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 5.78
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.04
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.54
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-8",
+      "elapsedMs": 14.72,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.77
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.65
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.94
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.72
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.53
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-9",
+      "elapsedMs": 12.21,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.8
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.72
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.87
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.72
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.45
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-10",
+      "elapsedMs": 10.39,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.7
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.5
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 5.79
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.68
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.46
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-11",
+      "elapsedMs": 9.94,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.63
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.51
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 5.4
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.79
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.38
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-12",
+      "elapsedMs": 11.05,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.84
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.45
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 5.83
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.08
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.43
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-13",
+      "elapsedMs": 17.77,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.7
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.33
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 13.01
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.75
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.56
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-14",
+      "elapsedMs": 11.38,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.55
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.35
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.72
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.61
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.38
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-15",
+      "elapsedMs": 11.38,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.53
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.22
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.46
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.44
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.43
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-16",
+      "elapsedMs": 9.97,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.5
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.36
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 5.79
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.62
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.41
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-17",
+      "elapsedMs": 13.05,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.69
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 3.07
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.69
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.67
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.48
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-18",
+      "elapsedMs": 11.07,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.52
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.47
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.63
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.65
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.49
+        }
+      }
+    },
+    {
+      "label": "list-0-warm-19",
+      "elapsedMs": 11.94,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.68
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.67
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 5.92
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.65
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 1.63
+        }
+      }
+    },
+    {
+      "label": "list-0-concurrent-4",
+      "elapsedMs": 25.88,
+      "spans": {
+        "pool_acquire": {
+          "calls": 56,
+          "ms": 12.23
+        },
+        "authorization": {
+          "calls": 8,
+          "ms": 11.61
+        },
+        "other_sql": {
+          "calls": 36,
+          "ms": 47.44
+        },
+        "evolution_registration": {
+          "calls": 8,
+          "ms": 7.54
+        },
+        "memory_query": {
+          "calls": 4,
+          "ms": 3.27
+        }
+      }
+    },
+    {
+      "label": "native-run-0",
+      "elapsedMs": 820.35,
+      "spans": {
+        "pool_acquire": {
+          "calls": 346,
+          "ms": 61.78
+        },
+        "other_sql": {
+          "calls": 300,
+          "ms": 290.4
+        },
+        "event_and_receipt": {
+          "calls": 104,
+          "ms": 145.3
+        },
+        "authorization": {
+          "calls": 16,
+          "ms": 17.4
+        },
+        "evolution_registration": {
+          "calls": 16,
+          "ms": 5.53
+        },
+        "memory_query": {
+          "calls": 8,
+          "ms": 20.08
+        }
+      }
+    },
+    {
+      "label": "native-events-0",
+      "startedSeq": 8,
+      "completedSeq": 9,
+      "timings": [
+        {
+          "seq": "8",
+          "recorded_at": "2026-10-19T14:04:47.522Z"
+        },
+        {
+          "seq": "9",
+          "recorded_at": "2026-10-19T14:04:47.589Z"
+        }
+      ]
+    },
+    {
+      "label": "projection-0",
+      "elapsedMs": 34.61,
+      "spans": {
+        "pool_acquire": {
+          "calls": 12,
+          "ms": 0.49
+        },
+        "other_sql": {
+          "calls": 11,
+          "ms": 11.25
+        },
+        "event_and_receipt": {
+          "calls": 1,
+          "ms": 1.1
+        }
+      }
+    },
+    {
+      "label": "scopes-8-first",
+      "elapsedMs": 25.64,
+      "spans": {
+        "pool_acquire": {
+          "calls": 13,
+          "ms": 0.44
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.07
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 20.86
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.19
+        }
+      }
+    },
+    {
+      "label": "list-8-first-0",
+      "elapsedMs": 23.18,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.5
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.94
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 14.75
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 2.35
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.08
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-1",
+      "elapsedMs": 14.58,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.56
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.42
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.99
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.67
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.78
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-2",
+      "elapsedMs": 14.62,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.63
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.51
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 9.85
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.59
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.71
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-3",
+      "elapsedMs": 16.14,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.51
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.99
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 9.61
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.64
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.78
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-4",
+      "elapsedMs": 11.08,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.47
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.36
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.83
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.47
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.82
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-5",
+      "elapsedMs": 11.94,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.48
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.42
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.27
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.73
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.88
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-6",
+      "elapsedMs": 18.95,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.45
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 5.94
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 9.38
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.65
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.8
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-7",
+      "elapsedMs": 10.93,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.52
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.73
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.19
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.64
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.61
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-8",
+      "elapsedMs": 10.13,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.48
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.29
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.37
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.58
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.48
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-9",
+      "elapsedMs": 14.51,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.77
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.33
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 9.37
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.64
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.87
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-10",
+      "elapsedMs": 11.47,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.53
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.56
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.13
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.54
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.56
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-11",
+      "elapsedMs": 14.77,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.52
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.45
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 9.46
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.96
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.66
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-12",
+      "elapsedMs": 13.06,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.58
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.36
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 8.31
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.76
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.62
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-13",
+      "elapsedMs": 28.16,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.89
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.33
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 11.93
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 4.25
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 7.89
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-14",
+      "elapsedMs": 13.68,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.66
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.15
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 8.09
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.6
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.56
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-15",
+      "elapsedMs": 14.34,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.58
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 3.73
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.78
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.52
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.58
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-16",
+      "elapsedMs": 12.14,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.56
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.74
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.2
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.55
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.78
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-17",
+      "elapsedMs": 12.76,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 1.04
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.8
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.75
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.47
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.89
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-18",
+      "elapsedMs": 16.04,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.46
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.55
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 11.33
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.52
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.83
+        }
+      }
+    },
+    {
+      "label": "list-8-warm-19",
+      "elapsedMs": 10.51,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.54
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.32
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.21
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.65
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.58
+        }
+      }
+    },
+    {
+      "label": "list-8-concurrent-4",
+      "elapsedMs": 20.79,
+      "spans": {
+        "pool_acquire": {
+          "calls": 56,
+          "ms": 3.02
+        },
+        "authorization": {
+          "calls": 8,
+          "ms": 9.97
+        },
+        "other_sql": {
+          "calls": 36,
+          "ms": 50.06
+        },
+        "evolution_registration": {
+          "calls": 8,
+          "ms": 8.06
+        },
+        "memory_query": {
+          "calls": 4,
+          "ms": 2.7
+        }
+      }
+    },
+    {
+      "label": "native-run-8",
+      "elapsedMs": 765.88,
+      "spans": {
+        "pool_acquire": {
+          "calls": 369,
+          "ms": 36.98
+        },
+        "other_sql": {
+          "calls": 303,
+          "ms": 308.54
+        },
+        "event_and_receipt": {
+          "calls": 124,
+          "ms": 157.49
+        },
+        "authorization": {
+          "calls": 16,
+          "ms": 19.27
+        },
+        "evolution_registration": {
+          "calls": 16,
+          "ms": 7.55
+        },
+        "memory_query": {
+          "calls": 8,
+          "ms": 7.77
+        }
+      }
+    },
+    {
+      "label": "native-events-8",
+      "startedSeq": 8,
+      "completedSeq": 9,
+      "timings": [
+        {
+          "seq": "8",
+          "recorded_at": "2026-10-19T14:04:48.743Z"
+        },
+        {
+          "seq": "9",
+          "recorded_at": "2026-10-19T14:04:48.809Z"
+        }
+      ]
+    },
+    {
+      "label": "projection-8",
+      "elapsedMs": 24.87,
+      "spans": {
+        "pool_acquire": {
+          "calls": 12,
+          "ms": 0.56
+        },
+        "other_sql": {
+          "calls": 11,
+          "ms": 14.59
+        },
+        "event_and_receipt": {
+          "calls": 1,
+          "ms": 0.95
+        }
+      }
+    },
+    {
+      "label": "list-unrelated-evolution-lock-1200ms",
+      "elapsedMs": 1205.57,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.68
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.77
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 20.97
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1177.91
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 0.82
+        }
+      }
+    },
+    {
+      "label": "stream-unrelated-presentation-lock-1200ms",
+      "elapsedMs": 1209.73,
+      "spans": {}
+    },
+    {
+      "label": "scopes-1024-first",
+      "elapsedMs": 12.78,
+      "spans": {
+        "pool_acquire": {
+          "calls": 13,
+          "ms": 0.52
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.19
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.82
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.74
+        }
+      }
+    },
+    {
+      "label": "list-1024-first-0",
+      "elapsedMs": 18.18,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.84
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.02
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 8.77
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.06
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 3.73
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-1",
+      "elapsedMs": 18.78,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.68
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.13
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 11.19
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.71
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.23
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-2",
+      "elapsedMs": 19.28,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.57
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.77
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 11.15
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.08
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 3.17
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-3",
+      "elapsedMs": 17.38,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.98
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.5
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 9.12
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.84
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 3.25
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-4",
+      "elapsedMs": 14.42,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 1.13
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.71
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.31
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.56
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.54
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-5",
+      "elapsedMs": 13.35,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.46
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.65
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.37
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.48
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.54
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-6",
+      "elapsedMs": 14.99,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.65
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.67
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.08
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.62
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 3.6
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-7",
+      "elapsedMs": 19.7,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.53
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.49
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 12.25
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.55
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 3.52
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-8",
+      "elapsedMs": 17.37,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.46
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 5.93
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.23
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.56
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.94
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-9",
+      "elapsedMs": 15.35,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.78
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.72
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 8.09
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.54
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.69
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-10",
+      "elapsedMs": 16.16,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.44
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.43
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.15
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 2.46
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 3.63
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-11",
+      "elapsedMs": 11.59,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.46
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.47
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.07
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.6
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 1.87
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-12",
+      "elapsedMs": 11.22,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.51
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.51
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 5.74
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.49
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 1.83
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-13",
+      "elapsedMs": 13.8,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.42
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.59
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.43
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.74
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.31
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-14",
+      "elapsedMs": 13.17,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.58
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.78
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.51
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.65
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.31
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-15",
+      "elapsedMs": 11.14,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.39
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.43
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 5.75
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.54
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 1.9
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-16",
+      "elapsedMs": 13.51,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.54
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 2.92
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 6.02
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.82
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.04
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-17",
+      "elapsedMs": 22.24,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.47
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.44
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 15.34
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 1.07
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.25
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-18",
+      "elapsedMs": 14.05,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.41
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.45
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 7.91
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.58
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 2.44
+        }
+      }
+    },
+    {
+      "label": "list-1024-warm-19",
+      "elapsedMs": 13.59,
+      "spans": {
+        "pool_acquire": {
+          "calls": 14,
+          "ms": 0.48
+        },
+        "authorization": {
+          "calls": 2,
+          "ms": 1.39
+        },
+        "other_sql": {
+          "calls": 9,
+          "ms": 8.07
+        },
+        "evolution_registration": {
+          "calls": 2,
+          "ms": 0.6
+        },
+        "memory_query": {
+          "calls": 1,
+          "ms": 1.64
+        }
+      }
+    },
+    {
+      "label": "list-1024-concurrent-4",
+      "elapsedMs": 22.68,
+      "spans": {
+        "pool_acquire": {
+          "calls": 56,
+          "ms": 2.13
+        },
+        "authorization": {
+          "calls": 8,
+          "ms": 12.82
+        },
+        "other_sql": {
+          "calls": 36,
+          "ms": 45.84
+        },
+        "evolution_registration": {
+          "calls": 8,
+          "ms": 9.36
+        },
+        "memory_query": {
+          "calls": 4,
+          "ms": 6.9
+        }
+      }
+    },
+    {
+      "label": "native-run-1024",
+      "elapsedMs": 719.61,
+      "spans": {
+        "pool_acquire": {
+          "calls": 397,
+          "ms": 36.37
+        },
+        "other_sql": {
+          "calls": 303,
+          "ms": 257.06
+        },
+        "event_and_receipt": {
+          "calls": 152,
+          "ms": 176.82
+        },
+        "authorization": {
+          "calls": 16,
+          "ms": 16.58
+        },
+        "evolution_registration": {
+          "calls": 16,
+          "ms": 5.05
+        },
+        "memory_query": {
+          "calls": 8,
+          "ms": 24.1
+        }
+      }
+    },
+    {
+      "label": "native-events-1024",
+      "startedSeq": 8,
+      "completedSeq": 9,
+      "timings": [
+        {
+          "seq": "8",
+          "recorded_at": "2026-10-19T14:04:52.356Z"
+        },
+        {
+          "seq": "9",
+          "recorded_at": "2026-10-19T14:04:52.410Z"
+        }
+      ]
+    },
+    {
+      "label": "projection-1024",
+      "elapsedMs": 24.61,
+      "spans": {
+        "pool_acquire": {
+          "calls": 12,
+          "ms": 0.5
+        },
+        "other_sql": {
+          "calls": 11,
+          "ms": 16.31
+        },
+        "event_and_receipt": {
+          "calls": 1,
+          "ms": 0.76
+        }
+      }
+    }
+  ]
+}

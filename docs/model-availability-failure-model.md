@@ -39,6 +39,7 @@ once authoritative state exists. Provider first content and completion must be
 reported separately; no provider SLO is claimed from a handful of probes.
 
 The urgent 197 fix precedes optional 196 performance changes. No schema change,
-production fault injection, deployment or soak mutation is part of this branch.
+production fault injection or soak mutation is part of this branch. An authorized
+release follows the repository production workflow after package and product gates.
 
 Reference: https://huggingface.co/zai-org/GLM-5.3-Flash
