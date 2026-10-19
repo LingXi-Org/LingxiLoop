@@ -12,23 +12,25 @@ import type { ForumAttachment } from './contracts'
 import { attachmentKind, ForumAttachments, forumFileUrl } from './ForumAttachments'
 import type { EditorFileOrigin } from './memos/editor/Editor/extensions'
 import type { EditorController } from './memos/editor/types/editorController'
+import { ForumMaterials } from './ForumMaterials'
 import { MemoEditor } from './memos/MemoEditor'
 
 const imageMarkdown = (file: ForumAttachment) => `![${file.name.replace(/[\\[\]]/g, '\\$&')}](${forumFileUrl(file)})`
 
-export function ForumContentFields({ body, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, tags, compact = false, onFocus }: {
+export function ForumContentFields({ body, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, tags, compact = false, focusCanvas = false, onFocus }: {
   body: string; setBody(value: string): void; links: string; setLinks(value: string): void
   attachments: ForumAttachment[]; setAttachments(value: ForumAttachment[]): void
-  disabled: boolean; onUploading(value: boolean): void; label?: string; maxLength?: number; tags?: string[]; compact?: boolean; onFocus?(): void
+  disabled: boolean; onUploading(value: boolean): void; label?: string; maxLength?: number; tags?: string[]; compact?: boolean; focusCanvas?: boolean; onFocus?(): void
 }) {
   const id = useId(), editor = useRef<EditorController>(null), picker = useRef<HTMLInputElement>(null)
+  const [materialsOpen, setMaterialsOpen] = useState(false)
   const [error, setError] = useState(''), [uploadName, setUploadName] = useState('')
   const [failed, setFailed] = useState<File[]>([]), uploading = useRef(false), latestFiles = useRef(attachments)
   latestFiles.current = attachments
   const upload = async (files: File[], origin?: EditorFileOrigin) => {
     if (uploading.current || disabled || !files.length) return
     if (latestFiles.current.length + files.length > 20) { setError('最多上传 20 个附件。'); return }
-    uploading.current = true; onUploading(true); setError(''); setFailed([])
+    uploading.current = true; setMaterialsOpen(true); onUploading(true); setError(''); setFailed([])
     const failures: File[] = []
     try {
       for (const file of files) {
@@ -57,13 +59,16 @@ export function ForumContentFields({ body, setBody, links, setLinks, attachments
     ;[next[index], next[target]] = [next[target], next[index]]
     setAttachments(next)
   }
-  return <div className={compact?'min-w-0':'min-w-0 space-y-2'}>
-    <MemoEditor ref={editor} compact={compact} onFocus={onFocus} value={body} onChange={setBody} label={label} maxLength={maxLength} tags={tags} disabled={disabled} onFiles={(files, origin) => void upload(files, origin)} />
-    <div hidden={compact} className="space-y-2">
-    <div className="flex flex-wrap items-center gap-2">
+  return <div className={compact || focusCanvas ? 'min-w-0' : 'min-w-0 space-y-2'}>
+    <MemoEditor focusCanvas={focusCanvas} ref={editor} compact={compact} onFocus={onFocus} value={body} onChange={setBody} label={label} maxLength={maxLength} tags={tags} disabled={disabled} onFiles={(files, origin) => void upload(files, origin)} />
+    <div hidden={compact} className={focusCanvas ? undefined : "space-y-2"}>
       <Input ref={picker} id={`${id}-files`} aria-label="附件" className="sr-only" type="file" multiple disabled={disabled || attachments.length >= 20} onChange={event => {
         const files = Array.from(event.target.files ?? []); event.target.value = ''; void upload(files)
       }} />
+    {focusCanvas ? <ForumMaterials attachments={attachments} links={links} setLinks={setLinks} disabled={disabled} picker={picker} open={materialsOpen} setOpen={setMaterialsOpen} onMove={move}
+      onRemove={file => { setAttachments(attachments.filter(item => item.key !== file.key)); setBody(body.replaceAll(imageMarkdown(file), '')) }}
+      onInsertImage={file => editor.current?.insertMarkdown(imageMarkdown(file))} /> : <>
+    <div className="flex flex-wrap items-center gap-2">
       <Button type="button" variant="outline" size="sm" disabled={disabled || attachments.length >= 20} onClick={() => picker.current?.click()}><PaperclipIcon />添加附件</Button>
       {uploadName ? <span role="status" className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground"><Spinner className="shrink-0 motion-reduce:animate-none" />正在上传 {uploadName}</span>
         : <span className="text-xs text-muted-foreground">可粘贴文件，或把图片拖入正文</span>}
@@ -77,7 +82,9 @@ export function ForumContentFields({ body, setBody, links, setLinks, attachments
       <Button type="button" variant="ghost" size="sm" disabled={disabled} onClick={() => { setAttachments(attachments.filter(item => item.key !== file.key)); setBody(body.replaceAll(imageMarkdown(file), '')) }} aria-label={`移除附件：${file.name}`}>移除</Button>
     </li>)}</ul>}
     <details className="rounded-lg border border-border/60 px-3 py-2"><summary className="cursor-pointer text-sm text-muted-foreground focus-visible:outline-2">附加链接</summary><div className="space-y-2 pt-2"><Label htmlFor={`${id}-links`}>链接（每行一个）</Label><Textarea id={`${id}-links`} value={links} onChange={event => setLinks(event.target.value)} rows={2} disabled={disabled} placeholder="https://" /></div></details>
-    {error && <p role="alert" className="text-sm text-destructive">{error}{failed.length > 0 && <Button type="button" variant="link" disabled={disabled} onClick={() => void upload(failed)}>重试上传</Button>}</p>}
+    </>}
+    {focusCanvas && uploadName && <p role="status" className="forum-focus-status flex items-center gap-2"><Spinner className="shrink-0 motion-reduce:animate-none" />正在上传 {uploadName}</p>}
+    {error && <p role="alert" className={focusCanvas ? "forum-focus-status text-destructive" : "text-sm text-destructive"}>{error}{failed.length > 0 && <Button type="button" variant="link" disabled={disabled} onClick={() => void upload(failed)}>重试上传</Button>}</p>}
     </div>
   </div>
 }
