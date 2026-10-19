@@ -27,6 +27,7 @@ test('history paints independently of diagnostics and obsolete requests cannot m
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
   mock.module('@/features/agents/state', { namedExports: { useParticipants: { getState: () => ({ byId: {} }) } } })
   mock.module('@/features/chat/api', { namedExports: { messagesApi: {} } })
+  mock.module('@/api/questionnaires', { namedExports: { questionnairesApi: {} } })
   mock.module('@/features/conversations/store', { namedExports: { useConversations: { getState: () => ({ list: [] }) } } })
   mock.module('@/lib/actionToast', { namedExports: { toastAction: () => {} } })
   mock.module('@/lib/workspaceSession', { namedExports: { getWorkspaceSession: () => ({ companyId: 'company', projectId }) } })

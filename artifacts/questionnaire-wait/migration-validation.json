@@ -1,0 +1,30 @@
+{
+  "productBase": "0b51617c5599ec221e3523d2771803c4b225e27d",
+  "runtime": {
+    "version": "3.5.3",
+    "commit": "aad661f0655e67c8898ebcbfd5f5cfbc1dc77ff3",
+    "qualification": "isolated source-built candidate; official package qualification still required",
+    "manifestsRemainPinned": "3.5.2"
+  },
+  "command": "node /workspace/release-20261019/pr190-review/run-local.mjs server/run-integration-tests.mjs --file migration.test.ts",
+  "before": { "tests": 26, "pass": 8, "fail": 18, "skipped": 0 },
+  "after": { "tests": 30, "pass": 30, "fail": 0, "cancelled": 0, "skipped": 0 },
+  "checks": { "serverTypecheck": "passed", "owningFileLint": "passed", "diffCheck": "passed" },
+  "coverageAdded": [
+    "0043 to 0044 preserves product rows, waiting runtime work, sessions and prior migration checksums/timestamps; new questionnaire table starts empty",
+    "Repeating migration preserves accepted questionnaire answers, submission nonce/payload and exhausted attempt count",
+    "Failure after 0044 DDL and a product update rolls back table/index/product mutation/history while prior 0043 remains committed (starting from 42 and 43)",
+    "Failure in 0044 during fresh cutover rolls back all product/runtime schema and installation history; clean retry succeeds exactly once"
+  ],
+  "mergeNotes": [
+    "PR189 changes the same historical expected migration sequences for 0045_organization_cases. Retain both 0044_questionnaire_wait and 0045_organization_cases in order; do not choose an entire side.",
+    "Retain all four new 0044 cases and the 0045 populated-upgrade case. Latest-schema success assertions/counts must include 45 after merging; failure injected into 44 still leaves committed history at 43 (or zero during fresh cutover).",
+    "Historical restoreSchema38/31 fixtures currently start from migrateThrough39, so no 0044 table exists to drop. If changed to start from latest, remove newer schema objects before deleting history; do not only rewind schema_migrations."
+  ],
+  "logs": [
+    "/workspace/release-20261019/pr190-review/migration-red.log",
+    "/workspace/release-20261019/pr190-review/migration-green.log",
+    "/workspace/release-20261019/pr190-review/migration-typecheck.log",
+    "/workspace/release-20261019/pr190-review/migration-lint.log"
+  ]
+}

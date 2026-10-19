@@ -9,6 +9,7 @@ import { bindProductRun, productRunIdentity, notifyRunAvailable } from './identi
 import { parseMentions } from '../mentions.js'
 import { attachmentRefId, readRequestAttachments, selectRequestAttachments, unavailableAttachmentIds } from './attachments.js'
 import { assertUiInteractionAdmission } from '../im/interactive-ui-admission.js'
+import { assertQuestionnaireContinuation, recordQuestionnaireContinuation } from '../im/questionnaires.js'
 
 export interface AgentRequest {
   companyId: string; agentId: string; channelId: string; clientMsgNo: string
@@ -65,16 +66,20 @@ export async function receiveAgentRequest(input: AgentRequest) {
   const continuation = input.continuation ?? (savedContinuation ? { runId: savedContinuation.runId, requestVersion: savedContinuation.requestVersion } : undefined)
   signal.throwIfAborted()
   if (continuation) {
+    await assertQuestionnaireContinuation({ companyId: input.companyId, channelId: input.channelId, userId: message.fromUid,
+      ...continuation, clientNonce: input.clientMsgNo, payload: message.payload })
     const run = await productRunIdentity({ companyId: input.companyId, conversationId: input.channelId, agentId: input.agentId, runId: continuation.runId, principalId: message.fromUid, ...(threadId ? { threadId } : {}) })
     const result = await api.continueInput({ ...run, ...continuation,
       inputId: input.clientMsgNo, text, attachments: files })
+    await recordQuestionnaireContinuation({ companyId: input.companyId, channelId: input.channelId, userId: message.fromUid,
+      ...continuation, clientNonce: input.clientMsgNo, payload: message.payload })
     notifyRunAvailable(run, input.channelId)
     return { id: result.workId, deduplicated: result.status === 'already_resumed' }
   }
   if (threadId) await api.conversations.registerThread({ tenantId: input.companyId, conversationId: input.channelId, threadId, policyVersion: policy.version })
   const members = (await pool.query<{ id: string; name: string; kind: 'human' | 'agent' }>(
     'SELECT id,name,kind FROM participants WHERE company_id=$1 AND id=ANY($2::text[])', [input.companyId,policy.participants.map(member => member.id)])).rows
-  const parsed = custom.uiInteraction ? { mentionedIds: [], mentionAll: false } : parseMentions(text,members)
+  const parsed = custom.uiInteraction || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(text,members)
   const mentions = parsed.mentionAll
     ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id)
     : custom.uiInteraction && Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : parsed.mentionedIds

@@ -15,9 +15,6 @@ const baselineUrl = new URL('../db/migrations/0001_v1_baseline.sql', import.meta
 const legacyCleanupUrl = new URL('../db/migrations/0002_remove_legacy_identity.sql', import.meta.url)
 const affinityUrl = new URL('../db/migrations/0003_agent_os_session_affinity.sql', import.meta.url)
 const personalOwnerUrl = new URL('../db/migrations/0004_backfill_personal_owner_participants.sql', import.meta.url)
-// Release integration reserves 0044 for #183; retain its exact asset when present.
-const casePrerequisiteMigrations = (await readdir(new URL('../db/migrations/', import.meta.url)))
-  .filter(name => /^0044_[a-z0-9_-]+\.sql$/.test(name)).map(name => name.slice(0, -4)).sort()
 
 // Upgrade failures to guard: existing PRIVATE/PROJECT rows changing scope, automatic
 // publication of legacy content, null project escaping the case-only constraint,
@@ -63,6 +60,110 @@ test('0045 preserves existing sources and adds explicit organization-only case s
   })
 })
 
+// 0044 must not backfill questions, rewrite existing product/runtime rows, lose
+// accepted answers on replay, or commit partial DDL/history when its SQL fails.
+async function withMigrationRange(through: number, run: (url: URL, directory: string) => Promise<void>) {
+  const directory = await mkdtemp(join(tmpdir(), 'lingxiloop-questionnaire-migration-'))
+  const source = new URL('../db/migrations/', import.meta.url)
+  try {
+    for (const file of await readdir(source)) if (Number(file.slice(0, 4)) <= through) {
+      await copyFile(new URL(file, source), join(directory, file))
+    }
+    await run(pathToFileURL(`${directory}${sep}`), directory)
+  } finally { await rm(directory, { recursive: true, force: true }) }
+}
+
+test('0044 preserves product and runtime rows, starts empty and retains accepted answers on replay', async () => {
+  await withDatabase(async database => {
+    await withMigrationRange(43, async url => { await migrateDatabase(database, url) })
+    await database.query(`INSERT INTO users(id,email,display_name) VALUES('human44','human44@example.test','Preserved');
+      INSERT INTO companies(id,name,slug,type,plan_id) VALUES('tenant44','Preserved','tenant44','EDUCATION','plan-education');
+      INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status)
+        VALUES('agent44','tenant44','agent','Preserved','A','#000','avail');
+      INSERT INTO conversations(id,company_id,kind,title,members)
+        VALUES('room44','tenant44','group','Preserved','["human44","agent44"]');
+      INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id)
+        VALUES('room44','tenant44','{"channelType":2,"members":["human44","agent44"]}','agent44');
+      INSERT INTO lingxios.agent_work_items(id,tenant_id,agent_id,principal_id,session_id,kind,lane,trigger_ref,status,meta)
+        VALUES('work44','tenant44','agent44','human44','session44','turn','interactive','request44','waiting','{"text":"Preserve waiting work"}');
+      INSERT INTO lingxios.agent_os_sessions(session_key,tenant_id,agent_id,session_id,history,summary,compaction_epoch)
+        VALUES('session44','tenant44','agent44','session44','[{"role":"user","content":"Preserve history"}]','Preserved summary',2)`)
+    const snapshot = async () => {
+      const tables = ['users', 'companies', 'participants', 'conversations', 'im_channel_bindings',
+        'lingxios.agent_work_items', 'lingxios.agent_os_sessions']
+      return Promise.all(tables.map(async table => (await database.query(`SELECT to_jsonb(row) AS data FROM ${table} row ORDER BY to_jsonb(row)::text`)).rows))
+    }
+    const before = await snapshot()
+    const history = (await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows
+    assert.deepEqual(await migrateDatabase(database), ['0044_questionnaire_wait', '0045_organization_cases'])
+    assert.deepEqual(await snapshot(), before)
+    assert.deepEqual((await database.query('SELECT * FROM schema_migrations WHERE version<=43 ORDER BY version')).rows, history)
+    assert.deepEqual((await database.query('SELECT * FROM im_questionnaires')).rows, [])
+    const index = (await database.query("SELECT indexdef FROM pg_indexes WHERE schemaname='public' AND indexname='im_questionnaires_pending_submission'")).rows[0]?.indexdef
+    assert.match(index, /submission_retry_at/)
+    assert.match(index, /answers IS NOT NULL.*submitted_at IS NULL/)
+    await database.query(`INSERT INTO im_questionnaires(company_id,channel_id,question_id,run_id,request_version,
+      agent_id,principal_id,session_id,payload,delivered_at,answers,submission_nonce,submission_payload,submission_attempts)
+      VALUES('tenant44','room44','question44','work44',1,'agent44','human44','session44','{"title":"Preserved question"}',
+        NOW(),'[{"id":"choice","value":"yes"}]','nonce44','{"kind":"continue","nonce":"nonce44"}',12)`)
+    const question = (await database.query('SELECT * FROM im_questionnaires')).rows
+    const applied = (await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows
+    assert.deepEqual(await migrateDatabase(database), [])
+    assert.deepEqual((await database.query('SELECT * FROM im_questionnaires')).rows, question)
+    assert.deepEqual((await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows, applied)
+    assert.deepEqual(await snapshot(), before)
+    await assertMigrationsCurrent(database)
+  })
+})
+
+for (const start of [42, 43]) test(`0044 failure from ${start} rolls back only its transaction and retains committed 0043`, async () => {
+  await withDatabase(async database => {
+    await withMigrationRange(start, async url => { await migrateDatabase(database, url) })
+    await database.query("INSERT INTO users(id,email,display_name) VALUES('rollback44','rollback44@example.test','Preserved')")
+    const user = (await database.query("SELECT * FROM users WHERE id='rollback44'")).rows
+    const history = (await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows
+    await withMigrationRange(44, async (url, directory) => {
+      const file = join(directory, '0044_questionnaire_wait.sql')
+      await writeFile(file, `${await readFile(file, 'utf8')}\nUPDATE users SET display_name='Must roll back' WHERE id='rollback44';\nSELECT missing_questionnaire_migration_function();\n`)
+      await assert.rejects(migrateDatabase(database, url), /migration 44_questionnaire_wait failed/)
+    })
+    assert.deepEqual((await database.query(`SELECT to_regclass('public.im_questionnaires') AS questions,
+      to_regclass('public.im_questionnaires_pending_submission') AS pending_index`)).rows,
+    [{ questions: null, pending_index: null }])
+    assert.deepEqual((await database.query("SELECT * FROM users WHERE id='rollback44'")).rows, user)
+    assert.deepEqual((await database.query('SELECT * FROM schema_migrations WHERE version<=$1 ORDER BY version', [start])).rows, history)
+    assert.deepEqual((await database.query('SELECT version,name FROM schema_migrations WHERE version>=43 ORDER BY version')).rows,
+      [{ version: 43, name: 'lingxios_3_5_0' }])
+    assert.equal((await database.query('SELECT version FROM lingxios.schema_version')).rows[0].version, releaseVersions.schema)
+    assert.equal((await database.query('SELECT runtime_version FROM lingxios_installation')).rows[0].runtime_version, releaseVersions.runtime)
+    await assert.rejects(assertMigrationsCurrent(database), /run `npm run db:migrate`/)
+    assert.deepEqual(await migrateDatabase(database), ['0044_questionnaire_wait', '0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database), [])
+    await assertMigrationsCurrent(database)
+  })
+})
+
+test('0044 failure during fresh cutover rolls back all product and runtime installation', async () => {
+  await withDatabase(async database => {
+    await withMigrationRange(44, async (url, directory) => {
+      const file = join(directory, '0044_questionnaire_wait.sql')
+      await writeFile(file, `${await readFile(file, 'utf8')}\nSELECT missing_questionnaire_migration_function();\n`)
+      await assert.rejects(migrateDatabase(database, url), /migration 44_questionnaire_wait failed/)
+    })
+    assert.deepEqual((await database.query(`SELECT to_regclass('public.users') AS users,
+      to_regclass('public.im_questionnaires') AS questions,
+      to_regclass('public.im_questionnaires_pending_submission') AS pending_index,
+      to_regclass('public.lingxios_installation') AS installation,
+      to_regclass('lingxios.agent_work_items') AS work,
+      (SELECT COUNT(*)::int FROM schema_migrations) AS history`)).rows,
+    [{ users: null, questions: null, pending_index: null, installation: null, work: null, history: 0 }])
+    assert.equal((await migrateDatabase(database)).length, 45)
+    assert.deepEqual((await database.query('SELECT * FROM im_questionnaires')).rows, [])
+    assert.deepEqual(await migrateDatabase(database), [])
+    await assertMigrationsCurrent(database)
+  })
+})
+
 test('0043 preserves schema-11 work without backfilling notices and applies the published upgrade exactly once', async () => {
   await withDatabase(async database => {
     const directory = await mkdtemp(join(tmpdir(),'lingxiloop-schema42-'))
@@ -76,7 +177,7 @@ test('0043 preserves schema-11 work without backfilling notices and applies the 
       VALUES('historical-failed','tenant','agent','human','session','turn','interactive','request','failed','{"text":"preserved request"}');
       INSERT INTO users(id,email,display_name) VALUES('preserved-43','preserved-43@example.test','Preserved')`)
     const before = (await database.query("SELECT id,status,meta,result_id FROM lingxios.agent_work_items WHERE id='historical-failed'")).rows
-    assert.deepEqual(await migrateDatabase(database),['0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database),['0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual((await database.query("SELECT id,status,meta,result_id FROM lingxios.agent_work_items WHERE id='historical-failed'")).rows,before)
     assert.equal((await database.query('SELECT COUNT(*)::int AS n FROM lingxios.agent_terminal_outbox')).rows[0].n,0)
     assert.equal((await database.query("SELECT id FROM users WHERE id='preserved-43'")).rows.length,1)
@@ -103,7 +204,7 @@ test('0043 refuses an active worker and rolls back all upgrade metadata', async 
     assert.equal((await database.query('SELECT MAX(version) AS version FROM schema_migrations')).rows[0].version,42)
     assert.equal((await database.query("SELECT to_regclass('lingxios.agent_terminal_outbox') AS outbox")).rows[0].outbox,null)
     await database.query("UPDATE lingxios.agent_work_items SET status='cancelled' WHERE id='active-43'")
-    assert.deepEqual(await migrateDatabase(database),['0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database),['0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual(await migrateDatabase(database),[])
   })
 })
@@ -121,7 +222,7 @@ test('a failed fresh cutover rolls back packaged schema installation and product
         to_regclass('lingxios.agent_work_items') AS work,(SELECT COUNT(*)::int FROM schema_migrations) AS history`)).rows,
       [{ users: null,work: null,history: 0 }])
     } finally { await rm(directory,{ recursive: true,force: true }) }
-    assert.equal((await migrateDatabase(database)).length,44 + casePrerequisiteMigrations.length)
+    assert.equal((await migrateDatabase(database)).length,45)
     await assertMigrationsCurrent(database)
   })
 })
@@ -208,7 +309,7 @@ async function withMigrations(run: (url: URL, directory: string) => Promise<void
 
 test('an empty database reaches the latest schema once and repeated migration is a no-op', async () => {
   await withDatabase(async (database) => {
-    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database), ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     const { rows } = await database.query('SELECT version,name FROM schema_migrations ORDER BY version')
@@ -256,7 +357,7 @@ test('an empty database reaches the latest schema once and repeated migration is
       { version: 41, name: 'homework_mastery' },
       { version: 42, name: 'forum_submission_evidence' },
       { version: 43, name: 'lingxios_3_5_0' },
-      ...casePrerequisiteMigrations.map(name => ({ version: 44, name: name.slice(5) })),
+      { version: 44, name: 'questionnaire_wait' },
       { version: 45, name: 'organization_cases' },
     ])
     const { rows: evalSchema } = await database.query(`SELECT
@@ -285,7 +386,7 @@ test('group mention upgrade preserves customized preset profiles and retires onl
     await database.query(`INSERT INTO companies(id,name,slug,type,plan_id) VALUES('mentions-upgrade','Upgrade','mentions-upgrade','EDUCATION','plan-education');
       INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,preset_key,capabilities,system_prompt,status)
         VALUES('custom-preset','mentions-upgrade','agent','My name','M','#123456','nova','["canvas","handoffs","documents"]','My custom instructions','avail')`)
-    assert.deepEqual(await migrateDatabase(database), ['0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database), ['0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual((await database.query(`SELECT name,initial,avatar_bg,system_prompt,capabilities FROM participants WHERE id='custom-preset'`)).rows,
       [{ name: 'My name', initial: 'M', avatar_bg: '#123456', system_prompt: 'My custom instructions', capabilities: ['canvas','documents'] }])
     assert.deepEqual(await migrateDatabase(database), [])
@@ -304,7 +405,7 @@ test('interactive UI upgrade preserves product rows and adds empty scoped state 
       DROP COLUMN agent_work_id, DROP COLUMN late, DROP COLUMN submission_sequence;
       DELETE FROM schema_migrations WHERE version>=33;
       INSERT INTO users(id,email,display_name) VALUES('ui-upgrade','ui-upgrade@example.test','Preserved')`)
-    assert.deepEqual(await migrateDatabase(database), ['0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database), ['0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual((await database.query("SELECT id FROM users WHERE id='ui-upgrade'")).rows, [{ id: 'ui-upgrade' }])
     assert.deepEqual((await database.query(`SELECT
       (SELECT COUNT(*)::int FROM im_ui_revisions) AS revisions,
@@ -342,7 +443,7 @@ test('collaboration upgrade preserves managed IDs, custom rooms and leaders whil
         VALUES('upgrade-course','collab-upgrade','upgrade-project','upgrade-owner','course-study');
       INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id)
         SELECT id,company_id,jsonb_build_object('members',members,'channelType',2),leader_id FROM conversations WHERE company_id='collab-upgrade'`)
-    assert.deepEqual(await migrateDatabase(database),['0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database),['0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     for (const preset of STARTER_TEAM) {
       const agent = (await database.query('SELECT name,initial,role,system_prompt,capabilities FROM participants WHERE id=$1',[`old-${preset.presetKey}`])).rows[0]
       // 0039 updates only exact historical presets to public-message collaboration.
@@ -379,7 +480,7 @@ test('earlier 3.2 versions upgrade only runtime registration and preserve existi
       ...!['3.2.9','3.2.10','3.2.11','3.2.12'].includes(version) ? ['0018_lingxios_3_2_9','0019_agent_read_receipts'] : [],
       ...!['3.2.10','3.2.11','3.2.12'].includes(version) ? ['0020_lingxios_3_2_10'] : [],
       ...!['3.2.11','3.2.12'].includes(version) ? ['0021_lingxios_3_2_11'] : [],
-      ...version !== '3.2.12' ? ['0022_lingxios_3_2_12'] : [],'0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+      ...version !== '3.2.12' ? ['0022_lingxios_3_2_12'] : [],'0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual(await migrateDatabase(database),[])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query('SELECT schema_version,protocol_version FROM lingxios_installation')).rows,
@@ -410,7 +511,7 @@ test('read receipt upgrade preserves human receipts and accepts only same-tenant
         VALUES('receipt-room','receipt-tenant','group','Receipts','["reader","agent-reader"]');
       INSERT INTO im_read_receipt_advances(company_id,channel_id,reader_id,previous_read_seq,read_through_seq)
         VALUES('receipt-tenant','receipt-room','reader',0,1)`)
-    assert.deepEqual(await migrateDatabase(database), ['0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database), ['0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     const { appendReadReceiptAdvance } = await import('../im/read-receipts-repository.js')
     await appendReadReceiptAdvance(database, { companyId: 'receipt-tenant', channelId: 'receipt-room', readerId: 'agent-reader', readThroughSeq: 2 })
     assert.deepEqual((await database.query('SELECT reader_id,read_through_seq::int FROM im_read_receipt_advances ORDER BY reader_id')).rows,
@@ -429,7 +530,7 @@ test('3.2.13 upgrades the workspace schema transactionally and repeats without c
     await restoreSchema10(database, '3.2.13')
     await database.query("INSERT INTO users(id,email,display_name) VALUES('upgrade-user','upgrade@example.test','Preserved')")
     await assert.rejects(assertMigrationsCurrent(database), /run `npm run db:migrate`/)
-    assert.deepEqual(await migrateDatabase(database), ['0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database), ['0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query(`SELECT to_regclass('lingxios.agent_workspace_checkpoints') AS checkpoints,
@@ -460,7 +561,7 @@ for (const [version, pending] of [['3.3.0', 25], ['3.3.1', 26], ['3.3.2', 28], [
     const schemaBefore = (await database.query(`SELECT table_name,column_name,data_type FROM information_schema.columns
       WHERE table_schema='lingxios' ORDER BY table_name,ordinal_position`)).rows
     await assert.rejects(assertMigrationsCurrent(database), /run `npm run db:migrate`/)
-    assert.deepEqual(await migrateDatabase(database), [...pending === 25 ? ['0025_lingxios_3_3_1'] : [], ...pending <= 26 ? ['0026_lingxios_3_3_2','0027_learning_collaboration'] : [], ...pending <= 28 ? ['0028_lingxios_3_3_4'] : [], ...pending <= 29 ? ['0029_lingxios_3_3_5'] : [],'0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database), [...pending === 25 ? ['0025_lingxios_3_3_1'] : [], ...pending <= 26 ? ['0026_lingxios_3_3_2','0027_learning_collaboration'] : [], ...pending <= 28 ? ['0028_lingxios_3_3_4'] : [], ...pending <= 29 ? ['0029_lingxios_3_3_5'] : [],'0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual(await migrateDatabase(database), [])
     await assertMigrationsCurrent(database)
     assert.deepEqual((await database.query('SELECT runtime_version,schema_version,protocol_version,schema_sha256 FROM lingxios_installation')).rows,
@@ -575,11 +676,11 @@ test('concurrent migrators serialize and apply each migration once', async () =>
     try {
       const results = await Promise.all([migrateDatabase(database), migrateDatabase(second)])
       assert.deepEqual(results.map((result) => [...result]).sort((a, b) => b.length - a.length), [
-        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'],
+        ['0001_v1_baseline', '0002_remove_legacy_identity', '0003_agent_os_session_affinity', '0004_backfill_personal_owner_participants', '0005_lingxios_v2_reset', '0006_observable_live_eval', '0007_install_lingxios', '0008_agent_os_execution', '0009_native_agent_tools', '0010_lingxios_native_runtime', '0011_closed_education', '0012_lingxios_3_2', '0013_native_collaboration', '0014_profile_avatars', '0015_lingxios_3_2_6', '0016_lingxios_3_2_7','0017_lingxios_3_2_8','0018_lingxios_3_2_9','0019_agent_read_receipts','0020_lingxios_3_2_10','0021_lingxios_3_2_11','0022_lingxios_3_2_12','0023_lingxios_3_2_13','0024_lingxios_3_3_0','0025_lingxios_3_3_1','0026_lingxios_3_3_2','0027_learning_collaboration','0028_lingxios_3_3_4','0029_lingxios_3_3_5','0030_lingxios_3_3_6','0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'],
         [],
       ])
       const { rows } = await database.query('SELECT COUNT(*)::int AS count FROM schema_migrations')
-    assert.deepEqual(rows, [{ count: 44 + casePrerequisiteMigrations.length }])
+    assert.deepEqual(rows, [{ count: 45 }])
     } finally {
       await second.end()
     }
@@ -616,7 +717,7 @@ test('capability backfill preserves teacher grants, custom prompts and later rev
       VALUES('ordinary','grants','agent','Ordinary','O','#000','avail','["documents"]','custom persona'),
         ('teacher','grants','agent','Teacher','T','#000','avail','["teacher_admin","knowledge"]','teacher persona');
       INSERT INTO learning_project_teacher_agents(project_id,company_id,agent_id) VALUES('grant-project','grants','teacher');`)
-    assert.deepEqual(await migrateDatabase(database), ['0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database), ['0031_agent_capabilities','0032_native_message_attachments','0033_interactive_ui','0034_retire_email_calendar','0035_course_forum','0036_public_run_activity','0037_forum_comment_attachments','0038_learning_submission_sequence','0039_native_memory_collaboration','0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     const read = async () => (await database.query('SELECT id,capabilities,system_prompt FROM participants WHERE company_id=$1 ORDER BY id', ['grants'])).rows
     const rows = await read()
     assert.equal(rows[0].system_prompt, 'custom persona')
@@ -662,7 +763,7 @@ test('forum convergence preserves complete submission history and rolls back amb
     assert.equal((await database.query("SELECT to_regclass('course_forum_retirement_archive') AS archive")).rows[0].archive,null)
     assert.equal((await database.query('SELECT COUNT(*)::int AS count FROM learning_attempts')).rows[0].count,3)
     await database.query("UPDATE learning_activities SET published_by='teacher' WHERE id='ambiguous'")
-    assert.deepEqual(await migrateDatabase(database),['0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0',...casePrerequisiteMigrations,'0045_organization_cases'])
+    assert.deepEqual(await migrateDatabase(database),['0040_forum_assignment_convergence','0041_homework_mastery','0042_forum_submission_evidence','0043_lingxios_3_5_0','0044_questionnaire_wait','0045_organization_cases'])
     assert.deepEqual(await migrateDatabase(database),[])
     assert.deepEqual((await database.query('SELECT id,submission_sequence,submitted_at FROM course_forum_submissions ORDER BY submission_sequence')).rows,original)
     const posts = (await database.query("SELECT author_user_id,body,due_at::text FROM course_forum_posts WHERE id='assignment'")).rows[0]

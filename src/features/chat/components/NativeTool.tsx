@@ -15,6 +15,7 @@ import { TOOL_DETAILS } from './ToolRenderers'
 import { ResearchSources } from './ResearchSources'
 import { MemoryTool } from './MemoryTool'
 import { memoryActivitySchema } from '@/lib/memoryActivity'
+import { hasQuestionnaireWait } from '../runtime/questionnaire-wait'
 
 export const hasRichTool = (name: string) => Object.hasOwn(TOOL_DETAILS,name) || /^(email|calendar)\./.test(name) || name === 'research.search'
   || /^memory(?:\.|__)/.test(name)
@@ -26,6 +27,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   const aui = useAui()
   const message = useAuiState(state => state.message)
   const custom = message.metadata.custom
+  const questionnaireWait = hasQuestionnaireWait(custom)
   const [answer, setAnswer] = useState(''), [busy, setBusy] = useState(false), [accepted, setAccepted] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const projected = toolDisplaySchema.safeParse(result && typeof result === 'object' ? Reflect.get(result, 'display') : undefined)
@@ -42,7 +44,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   const failed = isError || resultStatus === 'failed' || status.type === 'incomplete' && status.reason === 'error'
   const label = approval?.resolution === 'expired' ? '审批已过期'
     : cancelled ? '已取消' : approval?.approved === false ? '已拒绝' : failed ? '执行失败'
-    : pending ? '等待审批' : interrupt && !ended ? '等待补充信息'
+    : pending ? '等待审批' : interrupt && !ended ? questionnaireWait ? '等待问卷回答' : '等待补充信息'
     : resultStatus === 'unknown' ? '结果待核对' : resultStatus === 'completed' ? '已完成' : status.type === 'running' ? '执行中'
     : approval?.approved ? '已批准 · 等待执行' : '未完成'
   const displayStatus: ToolCallMessagePartStatus = failed ? { type: 'incomplete', reason: 'error' }
@@ -72,7 +74,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   const resume = () => act(async current => {
     const meta = current.metadata.custom, view = meta.harness as RunDisplayState | undefined
     const part = current.content.find(part => part.type === 'tool-call' && part.toolCallId === toolCallId)
-    if (part?.type !== 'tool-call' || !part.interrupt || !answer.trim() || !view || view.runId !== meta.runId
+    if (part?.type !== 'tool-call' || !part.interrupt || hasQuestionnaireWait(meta) || !answer.trim() || !view || view.runId !== meta.runId
       || view.requestVersion !== (custom.harness as RunDisplayState | undefined)?.requestVersion
       || typeof meta.conversationId !== 'string' || typeof meta.senderId !== 'string') throw new Error('409')
     await chatTransport.continueRun({ conversationId: meta.conversationId, agentId: meta.senderId, runId: view.runId,
@@ -112,7 +114,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
           onApprove={() => approve(true)} onDeny={() => approve(false)} />}
         {pending && !permitted && <p className="text-xs text-muted-foreground">等待有权限的成员审批。</p>}
       </div>}
-      {interrupt && !ended && <fieldset disabled={!permitted || busy || accepted} className="min-w-0">
+      {interrupt && !ended && !questionnaireWait && <fieldset disabled={!permitted || busy || accepted} className="min-w-0">
         <ElicitationForm server="补充信息" message={typeof interrupt.payload === 'object' && interrupt.payload && 'prompt' in interrupt.payload
           && typeof interrupt.payload.prompt === 'string' ? interrupt.payload.prompt : '请补充信息以继续任务。'}
           fields={[{ name: 'answer', label: '补充信息', kind: 'text', value: answer, required: true }]}

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="7" failures="0" errors="0" skipped="0" time="11.628">
+  <testsuite name="e2e/web/questionnaire.e2e.ts" tests="7" failures="0" errors="0" skipped="0" time="11.628">
+    <testcase name="durable questionnaire &gt; trusted questionnaire binding replaces generic continuation forms [web]" classname="e2e/web/questionnaire.e2e.ts" time="1.350"/>
+    <testcase name="durable questionnaire &gt; unread status blocks submission; waiting stays idle until explicit submit [web]" classname="e2e/web/questionnaire.e2e.ts" time="2.881"/>
+    <testcase name="durable questionnaire &gt; durable answers render read-only without answer history and refresh never posts [web]" classname="e2e/web/questionnaire.e2e.ts" time="1.190"/>
+    <testcase name="durable questionnaire &gt; double clicks submit once; failure retries and refresh preserves accepted answers [web]" classname="e2e/web/questionnaire.e2e.ts" time="1.754"/>
+    <testcase name="durable questionnaire &gt; a lost accepted response reconciles canonical answers before another POST [web]" classname="e2e/web/questionnaire.e2e.ts" time="1.385"/>
+    <testcase name="durable questionnaire &gt; pending submission freezes saved answers and retries only those values [web]" classname="e2e/web/questionnaire.e2e.ts" time="1.298"/>
+    <testcase name="durable questionnaire &gt; unavailable and foreign owner cards stay disabled; loading failure can reload [web]" classname="e2e/web/questionnaire.e2e.ts" time="1.770"/>
+  </testsuite>
+</testsuites>

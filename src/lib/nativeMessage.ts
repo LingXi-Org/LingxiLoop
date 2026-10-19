@@ -110,6 +110,7 @@ const humanCustom = z.object({ replyToClientMsgNo: id.optional(), regenerateOfCl
   uiInteraction: uiInteractionSchema.optional(),
   agentContinuation: z.object({ agentId: id, runId: id, requestVersion: z.number().int().positive().safe() }).strict().optional(),
   questionnaireReply: z.object({ questionId: id, answers: z.record(z.string(), z.union([z.string().max(4000), z.array(z.string().max(4000)).max(12)])) }).strict().optional(),
+  recommendationReply: z.object({ questionId: id, answers: z.record(z.string(), z.union([z.string().max(4000), z.array(z.string().max(4000)).max(12)])) }).strict().optional(),
 }).strict().superRefine((value, ctx) => {
   if (value.regenerateOfClientMsgNo && (value.regenerateOfClientMsgNo !== value.replyToClientMsgNo || value.mentionedIds?.length !== 1)) {
     ctx.addIssue({ code: 'custom', message: 'regeneration requires its quoted reply and one target agent' })
