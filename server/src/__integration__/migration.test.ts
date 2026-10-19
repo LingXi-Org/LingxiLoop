@@ -814,7 +814,8 @@ test('0046 compatibility rollback preserves old features and populated Visualize
         VALUES('tenant46','memory46','agent','agent46','/preserved.md','Preserved memory','Keep existing memory','Retained body','Retained body','reference','explicit','[{"runId":"run46"}]')`)
     const retained = async () => Promise.all(['im_ui_revisions','im_ui_user_states','agent_run_bindings','im_send_acceptances','llm_calls',
       'im_questionnaires','organization_cases','canvases','lingxios.agent_os_sessions','lingxios.agent_memories','lingxios.agent_memory_versions','lingxios_installation']
-      .map(async table => (await database.query(`SELECT to_jsonb(row) AS data FROM ${table} row ORDER BY to_jsonb(row)::text`)).rows))
+      // Existing applyRuntimeUpgrade refreshes only this installation-check timestamp.
+      .map(async table => (await database.query(`SELECT ${table === 'lingxios_installation' ? "to_jsonb(row)-'installed_at'" : 'to_jsonb(row)'} AS data FROM ${table} row ORDER BY to_jsonb(row)::text`)).rows))
     const before = await retained(), history = (await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows
     assert.deepEqual(await migrateDatabase(database), ['0046_visualize'])
     assert.deepEqual(await retained(), before)
