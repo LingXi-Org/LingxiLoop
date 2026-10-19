@@ -3,6 +3,7 @@ import { extractAssistantDirectives } from '../../../src/features/chat/visualize
 import { projectGenUiReferences } from '../../../src/features/chat/visualize/zcode/gen-ui/domain/references.js'
 
 export function visualizeReferences(body: string) {
+  if (!body.includes(':') && !body.includes('')) return []
   return projectGenUiReferences(body, true).flatMap(part => part.kind === 'ui' ? [part] : [])
 }
 export function assertVisualizeCitationSpans(body: string, citations: readonly { start: number; end: number }[]) {
@@ -13,6 +14,9 @@ export function assertVisualizeCitationSpans(body: string, citations: readonly {
   }
 }
 export function projectVisualizeText(body: string, preview: boolean): ThreadAssistantMessagePart[] {
-  const text = preview ? projectGenUiReferences(body, false).flatMap(part => part.kind === 'text' ? [part.text] : []).join('') : body
+  // Both complete directives and pending prefixes need one of these markers.
+  // Ordinary streaming prose avoids repeatedly scanning all Markdown ranges.
+  const text = preview && (body.includes(':') || body.includes(''))
+    ? projectGenUiReferences(body, false).flatMap(part => part.kind === 'text' ? [part.text] : []).join('') : body
   return text ? [{ type: 'text', text }] : []
 }

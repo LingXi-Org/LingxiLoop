@@ -1,0 +1,19 @@
+{
+  "base": "088e269f36f63884b44704c3b0f1e27f1a6f76fc",
+  "owningTestFiles": 278,
+  "byDirectory": {
+    "admin": 3,
+    "e2e": 68,
+    "eval": 2,
+    "perf": 2,
+    "scripts": 4,
+    "server": 150,
+    "src": 46,
+    "workers": 3
+  },
+  "exactDuplicateFiles": [],
+  "deletedTestFiles": [],
+  "newTestFiles": [],
+  "strengthenedExistingFile": "scripts/production-rag-contract.test.mjs",
+  "skipOrAssertionRelaxationChanges": false
+}

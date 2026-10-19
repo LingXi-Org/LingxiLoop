@@ -1,0 +1,317 @@
+{
+  "startedAt": "2026-10-19T16:19:00.733Z",
+  "endedAt": "2026-10-19T16:19:07.387Z",
+  "runs": 1,
+  "baseCommit": "088e269f36f63884b44704c3b0f1e27f1a6f76fc",
+  "candidateCommit": "b57a2814a4a6c0dded05736e559874f554ae33b8",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "logicalCpus": 5,
+  "protocol": "Alternating fresh-process A/B, one identical warmup, explicit GC before each sample; instrumentation counted separately",
+  "summary": {
+    "short": {
+      "base": {
+        "metrics": {
+          "firstStateMs": {
+            "p50": 2.153493000000026,
+            "p75": 2.153493000000026,
+            "p95": 2.153493000000026
+          },
+          "firstBodyMs": {
+            "p50": 2.5999950000000354,
+            "p75": 2.5999950000000354,
+            "p95": 2.5999950000000354
+          },
+          "totalMs": {
+            "p50": 19.859868000000006,
+            "p75": 19.859868000000006,
+            "p95": 19.859868000000006
+          },
+          "cpuUserMs": {
+            "p50": 27.862,
+            "p75": 27.862,
+            "p95": 27.862
+          },
+          "cpuSystemMs": {
+            "p50": 3.534,
+            "p75": 3.534,
+            "p95": 3.534
+          },
+          "peakHeapBytes": {
+            "p50": 34089832,
+            "p75": 34089832,
+            "p95": 34089832
+          },
+          "peakRssBytes": {
+            "p50": 119144448,
+            "p75": 119144448,
+            "p95": 119144448
+          }
+        },
+        "counts": {
+          "stringifyCalls": 1517,
+          "serializedChars": 600315,
+          "projections": 84,
+          "wireBytes": 9131,
+          "chunks": 42
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "firstStateMs": {
+            "p50": 2.153453000000013,
+            "p75": 2.153453000000013,
+            "p95": 2.153453000000013
+          },
+          "firstBodyMs": {
+            "p50": 2.5760700000000156,
+            "p75": 2.5760700000000156,
+            "p95": 2.5760700000000156
+          },
+          "totalMs": {
+            "p50": 17.277500000000032,
+            "p75": 17.277500000000032,
+            "p95": 17.277500000000032
+          },
+          "cpuUserMs": {
+            "p50": 28.699,
+            "p75": 28.699,
+            "p95": 28.699
+          },
+          "cpuSystemMs": {
+            "p50": 0,
+            "p75": 0,
+            "p95": 0
+          },
+          "peakHeapBytes": {
+            "p50": 34527640,
+            "p75": 34527640,
+            "p95": 34527640
+          },
+          "peakRssBytes": {
+            "p50": 119390208,
+            "p75": 119390208,
+            "p95": 119390208
+          }
+        },
+        "counts": {
+          "stringifyCalls": 168,
+          "serializedChars": 154980,
+          "projections": 84,
+          "wireBytes": 9131,
+          "chunks": 42
+        }
+      }
+    },
+    "long": {
+      "base": {
+        "metrics": {
+          "firstStateMs": {
+            "p50": 2.1959269999999833,
+            "p75": 2.1959269999999833,
+            "p95": 2.1959269999999833
+          },
+          "firstBodyMs": {
+            "p50": 2.6059649999999692,
+            "p75": 2.6059649999999692,
+            "p95": 2.6059649999999692
+          },
+          "totalMs": {
+            "p50": 991.2681659999998,
+            "p75": 991.2681659999998,
+            "p95": 991.2681659999998
+          },
+          "cpuUserMs": {
+            "p50": 927.851,
+            "p75": 927.851,
+            "p95": 927.851
+          },
+          "cpuSystemMs": {
+            "p50": 94.049,
+            "p75": 94.049,
+            "p95": 94.049
+          },
+          "peakHeapBytes": {
+            "p50": 139668320,
+            "p75": 139668320,
+            "p95": 139668320
+          },
+          "peakRssBytes": {
+            "p50": 322908160,
+            "p75": 322908160,
+            "p95": 322908160
+          }
+        },
+        "counts": {
+          "stringifyCalls": 14837,
+          "serializedChars": 245713137,
+          "projections": 804,
+          "wireBytes": 261331,
+          "chunks": 402
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "firstStateMs": {
+            "p50": 2.714317999999821,
+            "p75": 2.714317999999821,
+            "p95": 2.714317999999821
+          },
+          "firstBodyMs": {
+            "p50": 3.3549619999998868,
+            "p75": 3.3549619999998868,
+            "p95": 3.3549619999998868
+          },
+          "totalMs": {
+            "p50": 532.3667779999998,
+            "p75": 532.3667779999998,
+            "p95": 532.3667779999998
+          },
+          "cpuUserMs": {
+            "p50": 529.607,
+            "p75": 529.607,
+            "p95": 529.607
+          },
+          "cpuSystemMs": {
+            "p50": 45.236,
+            "p75": 45.236,
+            "p95": 45.236
+          },
+          "peakHeapBytes": {
+            "p50": 150553344,
+            "p75": 150553344,
+            "p95": 150553344
+          },
+          "peakRssBytes": {
+            "p50": 332607488,
+            "p75": 332607488,
+            "p95": 332607488
+          }
+        },
+        "counts": {
+          "stringifyCalls": 1608,
+          "serializedChars": 53111880,
+          "projections": 804,
+          "wireBytes": 261331,
+          "chunks": 402
+        }
+      }
+    }
+  },
+  "samples": [
+    {
+      "pair": 0,
+      "variant": "base",
+      "kind": "short",
+      "timing": {
+        "firstStateMs": 2.153493000000026,
+        "firstBodyMs": 2.5999950000000354,
+        "totalMs": 19.859868000000006,
+        "cpuUserMs": 27.862,
+        "cpuSystemMs": 3.534,
+        "heapStartBytes": 19527344,
+        "peakHeapBytes": 34089832,
+        "peakRssBytes": 119144448,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 0,
+      "variant": "candidate",
+      "kind": "short",
+      "timing": {
+        "firstStateMs": 2.153453000000013,
+        "firstBodyMs": 2.5760700000000156,
+        "totalMs": 17.277500000000032,
+        "cpuUserMs": 28.699,
+        "cpuSystemMs": 0,
+        "heapStartBytes": 20379048,
+        "peakHeapBytes": 34527640,
+        "peakRssBytes": 119390208,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 168,
+        "serializedChars": 154980,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 0,
+      "variant": "base",
+      "kind": "long",
+      "timing": {
+        "firstStateMs": 2.1959269999999833,
+        "firstBodyMs": 2.6059649999999692,
+        "totalMs": 991.2681659999998,
+        "cpuUserMs": 927.851,
+        "cpuSystemMs": 94.049,
+        "heapStartBytes": 20350792,
+        "peakHeapBytes": 139668320,
+        "peakRssBytes": 322908160,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 0,
+      "variant": "candidate",
+      "kind": "long",
+      "timing": {
+        "firstStateMs": 2.714317999999821,
+        "firstBodyMs": 3.3549619999998868,
+        "totalMs": 532.3667779999998,
+        "cpuUserMs": 529.607,
+        "cpuSystemMs": 45.236,
+        "heapStartBytes": 21218424,
+        "peakHeapBytes": 150553344,
+        "peakRssBytes": 332607488,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1608,
+        "serializedChars": 53111880,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    }
+  ]
+}

@@ -1,0 +1,3114 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15503-3948-7667-b8e3-2e163070eddc",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-19T16:33:57.474Z",
+    "finishedAt": "2026-10-19T16:34:18.417Z",
+    "project": {
+      "id": "journeys-perf-20261019",
+      "configDigest": "0e39d7ffd050d8e679268ed057c50706ffed17710f59814ddbdbd3269637f1cb"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "39f70a532285a00bebe5d0999feed843107b9ab9",
+      "branch": "codex/perf-measured-hotpaths",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5180",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "9c5077eaa50dbf6e899f74b625166c65ee3f006fc4dcae077ddae7b03a5290a8",
+        "testId": "journeys.e2e.ts::login%20usable%200",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "login usable 0"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-3d1e-7778-9e2e-bd80d67e1996",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:33:58.046Z",
+            "durationMs": 460,
+            "artifacts": [
+              {
+                "id": "01a15503-3d1e-7778-9e2e-bd80d67e1996:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_200-8057ef5d/default/attempt-0/trace/trace.zip",
+                "size": 244708,
+                "sha256": "9c889eb5b660c25a85f357dd4e4779ed53d4524d7b717596342959b04c163e27"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-3d1e-7778-9e2e-bd80d67e1996:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.135Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-3d1e-7778-9e2e-bd80d67e1996:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.137Z",
+                "durationMs": 129,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-3d1e-7778-9e2e-bd80d67e1996:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.266Z",
+                "durationMs": 133,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-3d1e-7778-9e2e-bd80d67e1996:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.400Z",
+                "durationMs": 54,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-3d1e-7778-9e2e-bd80d67e1996:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.454Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ebc0768b7379748f0edf6fb266f50b9b743dbb9ba8d2ec803e4a725b6db3b277",
+        "testId": "journeys.e2e.ts::login%20usable%201",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "login usable 1"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-3eec-7128-90b4-5d6ec33c6176",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:33:58.508Z",
+            "durationMs": 301,
+            "artifacts": [
+              {
+                "id": "01a15503-3eec-7128-90b4-5d6ec33c6176:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_201-2263be82/default/attempt-0/trace/trace.zip",
+                "size": 246167,
+                "sha256": "8d4047823aab96ab8e15a6f4237d7d47a8aada4345a32c77b529538e8d659f98"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-3eec-7128-90b4-5d6ec33c6176:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.517Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-3eec-7128-90b4-5d6ec33c6176:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.519Z",
+                "durationMs": 97,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-3eec-7128-90b4-5d6ec33c6176:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.616Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-3eec-7128-90b4-5d6ec33c6176:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.723Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-3eec-7128-90b4-5d6ec33c6176:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.768Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "93cb1a2556702092ec06e51bcd89aaf4e540bd5c6f6df28848ba657a7dad2e20",
+        "testId": "journeys.e2e.ts::login%20usable%202",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "login usable 2"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-4019-71bb-81b3-66add205a6e3",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:33:58.809Z",
+            "durationMs": 285,
+            "artifacts": [
+              {
+                "id": "01a15503-4019-71bb-81b3-66add205a6e3:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_202-040756a9/default/attempt-0/trace/trace.zip",
+                "size": 236817,
+                "sha256": "d8d59b8c7a6165473f0b3272031f8edcccc6740e1210ff36bc975370a18cd160"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-4019-71bb-81b3-66add205a6e3:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.821Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-4019-71bb-81b3-66add205a6e3:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.822Z",
+                "durationMs": 104,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-4019-71bb-81b3-66add205a6e3:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:58.927Z",
+                "durationMs": 82,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-4019-71bb-81b3-66add205a6e3:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.009Z",
+                "durationMs": 48,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-4019-71bb-81b3-66add205a6e3:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.057Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "bd1895e82bed73759406ee327a6c7b6fcc925bb97d67227d88650ebfe55fb027",
+        "testId": "journeys.e2e.ts::login%20usable%203",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "login usable 3"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-4137-7e99-b0d9-60034910bf30",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:33:59.095Z",
+            "durationMs": 295,
+            "artifacts": [
+              {
+                "id": "01a15503-4137-7e99-b0d9-60034910bf30:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_203-e299c81a/default/attempt-0/trace/trace.zip",
+                "size": 240174,
+                "sha256": "87d67b72f727f87b6f9d5f7877ef76ddf59c22303b0a6c68b909da67aef58216"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-4137-7e99-b0d9-60034910bf30:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.102Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-4137-7e99-b0d9-60034910bf30:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.104Z",
+                "durationMs": 101,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-4137-7e99-b0d9-60034910bf30:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.207Z",
+                "durationMs": 95,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-4137-7e99-b0d9-60034910bf30:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.302Z",
+                "durationMs": 50,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-4137-7e99-b0d9-60034910bf30:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.352Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6d4a1b21a360c9b8065b5104580d1870989e49fee76785198bda651236a23171",
+        "testId": "journeys.e2e.ts::login%20usable%204",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "login usable 4"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-425e-775a-8a00-14e565e65a10",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:33:59.390Z",
+            "durationMs": 322,
+            "artifacts": [
+              {
+                "id": "01a15503-425e-775a-8a00-14e565e65a10:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_204-1732976c/default/attempt-0/trace/trace.zip",
+                "size": 240871,
+                "sha256": "cb9cfa0298b3a1ec0c6721d5b14b47e59fab9c2bee1828f6140ab948d2819938"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-425e-775a-8a00-14e565e65a10:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.399Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-425e-775a-8a00-14e565e65a10:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.400Z",
+                "durationMs": 122,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-425e-775a-8a00-14e565e65a10:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.522Z",
+                "durationMs": 101,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-425e-775a-8a00-14e565e65a10:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.623Z",
+                "durationMs": 50,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-425e-775a-8a00-14e565e65a10:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.674Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "084b4b2852defd1165eec02104170e6520d2a10c7d81ae068a04cdf4003b3907",
+        "testId": "journeys.e2e.ts::login%20usable%205",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "login usable 5"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-43a0-701a-bb9a-2d19eec55286",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:33:59.712Z",
+            "durationMs": 399,
+            "artifacts": [
+              {
+                "id": "01a15503-43a0-701a-bb9a-2d19eec55286:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_205-2850d117/default/attempt-0/trace/trace.zip",
+                "size": 276528,
+                "sha256": "fbde1bbd33a712e3d93702f021f09555b54391283e4eaf3daea12544da009930"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-43a0-701a-bb9a-2d19eec55286:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.720Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-43a0-701a-bb9a-2d19eec55286:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.720Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-43a0-701a-bb9a-2d19eec55286:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:33:59.818Z",
+                "durationMs": 209,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-43a0-701a-bb9a-2d19eec55286:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.027Z",
+                "durationMs": 44,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-43a0-701a-bb9a-2d19eec55286:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.071Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "530754c8ec30abcf0236c0afa4699f643082bd5e23228eccfba159a4554dad4a",
+        "testId": "journeys.e2e.ts::login%20usable%206",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "login usable 6"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-452f-77bf-91c8-09571821feb0",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:00.111Z",
+            "durationMs": 304,
+            "artifacts": [
+              {
+                "id": "01a15503-452f-77bf-91c8-09571821feb0:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_206-9c5c71f0/default/attempt-0/trace/trace.zip",
+                "size": 247624,
+                "sha256": "3c666be68f53ff002eb69da4aca062514c869645cb835b5d38dffbee27ba443f"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-452f-77bf-91c8-09571821feb0:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.118Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-452f-77bf-91c8-09571821feb0:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.119Z",
+                "durationMs": 104,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-452f-77bf-91c8-09571821feb0:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.223Z",
+                "durationMs": 103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-452f-77bf-91c8-09571821feb0:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.326Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-452f-77bf-91c8-09571821feb0:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.378Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2e28695c6bc8bcdbbb4ee3ed93d8cc1e67a0bb66d195fedbd8311d44fa63a927",
+        "testId": "journeys.e2e.ts::login%20usable%207",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "login usable 7"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-4661-77e7-a739-9077f761ec84",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:00.417Z",
+            "durationMs": 284,
+            "artifacts": [
+              {
+                "id": "01a15503-4661-77e7-a739-9077f761ec84:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_207-06bdbd17/default/attempt-0/trace/trace.zip",
+                "size": 248909,
+                "sha256": "481ba3149d8024392423720070b51a9f51540671ad78c1f05c388f2c47e0da93"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-4661-77e7-a739-9077f761ec84:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.424Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-4661-77e7-a739-9077f761ec84:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.424Z",
+                "durationMs": 94,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-4661-77e7-a739-9077f761ec84:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.519Z",
+                "durationMs": 99,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-4661-77e7-a739-9077f761ec84:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.619Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-4661-77e7-a739-9077f761ec84:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.663Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7a655271bf61b2767faf637a470b2cf9c3543c5d5e0830ef6024c93352401999",
+        "testId": "journeys.e2e.ts::login%20usable%208",
+        "kind": "test",
+        "declarationIndex": 8,
+        "titlePath": [
+          "login usable 8"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-477d-7175-9b51-60be148b446e",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:00.701Z",
+            "durationMs": 299,
+            "artifacts": [
+              {
+                "id": "01a15503-477d-7175-9b51-60be148b446e:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_208-4a77ca42/default/attempt-0/trace/trace.zip",
+                "size": 243104,
+                "sha256": "dce652c0bbf7db9044d24ed0087b38271a45cc07632a00eaa74a9aa7c38d8790"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-477d-7175-9b51-60be148b446e:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.709Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-477d-7175-9b51-60be148b446e:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.710Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-477d-7175-9b51-60be148b446e:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.824Z",
+                "durationMs": 93,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-477d-7175-9b51-60be148b446e:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.917Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-477d-7175-9b51-60be148b446e:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:00.960Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "001c4ba4b9a6e212e8381b1b348c3e7905fcfafdf6d83bfbd697bda44b79fa2d",
+        "testId": "journeys.e2e.ts::login%20usable%209",
+        "kind": "test",
+        "declarationIndex": 9,
+        "titlePath": [
+          "login usable 9"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-48a9-7b51-94a5-49576dee5b75",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:01.001Z",
+            "durationMs": 277,
+            "artifacts": [
+              {
+                "id": "01a15503-48a9-7b51-94a5-49576dee5b75:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__login_20usable_209-4b17a97f/default/attempt-0/trace/trace.zip",
+                "size": 236829,
+                "sha256": "5e89147a4c8f95c94707ba9175f2553b62f35dc7acf281c75767ea9659f77cf5"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-48a9-7b51-94a5-49576dee5b75:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.009Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-48a9-7b51-94a5-49576dee5b75:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.009Z",
+                "durationMs": 101,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-48a9-7b51-94a5-49576dee5b75:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.110Z",
+                "durationMs": 90,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-48a9-7b51-94a5-49576dee5b75:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[type=\\\"email\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.201Z",
+                "durationMs": 42,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-48a9-7b51-94a5-49576dee5b75:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.243Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e5e38c8d1eb3aa8ed2ade5ef621391dc761dc835ceeab81d16c7b22ab20ba8a5",
+        "testId": "journeys.e2e.ts::conversation%20usable%200",
+        "kind": "test",
+        "declarationIndex": 10,
+        "titlePath": [
+          "conversation usable 0"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-49be-7631-b1c4-c30dc1084680",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:01.278Z",
+            "durationMs": 1718,
+            "artifacts": [
+              {
+                "id": "01a15503-49be-7631-b1c4-c30dc1084680:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_200-13a7227f/default/attempt-0/trace/trace.zip",
+                "size": 579954,
+                "sha256": "134bb56b4d031a4aca9c8a0583ac3b8272e9f916086d16d440d772da4553e257"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-49be-7631-b1c4-c30dc1084680:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.313Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-49be-7631-b1c4-c30dc1084680:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.316Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-49be-7631-b1c4-c30dc1084680:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.317Z",
+                "durationMs": 117,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-49be-7631-b1c4-c30dc1084680:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:01.435Z",
+                "durationMs": 1331,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-49be-7631-b1c4-c30dc1084680:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:02.766Z",
+                "durationMs": 82,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-49be-7631-b1c4-c30dc1084680:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:02.848Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-49be-7631-b1c4-c30dc1084680:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:02.857Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "727477541dcd4687bbe2f3c136d1d199eea3c478783c5a281b4ebf767c095d97",
+        "testId": "journeys.e2e.ts::conversation%20usable%201",
+        "kind": "test",
+        "declarationIndex": 11,
+        "titlePath": [
+          "conversation usable 1"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-5074-7bde-b929-abcd83df5fa8",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:02.996Z",
+            "durationMs": 1744,
+            "artifacts": [
+              {
+                "id": "01a15503-5074-7bde-b929-abcd83df5fa8:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_201-5b8d4b79/default/attempt-0/trace/trace.zip",
+                "size": 596363,
+                "sha256": "ba469dc8b32a79dddf68dddea348bcf4060cd25dffadd5a6e3aaa890656c39d8"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-5074-7bde-b929-abcd83df5fa8:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:03.033Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-5074-7bde-b929-abcd83df5fa8:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:03.036Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-5074-7bde-b929-abcd83df5fa8:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:03.036Z",
+                "durationMs": 103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-5074-7bde-b929-abcd83df5fa8:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:03.139Z",
+                "durationMs": 1415,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-5074-7bde-b929-abcd83df5fa8:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:04.554Z",
+                "durationMs": 53,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-5074-7bde-b929-abcd83df5fa8:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:04.608Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-5074-7bde-b929-abcd83df5fa8:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:04.620Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c52ef0bc3cdd0461f4b637481e800b7331b9a54dc9f3e38c26c12f9901860811",
+        "testId": "journeys.e2e.ts::conversation%20usable%202",
+        "kind": "test",
+        "declarationIndex": 12,
+        "titlePath": [
+          "conversation usable 2"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-5744-7a4b-91a2-b43ed808f766",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:04.740Z",
+            "durationMs": 1671,
+            "artifacts": [
+              {
+                "id": "01a15503-5744-7a4b-91a2-b43ed808f766:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_202-a9ced4ad/default/attempt-0/trace/trace.zip",
+                "size": 546460,
+                "sha256": "95191d97d8a10e99deb88553f9be645746193461c6a2f2f9de0234fc3a3d3de3"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-5744-7a4b-91a2-b43ed808f766:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:04.776Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-5744-7a4b-91a2-b43ed808f766:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:04.779Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-5744-7a4b-91a2-b43ed808f766:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:04.779Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-5744-7a4b-91a2-b43ed808f766:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:04.872Z",
+                "durationMs": 1307,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-5744-7a4b-91a2-b43ed808f766:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:06.180Z",
+                "durationMs": 84,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-5744-7a4b-91a2-b43ed808f766:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:06.264Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-5744-7a4b-91a2-b43ed808f766:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:06.278Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "1064d9564f9f95d0b80b911c61cdaa5c66d61feb23e13592e1119b278150c099",
+        "testId": "journeys.e2e.ts::conversation%20usable%203",
+        "kind": "test",
+        "declarationIndex": 13,
+        "titlePath": [
+          "conversation usable 3"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-5dcb-73c0-b94b-f786dc820469",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:06.411Z",
+            "durationMs": 1675,
+            "artifacts": [
+              {
+                "id": "01a15503-5dcb-73c0-b94b-f786dc820469:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_203-4a7b5b3a/default/attempt-0/trace/trace.zip",
+                "size": 539104,
+                "sha256": "e045b1e1fe7838f370361a19452e7fd266dc0c3ffd6165f24956079695fd97f2"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-5dcb-73c0-b94b-f786dc820469:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:06.447Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-5dcb-73c0-b94b-f786dc820469:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:06.449Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-5dcb-73c0-b94b-f786dc820469:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:06.450Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-5dcb-73c0-b94b-f786dc820469:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:06.556Z",
+                "durationMs": 1334,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-5dcb-73c0-b94b-f786dc820469:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:07.890Z",
+                "durationMs": 68,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-5dcb-73c0-b94b-f786dc820469:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:07.958Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-5dcb-73c0-b94b-f786dc820469:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:07.966Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "04444994c5b8f7d33e203a45601cadf1245a6db3dfde460d0f0576d3681614a1",
+        "testId": "journeys.e2e.ts::conversation%20usable%204",
+        "kind": "test",
+        "declarationIndex": 14,
+        "titlePath": [
+          "conversation usable 4"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-6456-7216-9787-b0e1204d476a",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:08.086Z",
+            "durationMs": 1788,
+            "artifacts": [
+              {
+                "id": "01a15503-6456-7216-9787-b0e1204d476a:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_204-762f95f0/default/attempt-0/trace/trace.zip",
+                "size": 601585,
+                "sha256": "1a6cf3d7466eee55f5357e13ead04d7814a2c1514361fcd47affa66f74c231ca"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-6456-7216-9787-b0e1204d476a:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:08.124Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-6456-7216-9787-b0e1204d476a:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:08.127Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-6456-7216-9787-b0e1204d476a:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:08.127Z",
+                "durationMs": 99,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-6456-7216-9787-b0e1204d476a:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:08.227Z",
+                "durationMs": 1433,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-6456-7216-9787-b0e1204d476a:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:09.660Z",
+                "durationMs": 56,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-6456-7216-9787-b0e1204d476a:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:09.717Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-6456-7216-9787-b0e1204d476a:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:09.725Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2f659654b341b7fbfc373bc6f219301108da80ca4846fe5340d69bef10235b35",
+        "testId": "journeys.e2e.ts::conversation%20usable%205",
+        "kind": "test",
+        "declarationIndex": 15,
+        "titlePath": [
+          "conversation usable 5"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:09.874Z",
+            "durationMs": 1682,
+            "artifacts": [
+              {
+                "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_205-d8353baa/default/attempt-0/trace/trace.zip",
+                "size": 552585,
+                "sha256": "4f0c3b0452cc1652def48a97370cd45ea4e6f30300f9e46ea9b9fa54cd837104"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:09.909Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:09.911Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:09.912Z",
+                "durationMs": 108,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:10.020Z",
+                "durationMs": 1296,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:11.316Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:11.414Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-6b52-7927-8ce5-aa6371f97dfa:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:11.421Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "cadba57fe3b97fa3ae9dcbdd0392717da8213de2985bb1e2db8ac5e0604f5040",
+        "testId": "journeys.e2e.ts::conversation%20usable%206",
+        "kind": "test",
+        "declarationIndex": 16,
+        "titlePath": [
+          "conversation usable 6"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:11.557Z",
+            "durationMs": 1683,
+            "artifacts": [
+              {
+                "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_206-53e0f9f0/default/attempt-0/trace/trace.zip",
+                "size": 549384,
+                "sha256": "e3fea4f8752a5643b5dc59ec1e5cd3a0d0eb8f3f1ab17eb8f80ee5226bd8692a"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:11.592Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:11.594Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:11.595Z",
+                "durationMs": 105,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:11.700Z",
+                "durationMs": 1294,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:12.995Z",
+                "durationMs": 93,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:13.089Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-71e4-71ef-b8dd-91f26ff02db7:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:13.097Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e6ac7eedfaa947f0745b1faf76dcc046162c7373124567e1749c0119b83cd6f1",
+        "testId": "journeys.e2e.ts::conversation%20usable%207",
+        "kind": "test",
+        "declarationIndex": 17,
+        "titlePath": [
+          "conversation usable 7"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-7878-7745-859c-6f0347b3984f",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:13.241Z",
+            "durationMs": 1768,
+            "artifacts": [
+              {
+                "id": "01a15503-7878-7745-859c-6f0347b3984f:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_207-323e1b94/default/attempt-0/trace/trace.zip",
+                "size": 579714,
+                "sha256": "183c83cb86f11ed7b76135481b0b388510b4a9dfeb2171942e2322412ffff6c7"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-7878-7745-859c-6f0347b3984f:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:13.286Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-7878-7745-859c-6f0347b3984f:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:13.289Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-7878-7745-859c-6f0347b3984f:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:13.290Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-7878-7745-859c-6f0347b3984f:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:13.382Z",
+                "durationMs": 1406,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-7878-7745-859c-6f0347b3984f:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:14.788Z",
+                "durationMs": 78,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-7878-7745-859c-6f0347b3984f:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:14.867Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-7878-7745-859c-6f0347b3984f:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:14.882Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "711bbe0d2af6616daa1d6bc78fa872e59394c59e068ab05f6f358d27496bdc71",
+        "testId": "journeys.e2e.ts::conversation%20usable%208",
+        "kind": "test",
+        "declarationIndex": 18,
+        "titlePath": [
+          "conversation usable 8"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-7f61-7558-88a6-8f6253934f8f",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:15.009Z",
+            "durationMs": 1673,
+            "artifacts": [
+              {
+                "id": "01a15503-7f61-7558-88a6-8f6253934f8f:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_208-c5865c4f/default/attempt-0/trace/trace.zip",
+                "size": 535967,
+                "sha256": "f952b0b649311abbf3b57045588ad798b1534409077041530fc76bfb1e5eb950"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-7f61-7558-88a6-8f6253934f8f:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:15.050Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-7f61-7558-88a6-8f6253934f8f:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:15.052Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-7f61-7558-88a6-8f6253934f8f:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:15.053Z",
+                "durationMs": 103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-7f61-7558-88a6-8f6253934f8f:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:15.157Z",
+                "durationMs": 1308,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-7f61-7558-88a6-8f6253934f8f:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:16.465Z",
+                "durationMs": 82,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-7f61-7558-88a6-8f6253934f8f:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:16.548Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-7f61-7558-88a6-8f6253934f8f:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:16.555Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "8b91c4d2a0acbfd82dec9179ce412e439df998f6dd5cf519df8075ab37e48a41",
+        "testId": "journeys.e2e.ts::conversation%20usable%209",
+        "kind": "test",
+        "declarationIndex": 19,
+        "titlePath": [
+          "conversation usable 9"
+        ],
+        "file": "journeys.e2e.ts",
+        "source": {
+          "file": "journeys.e2e.ts",
+          "line": 11,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15503-85eb-746d-bc33-2e067eec3176",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-19T16:34:16.683Z",
+            "durationMs": 1664,
+            "artifacts": [
+              {
+                "id": "01a15503-85eb-746d-bc33-2e067eec3176:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/journeys.e2e.ts__conversation_20usable_209-49fd74be/default/attempt-0/trace/trace.zip",
+                "size": 555819,
+                "sha256": "59171e0dd068ed46ec6290f8c6953e624d4dc20b4a298c95bdca3ae8ce77ef23"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15503-85eb-746d-bc33-2e067eec3176:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setCookies",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:16.722Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 13,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15503-85eb-746d-bc33-2e067eec3176:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:16.724Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 14,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-85eb-746d-bc33-2e067eec3176:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.goto",
+                "label": "http://127.0.0.1:5180/?project=e2e-classroom&view=conversations&conversation=e2e-study-room",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:16.725Z",
+                "durationMs": 111,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 27,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15503-85eb-746d-bc33-2e067eec3176:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:16.836Z",
+                "durationMs": 1315,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 29,
+                  "column": 27
+                }
+              },
+              {
+                "id": "01a15503-85eb-746d-bc33-2e067eec3176:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:18.151Z",
+                "durationMs": 68,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 30,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15503-85eb-746d-bc33-2e067eec3176:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:18.221Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 31,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a15503-85eb-746d-bc33-2e067eec3176:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-19T16:34:18.227Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "journeys.e2e.ts",
+                  "line": 32,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 20,
+      "selected": 20,
+      "executed": 20,
+      "passed": 20,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 20,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 8098666,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

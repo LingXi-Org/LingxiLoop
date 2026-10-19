@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-19T16:59:53.914Z",
+  "runtime": "3.5.4",
+  "environment": "isolated PostgreSQL; deterministic worker; recording WuKong; no live provider",
+  "lockMs": 1500,
+  "evidence": [
+    {
+      "scenario": "tool-completed-visible",
+      "elapsedMs": 10.85
+    },
+    {
+      "scenario": "terminal-visible",
+      "elapsedMs": 35.15
+    },
+    {
+      "scenario": "tool-completed-and-final",
+      "elapsedMs": 173.29
+    },
+    {
+      "scenario": "no-tool-snapshot",
+      "elapsedMs": 31.36
+    },
+    {
+      "scenario": "no-tool-durable-after-terminal",
+      "elapsedMs": 149.17
+    },
+    {
+      "scenario": "cancelled-state",
+      "elapsedMs": 78
+    },
+    {
+      "scenario": "concurrent-tool-snapshots",
+      "elapsedMs": 241.92
+    },
+    {
+      "scenario": "abort-optional-read",
+      "elapsedMs": 30.25
+    },
+    {
+      "scenario": "cancel-pending-upstream",
+      "elapsedMs": 6.23
+    }
+  ]
+}
