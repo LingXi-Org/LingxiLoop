@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
+import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import { skillIndex } from '@lyyzka/lingxios'
@@ -34,6 +35,7 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
     let phase = 0, calls = 0, path = '', exporting = false
     let observation: { actionKey: string; sha256: string; text: string } | undefined
     let completeSkillRead = false
+    let maxRangeResponseCharacters = 0, consumedSkillSha256 = ''
     worker = createWorker({ controlPlane: api, worker: { id: 'visualize-generation-fixture' },
       model: { modelId: 'visualize-fixture', contextWindowTokens: 1000000, async compact() { throw new Error('unexpected compaction') },
         async structured() { return { value: { missing: [] }, model: 'visualize-fixture', usage } },
@@ -47,16 +49,18 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
           const call = (name: string, input: object) => ({ text: '', output: [{ type: 'function_call' as const, callId: `call-${calls}`, name, arguments: JSON.stringify(input) }], usage })
           const answer = (text: string) => ({ text, output: [{ role: 'assistant' as const, content: text }], usage })
           if (output?.truncated) {
+            assert.equal(observation, undefined, 'a 4000-character observation range must remain untruncated')
             assert.ok(names.includes('observations__read'))
             const ref = output.observations?.[0]; assert.ok(ref, 'truncated results must retain their authorized observation reference')
             observation = { actionKey: ref.actionKey, sha256: ref.sha256, text: '' }
-            return call('observations__read', { actionKey: ref.actionKey, sha256: ref.sha256, start: 0, length: 2000 })
+            return call('observations__read', { actionKey: ref.actionKey, sha256: ref.sha256, start: 0, length: 4000 })
           }
           if (observation) {
             assert.equal(output.ok, true, JSON.stringify(output))
+            maxRangeResponseCharacters = Math.max(maxRangeResponseCharacters, last && 'output' in last ? last.output.length : 0)
             observation.text += output.value.text
             if (output.value.next !== null) return call('observations__read', {
-              actionKey: observation.actionKey, sha256: observation.sha256, start: output.value.next, length: 2000,
+              actionKey: observation.actionKey, sha256: observation.sha256, start: output.value.next, length: 4000,
             })
             result = { ok: true, value: JSON.parse(observation.text) }; observation = undefined
           }
@@ -67,7 +71,7 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
           }
           switch (phase++) {
             case 0: { const { name, version, hash } = skillIndex(visualizeSkill); return call('skills__load', { name, version, hash }) }
-            case 1: assert.equal(result.ok, true); assert.equal(result.value.body, visualizeSkill.body); completeSkillRead = true; return call('visualize__read_reference', { path: 'references/api.md' })
+            case 1: assert.equal(result.ok, true); assert.equal(result.value.body, visualizeSkill.body); completeSkillRead = true; consumedSkillSha256 = createHash('sha256').update(result.value.body).digest('hex'); return call('visualize__read_reference', { path: 'references/api.md' })
             case 2: assert.equal(result.ok, true); assert.equal(result.value.text, await readVisualizeReference('references/api.md')); return call('visualize__read_reference', { path: 'references/styles.md' })
             case 3: assert.equal(result.ok, true); assert.equal(result.value.text, await readVisualizeReference('references/styles.md')); return call('visualize__save', { name: 'native-fixture', html })
             case 4: assert.equal(result.ok, true, JSON.stringify(result)); path = result.value.path; assert.equal(await readFile(path, 'utf8'), html); return call('visualize__read', { path })
@@ -103,6 +107,7 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
     await mkdir('artifacts/visualize/runtime', { recursive: true })
     await writeFile('artifacts/visualize/runtime/native-fixture.html', exported.bytes)
     await writeFile('artifacts/visualize/runtime/generation.json', JSON.stringify({ skillLoaded: true, completeSkillRead, referenceRead: true, savedAndRead: true,
+      skillSha256: createHash('sha256').update(visualizeSkill.body).digest('hex'), consumedSkillSha256, maxRangeResponseCharacters,
       realOutputFile: true, delivered: true, exportedByOriginalRender: true, modelCalls: calls, ledgerCalls: ledger.count, unauthorizedReadRejected: true }, null, 2))
   } finally { await worker?.stop(); await teardownAll(); await im.close() }
 })
