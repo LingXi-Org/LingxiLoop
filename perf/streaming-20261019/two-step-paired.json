@@ -1,0 +1,1425 @@
+{
+  "startedAt": "2026-10-19T16:28:50.538Z",
+  "endedAt": "2026-10-19T16:29:53.885Z",
+  "runs": 10,
+  "baseCommit": "088e269f36f63884b44704c3b0f1e27f1a6f76fc",
+  "candidateCommit": "39f70a532285a00bebe5d0999feed843107b9ab9",
+  "node": "v24.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "cpu": "AMD EPYC 9V74 80-Core Processor",
+  "logicalCpus": 5,
+  "protocol": "Alternating fresh-process A/B, one identical warmup, explicit GC before each sample; instrumentation counted separately",
+  "summary": {
+    "short": {
+      "base": {
+        "metrics": {
+          "firstStateMs": {
+            "p50": 2.648698999999965,
+            "p75": 2.847869000000003,
+            "p95": 2.8981340000000273
+          },
+          "firstBodyMs": {
+            "p50": 3.1767040000000293,
+            "p75": 3.3655580000000214,
+            "p95": 3.4002000000000407
+          },
+          "totalMs": {
+            "p50": 21.977175999999986,
+            "p75": 22.666154000000006,
+            "p95": 25.187851999999964
+          },
+          "cpuUserMs": {
+            "p50": 30.893,
+            "p75": 35.383,
+            "p95": 38.428
+          },
+          "cpuSystemMs": {
+            "p50": 3.289,
+            "p75": 4.114,
+            "p95": 8.503
+          },
+          "peakHeapBytes": {
+            "p50": 34251184,
+            "p75": 34255456,
+            "p95": 34299016
+          },
+          "heapRetainedBytes": {
+            "p50": 19839696,
+            "p75": 19841408,
+            "p95": 19843264
+          },
+          "peakRssBytes": {
+            "p50": 118804480,
+            "p75": 119197696,
+            "p95": 120897536
+          }
+        },
+        "counts": {
+          "stringifyCalls": 1517,
+          "serializedChars": 600315,
+          "projections": 84,
+          "wireBytes": 9131,
+          "chunks": 42
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "firstStateMs": {
+            "p50": 2.5724840000000313,
+            "p75": 2.637832000000003,
+            "p95": 3.1166729999999916
+          },
+          "firstBodyMs": {
+            "p50": 3.093028000000004,
+            "p75": 3.2332189999999628,
+            "p95": 3.6893059999999878
+          },
+          "totalMs": {
+            "p50": 16.046254000000033,
+            "p75": 16.799439000000007,
+            "p95": 17.538962999999967
+          },
+          "cpuUserMs": {
+            "p50": 23.258,
+            "p75": 24.315,
+            "p95": 26.462
+          },
+          "cpuSystemMs": {
+            "p50": 0,
+            "p75": 3.671,
+            "p95": 4.261
+          },
+          "peakHeapBytes": {
+            "p50": 28495888,
+            "p75": 28498040,
+            "p95": 28502952
+          },
+          "heapRetainedBytes": {
+            "p50": 19835520,
+            "p75": 19838128,
+            "p95": 19860384
+          },
+          "peakRssBytes": {
+            "p50": 112525312,
+            "p75": 113655808,
+            "p95": 114700288
+          }
+        },
+        "counts": {
+          "stringifyCalls": 126,
+          "serializedChars": 105907,
+          "projections": 42,
+          "wireBytes": 9131,
+          "chunks": 42
+        }
+      }
+    },
+    "long": {
+      "base": {
+        "metrics": {
+          "firstStateMs": {
+            "p50": 2.757082000000082,
+            "p75": 2.8159210000001167,
+            "p95": 3.2970949999998993
+          },
+          "firstBodyMs": {
+            "p50": 3.2438250000000153,
+            "p75": 3.293920999999955,
+            "p95": 3.8614249999998265
+          },
+          "totalMs": {
+            "p50": 1022.6314329999998,
+            "p75": 1046.2511479999998,
+            "p95": 1057.1369000000002
+          },
+          "cpuUserMs": {
+            "p50": 953.749,
+            "p75": 987.238,
+            "p95": 1015.425
+          },
+          "cpuSystemMs": {
+            "p50": 96.15,
+            "p75": 112.314,
+            "p95": 146.384
+          },
+          "peakHeapBytes": {
+            "p50": 139779416,
+            "p75": 140297992,
+            "p95": 142417680
+          },
+          "heapRetainedBytes": {
+            "p50": 20748400,
+            "p75": 20751888,
+            "p95": 20754584
+          },
+          "peakRssBytes": {
+            "p50": 322965504,
+            "p75": 324173824,
+            "p95": 324505600
+          }
+        },
+        "counts": {
+          "stringifyCalls": 14837,
+          "serializedChars": 245713137,
+          "projections": 804,
+          "wireBytes": 261331,
+          "chunks": 402
+        }
+      },
+      "candidate": {
+        "metrics": {
+          "firstStateMs": {
+            "p50": 2.6542670000000044,
+            "p75": 2.820959000000016,
+            "p95": 3.1707550000000992
+          },
+          "firstBodyMs": {
+            "p50": 3.1494330000000446,
+            "p75": 3.366200000000049,
+            "p95": 3.882547000000045
+          },
+          "totalMs": {
+            "p50": 351.6225679999999,
+            "p75": 369.2158730000001,
+            "p95": 380.445161
+          },
+          "cpuUserMs": {
+            "p50": 340.004,
+            "p75": 349.301,
+            "p95": 384.232
+          },
+          "cpuSystemMs": {
+            "p50": 48.448,
+            "p75": 53.634,
+            "p95": 69.631
+          },
+          "peakHeapBytes": {
+            "p50": 152506720,
+            "p75": 152527416,
+            "p95": 152610856
+          },
+          "heapRetainedBytes": {
+            "p50": 20621088,
+            "p75": 20624104,
+            "p95": 20629784
+          },
+          "peakRssBytes": {
+            "p50": 303697920,
+            "p75": 303968256,
+            "p95": 304865280
+          }
+        },
+        "counts": {
+          "stringifyCalls": 1206,
+          "serializedChars": 35455027,
+          "projections": 402,
+          "wireBytes": 261331,
+          "chunks": 402
+        }
+      }
+    }
+  },
+  "samples": [
+    {
+      "pair": 0,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.847869000000003,
+        "firstBodyMs": 3.3694939999999747,
+        "totalMs": 23.20579699999996,
+        "cpuUserMs": 34.941,
+        "cpuSystemMs": 0,
+        "heapStartBytes": 19665336,
+        "peakHeapBytes": 34299016,
+        "heapRetainedBytes": 19830944,
+        "peakRssBytes": 120897536,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 0,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.4886579999999867,
+        "firstBodyMs": 3.0540189999999257,
+        "totalMs": 17.538962999999967,
+        "cpuUserMs": 26.462,
+        "cpuSystemMs": 0,
+        "heapStartBytes": 19638296,
+        "peakHeapBytes": 28498040,
+        "heapRetainedBytes": 19837472,
+        "peakRssBytes": 112525312,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 1,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.8200369999999566,
+        "firstBodyMs": 3.2963639999999828,
+        "totalMs": 22.662357999999983,
+        "cpuUserMs": 35.383,
+        "cpuSystemMs": 0.423,
+        "heapStartBytes": 19673056,
+        "peakHeapBytes": 34254496,
+        "heapRetainedBytes": 19843008,
+        "peakRssBytes": 118804480,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 1,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5724840000000313,
+        "firstBodyMs": 3.1123870000000124,
+        "totalMs": 15.868836999999985,
+        "cpuUserMs": 21.302,
+        "cpuSystemMs": 4.261,
+        "heapStartBytes": 19638952,
+        "peakHeapBytes": 28500568,
+        "heapRetainedBytes": 19838128,
+        "peakRssBytes": 112467968,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 2,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5791639999999916,
+        "firstBodyMs": 3.1767040000000293,
+        "totalMs": 25.187851999999964,
+        "cpuUserMs": 38.428,
+        "cpuSystemMs": 1.691,
+        "heapStartBytes": 19671424,
+        "peakHeapBytes": 34227312,
+        "heapRetainedBytes": 19841408,
+        "peakRssBytes": 119197696,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 2,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 3.1166729999999916,
+        "firstBodyMs": 3.6893059999999878,
+        "totalMs": 16.799439000000007,
+        "cpuUserMs": 22.35,
+        "cpuSystemMs": 3.671,
+        "heapStartBytes": 19634736,
+        "peakHeapBytes": 28494480,
+        "heapRetainedBytes": 19833912,
+        "peakRssBytes": 112644096,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 3,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.8981340000000273,
+        "firstBodyMs": 3.4002000000000407,
+        "totalMs": 22.097357000000045,
+        "cpuUserMs": 35.572,
+        "cpuSystemMs": 0.434,
+        "heapStartBytes": 19669744,
+        "peakHeapBytes": 34251184,
+        "heapRetainedBytes": 19839696,
+        "peakRssBytes": 119123968,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 3,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.637832000000003,
+        "firstBodyMs": 3.216463000000033,
+        "totalMs": 15.946825000000047,
+        "cpuUserMs": 21.217,
+        "cpuSystemMs": 4.042,
+        "heapStartBytes": 19658808,
+        "peakHeapBytes": 24131712,
+        "heapRetainedBytes": 19860384,
+        "peakRssBytes": 112128000,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 4,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.648698999999965,
+        "firstBodyMs": 3.130083999999954,
+        "totalMs": 21.354618999999957,
+        "cpuUserMs": 30.893,
+        "cpuSystemMs": 3.666,
+        "heapStartBytes": 19670656,
+        "peakHeapBytes": 34278600,
+        "heapRetainedBytes": 19840640,
+        "peakRssBytes": 117116928,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 4,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.625443999999959,
+        "firstBodyMs": 3.2332189999999628,
+        "totalMs": 16.22290099999998,
+        "cpuUserMs": 25.964,
+        "cpuSystemMs": 0,
+        "heapStartBytes": 19636392,
+        "peakHeapBytes": 28496312,
+        "heapRetainedBytes": 19835520,
+        "peakRssBytes": 112820224,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 5,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.863070999999991,
+        "firstBodyMs": 3.3655580000000214,
+        "totalMs": 21.977175999999986,
+        "cpuUserMs": 27.421,
+        "cpuSystemMs": 6.865,
+        "heapStartBytes": 19669120,
+        "peakHeapBytes": 34254536,
+        "heapRetainedBytes": 19839008,
+        "peakRssBytes": 119005184,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 5,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5081779999999867,
+        "firstBodyMs": 3.093028000000004,
+        "totalMs": 16.917367000000013,
+        "cpuUserMs": 24.167,
+        "cpuSystemMs": 0.532,
+        "heapStartBytes": 19637104,
+        "peakHeapBytes": 28497072,
+        "heapRetainedBytes": 19836200,
+        "peakRssBytes": 112185344,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 6,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5802459999999883,
+        "firstBodyMs": 3.044125000000008,
+        "totalMs": 21.178514000000007,
+        "cpuUserMs": 30.116,
+        "cpuSystemMs": 3.759,
+        "heapStartBytes": 19668208,
+        "peakHeapBytes": 34249824,
+        "heapRetainedBytes": 19838160,
+        "peakRssBytes": 117981184,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 6,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.2374700000000303,
+        "firstBodyMs": 2.7534969999999817,
+        "totalMs": 15.106569999999977,
+        "cpuUserMs": 23.117,
+        "cpuSystemMs": 0,
+        "heapStartBytes": 19630592,
+        "peakHeapBytes": 28490272,
+        "heapRetainedBytes": 19829656,
+        "peakRssBytes": 112193536,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 7,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5606559999999945,
+        "firstBodyMs": 3.046547999999973,
+        "totalMs": 20.967505999999958,
+        "cpuUserMs": 29.241,
+        "cpuSystemMs": 4.114,
+        "heapStartBytes": 19673376,
+        "peakHeapBytes": 34255456,
+        "heapRetainedBytes": 19843264,
+        "peakRssBytes": 120016896,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 7,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.7982540000000427,
+        "firstBodyMs": 3.3669700000000375,
+        "totalMs": 16.792558000000042,
+        "cpuUserMs": 24.315,
+        "cpuSystemMs": 1.577,
+        "heapStartBytes": 19628624,
+        "peakHeapBytes": 28488520,
+        "heapRetainedBytes": 19827752,
+        "peakRssBytes": 113655808,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 8,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.685134000000005,
+        "firstBodyMs": 3.2423029999999926,
+        "totalMs": 22.666154000000006,
+        "cpuUserMs": 32.138,
+        "cpuSystemMs": 3.289,
+        "heapStartBytes": 19669880,
+        "peakHeapBytes": 34226440,
+        "heapRetainedBytes": 19839768,
+        "peakRssBytes": 117755904,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 8,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5863750000000323,
+        "firstBodyMs": 3.088079999999991,
+        "totalMs": 16.046254000000033,
+        "cpuUserMs": 23.258,
+        "cpuSystemMs": 0,
+        "heapStartBytes": 19636064,
+        "peakHeapBytes": 28495888,
+        "heapRetainedBytes": 19835240,
+        "peakRssBytes": 114700288,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 9,
+      "variant": "base",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5170309999999745,
+        "firstBodyMs": 3.0052459999999996,
+        "totalMs": 21.944907999999998,
+        "cpuUserMs": 25.607,
+        "cpuSystemMs": 8.503,
+        "heapStartBytes": 19668208,
+        "peakHeapBytes": 34238632,
+        "heapRetainedBytes": 19838128,
+        "peakRssBytes": 118718464,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1517,
+        "serializedChars": 600315,
+        "projections": 84,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 9,
+      "variant": "candidate",
+      "kind": "short",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.2801039999999944,
+        "firstBodyMs": 2.8103629999999953,
+        "totalMs": 15.947045000000003,
+        "cpuUserMs": 24.017,
+        "cpuSystemMs": 0,
+        "heapStartBytes": 19642720,
+        "peakHeapBytes": 28502952,
+        "heapRetainedBytes": 19843096,
+        "peakRssBytes": 114020352,
+        "wireBytes": 9131,
+        "chunks": 42,
+        "wireSha256": "3aeafbd1d379fd10aa1fa58111609765805e97003082fea9bc51a183bedf6898",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 126,
+        "serializedChars": 105907,
+        "projections": 42,
+        "wireBytes": 9131,
+        "chunks": 42
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 0,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5411569999998846,
+        "firstBodyMs": 3.078215,
+        "totalMs": 1053.2745709999997,
+        "cpuUserMs": 1007.293,
+        "cpuSystemMs": 80.351,
+        "heapStartBytes": 20464408,
+        "peakHeapBytes": 139776800,
+        "heapRetainedBytes": 20749512,
+        "peakRssBytes": 323121152,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 0,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.614778000000001,
+        "firstBodyMs": 3.0425319999999374,
+        "totalMs": 351.4646579999999,
+        "cpuUserMs": 354.006,
+        "cpuSystemMs": 28.038,
+        "heapStartBytes": 20281296,
+        "peakHeapBytes": 152535440,
+        "heapRetainedBytes": 20621088,
+        "peakRssBytes": 302665728,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 1,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.757082000000082,
+        "firstBodyMs": 3.267229999999927,
+        "totalMs": 1020.1731530000002,
+        "cpuUserMs": 938.366,
+        "cpuSystemMs": 112.314,
+        "heapStartBytes": 20463160,
+        "peakHeapBytes": 139775384,
+        "heapRetainedBytes": 20748264,
+        "peakRssBytes": 322195456,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 1,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.891574999999989,
+        "firstBodyMs": 3.489975999999956,
+        "totalMs": 380.445161,
+        "cpuUserMs": 347.077,
+        "cpuSystemMs": 69.631,
+        "heapStartBytes": 20283856,
+        "peakHeapBytes": 152454168,
+        "heapRetainedBytes": 20624104,
+        "peakRssBytes": 304263168,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 2,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.5742760000000544,
+        "firstBodyMs": 3.2438250000000153,
+        "totalMs": 1022.6314329999998,
+        "cpuUserMs": 961.738,
+        "cpuSystemMs": 92.268,
+        "heapStartBytes": 20466968,
+        "peakHeapBytes": 139779416,
+        "heapRetainedBytes": 20752024,
+        "peakRssBytes": 324173824,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 2,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.7180740000000014,
+        "firstBodyMs": 3.1494330000000446,
+        "totalMs": 349.355989,
+        "cpuUserMs": 337.371,
+        "cpuSystemMs": 45.2,
+        "heapStartBytes": 20278480,
+        "peakHeapBytes": 152527416,
+        "heapRetainedBytes": 20618184,
+        "peakRssBytes": 302964736,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 3,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.604962999999998,
+        "firstBodyMs": 3.044736000000057,
+        "totalMs": 1012.6312610000002,
+        "cpuUserMs": 947.672,
+        "cpuSystemMs": 98.811,
+        "heapStartBytes": 20461440,
+        "peakHeapBytes": 140297992,
+        "heapRetainedBytes": 20746496,
+        "peakRssBytes": 322846720,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 3,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 3.1707550000000992,
+        "firstBodyMs": 3.882547000000045,
+        "totalMs": 376.38597300000004,
+        "cpuUserMs": 384.232,
+        "cpuSystemMs": 25.035,
+        "heapStartBytes": 20285344,
+        "peakHeapBytes": 152610856,
+        "heapRetainedBytes": 20625136,
+        "peakRssBytes": 302632960,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 4,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 3.2970949999998993,
+        "firstBodyMs": 3.8614249999998265,
+        "totalMs": 1035.9855759999998,
+        "cpuUserMs": 987.238,
+        "cpuSystemMs": 81.307,
+        "heapStartBytes": 20459712,
+        "peakHeapBytes": 142417680,
+        "heapRetainedBytes": 20744864,
+        "peakRssBytes": 321839104,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 4,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.2806150000000116,
+        "firstBodyMs": 2.6791749999999865,
+        "totalMs": 349.464475,
+        "cpuUserMs": 328.648,
+        "cpuSystemMs": 53.634,
+        "heapStartBytes": 20281000,
+        "peakHeapBytes": 152473632,
+        "heapRetainedBytes": 20620792,
+        "peakRssBytes": 303697920,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 5,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.52794700000004,
+        "firstBodyMs": 2.9695420000000468,
+        "totalMs": 1046.2511479999998,
+        "cpuUserMs": 984.883,
+        "cpuSystemMs": 96.15,
+        "heapStartBytes": 20464096,
+        "peakHeapBytes": 139776664,
+        "heapRetainedBytes": 20749296,
+        "peakRssBytes": 322678784,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 5,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.7602769999999737,
+        "firstBodyMs": 3.194349999999986,
+        "totalMs": 369.2158730000001,
+        "cpuUserMs": 347.041,
+        "cpuSystemMs": 53.052,
+        "heapStartBytes": 20281456,
+        "peakHeapBytes": 152515960,
+        "heapRetainedBytes": 20621248,
+        "peakRssBytes": 303968256,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 6,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.8159210000001167,
+        "firstBodyMs": 3.262412999999924,
+        "totalMs": 1012.057325,
+        "cpuUserMs": 923.177,
+        "cpuSystemMs": 123.728,
+        "heapStartBytes": 20463232,
+        "peakHeapBytes": 142159312,
+        "heapRetainedBytes": 20748400,
+        "peakRssBytes": 323584000,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 6,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.3418870000000425,
+        "firstBodyMs": 2.7745690000000423,
+        "totalMs": 349.9575780000001,
+        "cpuUserMs": 349.301,
+        "cpuSystemMs": 30.8,
+        "heapStartBytes": 20276888,
+        "peakHeapBytes": 152506720,
+        "heapRetainedBytes": 20616680,
+        "peakRssBytes": 303759360,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 7,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.7878390000000763,
+        "firstBodyMs": 3.293920999999955,
+        "totalMs": 1023.5592680000002,
+        "cpuUserMs": 953.749,
+        "cpuSystemMs": 105.486,
+        "heapStartBytes": 20458416,
+        "peakHeapBytes": 139914432,
+        "heapRetainedBytes": 20743520,
+        "peakRssBytes": 324505600,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 7,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.6542670000000044,
+        "firstBodyMs": 3.2252770000000055,
+        "totalMs": 357.76974499999994,
+        "cpuUserMs": 340.004,
+        "cpuSystemMs": 48.448,
+        "heapStartBytes": 20274056,
+        "peakHeapBytes": 152494272,
+        "heapRetainedBytes": 20613880,
+        "peakRssBytes": 303804416,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 8,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 3.0344689999999446,
+        "firstBodyMs": 3.566430000000082,
+        "totalMs": 1057.1369000000002,
+        "cpuUserMs": 1015.425,
+        "cpuSystemMs": 78.215,
+        "heapStartBytes": 20466784,
+        "peakHeapBytes": 140041312,
+        "heapRetainedBytes": 20751888,
+        "peakRssBytes": 324321280,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 8,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.3975299999999606,
+        "firstBodyMs": 2.9709139999999934,
+        "totalMs": 351.6225679999999,
+        "cpuUserMs": 329.385,
+        "cpuSystemMs": 51.522,
+        "heapStartBytes": 20283256,
+        "peakHeapBytes": 152511544,
+        "heapRetainedBytes": 20622888,
+        "peakRssBytes": 304865280,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 9,
+      "variant": "base",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.7626299999999446,
+        "firstBodyMs": 3.167349999999942,
+        "totalMs": 1021.3914819999998,
+        "cpuUserMs": 909.094,
+        "cpuSystemMs": 146.384,
+        "heapStartBytes": 20469448,
+        "peakHeapBytes": 139519760,
+        "heapRetainedBytes": 20754584,
+        "peakRssBytes": 322965504,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 14837,
+        "serializedChars": 245713137,
+        "projections": 804,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    },
+    {
+      "pair": 9,
+      "variant": "candidate",
+      "kind": "long",
+      "runtimeVersion": "3.5.3",
+      "timing": {
+        "firstStateMs": 2.820959000000016,
+        "firstBodyMs": 3.366200000000049,
+        "totalMs": 359.2919760000001,
+        "cpuUserMs": 333.618,
+        "cpuSystemMs": 56.814,
+        "heapStartBytes": 20275688,
+        "peakHeapBytes": 152502912,
+        "heapRetainedBytes": 20629784,
+        "peakRssBytes": 303337472,
+        "wireBytes": 261331,
+        "chunks": 402,
+        "wireSha256": "300842272e591011a3a1790bc2e0d7e621eb60f2482ac0c13fa2eb5ab8cbe795",
+        "requests": 0,
+        "databaseQueries": 0
+      },
+      "counts": {
+        "stringifyCalls": 1206,
+        "serializedChars": 35455027,
+        "projections": 402,
+        "wireBytes": 261331,
+        "chunks": 402
+      },
+      "timingScope": "in-process public projection, encoder, decoder and state tracker; not model TTFT or browser paint"
+    }
+  ]
+}

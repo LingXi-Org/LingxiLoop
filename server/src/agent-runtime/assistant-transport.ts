@@ -30,6 +30,12 @@ export class RunStreamProjection {
   }
 
   apply(item: RunStreamEvent): AgentRunSnapshot {
+    this.advance(item)
+    return this.snapshot
+  }
+
+  /** Consume in order; callers must materialize and validate before emitting. */
+  advance(item: RunStreamEvent): void {
     const id = item.type === 'state' ? item.state.run.id : item.type === 'event' ? item.event.runId
       : item.type === 'preview' ? item.preview.runId : item.runId
     if (id !== this.view.runId) throw new Error('运行身份不一致')
@@ -53,7 +59,6 @@ export class RunStreamProjection {
       if (this.view !== before && event.kind === 'run.failed' && typeof event.data.error === 'string') this.error = event.data.error
       if (event.kind === 'run.started' && typeof event.data.sourceRef === 'string') this.sourceRef = event.data.sourceRef
     }
-    return this.snapshot
   }
 
   async syncApprovals(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval'>, identity: RunIdentity): Promise<void> {
@@ -190,19 +195,21 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   return projection
 }
 
-function changes(previous: AgentRunSnapshot | undefined, next: AgentRunSnapshot): AssistantTransportStateOperation[] {
-  const state = JSON.parse(JSON.stringify(next)) as ReadonlyJSONValue
+function changes(previous: ReadonlyJSONValue | undefined, next: ReadonlyJSONValue): AssistantTransportStateOperation[] {
   const operations: AssistantTransportStateOperation[] = []
   function diff(before: ReadonlyJSONValue | undefined, after: ReadonlyJSONValue, path: string[]) {
-    if (JSON.stringify(before) === JSON.stringify(after)) return
+    if (before === after) return
     if (typeof before === 'string' && typeof after === 'string' && ['text','argsText'].includes(path.at(-1) ?? '') && after.startsWith(before)) {
       operations.push({ type: 'append-text',path,value: after.slice(before.length) })
     } else if (before && after && typeof before === 'object' && typeof after === 'object'
-      && Array.isArray(before) === Array.isArray(after) && JSON.stringify(Object.keys(before)) === JSON.stringify(Object.keys(after))) {
-      for (const key of Object.keys(after)) diff(Reflect.get(before,key),Reflect.get(after,key),[...path,key])
+      && Array.isArray(before) === Array.isArray(after)) {
+      const beforeKeys = Object.keys(before), afterKeys = Object.keys(after)
+      if (beforeKeys.length === afterKeys.length && beforeKeys.every((key, index) => key === afterKeys[index])) {
+        for (const key of afterKeys) diff(Reflect.get(before,key),Reflect.get(after,key),[...path,key])
+      } else operations.push({ type: 'set',path,value: after })
     } else operations.push({ type: 'set',path,value: after })
   }
-  diff(previous ? JSON.parse(JSON.stringify(previous)) : undefined,state,[])
+  diff(previous,next,[])
   return operations
 }
 
@@ -210,7 +217,10 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
   const cancellation = new AbortController()
   const signal = approvals?.signal ? AbortSignal.any([cancellation.signal, approvals.signal]) : cancellation.signal
   async function* chunks(): AsyncGenerator<AssistantStreamChunk> {
-    let previous: AgentRunSnapshot | undefined
+    // Keep one JSON-normalized snapshot per response. It cannot be mutated by
+    // the projection or shared with another subscriber, and is already ready
+    // for the next comparison without cloning or serializing whole subtrees.
+    let previous: ReadonlyJSONValue | undefined
     const events = nativeRunEvents(body, signal)
     const read = () => events.next().then(value => ({ type: 'native' as const, value }),
       (error: unknown) => ({ type: 'error' as const, error }))
@@ -236,7 +246,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
             incoming = read()
             continue
           }
-          projection.apply(item)
+          projection.advance(item)
           if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
           if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
           if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'goal.waiting')) await projection.syncQuestionnaire(approvals.identity)
@@ -249,7 +259,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
           presentation = undefined
           refresh()
         }
-        const next = projection.snapshot
+        const next = JSON.parse(JSON.stringify(projection.snapshot)) as ReadonlyJSONValue
         const operations = changes(previous, next)
         if (operations.length) yield { type: 'update-state', path: [], operations }
         previous = next

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assistantTextViolation } from '../agent-runtime/assistant-text.js'
+import { projectVisualizeText, visualizeReferences } from '../agent-runtime/visualize-projection.js'
+import { projectGenUiReferences } from '../../../src/features/chat/visualize/zcode/gen-ui/domain/references.js'
 
 test('rejects protocol leakage and repeated paragraphs without clipping normal reasoning vocabulary', () => {
   assert.ok(assistantTextViolation('<think>private deliberation</think>Answer'))
@@ -12,4 +14,24 @@ test('rejects protocol leakage and repeated paragraphs without clipping normal r
   assert.ok(assistantTextViolation(Array(4).fill('结束。done。').join('\n\n')))
   assert.equal(assistantTextViolation(['定义','例子','推导','条件','误区'].join('\n\n---\n\n')),null)
   for (const text of ['我认为需要先思考边界条件，再解释这个公式。', '先解释 Wi-Fi 接入，再讨论 TCP 和 IP 的分工。', '```xml\n<think>protocol example</think>\n```']) assert.equal(assistantTextViolation(text), null)
+})
+
+// Written before the parser fast path: absent markers must preserve exact text;
+// any partial, escaped or protected directive must retain upstream semantics.
+test('plain-text fast path and every directive prefix match the pinned reference parser', () => {
+  const directive = '::visualize{"path":"/workspace/lesson.html"}'
+  const unicode = 'visualize{"path":"/workspace/lesson.html"}'
+  const bodies = ['', '普通文本，emoji 😀 与中文标点：保留。', 'plain text\nsecond line',
+    'a:b', '::::visualize{}', '\\' + directive, '`' + directive + '`',
+    '```text\n' + directive + '\n```', '<pre>' + unicode + '</pre>',
+    directive + ' trailing', unicode + ' trailing', '::visualize{invalid}',
+    ...Array.from({ length: directive.length + 1 }, (_, i) => 'before ' + directive.slice(0, i)),
+    ...Array.from({ length: unicode.length + 1 }, (_, i) => 'before ' + unicode.slice(0, i))]
+  for (const body of bodies) {
+    for (const preview of [false, true]) {
+      const expected = preview ? projectGenUiReferences(body, false).flatMap(part => part.kind === 'text' ? [part.text] : []).join('') : body
+      assert.deepEqual(projectVisualizeText(body, preview), expected ? [{ type: 'text', text: expected }] : [])
+    }
+    assert.deepEqual(visualizeReferences(body), projectGenUiReferences(body, true).filter(part => part.kind === 'ui'))
+  }
 })

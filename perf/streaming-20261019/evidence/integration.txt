@@ -1,0 +1,73 @@
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-redis-1  Healthy
+ Container lingxiloop-e2e-postgres-1  Healthy
+[db:migrate] already current · 62ms
+[integration] selected 3/77 file(s): runtime-nonthinking.test.ts, native-message-approvals.test.ts, public-run-activity.test.ts
+TAP version 13
+# {"ts":"2026-10-19T16:38:01.462Z","level":"info","msg":"worker stopped","workerId":"approval-fixture","timedOut":false}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-19T16:38:01.470Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# Subtest: HTTP approval decisions and expiry survive native message replay under a real worker lease
+ok 1 - HTTP approval decisions and expiry survive native message replay under a real worker lease
+  ---
+  duration_ms: 3213.667134
+  type: 'test'
+  ...
+# {"ts":"2026-10-19T16:38:11.070Z","level":"info","msg":"worker stopped","workerId":"public-activity-fixture","timedOut":false}
+# {"ts":"2026-10-19T16:38:11.074Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# Subtest: published worker persists authorized public activity and measured tool boundaries without private data
+ok 2 - published worker persists authorized public activity and measured tool boundaries without private data
+  ---
+  duration_ms: 2806.688605
+  type: 'test'
+  ...
+# {"ts":"2026-10-19T16:38:19.386Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-1ormi","healthPort":29093,"maxConcurrentRuns":2}
+# {"ts":"2026-10-19T16:38:20.479Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-1ormi","timedOut":false}
+# {"ts":"2026-10-19T16:38:20.480Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:157:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async Object.stop (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:239:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"}}
+# {"ts":"2026-10-19T16:38:20.483Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:157:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async Object.stop (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:239:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"}}
+# {"ts":"2026-10-19T16:38:20.617Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-1ormi","healthPort":29093,"maxConcurrentRuns":2}
+# {"ts":"2026-10-19T16:38:21.474Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-1ormi","timedOut":false}
+# {"ts":"2026-10-19T16:38:21.474Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:157:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async Object.stop (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:239:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"}}
+# {"ts":"2026-10-19T16:38:21.475Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:157:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async Object.stop (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:239:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)"}}
+# Subtest: production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion
+ok 3 - production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion
+  ---
+  duration_ms: 3394.069194
+  type: 'test'
+  ...
+# {"ts":"2026-10-19T16:38:21.930Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-1ormi","healthPort":29094,"maxConcurrentRuns":2}
+# {"ts":"2026-10-19T16:38:22.584Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-1ormi","timedOut":false}
+# {"ts":"2026-10-19T16:38:22.584Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:157:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async Object.stop (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:239:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:232:5)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"}}
+# {"ts":"2026-10-19T16:38:22.585Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:157:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\\n    at async Object.stop (/workspace/LingxiLoop/server/src/agent-runtime/runtime.ts:239:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:232:5)\\n    at async Test.run (node:internal/test_runner/test:1389:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)"}}
+# Subtest: unavailable visualization references are repaired before durable delivery
+ok 4 - unavailable visualization references are repaired before durable delivery
+  ---
+  duration_ms: 1109.293305
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 26665.005748
