@@ -29,6 +29,7 @@ test('history restores stopped runs before publishing messages, without replayin
     agent: { id: 'agent', kind: 'agent', name: '助手' },
   } }) } } })
   mock.module('@/features/chat/api', { namedExports: { messagesApi: {} } })
+  mock.module('@/api/questionnaires', { namedExports: { questionnairesApi: {} } })
   mock.module('@/features/conversations/store', { namedExports: { useConversations: { getState: () => ({ list: [] }) } } })
   mock.module('@/lib/actionToast', { namedExports: { toastAction: () => {} } })
   mock.module('@/lib/workspaceSession', { namedExports: { getWorkspaceSession: () => ({ companyId: 'company', projectId }) } })

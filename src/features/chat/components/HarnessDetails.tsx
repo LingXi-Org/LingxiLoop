@@ -9,6 +9,7 @@ import { chatTransport } from '../runtime/transport'
 import { DeliveryCard } from './RunResultCards'
 import { ElicitationForm } from '@/components/assistant-ui/elements/elicitation-form'
 import { activityAnnotation } from '@/lib/runActivity'
+import { hasQuestionnaireWait } from '../runtime/questionnaire-wait'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const aui = useAui()
@@ -19,6 +20,7 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
   const content = useAuiState(state => state.message.content)
   const tools = useMemo(() => content.filter(part => part.type === 'tool-call'), [content])
   const outcome = view.goalOutcome
+  const questionnaireWait = hasQuestionnaireWait(metadata)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [answer, setAnswer] = useState('')
@@ -56,13 +58,13 @@ export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }
       <p>答复投递失败，请重试。</p>
       {metadata.harnessControl && <Button type="button" size="sm" className="mt-2" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button>}
     </ErrorPrimitive.Root>}
-    {outcome?.status === 'awaiting_input' ? <ElicitationForm server="补充信息" message={outcome.question ?? '请补充信息以继续任务。'}
+    {questionnaireWait ? <p role="status">请在问卷卡片中提交回答。</p> : outcome?.status === 'awaiting_input' ? <ElicitationForm server="补充信息" message={outcome.question ?? '请补充信息以继续任务。'}
       fields={[{ name: 'answer', label: '补充信息', kind: 'text', value: answer, required: true }]}
       state={submitted === view.requestVersion ? 'accepted' : 'request'} acceptDisabled={!metadata.harnessControl || busy || !answer.trim()}
       acceptLabel={busy ? '正在提交…' : '提交并继续'} onFieldChange={(_, value) => setAnswer(String(value))}
       onAccept={() => void perform(async () => {
         const current = aui.message.getState().metadata.custom as LingxiMessageMetadata
-        if (!current.harnessControl || current.harness?.goalOutcome?.status !== 'awaiting_input' || current.harness.requestVersion !== view.requestVersion || !answer.trim()) throw new Error('409')
+        if (!current.harnessControl || hasQuestionnaireWait(current) || current.harness?.goalOutcome?.status !== 'awaiting_input' || current.harness.requestVersion !== view.requestVersion || !answer.trim()) throw new Error('409')
         await chatTransport.continueRun(target, answer.trim(), view.requestVersion)
         setSubmitted(view.requestVersion)
       })} /> : outcome?.question && <p className="text-sm text-foreground">{outcome.question}</p>}

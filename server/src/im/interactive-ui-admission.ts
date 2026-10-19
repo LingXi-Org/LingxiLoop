@@ -25,6 +25,9 @@ export async function assertUiActor(db: Queryable, input: UiActor, action: 'conv
 
 /** A generic send or webhook may replay an admitted action, but cannot mint its authority. */
 export async function assertUiInteractionAdmission(input: UiActor & { clientNonce: string; payload: NativeMessage }, db: Queryable = pool): Promise<void> {
+  if (input.payload.metadata.custom.questionnaireReply !== undefined) {
+    await (await import('./questionnaires.js')).assertQuestionnaireAdmission(input, db)
+  }
   if (input.payload.metadata.custom.uiInteraction === undefined) return
   if (input.payload.role !== 'user' || !uiInteractionSchema.safeParse(input.payload.metadata.custom.uiInteraction).success
     || input.payload.id !== input.clientNonce) throw new HttpError(403, '交互提交无效。')

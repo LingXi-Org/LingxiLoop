@@ -53,6 +53,7 @@ export async function enqueueAgentWakes(db: Queryable, input: AgentWakeInput): P
 }
 
 export async function flushAgentWakes(eventId?: string, signal?: AbortSignal): Promise<number> {
+  if (!eventId && !signal?.aborted) await (await import('../im/questionnaires.js')).flushQuestionnaireSubmissions(signal)
   let delivered = 0
   await pool.query(`UPDATE lingxios_ingress_outbox SET failed_at=NOW(),claim_token=NULL,claimed_until=NULL,
     error=COALESCE(error,'ingress lease expired after retry limit') WHERE delivered_at IS NULL AND failed_at IS NULL

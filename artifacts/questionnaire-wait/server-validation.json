@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-10-19T09:49:17.811Z",
+  "reproduce": "node e2e/server/run.mjs --file questionnaire-wait.test.ts --file im-conversation-style.test.ts --file native-message-flow.test.ts --file native-message-approvals.test.ts --file im-send-reconciliation.test.ts --file interactive-ui-disabled.test.ts",
+  "status": "passed",
+  "counts": {
+    "tests": 30,
+    "pass": 30,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "results": [
+    {
+      "command": "docker compose -f e2e/server/compose.yaml up -d --wait",
+      "startedAt": "2026-10-19T09:48:16.950Z",
+      "finishedAt": "2026-10-19T09:48:17.551Z",
+      "exitCode": 0
+    },
+    {
+      "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node --import tsx server/src/migrate-bin.ts",
+      "startedAt": "2026-10-19T09:48:17.551Z",
+      "finishedAt": "2026-10-19T09:48:18.004Z",
+      "exitCode": 0
+    },
+    {
+      "command": "/opt/codex/runtimes/codex-primary-runtime/dependencies/node/bin/node server/run-integration-tests.mjs --file questionnaire-wait.test.ts --file im-conversation-style.test.ts --file native-message-flow.test.ts --file native-message-approvals.test.ts --file im-send-reconciliation.test.ts --file interactive-ui-disabled.test.ts",
+      "startedAt": "2026-10-19T09:48:18.004Z",
+      "finishedAt": "2026-10-19T09:49:17.811Z",
+      "exitCode": 0
+    }
+  ],
+  "log": "artifacts/questionnaire-wait/server-integration.log",
+  "selectedFiles": [
+    "questionnaire-wait.test.ts",
+    "im-conversation-style.test.ts",
+    "native-message-flow.test.ts",
+    "native-message-approvals.test.ts",
+    "im-send-reconciliation.test.ts",
+    "interactive-ui-disabled.test.ts"
+  ],
+  "limitations": [
+    "Live model provider and Resend delivery are unverified; this isolated runner disables both.",
+    "Integration fixtures simulate WuKongIM and object storage."
+  ],
+  "runtime": {
+    "package": "@lyyzka/lingxios",
+    "version": "3.5.3",
+    "published": false,
+    "sourceCommit": "aad661f0655e67c8898ebcbfd5f5cfbc1dc77ff3",
+    "upstreamPR": "https://github.com/LingXi-Org/LingxiOS/pull/29",
+    "tarballSHA256": "f65245f385da2750d74b8f71fe43f46ce057aa407607e36d050689a41502dc20",
+    "installation": "Isolated worktree node_modules overlay; shared/original node_modules untouched."
+  },
+  "manifestPin": "3.5.2",
+  "releaseBlocked": true,
+  "checks": {
+    "serverTypecheck": "passed",
+    "serverLint": "passed (no warnings)",
+    "serverTest": {
+      "passed": 106,
+      "failed": 0,
+      "skipped": 0
+    },
+    "migration": "0044 applied on disposable PostgreSQL, then a second db:migrate reported already current"
+  }
+}

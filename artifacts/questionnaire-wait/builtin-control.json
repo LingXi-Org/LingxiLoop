@@ -1,0 +1,13 @@
+{
+  "mode": "builtin-control",
+  "modelCalls": 1,
+  "questionnaireCount": 0,
+  "status": "waiting",
+  "goalOutcome": {
+    "status": "awaiting_input",
+    "question": "第三讲子网划分 — 先确认两件事",
+    "verification": "not_run",
+    "requestVersion": 1
+  },
+  "waitErrors": []
+}

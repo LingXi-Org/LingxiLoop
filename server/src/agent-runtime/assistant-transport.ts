@@ -10,6 +10,7 @@ import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { readPublicToolActivity } from './tool-activity.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
+import { readQuestionnaireWait } from './questionnaire-projection.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
 export class RunStreamProjection {
@@ -19,6 +20,7 @@ export class RunStreamProjection {
   private error: string | null = null
   private sourceRef: string | null = null
   private durableDraft = ''
+  private questionnaireWait: { questionId: string; requestVersion: number } | null = null
   private terminalFeedback: { id: string; requestVersion: number; reason: string; status: string; delivery: string } | null = null
   needsResync = false
 
@@ -77,6 +79,11 @@ export class RunStreamProjection {
     })
   }
 
+  async syncQuestionnaire(identity: RunIdentity): Promise<void> {
+    this.questionnaireWait = this.view.goalOutcome?.status === 'awaiting_input'
+      ? await readQuestionnaireWait(identity, this.view.requestVersion) : null
+  }
+
   async syncTerminal(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readTerminal'>, identity: RunIdentity): Promise<void> {
     const terminal = await api.readTerminal(identity)
     this.terminalFeedback = terminal && terminal.feedback.requestVersion === this.view.requestVersion
@@ -125,6 +132,8 @@ export class RunStreamProjection {
     const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
       content: parts, status: runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
+        ...(this.questionnaireWait?.requestVersion === this.view.requestVersion && this.view.goalOutcome?.status === 'awaiting_input'
+          ? { questionnaireWait: this.questionnaireWait } : {}),
         ...(agentId ? { refs: { runId: this.view.runId, agentId } } : {}),
         ...(this.identity?.principalId ? { controlPrincipalId: this.identity.principalId } : {}),
         ...(this.identity?.threadId ? { replyToClientMsgNo: this.identity.threadId } : {}),
@@ -169,6 +178,7 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   await projection.syncApprovals(api,identity)
   await projection.syncPresentation(identity)
   await projection.syncTerminal(api,identity)
+  await projection.syncQuestionnaire(identity)
   return projection
 }
 
@@ -200,6 +210,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
       if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
       if (approvals && (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed'].includes(item.event.kind))) await projection.syncPresentation(approvals.identity)
       if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
+      if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'goal.waiting')) await projection.syncQuestionnaire(approvals.identity)
       const next = projection.snapshot
       const operations = changes(previous, next)
       if (operations.length) yield { type: 'update-state', path: [], operations }
