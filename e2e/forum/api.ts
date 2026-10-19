@@ -83,6 +83,24 @@ app.use((req, res, next) => {
 let failPost=false
 app.post('/api/fixture-fail-next-post',(_req,res)=>{failPost=true;res.sendStatus(200)})
 app.use((req,res,next)=>{if(failPost&&req.method==='POST'&&/^\/api\/courses\/[^/]+\/forum$/.test(req.path)){failPost=false;res.status(503).json({error:'Temporary fixture failure'});return}next()})
+// Explicitly controlled failure/pending states; successful uploads still execute
+// the ordinary presign route and object PUT, without timing-based test sleeps.
+let attachmentUploadMode: 'pass' | 'hold' | 'fail' = 'pass'
+let releaseAttachmentUpload: (() => void) | undefined
+app.post('/api/fixture-attachment-upload/:mode', (req,res) => {
+  if (!['pass','hold','fail'].includes(req.params.mode)) { res.sendStatus(400); return }
+  attachmentUploadMode = req.params.mode as typeof attachmentUploadMode
+  if (attachmentUploadMode === 'pass') { releaseAttachmentUpload?.(); releaseAttachmentUpload = undefined }
+  res.sendStatus(200)
+})
+app.use((req,res,next) => {
+  if (req.method !== 'POST' || req.path !== '/api/uploads/presign') { next(); return }
+  if (attachmentUploadMode === 'fail') {
+    attachmentUploadMode = 'pass'; res.status(503).json({ error: 'Temporary attachment upload failure' }); return
+  }
+  if (attachmentUploadMode === 'hold') { releaseAttachmentUpload = next; return }
+  next()
+})
 app.put('/api/fixture-object', express.raw({ type: '*/*',limit: '1mb' }), async (req,res) => {
   await storage.put(String(req.query.key),req.body,req.headers['content-type'] ?? 'text/plain')
   res.sendStatus(200)

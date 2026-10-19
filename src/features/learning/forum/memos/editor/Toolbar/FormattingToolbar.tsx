@@ -36,6 +36,7 @@ interface FormattingToolbarProps {
   exit?: { action: "minimize" | "close"; onExit: () => void };
   /** Extra classes for the host to frame the toolbar row. */
   className?: string;
+  portalClassName?: string;
 }
 
 const MARK_COMMANDS = EDITOR_COMMANDS.filter((command) => command.group === "mark");
@@ -66,7 +67,7 @@ const preventFocusSteal: MouseEventHandler<HTMLButtonElement> = (event) => event
  * stay inline. When the editor sits in a frame, the button that dismisses it is
  * pushed to the far edge.
  */
-export function FormattingToolbar({ controllerRef, exit, className }: FormattingToolbarProps) {
+export function FormattingToolbar({ controllerRef, exit, className, portalClassName }: FormattingToolbarProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const width = useElementWidth(rootRef);
   const compact = isCompactWidth(width);
@@ -106,7 +107,7 @@ export function FormattingToolbar({ controllerRef, exit, className }: Formatting
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild><SegmentButton Icon={HeadingGlyph} label={t("editor.format.heading")} /></DropdownMenuTrigger>
-        <DropdownMenuContent align="start" onCloseAutoFocus={event => { event.preventDefault(); returnFocusToEditor() }}>
+        <DropdownMenuContent className={portalClassName} align="start" onCloseAutoFocus={event => { event.preventDefault(); returnFocusToEditor() }}>
           {HEADING_COMMANDS.map((command) => (
             <DropdownMenuItem key={command.id} onClick={() => run(command.id)}>
               {t(command.labelKey)}
@@ -126,7 +127,7 @@ export function FormattingToolbar({ controllerRef, exit, className }: Formatting
       {compact ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild><SegmentButton Icon={MoreHorizontalIcon} label={t("editor.format.more")} /></DropdownMenuTrigger>
-          <DropdownMenuContent align="start" onCloseAutoFocus={event => { event.preventDefault(); returnFocusToEditor() }}>
+          <DropdownMenuContent className={portalClassName} align="start" onCloseAutoFocus={event => { event.preventDefault(); returnFocusToEditor() }}>
             {blockButtons.map((button) => (
               <DropdownMenuItem key={button.label} onClick={button.onClick}>
                 {button.label}
