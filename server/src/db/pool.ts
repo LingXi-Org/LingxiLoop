@@ -26,6 +26,20 @@ export const pool = new Pool({
   idle_in_transaction_session_timeout: 30_000,
 })
 
+// Display enrichment must never exhaust the pool used for authorization and
+// authoritative run state. This is one process-scoped pool, closed at shutdown.
+export const presentationPool = new Pool({
+  connectionString: databaseUrl,
+  application_name: 'lingxiloop-presentation',
+  max: 2,
+  connectionTimeoutMillis: 75,
+  statement_timeout: 75,
+  idleTimeoutMillis: 10_000,
+})
+// Active errors are handled by the optional reader; idle failures only evict the
+// affected client. Do not log connection details or presentation query values.
+presentationPool.on('error', () => {})
+
 // Instrument the public pg instance without changing overload/callback semantics.
 // Pool.query calls connect internally; count acquisition there once. Instrument
 // each physical client's query once so transaction and listener SQL also count.
@@ -61,7 +75,7 @@ pool.on('error', (err) => {
 })
 
 export async function closeDatabasePools(): Promise<void> {
-  await pool.end()
+  await Promise.all([pool.end(), presentationPool.end()])
 }
 
 export function isDatabaseConnectionError(error: unknown): boolean {

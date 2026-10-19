@@ -1,5 +1,5 @@
 import type { ActionContext, ActionResult, RunIdentity } from '@lyyzka/lingxios'
-import { pool } from '../db/pool.js'
+import { pool, presentationPool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
 import { toolDisplay, toolDisplaySchema, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
@@ -7,6 +7,45 @@ export interface PublicToolActivity {
   toolCallId: string
   display: ToolDisplay
   timing: { startedAt: number; completedAt?: number }
+}
+
+/** Optional display only: required authorization/approval/terminal reads never use this pool. */
+export async function readOptionalToolActivity(identity: RunIdentity, requestSignal?: AbortSignal): Promise<PublicToolActivity[]> {
+  if (requestSignal?.aborted) return []
+  const deadline = new AbortController()
+  const timer = setTimeout(() => deadline.abort(), 100)
+  const signal = requestSignal ? AbortSignal.any([requestSignal, deadline.signal]) : deadline.signal
+  try {
+    // pg's acquisition timeout removes queued waiters and destroys timed-out
+    // connections. An aborted acquisition can live for at most those 75 ms.
+    const client = await presentationPool.connect()
+    let released = false
+    const release = (destroy = false) => {
+      if (released) return
+      released = true
+      client.release(destroy)
+    }
+    // pg-pool removes its idle error listener while a client is checked out.
+    // Socket errors must not become process-level uncaught exceptions.
+    const connectionError = () => release(true)
+    client.on('error', connectionError)
+    // Destroying an active pg client closes its socket, interrupting real SQL.
+    // The server-side statement timeout independently bounds lock/CPU waits.
+    const abort = () => release(true)
+    signal.addEventListener('abort', abort, { once: true })
+    try {
+      signal.throwIfAborted()
+      const records = await readPublicToolActivity(identity, client)
+      return signal.aborted ? [] : records
+    } finally {
+      signal.removeEventListener('abort', abort)
+      release(signal.aborted)
+      client.off('error', connectionError)
+    }
+  } catch {
+    // Keep authoritative event contents and the existing generic display.
+    return []
+  } finally { clearTimeout(timer) }
 }
 
 const inputFields: Record<string, readonly [string, string][]> = {

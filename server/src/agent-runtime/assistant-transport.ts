@@ -7,7 +7,7 @@ import { createNativeMessage } from '../im/message-types.js'
 import { runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
-import { readPublicToolActivity } from './tool-activity.js'
+import { readOptionalToolActivity } from './tool-activity.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import { readQuestionnaireWait } from './questionnaire-projection.js'
@@ -71,11 +71,19 @@ export class RunStreamProjection {
     }
   }
 
-  async syncPresentation(identity: RunIdentity): Promise<void> {
-    const records = new Map((await readPublicToolActivity(identity)).map(record => [record.toolCallId, record]))
+  async syncPresentation(identity: RunIdentity, signal?: AbortSignal): Promise<void> {
+    if (!this.tools.length || signal?.aborted) return
+    const view = this.view
+    const revisions = new Map(this.tools.map(tool => [tool.toolCallId, tool.eventSeq]))
+    const records = new Map((await readOptionalToolActivity(identity, signal)).map(record => [record.toolCallId, record]))
+    // Native text/receipt events do not invalidate display metadata. Request,
+    // fence, lifecycle and tool revisions do; a relevant event coalesces another
+    // refresh without allowing an old read to mutate new authoritative content.
+    if (this.view.requestVersion !== view.requestVersion || this.view.fence !== view.fence
+      || this.view.lifecycle !== view.lifecycle || signal?.aborted) return
     this.tools = this.tools.map(tool => {
       const recorded = records.get(tool.toolCallId)
-      return recorded ? { ...tool, timing: recorded.timing, display: recorded.display } : tool
+      return recorded && revisions.get(tool.toolCallId) === tool.eventSeq ? { ...tool, timing: recorded.timing, display: recorded.display } : tool
     })
   }
 
@@ -157,7 +165,7 @@ export class RunStreamProjection {
   }
 }
 
-export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean) {
+export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal) {
   const state = await api.readRunState(identity)
   if (!state) throw new Error('run not found')
   const projection = new RunStreamProjection(identity.runId,canControl,identity)
@@ -176,9 +184,9 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   if (!current) throw new Error('run not found')
   projection.apply({ type: 'state',state: current })
   await projection.syncApprovals(api,identity)
-  await projection.syncPresentation(identity)
   await projection.syncTerminal(api,identity)
   await projection.syncQuestionnaire(identity)
+  await projection.syncPresentation(identity, presentationSignal)
   return projection
 }
 
@@ -198,24 +206,59 @@ function changes(previous: AgentRunSnapshot | undefined, next: AgentRunSnapshot)
   return operations
 }
 
-export function assistantRunResponse(body: ReadableStream<Uint8Array>, projection: RunStreamProjection, approvals?: { api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval' | 'readTerminal'>; identity: RunIdentity }): Response {
+export function assistantRunResponse(body: ReadableStream<Uint8Array>, projection: RunStreamProjection, approvals?: { api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval' | 'readTerminal'>; identity: RunIdentity; signal?: AbortSignal }): Response {
+  const cancellation = new AbortController()
+  const signal = approvals?.signal ? AbortSignal.any([cancellation.signal, approvals.signal]) : cancellation.signal
   async function* chunks(): AsyncGenerator<AssistantStreamChunk> {
     let previous: AgentRunSnapshot | undefined
-    for await (const item of nativeRunEvents(body)) {
-      if (!item) {
-        yield { type: 'update-state', path: [], operations: [] }
-        continue
+    const events = nativeRunEvents(body, signal)
+    const read = () => events.next().then(value => ({ type: 'native' as const, value }),
+      (error: unknown) => ({ type: 'error' as const, error }))
+    let incoming: ReturnType<typeof read> | undefined = read()
+    let presentation: Promise<{ type: 'presentation' }> | undefined
+    let refreshRequested = false
+    const refresh = () => {
+      if (!approvals || presentation || !refreshRequested || signal.aborted) return
+      refreshRequested = false
+      presentation = projection.syncPresentation(approvals.identity, signal).then(() => ({ type: 'presentation' as const }))
+    }
+    try {
+      while (incoming || presentation) {
+        // Race independent event sources, never a timeout against uncancelled SQL.
+        const ready = await Promise.race([...incoming ? [incoming] : [], ...presentation ? [presentation] : []])
+        if (signal.aborted) break
+        if (ready.type === 'error') throw ready.error
+        if (ready.type === 'native') {
+          if (ready.value.done) { incoming = undefined; continue }
+          const item = ready.value.value
+          if (!item) {
+            yield { type: 'update-state', path: [], operations: [] }
+            incoming = read()
+            continue
+          }
+          projection.apply(item)
+          if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
+          if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
+          if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'goal.waiting')) await projection.syncQuestionnaire(approvals.identity)
+          if (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed'].includes(item.event.kind)) refreshRequested = true
+          // Only required reads precede the authoritative frame. Display work
+          // continues independently and at most one refresh is in flight.
+          refresh()
+          incoming = read()
+        } else {
+          presentation = undefined
+          refresh()
+        }
+        const next = projection.snapshot
+        const operations = changes(previous, next)
+        if (operations.length) yield { type: 'update-state', path: [], operations }
+        previous = next
+        if (projection.needsResync) throw new Error('runtime preview gap; reconnect for a complete snapshot')
       }
-      projection.apply(item)
-      if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
-      if (approvals && (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed'].includes(item.event.kind))) await projection.syncPresentation(approvals.identity)
-      if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
-      if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'goal.waiting')) await projection.syncQuestionnaire(approvals.identity)
-      const next = projection.snapshot
-      const operations = changes(previous, next)
-      if (operations.length) yield { type: 'update-state', path: [], operations }
-      previous = next
-      if (projection.needsResync) throw new Error('runtime preview gap; reconnect for a complete snapshot')
+    } finally {
+      cancellation.abort()
+      await presentation
+      await events.return(undefined)
     }
   }
   const iterator = chunks()
@@ -227,7 +270,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
         else controller.enqueue(next.value)
       } catch (error) { controller.error(error); await iterator.return(undefined) }
     },
-    async cancel() { await iterator.return(undefined) },
+    async cancel() { cancellation.abort(); await iterator.return(undefined) },
   })
   const response = AssistantStream.toResponse(stream, new AssistantTransportEncoder())
   response.headers.set('Cache-Control', 'private, no-cache, no-transform')
