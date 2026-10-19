@@ -1,0 +1,70 @@
+{
+  "runId": 39264078273,
+  "sourceCommit": "56f5f05b6b90cb0225b421c89f99915e7e100dd7",
+  "largestIndividualTestDurations": [
+    {
+      "durationMs": 16319.583025,
+      "test": "production GLM worker preserves conversation continuity across repeated compaction"
+    },
+    {
+      "durationMs": 9600.857259,
+      "test": "native memory steps reach Run Activity and preserve reviewed versioned writes"
+    },
+    {
+      "durationMs": 8945.589817,
+      "test": "earlier 3.2 versions upgrade only runtime registration and preserve existing data"
+    },
+    {
+      "durationMs": 8468.632469,
+      "test": "product native admission, cancellation, revision, independent delivery and stable ACK replay"
+    },
+    {
+      "durationMs": 6765.065476,
+      "test": "context bounds automatic search and persists Agent receipts before asynchronous delivery"
+    },
+    {
+      "durationMs": 6665.40449,
+      "test": "product correction commits frozen excerpts and preserves them in IM delivery and authenticated reconnects"
+    },
+    {
+      "durationMs": 6422.792946,
+      "test": "an answer committed before wait retries the original threaded run without dispatching a new run"
+    },
+    {
+      "durationMs": 5957.26041,
+      "test": "product policy feeds native IM identities, graph waits, state conflicts and revocation"
+    },
+    {
+      "durationMs": 5790.879575,
+      "test": "[integration] submitted time and late status use the same post-lock database time"
+    },
+    {
+      "durationMs": 5296.692196,
+      "test": "published native worker loads unchanged skill, saves and reads a scoped fragment, delivers its reference and exports actual HTML"
+    },
+    {
+      "durationMs": 4384.335028,
+      "test": "0045 preserves existing sources and adds explicit organization-only case scope exactly once"
+    },
+    {
+      "durationMs": 4162.826745,
+      "test": "a slow successful knowledge readiness probe stays healthy without delaying API liveness"
+    },
+    {
+      "durationMs": 4094.050589,
+      "test": "production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion"
+    },
+    {
+      "durationMs": 3686.839824,
+      "test": "preset and custom Agents receive IM rules and deliver distinct messages to both IM and subsequent native context"
+    },
+    {
+      "durationMs": 3520.632337,
+      "test": "HTTP approval decisions and expiry survive native message replay under a real worker lease"
+    }
+  ],
+  "limitations": [
+    "Single historical CI sample; test duration includes fixture setup/execution and is not a production latency measurement.",
+    "No test was classified obsolete solely from its duration."
+  ]
+}

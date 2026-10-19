@@ -391,6 +391,10 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ['src/features/settings/SettingsDialog.tsx', 'web', 'server'],
     ['server/src/auth.ts', 'integration', 'server'],
     ['src/lib/canvasLayout.ts', 'integration', 'server'],
+    // Server runtime imports must not silently receive only Web checks.
+    ['src/lib/mentions.ts', 'integration', 'server'],
+    ['src/lib/memoryActivity.ts', 'integration', 'server'],
+    ['src/features/chat/visualize/zcode/shared/gen-ui/contract.ts', 'integration', 'server'],
     ['package-lock.json', 'integration', 'server'],
     ['.github/workflows/ci.yml', 'deploy_contract', ''],
     ['scripts/release-smoke.mjs', 'deploy_contract', ''],
@@ -405,6 +409,18 @@ test('workflow path filters route real changed paths to their owning checks', ()
   }
   assert.equal(select('third_party/open-notebook/frontend/src/app/page.tsx').checks, false)
   assert.deepEqual(select('server/src/__integration__/migration.test.ts').integration_files, ['migration.test.ts'])
+  // The image's shared runtime inputs also need owning server checks. Cover
+  // future additions instead of relying only on the examples above.
+  const sharedSources = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1).split(/\r?\n/)
+    .filter(line => /^COPY src[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
+    .flatMap(path => path.endsWith('.ts') ? [path] : ts.sys.readDirectory(path, ['.ts'], ['**/*.test.ts']))
+  assert.ok(sharedSources.length > 10)
+  for (const file of sharedSources) {
+    const scope = select(file)
+    assert.equal(scope.server, true, `server check missing for ${file}`)
+    assert.equal(scope.integration, true, `integration missing for ${file}`)
+    assert.deepEqual(scope.integration_files, [], `shared source requires full integration: ${file}`)
+  }
 })
 
 test('actual workflow conditions block publishing and deployment after a failed or cancelled gate', () => {

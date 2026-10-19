@@ -1,0 +1,56 @@
+{
+  "base": "088e269f36f63884b44704c3b0f1e27f1a6f76fc",
+  "implementationCommit": "3096d7f999b4f7436e474c6f8a8bc27770718890",
+  "node": "22.23.3",
+  "typescriptParser": "5.9.3",
+  "checks": [
+    {
+      "name": "production contract baseline",
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "new shared-path assertion on baseline workflow",
+      "passed": 17,
+      "failed": 1,
+      "skipped": 0,
+      "expectedFailure": true
+    },
+    {
+      "name": "production contract after path fix",
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "workflow YAML parse",
+      "passed": true
+    },
+    {
+      "name": "permissions, triggers, concurrency, deployment gates unchanged",
+      "passed": true
+    },
+    {
+      "name": "lockfile surviving identities unchanged, no new package entries",
+      "passed": true
+    },
+    {
+      "name": "migration files and AGENTS.md unchanged",
+      "passed": true
+    }
+  ],
+  "localFullInstall": {
+    "outcome": "blocked",
+    "exitCode": 1,
+    "elapsedSeconds": 41.736,
+    "reason": "Injected npm token returned HTTP 401 for the exact published LingxiOS 3.5.3 package. Authentication was not changed.",
+    "preinstalledRuntime": "3.5.2 (not used as substitute for 3.5.3 tests)"
+  },
+  "unverified": [
+    "Web/Admin build and bundle equivalence",
+    "Full server/control/Web tests and integration",
+    "Candidate CI wall time, runner minutes and final image size"
+  ],
+  "deploymentPerformed": false
+}
