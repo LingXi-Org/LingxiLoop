@@ -7,6 +7,7 @@
  *  doesn't need a file. */
 import 'dotenv/config'
 import { createHmac } from 'node:crypto'
+import { isSiliconFlowModel } from './agent-runtime/pricing.js'
 
 function required(name: string): string {
   const v = process.env[name]
@@ -36,7 +37,7 @@ function wukongUserTokenSecret(): string {
     .update('lingxiloop:wukong-user-token:v1')
     .digest('base64url')
 }
-const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || 'zai-org/GLM-5.2'
+const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || 'zai-org/GLM-5.3-Flash'
 export const env = {
   PORT: Number(process.env.PORT ?? 5181),
   NODE_ENV: process.env.NODE_ENV ?? 'development',
@@ -53,7 +54,7 @@ export const env = {
     ?? (process.env.NODE_ENV === 'production' ? required('LINGXILOOP_GATEWAY_HMAC_SECRET') : 'dev-only-gateway-secret'),
   OPENAI_API_KEY: required('OPENAI_API_KEY'),
   /** Standard OpenAI API endpoint. */
-  OPENAI_BASE_URL: process.env.OPENAI_BASE_URL?.trim() || (['zai-org/GLM-5.2','deepseek-ai/DeepSeek-V4-Flash'].includes(DEFAULT_MODEL) ? 'https://api.siliconflow.cn/v1' : 'https://api.openai.com/v1'),
+  OPENAI_BASE_URL: process.env.OPENAI_BASE_URL?.trim() || (isSiliconFlowModel(DEFAULT_MODEL) ? 'https://api.siliconflow.cn/v1' : 'https://api.openai.com/v1'),
   /**
    * The global OpenAI Chat Completions model for retained product utilities.
    */

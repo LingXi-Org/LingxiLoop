@@ -19,13 +19,13 @@ import { installRecordingWukong } from './_recording-wukong.js'
 test('production GLM worker preserves conversation continuity across repeated compaction', { timeout: 480000 }, async () => {
   const live = process.env.LINGXIOS_LIVE_CONTEXT === '1'
   if (live) {
-    assert.equal(env.OPENAI_MODEL, 'zai-org/GLM-5.2')
+    assert.equal(env.OPENAI_MODEL, 'zai-org/GLM-5.3-Flash')
     assert.equal(new URL(env.OPENAI_BASE_URL).hostname, 'api.siliconflow.cn')
   }
   await ensureSchemaOnce(); await resetAllTables()
   const im = await installRecordingWukong(), originalFetch = globalThis.fetch
   const originalModel = env.OPENAI_MODEL, originalBaseUrl = env.OPENAI_BASE_URL
-  env.OPENAI_MODEL = 'zai-org/GLM-5.2'; env.OPENAI_BASE_URL = 'https://api.siliconflow.cn/v1'
+  env.OPENAI_MODEL = 'zai-org/GLM-5.3-Flash'; env.OPENAI_BASE_URL = 'https://api.siliconflow.cn/v1'
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
   const requests: { bytes: number; stream: boolean }[] = [], results: { status: string; delivered: boolean }[] = []
   const checkpoints: { epoch: number; historyBytes: number }[] = []
@@ -34,7 +34,7 @@ test('production GLM worker preserves conversation continuity across repeated co
     const url = input instanceof Request ? input.url : String(input)
     if (url !== 'https://api.siliconflow.cn/v1/chat/completions') return originalFetch(input, init)
     const body = String(init?.body), request = JSON.parse(body)
-    assert.equal(request.model, 'zai-org/GLM-5.2')
+    assert.equal(request.model, 'zai-org/GLM-5.3-Flash')
     assert.equal(request.enable_thinking, false)
     requests.push({ bytes: Buffer.byteLength(body), stream: request.stream === true })
     if (live) return originalFetch(input, init)

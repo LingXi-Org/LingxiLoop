@@ -1,3 +1,4 @@
+import './focus-canvas.css'
 import { ChevronDownIcon, ChevronUpIcon, Maximize2Icon, Minimize2Icon } from 'lucide-react'
 import { useFocusMode } from './memos/editor/hooks/useFocusMode'
 // Home leading editor and edit-in-place lifecycle adapted from Memos (MIT), pinned in memos/README.md.
@@ -29,18 +30,22 @@ export function ForumComposer({ space, item, onCreated, onCancel }: { space: Lea
     setExpanded(false);setFocus(false)
     requestAnimationFrame(()=>section.current?.querySelector<HTMLButtonElement>('[aria-label="展开发布框"]')?.focus())
   }
-  return <div ref={containerRef} style={focus?{height:placeholderHeight}:undefined}><section ref={section} data-forum-composer-expanded={expanded} onKeyDown={event=>{if(event.key==='Escape'&&focus){event.stopPropagation();setFocus(false)}}} aria-label={item ? '编辑学习论坛内容' : '发布学习论坛内容'} className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 rounded-lg border bg-card p-2 ${focus?"fixed inset-x-2 top-2 bottom-2 z-50 mx-auto max-w-4xl overflow-y-auto shadow-2xl sm:inset-x-8 sm:top-8 sm:bottom-8":"relative min-w-0"}`}>
+  return <div ref={containerRef} className="forum-focus-theme forum-focus-stage" style={focus?{height:placeholderHeight}:undefined}><section ref={section} data-forum-focus-canvas data-forum-composer-focus={focus} data-forum-composer-expanded={expanded} onKeyDown={event=>{if(event.key==='Escape'&&focus&&!event.defaultPrevented&&event.currentTarget.contains(event.target as Node)){event.stopPropagation();setFocus(false)}}} aria-label={item ? '编辑学习论坛内容' : '发布学习论坛内容'} className={`forum-focus-composer ${focus?"fixed inset-x-2 top-2 z-50 mx-auto max-h-[calc(100dvh-1rem)] max-w-4xl overflow-y-auto sm:inset-x-8 sm:top-8 sm:max-h-[calc(100dvh-4rem)]":"relative min-w-0"}`}>
+    <header className="forum-focus-head">
+    <div className="forum-focus-author">
     {user&&<ForumAvatar userId={user.id} name={user.name} url={user.avatarUrl}/>}
-    <span hidden={!expanded} className="min-w-0 self-center truncate text-sm font-medium">{user?.name}</span>
-    <div className="col-start-3 row-start-1 flex gap-1">
+    <div hidden={!expanded} className="min-w-0"><span className="block truncate text-sm font-semibold">{user?.name}</span><span className="text-xs text-muted-foreground">本课程成员可见</span></div>
+    </div>
+    <div className="forum-focus-head-actions">
       {expanded&&<Button type="button" variant="ghost" size="icon-sm" aria-label={focus?"退出专注模式":"专注模式"} aria-pressed={focus} onClick={()=>setFocus(value=>!value)}>{focus?<Minimize2Icon/>:<Maximize2Icon/>}</Button>}
       {!item&&<Button type="button" variant="ghost" size="icon-sm" aria-label={expanded?'收起发布框':'展开发布框'} aria-expanded={expanded} onClick={()=>expanded?collapse():setExpanded(true)}>{expanded?<ChevronUpIcon/>:<ChevronDownIcon/>}</Button>}
     </div>
-    <div className={expanded?'col-span-3 min-w-0':'col-start-2 row-start-1 min-w-0'}>
+    </header>
+    <div className="forum-focus-compose-content">
       <div hidden={!expanded}>
-        {!item && space.canEditContent && <div className="mb-2 flex gap-2" role="group" aria-label="发布类型">
-          <Button type="button" variant={kind === 'share' ? 'secondary' : 'ghost'} size="sm" disabled={working} aria-pressed={kind === 'share'} onClick={() => setKind('share')}>自由讨论</Button>
-          <Button type="button" variant={kind === 'assignment' ? 'secondary' : 'ghost'} size="sm" disabled={working} aria-pressed={kind === 'assignment'} onClick={() => setKind('assignment')}>正式作业</Button>
+        {!item && <div className="forum-focus-modes" role="group" aria-label="发布类型">
+          <Button type="button" variant="ghost" size="sm" disabled={working} aria-pressed={kind === 'share'} onClick={() => setKind('share')}>自由讨论</Button>
+          {space.canEditContent && <Button type="button" variant="ghost" size="sm" disabled={working} aria-pressed={kind === 'assignment'} onClick={() => setKind('assignment')}>正式作业</Button>}
         </div>}
       </div>
       <InlineEditor key={`${user?.id}:${space.courseId}:${kind}:${item?.id ?? 'new'}`} space={space} kind={kind} item={item} expanded={expanded} onExpand={()=>setExpanded(true)} onWorking={setWorking} onCreated={()=>{if(!item)collapse();onCreated()}} onCancel={onCancel} />
@@ -61,7 +66,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
   },[space.projectId])
   const disabled=busy||uploading
   useEffect(()=>{onWorking(disabled);return()=>onWorking(false)},[disabled,onWorking])
-  return <form className={expanded?'min-w-0 space-y-2':'min-w-0'} onSubmit={async event=>{
+  return <form className="forum-focus-form" onSubmit={async event=>{
     event.preventDefault()
     if(disabled||!space.courseId) return
     setBusy(true);setError('')
@@ -76,22 +81,22 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     } catch(reason){setError(userFacingError(reason,'发布失败，输入与附件已保留，请重试。'))}
     finally{setBusy(false)}
   }}>
-    {kind==='assignment'&&<div hidden={!expanded} className="space-y-2"><Label htmlFor={`forum-title-${item?.id ?? kind}`}>作业标题</Label><Input id={`forum-title-${item?.id ?? kind}`} value={title} onChange={e=>setDraft(previous=>({...previous,title:e.target.value}))} maxLength={200} required disabled={disabled}/></div>}
-    <ForumContentFields compact={!expanded} onFocus={onExpand} body={body} setBody={body=>setDraft(previous=>({...previous,body}))} links={links} setLinks={links=>setDraft(previous=>({...previous,links}))}
+    {kind==='assignment'&&<div hidden={!expanded} className="forum-focus-assignment space-y-2"><Label htmlFor={`forum-title-${item?.id ?? kind}`}>作业标题</Label><Input id={`forum-title-${item?.id ?? kind}`} value={title} onChange={e=>setDraft(previous=>({...previous,title:e.target.value}))} maxLength={200} required disabled={disabled}/></div>}
+    <ForumContentFields focusCanvas compact={!expanded} onFocus={onExpand} body={body} setBody={body=>setDraft(previous=>({...previous,body}))} links={links} setLinks={links=>setDraft(previous=>({...previous,links}))}
       attachments={attachments} setAttachments={attachments=>setDraft(previous=>({...previous,attachments}))} disabled={disabled} onUploading={setUploading} tags={tags.split(/[,，]/).filter(Boolean)}/>
-    <div hidden={!expanded} className="space-y-2">
-    <details className="text-sm"><summary className="cursor-pointer rounded focus-visible:outline-2">{kind==='assignment'?'截止时间、标签与引用':'标签与作业资料引用'}</summary><div className="space-y-3 pt-3">
+    <div hidden={!expanded}>
+    <details className="forum-focus-extras"><summary className="cursor-pointer rounded focus-visible:outline-2">{kind==='assignment'?'截止时间、标签与引用':'标签与作业资料引用'}</summary><div className="forum-focus-extra-fields">
       {kind==='assignment'&&<Label className="block space-y-2"><span>截止时间（可选）</span><Input type="datetime-local" aria-label="截止时间" value={dueAt} onChange={e=>setDraft(previous=>({...previous,dueAt:e.target.value}))} disabled={disabled}/></Label>}
       <Label className="block space-y-2"><span>标签</span><Input aria-label="标签" value={tags} onChange={e=>setDraft(previous=>({...previous,tags:e.target.value}))} placeholder="用逗号分隔，或在正文中输入 #标签" disabled={disabled}/></Label>
-      <SelectField ariaLabel="引用作业资料" value={sourceId} onValueChange={sourceId=>setDraft(previous=>({...previous,sourceId}))} disabled={disabled}
+      <SelectField contentClassName="forum-focus-theme forum-focus-popover" ariaLabel="引用作业资料" value={sourceId} onValueChange={sourceId=>setDraft(previous=>({...previous,sourceId}))} disabled={disabled}
         options={[{value:'none',label:'不引用资料'},...sources.map(source=>({value:source.id,label:source.title}))]}/>
     </div></details>
-    {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}
-    {storageError&&<p role="status" className="text-sm text-destructive">本地草稿保存失败，请复制内容后重试。</p>}
-    <div className="flex flex-wrap items-center gap-2"><span className="me-auto text-xs text-muted-foreground">本课程成员可见 · 草稿自动保存</span>
+    {error&&<p role="alert" className="forum-focus-status text-destructive">{error}</p>}
+    {storageError&&<p role="status" className="forum-focus-status text-destructive">本地草稿保存失败，请复制内容后重试。</p>}
+    <footer className="forum-focus-foot"><span className="me-auto text-xs text-muted-foreground">{storageError ? '草稿未保存' : '草稿自动保存'}</span>
       {item&&<Button type="button" variant="ghost" onClick={onCancel} disabled={disabled}>收起编辑</Button>}
       <Button type="submit" disabled={disabled || (kind==='assignment'&&!title.trim()) || (!body.trim()&&!links.trim()&&!attachments.length)}>{uploading?'上传中…':busy?'发布中…':item?'保存修改':kind==='assignment'?'发布作业':'发布'}</Button>
-    </div>
+    </footer>
     </div>
   </form>
 }

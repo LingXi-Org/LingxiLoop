@@ -126,7 +126,7 @@ test('Komodo workers inherit the complete runtime environment', async () => {
   assert.match(compose, /db-migrate:[\s\S]*?restart: on-failure/)
   assert.match(compose, /start_period: 10m/)
   assert.match(compose, /pull_policy: always/)
-  assert.match(compose, /AGENT_OS_INPUT_COST_MICROS_PER_MILLION: \$\{AGENT_OS_INPUT_COST_MICROS_PER_MILLION:\?/)
+  assert.match(compose, /AGENT_OS_INPUT_COST_MICROS_PER_MILLION: \$\{AGENT_OS_INPUT_COST_MICROS_PER_MILLION:-\}/)
   assert.match(compose, /lingxios-homes:\/var\/lib\/lingxios\/homes/)
   assert.match(compose, /security_opt: \["seccomp=unconfined", "systempaths=unconfined"\]/)
   assert.match(compose, /pids_limit: 128/)

@@ -1,0 +1,39 @@
+{
+  "passed": false,
+  "frames": 7,
+  "status": {
+    "type": "incomplete",
+    "reason": "error"
+  },
+  "calls": [
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "succeeded",
+      "input_tokens": 10759,
+      "output_tokens": 1837,
+      "cost_usd": "0.00196440",
+      "measured": true,
+      "error": null,
+      "reasoningTokens": 1832,
+      "attempt": 1,
+      "elapsedMs": 75212.796252
+    },
+    {
+      "purpose": "lingxios.agent-turn",
+      "model": "zai-org/GLM-5.3-Flash",
+      "status": "failed",
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cost_usd": "0.00841800",
+      "measured": false,
+      "error": "Model request failed (timeout)",
+      "failure": {
+        "category": "timeout",
+        "retryable": true
+      },
+      "attempt": 1,
+      "elapsedMs": 90048.086888
+    }
+  ]
+}

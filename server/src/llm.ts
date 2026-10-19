@@ -5,6 +5,7 @@ import { acquireCircuit, modelFailure, recoveryPolicy, type ModelFailure } from 
 import { env } from './env.js'
 import { createOpenAIClient } from './llm-client.js'
 import { type LlmCallContext, type LlmUsage, recordLlmCall } from './llm-ledger.js'
+import { siliconFlowCost, siliconFlowPricingForModel } from './agent-runtime/pricing.js'
 
 let testOverride: (() => OpenAI | Promise<OpenAI>) | null = null
 export function __setLlmClientOverrideForTesting(override: typeof testOverride): void {
@@ -49,6 +50,7 @@ async function tracked<T>(
   usageOf: (value: T) => LlmUsage | null = () => null,
   options: OpenAI.RequestOptions = {},
 ): Promise<T> {
+  const pricing = siliconFlowPricingForModel(env.OPENAI_BASE_URL, model, env.NODE_ENV === 'production')
   const rates = model === env.OPENAI_MODEL ? [
     'AGENT_OS_INPUT_COST_MICROS_PER_MILLION', 'AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION',
   ].map(name => {
@@ -78,13 +80,31 @@ async function tracked<T>(
       latestFailure = succeeded ? undefined : modelFailure(failure,options.signal?.aborted)
       const trackedContext = { ...context,extras: { ...context.extras,callId,logicalCallId,attempt,
         elapsedMs: performance.now()-began,...(latestFailure ? { failure: latestFailure } : {}) } }
-      const usage = succeeded ? usageOf(value!) : null
+      let usage = succeeded ? usageOf(value!) : null
+      if (pricing && usage) {
+        const validToken = (value: unknown): value is number => Number.isSafeInteger(value) && Number(value) >= 0
+        if (!validToken(usage.prompt_tokens) || !validToken(usage.completion_tokens)) {
+          usage = null
+          Object.assign(trackedContext.extras, { invalidProviderUsage: true })
+        } else {
+          const cached = usage.prompt_tokens_details?.cached_tokens
+          // Match the native driver: invalid cache counters are unavailable, not
+          // a reason to lose the ledger record for an already issued paid call.
+          usage = { prompt_tokens: usage.prompt_tokens, completion_tokens: usage.completion_tokens,
+            ...(validToken(cached) && cached <= usage.prompt_tokens ? { prompt_tokens_details: { cached_tokens: cached } } : {}) }
+        }
+      }
+      const billing = pricing && usage ? siliconFlowCost({ available: true,
+        inputTokens: usage.prompt_tokens ?? 0, outputTokens: usage.completion_tokens ?? 0,
+        cachedInputTokens: usage.prompt_tokens_details?.cached_tokens,
+      }, pricing) : undefined
+      if (billing) Object.assign(trackedContext.extras, { providerPricing: pricing, ...billing })
       // Persist each issued attempt before returning or retrying. The stable ID also
       // makes a lost ledger acknowledgement safe to retry without duplicate billing rows.
       await persistTrackedCall({ context: trackedContext,model,usage,latencyMs: performance.now()-startedAt,
         status: succeeded ? 'succeeded' : 'failed',
         ...(latestFailure ? { error: `Model request failed (${latestFailure.category})`,measured: false } : {}),
-        ...(rates && usage ? { costUsd: ((usage.prompt_tokens ?? 0)*rates[0]!+(usage.completion_tokens ?? 0)*rates[1]!)/1e12,
+        ...(billing ? { costUsd: billing.costUsd, costEstimated: true } : rates && usage ? { costUsd: ((usage.prompt_tokens ?? 0)*rates[0]!+(usage.completion_tokens ?? 0)*rates[1]!)/1e12,
           costEstimated: true } : {}),
       },callId)
       if (succeeded) return value!
