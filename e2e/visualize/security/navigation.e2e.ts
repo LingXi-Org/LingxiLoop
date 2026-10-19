@@ -2,7 +2,7 @@ import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 import { mkdir, writeFile } from 'node:fs/promises'
 const evidenceDirectory = new URL('../../../.e2e/visualize-security/', import.meta.url)
-const results=[]
+const results: unknown[]=[]
 for(const mode of ['baseline','parent-self','parent-none','outer-shell','product-shell']) test(mode,async({app,browser,screen})=>{
 await app.open('/?mode='+mode)
 await expect(screen.getByText('Waiting',{exact:true})).toHaveCount(0)
