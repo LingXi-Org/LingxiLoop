@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "readOnly": true,
+  "startedAt": "2026-10-19T14:25:09.384Z",
+  "finishedAt": "2026-10-19T14:25:22.162Z",
+  "updateId": "6ad62847e06d5e1f79832a8a",
+  "komodoStatus": "Complete",
+  "komodoSuccess": true,
+  "commandSha256": "73335bca7186dfcf8cd428c7e90275b2a978d26c69f90e0c865b2a8990be82bd",
+  "checks": {
+    "legacyMigrationChecksum": true,
+    "schema46": true,
+    "migrationChecksum": true,
+    "legacyTables": true,
+    "runtime": true,
+    "visualizeTables": true
+  },
+  "runtime": {
+    "schema": 12,
+    "version": "3.5.3",
+    "protocol": 11,
+    "schemaHash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a",
+    "actualSchema": 12
+  },
+  "migration33": {
+    "name": "interactive_ui",
+    "version": 33,
+    "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+  },
+  "migration46": {
+    "name": "visualize",
+    "version": 46,
+    "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+  },
+  "legacy_tables": [
+    "im_ui_revisions",
+    "im_ui_user_states"
+  ],
+  "product_schema": 46,
+  "visualize_tables": [
+    "im_visualize_documents",
+    "im_visualize_gestures",
+    "im_visualize_pages",
+    "im_visualize_states"
+  ],
+  "legacy_state_rows": 0,
+  "legacy_revision_rows": 0,
+  "limitations": "Counts are current read-only observations, not a transaction spanning the earlier backup or proof that users made no intervening writes."
+}

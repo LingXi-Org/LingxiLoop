@@ -1,0 +1,15 @@
+{
+  "status": "published",
+  "sourceCommit": "bc6dd87d203496580914069d4854f8958692a196",
+  "image": "ghcr.io/lingxi-org/lingxiloop-server:bc6dd87d203496580914069d4854f8958692a196",
+  "manifestDigest": "sha256:ecaa05bec5a9334eabb23133ec8c72f6a02bacf2048daee562027bd5b1dd93df",
+  "digestSource": "Successful GitHub Actions docker/build-push-action output; distinct from Docker image config ID",
+  "workflowRun": 39264147651,
+  "publishJob": 118102980636,
+  "workflowConclusion": "success",
+  "deploymentTriggeredByProductMerge": false,
+  "productionManifestPR": 199,
+  "productionManifestMerge": "9b1bf3ac5f8acfe318b2444ea540d669269fb8c8",
+  "linuxAmd64ManifestDigest": "sha256:4c8029da1173f49c52b65e3f9adda0969ee13ca7de2d3f6bcac5137f67a38146",
+  "dockerImageConfigDigest": "sha256:da3157c6e28338d021016e9779fd79abe30bfcaa333a14b1e03f4232b3e71212"
+}

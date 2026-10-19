@@ -1,0 +1,18 @@
+{
+  "status": "failed",
+  "operation": "DeployStack",
+  "stack": "lingxiloop-app-b",
+  "updateId": "6ad62712e06d5e1f79832a4d",
+  "parentUpdateId": "6ad624d4e06d5e1f798329ce",
+  "startedAt": "2026-10-19T14:20:02.358Z",
+  "finishedAt": "2026-10-19T14:26:46.244Z",
+  "komodoStatus": "Complete",
+  "komodoSuccess": false,
+  "failedStep": "Docker image layer download",
+  "error": "unknown: failed to copy: httpReadSeeker: failed open: unexpected status from GET request to existing accel.way2api.fun image mirror: HTTP 522",
+  "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:bc6dd87d203496580914069d4854f8958692a196",
+  "newBContainerCreated": false,
+  "containerEvidence": "rollout-failure-container-state.json",
+  "actualSchema": 46,
+  "recoveryDecision": "Retry only terminally failed B deployment on the same qualified image. Keep healthy new A Worker running. No mirror, credential, timeout, TLS, security or application configuration change."
+}
