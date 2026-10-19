@@ -119,6 +119,7 @@ jobs:
             server_tests:
               - 'server/src/**/*.test.ts'
               - '!server/src/__integration__/**'
+            # Include shared sources loaded by the server runtime and copied by its image.
             server_source:
               - 'third_party/zcode/**'
               - 'scripts/verify-zcode-visualize.mjs'
@@ -131,8 +132,20 @@ jobs:
               - 'server/package.json'
               - 'server/package-lock.json'
               - 'server/*.conf'
+              - 'src/lib/agentToolCards.ts'
+              - 'src/lib/researchSources.ts'
+              - 'src/lib/agentCapabilities.ts'
               - 'src/lib/canvasLayout.ts'
               - 'src/lib/canvasEventKinds.ts'
+              - 'src/lib/mentions.ts'
+              - 'src/lib/agentRunSnapshot.ts'
+              - 'src/lib/nativeMessage.ts'
+              - 'src/lib/userFacingError.ts'
+              - 'src/lib/runActivity.ts'
+              - 'src/lib/memoryActivity.ts'
+              - 'src/features/chat/visualize/zcode/shared/gen-ui/**'
+              - 'src/features/chat/visualize/zcode/gen-ui/domain/**'
+              - 'src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts'
             integration_tests:
               - 'server/src/__integration__/*.test.ts'
             integration_runner:
@@ -240,17 +253,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
+        if: matrix.component != 'open-notebook'
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            server/package-lock.json
-            eval/package-lock.json
-      - if: matrix.component != 'open-notebook'
-        run: npm ci
+          cache: ${{ matrix.component != 'release' && 'npm' || '' }}
+          cache-dependency-path: package-lock.json
+      # Version synchronization reads JSON with Node builtins; it needs no packages.
+      - if: matrix.component != 'open-notebook' && matrix.component != 'release'
+        run: npm ci --prefer-offline
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - if: matrix.component != 'open-notebook' && matrix.component != 'release'
+        name: Record installed dependency footprint
+        run: du -sb node_modules
       - if: matrix.component == 'web'
         run: npm run lint && npm test
         env:
@@ -329,11 +344,8 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            server/package-lock.json
-            eval/package-lock.json
-      - run: npm ci
+          cache-dependency-path: package-lock.json
+      - run: npm ci --prefer-offline
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - run: npm run verify:visualize && npm run build:visualize-runtime
@@ -464,11 +476,8 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            server/package-lock.json
-            eval/package-lock.json
-      - run: npm ci
+          cache-dependency-path: package-lock.json
+      - run: npm ci --prefer-offline
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - name: Build Refine before production changes
