@@ -7,7 +7,7 @@
   "runtime": null,
   "schema": null,
   "scope": "harness-selftest",
-  "status": "running",
+  "status": "selftest-complete",
   "limits": null,
   "qualification": "No 24-hour acceptance pass.",
   "completionRule": "Explicit terminal receipt, >=86400 monotonic seconds, continuous <=90s heartbeat gaps, unchanged containers/images and zero violations. Missing or stale evidence is incomplete.",
@@ -19,6 +19,7 @@
   "createdAt": "2026-10-19T10:01:00.419Z",
   "startedAt": "2026-10-19T10:01:00.419Z",
   "lastHeartbeatAt": "2026-10-19T10:01:02.527Z",
-  "capturedAt": "2026-10-19T10:01:02.530Z",
+  "finishedAt": "2026-10-19T10:01:04.576Z",
+  "capturedAt": "2026-10-19T10:01:04.579Z",
   "workerProbe": "harness-only"
 }
