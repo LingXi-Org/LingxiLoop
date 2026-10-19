@@ -1,0 +1,27 @@
+{
+  "format": 1,
+  "runId": "soak353-selftest-1792404066793-interrupted",
+  "mode": "selftest",
+  "productSha": null,
+  "image": null,
+  "runtime": null,
+  "schema": null,
+  "scope": "harness-selftest",
+  "status": "incomplete",
+  "limits": null,
+  "qualification": "No 24-hour acceptance pass.",
+  "completionRule": "Explicit terminal receipt, >=86400 monotonic seconds, continuous <=90s heartbeat gaps, unchanged containers/images and zero violations. Missing or stale evidence is incomplete.",
+  "violations": [
+    "monitor-disappeared"
+  ],
+  "targetSeconds": 0,
+  "elapsedSeconds": 0,
+  "samples": 0,
+  "maxGapSeconds": 0,
+  "createdAt": "2026-10-19T10:01:06.793Z",
+  "startedAt": "2026-10-19T10:01:06.793Z",
+  "lastHeartbeatAt": "2026-10-19T10:01:06.793Z",
+  "finishedAt": "2026-10-19T10:01:08.470Z",
+  "capturedAt": "2026-10-19T10:01:08.474Z",
+  "workerProbe": "harness-only"
+}
