@@ -110,6 +110,7 @@ export interface KnowledgeCitation {
   chunkId: string
   excerpt: string
   sourceUrl?: string
+  sourceVersion?: string
   position: number
   page?: number
   marker: string
@@ -541,6 +542,7 @@ export async function retrieveKnowledgeState(args: KnowledgeRetrievalInput): Pro
     return [{
       sourceId: source.id, sourceTitle: source.title, chunkId: String(hit.id ?? externalId), excerpt,
       ...(source.originalUrl ? { sourceUrl: source.originalUrl } : {}),
+      ...(source.sourceVersion ? { sourceVersion: source.sourceVersion } : {}),
       ...(typeof hit.page_number === 'number' && Number.isSafeInteger(hit.page_number) && hit.page_number > 0
         ? { page: hit.page_number }
         : {}),

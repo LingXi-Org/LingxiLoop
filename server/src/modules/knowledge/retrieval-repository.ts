@@ -1,4 +1,5 @@
 import type { Queryable } from '../../db/queryable.js'
+import { caseSourceVersion } from '../cases/evidence.js'
 
 export interface KnowledgeRetrievalSource {
   id: string
@@ -7,6 +8,7 @@ export interface KnowledgeRetrievalSource {
   status: string
   originalUrl: string | null
   excluded: boolean
+  sourceVersion?: string
 }
 
 export async function findKnowledgeRetrievalProject(
@@ -58,12 +60,13 @@ export async function listKnowledgeRetrievalSources(
 
 /** Explicit organization scope; never broadens the project/private source query above. */
 export async function listCaseRetrievalSources(db: Queryable, companyId: string): Promise<KnowledgeRetrievalSource[]> {
-  const { rows } = await db.query<{ id:string; title:string; external_source_id:string|null; status:string; original_url:string|null }>(
-    `SELECT source.id,source.title,source.external_source_id,source.status,source.original_url
+  const { rows } = await db.query<{ id:string; title:string; external_source_id:string|null; status:string; original_url:string|null; case_id:string; case_version:number }>(
+    `SELECT source.id,source.title,source.external_source_id,source.status,source.original_url,source.case_id,source.case_version
        FROM organization_cases article JOIN knowledge_sources source
          ON source.id=article.source_id AND source.case_id=article.id AND source.company_id=article.company_id
         AND source.case_version=article.published_version
       WHERE article.company_id=$1 AND article.status='published' AND source.deleted_at IS NULL
         AND source.visibility_scope='COMPANY_CASE'`, [companyId])
-  return rows.map(s => ({ id:s.id,title:s.title,externalSourceId:s.external_source_id,status:s.status,originalUrl:s.original_url,excluded:false }))
+  return rows.map(s => ({ id:s.id,title:s.title,externalSourceId:s.external_source_id,status:s.status,originalUrl:s.original_url,excluded:false,
+    sourceVersion:caseSourceVersion(s.case_id,s.case_version) }))
 }

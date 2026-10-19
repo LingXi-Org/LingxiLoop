@@ -20,6 +20,7 @@ import { STARTER_TEAM } from '../modules/learning/preset.js'
 import { INTERACTIVE_LESSONS_ENABLED, lessonInstructions } from '../../../src/lib/interactive-ui/catalog.js'
 import { messageLessons } from './interactive-ui-projection.js'
 import { lingxiOSControl } from './runtime.js'
+import { readCaseEvidenceSource } from '../modules/cases/evidence.js'
 
 type Work = Omit<WorkItem, 'leaseToken'>
 
@@ -107,8 +108,15 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const denied = await unavailableAttachmentIds(pool,work.tenantId,productConversationId(work),
       attachments.filter(item => item.text !== undefined).map(item => parseAttachmentRefId(item.id)),readers)
     if (denied.size) throw new NoEffectError('request attachment access or source selection was revoked','forbidden')
-    const sourceIds = [...new Set(request.evidence.items.map(item => item.sourceId).filter(id => !id.startsWith('attachment:') && !/^https?:\/\//.test(id)))]
-    for (const id of sourceIds) await authorizeAudienceRead({ work,database: pool },{ action: 'knowledge:read',resource: { type: 'knowledge_source',id } })
+    const sourceIds: string[] = []
+    for (const item of request.evidence.items) {
+      if (item.sourceId.startsWith('attachment:') || /^https?:\/\//.test(item.sourceId)) continue
+      if (await readCaseEvidenceSource(pool, { companyId: work.tenantId, sourceId: item.sourceId,
+        readerUserIds: readers, sourceVersion: item.sourceVersion })) continue
+      if (sourceIds.includes(item.sourceId)) continue
+      await authorizeAudienceRead({ work,database: pool },{ action: 'knowledge:read',resource: { type: 'knowledge_source',id: item.sourceId } })
+      sourceIds.push(item.sourceId)
+    }
     if (sourceIds.length && (await pool.query(`SELECT 1 FROM conversation_source_exclusions WHERE conversation_id=$1
       AND source_id=ANY($2::text[]) AND user_id=ANY($3::text[]) LIMIT 1`,[productConversationId(work),sourceIds,readers])).rows.length) {
       throw new NoEffectError('request knowledge source selection was revoked','forbidden')
@@ -175,7 +183,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const versions = retrieval.length ? await pool.query<{ id: string; updated_at: Date }>(
       'SELECT id,updated_at FROM knowledge_sources WHERE company_id=$1 AND id=ANY($2::text[])', [work.tenantId,retrieval.map(item => item.sourceId)]) : { rows: [] }
     const versionBySource = new Map(versions.rows.map(row => [row.id, new Date(row.updated_at).toISOString()]))
-    const evidence = retrieval.map(item => ({ marker: item.marker, sourceId: item.sourceId, sourceVersion: versionBySource.get(item.sourceId)!,
+    const evidence = retrieval.map(item => ({ marker: item.marker, sourceId: item.sourceId, sourceVersion: item.sourceVersion ?? versionBySource.get(item.sourceId)!,
       chunkId: item.chunkId, title: item.sourceTitle, excerpt: item.excerpt, truncated: true, ...(item.sourceUrl ? { url: item.sourceUrl } : {}) }))
     signal?.throwIfAborted()
     return { responseProfile: 'deep' as const,

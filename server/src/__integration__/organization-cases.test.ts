@@ -9,7 +9,10 @@ import { storage } from '../storage.js'
 import { openNotebookClient } from '../modules/knowledge/provider.js'
 import { retrieveKnowledgeState, runKnowledgeWorkerOnce } from '../modules/knowledge/runtime.js'
 import { listCaseRetrievalSources } from '../modules/knowledge/retrieval-repository.js'
-import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll } from './_helpers.js'
+import type { ActionContext, RequestSnapshot } from '@lyyzka/lingxios'
+import { knowledgeTools } from '../modules/knowledge/agent-tools.js'
+import { createProductContext } from '../agent-runtime/context.js'
+import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, teardownAll, installFakeWukong } from './_helpers.js'
 
 // Failure modes defined before exercising the implementation: tenant/role bypass,
 // draft content/search/image disclosure, shared-teacher lost updates, source version
@@ -313,4 +316,107 @@ test('[integration] publication, removal and retry share worker job-before-sourc
       await mutation
     }
   }
+})
+
+// Agent boundary failures: published cases missing from the course-only version
+// map, replay rejected by generic source authorization, draft leakage through
+// read_source, stale publication versions, forged versions, foreign organizations,
+// an audience member losing access, and case reads widening course write policies.
+async function caseAgent() {
+  const agentId = 'cases-knowledge-agent', members = [student.userId, peer.userId, agentId]
+  await pool.query(`INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status,capabilities)
+    VALUES($1,$2,'agent','Case reader','C','#123456','avail','["knowledge"]')`, [agentId, companyId])
+  await pool.query('UPDATE conversations SET members=$2::jsonb WHERE id=$1', ['cases-room', JSON.stringify(members)])
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id)
+    VALUES('cases-room',$1,$2::jsonb,$3)`, [companyId, JSON.stringify({ channelType: 2, members }), agentId])
+  const work: ActionContext['work'] = { id: 'case-evidence-work', tenantId: companyId, agentId, principalId: student.userId,
+    sessionId: 'cases-room', kind: 'turn', lane: 'interactive', triggerRef: 'case-question', fence: 1, homeEpoch: 1,
+    createdAt: new Date().toISOString(), meta: { conversationId: 'cases-room', text: 'Explain geometry' },
+    conversation: { conversationId: 'cases-room', source: { messageId: 'case-question' }, audience: { participantIds: members } } as ActionContext['work']['conversation'] }
+  const unexpected = async (): Promise<never> => { throw new Error('Unexpected side effect in case read') }
+  const context = (action: string): ActionContext => ({ work, database: pool, signal: new AbortController().signal, requestVersion: 1,
+    writeMemory: unexpected, forgetMemory: unexpected, requestSnapshot: unexpected, enqueueGraph: unexpected, readGraph: unexpected,
+    waitForChildren: unexpected, createSharedState: unexpected, readSharedState: unexpected, updateSharedState: unexpected,
+    enqueueChild: unexpected, readChild: unexpected, cancelChild: unexpected, reviseChild: unexpected, createArtifact: unexpected,
+    deadlineAt: new Date(Date.now()+30_000).toISOString(), action: { runId: work.id, cellId: action, callIndex: 0, idempotencyKey: action, action, args: {} } })
+  const invoke = async (action: string, args: Record<string, unknown>) => {
+    const tool = knowledgeTools.find(tool => tool.action === action)!, ctx = context(action), input = tool.parse(args)
+    await tool.authorize(ctx, input)
+    return tool.execute(ctx, input)
+  }
+  const provider = createProductContext(knowledgeTools).contextProvider
+  const request = (evidence: NonNullable<Awaited<ReturnType<typeof invoke>>['evidence']>): RequestSnapshot => ({
+    version: 1, workId: work.id, tenantId: companyId, sessionId: work.sessionId, authorId: student.userId,
+    sourceRef: 'case-question', originalText: 'Explain geometry', attachments: [], revisions: [],
+    evidence: { version: 1, id: 'case-evidence', items: evidence.map((item, index) => ({ ...item, marker: `S${index+1}` })) },
+  })
+  return { work, invoke, request, load: () => provider.loadContext(work), authorize: (snapshot: RequestSnapshot) => provider.authorizeRequest!(work, snapshot) }
+}
+
+test('[integration] real Agent knowledge tools consume published case evidence without widening generic source writes', async () => {
+  recordNotebook()
+  const live = await publish(), source = await readySource(live.id), agent = await caseAgent()
+  mock.method(openNotebookClient, 'search', async () => [{ id: 'case-chunk', parent_id: source.external_source_id, content: 'A triangle has half the area.' }])
+  const search = await agent.invoke('knowledge.search', { query: 'triangle' })
+  assert.equal(search.evidence?.[0].sourceId, source.id)
+  await agent.authorize(agent.request(search.evidence!))
+  // Automatic first-turn retrieval must freeze the same publication version as
+  // explicit tool results, or the subsequent session authorization rejects it.
+  installFakeWukong()
+  const automatic = await agent.load()
+  assert.equal(automatic.evidence![0].sourceVersion, search.evidence![0].sourceVersion)
+  await agent.authorize(agent.request(automatic.evidence!))
+  await application.save(teacher, live.id, { ...content(), body: 'Secret unpublished replacement' }, live.version)
+  const read = await agent.invoke('knowledge.read_source', { sourceId: source.id, limit: 16000 })
+  assert.match(read.evidence![0].excerpt, /enclosing parallelogram/)
+  assert.doesNotMatch(read.evidence![0].excerpt, /Secret unpublished/)
+  assert.equal(read.evidence![0].sourceVersion, search.evidence![0].sourceVersion)
+  await agent.authorize(agent.request(read.evidence!))
+  const forged = agent.request(search.evidence!)
+  forged.evidence.items[0].sourceVersion = 'forged-version'
+  await assert.rejects(agent.authorize(forged))
+  const generic = await api(teacher.userId)
+  assert.equal((await generic(`/projects/cases-course/sources/${source.id}`)).status, 404)
+  await assert.rejects(agent.invoke('knowledge.delete_source', { sourceId: source.id }))
+})
+
+test('[integration] Agent case evidence is rejected after republish, unpublish and audience revocation', async () => {
+  recordNotebook()
+  const live = await publish(), first = await readySource(live.id), agent = await caseAgent()
+  let hits = [{ id: 'case-old', parent_id: first.external_source_id, content: 'A triangle has half the area.' }]
+  mock.method(openNotebookClient, 'search', async () => hits)
+  const frozen = agent.request((await agent.invoke('knowledge.search', { query: 'triangle' })).evidence!)
+  await agent.authorize(frozen)
+  const updated = await application.publish(colleague, live.id, live.version), second = await readySource(live.id)
+  await assert.rejects(agent.authorize(frozen))
+  await assert.rejects(agent.invoke('knowledge.read_source', { sourceId: first.id }))
+  hits = [...hits, { id: 'case-new', parent_id: second.external_source_id, content: 'The current published explanation.' }]
+  const current = await agent.invoke('knowledge.search', { query: 'triangle' })
+  assert.deepEqual(current.evidence!.map(item => item.sourceId), [second.id])
+  const snapshot = agent.request(current.evidence!)
+  await agent.authorize(snapshot)
+  await pool.query("UPDATE company_memberships SET status='SUSPENDED' WHERE company_id=$1 AND user_id=$2", [companyId, peer.userId])
+  await assert.rejects(agent.authorize(snapshot))
+  await assert.rejects(agent.invoke('knowledge.read_source', { sourceId: second.id }))
+  await pool.query("UPDATE company_memberships SET status='ACTIVE' WHERE company_id=$1 AND user_id=$2", [companyId, peer.userId])
+  const foreignDraft = await application.create(outsider, content('Foreign case'))
+  const foreign = await application.publish(outsider, foreignDraft.id, foreignDraft.version)
+  const foreignSource = await readySource(foreign.id)
+  const injected = agent.request(current.evidence!)
+  injected.evidence.items[0].sourceId = foreignSource.id
+  await assert.rejects(agent.authorize(injected))
+  await assert.rejects(agent.invoke('knowledge.read_source', { sourceId: foreignSource.id }))
+  await application.unpublish(teacher, live.id, updated.version)
+  await assert.rejects(agent.authorize(snapshot))
+  await assert.rejects(agent.invoke('knowledge.read_source', { sourceId: second.id }))
+  assert.equal((await agent.invoke('knowledge.search', { query: 'triangle' })).evidence?.length, 0)
+})
+
+test('[integration] context reauthorizes current case source versions independently of course knowledge resources', async () => {
+  const live = await publish(), source = await readySource(live.id), agent = await caseAgent()
+  const snapshot = agent.request([{ sourceId: source.id, sourceVersion: `case:${live.id}:${live.publishedVersion}`,
+    title: live.title, chunkId: 'case-chunk', excerpt: 'Published explanation', truncated: true }])
+  await agent.authorize(snapshot)
+  await application.unpublish(teacher, live.id, live.version)
+  await assert.rejects(agent.authorize(snapshot))
 })
