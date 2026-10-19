@@ -52,6 +52,8 @@ Host theme observes root class/style/data-theme. Standard MCP style variables pa
 
 Fixed CDN script URLs are mapped to bundled instance-scoped resources by the vendor manifest. Missing resources fail closed, with no network fallback for those fixed scripts. D3 remains on demand. Resource assembly preserves upstream and third-party licenses. Upstream `render.py` remains the standalone export workflow; it embeds vendor scripts as data URLs and uses the original standalone host/shell. No extra export button is part of the card.
 
+The original exporter independently caps its input fragment at 1,000,000 bytes (`_MAX_FRAGMENT_BYTES`), whereas the inline file service permits 5,000,000 bytes. These are distinct bounds. A larger inline fragment must be simplified before standalone export; keeping the exporter byte-identical means retaining its 1 MB limit. Embedded assets may make the resulting standalone HTML larger than the input-fragment limit.
+
 ## State, bridge, lifecycle and security
 
 - Public frozen `window.zcode` exposes a cloned `widgetState`, `setWidgetState`, `sendFollowUpMessage`, and `openExternal({href})`. Private state/follow-up/tweak/presentation RPC and standard ui/open-link run through the SDK. No arbitrary filesystem read or generic tool endpoint is available.

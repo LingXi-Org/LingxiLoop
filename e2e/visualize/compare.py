@@ -18,11 +18,17 @@ for pair in json.loads(args.manifest.read_text()):
     if a.size != b.size:
         result.update(passed=False,reason='Image sizes differ')
     else:
-        delta=ImageChops.difference(a,b).convert('RGB')
-        pixels=list(delta.getdata())
-        changed=sum(any(pixel) for pixel in pixels)
+        rgba_delta=ImageChops.difference(a,b)
+        delta=rgba_delta.convert('RGB')
+        channels=rgba_delta.split()
+        maximum=channels[0]
+        for channel in channels[1:]:
+            maximum=ImageChops.lighter(maximum,channel)
+        total=a.width*a.height
+        changed=total-maximum.histogram()[0]
+        histogram=delta.histogram()
         delta.save(args.output/(pair['name']+'-diff.png'))
-        result.update(passed=changed==0,changedPixels=changed,totalPixels=len(pixels),changedFraction=changed/len(pixels),maxChannelDelta=max(max(pixel) for pixel in pixels),meanChannelDelta=sum(sum(pixel) for pixel in pixels)/(len(pixels)*3))
+        result.update(passed=changed==0,changedPixels=changed,totalPixels=total,changedFraction=changed/total,maxChannelDelta=maximum.getextrema()[1],meanChannelDelta=sum((index%256)*count for index,count in enumerate(histogram))/(total*3))
     results.append(result)
 report={'policy':'exact RGBA equality; no resizing, masks, or threshold','passed':bool(results) and all(x['passed'] for x in results),'pairs':results}
 (args.output/'diff-report.json').write_text(json.dumps(report,indent=2)+'\n')

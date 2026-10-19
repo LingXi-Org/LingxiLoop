@@ -31,7 +31,13 @@
     catch {show('bridge-save-status','rejected')}
   };
   window.addEventListener('message',async event=>{
-    if(event.source!==parent||event.data?.method!=='fixture/replaced')return;
+    if(event.source!==parent)return;
+    if(event.data?.method==='fixture/stale-save'){
+      try {await zcode.setWidgetState({modelContent:{fictionalStale:true}});show('bridge-save-status','unexpected success')}
+      catch {show('bridge-save-status','rejected')}
+      return;
+    }
+    if(event.data?.method!=='fixture/replaced')return;
     const results=await Promise.allSettled([
       zcode.sendFollowUpMessage({prompt:'Replaced fictional page must not send'}),
       zcode.setWidgetState({modelContent:{fictionalReplaced:true}}),

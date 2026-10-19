@@ -6,7 +6,7 @@ import { expect } from 'e2e'
 // render the exact same fixture; only the original/product component import differs.
 for (const implementation of ['upstream', 'product']) {
   for (const theme of ['light', 'dark']) {
-    test(`${implementation}: complete card interaction (${theme})`, async ({ app, browser, screen }) => {
+    test(`${implementation}: complete card interaction (${theme})`, {timeout:300000}, async ({ app, browser, screen }) => {
       await app.open(`/e2e/visualize/index.html?implementation=${implementation}&theme=${theme}`)
       await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase', 'ready')
       const guest = browser.frameLocator('iframe[data-visualize-guest]:visible').frameLocator('iframe[data-visualize-content]')

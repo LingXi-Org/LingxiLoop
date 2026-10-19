@@ -1,4 +1,5 @@
 import { useEffect,useState } from 'react'
+import {applyTheme} from '../../third_party/zcode/upstream/packages/ui/src/useTheme'
 import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/inter'
 import '@fontsource-variable/geist'
@@ -12,8 +13,8 @@ if(params.get('implementation')==='upstream')await import('../../third_party/zco
 else await import('@/styles/globals.css')
 await import('./fixture.css')
 const dark=params.get('theme')==='dark'
-document.documentElement.classList.toggle('dark',dark)
-document.documentElement.classList.toggle('light',!dark)
+document.documentElement.setAttribute('data-zcode-browser-theme-surface','')
+applyTheme(dark?'dark':'light')
 useAuth.setState({activeCompanyId:'fixture-company',ready:true})
 setWorkspaceSession({companyId:'fixture-company',projectId:'fixture-project'})
 const runKey=`visualize-fixture:${params.toString()}`

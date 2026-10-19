@@ -1,11 +1,11 @@
 {
   "upstreamCommit": "0a1fc56d279fd1001f78387bd81aec1c26767411",
-  "capturedAt": "2026-10-19T12:44:34+00:00",
-  "captureCompletedAt": "2026-10-19T12:44:47+00:00",
-  "productHead": "5554c0f3c21ba3350e78ed6076e639ad0124645a",
+  "capturedAt": "2026-10-19T13:25:21+00:00",
+  "captureCompletedAt": "2026-10-19T13:25:27+00:00",
+  "productHead": "54075c1af031172f768a1894c8bd29a5ce74e98f",
   "worktreeHasUncommittedChanges": true,
   "captureStableDuringRead": true,
-  "review": "Point-in-time source audit during active integration; frontend/runtime deltas may continue. Byte/line statistics do not establish interaction, security or pixel parity. Rehash every listed file against this capture after further edits.",
+  "review": "Final requested source capture after the Web host theme correction; source bytes were stable during this read. Browser acceptance is recorded separately and is not implied by byte/line statistics. Rehash after any later code change; this is not a production-release or runtime-behavior attestation.",
   "diffMethod": "git diff --no-index --numstat; byteIdentical uses exact bytes",
   "summary": {
     "pairedFiles": 34,
@@ -19,15 +19,15 @@
   "provenanceVerification": {
     "status": "passed",
     "command": "node scripts/verify-zcode-visualize.mjs",
-    "verifiedFiles": 221,
+    "verifiedFiles": 223,
     "kinds": {
       "skill": 24,
-      "source": 195,
+      "source": 197,
       "runtime": 1,
       "license": 1
     },
     "skillGitTree": "87f38506cdda363267e0a73bfb2f20b4632134e1",
-    "manifestSha256": "5c82de6a3639cf42035dc66e18b21d5a317f3594fe59c1b801fff326ef320f55",
+    "manifestSha256": "80d383b323806f1dd8205728ce3ea3ef789ef866deee9f15746d04030080304b",
     "runtimeFiles": 4,
     "vendorLibraries": 4,
     "licenses": [
@@ -419,8 +419,8 @@
     },
     {
       "product": "server/src/agent-runtime/visualize-skill.ts",
-      "productSha256": "39a81fa2c9eeb060e287a649a19ae069b9547eb47d68decd8ca9c83dbaf9a7cd",
-      "bytes": 2895
+      "productSha256": "fadd8c2ce26e03e7650d262cafa3cbede391ac8b42a3815685a76b6b2ee379a4",
+      "bytes": 2958
     },
     {
       "product": "server/src/agent-runtime/visualize-state-context.ts",
@@ -479,13 +479,13 @@
     },
     {
       "product": "src/features/chat/visualize/zcode.css",
-      "productSha256": "e95cdc87fa8df0428262ff8351c72958c1fead2144f1b42f02600d7686e8e9f5",
-      "bytes": 26447,
+      "productSha256": "fe485a7da5e57a47bfe51607a6bc3ef329187ac9fa0a31be0b64d43b88791ba4",
+      "bytes": 41288,
       "upstream": "third_party/zcode/upstream/packages/ui/src/styles.css",
       "upstreamSha256": "ae1c3575fa770258bba05afb5a0ebbeda59ecbd8b4cfa9d0355b5fbfd8dcbd8b",
       "byteIdentical": false,
-      "addedLines": 92,
-      "removedLines": 1906,
+      "addedLines": 103,
+      "removedLines": 1583,
       "relationship": "Scoped theme/style extraction with Web host cascade isolation; not a whole-stylesheet copy"
     },
     {
@@ -493,5 +493,37 @@
       "productSha256": "b735e192b150c5b68353e87dd25f30f5b6b49abb0acb55f27e34e89ede84fb73",
       "bytes": 2172
     }
-  ]
+  ],
+  "webHostThemeVerification": {
+    "status": "passed",
+    "declarationBlocks": [
+      {
+        "theme": "light",
+        "upstreamSelector": ".theme-zai-light",
+        "productSelector": ".zcode-visualize",
+        "declarationsByteIdentical": true,
+        "blockSha256": "bb11c0da5370b25df45f5599b4d8492cd8e664adb863243519077987e13b283e"
+      },
+      {
+        "theme": "dark",
+        "upstreamSelector": ".theme-zai-dark",
+        "productSelector": ".dark .zcode-visualize",
+        "declarationsByteIdentical": true,
+        "blockSha256": "8f82f3a55e95edaba0e1993216e318e75fe0953536842c26ea8cd49d72f9fa1f"
+      }
+    ],
+    "semanticForeground": true,
+    "webEntryFontStack": true,
+    "localLightDarkColorScheme": true,
+    "scope": "Cold-start Web semantic host input; not a preserved navigation-bootstrap snapshot",
+    "sourceEvidence": "docs/evidence/issue-193/UPSTREAM-WEB-COLOR-CASCADE.md"
+  },
+  "modelInstructionVerification": {
+    "path": "server/src/agent-runtime/visualize-skill.ts",
+    "sha256": "fadd8c2ce26e03e7650d262cafa3cbede391ac8b42a3815685a76b6b2ee379a4",
+    "rangeUtf16Characters": 4000,
+    "truncatedRangeRetryUtf16Characters": 2000,
+    "oneRangePerResponse": true,
+    "scope": "Instruction source only; actual model tool/range execution requires separate evidence"
+  }
 }

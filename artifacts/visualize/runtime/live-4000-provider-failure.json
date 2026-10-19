@@ -1,0 +1,66 @@
+{
+  "status": "failed-provider",
+  "requestTimeoutMs": 180000,
+  "completeSkill": false,
+  "ledger": {
+    "calls": 2,
+    "measured": 1,
+    "usd": "0.01075213"
+  },
+  "work": [
+    {
+      "id": "im:531f2b0a3afdc1f85d441f60db732822bf9a946c97986a60d406410db6a82f50",
+      "status": "failed",
+      "attempts": 1,
+      "error": "Model provider request failed",
+      "goal_outcome": {
+        "gaps": [
+          "Model provider request failed"
+        ],
+        "status": "blocked",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      }
+    }
+  ],
+  "diagnostic": [
+    {
+      "seq": "13",
+      "kind": "model.request.finished",
+      "stage": "failed",
+      "error": "Model request failed (timeout)",
+      "status": "failed",
+      "code": null,
+      "reason": null,
+      "recorded_at": "2026-10-19T13:12:17.876Z"
+    },
+    {
+      "seq": "14",
+      "kind": "model.failed",
+      "stage": "failed",
+      "error": "Model request exceeded its total deadline",
+      "status": null,
+      "code": null,
+      "reason": null,
+      "recorded_at": "2026-10-19T13:12:17.996Z"
+    },
+    {
+      "seq": "15",
+      "kind": "run.failed",
+      "stage": "failed",
+      "error": "Model provider request failed",
+      "status": null,
+      "code": null,
+      "reason": null,
+      "recorded_at": "2026-10-19T13:12:18.859Z"
+    }
+  ],
+  "test": {
+    "status": "failed",
+    "provider": "zai-org/GLM-5.3-Flash",
+    "modelMock": false,
+    "browserMock": false,
+    "resumedDurableWork": false,
+    "error": "live run terminated: Model provider request failed"
+  }
+}

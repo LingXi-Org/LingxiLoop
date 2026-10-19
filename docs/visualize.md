@@ -8,7 +8,7 @@ The complete 24-file skill is unchanged in [`third_party/zcode/skills/visualize`
 
 `server/src/agent-runtime/visualize-skill.ts` registers the original SKILL.md as a published LingxiOS `SkillDefinition`. The product supplies `visualize.read_reference`, `visualize.save`, `visualize.read` and `visualize.export` through its native tool registry. `skills.load` loads the complete original body; the reference tool reads an explicit skill-relative allowlist. No shell or arbitrary file-read capability is exposed. Product context supplies the authorized output directory and adaptation instructions; internal/canvas work does not acquire this chat capability.
 
-The model saves literal HTML fragments and reads them back. The server checks current conversation authorization, principal/run/agent binding, author ownership and a lowercase hyphenated filename. The output directory derives from company and conversation under `AGENT_OS_HOMES_ROOT/visualize` (using the existing homes default when unset). Files are executor mirrors; PostgreSQL `im_visualize_documents` owns source HTML, hash and version. A model reference never grants arbitrary filesystem access.
+The model saves literal HTML fragments and reads them back. Inline save/hosting accepts at most 5,000,000 UTF-8 bytes. The server checks current conversation authorization, principal/run/agent binding, author ownership and a lowercase hyphenated filename. The output directory derives from company and conversation under `AGENT_OS_HOMES_ROOT/visualize` (using the existing homes default when unset). Files are executor mirrors; PostgreSQL `im_visualize_documents` owns source HTML, hash and version. A model reference never grants arbitrary filesystem access.
 
 Final assistant text uses the actual returned path:
 
@@ -49,6 +49,8 @@ The retained-page manager keeps upstream limits of 30 tasks/64 active pages and 
 ## Export and retained historical data
 
 When explicitly requested, `visualize.export` reads the authorized document and invokes original `render.py` with temporary input/output paths, cancellation, timeout and `PYTHONDONTWRITEBYTECODE=1`. The resulting standalone HTML is delivered through LingxiOS `createArtifact`. The unchanged exporter embeds vendor scripts; generated content with host-only follow-up/openExternal calls must follow the upstream export workflow. A canned export alone does not establish real-model delivery.
+
+Standalone export has a separate maximum of 1,000,000 input-fragment bytes, enforced by the unchanged upstream `render.py` and checked by the product adapter. Larger fragments that are valid for inline hosting must be simplified before export, as the tool description explains. This limit applies to the input fragment, not the final HTML containing embedded assets; it is not raised to the inline 5 MB limit.
 
 Additive `0046_visualize.sql` creates document, personal state, page and gesture tables. Existing `im_ui_*` rows remain intact; `0033_interactive_ui.sql` is unchanged. No old rows are converted or deleted. This source change does not authorize production deployment or establish that 0046 is applied anywhere. Historical reports remain in [`artifacts/interactive-ui`](../artifacts/interactive-ui); the [OpenUI ADR](adr/issue-111-openui-m0.md) remains a superseded historical record.
 
@@ -91,4 +93,4 @@ PYTHONDONTWRITEBYTECODE=1 E2E_TELEMETRY_DISABLED=1 \
 
 The port-5193 fixture uses official `@e2e-dev/web`, not a direct Playwright runner. Its original-source/product-source entries share a Web host adaptation, limiting the claim a pixel match can support. Compare screenshot pairs with `python3 -B e2e/visualize/compare.py <pairs.json> --output <diff-directory>`; preserve both images, fixture/font/theme hashes, viewport/DPR and difference report.
 
-Current gates and execution evidence live in [issue #193 acceptance](evidence/issue-193/ACCEPTANCE.md) and `artifacts/visualize/`. Missing/skipped/failed/mocked cases do not establish real-model behavior, native Electron equivalence or production readiness. The real-model ask→generate→display→adjust→continue sequence remains a separate mandatory gate.
+Current gates and execution evidence live in [issue #193 acceptance](evidence/issue-193/ACCEPTANCE.md) and `artifacts/visualize/`. Missing/skipped/failed/mocked cases do not establish real-model behavior, native Electron equivalence or production readiness. The real-model ask→generate→display→adjust→continue sequence remains a separate acceptance item. Deterministic fixtures and provider health probes do not establish that it passed; the release record states its actual status and any explicitly accepted release limitation.

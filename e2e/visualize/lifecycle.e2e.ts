@@ -1,3 +1,5 @@
+import {createHash} from 'node:crypto'
+import {mkdir,writeFile} from 'node:fs/promises'
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 
@@ -55,14 +57,20 @@ test('copy-image button writes a real PNG through the host clipboard',async({app
   const image=await browser.evaluate(async()=>{
     const items=await navigator.clipboard.read()
     const png=items.find(item=>item.types.includes('image/png'))
-    if(!png) return {type:'',size:0,width:0,height:0}
+    if(!png) return {type:'',size:0,width:0,height:0,png:[] as number[]}
     const blob=await png.getType('image/png'), bitmap=await createImageBitmap(blob)
-    return {type:blob.type,size:blob.size,width:bitmap.width,height:bitmap.height}
+    return {type:blob.type,size:blob.size,width:bitmap.width,height:bitmap.height,png:Array.from(new Uint8Array(await blob.arrayBuffer()))}
   })
   expect(image.type).toBe('image/png')
   expect(image.size).toBeGreaterThan(100)
   expect(image.width).toBeGreaterThan(100)
   expect(image.height).toBeGreaterThan(100)
+  const output=process.env.E2E_VISUALIZE_OUTPUT??'.e2e/visualize'
+  await mkdir(output,{recursive:true})
+  const {png,...metadata}=image,bytes=Buffer.from(png)
+  await writeFile(`${output}/clipboard-readback.png`,bytes)
+  await writeFile(`${output}/clipboard-interaction.json`,JSON.stringify({...metadata,sha256:createHash('sha256').update(bytes).digest('hex'),nativeReadback:true,permissionOrigin:'http://127.0.0.1:5193'},null,2))
+  await app.screenshot('product-copy-image-clipboard')
 })
 
 
@@ -75,19 +83,42 @@ test('offline host exposes recovery and reconnects when online',async({app,brows
   await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase','ready')
 })
 
-test('page capacity reclaims hidden guests and restores the oldest saved state',{timeout:600000},async({app,browser,screen})=>{
+test('page capacity reclaims hidden guests and restores the oldest saved state',{timeout:330000},async({app,browser,screen})=>{
   await app.open('/e2e/visualize/index.html?implementation=product&theme=light&capacity=1')
   const guest=browser.frameLocator('iframe[data-visualize-guest]:visible')
   const inner=guest.frameLocator('iframe[data-visualize-content]')
-  await inner.getByRole('button','Saved count: 5',{exact:true}).tap()
+  await expect(inner.getByRole('button','Saved count: 5',{exact:true})).toBeVisible()
+  await inner.getByRole('button','Saved count: 5',{exact:true}).tap({timeout:90000})
   await expect(inner.getByRole('button','Saved count: 6',{exact:true})).toBeVisible()
-  for(let index=1;index<=65;index++){
-    await screen.getByRole('button','Fixture next page',{exact:true}).tap()
-    await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase','ready')
+  const started=Date.now()
+  // Batch the public fixture button's ordinary DOM events to avoid the official
+  // runner observing all retained frames after every admission. No host/private
+  // API or trusted-gesture path is used in this capacity-only setup.
+  for(let batch=0;batch<13;batch++){
+    await browser.evaluate(async({start,end})=>{
+      const next=Array.from(document.querySelectorAll('button')).find(button=>button.textContent==='Fixture next page')!
+      for(let index=start;index<=end;index++){
+        next.click()
+        const deadline=Date.now()+25000
+        while(document.querySelector('[data-testid="fixture-page-index"]')?.textContent!==String(index)||document.querySelector('[data-testid="gen-ui-card"]')?.getAttribute('data-gen-ui-phase')!=='ready'){
+          if(Date.now()>deadline)throw new Error(`Fixture page ${index} did not become ready`)
+          await new Promise(resolve=>setTimeout(resolve,20))
+        }
+      }
+      return true
+    },{start:batch*5+1,end:Math.min(batch*5+5,63)})
   }
+  const atLimit=await browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()))
+  expect(atLimit.activePages).toBe(64)
+  expect(atLimit.closedPages).toBe(0)
+  await screen.getByRole('button','Fixture next page',{exact:true}).tap()
+  await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase','ready')
+  await expect.poll(async()=>Number((await browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()))).closedPages)).toBeGreaterThan(0)
   const counts=await browser.evaluate(async()=>await fetch('/__visualize_fixture/evidence').then(response=>response.json()))
   expect(counts.activePages).toBeLessThanOrEqual(64)
-  expect(counts.closedPages).toBeGreaterThan(0)
+  const output=process.env.E2E_VISUALIZE_OUTPUT??'.e2e/visualize'
+  await mkdir(output,{recursive:true})
+  await writeFile(`${output}/capacity-interaction.json`,JSON.stringify({atLimit,afterOverflow:counts,elapsedMs:Date.now()-started,admission:'public fixture next button DOM events; overflow and restoration use official trusted clicks'},null,2))
   await screen.getByRole('button','Fixture first page',{exact:true}).tap()
   await expect(inner.getByRole('button','Saved count: 6',{exact:true})).toBeVisible()
   await app.screenshot('product-capacity-restored')

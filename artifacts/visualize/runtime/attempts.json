@@ -1,11 +1,14 @@
 {
-  "skillReferenceProjectionAndRender": "passed (3 tests, before bounded-state coverage was added)",
+  "skillReferenceProjectionAndRender": "passed (4 tests including full-entry state budget, markup escaping and original export size boundary)",
   "actualRenderArtifact": "artifacts/visualize/runtime/export-check.html",
   "generationInitialFailure": "skills.load omitted by explicit capability resolver; fixed by granting only native skills.load whose published implementation rechecks all skill actions",
-  "nativeReferenceRepair": "passed: unavailable visualization paths corrected before durable delivery",
-  "nonthinkingCore": "timed out during concurrent CPU/IO load; serial rerun required",
-  "owningBatch": "Serial generation, teacher, render/state and protocol batch running after fixes.",
+  "nativeReferenceRepair": "Passed in the same CI run, case 270 (unavailable visualize reference repaired before delivery).",
+  "nonthinkingCore": "Passed in GitHub Actions run 39254963846 / integration job 118067944234, case 269 (full tools / disabled thinking / body-only streaming).",
+  "owningBatch": "7/7 passed with 2000-character ranges: protocol guard, full generation worker, four skill/reference/render/state tests and teacher authorization. That version recorded 27 scripted model calls and 27 ledger rows.",
   "liveDatabase": "Dedicated lingxiloop_issue193_model_test migrated 0001-0046; standard integration safety guard unchanged.",
-  "liveProvider": "First preflight failed before model calls due missing local runtime object-store credential variables. Second attempt deliberately stopped after four measured calls because skill output was only a preview; evidence live-incomplete-skill.json. Fresh full-range model run pending scripted pass.",
-  "generationTruncationFailure": "Published 8000-character output bound discovered; added authorized observations.read ranges. Complete skill recovery reached; then independent save verification and explicit 1M mock context declaration were required. Final owning batch pending."
+  "liveProvider": "Stopped after final terminal failure; no further full attempts or probes. Complete real-provider generation/browser/followup/export was NOT accepted. See live-attempt-summary.json and request-shape-review.md.",
+  "generationTruncationFailure": "Initial failures found missing native skills grant, truncated skill output, mock context declaration and missing independent save verification. All were corrected and covered by passing owning integration.",
+  "ciIntegration": "Run 39254963846: 302 total, 291 passed, 0 failed, 11 skipped; generation case 288 and teacher case 294 passed. Live case 289 explicitly skipped. Real-provider success remains an unpassed optional validation, not an indefinite release blocker per parent authorization.",
+  "generationRangeOptimization": "4000-character ranges passed the full worker chain separately: 18 scripted calls equal 18 ledger rows; largest range response 4696 characters below the published 8000 limit; original and consumed skill SHA256 exactly match. See generation.json.",
+  "priorRealAttempts": "All completed attempts, measured and estimated costs, unknown requests, exact available durations and diagnostic probe are recorded separately in live-attempt-summary.json."
 }

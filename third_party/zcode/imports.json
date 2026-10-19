@@ -2958,5 +2958,9 @@
   {
     "file": "packages/ui/lucide-colors.mjs",
     "import": "tailwindcss/lib/util/flattenColorPalette"
+  },
+  {
+    "file": "packages/ui/src/useTheme.ts",
+    "import": "react"
   }
 ]
