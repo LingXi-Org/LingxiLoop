@@ -14,6 +14,8 @@ import { userFacingError } from '@/lib/userFacingError'
 import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType } from '../contracts'
 import { canvasStatusLabel, isCanvasAssignmentActive } from '../lib/collaboration'
 import { useCanvas } from '../state'
+import { canvasApi } from '../api'
+import { useCanvasFeedbackScope } from '../mcp-app/useCanvasFeedbackScope'
 import { CanvasFrameContent } from './CanvasFrameContent'
 import { CanvasDocumentEditor } from './CanvasDocumentEditor'
 import type { CanvasReference } from '../mcp-app/contract'
@@ -316,7 +318,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId: string; onBack?: ()
         : menu && <CanvasContextMenu menu={menu} onTalk={() => { setMenu(null); setDialogOpen(true) }} onCreate={createAt} />}
     </ContextMenuContent>
     </ContextMenu>
-    {feedbackFrame && <FrameFeedbackDialog frame={feedbackFrame} reference={reference} onClose={() => { setFeedbackFrameId(null); setReference(null) }} />}
+    {feedbackFrame && <FrameFeedbackDialog key={`${feedbackFrame.canvasId}:${feedbackFrame.id}`} frame={feedbackFrame} reference={reference} onClose={() => { setFeedbackFrameId(null); setReference(null) }} />}
     {dialogOpen && snapshot && <CanvasAgentDialog onClose={() => setDialogOpen(false)} />}
   </div>
 }
@@ -552,9 +554,7 @@ function writeFeedbackDraft(canvasId: string, frameId: string, body: string) {
 
 function FrameFeedbackDialog({ frame, reference, onClose }: { frame: CanvasFrame; reference?: CanvasReference | null; onClose: () => void }) {
   const snapshot = useCanvas((state) => state.snapshot)!
-  const steerAgent = useCanvas((state) => state.steerAgent)
-  const assignAgent = useCanvas((state) => state.assignAgent)
-  const addComment = useCanvas((state) => state.addComment)
+  const { beginSend, cancel } = useCanvasFeedbackScope(frame, onClose)
   const byId = useParticipants((state) => state.byId)
   const [body, setBody] = useState(() => readFeedbackDraft(frame.canvasId, frame.id))
   const bodyRef = useRef(body)
@@ -572,20 +572,34 @@ function FrameFeedbackDialog({ frame, reference, onClose }: { frame: CanvasFrame
     if (!question || busy) return
     const text = reference ? `引用画布卡片「${reference.title}」（${reference.frameId}，第 ${reference.revision} 版）：\n${reference.text}\n\n用户反馈：${question}` : question
     if (text.length > 4000) { setError('引用与反馈合计不能超过 4000 字符，请缩短后发送。'); return }
+    let send: ReturnType<typeof beginSend>
+    try { send = beginSend() } catch { cancel(); return }
     setBusy(true); setError(null)
     try {
       if (agentId) {
-        if (targetAssignment && isCanvasAssignmentActive(targetAssignment.status)) await steerAgent(agentId, text)
-        else await assignAgent(agentId, text)
+        if (targetAssignment && isCanvasAssignmentActive(targetAssignment.status)) {
+          await canvasApi.steerCanvasAssignment(send.canvasId, agentId, text, send.signal)
+          send.assertCurrent()
+        } else {
+          const saved = await canvasApi.assignCanvasWork(send.canvasId, agentId, text, send.signal)
+          send.assertCurrent()
+          useCanvas.setState(state => ({ snapshot: saved, previews: { ...state.previews, [send.canvasId]: saved } }))
+        }
       }
-      await addComment(text, frame.id)
-      writeFeedbackDraft(frame.canvasId, frame.id, '')
+      send.assertCurrent()
+      const comment = await canvasApi.addCanvasComment(text, send.frameId, send.canvasId, send.signal)
+      send.assertCurrent()
+      useCanvas.setState(state => state.snapshot?.id === send.canvasId ? {
+        snapshot: { ...state.snapshot, comments: [comment, ...state.snapshot.comments.filter(item => item.id !== comment.id)] },
+      } : {})
+      writeFeedbackDraft(send.canvasId, send.frameId, '')
       onClose()
-    } catch (cause) { setError(userFacingError(cause, '反馈发送失败，请稍后重试。')) }
-    finally { setBusy(false) }
+    } catch (cause) {
+      if (!send.signal.aborted) setError(userFacingError(cause, '反馈发送失败，请稍后重试。'))
+    } finally { if (!send.signal.aborted) setBusy(false) }
   }
 
-  return <Dialog open onOpenChange={(open) => { if (!open) { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() } }}><DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-sm"><form onSubmit={submit}>
+  return <Dialog open onOpenChange={(open) => { if (!open) { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); cancel() } }}><DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-sm"><form onSubmit={submit}>
     <DialogHeader className="pe-10"><div className="flex items-center gap-3">
       {participant ? <AvatarMini p={participant} size={34} /> : <span className="canvas-feedback-avatar grid size-9 place-items-center text-sm font-bold">评</span>}
       <div className="min-w-0 flex-1"><DialogTitle className="truncate">反馈给 {participant?.name ?? '智能助教'}</DialogTitle><DialogDescription className="truncate">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</DialogDescription></div>
@@ -598,7 +612,8 @@ function FrameFeedbackDialog({ frame, reference, onClose }: { frame: CanvasFrame
     {reference && <blockquote className="mt-3 max-h-36 overflow-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap" aria-label="待发送的画布引用">{reference.text}<footer className="mt-1 text-muted-foreground">{reference.title} · 第 {reference.revision} 版 · 确认发送后交给智能助教</footer></blockquote>}
     <Textarea aria-label="画布反馈" maxLength={4000} autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="mt-3 resize-none text-xs" />
     {error && <div className="mt-2 text-[10px] text-destructive">{error}</div>}
-    <DialogFooter className="mt-3"><Button type="button" variant="outline" disabled={busy} onClick={onClose}>取消</Button><Button type="submit" disabled={!agentId || !body.trim() || busy}><ISend className="size-3.5" />发送反馈</Button></DialogFooter>
+    {busy && <p className="mt-2 text-xs text-muted-foreground">已发送的请求可能完成；停止等待会取消后续操作。</p>}
+    <DialogFooter className="mt-3"><Button type="button" variant="outline" onClick={cancel}>{busy ? '停止等待' : '取消'}</Button><Button type="submit" disabled={!agentId || !body.trim() || busy}><ISend className="size-3.5" />发送反馈</Button></DialogFooter>
   </form></DialogContent></Dialog>
 }
 
