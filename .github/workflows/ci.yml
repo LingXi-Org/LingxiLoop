@@ -196,6 +196,7 @@ jobs:
               - 'scripts/trigger-komodo-rollout.mjs'
               - 'scripts/prepare-forum-rollout.mjs'
               - 'scripts/schema-upgrade-*.mjs'
+              - 'scripts/host-release*.mjs'
               - 'scripts/verify-memory-backup*.mjs'
               - 'scripts/sync-komodo-config.mjs'
               - 'scripts/test-distributed-realtime.mjs'
@@ -204,6 +205,7 @@ jobs:
               - 'scripts/trigger-komodo-rollout.mjs'
               - 'scripts/prepare-forum-rollout.mjs'
               - 'scripts/schema-upgrade-*.mjs'
+              - 'scripts/host-release*.mjs'
               - 'scripts/verify-memory-backup*.mjs'
               - 'scripts/sync-komodo-config.mjs'
               - 'deploy/**'
@@ -315,7 +317,9 @@ jobs:
         working-directory: third_party/open-notebook
         run: uv run --frozen --python 3.12 pytest -q
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs
+        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs
+      - if: matrix.component == 'deploy-contract'
+        run: node --test --test-name-pattern 'effective candidate' scripts/host-release.local.test.mjs
       - if: matrix.component == 'release'
         run: npm run version:check
 
@@ -532,6 +536,6 @@ jobs:
       KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
     steps:
       - uses: actions/checkout@v5
-        with: { ref: main }
+        with: { ref: '${{ needs.update-manifests.outputs.commit-sha }}' }
       - name: Trigger Komodo rollout
         run: node scripts/trigger-komodo-rollout.mjs

@@ -82,7 +82,43 @@ export function createTransport({apiKey,apiSecret,signal,fetcher=fetch,wait=dela
   // Native cache refresh does not edit configuration or execute a service.
   await request('write','RefreshStackCache',{stack})
  }
- return {read,execute,refreshStackCache}
+ async function writeHostFile(stack,contents){
+  check(APPS.includes(stack)&&typeof contents==='string'&&Buffer.byteLength(contents)<=512*1024,'Only public application Compose staging allowed')
+  const details=await read('GetStack',{stack}),stackId=details?._id?.$oid
+  check(ID.test(stackId??''),'Stack identity unavailable')
+  let id,submitted=false,terminal=false
+  try{
+   await onProgress({phase:'komodo',status:'submitting',operation:'WriteStackFileContents',stack});signal?.throwIfAborted();submitted=true
+   const accepted=await request('write','WriteStackFileContents',{stack,file_path:'compose.yml',contents});id=accepted?._id?.$oid
+   check(ID.test(id??''),'Missing file-write update identity')
+   await onProgress({phase:'komodo',status:'pending',operation:'WriteStackFileContents',stack,updateId:id})
+   const verify=u=>check(u?._id?.$oid===id&&u.operation==='WriteStackContents'&&u.target?.type==='Stack'&&u.target.id===stackId&&u.status==='Complete'&&typeof u.success==='boolean','File-write receipt identity mismatch')
+   // This native write is synchronous in v2.3.3; no speculative resubmission.
+   verify(accepted);terminal=true;check(accepted.success===true,'File write failed')
+   const confirmed=await read('GetUpdate',{id});verify(confirmed);check(confirmed.success===true,'File-write confirmation failed')
+   await onProgress({phase:'komodo',status:'complete',operation:'WriteStackFileContents',stack,updateId:id});return confirmed
+  }catch{
+   const uncertain=submitted&&!terminal
+   await onProgress({phase:'komodo',status:uncertain?'uncertain':'failed',operation:'WriteStackFileContents',stack,...(ID.test(id??'')?{updateId:id}:{})}).catch(()=>{})
+   throw Object.assign(Error('Host file write failed; resolve saved update before continuing'),{uncertain})
+  }
+ }
+ async function setHostReleaseConfig(stack,config){
+  check(APPS.includes(stack)&&config&&Object.keys(config).sort().join()==='auto_pull,branch,commit,extra_args'
+   &&HEX40.test(config.commit??'')&&/^release\/[a-z0-9][a-z0-9._-]{0,95}$/.test(config.branch??'')&&!config.branch.includes('..')
+   &&!config.branch.endsWith('.')&&!config.branch.endsWith('.lock')&&config.auto_pull===false
+   &&JSON.stringify(config.extra_args)==='["--no-deps","--pull","never"]','Only exact app host-release policy allowed')
+  const details=await read('GetStack',{stack}),id=details?._id?.$oid;check(ID.test(id??''),'Stack identity unavailable')
+  await onProgress({phase:'host-config',status:'submitting',stack,fields:Object.keys(config)})
+  try{
+   await request('write','UpdateStack',{id,config})
+   await onProgress({phase:'host-config',status:'acknowledged',stack})
+  }
+  catch{await onProgress({phase:'host-config',status:'uncertain',stack}).catch(()=>{});throw Object.assign(Error('Host configuration outcome uncertain; no retry'),{uncertain:true})}
+  // UpdateStack may return an empty body-shaped object. Caller verifies exact
+  // full config readback; neither HTTP success nor these fields imply success.
+ }
+ return {read,execute,refreshStackCache,writeHostFile,setHostReleaseConfig}
 }
 export function validateStateReceipt(value) {
  const numbers=['schema','installedSchema','protocol','count','product','liveWork','liveSession','liveAttempts','liveCapture','liveOutbox','otherClients','prepared','queued','pendingCapture']
@@ -120,7 +156,7 @@ SELECT 'SCHEMA_UPGRADE_STATE='||jsonb_build_object(
  'pendingCapture',(SELECT count(*) FROM lingxios.agent_memory_capture WHERE completed_at IS NULL)
 )::text;
 COMMIT;`
-const stateCommand=`set -eu; set +x; export PGPASSWORD="$POSTGRES_PASSWORD" PGCONNECT_TIMEOUT=10; exec timeout -k 5 30 psql -X -qAt -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c ${quote(STATE_SQL)}`
+export const stateCommand=`set -eu; set +x; export PGPASSWORD="$POSTGRES_PASSWORD" PGCONNECT_TIMEOUT=10; exec timeout -k 5 30 psql -X -qAt -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c ${quote(STATE_SQL)}`
 export const METADATA_CODE=`import{readFile,readdir}from'node:fs/promises';import{createHash}from'node:crypto';import{releaseVersions,packageResources}from'@lyyzka/lingxios';
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const lock=JSON.parse(await readFile('package-lock.json','utf8')).packages['node_modules/@lyyzka/lingxios'];
