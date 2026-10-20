@@ -1,0 +1,555 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a1578a-cc7b-739e-b7e9-b1f079a80601",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-20T04:21:18.051Z",
+    "finishedAt": "2026-10-20T04:21:35.008Z",
+    "project": {
+      "id": "lingxiloop-forum",
+      "configDigest": "269d4636e9423cf18c142627de1fec48db216336552b4d4f66c684d89d2fcf7f"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "1a5f1f871319ffa7433a2748191869eb39be8907",
+      "branch": "codex/issue219-cases-forum-blocknote",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "forum",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53098",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "29398952ad84808167033e316c52964bcf4e9f0444bfc5e9a2bc920df4e406e1",
+        "testId": "e2e/forum/issue219-states.e2e.ts::forum%20loading%2C%20HTTP%20retry%20and%20empty%20filters%20retain%20navigation%20and%20keyboard%20access",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "forum loading, HTTP retry and empty filters retain navigation and keyboard access"
+        ],
+        "file": "e2e/forum/issue219-states.e2e.ts",
+        "source": {
+          "file": "e2e/forum/issue219-states.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "forum",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T04:21:19.723Z",
+            "durationMs": 15190,
+            "artifacts": [
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:5"
+                },
+                "path": "forum/e2e_forum_issue219-states.e2e.ts__forum_20loading_2C_20HTTP_20retry_20and_20empty_20filters_20retain_20navigati-d063947b/default/attempt-0/screenshots/001-forum-list-loading.png",
+                "size": 41914,
+                "sha256": "69300b88005b3d428f6be65de0d5795b0e1aedfe16639e5d9e57abda914254fd"
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:12"
+                },
+                "path": "forum/e2e_forum_issue219-states.e2e.ts__forum_20loading_2C_20HTTP_20retry_20and_20empty_20filters_20retain_20navigati-d063947b/default/attempt-0/screenshots/002-forum-list-error.png",
+                "size": 46794,
+                "sha256": "055987b87843a2eb0c74c629830b219c2a9966cec2be9c70b0f75a780e32ed7f"
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:21"
+                },
+                "path": "forum/e2e_forum_issue219-states.e2e.ts__forum_20loading_2C_20HTTP_20retry_20and_20empty_20filters_20retain_20navigati-d063947b/default/attempt-0/screenshots/003-forum-list-empty-mobile-keyboard.png",
+                "size": 23000,
+                "sha256": "e6f6b44f315de95cd22261f6416e92e57e19d796bef6bb67ea4e1c7d59ed51ee"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:19.999Z",
+                "durationMs": 546,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 5,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:20.547Z",
+                "durationMs": 683,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 6,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=e2e-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:21.231Z",
+                "durationMs": 312,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 7,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"status\").filter({ hasText: \"正在加载学习论坛\" })",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:21.548Z",
+                "durationMs": 10181,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 9,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:31.730Z",
+                "durationMs": 568,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 10,
+                  "column": 45
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "forum-list-loading",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:32.299Z",
+                "durationMs": 679,
+                "events": [],
+                "artifacts": [
+                  "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 11,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:32.979Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 12,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"status\").filter({ hasText: \"正在加载学习论坛\" })",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.006Z",
+                "durationMs": 239,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 13,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"link\", name: \"Forum homework\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.245Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 14,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.278Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 15,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.298Z",
+                "durationMs": 178,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 16,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"alert\").filter({ hasText: \"服务暂时不可用\" })",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.477Z",
+                "durationMs": 270,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 17,
+                  "column": 71
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:12",
+                "index": 12,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "forum-list-error",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.748Z",
+                "durationMs": 115,
+                "events": [],
+                "artifacts": [
+                  "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 18,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"button\", name: \"重试\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.863Z",
+                "durationMs": 40,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 19,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.904Z",
+                "durationMs": 57,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 20,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:15",
+                "index": 15,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"没有符合条件的内容。\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:33.962Z",
+                "durationMs": 67,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 21,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:34.030Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 22,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:34.044Z",
+                "durationMs": 135,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 23,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:34.182Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 24,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Tab",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:34.217Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 25,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:34.241Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 26,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "forum-list-empty-mobile-keyboard",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:21:34.255Z",
+                "durationMs": 76,
+                "events": [],
+                "artifacts": [
+                  "01a1578a-d8eb-7053-a8c5-d09234ef5c0f:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/forum/issue219-states.e2e.ts",
+                  "line": 27,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 111708,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

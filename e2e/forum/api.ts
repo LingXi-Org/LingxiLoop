@@ -50,6 +50,68 @@ await pool.query(`INSERT INTO homework_submissions(id,company_id,project_id,home
   VALUES('fixture-homework-submission','e2e-school','e2e-classroom','issue146-homework','forum-student',1,'fixture-key','fixture',$1::jsonb,$2::jsonb,1,0,false,$3::jsonb)`,[JSON.stringify(fixtureAnswer),JSON.stringify(fixtureReport),JSON.stringify(fixtureReferences)])
 // Synthetic auth and in-memory objects are confined to this loopback-only test server.
 const app = express()
+let forumListMode: 'pass'|'hold'|'fail'='pass'
+const pendingLists=new Set<()=>void>()
+app.post('/api/fixture-forum-list/:mode',(req,res)=>{
+  if(!['pass','hold','fail'].includes(req.params.mode)){res.sendStatus(400);return}
+  forumListMode=req.params.mode as typeof forumListMode
+  if(forumListMode==='pass'){for(const release of pendingLists)release();pendingLists.clear()}
+  res.sendStatus(200)
+})
+app.use((req,res,next)=>{
+  if(req.method==='GET'&&req.path==='/api/courses/e2e-course/forum'){
+    if(forumListMode==='hold'){pendingLists.add(next);res.once('close',()=>pendingLists.delete(next));return}
+    if(forumListMode==='fail'){forumListMode='pass';res.status(503).json({error:'Recorded forum list failure'});return}
+  }
+  next()
+})
+
+// #219 only: deterministic authoring/review fixtures; no live model claim.
+if (process.env.FORUM_ISSUE219 === '1') {
+  await pool.query("UPDATE participants SET preset_key='nova' WHERE id='forum-evidence-agent'")
+  await pool.query("UPDATE conversations SET members=members || '[\"forum-evidence-agent\"]'::jsonb WHERE id=(SELECT study_room_conversation_id FROM courses WHERE id='e2e-course') AND NOT members ? 'forum-evidence-agent'")
+  const { HomeworkApplication } = await import('../../server/src/modules/learning/homework-application')
+  const { withTransaction } = await import('../../server/src/db/transaction')
+  const homework = new HomeworkApplication(pool, work => withTransaction(pool, work))
+  app.post('/api/fixture-native-homework', async (_req,res) => {
+    const detail=await homework.draft({companyId:'e2e-school',userId:'forum-teacher'},'e2e-course',{
+      title:'Issue219 原生作业草稿',instructions:'先观察，再说明。',criteria:['独立解释计算步骤。','核对 **原文** 标记。\n第二行仍属于同一标准。'],links:[],attachments:[],dueAt:null,
+    })
+    res.json(detail)
+  })
+  app.post('/api/fixture-native-homework/:id/ready',async(req,res)=>{
+    await pool.query("UPDATE homeworks SET validation_status='READY',validated_revision=revision WHERE company_id='e2e-school' AND id=$1 AND status='DRAFT'",[req.params.id])
+    res.sendStatus(200)
+  })
+  app.post('/api/fixture-native-homework/:id/evidence',async(req,res)=>{
+    const thread=await homework.start({companyId:'e2e-school',userId:'forum-student'},'e2e-course',req.params.id)
+    for(const role of ['user','assistant'] as const) {
+      const id=`native-219-${role}-${im.messages.length+1}`
+      im.messages.push({channelId:thread.channelId,channelType:2,messageId:id,clientMsgNo:id,messageSeq:im.messages.length+1,
+        fromUid:role==='user'?'forum-student':thread.agentId,timestamp:Date.now()/1000,
+        payload:createNativeMessage({id,role,content:[{type:'text',text:role==='user'?'Issue219 学习记录：我用两个三角形解释面积的一半。':'请再解释一个不同的底和高。'}]})})
+    }
+    res.json(thread)
+  })
+  // Recorded loopback provider: malformed judgment deliberately exercises the
+  // production unverified-report fallback. No live model or mastery claim.
+  const OpenAI=(await import('openai')).default
+  const {__setLlmClientOverrideForTesting}=await import('../../server/src/llm')
+  __setLlmClientOverrideForTesting(()=>new OpenAI({apiKey:'isolated-native-fixture',baseURL:'http://127.0.0.1:53097/api/fixture-model/v1'}))
+  const modelRequests: unknown[] = []
+  app.get('/api/fixture-native-model-inputs',(_req,res)=>res.json(modelRequests))
+  app.post('/api/fixture-model/v1/chat/completions',express.json(),(req,res)=>{
+    modelRequests.push(req.body)
+    res.json({id:'native-219-recorded',model:'recorded-fixture',
+      choices:[{index:0,finish_reason:'stop',message:{role:'assistant',content:'{"recorded":"unverified"}'}}],usage:{prompt_tokens:1,completion_tokens:1,total_tokens:2}})
+  })
+  app.post('/api/fixture-native-effects',async(_req,res)=>{
+    const {runLearningEffects}=await import('../../server/src/modules/learning/worker')
+    await runLearningEffects()
+    res.sendStatus(200)
+  })
+}
+
 // Mirror the public avatar prefix only; private attachment reads still use the
 // ordinary authorized file API. The object bytes live in integration storage.
 const originalPublicUrl = storage.publicUrl.bind(storage)

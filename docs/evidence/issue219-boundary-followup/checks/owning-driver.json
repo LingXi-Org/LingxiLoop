@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "reproduce": "XDG_CACHE_HOME=/workspace/.cache node e2e/server/content-editor.mjs --integration-only",
+  "database": "lingxiloop_content219_test",
+  "results": [
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-20T05:29:58.765Z",
+      "finishedAt": "2026-10-20T05:29:59.995Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-20T05:29:59.995Z",
+      "finishedAt": "2026-10-20T05:30:01.252Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "server/run-integration-tests.mjs",
+        "--file",
+        "organization-cases.test.ts",
+        "--file",
+        "course-forum.test.ts",
+        "--file",
+        "homework.test.ts"
+      ],
+      "startedAt": "2026-10-20T05:30:01.252Z",
+      "finishedAt": "2026-10-20T05:32:34.331Z",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Native browser fixture isolates the actual product editor with synthetic localStorage persistence. Business API and authorization coverage is in the cases and forum suites; integration checks use the existing three owning suites on dedicated PostgreSQL. No live model/provider validation."
+  ]
+}

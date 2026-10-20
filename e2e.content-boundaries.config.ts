@@ -1,0 +1,3 @@
+import { web } from '@e2e-dev/web'
+import type { E2EConfig } from 'e2e'
+export default {projectId:'lingxiloop-content-boundaries',tests:process.env.CONTENT_BOUNDARY_NATIVE_REGRESSION ? ['e2e/content-boundaries/browser.e2e.ts','e2e/content-editor/browser.e2e.ts'] : ['e2e/content-boundaries/browser.e2e.ts'],targets:[{name:'native',engine:web({browser:'chromium',viewport:{width:1440,height:1000},locale:'zh-CN'}),app:{url:`http://127.0.0.1:${process.env.CONTENT_BOUNDARY_PORT || 5391}`}}],workers:1,retries:0,timeout:120000,assertionTimeout:15000,trace:'retain-on-failure',output:process.env.CONTENT_BOUNDARY_OUTPUT || '.codex-tmp/content-boundary-browser',reporters:['list','junit','markdown'],failOnSkippedFailure:true} satisfies E2EConfig

@@ -1,6 +1,7 @@
+import type { ContentDocument } from '@/features/content-editor'
 import { http } from '@/api/core/http'
 import type { ContextThreadResult } from '@/features/context-threads/api'
-import type { ConversationReference, ForumPage } from '../forum/contracts'
+import type { ConversationReference, ForumPage, ForumAttachment } from '../forum/contracts'
 import type { HomeworkAnswer, HomeworkDetail, HomeworkFields, HomeworkLearner, HomeworkStudent, HomeworkSubmission } from './contracts'
 
 const base = (courseId: string, homeworkId: string) => `/courses/${encodeURIComponent(courseId)}/homeworks/${encodeURIComponent(homeworkId)}`
@@ -25,6 +26,6 @@ export const homeworkApi = {
     http<HomeworkSubmission>(`${base(courseId, id)}/submit`, { method: 'POST', body: JSON.stringify(input) }),
   learners: (courseId: string, id: string, offset = 0, search = '') => http<ForumPage<HomeworkLearner>>(`${base(courseId, id)}/learners?${new URLSearchParams({offset:String(offset),search})}`),
   submissions: (courseId: string, id: string, offset = 0, learnerId = '') => http<ForumPage<HomeworkSubmission>>(`${base(courseId, id)}/submissions?${new URLSearchParams({offset:String(offset),learnerId})}`),
-  review: (courseId: string, id: string, input: { learnerId: string; expectedSubmissionId: string; decision: 'PASSED' | 'RETURNED'; reason: string }) =>
+  review: (courseId: string, id: string, input: { learnerId: string; expectedSubmissionId: string; decision: 'PASSED' | 'RETURNED'; reason: string; editorDocument?: ContentDocument | null; attachments?: ForumAttachment[]; links?: string[] }) =>
     http<{ ok: true }>(`${base(courseId, id)}/review`, { method: 'POST', body: JSON.stringify(input) }),
 }

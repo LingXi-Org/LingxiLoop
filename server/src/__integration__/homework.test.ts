@@ -1388,3 +1388,54 @@ test('[integration] homework shares forum filters while keeping target flags, co
   assert.equal((await call(student,`/courses/${courseId}/teacher-agent`)).status,403)
   assert.equal((await call(outsider,`/courses/${courseId}/teacher-agent`)).status,404)
 })
+
+// Failure model: recovery-only pre-edit text leaks through report JSON, frozen
+// submissions or old stored snapshots; stripping it must preserve current native
+// formatting, private recovery, report pairing, tenant/peer checks and idempotency.
+test('[integration] legacy recovery stays private across current reports and native submission snapshots', async () => {
+  const { learnerHomeworkRead, teacherHomeworkOverview } = await import('../modules/learning/homework-reporting.js')
+  const { homework: task } = await published()
+  const thread = await homework.start(student, courseId, task.id)
+  const message = commitLearnerEvidence(thread, 'I can explain my current answer and need feedback about the half factor.')
+  const editorDocument = { format: 'blocknote', version: 1, projection: 'CURRENT ANSWER B', sections: ['CURRENT ANSWER B'],
+    legacyMarkdown: 'PRIVATE ORIGINAL A', blocks: [{ id: 'current-answer-block', type: 'paragraph',
+      props: { textColor: 'default', backgroundColor: 'default', textAlignment: 'left' },
+      content: [{ type: 'text', text: 'CURRENT ANSWER B', styles: { bold: true } }], children: [] }] }
+  const savedResponse = await call(student, path(task.id, '/answer'), 'PATCH',
+    { expectedRevision: 0, text: 'CURRENT ANSWER B', editorDocument, links: [], attachments: [] })
+  assert.equal(savedResponse.status, 200)
+  const privateState = (await homework.detail(student, courseId, task.id)).student!
+  assert.equal(privateState.answer.editorDocument?.legacyMarkdown, 'PRIVATE ORIGINAL A')
+  const ready = await report(task.id, evidenceJudgment(task.criteria, message.clientMsgNo, message.text, false))
+  const modelInput = lastModelRequest as { messages: Array<{ role: string; content: string }> }
+  const data = JSON.parse(modelInput.messages.find(item => item.role === 'user')!.content)
+  assert.deepEqual(data.answer, { text: 'CURRENT ANSWER B', links: [], attachments: [] })
+  const ownTool = await learnerHomeworkRead(pool, student, courseId, { homeworkId: task.id, section: 'answer', offset: 0 }, new AbortController().signal)
+  assert.doesNotMatch(JSON.stringify(ownTool), /PRIVATE ORIGINAL A|legacyMarkdown|editorDocument/)
+  const input = { expectedAnswerRevision: ready.answerRevision, reportId: ready.report!.id,
+    conversationReferences: currentReferences(), idempotencyKey: 'native-current-answer-only' }
+  const submittedResponse = await call(student, path(task.id, '/submit'), 'POST', input)
+  assert.equal(submittedResponse.status, 200)
+  const submitted = await submittedResponse.json() as Awaited<ReturnType<typeof homework.submit>>
+  assert.ok(submitted.answer.editorDocument)
+  assert.equal(submitted.answer.editorDocument.legacyMarkdown, undefined)
+  assert.deepEqual(submitted.answer.editorDocument.blocks, editorDocument.blocks)
+  assert.deepEqual((await homework.submit(student, courseId, task.id, input)).answer, submitted.answer)
+  const persisted = (await pool.query('SELECT answer FROM homework_submissions WHERE id=$1', [submitted.id])).rows[0].answer
+  assert.equal(persisted.editorDocument.legacyMarkdown, undefined)
+  // Simulate a row saved by the previous writer; reader must not disclose old
+  // recovery metadata, and must not rewrite that immutable historical row.
+  await pool.query('UPDATE homework_submissions SET answer=$2::jsonb WHERE id=$1',
+    [submitted.id, JSON.stringify({ ...persisted, editorDocument })])
+  const teacherItems = (await homework.submissions(teacher, courseId, task.id)).items
+  assert.equal(teacherItems[0].answer.editorDocument?.legacyMarkdown, undefined)
+  assert.deepEqual(teacherItems[0].answer.editorDocument?.blocks, editorDocument.blocks)
+  const teacherTool = await teacherHomeworkOverview(pool, teacher, courseId,
+    { homeworkId: task.id, learnerId: student.userId, section: 'answer', offset: 0 })
+  assert.doesNotMatch(JSON.stringify(teacherTool), /PRIVATE ORIGINAL A|legacyMarkdown|editorDocument/)
+  assert.match(JSON.stringify(teacherTool), /CURRENT ANSWER B/)
+  assert.equal((await homework.submissions(peer, courseId, task.id)).items.length, 0)
+  await assert.rejects(homework.submissions(outsider, courseId, task.id))
+  assert.equal((await homework.detail(student, courseId, task.id)).student!.answer.editorDocument?.legacyMarkdown, 'PRIVATE ORIGINAL A')
+  assert.equal((await pool.query('SELECT answer FROM homework_submissions WHERE id=$1', [submitted.id])).rows[0].answer.editorDocument.legacyMarkdown, 'PRIVATE ORIGINAL A')
+})

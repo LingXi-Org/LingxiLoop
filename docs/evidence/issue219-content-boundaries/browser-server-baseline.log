@@ -1,0 +1,21 @@
+(node:1268854) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+content boundary fixture ready
+[BABEL] Note: The code generator has deoptimised the styling of /workspace/LingxiLoop-issue219-boundaries/.codex-tmp/content-boundary-vite/deps/chunk-6NKYALLR.js?v=93958206 as it exceeds the max of 500KB.
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+4:51:41 AM [vite] Internal server error: Failed to parse source for import analysis because the content contains invalid JS syntax. If you use tsconfig.json, make sure to not set jsx to preserve.
+  Plugin: vite:import-analysis
+  File: /workspace/LingxiLoop-issue219-boundaries/src/features/content-editor/ContentEditor.tsx:69:10
+  74 |      {!compact && <p className="px-3 pb-2 text-xs text-muted-foreground" role={value.length > maxLength ? 'alert' : undefined}>
+  75 |        {value.length > maxLength ? `内容超过 ${maxLength.toLocaleString()} 字，请缩短后保存。` : `${value.length.toLocaleString()} / ${maxLength.toLocaleString()}`}
+  76 |      </p>}
+     |           ^
+  77 |    </div>
+  78 |  })
+      at TransformPluginContext._formatError (file:///workspace/LingxiLoop-review-pr223/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///workspace/LingxiLoop-review-pr223/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at TransformPluginContext.transform (file:///workspace/LingxiLoop-review-pr223/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64259:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async PluginContainer.transform (file:///workspace/LingxiLoop-review-pr223/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///workspace/LingxiLoop-review-pr223/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)

@@ -1,0 +1,50 @@
+# Screen at failure
+url: http://127.0.0.1:5391/e2e/content-editor.html
+revision: b1
+viewport: 390x900
+nodes: 44
+
+#root document "Native content editor acceptance"
+ #n36 main
+  #n37 heading "官方原生编辑器 · 隔离 UI 验收"
+  #n38 textbox "原生正文" value="原生格式\n\nhttps://example.org/native-219\n\n💯 \n\n\n\n\n\t\n\n\n\n\n\t\n\n\n\n\n\n\n\n\n\n\n\t\n\n\n\n\n\t\n\n\n\n\n\n\n\n\n\n\n\t\n\n\n\n\n\t\n\n\n" [focused]
+   #n39 heading "原生格式"
+    #n40 text="原生格式"
+   #n41 link "https://example.org/native-219" href="https://example.org/native-219"
+   #n42 text="💯"
+   #n43 table
+    #n44 rowgroup
+     #n45 row
+      #n46 cell
+      #n47 cell
+      #n48 cell
+     #n49 row
+      #n50 cell
+      #n51 cell
+      #n52 cell
+     #n53 row
+      #n54 cell
+      #n55 cell
+      #n56 cell
+  #n57 text="252 / 20,000"
+  #n58 button "保存并重新打开"
+  #n59 region "已保存文档"
+   #n60 textbox
+    #n61 heading "原生格式"
+     #n62 text="原生格式"
+    #n63 link "https://example.org/native-219" href="https://example.org/native-219"
+    #n64 text="💯"
+    #n65 table
+     #n66 rowgroup
+      #n67 row
+       #n68 cell
+       #n69 cell
+       #n70 cell
+      #n71 row
+       #n72 cell
+       #n73 cell
+       #n74 cell
+      #n75 row
+       #n76 cell
+       #n77 cell
+       #n78 cell

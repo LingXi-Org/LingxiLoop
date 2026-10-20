@@ -1,0 +1,20 @@
+[db:migrate] already current · 128ms
+[db:migrate] already current · 140ms
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop
+      run 01a157ce-22a2-7680-ac8a-02a78c7eb58d · targets: forum
+
+ ✓ |forum| e2e/forum/issue219.e2e.ts (3 tests) 188.65s
+   ✓ native forum menus, table, task state, scoped draft, upload retry, publish retry and JSON reopen 91.20s
+   ✓ legacy submission, native teacher feedback media and private history keep the same audience 36.12s
+   ✓ real homework draft card persists both native fields, publishes, and reopens answer and acceptance 61.33s
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:34:51
+   Duration  191.73s (3m 12s)
+     Report  artifacts/forum/issue219/browser/report.json
+
+      JUnit  artifacts/forum/issue219/browser/junit.xml
+   Markdown  artifacts/forum/issue219/browser/summary.md
+

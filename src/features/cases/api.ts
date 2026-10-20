@@ -1,9 +1,12 @@
+import type { ContentDocument } from '@/features/content-editor'
 import { http } from '@/api/core/http'
 
 export interface CaseInput {
   title: string
   summary: string
   body: string
+  editorDocument?: ContentDocument | null
+  summaryDocument?: ContentDocument | null
   cover: string | null
   category: string
   tags: string[]
@@ -28,5 +31,6 @@ export const casesApi = {
   detail: (id: string, signal?: AbortSignal) => http<CaseArticle>(base(id), { signal }),
   save: (input: CaseInput, article?: CaseArticle) => http<CaseArticle>(article ? base(article.id) : '/cases', { method: article ? 'PUT' : 'POST', body: JSON.stringify({ ...input, ...(article ? { version: article.version } : {}) }) }),
   action: (article: CaseArticle, action: 'publish' | 'unpublish' | 'retry-index') => http<CaseArticle>(`${base(article.id)}/${action}`, { method: 'POST', body: JSON.stringify({ version: article.version }) }),
+  file: (id: string, mime: string, data: string) => http<{ url: string }>(`${base(id)}/files`, { method: 'POST', body: JSON.stringify({ mime, data }) }),
   image: (id: string, mime: string, data: string) => http<{ url: string }>(`${base(id)}/images`, { method: 'POST', body: JSON.stringify({ mime, data }) }),
 }

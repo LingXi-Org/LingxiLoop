@@ -1,3 +1,4 @@
+import type { ContentDocument } from '../content-editor/contracts.js'
 import { createHash } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
@@ -7,12 +8,13 @@ import type { HomeworkAnswer, HomeworkJudgment, HomeworkMaterial, HomeworkReport
 import type { LearningAttachment } from './forum-contracts.js'
 import { requireLearningCourseProjectScope } from './project-scope-repository.js'
 import { hasHomeworkLearningRecord } from './homework-evidence.js'
+import { sharedHomeworkAnswer } from './homework-answer.js'
 
 export const homeworkHash = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 export type HomeworkTransaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
 export interface HomeworkRow {
   id: string; company_id: string; project_id: string; course_id: string; created_by: string; status: 'DRAFT'|'PUBLISHED'|'CLOSED';
-  revision: number; title: string; instructions: string; criteria: string[]; links: string[]; attachments: LearningAttachment[];
+  editor_document?: ContentDocument | null; criteria_document?: ContentDocument | null; revision: number; title: string; instructions: string; criteria: string[]; links: string[]; attachments: LearningAttachment[];
   due_at: Date|null; visible_hash: string; validated_revision: number|null; validation_status: 'PENDING'|'READY'|'INVALID';
   validation_feedback: string; materials: HomeworkMaterial[]; publish_key: string|null
 }
@@ -27,7 +29,7 @@ export interface HomeworkStateRow {
 export interface HomeworkSubmission {
   conversationReferences:import('./forum-evidence.js').ConversationEvidence[]
   id: string; learnerId: string; learnerName: string; learnerAvatarUrl: string | null; version: number; answer: HomeworkAnswer; report: HomeworkReport;
-  submittedAt: string; late: boolean; reviewStatus: 'PENDING'|'PASSED'|'RETURNED'; feedback: string
+  submittedAt: string; late: boolean; reviewStatus: 'PENDING'|'PASSED'|'RETURNED'; feedback: string; feedbackDocument?: ContentDocument | null; feedbackAttachments: LearningAttachment[]; feedbackLinks: string[]
 }
 
 export async function homeworkScope(db: Queryable, scope: LearningScope, courseId: string, mode: 'read'|'submit'|'manage'|'review'='read') {
@@ -65,13 +67,13 @@ export const manualMastery = (state: HomeworkStateRow) => Boolean(state.manual_u
 
 export async function homeworkSubmissions(db: Queryable,hw: HomeworkRow,learnerId: string|null,offset=0,submissionId?:string) {
   const {rows}=await db.query<HomeworkSubmission>(`SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",u.avatar_url AS "learnerAvatarUrl",s.version,
-    s.answer,s.report,s.conversation_references AS "conversationReferences",s.submitted_at AS "submittedAt",s.late,COALESCE(d.decision,'PENDING') AS "reviewStatus",COALESCE(d.reason,'') AS feedback
+    s.answer,s.report,s.conversation_references AS "conversationReferences",s.submitted_at AS "submittedAt",s.late,COALESCE(d.decision,'PENDING') AS "reviewStatus",COALESCE(d.reason,'') AS feedback,d.editor_document AS "feedbackDocument",COALESCE(d.attachments,'[]') AS "feedbackAttachments",COALESCE(d.links,'[]') AS "feedbackLinks"
     FROM homework_submissions s JOIN users u ON u.id=s.learner_id LEFT JOIN LATERAL (
-      SELECT decision,reason FROM homework_teacher_decisions WHERE company_id=s.company_id AND homework_id=s.homework_id
+      SELECT decision,reason,editor_document,attachments,links FROM homework_teacher_decisions WHERE company_id=s.company_id AND homework_id=s.homework_id
         AND learner_id=s.learner_id AND submission_id=s.id ORDER BY created_at DESC,id DESC LIMIT 1
     ) d ON TRUE WHERE s.company_id=$1 AND s.homework_id=$2 AND ($3::text IS NULL OR s.learner_id=$3) AND ($5::text IS NULL OR s.id=$5)
     ORDER BY s.submitted_at DESC,s.version DESC LIMIT 51 OFFSET $4`,[hw.company_id,hw.id,learnerId,offset,submissionId??null])
-  return rows
+  return rows.map(row => ({ ...row, answer: sharedHomeworkAnswer(row.answer) }))
 }
 export async function studentHomeworkView(db:Queryable,hw:HomeworkRow,state:HomeworkStateRow,options:{readLearningRecord?:boolean}={}) {
   const assessment=await homeworkAssessment(db,state)
@@ -83,11 +85,11 @@ export async function studentHomeworkView(db:Queryable,hw:HomeworkRow,state:Home
   const canSubmit=hasLearningRecord && status!=='PASSED' && hw.status!=='DRAFT' && (hw.status!=='CLOSED'||status==='RETURNED')
   return {answer:state.answer,answerRevision:state.answer_revision,evidenceRevision:state.evidence_revision,channelId:state.channel_id,
     status,unlocked,hasLearningRecord,canSubmit,criteria,report:state.report,reportStatus:state.report_status,reportFeedback:state.report_feedback,latestSubmission,
-    feedback:latestSubmission?.feedback??'',manualReview:state.manual_evidence,
+    feedback:latestSubmission?.feedback??'',feedbackDocument:latestSubmission?.feedbackDocument,feedbackAttachments:latestSubmission?.feedbackAttachments??[],feedbackLinks:latestSubmission?.feedbackLinks??[],manualReview:state.manual_evidence,
     manualReviewPreview:assessment?.evidence.map(item=>item.excerpt)??[]}
 }
 export function homeworkView(hw:HomeworkRow,userId:string) {
-  return {id:hw.id,courseId:hw.course_id,title:hw.title,instructions:hw.instructions,criteria:hw.criteria,links:hw.links,attachments:hw.attachments,
+  return {id:hw.id,courseId:hw.course_id,title:hw.title,instructions:hw.instructions,editorDocument:hw.editor_document,criteria:hw.criteria,criteriaDocument:hw.criteria_document,links:hw.links,attachments:hw.attachments,
     dueAt:hw.due_at,status:hw.status,revision:hw.revision,visibleHash:hw.visible_hash,createdBy:hw.created_by,
     validation:{status:hw.validation_status,revision:hw.validated_revision,feedback:hw.validation_feedback},
     canEditDraft:hw.created_by===userId&&hw.status==='DRAFT',

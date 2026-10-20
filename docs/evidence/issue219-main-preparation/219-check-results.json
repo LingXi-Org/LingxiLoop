@@ -1,0 +1,70 @@
+[
+  {
+    "label": "web-types",
+    "exitCode": 0,
+    "elapsedMs": 20525,
+    "command": [
+      "/workspace/.tools/node-v22.23.3-linux-x64/bin/node",
+      "node_modules/typescript/bin/tsc",
+      "--noEmit"
+    ]
+  },
+  {
+    "label": "node-types",
+    "exitCode": 0,
+    "elapsedMs": 768,
+    "command": [
+      "/workspace/.tools/node-v22.23.3-linux-x64/bin/node",
+      "node_modules/typescript/bin/tsc",
+      "-p",
+      "tsconfig.node.json",
+      "--noEmit"
+    ]
+  },
+  {
+    "label": "server-types",
+    "exitCode": 0,
+    "elapsedMs": 11841,
+    "command": [
+      "/workspace/.tools/node-v22.23.3-linux-x64/bin/node",
+      "node_modules/typescript/bin/tsc",
+      "-p",
+      "server/tsconfig.json",
+      "--noEmit"
+    ]
+  },
+  {
+    "label": "e2e-types",
+    "exitCode": 0,
+    "elapsedMs": 12812,
+    "command": [
+      "/workspace/.tools/node-v22.23.3-linux-x64/bin/node",
+      "node_modules/typescript/bin/tsc",
+      "-p",
+      "e2e/tsconfig.json",
+      "--noEmit"
+    ]
+  },
+  {
+    "label": "payload",
+    "exitCode": 0,
+    "elapsedMs": 918,
+    "command": [
+      "/workspace/.tools/node-v22.23.3-linux-x64/bin/node",
+      "--import",
+      "tsx",
+      "docs/evidence/issue219-content-boundaries/boundary-probe.mjs"
+    ]
+  },
+  {
+    "label": "migration-preflight",
+    "exitCode": 2,
+    "elapsedMs": 415,
+    "command": [
+      "/workspace/.tools/node-v22.23.3-linux-x64/bin/node",
+      "--import",
+      "tsx",
+      "docs/evidence/issue219-content-boundaries/migration-preflight.mjs"
+    ]
+  }
+]

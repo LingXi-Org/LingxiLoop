@@ -1,12 +1,15 @@
+import type { ContentDocument } from '@/features/content-editor'
 import type { ConversationEvidence, ForumAttachment } from '../forum/contracts'
 
-export interface HomeworkAnswer { text: string; links: string[]; attachments: ForumAttachment[] }
+export interface HomeworkAnswer { text: string; editorDocument?: ContentDocument | null; links: string[]; attachments: ForumAttachment[] }
 export interface HomeworkCriterion { criterion: string; met: boolean; independent: boolean; feedback: string }
 export interface Homework {
   id: string
   courseId: string
   title: string
   instructions: string
+  editorDocument?: ContentDocument | null
+  criteriaDocument?: ContentDocument | null
   criteria: string[]
   links: string[]
   attachments: ForumAttachment[]
@@ -19,7 +22,7 @@ export interface Homework {
   canPublish: boolean
   canEditDraft: boolean
 }
-export type HomeworkFields = Pick<Homework, 'title' | 'instructions' | 'criteria' | 'links' | 'attachments' | 'dueAt'>
+export type HomeworkFields = Pick<Homework, 'title' | 'instructions' | 'editorDocument' | 'criteriaDocument' | 'criteria' | 'links' | 'attachments' | 'dueAt'>
 export interface HomeworkReport {
   id: string
   answerRevision: number
@@ -44,6 +47,9 @@ export interface HomeworkSubmission {
   late: boolean
   reviewStatus: 'PENDING' | 'PASSED' | 'RETURNED'
   feedback: string
+  feedbackDocument?: ContentDocument | null
+  feedbackAttachments?: ForumAttachment[]
+  feedbackLinks?: string[]
 }
 export type HomeworkLearnerStatus = 'NOT_STARTED' | 'LEARNING' | 'MASTERED' | 'PENDING' | 'PASSED' | 'RETURNED'
 export interface HomeworkStudent {
@@ -61,6 +67,9 @@ export interface HomeworkStudent {
   reportFeedback: string
   latestSubmission: HomeworkSubmission | null
   feedback: string
+  feedbackDocument?: ContentDocument | null
+  feedbackAttachments?: ForumAttachment[]
+  feedbackLinks?: string[]
   manualReview: { evidence: string[]; sharedAt: string } | null
 }
 export interface HomeworkDetail { homework: Homework; student: HomeworkStudent | null; teacher: boolean }

@@ -1,0 +1,31 @@
+{
+  "value": "CURRENT ANSWER B\n",
+  "document": {
+    "format": "blocknote",
+    "version": 1,
+    "blocks": [
+      {
+        "id": "eab24e23-2b37-4b43-9fbf-10de16322cdb",
+        "type": "paragraph",
+        "props": {
+          "backgroundColor": "default",
+          "textColor": "default",
+          "textAlignment": "left"
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "CURRENT ANSWER B",
+            "styles": {}
+          }
+        ],
+        "children": []
+      }
+    ],
+    "projection": "CURRENT ANSWER B\n",
+    "sections": [
+      "CURRENT ANSWER B"
+    ],
+    "legacyMarkdown": "PRIVATE ORIGINAL A"
+  }
+}

@@ -1,0 +1,1067 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a157a1-9644-773f-8d00-792d581a2014",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-20T04:46:10.471Z",
+    "finishedAt": "2026-10-20T04:46:26.803Z",
+    "project": {
+      "id": "lingxiloop-content-boundaries",
+      "configDigest": "15782a3a351853e22e9692eaecabed7b83b01c34b41c7325c77c4b0e829e9c80"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "dc4bc88b81f0b9011c7540e4dc7f0889cab23778",
+      "branch": "fix/issue219-content-boundaries",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "native",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5391",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "95217d8c17f1f56ee6db12b6103ee683792dc5d25502f204512d4b307f907abf",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::legacy%20criteria%20keep%20separate%20native%20paragraphs%20on%20edit%20and%20reopen%3A%20plain",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "legacy criteria keep separate native paragraphs on edit and reopen: plain"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 8,
+          "column": 13
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T04:46:11.104Z",
+            "durationMs": 5763,
+            "artifacts": [
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:21"
+                },
+                "path": "native/e2e_content-boundaries_browser.e2e.ts__legacy_20criteria_20keep_20separate_20native_20paragraphs_20on_20edit_20-410f71fc/default/attempt-0/screenshots/001-criteria-plain-reopened.png",
+                "size": 51512,
+                "sha256": "be36b6c52a0a7155d573eaf96bb01fbfac3ba2839b0f50ba9710f9aeab827eca"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-boundaries/fixture.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:11.239Z",
+                "durationMs": 1279,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 9,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:12.519Z",
+                "durationMs": 130,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 10,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-boundaries/fixture.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:12.650Z",
+                "durationMs": 904,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 11,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"验收标准\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:13.556Z",
+                "durationMs": 578,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:14.135Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 14,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"验收标准\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:14.145Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 15,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:14.227Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 15,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "9 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:14.242Z",
+                "durationMs": 161,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 15,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存修改\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:14.404Z",
+                "durationMs": 148,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 16,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:14.554Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 17,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:14.565Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 18,
+                  "column": 31
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-boundaries/fixture.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:14.582Z",
+                "durationMs": 929,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 24,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"验收标准\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:15.511Z",
+                "durationMs": 423,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 25,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"验收标准\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:15.936Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.050Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+b",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.069Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "10 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.091Z",
+                "durationMs": 232,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 135
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+b",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.324Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 177
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存修改\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.344Z",
+                "durationMs": 181,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 27,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.526Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 28,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.542Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 29,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "criteria-plain-reopened",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.566Z",
+                "durationMs": 86,
+                "events": [],
+                "artifacts": [
+                  "01a157a1-9aa0-7f25-93ff-dd70f8d2ebcd:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 34,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "650cfcd89ff84b60da7db8ee1f47bfd2a68e72eef4944414b95085a8fac0b8d5",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::legacy%20criteria%20keep%20separate%20native%20paragraphs%20on%20edit%20and%20reopen%3A%20multiline-literal",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "legacy criteria keep separate native paragraphs on edit and reopen: multiline-literal"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 8,
+          "column": 13
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a157a1-b124-755b-9746-10ad2404c12b",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T04:46:16.868Z",
+            "durationMs": 7126,
+            "artifacts": [
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a157a1-b124-755b-9746-10ad2404c12b:21"
+                },
+                "path": "native/e2e_content-boundaries_browser.e2e.ts__legacy_20criteria_20keep_20separate_20native_20paragraphs_20on_20edit_20-947ae34d/default/attempt-0/screenshots/001-criteria-multiline-literal-reopened.png",
+                "size": 52670,
+                "sha256": "3d3c0fc77a8ce97f367312a986d45424f738e722cdba5a182aeba44c37bc3e93"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-boundaries/fixture.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:16.887Z",
+                "durationMs": 1101,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 9,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:17.989Z",
+                "durationMs": 104,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 10,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-boundaries/fixture.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:18.094Z",
+                "durationMs": 1086,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 11,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"验收标准\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:19.181Z",
+                "durationMs": 1014,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:20.195Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 14,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"验收标准\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:20.210Z",
+                "durationMs": 263,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 15,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:20.473Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 15,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "9 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:20.500Z",
+                "durationMs": 455,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 15,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存修改\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:20.956Z",
+                "durationMs": 159,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 16,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:21.116Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 17,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:21.149Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 18,
+                  "column": 31
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-boundaries/fixture.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:21.190Z",
+                "durationMs": 1004,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 24,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"验收标准\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:22.194Z",
+                "durationMs": 813,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 25,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"验收标准\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.008Z",
+                "durationMs": 116,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.125Z",
+                "durationMs": 49,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+b",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.174Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "10 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.190Z",
+                "durationMs": 284,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 135
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+b",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.474Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 26,
+                  "column": 177
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存修改\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.484Z",
+                "durationMs": 193,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 27,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.677Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 28,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.707Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 29,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a157a1-b124-755b-9746-10ad2404c12b:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "criteria-multiline-literal-reopened",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:23.725Z",
+                "durationMs": 89,
+                "events": [],
+                "artifacts": [
+                  "01a157a1-b124-755b-9746-10ad2404c12b:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 34,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "fa44a640673224091b21f620724fff6dad3229fad200ed0509789df063db960c",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::private%20legacy%20recovery%20remains%20available%20after%20editing%20current%20content",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "private legacy recovery remains available after editing current content"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 36,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a157a1-ccfb-7122-bd46-6a4509f21d39",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T04:46:23.995Z",
+            "durationMs": 2716,
+            "artifacts": [],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a157a1-ccfb-7122-bd46-6a4509f21d39:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-boundaries/fixture.html?answer=1",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:24.006Z",
+                "durationMs": 1372,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 37,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a1-ccfb-7122-bd46-6a4509f21d39:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"私有作答\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:25.378Z",
+                "durationMs": 885,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 38,
+                  "column": 76
+                }
+              },
+              {
+                "id": "01a157a1-ccfb-7122-bd46-6a4509f21d39:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"私有作答\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:26.269Z",
+                "durationMs": 277,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 39,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a157a1-ccfb-7122-bd46-6a4509f21d39:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:26.547Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 40,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a157a1-ccfb-7122-bd46-6a4509f21d39:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:46:26.577Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-boundaries/browser.e2e.ts",
+                  "line": 41,
+                  "column": 30
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 3,
+      "selected": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 3,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 104182,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

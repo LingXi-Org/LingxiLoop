@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "reproduce": "XDG_CACHE_HOME=/workspace/.cache node e2e/server/content-editor.mjs --browser-only",
+  "database": "lingxiloop_content219_test",
+  "results": [
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-20T04:10:03.681Z",
+      "finishedAt": "2026-10-20T04:10:04.508Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-20T04:10:04.508Z",
+      "finishedAt": "2026-10-20T04:10:05.278Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "/workspace/LingxiLoop/node_modules/e2e/dist/cli/bin.js",
+        "run",
+        "--config",
+        "e2e.native-content.config.ts"
+      ],
+      "startedAt": "2026-10-20T04:10:06.329Z",
+      "finishedAt": "2026-10-20T04:11:37.275Z",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Native browser fixture isolates the actual product editor with synthetic localStorage persistence. Business API and authorization coverage is in the cases and forum suites; integration checks use the existing three owning suites on dedicated PostgreSQL. No live model/provider validation."
+  ]
+}

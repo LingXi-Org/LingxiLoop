@@ -1,20 +1,21 @@
+import type { ContentDocument } from '../content-editor/contracts.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { ForumQuery, ForumTarget, LearningAttachment } from './forum-contracts.js'
 export interface ForumItem {
-  id: string; targetType: ForumTarget; kind: 'share' | 'assignment'; title: string; body: string
+  id: string; targetType: ForumTarget; kind: 'share' | 'assignment'; title: string; body: string; editorDocument?: ContentDocument | null
   authorId: string; authorName: string; authorAvatarUrl: string | null; createdAt: string; updatedAt: string; tags: string[]; links: string[]; attachments: LearningAttachment[]
   sourceId: string | null; dueAt: string | null; status: string; pinned: boolean; archived: boolean; commentCount: number; reactions: { emoji: string; userIds: string[] }[]
 }
 export async function listForumItems(db: Queryable, companyId: string, projectId: string, query: ForumQuery,
   target?: { type: ForumTarget; id: string }): Promise<ForumItem[]> {
   const { rows } = await db.query<ForumItem>(`WITH items AS (
-    SELECT p.id,p.company_id,p.project_id,p.author_user_id,p.kind,p.title,p.body,p.tags,p.links,p.attachments,p.source_id,p.created_at,p.updated_at,p.due_at,p.status,p.archived,p.deleted_at,'post'::text AS target_type FROM course_forum_posts p
+    SELECT p.id,p.company_id,p.project_id,p.author_user_id,p.kind,p.title,p.body,p.tags,p.links,p.attachments,p.source_id,p.created_at,p.updated_at,p.due_at,p.status,p.archived,p.deleted_at,p.editor_document,'post'::text AS target_type FROM course_forum_posts p
     UNION ALL
     SELECT h.id,h.company_id,h.project_id,h.created_by,'assignment',h.title,h.instructions,'{}'::text[],
       h.links,h.attachments,NULL,h.published_at,h.updated_at
-      ,h.due_at,h.status,FALSE,NULL,'homework'
+      ,h.due_at,h.status,FALSE,NULL,h.editor_document,'homework'
     FROM homeworks h WHERE h.company_id=$1 AND h.project_id=$2
-  ) SELECT p.id,p.target_type AS "targetType",p.kind,p.title,p.body,p.author_user_id AS "authorId",
+  ) SELECT p.id,p.target_type AS "targetType",p.kind,p.title,p.body,p.editor_document AS "editorDocument",p.author_user_id AS "authorId",
     COALESCE(u.display_name,'课程成员') AS "authorName",u.avatar_url AS "authorAvatarUrl",p.created_at AS "createdAt",p.updated_at AS "updatedAt",p.tags,p.links,p.attachments,
     p.source_id AS "sourceId",p.due_at AS "dueAt",p.status,COALESCE(f.pinned,FALSE) AS pinned,CASE WHEN p.target_type='homework' THEN COALESCE(f.archived,FALSE) ELSE p.archived END AS archived,
     (SELECT COUNT(*)::int FROM course_forum_comments c WHERE c.company_id=p.company_id AND c.project_id=p.project_id AND c.target_type=p.target_type AND c.target_id=p.id AND c.deleted_at IS NULL) AS "commentCount",
@@ -40,10 +41,10 @@ export async function listForumItems(db: Queryable, companyId: string, projectId
 export async function listSubmissionVersions(db: Queryable, companyId: string, projectId: string, assignmentId: string, learnerId: string | null, offset: number) {
   const { rows } = await db.query(`SELECT s.id,s.learner_id AS "learnerId",u.display_name AS "learnerName",u.avatar_url AS "learnerAvatarUrl",s.submitted_at AS "submittedAt",
     (ROW_NUMBER() OVER (PARTITION BY s.learner_id ORDER BY s.submission_sequence))::int AS version,
-    s.source,s.submitted_by_agent AS "agentId",s.agent_work_id AS "agentWorkId",s.late,s.answer,s.links,s.attachments,s.conversation_references AS "conversationReferences",
+    s.source,s.submitted_by_agent AS "agentId",s.agent_work_id AS "agentWorkId",s.late,s.answer,s.editor_document AS "editorDocument",s.links,s.attachments,s.conversation_references AS "conversationReferences",
     COALESCE(s.assessment,(SELECT jsonb_build_object('status',CASE e.status WHEN 'failed' THEN 'FAILED' ELSE 'PENDING' END) FROM learning_effects e
       WHERE e.company_id=s.company_id AND e.kind='forum.assess' AND e.effect_key=s.id)) AS assessment,
-    COALESCE((SELECT jsonb_agg(jsonb_build_object('id',f.id,'body',f.body,'authorId',f.author_id,'kind',COALESCE(f.legacy_record->>'evaluator_kind','TEACHER'),'status',COALESCE(f.legacy_record->>'status','ACCEPTED'),'createdAt',f.created_at) ORDER BY f.created_at,f.id)
+    COALESCE((SELECT jsonb_agg(jsonb_build_object('id',f.id,'body',f.body,'editorDocument',f.editor_document,'attachments',COALESCE(f.attachments,'[]'),'links',COALESCE(f.links,'[]'),'authorId',f.author_id,'kind',COALESCE(f.legacy_record->>'evaluator_kind','TEACHER'),'status',COALESCE(f.legacy_record->>'status','ACCEPTED'),'createdAt',f.created_at) ORDER BY f.created_at,f.id)
       FROM course_forum_feedback f WHERE f.company_id=s.company_id AND f.project_id=s.project_id AND f.submission_id=s.id),'[]') AS feedback
     FROM course_forum_submissions s JOIN users u ON u.id=s.learner_id
     WHERE s.company_id=$1 AND s.project_id=$2 AND s.assignment_id=$3 AND ($4::text IS NULL OR s.learner_id=$4)

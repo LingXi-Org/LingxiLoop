@@ -1,0 +1,361 @@
+[db:migrate] already current · 58ms
+[db:migrate] already current · 59ms
+[integration] selected 3/88 file(s): organization-cases.test.ts, course-forum.test.ts, homework.test.ts
+TAP version 13
+# Subtest: [integration] forum discovers assignments without aggregating sources, isolating every content operation
+ok 1 - [integration] forum discovers assignments without aggregating sources, isolating every content operation
+  ---
+  duration_ms: 1456.371989
+  type: 'test'
+  ...
+# Subtest: [integration] submission versions preserve links, private files, late status and idempotency; closure blocks browser and Agent
+ok 2 - [integration] submission versions preserve links, private files, late status and idempotency; closure blocks browser and Agent
+  ---
+  duration_ms: 1654.721732
+  type: 'test'
+  ...
+# Subtest: [integration] comment files follow course membership and current source visibility
+ok 3 - [integration] comment files follow course membership and current source visibility
+  ---
+  duration_ms: 1567.340381
+  type: 'test'
+  ...
+# Subtest: [integration] Agent provenance cannot become independent human evidence or change the submitting student
+ok 4 - [integration] Agent provenance cannot become independent human evidence or change the submitting student
+  ---
+  duration_ms: 1848.544616
+  type: 'test'
+  ...
+# Subtest: [integration] native submission tools bind principal, frozen audience, original messages and Agent provenance
+ok 5 - [integration] native submission tools bind principal, frozen audience, original messages and Agent provenance
+  ---
+  duration_ms: 3749.343769
+  type: 'test'
+  ...
+# Subtest: [integration] HTTP forum and private download routes reject cross-course access and forged browser provenance
+ok 6 - [integration] HTTP forum and private download routes reject cross-course access and forged browser provenance
+  ---
+  duration_ms: 5212.888368
+  type: 'test'
+  ...
+# Subtest: [integration] inline edits, comments, reactions, archive and filters obey author and course grants
+ok 7 - [integration] inline edits, comments, reactions, archive and filters obey author and course grants
+  ---
+  duration_ms: 1632.577425
+  type: 'test'
+  ...
+# Subtest: [integration] concurrent retries preserve one version and teacher feedback survives closure and revocation
+ok 8 - [integration] concurrent retries preserve one version and teacher feedback survives closure and revocation
+  ---
+  duration_ms: 1323.546218
+  type: 'test'
+  ...
+# Subtest: [integration] references are mandatory, private and frozen; each accepted version has a durable assessment
+ok 9 - [integration] references are mandatory, private and frozen; each accepted version has a durable assessment
+  ---
+  duration_ms: 1355.470931
+  type: 'test'
+  ...
+# Subtest: [integration] assessment retries fail honestly and persist only grounded student evidence
+ok 10 - [integration] assessment retries fail honestly and persist only grounded student evidence
+  ---
+  duration_ms: 1292.699254
+  type: 'test'
+  ...
+# Subtest: [integration] validation finalization and a concurrent draft revision cannot form an effect/actor lock cycle
+ok 11 - [integration] validation finalization and a concurrent draft revision cannot form an effect/actor lock cycle
+  ---
+  duration_ms: 3257.418141
+  type: 'test'
+  ...
+# Subtest: [integration] an effect lease expiring during authorization lock wait cannot install its judgment
+ok 12 - [integration] an effect lease expiring during authorization lock wait cannot install its judgment
+  ---
+  duration_ms: 1187.047563
+  type: 'test'
+  ...
+# Subtest: [integration] each homework learner resumes one private thread and renewed authorization guards existing bindings
+ok 13 - [integration] each homework learner resumes one private thread and renewed authorization guards existing bindings
+  ---
+  duration_ms: 2511.187262
+  type: 'test'
+  ...
+# Subtest: [integration] a genuine learning record permits a truthful report and paired submission without an assessment
+ok 14 - [integration] a genuine learning record permits a truthful report and paired submission without an assessment
+  ---
+  duration_ms: 2328.985223
+  type: 'test'
+  ...
+# Subtest: [integration] only the current learner persisted nonempty messages in this homework count as learning records
+ok 15 - [integration] only the current learner persisted nonempty messages in this homework count as learning records
+  ---
+  duration_ms: 1915.708385
+  type: 'test'
+  ...
+# Subtest: [integration] an authorized unreadable learning attachment alone permits an unverified submission while revoked access still rejects
+ok 16 - [integration] an authorized unreadable learning attachment alone permits an unverified submission while revoked access still rejects
+  ---
+  duration_ms: 1516.072712
+  type: 'test'
+  ...
+# Subtest: [integration] a changed learning conversation invalidates its report preview even when no assessment ran
+ok 17 - [integration] a changed learning conversation invalidates its report preview even when no assessment ran
+  ---
+  duration_ms: 1725.768018
+  type: 'test'
+  ...
+# Subtest: [integration] a genuine user message committed while submission waits for authorization rejects the old report
+ok 18 - [integration] a genuine user message committed while submission waits for authorization rejects the old report
+  ---
+  duration_ms: 1604.570305
+  type: 'test'
+  ...
+# Subtest: [integration] a genuine assistant message committed while submission waits for authorization rejects the old report
+ok 19 - [integration] a genuine assistant message committed while submission waits for authorization rejects the old report
+  ---
+  duration_ms: 1325.233714
+  type: 'test'
+  ...
+# Subtest: [integration] invalid model claims yield an explicitly unverified factual report that the learner may submit
+ok 20 - [integration] invalid model claims yield an explicitly unverified factual report that the learner may submit
+  ---
+  duration_ms: 1352.572812
+  type: 'test'
+  ...
+# Subtest: [integration] optional assessment diagnostics do not invalidate a ready report for unchanged learning records
+ok 21 - [integration] optional assessment diagnostics do not invalidate a ready report for unchanged learning records
+  ---
+  duration_ms: 1590.366301
+  type: 'test'
+  ...
+# Subtest: [integration] canonical assessment retries reuse pending and negative ready evidence without erasing manual review or reports
+ok 22 - [integration] canonical assessment retries reuse pending and negative ready evidence without erasing manual review or reports
+  ---
+  duration_ms: 2012.692842
+  type: 'test'
+  ...
+# Subtest: [integration] invalid assessment retries converge once while new evidence and teacher returns invalidate old native receipts
+ok 23 - [integration] invalid assessment retries converge once while new evidence and teacher returns invalidate old native receipts
+  ---
+  duration_ms: 2627.607241
+  type: 'test'
+  ...
+# Subtest: [integration] pending assessment retry restores a missing effect without replacing the evidence receipt
+ok 24 - [integration] pending assessment retry restores a missing effect without replacing the evidence receipt
+  ---
+  duration_ms: 1913.660884
+  type: 'test'
+  ...
+# Subtest: [integration] pending assessment retry restores a completed effect without replacing the evidence receipt
+ok 25 - [integration] pending assessment retry restores a completed effect without replacing the evidence receipt
+  ---
+  duration_ms: 2052.033848
+  type: 'test'
+  ...
+# Subtest: [integration] host assessment sees the assistants published commentary and public explanation when judging copied help
+ok 26 - [integration] host assessment sees the assistants published commentary and public explanation when judging copied help
+  ---
+  duration_ms: 1380.478125
+  type: 'test'
+  ...
+# Subtest: [integration] latest locked teacher decision wins when transaction start order differs from review order
+ok 27 - [integration] latest locked teacher decision wins when transaction start order differs from review order
+  ---
+  duration_ms: 1798.699533
+  type: 'test'
+  ...
+# Subtest: [integration] submitted time and late status use the same post-lock database time
+ok 28 - [integration] submitted time and late status use the same post-lock database time
+  ---
+  duration_ms: 6741.419814
+  type: 'test'
+  ...
+# Subtest: [integration] manual review waiting for the learner cannot deadlock with the learner saving a draft
+ok 29 - [integration] manual review waiting for the learner cannot deadlock with the learner saving a draft
+  ---
+  duration_ms: 1378.125731
+  type: 'test'
+  ...
+# Subtest: [integration] private drafts and truthful partial mastery reports form one idempotent versioned submission pair
+ok 30 - [integration] private drafts and truthful partial mastery reports form one idempotent versioned submission pair
+  ---
+  duration_ms: 1748.5589
+  type: 'test'
+  ...
+# Subtest: [integration] pending replacement preserves history, stale teacher review rejects, and closed return exception is consumed once
+ok 31 - [integration] pending replacement preserves history, stale teacher review rejects, and closed return exception is consumed once
+  ---
+  duration_ms: 2560.224488
+  type: 'test'
+  ...
+# Subtest: [integration] manual unlock needs learner-shared evidence and preserves unresolved host findings without exposing private drafts
+ok 32 - [integration] manual unlock needs learner-shared evidence and preserves unresolved host findings without exposing private drafts
+  ---
+  duration_ms: 1985.414846
+  type: 'test'
+  ...
+# Subtest: [integration] fabricated assessment evidence stays invalid while an unreadable authorized answer permits an unverified submission
+ok 33 - [integration] fabricated assessment evidence stays invalid while an unreadable authorized answer permits an unverified submission
+  ---
+  duration_ms: 2438.288758
+  type: 'test'
+  ...
+# Subtest: [integration] changed bytes of a committed chat attachment invalidate a ready report without losing the answer
+ok 34 - [integration] changed bytes of a committed chat attachment invalidate a ready report without losing the answer
+  ---
+  duration_ms: 1663.430554
+  type: 'test'
+  ...
+# Subtest: [integration] cached ready assessment cannot bypass revoked access to its committed attachment
+ok 35 - [integration] cached ready assessment cannot bypass revoked access to its committed attachment
+  ---
+  duration_ms: 1271.577747
+  type: 'test'
+  ...
+# Subtest: [integration] revoked access to committed chat evidence blocks an existing report and preserves the private draft
+ok 36 - [integration] revoked access to committed chat evidence blocks an existing report and preserves the private draft
+  ---
+  duration_ms: 1434.320482
+  type: 'test'
+  ...
+# Subtest: [integration] evidence access revoked during a paid report cannot install a ready report
+ok 37 - [integration] evidence access revoked during a paid report cannot install a ready report
+  ---
+  duration_ms: 1925.64823
+  type: 'test'
+  ...
+# Subtest: [integration] evidence access revoked after material reading but before the submission transaction rejects atomically
+ok 38 - [integration] evidence access revoked after material reading but before the submission transaction rejects atomically
+  ---
+  duration_ms: 1691.252082
+  type: 'test'
+  ...
+# Subtest: [integration] worker results cannot install over newer answers or expired queue ownership
+ok 39 - [integration] worker results cannot install over newer answers or expired queue ownership
+  ---
+  duration_ms: 2178.681627
+  type: 'test'
+  ...
+# Subtest: [integration] unsupported homework materials and model failure never publish, and explicit revalidation can recover
+ok 40 - [integration] unsupported homework materials and model failure never publish, and explicit revalidation can recover
+  ---
+  duration_ms: 3392.120873
+  type: 'test'
+  ...
+# Subtest: [integration] homework draft is teacher-owned and absent from learner feeds until explicit validated confirmation
+ok 41 - [integration] homework draft is teacher-owned and absent from learner feeds until explicit validated confirmation
+  ---
+  duration_ms: 1585.493536
+  type: 'test'
+  ...
+# Subtest: [integration] card edits reject stale revisions, foreign course scope and forbidden client authority fields
+ok 42 - [integration] card edits reject stale revisions, foreign course scope and forbidden client authority fields
+  ---
+  duration_ms: 1156.598772
+  type: 'test'
+  ...
+# Subtest: [integration] existing managed teacher bindings refresh their persona while ordinary custom agents retain theirs
+ok 43 - [integration] existing managed teacher bindings refresh their persona while ordinary custom agents retain theirs
+  ---
+  duration_ms: 1409.174269
+  type: 'test'
+  ...
+# Subtest: [integration] native teacher revisions update the same draft and require fresh human confirmation; no model publication/review tool exists
+ok 44 - [integration] native teacher revisions update the same draft and require fresh human confirmation; no model publication/review tool exists
+  ---
+  duration_ms: 2293.716828
+  type: 'test'
+  ...
+# Subtest: [integration] native homework overview bounds long reports, aggregates the whole class and pages submitted sections without private drafts
+ok 45 - [integration] native homework overview bounds long reports, aggregates the whole class and pages submitted sections without private drafts
+  ---
+  duration_ms: 2863.118592
+  type: 'test'
+  ...
+# Subtest: [integration] learner native reads page full requirements and real materials while retaining private scope and output bounds
+ok 46 - [integration] learner native reads page full requirements and real materials while retaining private scope and output bounds
+  ---
+  duration_ms: 3102.013846
+  type: 'test'
+  ...
+# Subtest: [integration] homework shares forum filters while keeping target flags, comments and room grants separate
+ok 47 - [integration] homework shares forum filters while keeping target flags, comments and room grants separate
+  ---
+  duration_ms: 894.766495
+  type: 'test'
+  ...
+# Subtest: [integration] cases enforce organization teacher writes and published-only student reads at HTTP boundaries
+ok 48 - [integration] cases enforce organization teacher writes and published-only student reads at HTTP boundaries
+  ---
+  duration_ms: 1949.556821
+  type: 'test'
+  ...
+# Subtest: [integration] draft edits do not alter public article, search, categories, or active index until explicit publication
+ok 49 - [integration] draft edits do not alter public article, search, categories, or active index until explicit publication
+  ---
+  duration_ms: 860.757247
+  type: 'test'
+  ...
+# Subtest: [integration] managed case images follow the published snapshot, organization and current role even with generic upload grants
+ok 50 - [integration] managed case images follow the published snapshot, organization and current role even with generic upload grants
+  ---
+  duration_ms: 911.402787
+  type: 'test'
+  ...
+# Subtest: [integration] failed publish keeps the prior public version and concurrent teacher saves cannot overwrite each other
+ok 51 - [integration] failed publish keeps the prior public version and concurrent teacher saves cannot overwrite each other
+  ---
+  duration_ms: 623.595306
+  type: 'test'
+  ...
+# Subtest: [integration] organization retrieval uses only the current published source and rejects retained vectors after update or unpublish
+ok 52 - [integration] organization retrieval uses only the current published source and rejects retained vectors after update or unpublish
+  ---
+  duration_ms: 930.936994
+  type: 'test'
+  ...
+# Subtest: [integration] case retrieval preserves course/private audience intersection and revocation across external search
+ok 53 - [integration] case retrieval preserves course/private audience intersection and revocation across external search
+  ---
+  duration_ms: 887.764653
+  type: 'test'
+  ...
+# Subtest: [integration] cases use existing worker ingestion, bounded failure/retry and invalidated lease fencing
+ok 54 - [integration] cases use existing worker ingestion, bounded failure/retry and invalidated lease fencing
+  ---
+  duration_ms: 1221.746093
+  type: 'test'
+  ...
+# Subtest: [integration] publication, removal and retry share worker job-before-source lock order
+ok 55 - [integration] publication, removal and retry share worker job-before-source lock order
+  ---
+  duration_ms: 1003.468392
+  type: 'test'
+  ...
+# Subtest: [integration] real Agent knowledge tools consume published case evidence without widening generic source writes
+ok 56 - [integration] real Agent knowledge tools consume published case evidence without widening generic source writes
+  ---
+  duration_ms: 1356.593708
+  type: 'test'
+  ...
+# Subtest: [integration] Agent case evidence is rejected after republish, unpublish and audience revocation
+ok 57 - [integration] Agent case evidence is rejected after republish, unpublish and audience revocation
+  ---
+  duration_ms: 1122.726245
+  type: 'test'
+  ...
+# Subtest: [integration] context reauthorizes current case source versions independently of course knowledge resources
+ok 58 - [integration] context reauthorizes current case source versions independently of course knowledge resources
+  ---
+  duration_ms: 713.281551
+  type: 'test'
+  ...
+1..58
+# tests 58
+# suites 0
+# pass 58
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 115088.918264

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="4" failures="0" errors="0" skipped="0" time="86.646">
+  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="86.646">
+    <testcase name="case GFM imports retain literal HTML text, currency and setext headings [native]" classname="e2e/content-editor/browser.e2e.ts" time="3.838"/>
+    <testcase name="upstream native schema, slash menus, tables, blocks, undo and lossless reopen [native]" classname="e2e/content-editor/browser.e2e.ts" time="14.868"/>
+    <testcase name="all 14 default blocks and official free math and diagram blocks remain insertable [native]" classname="e2e/content-editor/browser.e2e.ts" time="51.459"/>
+    <testcase name="native formatting, links, emoji, block menu and table operations remain complete [native]" classname="e2e/content-editor/browser.e2e.ts" time="16.481"/>
+  </testsuite>
+</testsuites>

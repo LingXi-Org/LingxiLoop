@@ -10,6 +10,9 @@ const WS_TARGET = process.env.LINGXILOOP_DEV_WS_TARGET || HTTP_TARGET.replace(/^
 
 export default defineConfig({
   plugins: [react()],
+  // Disposable API fixtures use distinct caches. Concurrent dev servers with
+  // different proxy defines must not replace each other's optimized modules.
+  cacheDir: process.env.LINGXILOOP_VITE_CACHE_DIR,
   // The renderer uses relative URLs through the Vite proxy, but commands
   // copied from the UI run outside that proxy and need the API origin.
   define: {
@@ -31,11 +34,16 @@ export default defineConfig({
     ],
   },
   optimizeDeps: {
+    // Reference/evidence HTML is not an application entry. Scanning it resolves
+    // third-party aliases against this app and repeatedly invalidates the cache.
+    entries: ['index.html'],
     // Pre-bundle the yjs/prosemirror family as shared entries so every
     // tiptap extension chunk imports the SAME module instance (see
     // resolve.dedupe above — both are needed: dedupe fixes source-level
     // resolution, include fixes the dep-optimizer's chunk graph).
     include: [
+      '@blocknote/core', '@blocknote/core/extensions', '@blocknote/react', '@blocknote/mantine',
+      '@blocknote/code-block', '@blocknote/math-block', '@blocknote/diagram-block', 'react-dom/server',
       '@assistant-ui/react', '@assistant-ui/react-markdown',
       'yjs',
       '@tiptap/pm/model', '@tiptap/pm/state', '@tiptap/pm/view',

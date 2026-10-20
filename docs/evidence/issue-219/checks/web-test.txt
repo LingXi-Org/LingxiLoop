@@ -1,0 +1,419 @@
+
+> lingxiloop@0.1.0-beta test
+> node scripts/run-tests.mjs web
+
+TAP version 13
+# (node:105478) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: a current session rejection stops automatic recovery but a stale rejection cannot clear a new sign-in
+ok 1 - a current session rejection stops automatic recovery but a stale rejection cannot clear a new sign-in
+  ---
+  duration_ms: 69.197425
+  type: 'test'
+  ...
+# Subtest: caller headers override matching defaults without dropping request context
+ok 2 - caller headers override matching defaults without dropping request context
+  ---
+  duration_ms: 40.923397
+  type: 'test'
+  ...
+# Subtest: presigned uploads keep the File body on the browser fetch path
+ok 3 - presigned uploads keep the File body on the browser fetch path
+  ---
+  duration_ms: 1.966568
+  type: 'test'
+  ...
+# (node:105505) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: streamed prose and incomplete Markdown blocks appear before completion
+ok 4 - streamed prose and incomplete Markdown blocks appear before completion
+  ---
+  duration_ms: 734.8383
+  type: 'test'
+  ...
+# Subtest: mixed message text keeps global citation positions and copy across non-text parts
+ok 5 - mixed message text keeps global citation positions and copy across non-text parts
+  ---
+  duration_ms: 61.560163
+  type: 'test'
+  ...
+# Subtest: lists and paragraphs retain their semantic layout without bubble wrappers
+ok 6 - lists and paragraphs retain their semantic layout without bubble wrappers
+  ---
+  duration_ms: 394.340619
+  type: 'test'
+  ...
+# Subtest: unfinished structural blocks remain visible during streaming and interruption
+ok 7 - unfinished structural blocks remain visible during streaming and interruption
+  ---
+  duration_ms: 106.333247
+  type: 'test'
+  ...
+# Subtest: only live agent text enables the streaming tail; settled and interrupted text is static
+ok 8 - only live agent text enables the streaming tail; settled and interrupted text is static
+  ---
+  duration_ms: 20.636055
+  type: 'test'
+  ...
+# Subtest: committed citations preserve Markdown and normal links, with one shared basis slot
+ok 9 - committed citations preserve Markdown and normal links, with one shared basis slot
+  ---
+  duration_ms: 32.603499
+  type: 'test'
+  ...
+# Subtest: only the active occurrence describes its fixed, accessible basis region
+ok 10 - only the active occurrence describes its fixed, accessible basis region
+  ---
+  duration_ms: 4.792273
+  type: 'test'
+  ...
+# Subtest: copying and quoting strip only supplied citation spans
+ok 11 - copying and quoting strip only supplied citation spans
+  ---
+  duration_ms: 7.777966
+  type: 'test'
+  ...
+# Subtest: citation excerpts render safe compact Markdown while source titles remain literal
+ok 12 - citation excerpts render safe compact Markdown while source titles remain literal
+  ---
+  duration_ms: 11.438002
+  type: 'test'
+  ...
+# Subtest: new citations underline answer wording and consume internal links before Link rendering
+ok 13 - new citations underline answer wording and consume internal links before Link rendering
+  ---
+  duration_ms: 47.158055
+  type: 'test'
+  ...
+# Subtest: new drafts show only body text and never activate citation navigation or stale confidence
+ok 14 - new drafts show only body text and never activate citation navigation or stale confidence
+  ---
+  duration_ms: 29.430513
+  type: 'test'
+  ...
+# Subtest: cached Markdown processors keep each message and regenerated claim identity separate
+ok 15 - cached Markdown processors keep each message and regenerated claim identity separate
+  ---
+  duration_ms: 40.420361
+  type: 'test'
+  ...
+# Subtest: a single safe search source uses LinkPreview after completion, replay and reload
+ok 16 - a single safe search source uses LinkPreview after completion, replay and reload
+  ---
+  duration_ms: 62.840552
+  type: 'test'
+  ...
+# Subtest: multiple sources use Citation while a deduplicated single source uses LinkPreview
+ok 17 - multiple sources use Citation while a deduplicated single source uses LinkPreview
+  ---
+  duration_ms: 13.538417
+  type: 'test'
+  ...
+# Subtest: empty results are silent while failures, malformed results and cancellation stay visible
+ok 18 - empty results are silent while failures, malformed results and cancellation stay visible
+  ---
+  duration_ms: 3.125957
+  type: 'test'
+  ...
+# Subtest: single-source images survive replay and select the with-image preview; invalid images keep the text card
+ok 19 - single-source images survive replay and select the with-image preview; invalid images keep the text card
+  ---
+  duration_ms: 11.882871
+  type: 'test'
+  ...
+# Subtest: one submission commits all attachments in order with one identity and one question
+ok 20 - one submission commits all attachments in order with one identity and one question
+  ---
+  duration_ms: 253.085433
+  type: 'test'
+  ...
+# Subtest: memory steps survive history and cache normalization without legacy private payloads
+ok 21 - memory steps survive history and cache normalization without legacy private payloads
+  ---
+  duration_ms: 125.969948
+  type: 'test'
+  ...
+# Subtest: native identity, date, role and content survive IM decoration independently of the viewer
+ok 22 - native identity, date, role and content survive IM decoration independently of the viewer
+  ---
+  duration_ms: 1.146059
+  type: 'test'
+  ...
+# Subtest: business data stays native and JSON replay retains all fields instead of fabricating tool calls
+ok 23 - business data stays native and JSON replay retains all fields instead of fabricating tool calls
+  ---
+  duration_ms: 52.108946
+  type: 'test'
+  ...
+# Subtest: batch conversion is stable, deduplicated, and projects sender grouping
+ok 24 - batch conversion is stable, deduplicated, and projects sender grouping
+  ---
+  duration_ms: 3.59735
+  type: 'test'
+  ...
+# Subtest: clusters adjacent text, attachments, and assistant-ui cards by sender rather than message kind
+ok 25 - clusters adjacent text, attachments, and assistant-ui cards by sender rather than message kind
+  ---
+  duration_ms: 36.600713
+  type: 'test'
+  ...
+# Subtest: a card-first agent cluster inherits the following bubble chrome once
+ok 26 - a card-first agent cluster inherits the following bubble chrome once
+  ---
+  duration_ms: 5.127306
+  type: 'test'
+  ...
+# Subtest: group projection preserves messages whose cluster position did not change
+ok 27 - group projection preserves messages whose cluster position did not change
+  ---
+  duration_ms: 0.676242
+  type: 'test'
+  ...
+# Subtest: retired content protocols and forged run identities fail closed
+ok 28 - retired content protocols and forged run identities fail closed
+  ---
+  duration_ms: 13.239498
+  type: 'test'
+  ...
+# (node:106010) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: run API consumes only assistant transport and reads the same projected snapshot
+ok 29 - run API consumes only assistant transport and reads the same projected snapshot
+  ---
+  duration_ms: 168.405506
+  type: 'test'
+  ...
+# Subtest: native response text and presentation cards retain segment order and stable identities
+ok 30 - native response text and presentation cards retain segment order and stable identities
+  ---
+  duration_ms: 10.033173
+  type: 'test'
+  ...
+# Subtest: public native tool events retain complete assistant-ui history and survive committed IM replay
+ok 31 - public native tool events retain complete assistant-ui history and survive committed IM replay
+  ---
+  duration_ms: 69.587414
+  type: 'test'
+  ...
+# Subtest: native committed partial answers retain artifact hashes and provenance without appearing complete
+ok 32 - native committed partial answers retain artifact hashes and provenance without appearing complete
+  ---
+  duration_ms: 24.002426
+  type: 'test'
+  ...
+# Subtest: native citations keep occurrence identities, all source versions and truncation, without grading support
+ok 33 - native citations keep occurrence identities, all source versions and truncation, without grading support
+  ---
+  duration_ms: 40.532043
+  type: 'test'
+  ...
+# Subtest: distinct chunks of one PDF remain specific across repeated and combined citations
+ok 34 - distinct chunks of one PDF remain specific across repeated and combined citations
+  ---
+  duration_ms: 27.176198
+  type: 'test'
+  ...
+# Subtest: history, API snapshots and later attempts converge to one current message without restoring an old wait
+ok 35 - history, API snapshots and later attempts converge to one current message without restoring an old wait
+  ---
+  duration_ms: 76.216659
+  type: 'test'
+  ...
+# (node:106218) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: message updates require a recorded run timestamp and preserve it during previews
+ok 36 - message updates require a recorded run timestamp and preserve it during previews
+  ---
+  duration_ms: 100.84977
+  type: 'test'
+  ...
+# Subtest: snapshot presentation follows rich content and clears stale card styling when content becomes text
+ok 37 - snapshot presentation follows rich content and clears stale card styling when content becomes text
+  ---
+  duration_ms: 41.691009
+  type: 'test'
+  ...
+# Subtest: same-result snapshots preserve canonical IM fallback content while updating run controls
+ok 38 - same-result snapshots preserve canonical IM fallback content while updating run controls
+  ---
+  duration_ms: 44.942265
+  type: 'test'
+  ...
+# Subtest: sent messages, native final citations and interleaved users survive replay and reload in IM order
+ok 39 - sent messages, native final citations and interleaved users survive replay and reload in IM order
+  ---
+  duration_ms: 187.664428
+  type: 'test'
+  ...
+# Subtest: a run discovered after a sent message owns a separate preview and cannot erase sent text on cancellation or failure
+ok 40 - a run discovered after a sent message owns a separate preview and cannot erase sent text on cancellation or failure
+  ---
+  duration_ms: 41.302227
+  type: 'test'
+  ...
+# Subtest: a failure retains streamed text and a safe error across snapshot replay
+ok 41 - a failure retains streamed text and a safe error across snapshot replay
+  ---
+  duration_ms: 26.382612
+  type: 'test'
+  ...
+# Subtest: live replies follow the triggering user despite clock skew, late receipts and late source events
+ok 42 - live replies follow the triggering user despite clock skew, late receipts and late source events
+  ---
+  duration_ms: 45.391342
+  type: 'test'
+  ...
+# Subtest: a live reply keeps its anchor until canonical delivery establishes IM order
+ok 43 - a live reply keeps its anchor until canonical delivery establishes IM order
+  ---
+  duration_ms: 10.924475
+  type: 'test'
+  ...
+# Subtest: snapshots preserve IM order after reload and older history does not move the reply
+ok 44 - snapshots preserve IM order after reload and older history does not move the reply
+  ---
+  duration_ms: 11.266427
+  type: 'test'
+  ...
+# Subtest: memory activity survives run replies, HTTP replay and IM merging
+ok 45 - memory activity survives run replies, HTTP replay and IM merging
+  ---
+  duration_ms: 186.372259
+  type: 'test'
+  ...
+# Subtest: reload keeps interleaved user clusters when run start times disagree with committed message order
+ok 46 - reload keeps interleaved user clusters when run start times disagree with committed message order
+  ---
+  duration_ms: 41.596547
+  type: 'test'
+  ...
+# Subtest: committed replies ignore duplicate snapshots and stale deltas without regressing content
+ok 47 - committed replies ignore duplicate snapshots and stale deltas without regressing content
+  ---
+  duration_ms: 49.47729
+  type: 'test'
+  ...
+# Subtest: citation projections agree across snapshots and IM replay and disappear before the next draft
+ok 48 - citation projections agree across snapshots and IM replay and disappear before the next draft
+  ---
+  duration_ms: 87.165805
+  type: 'test'
+  ...
+# Subtest: paragraph deltas display immediately, deduplicate, and cancellation clears uncommitted drafts
+ok 49 - paragraph deltas display immediately, deduplicate, and cancellation clears uncommitted drafts
+  ---
+  duration_ms: 11.607281
+  type: 'test'
+  ...
+# Subtest: a reply at the page boundary leaves room for subsequently loaded older history
+ok 50 - a reply at the page boundary leaves room for subsequently loaded older history
+  ---
+  duration_ms: 9.247059
+  type: 'test'
+  ...
+# Subtest: initial history is ready before slow run snapshots, which merge without duplicate replies
+ok 51 - initial history is ready before slow run snapshots, which merge without duplicate replies
+  ---
+  duration_ms: 1039.353087
+  type: 'test'
+  ...
+# Subtest: separate agents and child threads cannot overwrite each other
+ok 52 - separate agents and child threads cannot overwrite each other
+  ---
+  duration_ms: 2.166005
+  type: 'test'
+  ...
+# Subtest: canonical merge replaces optimistic messages by client identity and preserves pagination order
+ok 53 - canonical merge replaces optimistic messages by client identity and preserves pagination order
+  ---
+  duration_ms: 9.522897
+  type: 'test'
+  ...
+# Subtest: invalid receipts cannot replace a known send time and later valid receipts repair missing times
+ok 54 - invalid receipts cannot replace a known send time and later valid receipts repair missing times
+  ---
+  duration_ms: 0.677154
+  type: 'test'
+  ...
+# Subtest: poll events replace canonical assistant-ui form state without retaining a second payload model
+ok 55 - poll events replace canonical assistant-ui form state without retaining a second payload model
+  ---
+  duration_ms: 3.365251
+  type: 'test'
+  ...
+# (node:106539) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: deleting an interrupted upload resets only its request key across both source views
+ok 56 - deleting an interrupted upload resets only its request key across both source views
+  ---
+  duration_ms: 177.283064
+  type: 'test'
+  ...
+# Subtest: generates a stable local avatar for each course
+ok 57 - generates a stable local avatar for each course
+  ---
+  duration_ms: 60.65863
+  type: 'test'
+  ...
+# Subtest: generates a local avatar when the course identifier is blank
+ok 58 - generates a local avatar when the course identifier is blank
+  ---
+  duration_ms: 26.418408
+  type: 'test'
+  ...
+# Subtest: presentation boundaries accept only explicit v1 schema versions
+ok 59 - presentation boundaries accept only explicit v1 schema versions
+  ---
+  duration_ms: 8.979423
+  type: 'test'
+  ...
+# Subtest: lecture deck artifacts fail closed
+ok 60 - lecture deck artifacts fail closed
+  ---
+  duration_ms: 0.238358
+  type: 'test'
+  ...
+# Subtest: the active viewer runs only authenticated Blob HTML in a script-only sandbox
+ok 61 - the active viewer runs only authenticated Blob HTML in a script-only sandbox
+  ---
+  duration_ms: 0.828445
+  type: 'test'
+  ...
+# Subtest: settings restores keyboard focus and interactive surfaces have accessible labels
+ok 62 - settings restores keyboard focus and interactive surfaces have accessible labels
+  ---
+  duration_ms: 21.985093
+  type: 'test'
+  ...
+# Subtest: account exit clears identity and authentication submits the CAPTCHA response
+ok 63 - account exit clears identity and authentication submits the CAPTCHA response
+  ---
+  duration_ms: 0.699571
+  type: 'test'
+  ...
+# Subtest: invitation landing remains reachable before authentication and clears on completion
+ok 64 - invitation landing remains reachable before authentication and clears on completion
+  ---
+  duration_ms: 0.309602
+  type: 'test'
+  ...
+# Subtest: user-visible errors are mapped before rendering provider details
+ok 65 - user-visible errors are mapped before rendering provider details
+  ---
+  duration_ms: 0.498941
+  type: 'test'
+  ...
+1..65
+# tests 65
+# suites 0
+# pass 65
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 31223.071497
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

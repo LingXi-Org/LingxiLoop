@@ -1,0 +1,8 @@
+{
+  "failure": "Duplicate use of selection JSON ID multiple-node",
+  "scope": "Concurrent local Vite fixture servers; production bundle is separately built",
+  "moduleUrls": [
+    "http://127.0.0.1:53108/node_modules/.vite/deps/chunk-KV5O6ULU.js?v=2d18af11",
+    "http://127.0.0.1:53108/node_modules/.vite/deps/chunk-KV5O6ULU.js"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "model": "synthetic",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Synthetic prompt"
+    },
+    {
+      "role": "user",
+      "content": "{\"homework\":{\"title\":\"Synthetic task\",\"instructions\":\"Current instructions\",\"criteria\":[\"Current criterion\"],\"materials\":[]},\"messages\":[],\"selectedIds\":[],\"coverage\":{},\"previousAssessment\":null,\"teacherFeedback\":null,\"returnedAt\":null,\"returnedAfterSequence\":0,\"answer\":{\"text\":\"CURRENT ANSWER B\",\"links\":[\"https://example.invalid/current\"],\"attachments\":[],\"editorDocument\":{\"format\":\"blocknote\",\"version\":1,\"projection\":\"CURRENT ANSWER B\",\"sections\":[\"CURRENT ANSWER B\"],\"blocks\":[{\"id\":\"current-paragraph\",\"type\":\"paragraph\",\"props\":{\"textColor\":\"default\",\"backgroundColor\":\"default\",\"textAlignment\":\"left\"},\"content\":[{\"type\":\"text\",\"text\":\"CURRENT ANSWER B\",\"styles\":{\"bold\":true}}],\"children\":[]}],\"legacyMarkdown\":\"PRIVATE ORIGINAL A\"}},\"answerMaterials\":[]}"
+    }
+  ],
+  "response_format": {
+    "type": "json_object"
+  },
+  "max_tokens": 6000
+}

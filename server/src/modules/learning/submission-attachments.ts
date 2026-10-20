@@ -3,6 +3,18 @@ import { normalizeStorageKey } from '../../storage.js'
 import { createPermissionService } from '../access/public.js'
 import { LearningApplicationError } from './errors.js'
 import type { LearningAttachment } from './forum-contracts.js'
+import { documentFileUrls, type ContentDocument } from '../content-editor/contracts.js'
+
+/** Native media uses the same explicit, owned attachment manifest as legacy content. */
+export function assertDocumentAttachments(attachments: LearningAttachment[], ...documents: (ContentDocument | null | undefined)[]) {
+  const keys = new Set(attachments.map(file => file.key))
+  for (const url of documents.flatMap(documentFileUrls)) {
+    const parsed = new URL(url, 'https://content.invalid')
+    if (/^https?:\/\//i.test(url) && parsed.pathname !== '/api/files') continue
+    const key = parsed.pathname === '/api/files' ? parsed.searchParams.get('key') : null
+    if (!key || !keys.has(key)) throw new LearningApplicationError('invalid', '正文附件必须保留在当前内容的附件列表中')
+  }
+}
 
 export async function assertOwnedLearningAttachments(db: Queryable,
   scope: { companyId: string; userId: string }, attachments: LearningAttachment[]): Promise<void> {
@@ -23,6 +35,14 @@ export async function canReadLearningFile(db: Queryable, key: string, userId: st
   const { rows } = await db.query<{ company_id: string; project_id: string; learner_id: string | null; visible: boolean; reviewable: boolean }>(`
     SELECT DISTINCT a.company_id,a.project_id,a.learner_id,TRUE AS visible,TRUE AS reviewable FROM course_forum_submissions a
     WHERE a.attachments @> jsonb_build_array(jsonb_build_object('key',$1::text))
+    UNION SELECT s.company_id,s.project_id,s.learner_id,TRUE,TRUE
+      FROM course_forum_feedback f JOIN course_forum_submissions s
+        ON s.company_id=f.company_id AND s.project_id=f.project_id AND s.id=f.submission_id
+      WHERE f.attachments @> jsonb_build_array(jsonb_build_object('key',$1::text))
+    UNION SELECT s.company_id,s.project_id,s.learner_id,TRUE,TRUE
+      FROM homework_teacher_decisions d JOIN homework_submissions s
+        ON s.company_id=d.company_id AND s.homework_id=d.homework_id AND s.learner_id=d.learner_id AND s.id=d.submission_id
+      WHERE d.attachments @> jsonb_build_array(jsonb_build_object('key',$1::text))
     UNION SELECT p.company_id,p.project_id,NULL,(p.deleted_at IS NULL AND p.status IN ('PUBLISHED','CLOSED') AND (p.source_id IS NULL OR EXISTS (
       SELECT 1 FROM knowledge_sources s WHERE s.company_id=p.company_id AND s.project_id=p.project_id AND s.id=p.source_id
         AND s.visibility_scope='PROJECT' AND s.deleted_at IS NULL))) AS visible,TRUE

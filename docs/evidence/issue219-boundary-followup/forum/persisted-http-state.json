@@ -1,0 +1,244 @@
+{
+  "note": "Read-only receipt from the disposable forum DB after the passing browser HTTP run; not a teacher API response.",
+  "homework": {
+    "id": "e7b62988-c6dd-4fc3-be66-4ccac3b47c3f",
+    "criteria": [
+      "**独立解释计算步骤。**",
+      "核对 **原文** 标记。\\\n第二行仍属于同一标准。 已复核。"
+    ],
+    "criteria_document": {
+      "blocks": [
+        {
+          "id": "fde50a53-4aa6-429f-8bcd-a8023c883b32",
+          "type": "paragraph",
+          "props": {
+            "textColor": "default",
+            "textAlignment": "left",
+            "backgroundColor": "default"
+          },
+          "content": [
+            {
+              "text": "独立解释计算步骤。",
+              "type": "text",
+              "styles": {
+                "bold": true
+              }
+            }
+          ],
+          "children": []
+        },
+        {
+          "id": "b944f3b5-01b1-4e3d-82ed-c3bd0b5ac7d7",
+          "type": "paragraph",
+          "props": {
+            "textColor": "default",
+            "textAlignment": "left",
+            "backgroundColor": "default"
+          },
+          "content": [
+            {
+              "text": "核对 **原文** 标记。\n第二行仍属于同一标准。 已复核。",
+              "type": "text",
+              "styles": {}
+            }
+          ],
+          "children": []
+        }
+      ],
+      "format": "blocknote",
+      "version": 1,
+      "sections": [
+        "**独立解释计算步骤。**",
+        "核对 **原文** 标记。\\\n第二行仍属于同一标准。 已复核。"
+      ],
+      "projection": "**独立解释计算步骤。**\n\n核对 **原文** 标记。\\\n第二行仍属于同一标准。 已复核。\n",
+      "legacyMarkdown": "独立解释计算步骤。\n\n核对 **原文** 标记。\n第二行仍属于同一标准。"
+    }
+  },
+  "state": {
+    "answer": {
+      "text": "Issue219 新作答：底乘高除以二。\n",
+      "links": [],
+      "attachments": [],
+      "editorDocument": {
+        "blocks": [
+          {
+            "id": "1ff37d93-40b1-41d0-8912-e3dcbe395063",
+            "type": "paragraph",
+            "props": {
+              "textColor": "default",
+              "textAlignment": "left",
+              "backgroundColor": "default"
+            },
+            "content": [
+              {
+                "text": "Issue219 新作答：底乘高除以二。",
+                "type": "text",
+                "styles": {}
+              }
+            ],
+            "children": []
+          }
+        ],
+        "format": "blocknote",
+        "version": 1,
+        "sections": [
+          "Issue219 新作答：底乘高除以二。"
+        ],
+        "projection": "Issue219 新作答：底乘高除以二。\n",
+        "legacyMarkdown": "PRIVATE ORIGINAL A 219"
+      }
+    },
+    "answer_revision": 2,
+    "report": null,
+    "report_status": "NONE"
+  },
+  "submissions": [
+    {
+      "version": 1,
+      "answer": {
+        "text": "Issue219 新作答：底乘高除以二。\n",
+        "links": [],
+        "attachments": [],
+        "editorDocument": {
+          "blocks": [
+            {
+              "id": "1ff37d93-40b1-41d0-8912-e3dcbe395063",
+              "type": "paragraph",
+              "props": {
+                "textColor": "default",
+                "textAlignment": "left",
+                "backgroundColor": "default"
+              },
+              "content": [
+                {
+                  "text": "Issue219 新作答：底乘高除以二。",
+                  "type": "text",
+                  "styles": {}
+                }
+              ],
+              "children": []
+            }
+          ],
+          "format": "blocknote",
+          "version": 1,
+          "sections": [
+            "Issue219 新作答：底乘高除以二。"
+          ],
+          "projection": "Issue219 新作答：底乘高除以二。\n"
+        }
+      },
+      "report": {
+        "id": "97774664-d1e9-43f5-8da6-9aac6757f3af",
+        "coverage": {
+          "truncated": false,
+          "messageCount": 2
+        },
+        "criteria": [
+          {
+            "met": false,
+            "feedback": "本次未能核实各项标准和独立完成程度。已保留真实学习记录与当前作答，可提交给教师批阅。",
+            "criterion": "**独立解释计算步骤。**",
+            "independent": false
+          },
+          {
+            "met": false,
+            "feedback": "本次未能核实各项标准和独立完成程度。已保留真实学习记录与当前作答，可提交给教师批阅。",
+            "criterion": "核对 **原文** 标记。\\\n第二行仍属于同一标准。 已复核。",
+            "independent": false
+          }
+        ],
+        "evidence": [
+          "Issue219 学习记录：我用两个三角形解释面积的一半。"
+        ],
+        "answerHash": "9532a3ea5e2d35e353de821e3154aeec0ffe82062ff7ff47ac67b7a2d23b0c2f",
+        "assistance": "可见学习记录中有 1 条助手回复，本次未能核实帮助程度。",
+        "completion": "本次未能核实各项标准和独立完成程度。已保留真实学习记录与当前作答，可提交给教师批阅。",
+        "weaknesses": [
+          "本次未能核实各项标准和独立完成程度。已保留真实学习记录与当前作答，可提交给教师批阅。"
+        ],
+        "returnEpoch": 0,
+        "evidenceHash": "505a5c8b6ac5df86690901b5c6ed2793d91f6bebc3433fdc4536c8ea4252cde4",
+        "independence": "本次未能核实独立完成程度",
+        "manualReview": null,
+        "verification": "unverified",
+        "answerRevision": 2,
+        "materialHashes": [],
+        "evidenceSources": [
+          {
+            "excerpt": "Issue219 学习记录：我用两个三角形解释面积的一半。",
+            "messageId": "native-219-user-3"
+          }
+        ],
+        "evidenceRevision": 0,
+        "homeworkRevision": 3,
+        "conversationSequence": 4
+      },
+      "answer_revision": 2
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "RETURNED",
+      "reason": "Issue219 验收意见：请补充独立说明。\n\n![diagram.png](/api/files?key=attachments%2Fe2e-school%2F39221b89890048cb85cdb79b064a45a5.png)",
+      "editor_document": {
+        "blocks": [
+          {
+            "id": "08f9caa7-4949-4d05-b15f-29b8a5a5fd1b",
+            "type": "paragraph",
+            "props": {
+              "textColor": "default",
+              "textAlignment": "left",
+              "backgroundColor": "default"
+            },
+            "content": [
+              {
+                "text": "Issue219 验收意见：请补充独立说明。",
+                "type": "text",
+                "styles": {}
+              }
+            ],
+            "children": []
+          },
+          {
+            "id": "05726872-7663-477c-be82-30382acb90e5",
+            "type": "image",
+            "props": {
+              "url": "/api/files?key=attachments%2Fe2e-school%2F39221b89890048cb85cdb79b064a45a5.png",
+              "name": "diagram.png",
+              "caption": "",
+              "showPreview": true,
+              "textAlignment": "left",
+              "backgroundColor": "default"
+            },
+            "children": []
+          },
+          {
+            "id": "16e2426d-c53e-4f75-8aea-3ae1dd98e0ad",
+            "type": "paragraph",
+            "props": {
+              "textColor": "default",
+              "textAlignment": "left",
+              "backgroundColor": "default"
+            },
+            "content": [],
+            "children": []
+          }
+        ],
+        "format": "blocknote",
+        "version": 1,
+        "sections": [
+          "Issue219 验收意见：请补充独立说明。",
+          "![diagram.png](/api/files?key=attachments%2Fe2e-school%2F39221b89890048cb85cdb79b064a45a5.png)"
+        ],
+        "projection": "Issue219 验收意见：请补充独立说明。\n\n![diagram.png](/api/files?key=attachments%2Fe2e-school%2F39221b89890048cb85cdb79b064a45a5.png)\n"
+      },
+      "attachments": [
+        {
+          "key": "attachments/e2e-school/39221b89890048cb85cdb79b064a45a5.png",
+          "name": "diagram.png"
+        }
+      ]
+    }
+  ]
+}

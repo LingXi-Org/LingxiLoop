@@ -25,6 +25,21 @@ for (const project of ['cases-classroom','cases-other-course']) await pool.query
 await pool.query("INSERT INTO knowledge_sources(id,company_id,project_id,kind,title,visibility_scope,owner_user_id,created_by_user_id,created_via) VALUES ('cases-independent-resource','cases-school','cases-classroom','text','独立资料保持可用','PROJECT','cases-teacher','cases-teacher','USER')")
 await installRecordingWukong()
 const app=express()
+let listMode: 'pass'|'hold'|'fail'='pass'
+let releaseList:(()=>void)|undefined
+app.post('/api/fixture-case-list/:mode',(req,res)=>{
+  if(!['pass','hold','fail'].includes(req.params.mode)){res.sendStatus(400);return}
+  listMode=req.params.mode as typeof listMode
+  if(listMode==='pass'){releaseList?.();releaseList=undefined}
+  res.sendStatus(200)
+})
+app.use((req,res,next)=>{
+  if(req.method==='GET'&&req.path==='/api/cases'){
+    if(listMode==='hold'){releaseList=next;return}
+    if(listMode==='fail'){listMode='pass';res.status(503).json({error:'Recorded list failure'});return}
+  }
+  next()
+})
 app.get('/api/fixture-role/:role',(req,res)=>{
   if(!['teacher','teacher2','student','outsider'].includes(req.params.role)){res.sendStatus(400);return}
   res.setHeader('Set-Cookie',`cases-role=${req.params.role}; Path=/; SameSite=Strict; HttpOnly`)

@@ -1,0 +1,43 @@
+(node:1272748) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-issue219-boundaries
+      run 01a157a8-9674-7eea-a37d-161af37692e2 · targets: native
+
+(node:1272811) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ |native| e2e/content-boundaries/browser.e2e.ts (3 tests) 20.56s
+ ❯ |native| e2e/content-editor/browser.e2e.ts (4 tests | 1 failed) 29.63s
+   ✓ case GFM imports retain literal HTML text, currency and setext headings 1.77s
+   ✓ upstream native schema, slash menus, tables, blocks, undo and lossless reopen 4.80s
+   × all 14 default blocks and official free math and diagram blocks remain insertable 14.67s
+     → expected "[{\"id\":\"64658c30-9e2d-44aa-b618-be9d73d33f94\",\"type\":\"h…
+   ✓ native formatting, links, emoji, block menu and table operations remain complete 8.39s
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |native| e2e/content-editor/browser.e2e.ts > all 14 default blocks and official free math and diagram blocks remain insertable
+ASSERTION_FAILED: expected "[{\"id\":\"64658c30-9e2d-44aa-b618-be9d73d33f94\",\"type\":\"heading\",\"props\":{\"backgroundColor\":\"default\",\"textColor\":\"default\",\"textAlignment\":\"left\",\"level\":1,\"isToggleable\":false},\"content\":[{\"type\":\"text\",\"text\":\"原生粗体\",\"styles\":{}}],\"children\":[]}]" to contain "\"bold\":true"
+ ❯ e2e/content-editor/browser.e2e.ts:84:119
+     82|   await browser.keyboard.press('Control+b')
+     83|   await screen.getByRole('button','保存并重新打开',{exact:true}).tap()
+     84|   expect(await browser.evaluate(()=>JSON.stringify(JSON.parse(localSt…
+       |                                                                                                                       ^
+     85|   await app.screenshot('default-native-controls')
+     86| })
+ ❯ at http://127.0.0.1:5391/e2e/content-editor.html
+ ❯ screen .codex-tmp/content-boundary-final/artifacts/native/e2e_content-editor_browser.e2e.ts__all_2014_20default_20blocks_20and_20official_20free_20math_20and_20diagram_2-128a25db/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 6 passed (7)
+   Start at  04:53:49
+   Duration  50.94s
+     Report  .codex-tmp/content-boundary-final/report.json
+
+      JUnit  .codex-tmp/content-boundary-final/junit.xml
+   Markdown  .codex-tmp/content-boundary-final/summary.md
+   Failures  .codex-tmp/content-boundary-final/failures/ (1 page)
+
