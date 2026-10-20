@@ -1,0 +1,112 @@
+TAP version 13
+# Subtest: sequence frames and adjacent connectors share document order and natural text layout
+ok 1 - sequence frames and adjacent connectors share document order and natural text layout
+  ---
+  duration_ms: 4.503541
+  type: 'test'
+  ...
+# Subtest: all labels remain inert complete text, including long words, Chinese and line breaks
+ok 2 - all labels remain inert complete text, including long words, Chinese and line breaks
+  ---
+  duration_ms: 0.613124
+  type: 'test'
+  ...
+# Subtest: nonlinear, incomplete or ambiguous diagrams and model geometry are rejected
+ok 3 - nonlinear, incomplete or ambiguous diagrams and model geometry are rejected
+  ---
+  duration_ms: 2.42684
+  type: 'test'
+  ...
+# Subtest: default adjacent edges follow node order and cancellation stays cancellation
+ok 4 - default adjacent edges follow node order and cancellation stays cancellation
+  ---
+  duration_ms: 0.579094
+  type: 'test'
+  ...
+# Subtest: explicitly absent optional edge label is not escaped as non-text
+ok 5 - explicitly absent optional edge label is not escaped as non-text
+  ---
+  duration_ms: 0.342837
+  type: 'test'
+  ...
+# Subtest: linear chart shares unrounded values across intersections, choices and rendered labels
+ok 6 - linear chart shares unrounded values across intersections, choices and rendered labels
+  ---
+  duration_ms: 18.105686
+  type: 'test'
+  ...
+# Subtest: general coefficients, higher preference, ties, parallel lines and display rounding
+ok 7 - general coefficients, higher preference, ties, parallel lines and display rounding
+  ---
+  duration_ms: 2.10834
+  type: 'test'
+  ...
+# Subtest: intersection evaluation permits finite cancellation without rounding decisions
+ok 8 - intersection evaluation permits finite cancellation without rounding decisions
+  ---
+  duration_ms: 0.787427
+  type: 'test'
+  ...
+# Subtest: trend differences, absolute changes, percentages and extrema use each actual series
+ok 9 - trend differences, absolute changes, percentages and extrema use each actual series
+  ---
+  duration_ms: 2.922096
+  type: 'test'
+  ...
+# Subtest: nonpositive previous values have no percent rate; tied increases and decreases are retained
+ok 10 - nonpositive previous values have no percent rate; tied increases and decreases are retained
+  ---
+  duration_ms: 0.830462
+  type: 'test'
+  ...
+# Subtest: ambiguous, missing, unbounded and nonfinite inputs fail before rendering
+ok 11 - ambiguous, missing, unbounded and nonfinite inputs fail before rendering
+  ---
+  duration_ms: 1.951783
+  type: 'test'
+  ...
+# Subtest: all untrusted labels and units are escaped and remain inert SVG/HTML text
+ok 12 - all untrusted labels and units are escaped and remain inert SVG/HTML text
+  ---
+  duration_ms: 1.070324
+  type: 'test'
+  ...
+# Subtest: abort before numeric work is preserved rather than converted into a successful chart
+ok 13 - abort before numeric work is preserved rather than converted into a successful chart
+  ---
+  duration_ms: 0.36461
+  type: 'test'
+  ...
+# Subtest: frozen wrong plot-region boxes map to same-source intervals, widths and intersection marks
+ok 14 - frozen wrong plot-region boxes map to same-source intervals, widths and intersection marks
+  ---
+  duration_ms: 29.790898
+  type: 'test'
+  ...
+# Subtest: intervals cover negative domains, higher preference, ties and more than two functions
+ok 15 - intervals cover negative domains, higher preference, ties and more than two functions
+  ---
+  duration_ms: 2.521312
+  type: 'test'
+  ...
+# Subtest: bands reject subpixel degenerate intervals instead of emitting zero-width rectangles
+ok 16 - bands reject subpixel degenerate intervals instead of emitting zero-width rectangles
+  ---
+  duration_ms: 4.142247
+  type: 'test'
+  ...
+# Subtest: midpoint cancellation cannot manufacture a whole-interval tie
+ok 17 - midpoint cancellation cannot manufacture a whole-interval tie
+  ---
+  duration_ms: 0.661258
+  type: 'test'
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 465.81112
