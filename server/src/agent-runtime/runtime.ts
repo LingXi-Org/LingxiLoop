@@ -21,6 +21,7 @@ import { createRealtimeStore } from './realtime-store.js'
 import { createRuntimeObjectStore } from './object-store.js'
 import { verifyVisualizeCandidate } from './visualize-tools.js'
 import { runProductCallback } from './product-callbacks.js'
+import type { Queryable } from '../db/queryable.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -103,11 +104,18 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
       background: { role: backgroundRole },
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
       ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
-      realtime: { ...(previewStore ? { store: previewStore } : {}), async allowDraft(work) {
+      realtime: { ...(previewStore ? { store: previewStore } : {}), allowDraft: () => false,
+        async allowPublicText(work, _requestVersion, context) {
+        context.signal.throwIfAborted()
         if (work.conversation?.internal) return false
-        await loadRuntimeBinding({ ...work, conversationId: productConversationId(work) })
-        await assertFrozenAudience(pool,work)
-        await authorizeAudienceRead({ work,database: pool },{ action: 'conversation:read',resource: { type: 'conversation',id: productConversationId(work) } })
+        // The runtime owns this bounded authorization transaction. Reuse it so
+        // revocation and publication share the same deadline and lock lifetime.
+        const database = context.database as Queryable
+        await loadRuntimeBinding({ ...work, conversationId: productConversationId(work) },database)
+        await assertFrozenAudience(database,work)
+        await authorizeAudienceRead({ work,database },{ action: 'conversation:read',resource: { type: 'conversation',id: productConversationId(work) } })
+        context.signal.throwIfAborted()
+        if (Date.now() >= context.deadlineMs) throw new DOMException('public text authorization deadline exceeded','TimeoutError')
         return true
       } },
       // Memory stays inside trusted Agent execution, including summaries and maintenance.

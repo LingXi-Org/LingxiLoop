@@ -1,4 +1,5 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
+import { createHash } from 'node:crypto'
 import { responseSegments, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
@@ -6,7 +7,8 @@ import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
 import { assertVisualizeCitationSpans, projectVisualizeText } from './visualize-projection.js'
 import { publicActivitySchema, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
-export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; display?: ToolDisplay }
+export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; display?: ToolDisplay;
+  activityIdentity?: { requestVersion: number; fence: number; attemptId: string } }
 export interface MarkdownConfidenceClaim {
   id: string
   text: string
@@ -26,7 +28,12 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
     const id = event.data.toolCallId
     if (typeof id !== 'string' || !id.startsWith('host:')) continue
     if (event.kind === 'tool.started' && typeof event.data.name === 'string' && !calls.has(id)) {
-      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: canonicalToolName(event.data.name),args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq })
+      const { requestVersion,fence,attemptId } = event.data
+      const activityIdentity = typeof requestVersion === 'number' && Number.isSafeInteger(requestVersion) && requestVersion > 0
+        && typeof fence === 'number' && Number.isSafeInteger(fence) && fence > 0 && typeof attemptId === 'string' && attemptId.length > 0 && attemptId.length <= 2000
+        ? { requestVersion,fence,attemptId } : undefined
+      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: canonicalToolName(event.data.name),args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq,
+        ...(activityIdentity ? { activityIdentity } : {}) })
     }
     const previous = calls.get(id)
     if (event.kind === 'tool.completed' && previous && event.seq > (previous.eventSeq ?? 0) && event.data.result && typeof event.data.result === 'object') {
@@ -49,21 +56,39 @@ function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Om
     lingxiloop: { activity: { version: 1, ...annotation } } } }
 }
 function activityParts(view: RunView, tools: readonly HarnessToolPart[]): ThreadAssistantMessagePart[] {
-  const parts = new Map<string, ThreadAssistantMessagePart>()
-  for (const { eventSeq: _eventSeq, startedSeq: _startedSeq, display: recordedDisplay, ...tool } of tools) {
+  const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
+  const attempts = [
+    ...tools.flatMap(tool => tool.activityIdentity ? [{ ...tool.activityIdentity,seq: tool.startedSeq ?? 0 }] : []),
+    ...(view.publicTextParts ?? []).map(part => ({ requestVersion: part.requestVersion,fence: part.fence,attemptId: part.attemptId,seq: part.firstSeq })),
+  ].filter(attempt => attempt.requestVersion === view.requestVersion && attempt.fence === view.fence)
+  const latestAttempt = attempts.sort((a,b) => a.seq-b.seq).at(-1)?.attemptId
+  const put = (id: string,seq: number,part: ThreadAssistantMessagePart) => parts.set(id,{ seq: parts.get(id)?.seq ?? seq,part })
+  const stableId = (prefix: string,identity: unknown[]) => `${prefix}:${createHash('sha256').update(JSON.stringify(identity)).digest('hex')}`
+  for (const part of view.publicTextParts ?? []) {
+    const id = stableId('public-text',[part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
+    const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
+      : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
+    put(id,part.firstSeq,annotated({ type: 'text',text: part.text,status },{ id,kind: 'commentary',label: '公开说明' }))
+  }
+  for (const { eventSeq, startedSeq, activityIdentity, display: recordedDisplay, ...tool } of tools) {
+    const seq = startedSeq ?? eventSeq ?? 0
     const result = tool.result && typeof tool.result === 'object' ? tool.result : undefined
     const explanation = publicActivitySchema.safeParse(result && Reflect.get(result, 'activity'))
     if (tool.toolName === 'chat.report_progress' && explanation.success) {
-      const entry = explanation.data, id = `public:${entry.id}`
+      const entry = explanation.data, id = stableId('public-report',[view.runId,activityIdentity?.requestVersion ?? null,
+        activityIdentity?.fence ?? null,activityIdentity?.attemptId ?? null,entry.id])
       if (entry.kind === 'plan' && entry.plan) {
-        parts.set(id, annotated({ type: 'generative-ui', id, spec: { root: { component: 'agent-plan', props: { title: entry.label, ...entry.plan } } } },
+        put(id,seq, annotated({ type: 'generative-ui', id, spec: { root: { component: 'agent-plan', props: { title: entry.label, ...entry.plan } } } },
           { id, kind: 'commentary', label: entry.label }))
         continue
       }
       const status = entry.state === 'complete' ? { type: 'complete' as const }
+        : !activityIdentity || activityIdentity.requestVersion !== view.requestVersion || activityIdentity.fence !== view.fence
+          || activityIdentity.attemptId !== latestAttempt
+          ? { type: 'incomplete' as const,reason: 'other' as const }
         : view.lifecycle === 'cancelled' || view.lifecycle === 'failed' ? { type: 'incomplete' as const, reason: view.lifecycle === 'cancelled' ? 'cancelled' as const : 'error' as const }
         : view.lifecycle === 'succeeded' ? { type: 'incomplete' as const, reason: 'other' as const } : { type: 'running' as const }
-      parts.set(id, annotated({ type: entry.kind === 'reasoning' ? 'reasoning' : 'text', text: entry.text, status,
+      put(id,seq, annotated({ type: entry.kind === 'reasoning' ? 'reasoning' : 'text', text: entry.text, status,
         ...(entry.kind === 'reasoning' ? { unstable_summary: entry.label } : {}) }, { id, kind: 'commentary', label: entry.label }))
       continue
     }
@@ -75,11 +100,11 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[]): Thread
     const display = resolveToolDisplay(tool.toolName, status, recordedDisplay)
     if (status !== 'completed') display.summary = toolDisplay(tool.toolName, status).summary
     const attention = !!tool.approval || !!tool.interrupt || projected.isError || ['failed', 'cancelled', 'unknown'].includes(String(status))
-    parts.set(tool.toolCallId, annotated({ ...projected, args: { fields: display.input ?? [] }, argsText: '',
+    put(tool.toolCallId,seq, annotated({ ...projected, args: { fields: display.input ?? [] }, argsText: '',
       ...(projected.result !== undefined ? { result: { ...(projected.result as object), display } } : {}),
     }, { id: tool.toolCallId, kind: attention ? 'attention' : 'tool', label: display.title }))
   }
-  return [...parts.values()]
+  return [...parts.values()].sort((a,b) => a.seq-b.seq).map(value => value.part)
 }
 function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]): ThreadAssistantMessagePart[] {
   return parts.map((part, index) => part.type === 'text'

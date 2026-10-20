@@ -28,11 +28,16 @@ export function publicRunEvent(event: RunEvent, action = ''): RunEvent {
   if (event.kind === 'run.failed' || event.kind === 'run.cancelled') return { ...event, data: {
     ...(event.kind === 'run.failed' ? { error: userFacingError(event.data.error, '这次任务未能完成，请稍后重试。') } : {}),
   } }
-  if (event.kind === 'tool.started') return { ...event, data: { toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, name: event.data.name } }
+  const identity = { requestVersion: event.data.requestVersion,fence: event.data.fence,attemptId: event.data.attemptId }
+  if (event.kind === 'public.text.delta' || event.kind === 'public.text.ended') return { ...event,data: {
+    version: event.data.version,...identity,partId: event.data.partId,partIndex: event.data.partIndex,
+    ...(event.kind === 'public.text.delta' ? { chunkIndex: event.data.chunkIndex,text: event.data.text } : { chunkCount: event.data.chunkCount,reason: event.data.reason }),
+  } }
+  if (event.kind === 'tool.started') return { ...event, data: { ...identity,toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, name: event.data.name } }
   if (event.kind !== 'tool.completed') return event
   const raw = event.data.result && typeof event.data.result === 'object' ? event.data.result : {}
   const value = action.startsWith('memory.') && Reflect.get(raw, 'status') !== 'completed' ? undefined : publicToolValue(action, Reflect.get(raw, 'value'))
-  return { ...event, data: { toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, isError: event.data.isError === true,
+  return { ...event, data: { ...identity,toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, isError: event.data.isError === true,
     result: { status: Reflect.get(raw, 'status'), ...(value === undefined ? {} : { value }),
       ...(typeof Reflect.get(raw, 'approvalId') === 'string' ? { approvalId: Reflect.get(raw, 'approvalId') } : {}) } } }
 }

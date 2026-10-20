@@ -29,6 +29,7 @@ test('run notifications and discovery subscribe before blocked history, deduplic
   mock.module('./converter', { namedExports: { convertEnvelope: () => {}, convertEnvelopeBatch: () => [],
     projectMessageGroups: (messages: unknown) => messages } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
+    history: async () => [],
     list: async () => listed,
     read: async () => {
       reads++

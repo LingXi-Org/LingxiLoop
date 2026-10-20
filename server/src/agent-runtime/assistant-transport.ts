@@ -1,6 +1,6 @@
 import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk, type AssistantTransportStateOperation } from 'assistant-stream'
 import type { ReadonlyJSONValue } from 'assistant-stream/utils'
-import { consumeAssistantMessage, consumeRunStreamEvent, createRunView, type AssistantMessage, type RunStreamEvent } from '@lyyzka/lingxios/ui'
+import { consumeAssistantMessage, consumeRunStreamEvent, consumePublicTextAttempts, createRunView, type AssistantMessage, type RunStreamEvent, type PublicTextAttempt } from '@lyyzka/lingxios/ui'
 import type { createLingxiOS, RunIdentity, RuntimeOperationContext } from '@lyyzka/lingxios'
 import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { createNativeMessage } from '../im/message-types.js'
@@ -33,6 +33,10 @@ export class RunStreamProjection {
   apply(item: RunStreamEvent): AgentRunSnapshot {
     this.advance(item)
     return this.snapshot
+  }
+
+  restorePublicAttempts(attempts: readonly PublicTextAttempt[]): void {
+    this.view = consumePublicTextAttempts(this.view,attempts)
   }
 
   /** Consume in order; callers must materialize and validate before emitting. */
@@ -130,7 +134,7 @@ export class RunStreamProjection {
 
   get snapshot(): AgentRunSnapshot {
     if (!this.createdAt) throw new Error('run state must precede message updates')
-    const { message, draft: _draft, preview: _preview, ...control } = this.view
+    const { message, draft: _draft, preview: _preview, publicTextParts: _publicTextParts, publicTextAttempts: _publicTextAttempts, ...control } = this.view
     // Outcome gaps are internal verification diagnostics, not product copy.
     const { gaps: _gaps, ...outcome } = control.goalOutcome ?? {}
     const harness: RunDisplayState = { ...control,
@@ -181,6 +185,7 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   while (true) {
     signal.throwIfAborted()
     const page = await api.readEvents(identity,cursor,operation)
+    projection.restorePublicAttempts(page.publicTextAttempts ?? [])
     for (const event of page.events) projection.apply({ type: 'event',event })
     if (page.events.length < 100) break
     if (page.nextSeq <= cursor) throw new Error('runtime event cursor did not advance')

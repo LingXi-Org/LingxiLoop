@@ -6,6 +6,7 @@ import 'katex/dist/katex.min.css'
 import { NativeMessageContent } from '@/features/chat/components/NativeMessageContent'
 import { createNativeMessage, deserializeMessage, type NativeMessage } from '@/lib/nativeMessage'
 import { harnessApi } from '@/features/chat/runtime/harness-api'
+import { createRunView } from '@lyyzka/lingxios/ui'
 
 if (!import.meta.env.DEV && import.meta.env.MODE !== 'interactive-test') throw new Error('This fixture requires the isolated test build')
 const params = new URLSearchParams(location.search)
@@ -48,7 +49,9 @@ function Fixture() {
   const message = deserializeMessage(createNativeMessage({ id: 'fixture-run', role: 'assistant', content: params.has('catalog') ? catalog : content,
     status: mode === 'running' ? { type: 'running' } : mode === 'cancelled' ? { type: 'incomplete', reason: 'cancelled' } : mode === 'pending' ? { type: 'requires-action', reason: 'tool-calls' } : mode === 'failed' ? { type: 'incomplete', reason: 'error' } : { type: 'complete', reason: 'stop' },
     custom: { activityPresentation: { version: 1 }, harnessControl: false,
-      ...(params.has('paged') ? { runId: 'fixture', senderId: 'fixture-agent', conversationId: 'fixture-room', activityHistory: { total: 1100, attention: 110 } } : {}) },
+      ...(params.has('paged') ? { runId: 'fixture', senderId: 'fixture-agent', conversationId: 'fixture-room', activityHistory: { total: 1100, attention: 110 },
+        harness: { ...createRunView('fixture'),requestVersion: 1,fence: 1,lastSeq: mode === 'pending' ? 1 : 2,
+          lifecycle: mode === 'failed' ? 'failed' : mode === 'cancelled' ? 'cancelled' : 'leased' } } : {}) },
   }))
   const runtime = useExternalStoreRuntime({ messages: [message], isRunning: mode === 'running', onNew: async () => {} })
   return <main className="mx-auto max-w-3xl space-y-4 p-4"><p>原生消息组件验收 · 合成数据</p>

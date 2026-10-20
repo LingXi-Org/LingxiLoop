@@ -38,6 +38,7 @@ test('history paints independently of diagnostics and obsolete requests cannot m
   } } })
   mock.module('./outbox', { namedExports: { readChatOutbox: () => [], forgetChatOutbox: () => {}, rememberChatOutbox: () => {} } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
+    history: async () => [],
     list: async () => [target], read: async () => { reads++; return run },
     subscribe: (_target: unknown, receive: (item: AgentRunSnapshot) => void, signal: AbortSignal) => {
       streams.push({ signal, receive })
