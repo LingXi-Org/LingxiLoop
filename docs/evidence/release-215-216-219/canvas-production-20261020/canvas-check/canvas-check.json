@@ -1,0 +1,176 @@
+{
+  "baselineCanvasEntries": 19,
+  "baselineCommit": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "baselineInventorySha256": "3d537b85a17d2dd22790264678a83ce64e147f2f0192f4e2bfda40d666f8c96a",
+  "baselineOci": {
+    "configDigest": "sha256:019d5728f0ef708fe9a642eaf1effd2c12699cdb303e2206e11b55e542fb2c4b",
+    "indexDigest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+    "linuxAmd64ManifestDigest": "sha256:1c437ff4f2b2f36055fddcf179460963d9f95147406989b48355a0020e4bf862"
+  },
+  "baselineReceiptSha256": "c78239a71b4d76f046a345413c40cda46738fe182add06abf5e0cef5e4a8e013",
+  "canvasScope": "app/node_modules/@napi-rs/canvas*",
+  "compressedOciSavings": "not-measured-by-this-tool",
+  "elapsedSeconds": 0.878,
+  "gnuSha256": "738cf404fc3422bd1f57dae002f19b2f4f41d2dd5614e8023e0b64d7ef3a8e10",
+  "loaderSha256": "be59c8d4888630cf88656f65b63dd150e60bdb1d5eab0ba5b47c0a6cb389533e",
+  "nativeExecution": "not-tested",
+  "passed": true,
+  "production": "not-accessed",
+  "readiness": "not-tested",
+  "removed": [
+    "app/node_modules/@napi-rs/canvas-linux-x64-musl/skia.linux-x64-musl.node"
+  ],
+  "removedRegularBytes": 30315608,
+  "removedSha256": "00790d510c990e1972f33d3c587d3d9faccddd4bf49c2bbe1938a05c40844034",
+  "retained": {
+    "app/node_modules/@napi-rs/canvas": {
+      "gid": 0,
+      "kind": "directory",
+      "mode": 493,
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas-linux-x64-gnu": {
+      "gid": 0,
+      "kind": "directory",
+      "mode": 493,
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas-linux-x64-gnu/README.md": {
+      "bytes": 105,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "4183a65ac5cbd8df6d3ee4f21dd26d0ae64686cf952fea98a695ef3cbbb863a1",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas-linux-x64-gnu/package.json": {
+      "bytes": 818,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "2936f3b48a72fbf6ff88132fa1b90f2c3d367f7182ca60b37e4caef86c1b810e",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas-linux-x64-gnu/skia.linux-x64-gnu.node": {
+      "bytes": 33974784,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "738cf404fc3422bd1f57dae002f19b2f4f41d2dd5614e8023e0b64d7ef3a8e10",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas-linux-x64-musl": {
+      "gid": 0,
+      "kind": "directory",
+      "mode": 493,
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas-linux-x64-musl/README.md": {
+      "bytes": 107,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "35e1248e7defd8cdfa18464965d12e6ac626667b9f6d5ad096a232818e1be0da",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas-linux-x64-musl/package.json": {
+      "bytes": 820,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "243c7204e2271dc138d95a2324aeca42af21525891aa4ed857d297a0026eca3c",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/LICENSE": {
+      "bytes": 1075,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "8802fecf9da4367bc23bcf20b21cc143785fc6c92b152f3fa7fbe6ce08d344d6",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/README.md": {
+      "bytes": 20727,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "1051a72627f361ae5ec3abd67804b5f6f46f292cebe903f1de5e019892576a87",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/geometry.js": {
+      "bytes": 19312,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "2e0ae365059fdb0424ddd2da8401e240a250c52b7efca68680996a99e804c1a1",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/index.d.ts": {
+      "bytes": 34280,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "0f04ed30163f6501da3a7e0832e987a9396b5223674849974fbd6594a8112556",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/index.js": {
+      "bytes": 5808,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "bbdad32cab670261983ea56d4625fc7d07b1382f8bb7d6d31232bb2834861597",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/js-binding.js": {
+      "bytes": 12799,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "be59c8d4888630cf88656f65b63dd150e60bdb1d5eab0ba5b47c0a6cb389533e",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/load-image.js": {
+      "bytes": 5954,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "0237683fc138d2f2a60e656709ccec9425166d17fd9a831fe3a96a93b189a9cb",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/node-canvas.d.ts": {
+      "bytes": 8863,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "9bafd71a8907c9597f3548e97c68a70915844ccbdb00fa7a8e36f75001c497fb",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/node-canvas.js": {
+      "bytes": 11906,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "8e43a89cf0a01572b015a6746e8a287f0bc2f6c48a73abd67cf0e2a0934f2be6",
+      "uid": 0
+    },
+    "app/node_modules/@napi-rs/canvas/package.json": {
+      "bytes": 4833,
+      "gid": 0,
+      "kind": "file",
+      "mode": 420,
+      "sha256": "e454ceeaa41fb647f8ecbeb6862380b1ee104d2c4d8b0b368dad55456f170033",
+      "uid": 0
+    }
+  },
+  "retainedCanvasEntries": 18,
+  "runtimePdfjsQualification": "delegated-to-input-original-oci-auditor",
+  "scope": "exact Canvas inventory delta conditional on supplied successful OCI audit receipts",
+  "targetCommit": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+  "targetInventorySha256": "f6edb98540280cee95f2a453a5b1bb626e692911037630420b70b82a1ebc4e0a",
+  "targetOci": {
+    "configDigest": "sha256:80c5e5ce9f7c0b20b06ae3ec9c0512bc2f8976572f7cab81a6de4c1f45c5fa6a",
+    "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+    "linuxAmd64ManifestDigest": "sha256:ba154cf9ba046cbe977a88067d9d56074f37f09544c99b5a56cf08bcb6aca2cc"
+  },
+  "targetReceiptSha256": "dc35f83085e31810184bf7c81985bcb7b015d25fdc0d096ad803683a737ea8dd"
+}
