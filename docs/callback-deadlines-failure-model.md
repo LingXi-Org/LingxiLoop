@@ -96,3 +96,25 @@ runtime methods listed above requires the separately reviewed public
 `RuntimeOperationContext` release and explicit product wiring before the whole
 delivery callback can be considered covered. No dependency lock is changed by
 this product-only stage.
+
+
+## Final public operation integration
+
+The final candidate pins formally published LingxiOS 3.5.6 and passes the same
+callback scope explicitly to its public reads and conversation sync/ingest.
+`readRun(identity, database)` continues using the existing product session;
+the other runtime methods own at most one additional existing pool session.
+No private runtime API, global implicit database scope or extra pool is used.
+
+The final short run passes nine session-scope tests, six product delivery tests,
+106 server tests, three owning reliability integrations, typecheck and lint.
+The two linked delivery cases use the same real runtime/worker for blocked-read
+cancellation, same-identity outbox recovery and the next successful turn. They
+also assert shared operation context on successful reads and conversation writes.
+Their fixed 250 ms post-abort observation proves the backend is absent by that
+check, not its precise exit latency. Read-approval propagation remains code-review
+and upstream-test coverage, rather than an approval-event fixture here.
+
+See [retained evidence](evidence/callback-deadlines/README.md) for exact source,
+formal package integrity, earlier red results and the final measurements. Full
+production matrices, live providers and long soak are still unverified.

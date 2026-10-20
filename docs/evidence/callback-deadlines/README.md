@@ -58,15 +58,46 @@ it creates only its own synthetic receipt table. It writes the repeatable
 `artifacts/callback-deadlines/scope.json` artifact. The migration and production
 schema are unchanged by this PR.
 
-## Final public runtime integration
+## Final public runtime integration: formal 3.5.6
 
-Pending a formal runtime release and explicit operation-context wiring. The two
-real PostgreSQL red fixtures are retained in `runtime-linked-red.log`; both
-cancel after a runtime read actually reaches its lock wait and leave the blocker
-held through the assertion. The final candidate must demonstrate rejected
-callbacks, vanished runtime backends, a foreground query and same-nonce recovery
-before this boundary is accepted. Earlier green product-only tests cannot serve
-as evidence for that final candidate.
+Source: `db8f6ca8643e85a3a6f93506b956158a819c45a1`, with a fresh independent
+installation of the formally published package. The root and server manifests
+and lockfiles pin 3.5.6 and its identical registry integrity. Upstream public
+API: [LingxiOS PR #32](https://github.com/LingXi-Org/LingxiOS/pull/32), published
+from `e44fb862c1a1a0d94eb5213fcfaf56f3dfccae73`. No schema migration is added;
+the existing explicit installer refreshes runtime installation provenance.
+See [validation.json](final-3.5.6/validation.json).
+
+| Check | Result |
+| --- | --- |
+| Product session scope, acquisition, settings and real backend cleanup | 9/9 passed |
+| Product callback / ACL / IM recovery, including two real runtime cases | 6/6 passed |
+| Existing server tests | 106/106 passed |
+| Existing terminal/cancel/revocation/next-message integration | 3/3 passed |
+| Server typecheck and lint | Passed, no lint warnings |
+
+The two real runtime cases first produce a failed terminal or committed result
+using a real runtime and worker with a local synthetic model. Each holds the
+native outbox at the product boundary, blocks its actual public runtime read in
+PostgreSQL, cancels the callback, and verifies that the identified backend has
+exited while the blocker remains held. A foreground query succeeds. Retrying the
+same real outbox sends once with the same identity and does not rerun the model.
+The same runtime and worker then complete and deliver a new successful turn.
+[delivery.json](final-3.5.6/delivery.json) records the assertions.
+
+The linked cases check backend absence **after a fixed 250 ms wait** (observed
+at about 252 ms). This is an observation window, not actual cancellation latency
+or a percentile. Separately, [scope.json](final-3.5.6/scope.json) records about
+78 ms from early abort through polling backend exit and completing the next
+callback; its 150 ms deadline-only and missing-context fixtures finished at
+about 169 ms and 152 ms. These measurements have different endpoints and are
+not an optimization before/after comparison.
+
+Successful linked calls assert that `readRunState`, `readEvents`, `readTerminal`,
+`conversations.sync` and `conversations.ingest` receive the same callback signal
+and absolute deadline. Product propagation to `readApproval` is reviewed, but
+these two fixtures contain no approval event; upstream owns that operation's
+cancellation test. The original 3.5.5 red evidence remains unchanged above.
 
 Full production fault matrices, live providers and long soak remain unverified
 by these short fixtures. No production action was performed for this work.
