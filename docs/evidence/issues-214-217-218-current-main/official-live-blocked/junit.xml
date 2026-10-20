@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="1" skipped="0" time="1.454">
+  <testsuite name="streaming-text-official.e2e.ts" tests="1" failures="0" errors="1" skipped="0" time="1.454">
+    <testcase name="official Streaming text live reference [official]" classname="streaming-text-official.e2e.ts" time="1.454">
+      <error message="navigation failed: page.goto: net::ERR_CERT_AUTHORITY_INVALID at https://www.assistant-ui.com/elements/streaming-text&#10;Call log:&#10;  - navigating to &quot;https://www.assistant-ui.com/elements/streaming-text&quot;, waiting until &quot;load&quot;&#10;" type="ENGINE_FAILURE">ENGINE_FAILURE (body): navigation failed: page.goto: net::ERR_CERT_AUTHORITY_INVALID at https://www.assistant-ui.com/elements/streaming-text
+Call log:
+  - navigating to &quot;https://www.assistant-ui.com/elements/streaming-text&quot;, waiting until &quot;load&quot;
+</error>
+    </testcase>
+  </testsuite>
+</testsuites>

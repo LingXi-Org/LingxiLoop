@@ -1,0 +1,220 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a158aa-b5c8-7c93-b285-972be9835e39",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "error",
+    "exitCode": 3,
+    "startedAt": "2026-10-20T09:35:45.580Z",
+    "finishedAt": "2026-10-20T09:35:47.702Z",
+    "project": {
+      "id": "lingxiloop-official-reference-isolated",
+      "configDigest": "5ade4bfba687e049f618ffc943b0532c592aeb844d435ee1debc0dd7175df545"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "targets": [
+      {
+        "id": "official",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "https://www.assistant-ui.com",
+        "environment": "production",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "884516a95432923e0db5c30b227d67e834d3383f71452c314bc2a7768be29ae2",
+        "testId": "streaming-text-official.e2e.ts::official%20Streaming%20text%20live%20reference",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "official Streaming text live reference"
+        ],
+        "file": "streaming-text-official.e2e.ts",
+        "source": {
+          "file": "streaming-text-official.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "official",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a158aa-ba13-7f2e-9760-8e61e7cdcb98",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-20T09:35:46.195Z",
+            "durationMs": 1454,
+            "artifacts": [
+              {
+                "id": "01a158aa-ba13-7f2e-9760-8e61e7cdcb98:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "official/streaming-text-official.e2e.ts__official_20Streaming_20text_20live_20reference-a0a95438/default/attempt-0/failure/screen.txt",
+                "size": 112,
+                "sha256": "d927afc527eb0bd312946bbca3f40e4672cce265a821ef539d1c021d621f391d"
+              },
+              {
+                "id": "01a158aa-ba13-7f2e-9760-8e61e7cdcb98:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "official/streaming-text-official.e2e.ts__official_20Streaming_20text_20live_20reference-a0a95438/default/attempt-0/screenshots/001-failure.png",
+                "size": 6234,
+                "sha256": "11c65be8621548249d7515ef8dbba61003a8ca9520bd221f6208ccacd9772aa2"
+              },
+              {
+                "id": "01a158aa-ba13-7f2e-9760-8e61e7cdcb98:artifact:2",
+                "kind": "video",
+                "mediaType": "video/webm",
+                "startedAt": "2026-10-20T09:35:46.907Z",
+                "redaction": "incomplete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "official/streaming-text-official.e2e.ts__official_20Streaming_20text_20live_20reference-a0a95438/default/attempt-0/video/video.webm",
+                "size": 4571,
+                "sha256": "9354e7d71e356a8abd1c0f572bbf883c2d2c7a58177298cb2e2df302fa941449"
+              },
+              {
+                "id": "01a158aa-ba13-7f2e-9760-8e61e7cdcb98:artifact:3",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "official/streaming-text-official.e2e.ts__official_20Streaming_20text_20live_20reference-a0a95438/default/attempt-0/trace/trace.zip",
+                "size": 78131,
+                "sha256": "6de062b04676b801a445900efe14e2017212c3e2957369ab97fa57430b0642ef"
+              }
+            ],
+            "error": {
+              "category": "infrastructure",
+              "code": "ENGINE_FAILURE",
+              "message": "navigation failed: page.goto: net::ERR_CERT_AUTHORITY_INVALID at https://www.assistant-ui.com/elements/streaming-text\nCall log:\n  - navigating to \"https://www.assistant-ui.com/elements/streaming-text\", waiting until \"load\"\n",
+              "retryable": false,
+              "phase": "body",
+              "source": {
+                "file": "streaming-text-official.e2e.ts",
+                "line": 10,
+                "column": 3
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "chrome-error://chromewebdata/",
+              "screen": "01a158aa-ba13-7f2e-9760-8e61e7cdcb98:artifact:0",
+              "screenshot": "01a158aa-ba13-7f2e-9760-8e61e7cdcb98:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a158aa-ba13-7f2e-9760-8e61e7cdcb98:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/elements/streaming-text",
+                "status": "failed",
+                "startedAt": "2026-10-20T09:35:46.949Z",
+                "durationMs": 194,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "streaming-text-official.e2e.ts",
+                  "line": 10,
+                  "column": 13
+                },
+                "error": {
+                  "category": "infrastructure",
+                  "code": "ENGINE_FAILURE",
+                  "message": "navigation failed: page.goto: net::ERR_CERT_AUTHORITY_INVALID at https://www.assistant-ui.com/elements/streaming-text\nCall log:\n  - navigating to \"https://www.assistant-ui.com/elements/streaming-text\", waiting until \"load\"\n",
+                  "retryable": false,
+                  "source": {
+                    "file": "streaming-text-official.e2e.ts",
+                    "line": 10,
+                    "column": 3
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 89048,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
