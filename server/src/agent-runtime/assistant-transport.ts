@@ -142,7 +142,10 @@ export class RunStreamProjection {
       artifacts: message?.envelope.artifacts ?? [] }
     const agentId = this.identity?.agentId ?? message?.agentId
     // Ephemeral cleanup must not retract validated model.delta text before its committed state arrives.
-    const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools)
+    // A committed answer explicitly names its streamed source part. Keep that
+    // immutable prefix in activityPage, but do not repeat it above the answer.
+    const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools,{ includeAcceptedPublicText: false })
+    const acceptedPublicParts = (this.view.publicTextParts ?? []).filter(part => part.acceptedResultId).length
     const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
     const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
     const activitySet = new Set(activity)
@@ -153,6 +156,7 @@ export class RunStreamProjection {
     const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
       content: parts, status: runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
+        ...(acceptedPublicParts ? { activityHistory: { total: activity.length+acceptedPublicParts,attention: attention.length } } : {}),
         ...(this.questionnaireWait?.requestVersion === this.view.requestVersion && this.view.goalOutcome?.status === 'awaiting_input'
           ? { questionnaireWait: this.questionnaireWait } : {}),
         ...(agentId ? { refs: { runId: this.view.runId, agentId } } : {}),
@@ -166,7 +170,7 @@ export class RunStreamProjection {
     if (activity.length <= 80) {
       try { return { message: createNativeMessage(input) } } catch { /* preserve answer and page activity below */ }
     }
-    const compact = { ...input, custom: { ...input.custom, activityHistory: { total: activity.length, attention: attention.length } } }
+    const compact = { ...input, custom: { ...input.custom, activityHistory: { total: activity.length+acceptedPublicParts, attention: attention.length } } }
     while (selected.size) {
       compact.content = parts.filter(part => !activitySet.has(part) || selected.has(part))
       try { return { message: createNativeMessage(compact) } }

@@ -30,14 +30,14 @@ function publish(chunks: string[], final = true) {
 }
 
 test('cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content', () => {
-  for (const marker of ['<think>','<analysis>','<|im_start|>','<|channel|>']) {
+  for (const marker of ['<think>','<analysis>','<system>','<|im_start|>','<|channel|>']) {
     const value = `I will inspect the files.\n${marker}PRIVATE_STREAM_SENTINEL`
     for (let cut = 1; cut < value.length; cut++) {
       const result = publish([value.slice(0,cut),value.slice(cut)])
-      assert.doesNotMatch(result.publicText,/PRIVATE_STREAM_SENTINEL|<think|<analysis|<\|/)
+      assert.doesNotMatch(result.publicText,/PRIVATE_STREAM_SENTINEL|<think|<analysis|<system|<\|/)
       assert.equal(result.rejected,true)
     }
-    assert.doesNotMatch(publish([...value]).publicText,/PRIVATE_STREAM_SENTINEL|<think|<analysis|<\|/)
+    assert.doesNotMatch(publish([...value]).publicText,/PRIVATE_STREAM_SENTINEL|<think|<analysis|<system|<\|/)
   }
 })
 
@@ -61,6 +61,7 @@ test('multiple planning directives are held cumulatively before a later cluster 
 
 test('fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character', () => {
   for (const value of ['```xml\n<think>PRIVATE_STREAM_SENTINEL</think>\n```\nExplanation.',
+    '```xml\n<system>PRIVATE_STREAM_SENTINEL</system>\n```', '> <system>PRIVATE_STREAM_SENTINEL</system>', '`<system>PRIVATE_STREAM_SENTINEL</system>`',
     '~~~xml\n<|channel|>PRIVATE_STREAM_SENTINEL\n~~~\nExplanation.',
     '> <think>PRIVATE_STREAM_SENTINEL</think>\n> Let me think. The user wants this. Let me write it.\n\nExplanation.',
     'Use `<think>PRIVATE_STREAM_SENTINEL</think>` as an example.',

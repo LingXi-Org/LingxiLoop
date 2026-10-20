@@ -48,7 +48,7 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
             return { text: 'I will inspect the available files.\n<think>PRIVATE_STREAM_SENTINEL</think>',output: [],usage }
           }
           if (!completes) await request.onTextDelta?.('PRIVATE_AFTER_REVOKE_OR_CANCEL')
-          return { text: '',output: [{ type: 'function_call',callId: 'issue215-files',name: 'files__list',arguments: '{}' }],usage }
+          return { text: 'I will inspect the available files.',output: [{ type: 'function_call',callId: 'issue215-files',name: 'files__list',arguments: '{}' }],usage }
         }
         if (outcome === 'final-stream') await request.onTextDelta?.('The inspection is complete.')
         return { text: 'The inspection is complete.',output: [{ role: 'assistant',content: 'The inspection is complete.' }],usage }
@@ -65,7 +65,9 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
     const response = assistantRunResponse(upstream.body,projection,{ api,identity,signal: cancellation.signal })
     const reader = AssistantStream.fromResponse(response,new AssistantTransportDecoder()).getReader(), tracker = new AssistantTransportDeltaTracker()
     let sawPrefix!: () => void
+    let sawTerminal!: (message: NativeMessage) => void
     const visible = new Promise<void>(resolve => { sawPrefix = resolve })
+    const terminal = new Promise<NativeMessage>(resolve => { sawTerminal = resolve })
     streamRead = (async () => {
       try {
         while (true) {
@@ -74,6 +76,7 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
           tracker.append(next.value.operations)
           const message = (tracker.state as unknown as { message?: NativeMessage }).message
           if (message?.content.some(part => part.type === 'text' && part.text === 'I will inspect the available files.' && activityAnnotation(part)?.kind === 'commentary')) sawPrefix()
+          if (message?.status?.type === 'complete') sawTerminal(message)
         }
       } finally { await reader.cancel(); reader.releaseLock() }
     })()
@@ -91,17 +94,25 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
     if (outcome === 'revoked') await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1",
       [conversationId,JSON.stringify([...members,'new-recipient'])])
     release(); await running
-    const replay = (await readRunProjection(api,identity,true)).snapshot.message
+    const replayProjection = await readRunProjection(api,identity,true), replay = replayProjection.snapshot.message
     if (outcome !== 'unsafe') assert.equal(nativeText(replay),completes ? 'The inspection is complete.' : '')
     const retained = replay.content.filter(part => activityAnnotation(part)?.kind === 'commentary')
     if (outcome === 'final-stream') {
       const copies = replay.content.filter(part => part.type === 'text' && part.text === 'The inspection is complete.')
       const latestCommentary = retained.at(-1)
       await mkdir('artifacts/issue215-public',{ recursive: true })
+      await writeFile('artifacts/issue215-public/captured-final-message.json',JSON.stringify(replay))
+      await writeFile('artifacts/issue215-public/captured-final-activity.json',JSON.stringify(replayProjection.activityPage(0)))
       await writeFile('artifacts/issue215-public/final-stream-foreground.json',JSON.stringify({ runtime: releaseVersions.runtime,
         finalAnswerCopiesInSnapshot: copies.length,latestCommentaryIsFinalAnswer: latestCommentary?.type === 'text' && latestCommentary.text === nativeText(replay),
         realLocalPostgres: true,realWorker: true,syntheticDriver: true,productionRequests: 0 },null,2))
       assert.equal(copies.length,1,'the accepted streamed final answer must not be duplicated as the latest foreground explanation')
+      const history = replayProjection.activityPage(0)
+      assert.equal(history.message.content.filter(part => activityAnnotation(part)?.kind === 'commentary').length,2)
+      assert.ok(history.message.content.some(part => part.type === 'text' && part.text === 'The inspection is complete.'))
+      assert.equal((replay.metadata.custom.activityHistory as { total: number }).total,history.total)
+      const streamedFinal = await terminal
+      assert.equal(streamedFinal.content.filter(part => part.type === 'text' && part.text === 'The inspection is complete.').length,1)
     }
     if (outcome !== 'unsafe') assert.equal(retained.length,1)
     assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)

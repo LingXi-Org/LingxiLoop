@@ -17,4 +17,16 @@ test.describe('Public activity history', {
     await expect(screen.getByText('最终答复始终可见。',{ exact: true })).toBeVisible()
     await app.screenshot('public-attention-history-reset')
   })
+  test('the captured Worker final answer appears once while its durable source remains in history', async ({ app, screen }) => {
+    await app.open('/e2e/run-activity.html?mode=complete&captured=1')
+    await expect(screen.getByText('真实 Worker 合成输出已加载',{ exact: true })).toBeVisible()
+    // The actual product component must resolve a unique visible final answer.
+    await expect(screen.getByText('The inspection is complete.',{ exact: true })).toBeVisible()
+    await expect(screen.getByText('I will inspect the available files.',{ exact: true })).toBeVisible()
+    await app.screenshot('captured-worker-final-answer-once')
+    await screen.getByRole('button','查看全部活动（3 条）',{ exact: true }).tap()
+    await expect(screen.getByText('活动记录 · 1–3 / 3',{ exact: true })).toBeVisible()
+    await expect(screen.getByRole('button','收起活动记录',{ exact: true })).toBeVisible()
+    await app.screenshot('captured-worker-final-prefix-history')
+  })
 })

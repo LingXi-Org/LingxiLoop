@@ -55,7 +55,7 @@ function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Om
   return { ...part, providerMetadata: { ...('providerMetadata' in part ? part.providerMetadata : {}),
     lingxiloop: { activity: { version: 1, ...annotation } } } }
 }
-function activityParts(view: RunView, tools: readonly HarnessToolPart[]): ThreadAssistantMessagePart[] {
+function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean): ThreadAssistantMessagePart[] {
   const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
   const attempts = [
     ...tools.flatMap(tool => tool.activityIdentity ? [{ ...tool.activityIdentity,seq: tool.startedSeq ?? 0 }] : []),
@@ -65,10 +65,11 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[]): Thread
   const put = (id: string,seq: number,part: ThreadAssistantMessagePart) => parts.set(id,{ seq: parts.get(id)?.seq ?? seq,part })
   const stableId = (prefix: string,identity: unknown[]) => `${prefix}:${createHash('sha256').update(JSON.stringify(identity)).digest('hex')}`
   for (const part of view.publicTextParts ?? []) {
+    if (!includeAcceptedPublicText && part.acceptedResultId) continue
     const id = stableId('public-text',[part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
-    put(id,part.firstSeq,annotated({ type: 'text',text: part.text,status },{ id,kind: 'commentary',label: '公开说明' }))
+    put(id,part.firstSeq,annotated({ type: 'text',text: part.text,status },{ id,kind: 'commentary',label: part.acceptedResultId ? '答复片段' : '公开说明' }))
   }
   for (const { eventSeq, startedSeq, activityIdentity, display: recordedDisplay, ...tool } of tools) {
     const seq = startedSeq ?? eventSeq ?? 0
@@ -110,8 +111,8 @@ function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]
   return parts.map((part, index) => part.type === 'text'
     ? annotated(part, { id: `answer:${view.requestVersion}:${index}`, kind: 'answer', label: '答复' }) : part)
 }
-export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = []): ThreadAssistantMessagePart[] {
-  const cards = activityParts(view, tools)
+export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = [], options: { includeAcceptedPublicText?: boolean } = {}): ThreadAssistantMessagePart[] {
+  const cards = activityParts(view, tools, options.includeAcceptedPublicText !== false)
   if (view.lifecycle === 'queued') return cards
   // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
   if (view.lifecycle === 'leased' && view.draft) return [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]

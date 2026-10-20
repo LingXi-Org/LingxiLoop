@@ -11,7 +11,7 @@ const directives = [...english,
   '我应该用结构化','我应该用中文','让我直接给出最终',
 ]
 const directivePattern = new RegExp(`\\b(?:${english.join('|')})|${directives.slice(english.length).join('|')}`,'gi')
-const markers = ['think','analysis','reasoning','scratchpad'].flatMap(name => [`<${name}`,`</${name}`])
+const markers = ['think','analysis','reasoning','scratchpad','system'].flatMap(name => [`<${name}`,`</${name}`])
 
 // Preserve offsets while ignoring explicit Markdown quoted data. Fence headers
 // are held until their newline, and unmatched inline ticks remain unapproved.
