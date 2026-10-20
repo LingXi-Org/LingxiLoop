@@ -15,7 +15,8 @@ import {
   ConfidenceMarker, ConfidenceMarkerInline,
 } from '@/components/assistant-ui/elements/confidence-marker'
 
-import { StreamingBlock, StreamingLeaf, rehypeStreamingText } from './markdown-streaming'
+import { StreamingLeaf, rehypeStreamingText } from './markdown-streaming'
+import { StreamingBlock, StreamingPart, useStreamingBlock } from './streaming-tail'
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 import { activityAnnotation } from '@/lib/runActivity'
@@ -162,7 +163,7 @@ const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, m
   const [initialContent] = useState(props.content)
   const [decorated, setDecorated] = useState(agent && isAnimating)
   if (!decorated && agent && isAnimating && props.content !== initialContent) setDecorated(true)
-  const streamingBlock = useMemo(() => ({ streaming: agent && isAnimating, animate: decorated }), [agent, isAnimating, decorated])
+  const streamingBlock = useStreamingBlock(props.index, agent && isAnimating, decorated)
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
     [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
@@ -220,6 +221,7 @@ const MarkdownTextImpl = ({
   return <ConfidenceMarker claims={confidenceClaims} hoveredId={hoveredId} onHover={setHoveredId} floatingBasis={inlineCitations}>
     <MentionTargets.Provider value={mentionTargets}><CitationBlocks.Provider value={citationBlocks}>
       <div data-find-content>
+        <StreamingPart key={partKey} offset={textOffset}>
         <StreamdownTextPrimitive
           key={partKey}
           smooth={agent && typeof window !== 'undefined' && !motionSettled && !messageInterrupted && part.status.type !== 'incomplete' ? smooth : false}
@@ -235,6 +237,7 @@ const MarkdownTextImpl = ({
           {...hasCitations || agent ? { BlockComponent: CitationBlock } : {}}
           className={`im-markdown${agent ? ' im-markdown-agent' : ''}`}
         />
+        </StreamingPart>
       </div>
     </CitationBlocks.Provider></MentionTargets.Provider>
   </ConfidenceMarker>

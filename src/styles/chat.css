@@ -564,8 +564,3 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .chat-question-index-button:hover { background: var(--accent); color: var(--foreground); }
 .chat-question-index-button:focus-visible { outline: 2px solid var(--ring); outline-offset: -3px; }
 .chat-question-index-button:disabled { opacity: .5; cursor: wait; }
-
-/* Markdown blocks share the official element; only the visual tail owns its
-   decoration. CSS changes the color target, retaining upstream's 700ms fade. */
-.im-markdown > :not(:last-child) [data-streaming-caret] { display: none; }
-:root .im-markdown > :not(:last-child) [data-streaming-fresh='true'] { color: inherit; }

@@ -1,15 +1,17 @@
 // Local browser regression fixture; uses the production renderer and assistant runtime.
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, MessagePrimitive, type ThreadMessage } from '@assistant-ui/react'
+import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, MessagePrimitive, type ThreadMessage, type TextMessagePartProps } from '@assistant-ui/react'
 import { MarkdownText } from '../src/components/assistant-ui/markdown-text'
 import { StreamingText as OfficialStreamingText } from '../third_party/assistant-ui/streaming-text/upstream/elements/streaming-text'
 import '../src/styles/globals.css'
 import type { Participant } from '../src/types'
+import { VisualizeText } from '../src/features/chat/visualize/VisualizeText'
 
 const mentionTargets: Participant[] = [{ id: 'fixture-colleague', kind: 'human', name: '同事', initial: '同', avatarBg: '#888', status: 'avail' }]
 function Text() { return <MarkdownText agent inlineCitations mentionTargets={mentionTargets} /> }
-function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
+function VisualizedText(part: TextMessagePartProps) { return <VisualizeText part={part} Text={Text} readOnly /> }
+function Message() { return <MessagePrimitive.Parts components={{ Text: params.has('visualize') ? VisualizedText : Text }} /> }
 const params = new URLSearchParams(location.search)
 function App() {
   const [value, setValue] = useState<{ text: string; done: boolean; cancelled?: boolean; failed?: boolean; id?: string }>({

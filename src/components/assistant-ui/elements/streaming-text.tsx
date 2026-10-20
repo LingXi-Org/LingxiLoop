@@ -13,7 +13,7 @@ export interface Segment {
   mono?: boolean;
 }
 
-export interface StreamingWord { word: string; mono?: boolean; separator?: string }
+export interface StreamingWord { word: string; mono?: boolean; separator?: string; prefix?: string }
 
 export function StreamingText({
   segments,
@@ -62,7 +62,7 @@ export function StreamingText({
 
       {...props}
     >
-      {shown.map(({ word, mono: isMono, separator = " " }, i) => {
+      {shown.map(({ word, mono: isMono, separator = " ", prefix = "" }, i) => {
         const fresh = streaming && shown.length - 1 - i + trailing < 2;
         return (
           <span
@@ -70,6 +70,7 @@ export function StreamingText({
             data-streaming-word=""
             className={animate ? "fade-in animate-in fill-mode-both duration-500 motion-reduce:animate-none" : undefined}
           >
+            {prefix}
             <span
               data-streaming-fresh={fresh}
               className={cn(

@@ -1,0 +1,16 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/streaming-tail-window.e2e.ts",
+    "--video",
+    "on",
+    "--output",
+    "docs/evidence/issue-214-tail/green-tail-settled"
+  ],
+  "buildMode": "external app via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "build": null
+}
