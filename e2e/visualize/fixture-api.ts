@@ -6,7 +6,7 @@ import type { Plugin } from 'vite'
 // Controlled local transport for UI/bridge tests. Real tenant authorization and
 // durable delivery are verified separately against the real service.
 export function visualizeFixtureApi(): Plugin {
-  type Page={channel:string;path:string;initId:string;active:boolean;stale:boolean;gestures:Set<string>}
+  type Page={channel:string;path:string;instanceKey:string;initId:string;active:boolean;stale:boolean;gestures:Set<string>}
   const pages=new Map<string,Page>(),states=new Map<string,unknown>(),revisions=new Map<string,number>()
   const follows:string[]=[],external:string[]=[],denied:string[]=[]
   let failOnce=false,closedPages=0,externalHits=0,acceptedSaves=0
@@ -30,6 +30,12 @@ export function visualizeFixtureApi(): Plugin {
         const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk))
         const input=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):{}
         const stage=!id&&req.method==='POST'?'create':req.method==='DELETE'?'delete':action
+        // Real createVisualizePage can continue after the HTTP client aborts.
+        // Hold its pre-transaction work, then commit even without a response.
+        if(stage==='create'&&fault==='late-create'){
+          blocked.push('late-create')
+          await new Promise<void>(resolve=>{const release=()=>{held.delete(release);resolve()};held.add(release)})
+        }
         if(fault.split(',').includes(stage ?? '') && fault && req.method!=='PUT'){
           blocked.push(stage!)
           await new Promise<void>(resolve=>{
@@ -41,7 +47,8 @@ export function visualizeFixtureApi(): Plugin {
         }
         if(!id&&req.method==='POST'){
           if(failOnce){failOnce=false;reply({error:'Deterministic first acquisition failure'},503);return}
-          const pageId=randomUUID(),initId=randomUUID(),page:Page={channel,path:input.path,initId,active:true,stale:false,gestures:new Set()};pages.set(pageId,page)
+          for(const page of pages.values())if(page.channel===channel&&page.instanceKey===input.instanceKey)page.active=false
+          const pageId=randomUUID(),initId=randomUUID(),page:Page={channel,path:input.path,instanceKey:input.instanceKey,initId,active:true,stale:false,gestures:new Set()};pages.set(pageId,page)
           const fixture=input.path==='/fixture/bridge.html'?'bridge':'acceptance'
           reply({pageId,initId,path:input.path,html:await readFile(`e2e/visualize/fixtures/${fixture}.html`,'utf8'),state:states.get(stateKey(page))??null,stateRevision:revisions.get(stateKey(page))??0});return
         }

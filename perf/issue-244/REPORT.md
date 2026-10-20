@@ -66,8 +66,11 @@ device or broad browser campaign is required by the user's latest instruction.
 - Generation/save/final-reference delivery and numerical/SVG red cases remain in
   #243's immutable evidence; this branch makes zero paid model calls.
 - An aborted POST can commit without returning its capability. Browser abort
-  does not prove server rollback; existing same-instance replacement/expiry is
-  the recovery boundary. No production state was modified to verify it.
+  does not prove server rollback. Acquisition attempts use independent existing
+  instance keys, so an old late transaction cannot revoke a successful retry.
+  Unknown capabilities can occupy the unchanged 64-page quota until the existing
+  24h expiry; near the quota retry can report 429. No production state was
+  modified to verify it.
 - Main-thread-blocking author code can delay browser timers. We do not weaken the
   sandbox or execute incomplete scripts to conceal that limitation.
 - Native clipboard permission and real-touch coverage remain unverified, unchanged.

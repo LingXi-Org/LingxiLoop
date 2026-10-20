@@ -215,7 +215,11 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
     async prepareSandbox(_input, signal) {
       assertScope()
       signal?.throwIfAborted()
-      const result = await http<{pageId:string;initId:string;html:string;state:GenUiWidgetState|null;stateRevision:number;path:string}>(`${path(target)}/pages`, {method:'POST',signal,body:JSON.stringify({path:target.path,sourceMessageId:target.sourceMessageId,instanceKey:target.instanceKey})})
+      // Retention uses target.instanceKey; acquisition uses an attempt identity.
+      // An aborted POST can still commit remotely after a successful retry.
+      // Its late transaction must not revoke that newer page as a replacement.
+      const instanceKey = crypto.randomUUID()
+      const result = await http<{pageId:string;initId:string;html:string;state:GenUiWidgetState|null;stateRevision:number;path:string}>(`${path(target)}/pages`, {method:'POST',signal,body:JSON.stringify({path:target.path,sourceMessageId:target.sourceMessageId,instanceKey})})
       const page: Page = {...result,sandboxId:result.pageId,shellUrl:'about:srcdoc',partition:'opaque',target,html:'',state:result.state === null ? null : genUiWidgetStateSchema.parse(result.state),active:false,disposed:false,gestureAt:-Infinity,captures:new Map(),loadCount:0,revision:result.stateRevision ?? 0,userId:ownerUserId}
       pages.set(page.sandboxId,page)
       const resources = new AbortController()
