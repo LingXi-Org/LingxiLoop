@@ -12,33 +12,22 @@ test.describe('Activity integration regressions', {
     await app.screenshot('public-explanation-running')
     for (const state of ['取消', '失败', '完成']) {
       await screen.getByRole('button', state, { exact: true }).tap()
-      const disclosure = browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > [data-slot="collapsible-trigger"]')
-      await disclosure.tap()
       await expect(screen.getByText('已经核对条件，接下来检查资料。', { exact: true })).toBeVisible()
       await expect(screen.getByText('最终答复始终可见。', { exact: true })).toBeVisible()
       await app.screenshot(`public-explanation-${state}`)
-      await disclosure.tap()
     }
   })
   test('memory renders with the product context and reloads authorized history', async ({ app, browser, screen }) => {
     await app.open('/e2e/memory-privacy.html?reset=1&mode=history')
-    const expand = async () => {
-      await browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > [data-slot="collapsible-trigger"]').tap()
-      await browser.locator('[data-slot="tool-group-trigger"]').tap()
-    }
-    await expand()
     await app.screenshot('memory-product-context')
     expect(await browser.evaluate(() => document.documentElement.dataset.cardException ?? '')).toBe('')
     await expect(screen.getByText('偏好中文回答', { exact: true })).toBeVisible()
     await browser.reload()
-    await expand()
     await expect(screen.getByText('偏好中文回答', { exact: true })).toBeVisible()
   })
   for (const [mode, expected] of [['empty', '当前没有可显示的记忆。'], ['loading', '正在核对记忆状态…'], ['load-error', '记忆状态暂时无法加载。']]) {
     test(`memory ${mode} is explicit and recoverable`, async ({ app, browser, screen }) => {
       await app.open(`/e2e/memory-privacy.html?reset=1&mode=${mode}`)
-      await browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > [data-slot="collapsible-trigger"]').tap()
-      await browser.locator('[data-slot="tool-group-trigger"]').tap()
       await expect(screen.getByText(expected, { exact: mode !== 'load-error' }).first()).toBeVisible()
       await app.screenshot(`memory-${mode}`)
       if (mode === 'load-error') {

@@ -9,10 +9,7 @@ test.describe('Public run activity', { tags: ['web', 'run-activity'], timeout: 1
     test(`native chronology, Markdown, attention and replay ${theme} ${width}`, async ({ app, browser, screen }) => {
       await browser.setViewport({ width, height: 960 })
       await app.open(`/e2e/run-activity.html?theme=${theme}`)
-      const disclosure = browser.locator('[data-slot="run-activity"] [data-slot="collapsible-trigger"]').first()
       await expect(screen.getByText('最终答复始终可见。', { exact: true })).toBeVisible()
-      await disclosure.focus()
-      await browser.keyboard.press('Enter')
       await expect(screen.getByRole('progressbar', '处理计划进度')).toHaveAttribute('aria-valuenow', '50')
       await expect(browser.locator('[data-slot="reasoning-root"]')).toBeVisible()
       await browser.locator('[data-slot="reasoning-trigger"]').tap()
@@ -27,7 +24,6 @@ test.describe('Public run activity', { tags: ['web', 'run-activity'], timeout: 1
       await app.screenshot(`activity-expanded-${theme}-${width}`)
       await screen.getByRole('button', '等待确认').tap()
       await expect(screen.getByText('等待有权限的成员审批。', { exact: true })).toBeVisible()
-      await disclosure.tap()
       await expect(screen.getByText('等待有权限的成员审批。', { exact: true })).toBeVisible()
       await expect(screen.getByText('最终答复始终可见。', { exact: true })).toBeVisible()
       await app.screenshot(`activity-attention-${theme}-${width}`)
@@ -40,9 +36,7 @@ test.describe('Public run activity', { tags: ['web', 'run-activity'], timeout: 1
   }
   test('long histories keep early calls and reveal all later calls', async ({ app, browser, screen }) => {
     await app.open('/e2e/run-activity.html?long=1')
-    await browser.locator('[data-slot="run-activity"] [data-slot="collapsible-trigger"]').first().tap()
     await expect(screen.getByText('最终答复始终可见。', { exact: true })).toBeVisible()
-    for (let index = 0; index < 7; index++) await browser.locator('button').filter({ hasText: '显示更多活动' }).tap()
     await browser.locator('[data-slot="tool-group-trigger"]').tap()
     await expect(screen.getByRole('region', '查看附件 1', { exact: true })).toBeVisible()
     await expect(screen.getByRole('region', '查看附件 300', { exact: true })).toBeVisible()
@@ -55,20 +49,13 @@ test.describe('Public run activity', { tags: ['web', 'run-activity'], timeout: 1
       await app.screenshot(`official-${component}-1440`)
     }
   })
-  test('wire history pages replace the page while answer and attention stay visible', async ({ app, browser, screen }) => {
-    await app.open('/e2e/run-activity.html?paged=1')
+  test('legacy history metadata does not resurrect aggregate controls', async ({ app, browser, screen }) => {
+    await app.open('/e2e/run-activity.html?paged=1&mode=pending')
     await expect(screen.getByText('最终答复始终可见。', { exact: true })).toBeVisible()
-    await screen.getByRole('button', '查看全部活动（1100 条）').tap()
-    await expect(screen.getByText('活动记录 · 1–40 / 1100', { exact: true })).toBeVisible()
-    await screen.getByRole('button', '下一页活动').tap()
-    await expect(screen.getByText('活动记录 · 41–80 / 1100', { exact: true })).toBeVisible()
-    await screen.getByRole('button', '上一页活动').tap()
-    await expect(screen.getByText('活动记录 · 1–40 / 1100', { exact: true })).toBeVisible()
-    await screen.getByRole('button', '查看需要注意的记录（110 条）').tap()
-    await expect(screen.getByText('活动记录 · 1–40 / 110', { exact: true })).toBeVisible()
-    expect(await browser.locator('[data-tool-state="incomplete"]').count()).toBeLessThanOrEqual(40)
-    await expect(screen.getByText('最终答复始终可见。', { exact: true })).toBeVisible()
-    await app.screenshot('activity-wire-pages')
+    await expect(screen.getByText('等待有权限的成员审批。', { exact: true })).toBeVisible()
+    expect(await browser.locator('[data-slot="run-activity"]').count()).toBe(0)
+    expect(await browser.evaluate(() => document.body.textContent)).not.toMatch(/查看全部活动|查看需要注意的记录|显示更多活动/)
+    await app.screenshot('activity-without-aggregates')
   })
   test('math fonts load through the production asset pipeline', async ({ app, browser }) => {
     await app.open('/e2e/run-activity.html')

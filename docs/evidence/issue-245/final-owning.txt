@@ -1,0 +1,39 @@
+
+> lingxiloop@0.1.0-beta test:e2e:server
+> node e2e/server/run.mjs --file memory-public-streaming.test.ts
+
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-postgres-1  Healthy
+ Container lingxiloop-e2e-redis-1  Healthy
+[db:migrate] already current · 60ms
+[integration] selected 1/93 file(s): memory-public-streaming.test.ts
+TAP version 13
+# {"ts":"2026-10-20T16:38:31.068Z","level":"info","msg":"worker stopped","workerId":"memory-public-worker","timedOut":false}
+# {"ts":"2026-10-20T16:38:31.075Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T16:38:31.076Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T16:38:31.076Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T16:38:31.077Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T16:38:31.077Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# Subtest: memory public content crosses provider, durable ledger and SSE before tool/final completion
+ok 1 - memory public content crosses provider, durable ledger and SSE before tool/final completion
+  ---
+  duration_ms: 3479.081421
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6814.107328
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

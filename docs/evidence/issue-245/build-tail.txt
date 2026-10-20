@@ -1,0 +1,15 @@
+dist/assets/emacs-lisp-C_m_b--Z.js                                                790.01 kB │ gzip:   198.83 kB
+dist/assets/cpp-D1IrUJTQ.js                                                     1,045.76 kB │ gzip:    74.98 kB
+dist/assets/ContentEditor-D-_s0WfM.js                                           1,252.16 kB │ gzip:   380.23 kB
+dist/assets/mermaid-HWGCJPDP-DJemxh88.js                                        3,729.09 kB │ gzip: 1,090.39 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1m 12s
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

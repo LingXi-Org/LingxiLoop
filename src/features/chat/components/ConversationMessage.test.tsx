@@ -9,7 +9,9 @@ import { getLingxiMessageMetadata } from '../runtime/model'
 import { create } from 'zustand'
 import type { Participant } from '@/types'
 import { load } from 'cheerio'
+import { TooltipProvider } from '@/components/ui/tooltip'
 mock.module('../../canvas/components/CanvasArtifactCard', { namedExports: { CanvasArtifactCard: () => null } })
+mock.module('../visualize/VisualizeText', { namedExports: { VisualizeText: ({ Text }: { Text: React.ComponentType }) => <Text /> } })
 mock.module('./ConversationComposer', { namedExports: { ConversationComposer: () => null } })
 mock.module('../runtime/transport', { namedExports: { ChatTransport: class {}, chatTransport: {}, filterThreadMessages: (messages: ThreadMessage[]) => messages } })
 mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })), getMeId: () => null, getActiveCompanyId: () => null } })
@@ -42,7 +44,7 @@ function Preview({ messages }: { messages: ThreadMessage[] }) {
 test('the real conversation thread displays native v2 messages', () => {
   function ThreadPreview() {
     const runtime = useExternalStoreRuntime({ messages: [message('1')], onNew: async () => {} })
-    return <AssistantRuntimeProvider runtime={runtime}><ConversationThread conversationId="room" readOnly /></AssistantRuntimeProvider>
+    return <AssistantRuntimeProvider runtime={runtime}><TooltipProvider><ConversationThread conversationId="room" readOnly /></TooltipProvider></AssistantRuntimeProvider>
   }
   assert.match(load(renderToStaticMarkup(<ThreadPreview />)).text(), /正文1/)
 })
@@ -79,7 +81,7 @@ test('adjacent ordinary tools group in place while retired records stay visible'
 
 // Failure cases: a run's tools appear twice or in multiple disclosures; answers or
 // decisions get hidden; failed/cancelled runs are presented as successful.
-test('run activity folds ordinary tool history once while answers and decisions stay visible', () => {
+test('native run parts retain tools, answers and decisions without activity aggregation', () => {
   const tool = (id: string) => ({ type: 'tool-call' as const, toolCallId: id, toolName: `fixture.${id}`, args: {}, argsText: '{}', result: { ok: true }, providerMetadata: { lingxiloop: { activity: { version: 1,id,kind: 'tool',label: '处理任务' } } } })
   const reply = { ...message('1'), status: { type: 'requires-action', reason: 'tool-calls' }, content: [
     tool('one'), { type: 'text', text: '公开答复' },
@@ -89,17 +91,15 @@ test('run activity folds ordinary tool history once while answers and decisions 
     harness: { ...createRunView('run'), lifecycle: 'waiting', artifacts: [] } } },
   } as ThreadMessage
   const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
-  assert.equal($('[data-slot="run-activity"]').length, 1)
-  assert.equal($('[data-slot="run-activity"]').attr('data-status'), 'requires-action')
+  assert.equal($('[data-slot="run-activity"]').length, 0)
   assert.equal($('[data-slot="tool-group-root"]').length, 0)
   assert.equal($.text().split('公开答复').length - 1, 1)
   for (const label of ['等待有权限的成员审批。', '这一步未完成，请重试。']) assert.ok($.text().includes(label), label)
-  assert.equal($('section[aria-label="工具：fixture.one"]').length, 0)
-  assert.equal($('section[aria-label="工具：fixture.two"]').length, 0)
+  assert.equal($('[data-native-part="tool-call"]').length, 4)
 })
 
 test('run activity retains cancelled, error and incomplete outcomes', () => {
-  for (const [status, expected] of [
+  for (const [status] of [
     [{ type: 'running' }, 'running'],
     [{ type: 'complete', reason: 'stop' }, 'complete'],
     [{ type: 'incomplete', reason: 'cancelled' }, 'cancelled'],
@@ -113,7 +113,7 @@ test('run activity retains cancelled, error and incomplete outcomes', () => {
       harness: { ...createRunView('run'), artifacts: [] } } },
     } as ThreadMessage
     const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
-    assert.equal($('[data-slot="run-activity"]').attr('data-status'), expected)
+    assert.equal($('[data-slot="run-activity"]').length, 0)
     assert.equal($.text().split('保留的答复').length - 1, 1)
     assert.equal($('time').length, 0)
   }
@@ -236,5 +236,28 @@ test('sender kind owns bubble chrome and agent avatars align at the top', () => 
       assert.doesNotMatch($('[data-agent-body]').attr('class') ?? '', /bg-|rounded-|border-/)
       assert.match($('[data-agent-body]').attr('class') ?? '', /text-base/)
     }
+  }
+})
+
+// #245 failure model: both public prefixes disappear into an aggregate when a
+// newer explanation arrives, and historical metadata resurrects count buttons.
+test('all public text stays visible across memory tools and legacy activity counts', () => {
+  for (const count of [7, 110, 1100]) {
+    const commentary = (id: string, text: string) => ({ type: 'text' as const, text,
+      providerMetadata: { lingxiloop: { activity: { version: 1, id, kind: 'commentary', label: '公开说明' } } } })
+    const reply = { ...message('1'), status: { type: 'running' }, content: [
+      commentary('before', '我先查看你授权的记忆。'),
+      { type: 'tool-call', toolCallId: 'memory', toolName: 'memory.list', args: {}, argsText: '', result: { status: 'completed' } },
+      commentary('after', '已查到目录，正在核对相关条目。'),
+    ], metadata: { custom: { ...getLingxiMessageMetadata(message('1')), activityPresentation: { version: 1 },
+      activityHistory: { total: count, attention: 1 }, runId: 'run' } } } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+    assert.equal($('[data-slot="run-activity"]').length, 0)
+    assert.doesNotMatch($.text(), /查看全部活动|查看需要注意的记录|显示更多活动|工具执行记录/)
+    const text = $.text()
+    assert.ok(text.includes('我先查看你授权的记忆。'))
+    assert.ok(text.includes('已查到目录，正在核对相关条目。'))
+    assert.ok(text.indexOf('我先查看') < text.indexOf('已查到目录'))
+    assert.equal($('[data-native-part="tool-call"]').length, 1)
   }
 })

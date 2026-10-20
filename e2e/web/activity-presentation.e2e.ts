@@ -11,18 +11,17 @@ test.describe('Public activity presentation', {
       const button = document.querySelector<HTMLButtonElement>('#receive-public-fixture')!
       button.click()
       const start = performance.getEntriesByName('activity-fixture-trigger').at(-1)!.startTime
-      let statusMs: number | null = null, textMs: number | null = null
+      let textMs: number | null = null
       const visible = (node: Element) => node.checkVisibility({ checkVisibilityCSS: true }) && node.getBoundingClientRect().width > 0
       while (performance.now() - start < 1200) {
         await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
-        if (statusMs === null && [...document.querySelectorAll('[data-slot="run-activity"][data-status="running"]')].some(visible)) statusMs = performance.now() - start
         const receive = performance.getEntriesByName('activity-fixture-receive').at(-1)?.startTime
         if (receive !== undefined && [...document.querySelectorAll('[data-native-part="text"]')].some(node => visible(node) && node.textContent?.includes('公开说明增量'))) {
           textMs = performance.now() - receive
           break
         }
       }
-      const value = { scope: 'synthetic public receipt; no provider or network send', visibility: document.visibilityState, statusMs, receiveToPaintMs: textMs }
+      const value = { scope: 'synthetic public receipt; no provider or network send', visibility: document.visibilityState, receiveToPaintMs: textMs }
       document.getElementById('activity-fixture-measurements')!.textContent = JSON.stringify(value)
       return value
     })
@@ -31,15 +30,12 @@ test.describe('Public activity presentation', {
     await writeFile(`${output}/timing.json`, JSON.stringify(timing, null, 2))
     await app.screenshot('public-receipt-timing')
     expect(timing.visibility).toBe('visible')
-    expect(timing.statusMs).not.toBeNull()
-    expect(timing.statusMs!).toBeLessThanOrEqual(1000)
     expect(timing.receiveToPaintMs).not.toBeNull()
     expect(timing.receiveToPaintMs!).toBeLessThanOrEqual(300)
   })
   for (const width of [390, 1440]) test(`known aliases, persisted generic titles and distinct official cards ${width}`, async ({ app, browser, screen }) => {
     await browser.setViewport({ width, height: 1100 })
     await app.open('/e2e/run-activity.html?catalog=1')
-    await browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > [data-slot="collapsible-trigger"]').press('Enter')
     await browser.locator('[data-slot="tool-group-trigger"]').press('Enter')
     for (const label of ['查看可视化参考', '阅读对话历史', '回查引用依据', '查找可用工具', '查找资料', '查看记忆', '重命名文档', '检索课程资料']) {
       await expect(browser.locator(`section[aria-label="${label}"]`)).toHaveCount(1)
