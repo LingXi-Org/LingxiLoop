@@ -19,13 +19,14 @@ six workstreams continue; a separate author owns 219.
 | 219 | Case library and forum workflow/visual redesign; full official BlockNote editors for all rich text editing entrypoints | Preserve existing content, authorization and workflows; coordinate root dependency/lock changes and any migration with the integrator; provide same-viewport before/after and full editor save/reopen evidence |
 | Sole integrator | Final shared-file resolution, upstream release versions, exact package locks, product migration numbering, exact-commit review/CI, serialized rollout and acceptance | Authors provide draft PRs; no independent merge, package publish, deployment or issue closure |
 
-The next product migration number, **47**, is reserved for issue 216 if its
-implementation needs a product migration. Issue 215 should first reuse existing
+Product migration **47** is allocated to issue 216's confirmed memory continuity
+change, together with upstream runtime schema 13. Issue 215 should first reuse existing
 durable public presentation/message storage. If evidence establishes additional
 DDL is necessary, the integrator assigns numbering against current main before
 either branch lands. Runtime schema migrations belong to the upstream repository.
-Issue 219 must report any actual DDL requirement before selecting a number; do not
-create migration 48 while 47 is absent. If independent UI/editor work requires no
+Product migration **48** is reserved for issue 219's native editor data if needed;
+verify it together with 47 before integration and never add an empty migration.
+If independent UI/editor work requires no
 DDL, it can release before the memory wave without waiting on 216.
 
 The next formal runtime release number is allocated only by the integrator.
@@ -58,6 +59,10 @@ release. Product locks must point to an actually published immutable package.
 Before any runtime schema upgrade, follow the production skill: a consistent
 backup restored into an isolated database, old Workers drained with no live
 leases, then ordered migration/deployment and installed-schema comparison.
+Web also enables background memory/outbox writers: verify compatibility or drain
+those writers as well before schema 13. The backup preparation verifies the
+current source (3.5.6/schema 12/product 46); it does not claim a target migration
+rehearsal until the actual candidate migrations are available and exercised.
 An older SQL observation does not satisfy a new migration gate. Existing fixed
 3.5.3 soak and automations remain untouched; no new long soak is required.
 
