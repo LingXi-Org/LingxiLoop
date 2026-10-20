@@ -1,8 +1,16 @@
-# Explicit same-schema host release
+# Explicit host release
 
-Use `scripts/host-release.mjs` only after the preceding production release has a sealed successful acceptance. This application-only path keeps Komodo's native host-file source, leaves core-state and app B's gateway unchanged, and does not call the legacy rollout procedure. The normal trigger still rejects unexplained host/pinned state.
+Use `scripts/host-release.mjs` only after the preceding production release has a sealed successful acceptance. This path keeps Komodo's native host-file source, leaves core-state and app B's gateway unchanged, and does not call the legacy rollout procedure. The normal trigger still rejects unexplained host/pinned state.
 
-The initial implementation deliberately supports native13/product48 only. Source and target must have identical runtime version, published package tarball/integrity, protocol, native schema/hash and all 48 product migration names/checksums. It does not import the application migrator. Web A, Web B, Worker A, Worker B are the only deploy targets.
+The same-schema format supports native13/product48 or product49. Source and target must have identical runtime version, published package tarball/integrity, protocol, native schema/hash and every product migration name/checksum. It never imports the application migrator. Web A, Web B, Worker A, Worker B are the only deploy targets.
+
+The separate `product-schema-host-release/v1` format permits only the reviewed
+runtime3.5.8/native13/product48→49 transition. Formal package/protocol/native
+provenance and the first48 migrations must match exactly; migration49 must be
+`conversation_list_removals` with SHA256
+`d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d`.
+No downgrade or arbitrary migration number/checksum is accepted. Subsequent
+49→49 releases use the same-schema format with the complete identical49 inventory.
 
 ## Qualification and plan
 
@@ -12,7 +20,7 @@ Descriptor fields:
 
 | Field | Contract |
 | --- | --- |
-| `format` | Exactly `same-schema-host-release/v1`; this is not a schema-upgrade plan. |
+| `format` | `same-schema-host-release/v1`, or explicit `product-schema-host-release/v1` for the reviewed48→49 transition only. Neither supports a native schema upgrade. |
 | `createdAt` | ISO timestamp. |
 | `source`, `target` | `releaseDescriptor(commit, formalRelease)` output plus `image` below. |
 | `sourceAcceptanceSha256` | SHA256 of the previous successful acceptance JSON bytes. It must have `passed:true`, exact source `candidate`, and every named check true. |
@@ -97,7 +105,23 @@ The receipt is exclusively created and records every known update ID. Only one d
 
 The driver first verifies actual source DB and images, stages exact target public files, makes the narrow app-only provenance/`auto_pull`/`extra_args` update with full config readback, and runs actual DB-free target metadata on both hosts. Both old Workers then stop with bounded grace. Two read-only observations must show zero live work/session/attempt/capture/outbox leases and no prepared transaction. Web connections and queued work are allowed.
 
-It deploys Web A, Web B, Worker A, Worker B with exact host source, image and health checks. It checks compatible DB provenance throughout and retains each newly healthy target's container identity. It does not require new Worker A's legitimate leases to be zero before starting Worker B.
+For the product-schema format only, after both old Workers stop and the two
+zero-lease observations pass, the driver submits exactly one native
+`RunStackService` for app A's `db-migrate`, with no dependencies, ports, detach,
+pull or environment override. Exact target image metadata is checked before
+importing the existing public `server/src/migrate-bin.ts` entrypoint. No
+`LINGXIOS_SCHEMA_UPGRADE_DRAINED` marker is set. Require the native terminal
+success and marker, then fresh runtime3.5.8/native13 and complete49-row migration
+inventory before any new Web deployment. Old Web remains online.
+
+The migrator owns its advisory lock, transaction, checksum ledger and the new
+table's 5-second lock timeout. Migration49 adds an empty preference table and
+foreign keys; it does not rewrite shared history, membership or native state.
+The existing skill's snapshot/restore and all-writer shutdown requirement for a
+native schema upgrade does not apply to this additive product-only transition.
+No additional backup/restore, browser or provider acceptance suite is introduced.
+
+It then deploys Web A, Web B, Worker A, Worker B with exact host source, image and health checks. It checks the expected complete DB provenance throughout and retains each newly healthy target's container identity. It does not require new Worker A's legitimate leases to be zero before starting Worker B.
 
 `auto_pull=false` suppresses Komodo's separate pre-deploy pull. `extra_args=["--no-deps","--pull","never"]` suppresses Compose dependency creation and pulling during `up`; all three services' `pull_policy: never` also covers metadata `run`, whose public Komodo request does not expose a pull-policy override. Core's unchanged read-only SQL oneoff retains its current source/image policy and is still an availability dependency.
 
@@ -106,6 +130,14 @@ A `complete` driver receipt establishes the ordered transaction's actual source/
 ## Recovery and permanent integration
 
 There is no automatic rollback/resume command. Unknown submission, failed source readback or acknowledgement without exact config proof stops all further requests. Known failures may perform one fresh read-only state check to classify whether same-schema recovery remains reviewable; that classification never starts a service.
+
+For48→49, a known failed action with fresh exact48 inventory is classified as
+`source-unchanged-recovery-requires-review`; fresh exact49 is `fix-forward`.
+Any other provenance or uncertain read remains unknown. Preserve the failed
+receipt and native update ID; never automatically repeat migration or continue
+deployment. Even though the DDL is additive, old48 binaries reject the49 ledger
+at startup. After49 commits, do not restart old48 or delete the new ledger/table
+as rollback. Recovery must use an independently reviewed49-compatible target.
 
 For reviewed recovery, first resolve every saved update and confirm the failed executor is dead. Verify exact current DB provenance and all partial host/config/container identities. Drain any new Workers before restoring the previous compatible image. Restore only reviewed public source bytes and narrow source-policy fields through the native APIs, then deploy in the same service order with cached-image/health checks. Seal a new receipt that retains the original failed one. No database restore, native downgrade, credential/security/environment change or broad procedure is authorized by this driver.
 

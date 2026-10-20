@@ -1,4 +1,4 @@
-// Explicit same-schema application release. No network work on import.
+// Explicit same-schema or reviewed product-only release. No network work on import.
 import {createHash} from 'node:crypto'
 import {readFile,writeFile} from 'node:fs/promises'
 import {execFile} from 'node:child_process'
@@ -15,20 +15,35 @@ export const check=(ok,message)=>{if(!ok)throw Error(message)}
 export const hash=bytes=>createHash('sha256').update(bytes).digest('hex')
 const sha=/^[a-f0-9]{40}$/,hex=/^[a-f0-9]{64}$/,digest=/^sha256:[a-f0-9]{64}$/
 const formalKeys=['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations']
+const packageKeys=formalKeys.filter(key=>!['productVersion','migrations'].includes(key))
+export const PRODUCT_SCHEMA_FORMAT='product-schema-host-release/v1'
+const migration49={version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}
 export const metadataKeys=['sha',...formalKeys]
 const select=(v,keys)=>Object.fromEntries(keys.map(k=>[k,v?.[k]]))
 const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v)
 export function sealHostPlan(value){const {planHash:_,...body}=value;return {...body,planHash:hash(stable(body))}}
 const exactKeys=(v,keys)=>v&&equal(Object.keys(v).sort(),keys.toSorted())
+function assertMigrationInventory(descriptor){
+ check(descriptor.schema===13&&[48,49].includes(descriptor.productVersion)&&Array.isArray(descriptor.migrations)
+  &&descriptor.migrations.length===descriptor.productVersion
+  &&descriptor.migrations.every((m,i)=>exactKeys(m,['version','name','checksum'])&&m.version===i+1&&/^[a-z0-9_]+$/.test(m.name??'')&&hex.test(m.checksum??'')),'Exact native13/product48-or49 inventory required')
+ if(descriptor.productVersion===49)check(equal(descriptor.migrations[48],migration49),'Only reviewed product migration49 supported')
+}
 export function assertSameSchema(source,target){
  check(equal(select(source,formalKeys),select(target,formalKeys)),'Formal package/schema/inventory differs; dedicated migration required')
- check(source.schema===13&&source.productVersion===48&&Array.isArray(source.migrations)&&source.migrations.length===48
-  &&source.migrations.every((m,i)=>exactKeys(m,['version','name','checksum'])&&m.version===i+1&&/^[a-z0-9_]+$/.test(m.name??'')&&hex.test(m.checksum??'')),'Exact native13/product48 inventory required')
+ assertMigrationInventory(source)
+}
+export function assertProductSchemaUpgrade(source,target){
+ assertMigrationInventory(source);assertMigrationInventory(target)
+ check(source.runtime==='3.5.8'&&source.productVersion===48&&target.productVersion===49
+  &&equal(select(source,packageKeys),select(target,packageKeys))
+  &&equal(source.migrations,target.migrations.slice(0,48)),'Only unchanged formal3.5.8/native13 product48→49 supported')
 }
 export function validateHostPlanShape(plan){
  check(exactKeys(plan,['format','createdAt','source','target','sourceAcceptanceSha256','qualification','stacks','planHash'])
-  &&plan.format==='same-schema-host-release/v1'&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
- assertSameSchema(plan.source,plan.target)
+  &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
+ if(plan.format===PRODUCT_SCHEMA_FORMAT)assertProductSchemaUpgrade(plan.source,plan.target)
+ else assertSameSchema(plan.source,plan.target)
  for(const d of [plan.source,plan.target]){
   check(exactKeys(d,[...metadataKeys,'image'])&&sha.test(d.sha??'')&&/^\d+\.\d+\.\d+$/.test(d.runtime??'')
    &&Number.isSafeInteger(d.protocol)&&d.protocol>0&&hex.test(d.schemaHash??'')
@@ -61,9 +76,10 @@ export function assertWorkerBarrier(state){
  for(const key of ['liveWork','liveSession','liveAttempts','liveCapture','liveOutbox','prepared'])check(state[key]===0,`Worker barrier not empty: ${key}`)
 }
 export function assertCompatibleState(state,descriptor){
+ assertMigrationInventory(descriptor)
  check(state?.readOnly===true&&state.fullVisibility===true&&state.schema===descriptor.schema&&state.installedSchema===descriptor.schema
   &&state.runtime===descriptor.runtime&&state.protocol===descriptor.protocol&&state.schemaHash===descriptor.schemaHash
-  &&state.product===48&&state.count===48&&equal(state.migrations,descriptor.migrations),'Actual database provenance changed')
+  &&state.product===descriptor.productVersion&&state.count===descriptor.productVersion&&equal(state.migrations,descriptor.migrations),'Actual database provenance changed')
 }
 export function assertImageIdentity(actual,audit){
  check(digest.test(actual?.Id??'')&&actual.RepoDigests?.some(x=>x===IMAGE.slice(0,-1)+'@'+audit.indexDigest)
@@ -86,7 +102,13 @@ function assertInventory(rows,plan,original,stopped=new Set(),deployed=new Map()
 }
 async function failed({error,ops,plan,record}){
  let recovery='unknown',uncertain=error?.uncertain===true
- if(!uncertain)try{assertCompatibleState(await ops.state(),plan.source);recovery='same-schema-recovery-requires-review'}catch(classificationError){uncertain=classificationError?.uncertain===true}
+ if(!uncertain)try{
+  const state=await ops.state()
+  try{assertCompatibleState(state,plan.source);recovery=plan.format===PRODUCT_SCHEMA_FORMAT?'source-unchanged-recovery-requires-review':'same-schema-recovery-requires-review'}
+  catch{
+   if(plan.format===PRODUCT_SCHEMA_FORMAT){assertCompatibleState(state,plan.target);recovery='fix-forward'}
+  }
+ }catch(classificationError){uncertain=classificationError?.uncertain===true}
  await record({phase:'stopped',status:uncertain?'uncertain':'failed',recovery,noAutomaticRetry:true}).catch(()=>{})
  throw Object.assign(Error('Host release stopped; resolve the private receipt before any further action'),{uncertain})
 }
@@ -105,9 +127,17 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
   assertCompatibleState(await ops.state(),plan.source);assertInventory(await ops.inspect(),plan,original)
   await record({phase:'online',status:'prepared'})
   const stopped=new Set(),deployed=new Map()
+  let installed=plan.source
   for(const stack of APPS){await ops.assertIdle();await ops.stop(stack,'worker');stopped.add(stack+':worker');assertInventory(await ops.inspect(),plan,original,stopped);await record({phase:'drain',status:'stopped',stack,service:'worker'})}
-  const barrier=async()=>{assertInventory(await ops.inspect(),plan,original,stopped,deployed);const state=await ops.state();assertCompatibleState(state,plan.source);assertWorkerBarrier(state);await record({phase:'drain',status:'zero-leases',state})}
+  const barrier=async()=>{assertInventory(await ops.inspect(),plan,original,stopped,deployed);const state=await ops.state();assertCompatibleState(state,installed);assertWorkerBarrier(state);await record({phase:'drain',status:'zero-leases',state})}
   await barrier();await ops.wait(2000);await barrier()
+  if(plan.format===PRODUCT_SCHEMA_FORMAT){
+   await ops.assertIdle();await ops.verifyImages('target')
+   await record({phase:'migration',status:'submitting'})
+   await ops.migrate()
+   const state=await ops.state();assertCompatibleState(state,plan.target);installed=plan.target
+   await record({phase:'migration',status:'migrated',state,recovery:'fix-forward'})
+  }
   for(const service of ['lingxiloop','worker'])for(const stack of APPS){
    await ops.assertIdle();await ops.verifyImages('target')
    assertCompatibleState(await ops.state(),plan.target)
@@ -180,14 +210,14 @@ export async function validateHostPlan(plan,{acceptance,sourceAudit,targetAudit}
 }
 async function main(){
  const args=process.argv.slice(2),values={},allowed=['--execute','--prepare-images','--input','--output','--acceptance','--source-audit','--target-audit']
- if(args.length===1&&args[0]==='--help'){console.log('Offline by default. --input <descriptor.json> --output <exclusive plan/receipt.json> --acceptance <accepted source.json> --source-audit <audit.json> --target-audit <audit.json>. All paths absolute. --execute performs same-schema release; --prepare-images explicitly prepares images online and restores source files. No automatic retry/recovery.');return}
+ if(args.length===1&&args[0]==='--help'){console.log('Offline by default. --input <descriptor.json> --output <exclusive plan/receipt.json> --acceptance <accepted source.json> --source-audit <audit.json> --target-audit <audit.json>. All paths absolute. --execute follows the explicit same-schema or reviewed product48→49 plan format; --prepare-images only prepares images online and restores source files. No automatic retry/recovery.');return}
  for(let i=0;i<args.length;i++){const k=args[i];check(allowed.includes(k)&&!(k in values),'Unknown or repeated argument');values[k]=['--execute','--prepare-images'].includes(k)?true:args[++i]}
  check(!(values['--execute']&&values['--prepare-images']),'Choose release or explicit online image preparation')
  for(const k of allowed.slice(2))check(isAbsolute(values[k]??''),'Absolute input/evidence/output paths required')
  const input=JSON.parse(await readFile(values['--input'],'utf8')),execute=values['--execute']||values['--prepare-images'],plan=execute?input:sealHostPlan(input)
  const files=await validateHostPlan(plan,{acceptance:await readFile(values['--acceptance']),sourceAudit:await readFile(values['--source-audit']),targetAudit:await readFile(values['--target-audit'])})
  if(!execute){await writeFile(values['--output'],JSON.stringify(plan,null,2)+'\n',{flag:'wx',mode:0o600});console.log(JSON.stringify({mode:'offline-plan',planHash:plan.planHash}));return}
- const abort=new AbortController(),stop=()=>abort.abort(),out={planHash:plan.planHash,mode:values['--prepare-images']?'online-images-only':'same-schema-release',startedAt:new Date().toISOString(),complete:false,events:[]}
+ const abort=new AbortController(),stop=()=>abort.abort(),out={planHash:plan.planHash,mode:values['--prepare-images']?'online-images-only':plan.format===PRODUCT_SCHEMA_FORMAT?'product-schema-release':'same-schema-release',startedAt:new Date().toISOString(),complete:false,events:[]}
  await writeFile(values['--output'],JSON.stringify(out)+'\n',{flag:'wx',mode:0o600})
  const onProgress=async e=>{out.events.push({...e,observedAt:new Date().toISOString()});if(e.phase==='complete')out.complete=true;await writeFile(values['--output'],JSON.stringify(out,null,2)+'\n',{mode:0o600})}
  process.once('SIGINT',stop);process.once('SIGTERM',stop)

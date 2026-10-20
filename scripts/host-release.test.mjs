@@ -111,7 +111,7 @@ test('product-only format permits exact48→49 and same-schema49, never altered 
   p=>p.format='same-schema-host-release/v1',
   p=>{[p.source,p.target]=[p.target,p.source]},
  ]){
-  const bad=structuredClone(migration);change(bad)
+  const bad=JSON.parse(JSON.stringify(migration));change(bad)
   assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)))
  }
 })
