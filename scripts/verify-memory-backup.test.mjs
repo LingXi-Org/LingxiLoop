@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createHash } from 'node:crypto'
+import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { spawn } from 'node:child_process'
+import { setTimeout as delay } from 'node:timers/promises'
 import { buildMemoryBackupPlan, validateMemoryBackupPlan, parseMemoryBackupReceipt, executeMemoryBackup } from './verify-memory-backup.mjs'
 
 const sourceSha = '2ea8615c17c9ed11b769c83c699719dc01c11ee4'
@@ -94,4 +99,34 @@ test('pre-abort sends no request; cancellation after acceptance preserves update
       onProgress:async p=>{if(p.updateId)during.abort()}}),error=>/outcome uncertain/.test(error.message)&&error.message.includes('a'.repeat(24)))
     assert.equal(calls,1)
   } finally {globalThis.fetch=original}
+})
+
+test('overall timeout reaches the generated inner timeout group before killing cleanup', {timeout:5000}, async () => {
+  const plan=await fixture(), directory=await mkdtemp(join(tmpdir(),'memory-backup-deadline-'))
+  const marker=join(directory,'events')
+  // Preserve the actual generated modes, shorten only durations and replace the
+  // database command with a harmless child. This failed before --foreground.
+  const outer=/^exec (timeout(?: --foreground)?) -k 75 3900 sh -ec /.exec(plan.command)?.[1]
+  const inner=/stage=restore\n(timeout(?: --foreground)?) -k 10 1200 pg_restore /.exec(plan.command)?.[1]
+  assert.ok(outer); assert.ok(inner)
+  const command=`trap 'printf "cleanup\\n" >> "$MARKER"' EXIT
+trap 'exit 1' HUP INT TERM
+${inner} -k .1 2 sh -ec 'printf "%s" "$$" > "$MARKER.pid"; printf "child-start\\n" >> "$MARKER"; sleep 1; printf "child-finish\\n" >> "$MARKER"'
+`
+  try {
+    const result=await new Promise((resolve,reject)=>{
+      const child=spawn('sh',['-ec',`${outer} -k .1 .2 sh -ec "$1"`,'deadline-test',command],
+        {env:{...process.env,MARKER:marker},stdio:'ignore'})
+      child.once('error',reject);child.once('exit',(code,signal)=>resolve({code,signal}))
+    })
+    assert.notEqual(result.code,0)
+    await delay(1100)
+    const events=(await readFile(marker,'utf8')).trim().split('\n')
+    assert.deepEqual(events,['child-start','cleanup'],'child must stop and cleanup must run after overall TERM')
+    const pid=Number(await readFile(marker+'.pid','utf8'))
+    const state=await readFile(`/proc/${pid}/stat`,'utf8').then(value=>/^\d+ \(.+\) (\S)/.exec(value)?.[1],error=>{
+      if(error.code==='ENOENT')return 'absent';throw error
+    })
+    assert.ok(['absent','Z','X'].includes(state),'the child must no longer be executable')
+  } finally {await rm(directory,{recursive:true,force:true})}
 })

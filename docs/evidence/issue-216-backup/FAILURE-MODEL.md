@@ -22,3 +22,15 @@ Local integration uses a new *_test database on the existing localhost55432
 fixture and no provider. No production credentials, terminal, SSH or network
 probe is needed to implement/test the tool. Unknown remote outcomes are not
 cleaned up by issuing another Execute operation.
+
+## Overall deadline regression (independent review, before fix)
+
+The outer GNU timeout and inner default timeouts create different process groups.
+At the overall deadline the waiting shell can miss its EXIT cleanup after KILL,
+while pg_restore/psql continues. Before changing implementation, add a bounded
+process regression that preserves generated timeout modes, and an isolated real
+PostgreSQL restore whose generated-column function delays COPY. At the deadline
+require child completion to be prevented, the owned restore DB removed, no active
+restore backend, no success marker, source/preexisting databases preserved, and
+the dump retained. The test alone may explicitly terminate its uniquely owned
+synthetic sessions in teardown to avoid leaving red-test work behind.

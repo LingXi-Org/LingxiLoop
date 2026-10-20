@@ -124,7 +124,7 @@ cleanup() {
   if [ "$created" = 1 ]; then
     if [ "$verify_db" != ${quote(isolatedDatabase)} ] || [ "$verify_db" = "$POSTGRES_DB" ]; then
       result=1; stage=cleanup-guard
-    elif ! timeout -k 10 60 dropdb -h postgres -U "$POSTGRES_USER" --maintenance-db=postgres "$verify_db" >/dev/null 2>&1; then
+    elif ! timeout --foreground -k 10 60 dropdb -h postgres -U "$POSTGRES_USER" --maintenance-db=postgres "$verify_db" >/dev/null 2>&1; then
       result=1; stage=cleanup-database
     fi
   fi
@@ -156,7 +156,7 @@ test "$(cd ${quote(backupDir.slice(0,backupDir.lastIndexOf('/')))} && pwd -P)" =
 mkdir "$backup_dir"
 printf '%s\\n' ${quote(JSON.stringify({source,attempt:plan.attempt,isolatedDatabase,migrationRehearsal:'not-performed'}))} > "$backup_dir/attempt.json"
 stage=capacity-initial
-db_bytes=$(timeout -k 10 60 psql -X -qAt -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c 'BEGIN READ ONLY; SELECT pg_database_size(current_database()); ROLLBACK;')
+db_bytes=$(timeout --foreground -k 10 60 psql -X -qAt -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -c 'BEGIN READ ONLY; SELECT pg_database_size(current_database()); ROLLBACK;')
 printf '%s' "$db_bytes" | grep -Eq '^[0-9]+$'
 headroom() {
   phase=$1; factor=$2
@@ -170,7 +170,7 @@ headroom() {
 headroom initial 2
 stage=snapshot
 mkfifo "$work/snapshot-input"; exec 9<> "$work/snapshot-input"; fifo_open=1
-timeout -k 10 2100 psql -X -qAt -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 \\
+timeout --foreground -k 10 2100 psql -X -qAt -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 \\
   -v precondition_file="$work/precondition.sql" -v snapshot_file="$work/snapshot-id" \\
   -v counts_file="$backup_dir/counts-before.jsonl" -v counts_query_file="$work/counts.sql" \\
   -v provenance_file="$backup_dir/provenance-before.json" -v provenance_query_file="$work/provenance.sql" \\
@@ -186,7 +186,7 @@ snapshot=$(cat "$work/snapshot-id")
 printf '%s' "$snapshot" | grep -Eq '^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9]+$'
 printf '${prefix}SNAPSHOT_READY=1\\n'
 stage=dump
-timeout -k 10 1080 pg_dump -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc --snapshot="$snapshot" --lock-wait-timeout=10s -f "$backup_dir/product.dump"
+timeout --foreground -k 10 1080 pg_dump -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc --snapshot="$snapshot" --lock-wait-timeout=10s -f "$backup_dir/product.dump"
 kill -0 "$holder"
 printf 'ROLLBACK;\\n\\\\q\\n' >&9
 exec 9>&-; fifo_open=0
@@ -196,14 +196,14 @@ printf '%s  product.dump\\n' "$dump_hash" > "$backup_dir/sha256.txt"
 stage=capacity-restore
 headroom restore 1
 stage=create-isolated-database
-timeout -k 10 60 createdb -h postgres -U "$POSTGRES_USER" --maintenance-db=postgres --template=template0 "$verify_db"
+timeout --foreground -k 10 60 createdb -h postgres -U "$POSTGRES_USER" --maintenance-db=postgres --template=template0 "$verify_db"
 created=1
 isolated() {
   test "$created" = 1; test "$verify_db" = ${quote(isolatedDatabase)}; test "$verify_db" != "$POSTGRES_DB"
-  timeout -k 10 660 psql -X -qAt -h postgres -U "$POSTGRES_USER" -d "$verify_db" -v ON_ERROR_STOP=1 "$@"
+  timeout --foreground -k 10 660 psql -X -qAt -h postgres -U "$POSTGRES_USER" -d "$verify_db" -v ON_ERROR_STOP=1 "$@"
 }
 stage=restore
-timeout -k 10 1200 pg_restore -h postgres -U "$POSTGRES_USER" -d "$verify_db" --no-owner --no-privileges --exit-on-error "$backup_dir/product.dump"
+timeout --foreground -k 10 1200 pg_restore -h postgres -U "$POSTGRES_USER" -d "$verify_db" --no-owner --no-privileges --exit-on-error "$backup_dir/product.dump"
 stage=verify-restore
 isolated -c 'BEGIN READ ONLY' -f "$work/precondition.sql" -c 'ROLLBACK' >/dev/null
 isolated -c 'BEGIN READ ONLY' -f "$work/counts.sql" -c 'ROLLBACK' > "$backup_dir/counts-restored.jsonl"
@@ -218,6 +218,9 @@ success=1
 `
   // A transport cancellation cannot stop a remote one-off service. Its own hard
   // ceiling includes a bounded grace period for dropping only the owned restore.
+  // Only this outer timeout owns a process group. Inner --foreground timeouts
+  // keep clients in that group so overall TERM interrupts the shell's wait and
+  // reaches cleanup before KILL. Do not add --foreground to the outer timeout.
   return `exec timeout -k 75 3900 sh -ec ${quote(inner)} memory-backup "$1"`
 }
 

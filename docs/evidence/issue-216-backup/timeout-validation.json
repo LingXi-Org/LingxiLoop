@@ -1,0 +1,76 @@
+{
+  "baseCommit": "8d6fb91d838cfbba03a1cfe63c370439869f93f5",
+  "sourceRelease": "2ea8615c17c9ed11b769c83c699719dc01c11ee4",
+  "sourceRuntime": "3.5.6",
+  "sourceProduct": 46,
+  "sourceNativeSchema": 12,
+  "implementationSha256": "32d39a5665f34c9421cde909195c79e95f0943a763adc029fd740bfef49c51b0",
+  "change": "All seven inner GNU timeout invocations use --foreground; the outer timeout retains process-group ownership.",
+  "productionDeadlines": {
+    "overallSeconds": 3900,
+    "killGraceSeconds": 75,
+    "dropDatabaseSeconds": 60,
+    "dropDatabaseKillGraceSeconds": 10
+  },
+  "red": {
+    "contract": {
+      "passed": 6,
+      "failed": 1,
+      "failure": "child finished after outer kill; cleanup absent"
+    },
+    "dedicatedPostgres": {
+      "passed": 5,
+      "failed": 1,
+      "failure": "one restore backend remained after overall deadline"
+    },
+    "postgresUnexpectedSignals": 0
+  },
+  "final": {
+    "contract": {
+      "passed": 7,
+      "failed": 0,
+      "cancelled": 0
+    },
+    "dedicatedPostgres": {
+      "passed": 6,
+      "failed": 0,
+      "cancelled": 0
+    },
+    "syntax": "passed",
+    "focusedBiomeLint": "passed",
+    "postgresUnexpectedSignals": 0,
+    "dedicatedContainerRemoved": true,
+    "dedicatedVolumeRemoved": true
+  },
+  "deadlineCase": {
+    "case": "overall-deadline-during-restore",
+    "restoreObserved": true,
+    "remainingRestoreBackends": 0,
+    "isolatedDatabaseRemoved": true,
+    "preexistingDatabasePreserved": true,
+    "sourceRows": 20,
+    "dumpRetained": true,
+    "toolContainerRemoved": true,
+    "successMarker": false,
+    "elapsedMs": 8157.820818000004
+  },
+  "harnessFailuresRetained": [
+    {
+      "kind": "PID namespace mismatch",
+      "description": "A rejected docker-exec deadline fixture caused postgres PID1 to adopt the killed exec shell and treat its abnormal exit as a server child crash. Process snapshot distinguished that sh PID from the true restore backend. Not target red evidence. Replaced with one-off tool container and dedicated PostgreSQL container/volume; owned synthetic leftovers cleaned with no service restart or active-connection termination."
+    },
+    {
+      "kind": "test envelope cancellation",
+      "description": "One final repeat cancelled the original snapshot+retry test at its 30-second test envelope (34.8 seconds observed); other five including deadline case passed. Dedicated-container envelope raised to60seconds for Docker startup/removal, default shared-fixture envelope remains30seconds. Final complete run passes. Production deadlines unchanged; no product latency claim."
+    }
+  ],
+  "newReviewedPlan": {
+    "commandHash": "1cf17c63a0045eb2d3fc7cc60929d5321eaf4e0061fe8cc0511cf64c709653e1",
+    "fileSha256": "eccc9751334980043edc75062db03bc2cbdee3ebdf70a66e3af53672c8ea38d5",
+    "oldPlanRejected": true,
+    "newPlanExactRegenerationPassed": true
+  },
+  "productionRequests": 0,
+  "providerRequests": 0,
+  "migrationRehearsal": "not-performed"
+}

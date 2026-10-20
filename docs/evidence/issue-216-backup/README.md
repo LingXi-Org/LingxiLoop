@@ -120,3 +120,50 @@ source provenance rejection, real pg_restore failure cleanup, and capacity
 refusal before snapshot/restore. Syntax and focused lint checks passed.
 See `validation.json`, `local.json` and the checksum manifest. Production backup,
 actual candidate migration, live provider and soak acceptance remain unverified.
+
+## Overall deadline correction
+
+Independent review found that nested GNU `timeout` process groups could survive
+the overall deadline while the supervising shell was killed before cleanup. All
+seven inner timeouts now use `--foreground`; the outer timeout keeps ownership
+of the shared process group. Overall TERM reaches the active clients and releases
+the shell's foreground wait so its cleanup trap can run. Production limits remain
+3900seconds plus75seconds kill grace; owned-database removal remains bounded at
+60seconds plus10seconds kill grace. No force-drop, source mutation, changed
+ownership guard, weakened receipt, or Execute retry was added.
+
+The new process-only regression was red before this change: the child finished
+after the outer exit and cleanup never ran. It now checks cleanup, prevented
+child completion and the child's non-running state. The real PostgreSQL test
+uses a synthetic generated-column function to hold actual pg_restore COPY in
+PgSleep until the outer deadline. It checks no surviving restore connection or
+tool container, removed owned DB, preserved preexisting DB and source rows,
+retained dump, and absence of success markers.
+
+Run deadline injection only with a fresh dedicated local PG container named
+`lingxiloop-memory-backup-216-<12hex>`, its own volume and one randomly assigned
+127.0.0.1 port. Pass that name as `MEMORY_BACKUP_LOCAL_CONTAINER`, and its existing
+synthetic fixture URL as `MEMORY_BACKUP_LOCAL_DATABASE_URL` (database `/postgres`).
+The local test uses the container's already-present exact image, separate one-off
+tool containers, and only that dedicated volume/network. It never pulls an image.
+Remove the dedicated container/volume by exact owner identity after the suite.
+Without a dedicated container the extra deadline case is skipped; the original
+five tests remain available on the existing fixture. The dedicated test envelope
+is60seconds to allow one-off container startup/removal; default local tests keep
+their30second envelope. These envelopes do not change production stage budgets.
+
+A rejected harness approach used `docker exec` inside the PG PID namespace.
+After the outer timeout was killed, postgres PID1 adopted its orphan shell and
+treated that shell's SIGKILL as a server child crash. Process evidence identified
+the reported PID as `sh`, distinct from the actual restore backend. That result
+was excluded from target red evidence; the dedicated PG and one-off tool path
+produced a valid red (one surviving restore connection) without a PG reset.
+All local test resources, including the first attempt's unique synthetic DBs and
+temporary directory, were cleaned with ownership checks. Production requests
+remain zero. See `timeout-validation.json` and `timeout-*` evidence files.
+Retained TAP logs normalize trailing whitespace only; raw private owner logs
+remain available for review.
+
+Changing the inner command invalidates the former reviewed commandHash
+`41d57426fe94dc4243f0a2b359787511817c79b32a5d45cf126e0e5271fe79f7`.
+The release owner must review a newly generated plan before any execution.
