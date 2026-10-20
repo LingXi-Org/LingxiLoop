@@ -1,4 +1,4 @@
-import type { ConversationPolicy, createLingxiOS } from '@lyyzka/lingxios'
+import type { ConversationPolicy, createLingxiOS, RuntimeOperationContext } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { withClientTransaction, withTransaction } from '../db/transaction.js'
 import { createPermissionService } from '../modules/access/public.js'
@@ -18,7 +18,7 @@ export async function syncProductChannel(profile: ImChannelProfile, signal?: Abo
 }
 
 /** Resolve the native policy from current product membership and ACLs, never message text. */
-export async function syncConversationPolicy(control: Control, companyId: string, conversationId: string, database?: Queryable): Promise<ConversationPolicy> {
+export async function syncConversationPolicy(control: Control, companyId: string, conversationId: string, database?: Queryable, operation?: RuntimeOperationContext): Promise<ConversationPolicy> {
   const transaction = <T>(work: (db: Queryable) => Promise<T>) => database
     ? withClientTransaction(database,work) : withTransaction(pool,work)
   const policy = await transaction(async db => {
@@ -62,6 +62,6 @@ export async function syncConversationPolicy(control: Control, companyId: string
     [companyId,conversationId,JSON.stringify(value)])
     return { ...value, version: updated.rows[0].runtime_policy_version }
   })
-  await control.conversations.sync(policy)
+  await control.conversations.sync(policy,operation)
   return policy
 }

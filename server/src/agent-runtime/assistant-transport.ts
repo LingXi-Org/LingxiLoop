@@ -1,7 +1,7 @@
 import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk, type AssistantTransportStateOperation } from 'assistant-stream'
 import type { ReadonlyJSONValue } from 'assistant-stream/utils'
 import { consumeAssistantMessage, consumeRunStreamEvent, createRunView, type AssistantMessage, type RunStreamEvent } from '@lyyzka/lingxios/ui'
-import type { createLingxiOS, RunIdentity } from '@lyyzka/lingxios'
+import type { createLingxiOS, RunIdentity, RuntimeOperationContext } from '@lyyzka/lingxios'
 import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { createNativeMessage } from '../im/message-types.js'
 import { runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
@@ -62,11 +62,11 @@ export class RunStreamProjection {
     }
   }
 
-  async syncApprovals(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval'>, identity: RunIdentity): Promise<void> {
+  async syncApprovals(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval'>, identity: RunIdentity, operation?: RuntimeOperationContext): Promise<void> {
     for (let index = 0; index < this.tools.length; index++) {
       const tool = this.tools[index]
       if (!tool.approval) continue
-      const approval = await api.readApproval({ tenantId: identity.tenantId, principalId: identity.principalId, approvalId: tool.approval.id })
+      const approval = await api.readApproval({ tenantId: identity.tenantId, principalId: identity.principalId, approvalId: tool.approval.id },operation)
       if (!approval || approval.runId !== this.view.runId || approval.agentId !== identity.agentId) throw new Error('approval identity is unavailable')
       this.tools[index] = { ...tool, approval: { id: approval.approvalId,
         ...(approval.decision !== null ? { approved: approval.decision }
@@ -98,8 +98,8 @@ export class RunStreamProjection {
       ? await readQuestionnaireWait(identity, this.view.requestVersion, database) : null
   }
 
-  async syncTerminal(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readTerminal'>, identity: RunIdentity): Promise<void> {
-    const terminal = await api.readTerminal(identity)
+  async syncTerminal(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readTerminal'>, identity: RunIdentity, operation?: RuntimeOperationContext): Promise<void> {
+    const terminal = await api.readTerminal(identity,operation)
     this.terminalFeedback = terminal && terminal.feedback.requestVersion === this.view.requestVersion
       ? { id: terminal.feedback.id,requestVersion: terminal.feedback.requestVersion,reason: terminal.feedback.reason,
           status: terminal.feedback.status,delivery: terminal.delivery } : null
@@ -171,8 +171,8 @@ export class RunStreamProjection {
   }
 }
 
-export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal, database?: Queryable) {
-  const state = await api.readRunState(identity)
+export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal, database?: Queryable, operation?: RuntimeOperationContext) {
+  const state = await api.readRunState(identity,operation)
   if (!state) throw new Error('run not found')
   const projection = new RunStreamProjection(identity.runId,canControl,identity)
   projection.apply({ type: 'state',state })
@@ -180,17 +180,17 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   let cursor = 0
   while (true) {
     signal.throwIfAborted()
-    const page = await api.readEvents(identity,cursor)
+    const page = await api.readEvents(identity,cursor,operation)
     for (const event of page.events) projection.apply({ type: 'event',event })
     if (page.events.length < 100) break
     if (page.nextSeq <= cursor) throw new Error('runtime event cursor did not advance')
     cursor = page.nextSeq
   }
-  const current = await api.readRunState(identity)
+  const current = await api.readRunState(identity,operation)
   if (!current) throw new Error('run not found')
   projection.apply({ type: 'state',state: current })
-  await projection.syncApprovals(api,identity)
-  await projection.syncTerminal(api,identity)
+  await projection.syncApprovals(api,identity,operation)
+  await projection.syncTerminal(api,identity,operation)
   await projection.syncQuestionnaire(identity,database)
   await projection.syncPresentation(identity, presentationSignal)
   return projection

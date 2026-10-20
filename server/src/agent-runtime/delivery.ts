@@ -36,7 +36,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         await assertFrozenAudience(database,work)
         const api = await control(), identity = { tenantId: work.tenantId,agentId: work.agentId,sessionId: work.sessionId,
           runId: work.id,principalId: work.principalId,...(work.threadId ? { threadId: work.threadId } : {}) }
-        const current = await api.readTerminal(identity)
+        const current = await api.readTerminal(identity,scope)
         if (!current || current.feedback.id !== feedback.id || current.feedback.requestVersion !== feedback.requestVersion) return
         const clientNonce = `terminal-${feedback.id}`
         const existing = await getSendAcceptance(database,{ companyId: work.tenantId,userId: work.agentId,clientNonce })
@@ -91,7 +91,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         await assertCanvasRequestCurrent(database, work)
         await assertFrozenAudience(database,work)
         const api = await control()
-        const policy = context.im ? await syncConversationPolicy(api,work.tenantId,conversationId,database) : undefined
+        const policy = context.im ? await syncConversationPolicy(api,work.tenantId,conversationId,database,scope) : undefined
         if (context.im && policy) {
           const readers = policy.participants.filter(member => member.capabilities.includes('read')).map(member => member.id).sort()
           if (JSON.stringify(readers) !== JSON.stringify([...context.im.audience.participantIds].sort())) {
@@ -100,7 +100,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         }
         const clientNonce = context.im?.messageKey ?? `agent-${createHash('sha256').update(context.commit.resultId).digest('hex')}`
         const projection = await readRunProjection(api,{ tenantId: work.tenantId, agentId: work.agentId, sessionId: work.sessionId,
-          runId: work.id, principalId: work.principalId!, ...(work.threadId ? { threadId: work.threadId } : {}) },true,scope.signal,database)
+          runId: work.id, principalId: work.principalId!, ...(work.threadId ? { threadId: work.threadId } : {}) },true,scope.signal,database,scope)
         const projected = projection.committed(message,context.commit).message
         const payload = nativeMessageSchema.parse({ ...projected, metadata: { ...projected.metadata, custom: {
           ...projected.metadata.custom, conversationId, sourceMessageId: clientNonce } } })
@@ -117,7 +117,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
             audience: { visibility: 'participants', participantIds: context.im.audience.participantIds },
             mentions: mentions.mentionAll ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id) : mentions.mentionedIds,
             causedBy: { resultId: context.commit.resultId }, replyTo: context.im.source },
-          { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation' })
+          { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation' },scope)
           const source = (await database.query<{ source_client_msg_no: string | null }>('SELECT source_client_msg_no FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2', [work.id,work.tenantId])).rows[0]?.source_client_msg_no
           for (const run of accepted.runs) await bindProductRun(database, run, conversationId, false, source ?? undefined)
           if (accepted.reason === 'mention_limit') {
