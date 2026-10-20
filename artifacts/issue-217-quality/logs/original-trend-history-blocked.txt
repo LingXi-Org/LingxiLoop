@@ -1,0 +1,24 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-217-quality
+      run 01a159fd-257f-7223-8747-06472f118b47 · targets: web
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Run Errors 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ ERROR  infrastructure error APP_UNREACHABLE
+target "web" command exited with code 1 before becoming ready
+set log on this command to keep its output
+
+
+ Test Files  0 passed (1)
+      Tests  0 passed (1)
+     Errors  1 error
+   Start at  15:45:26
+   Duration  2.95s
+     Report  (not written)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

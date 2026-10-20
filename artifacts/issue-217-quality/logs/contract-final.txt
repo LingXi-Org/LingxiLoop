@@ -1,0 +1,92 @@
+
+> lingxiloop@0.1.0-beta test:integration
+> node server/run-integration-tests.mjs --file visualize-quality-contract.test.ts --file visualize-runtime.test.ts --file visualize.test.ts
+
+[integration] selected 3/94 file(s): visualize-quality-contract.test.ts, visualize-runtime.test.ts, visualize.test.ts
+TAP version 13
+# Subtest: full HTML gets actionable native input failure and never writes a document
+ok 1 - full HTML gets actionable native input failure and never writes a document
+  ---
+  duration_ms: 4015.243844
+  type: 'test'
+  ...
+# Subtest: code-only own-save references request repair; exports, fallbacks and examples remain valid
+ok 2 - code-only own-save references request repair; exports, fallbacks and examples remain valid
+  ---
+  duration_ms: 165.906944
+  type: 'test'
+  ...
+# Subtest: the native skill and reference tool preserve the pinned upstream authoring contract
+ok 3 - the native skill and reference tool preserve the pinned upstream authoring contract
+  ---
+  duration_ms: 26.684517
+  type: 'test'
+  ...
+# Subtest: references remain literal final text and cannot mount during preview or inside code examples
+ok 4 - references remain literal final text and cannot mount during preview or inside code examples
+  ---
+  duration_ms: 5.662251
+  type: 'test'
+  ...
+# Subtest: actual pinned render.py produces an isolated standalone HTML with embedded bundled D3
+ok 5 - actual pinned render.py produces an isolated standalone HTML with embedded bundled D3
+  ---
+  duration_ms: 229.38676
+  type: 'test'
+  ...
+# Subtest: widget model context is sorted, bounded by complete entries and cannot close its untrusted wrapper
+ok 6 - widget model context is sorted, bounded by complete entries and cannot close its untrusted wrapper
+  ---
+  duration_ms: 10.441145
+  type: 'test'
+  ...
+# Subtest: authorized output is real, bounded and delivered references are required
+ok 7 - authorized output is real, bounded and delivered references are required
+  ---
+  duration_ms: 7138.239518
+  type: 'test'
+  ...
+# Subtest: state is personal and bounded, fixed resources require a live page, and closed tokens fail
+ok 8 - state is personal and bounded, fixed resources require a live page, and closed tokens fail
+  ---
+  duration_ms: 787.091482
+  type: 'test'
+  ...
+# Subtest: replacement documents and revoked membership invalidate every old page capability
+ok 9 - replacement documents and revoked membership invalidate every old page capability
+  ---
+  duration_ms: 323.920643
+  type: 'test'
+  ...
+# Subtest: one-use gestures gate links and follow-ups and forged generic ingress is rejected
+ok 10 - one-use gestures gate links and follow-ups and forged generic ingress is rejected
+  ---
+  duration_ms: 283.923049
+  type: 'test'
+  ...
+# Subtest: durable follow-up JSONB retries reconcile a lost ACK without duplicate messages
+ok 11 - durable follow-up JSONB retries reconcile a lost ACK without duplicate messages
+  ---
+  duration_ms: 290.390883
+  type: 'test'
+  ...
+# Subtest: document replacement waits for an admitted state transaction and capacity is bounded
+ok 12 - document replacement waits for an admitted state transaction and capacity is bounded
+  ---
+  duration_ms: 655.424857
+  type: 'test'
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 12
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 18044.428414
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

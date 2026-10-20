@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "e8595551025fd185405f6864ec6b50e5daf63c40",
+  "baseCommit": "4c57fce92c316628e59600203c7ba48722f61636",
+  "checks": [
+    {
+      "command": "npm run server:typecheck",
+      "exitCode": 0,
+      "log": "logs/server-typecheck-final.txt"
+    },
+    {
+      "command": "npm run server:lint",
+      "exitCode": 0,
+      "log": "logs/server-lint-final.txt"
+    },
+    {
+      "command": "npm run test:e2e:typecheck",
+      "exitCode": 0,
+      "log": "logs/e2e-typecheck-final.txt"
+    },
+    {
+      "command": "npm run verify:visualize",
+      "exitCode": 0,
+      "log": "logs/source-verifier-final.txt"
+    }
+  ],
+  "integration": {
+    "command": "npm run test:integration -- --file visualize-quality-contract.test.ts --file visualize-runtime.test.ts --file visualize.test.ts",
+    "exitCode": 0,
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0,
+    "log": "logs/integration-final-commit.txt"
+  },
+  "independentArithmetic": {
+    "command": "python docs/evidence/issue-217-quality/recompute.py",
+    "exitCode": 0
+  },
+  "numericalVisualizationAcceptance": "FAILED",
+  "productionActions": false
+}

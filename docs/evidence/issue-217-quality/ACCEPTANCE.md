@@ -18,7 +18,7 @@
 
 原始 [comparison.html](../../../artifacts/issue-217-quality/original/comparison.html) SHA-256 `980ecb22cabedd1be0eef4e2ed82f92bb2df492b0fba40cf515c9ac2599f3a03`、[trend.html](../../../artifacts/issue-217-quality/original/trend.html) SHA-256 `d9961e4cc3f20f5dceff0743937842e1f3ae2cc7007f0b226feb444d4c412edd` 与原专用测试库一致，未改写。官方浏览器原比较用例 **2/2 红**，保留 [错误交点](../../../artifacts/issue-217-quality/screenshots/original-comparison-intersection-red.png)、[错误推荐](../../../artifacts/issue-217-quality/screenshots/original-comparison-decision-red.png) 与 [原始断言日志](../../../artifacts/issue-217-quality/logs/original-comparison-red.txt)。这些失败是固定历史输出的回归证据，不是应删掉的测试。
 
-原趋势历史回放 **未进入浏览器数学断言**：服务端启动被 `A delivered complete real-model reference is required` 拦住，因为原运行 partial。没有删除完成门槛、移动文件或绕过 403；[失败日志](../../../artifacts/issue-217-quality/logs/original-trend-history-blocked.txt) 保留。趋势数值定位来自原 HTML 和独立算术。
+原趋势历史回放 **未进入浏览器数学断言**：服务端启动被 `A delivered complete real-model reference is required` 拦住，因为原运行 partial。没有删除完成门槛、移动文件或绕过 403；[官方引擎失败日志](../../../artifacts/issue-217-quality/logs/original-trend-history-blocked.txt) 与 [服务端原始断言](../../../artifacts/issue-217-quality/logs/original-trend-completed-reference-guard.txt) 保留。趋势数值定位来自原 HTML 和独立算术。
 
 ## 最小接入改动
 
@@ -60,6 +60,8 @@
 失效模型和确定性回归先于对应代码。原契约两项先红；修补后与原 visualize/runtime 集成共 **12/12 通过、0 skip**，含非法完整文档无写入、修正 fragment 真正保存、代码围栏修复提示、导出/回退/其他运行示例不受影响和权限撤销不得通过。[日志](../../../artifacts/issue-217-quality/logs/contract-final.txt)。首次 revocation 用例误期望抛异常，实际既有合同返回 failed record；修正为验证非成功，保留 [该失败轮](../../../artifacts/issue-217-quality/logs/contract-after.txt)。另一次缺测试 secret 的配置失败也 [保留](../../../artifacts/issue-217-quality/logs/contract-config-error.txt)，未计为通过。
 
 `server:typecheck`、`server:lint`、E2E TypeScript 和 `verify:visualize` 通过。先前提示改动检查点 server tests 106/106；后续 guard 变化由上述 owning integration 覆盖，不把此前全套结果描述为最终 guard 的重跑。
+
+上述 owning 检查又在产品/测试提交 `e8595551025fd185405f6864ec6b50e5daf63c40` 全部复验通过：[命令、退出码和日志入口](../../../artifacts/issue-217-quality/validation.json)，其中集成仍是 12/12、0 skip。后续仅增加证据文件。独立 Astra 只读审查此提交相对 `4c57fce9` 未发现阻塞性产品缺陷；见 [审查记录](REVIEW.md)。这不改变真实 provider 数值/交付失败。
 
 实际复用：
 
