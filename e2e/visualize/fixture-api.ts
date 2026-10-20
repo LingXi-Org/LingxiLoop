@@ -41,6 +41,9 @@ export function visualizeFixtureApi(): Plugin {
           const allowed=['visualize.css','visualize.html','calendar.js','gen-ui.js','vendor/d3-7.9.0.min.js','vendor/floating-ui-core-1.7.3.min.js','vendor/floating-ui-dom-1.7.4.min.js','vendor/lucide-1.17.0.js']
           if(!allowed.includes(name)){reply({},404);return}
           const file=name==='gen-ui.js'?'server/assets/visualize-runtime/gen-ui.js':path.join('third_party/zcode/skills/visualize/assets',name)
+          const delay = Number(process.env.E2E_VISUALIZE_RESOURCE_DELAY ?? 0)
+          if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay))
+          res.setHeader('cache-control','no-store')
           res.setHeader('content-type','text/plain');res.end(await readFile(file));return
         }
         const key=stateKey(page)

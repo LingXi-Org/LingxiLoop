@@ -239,7 +239,7 @@ export function ConversationThread({
         />
       </div>}
       {readingHistory ? <Button type="button" variant="outline" size="icon"
-        className="absolute bottom-24 end-5 z-10 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground md:size-9"
+        className="absolute bottom-24 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground md:size-9"
         aria-label="滚动到底部" data-chat-scroll-bottom onClick={() => {
           flushSync(() => setReadingHistory(false))
           viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'instant' })
@@ -251,7 +251,7 @@ export function ConversationThread({
           type="button"
           variant="outline"
           size="icon"
-          className="absolute bottom-24 end-5 z-10 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible md:size-9"
+          className="absolute bottom-24 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible md:size-9"
           aria-label="滚动到底部"
           data-chat-scroll-bottom
         >
