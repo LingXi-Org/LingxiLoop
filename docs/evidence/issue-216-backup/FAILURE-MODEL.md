@@ -6,7 +6,7 @@ owner may later execute a reviewed plan through existing Komodo authorization.
 
 | Failure | Required behavior / short check |
 | --- | --- |
-| Wrong source, modified migration, different runtime package | Bind the concrete source commit, both manifests/locks, every migration checksum and installed formal runtime schema resource. Reject before any request. Source is product46/runtime3.5.6/native12; target migration remains unperformed. |
+| Wrong source, modified migration, different runtime package | Bind the concrete source commit, both manifests/locks, every migration checksum and formally published source schema resource hash (checked against the installed formal package in local verification). Reject before any request. Source is product46/runtime3.5.6/native12; target migration remains unperformed. |
 | Default invocation changes production | Default creates only a private exclusive local plan. Execution requires explicit `--execute`, the exact reviewed plan file and a new receipt path. Tests intercept fetch and require zero requests for planning/invalid plans. |
 | Counts and dump see different writes | One read-only repeatable-read exported snapshot owns counts, provenance and pg_dump. Restore comparison uses that snapshot's counts, never a later live SELECT. Exercise with isolated synthetic PostgreSQL. |
 | Destructive live SQL or accidental restore target | Source psql is read-only; pg_restore targets only the full random owned database name, unequal to the live name. No target migration SQL, UPDATE, DDL or reset against source. |
