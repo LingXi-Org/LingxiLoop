@@ -1,0 +1,52 @@
+{
+  "at": "2026-10-20T17:10:16.443Z",
+  "candidate": "10db48ad8254f3d74918ae5aabed46c239505f6f",
+  "planHash": "4226e6bfd349fafa27221832058ba7c31d01e7d4546da1726fc674cff2400033",
+  "checks": {
+    "sealedSameSchemaPlan": true,
+    "acceptedSource": true,
+    "executionAndPreparation": true,
+    "auditBytes": true,
+    "terminalReceipts": true,
+    "freshPostflight": true,
+    "exactCurrentContainers": true,
+    "exactCurrentSources": true,
+    "actualHostImageIdentity": true,
+    "policyUnchanged": true,
+    "schema": true,
+    "publicHealthAndVersion": true,
+    "workerStartupSelfChecksInferred": true
+  },
+  "passed": true,
+  "inputs": [
+    {
+      "name": "plan.json",
+      "sha256": "94228d2db6d58aa6516e5c736acc46cffdf14d7af2821128b401791c24cb2ea0"
+    },
+    {
+      "name": "release-execution.json",
+      "sha256": "92ab71d2bf5e3380a00e025f321157cbfa6bf3170204c7ebf15940f2004f0630"
+    },
+    {
+      "name": "image-preparation.json",
+      "sha256": "ea2dbdd7818470b607736afb2a8f601a41a4bae17d50c604a28ad64a8cbf3cbe"
+    },
+    {
+      "name": "production-after.json",
+      "sha256": "70fa1479d71f77f025f137ad6c588227e465f0e0bcc833628717ffef8f4bb7c9"
+    },
+    {
+      "name": "image-audit/receipt.json",
+      "sha256": "613e44c0fcacf94289dabc9e24d54918af3561aa77be6177a84a4fb99946e1a3"
+    },
+    {
+      "name": "terminal-receipts.json",
+      "sha256": "a855cd379282eeca49e418b8e7730f3b06a57920f069d7138ece055a8a619660"
+    }
+  ],
+  "sourceAcceptanceSha256": "c67b628c068bcdee245e086947ee876b982957d12290b6da52e10853e819d85d",
+  "sourceProductionReadSha256": "abb274eb410468eb7609637e04f5a3e9e38a6e7f8ea629f29801bbe634b03852",
+  "isolationScope": "Exact production entrypoint and native readyz imply shipped startup self-check completion; no full production isolation/fault-injection matrix.",
+  "authenticatedSmoke": "not-run: no existing authorized identity injected; no credential created/copied",
+  "scope": "Deployment evidence only: no Canvas probe, asset matrix, browser, model or performance acceptance in this batch."
+}

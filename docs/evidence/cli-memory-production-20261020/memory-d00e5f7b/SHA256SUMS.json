@@ -1,0 +1,30 @@
+[
+  {
+    "file": "plan.json",
+    "sha256": "ca1b5f132b4719fc68d2671054e0153dc6d72913880c3f53fdb56f2a74d195ff"
+  },
+  {
+    "file": "release-execution.json",
+    "sha256": "7617b0817d5747b4fcbe9cc8fb88ce5163b1fd78c9d6b39cad9669b38a68a01c"
+  },
+  {
+    "file": "image-preparation.json",
+    "sha256": "4645c7e4942a5d7a752be69b26d73b0a7e18c45d8691fa2a5b7c028d278ce4bf"
+  },
+  {
+    "file": "terminal-receipts.json",
+    "sha256": "306701e20fccc54dadfdf84b69c537695b7c9d4c7ce6b7b1c333876e3a61b208"
+  },
+  {
+    "file": "production-after.json",
+    "sha256": "a0e9ab9b4c4c0dd852cf983aa1ca693e8e3244914061f0084066b734b1ea6a82"
+  },
+  {
+    "file": "final-acceptance.json",
+    "sha256": "b2e0ed2fcbc1b9506128469fed294939c3467933f57c37fe71311df83af16cec"
+  },
+  {
+    "file": "image-audit/receipt.json",
+    "sha256": "93cb954ab8d71ed9f7bfe89b88f83e41c933155758e9d7aa944985bd0fb8bcc7"
+  }
+]
