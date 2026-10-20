@@ -1,0 +1,53 @@
+TAP version 13
+# [env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET
+# Subtest: cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+ok 1 - cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+  ---
+  duration_ms: 26.093283
+  type: 'test'
+  ...
+# Subtest: normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+ok 2 - normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+  ---
+  duration_ms: 1.871842
+  type: 'test'
+  ...
+# Subtest: multiple planning directives are held cumulatively before a later cluster can reject them
+ok 3 - multiple planning directives are held cumulatively before a later cluster can reject them
+  ---
+  duration_ms: 7.240317
+  type: 'test'
+  ...
+# Subtest: fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+ok 4 - fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+  ---
+  duration_ms: 16.521341
+  type: 'test'
+  ...
+# Subtest: leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+ok 5 - leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+  ---
+  duration_ms: 0.613935
+  type: 'test'
+  ...
+# Subtest: approval holds a trailing high surrogate until the pair arrives
+ok 6 - approval holds a trailing high surrogate until the pair arrives
+  ---
+  duration_ms: 0.364049
+  type: 'test'
+  ...
+# Subtest: long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+ok 7 - long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+  ---
+  duration_ms: 2.950018
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2272.240689

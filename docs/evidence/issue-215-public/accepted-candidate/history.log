@@ -1,0 +1,41 @@
+
+> lingxiloop@0.1.0-beta test:integration
+> node server/run-integration-tests.mjs --file public-run-activity.test.ts --file public-activity-history.test.ts
+
+[integration] selected 2/90 file(s): public-run-activity.test.ts, public-activity-history.test.ts
+TAP version 13
+# [env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET
+# {"ts":"2026-10-20T03:44:51.251Z","level":"info","msg":"worker stopped","workerId":"issue215-history-failure","timedOut":false}
+# Subtest: loaded IM anchors recover stopped runs beyond recent 20 through scoped stable history pages
+ok 1 - loaded IM anchors recover stopped runs beyond recent 20 through scoped stable history pages
+  ---
+  duration_ms: 2706.343199
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T03:44:53.025Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T03:44:53.025Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T03:44:53.025Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T03:44:53.025Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# [env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET
+# {"ts":"2026-10-20T03:45:04.541Z","level":"info","msg":"worker stopped","workerId":"public-activity-fixture","timedOut":false}
+# Subtest: published worker persists authorized public activity and measured tool boundaries without private data
+ok 2 - published worker persists authorized public activity and measured tool boundaries without private data
+  ---
+  duration_ms: 6146.218813
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T03:45:04.546Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 20581.257184
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
