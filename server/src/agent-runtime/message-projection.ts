@@ -4,7 +4,7 @@ import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
 import { assertVisualizeCitationSpans, projectVisualizeText } from './visualize-projection.js'
-import { publicActivitySchema, toolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
+import { publicActivitySchema, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
 export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; display?: ToolDisplay }
 export interface MarkdownConfidenceClaim {
@@ -26,7 +26,7 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
     const id = event.data.toolCallId
     if (typeof id !== 'string' || !id.startsWith('host:')) continue
     if (event.kind === 'tool.started' && typeof event.data.name === 'string' && !calls.has(id)) {
-      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: event.data.name,args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq })
+      calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: canonicalToolName(event.data.name),args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq })
     }
     const previous = calls.get(id)
     if (event.kind === 'tool.completed' && previous && event.seq > (previous.eventSeq ?? 0) && event.data.result && typeof event.data.result === 'object') {
@@ -72,7 +72,7 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[]): Thread
     const stopped = tool.result === undefined && (view.lifecycle === 'cancelled' || view.lifecycle === 'failed')
     const projected = stopped ? { ...tool, result: { status: view.lifecycle }, isError: view.lifecycle === 'failed' } : tool
     const status = projected.result && typeof projected.result === 'object' ? Reflect.get(projected.result, 'status') : undefined
-    const display = { ...toolDisplay(tool.toolName, status), ...recordedDisplay }
+    const display = resolveToolDisplay(tool.toolName, status, recordedDisplay)
     if (status !== 'completed') display.summary = toolDisplay(tool.toolName, status).summary
     const attention = !!tool.approval || !!tool.interrupt || projected.isError || ['failed', 'cancelled', 'unknown'].includes(String(status))
     parts.set(tool.toolCallId, annotated({ ...projected, args: { fields: display.input ?? [] }, argsText: '',
