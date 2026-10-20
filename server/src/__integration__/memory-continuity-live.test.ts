@@ -18,11 +18,35 @@ import {installRecordingWukong} from './_recording-wukong.js'
 test('live native memory saves, recalls semantically and extracts long-source tails across rooms',{
   skip:process.env.LINGXIOS_LIVE_CONTINUITY!=='1',timeout:600000,
 },async()=>{
-  assert.equal(new URL(env.DATABASE_URL).pathname,'/lingxiloop_memory_continuity_model_test')
+  assert.ok(['/lingxiloop_memory_continuity_model_test','/lingxiloop_memory_continuity_qualification_test','/lingxiloop_memory_continuity_candidate_test','/lingxiloop_memory_continuity_final_test'].includes(new URL(env.DATABASE_URL).pathname))
   await ensureSchemaOnce();await resetAllTables()
   const recording=await installRecordingWukong(),originalFetch=globalThis.fetch
-  let worker:ReturnType<typeof createWorker>|undefined,phase='save'
-  const observed:Array<{phase:string;kind:string;status:number;elapsedMs:number;core:boolean;middle:boolean;tail:boolean}>=[]
+  let worker:ReturnType<typeof createWorker>|undefined,phase='save',completed=false
+  const operations:Array<{phase:string;operation:string;startedAt:string;elapsedMs:number;error?:string}>=[]
+  const operationStats:Record<string,{count:number;totalMs:number;maxMs:number;errors:number}>={}
+  const slowOperations:typeof operations=[]
+  const waits:Array<{phase:string;waiting:number;blocked:number;categories:string[]}>=[]
+  async function measured<T>(operation:string,call:()=>Promise<T>):Promise<T>{
+    const started=performance.now(),entry={phase,operation,startedAt:new Date().toISOString(),elapsedMs:0} as typeof operations[number]
+    try{return await call()}catch(error){entry.error=error instanceof Error && ['Error','AssertionError','AbortError','TimeoutError'].includes(error.name)?error.name:'OtherError';throw error}
+    finally{entry.elapsedMs=Math.round(performance.now()-started);operations.push(entry);if(operations.length>512)operations.shift()
+      const stats=operationStats[operation]??={count:0,totalMs:0,maxMs:0,errors:0};stats.count++;stats.totalMs+=entry.elapsedMs;stats.maxMs=Math.max(stats.maxMs,entry.elapsedMs);stats.errors+=entry.error?1:0
+      if((entry.elapsedMs>=500||entry.error)&&slowOperations.length<128)slowOperations.push(entry)
+    }
+  }
+  const next=()=>measured('worker.runNext',()=>worker!.runNext())
+  let sampling=false
+  const waitTimer=setInterval(()=>{
+    if(sampling)return;sampling=true
+    void pool.query<{waiting:number;blocked:number;categories:string[]}>(`SELECT COUNT(*)::int AS waiting,
+      COUNT(*) FILTER(WHERE cardinality(pg_blocking_pids(pid))>0)::int AS blocked,
+      array_agg(DISTINCT wait_event_type) AS categories FROM pg_stat_activity
+      WHERE datname=current_database() AND state='active' AND wait_event_type IS NOT NULL AND pid<>pg_backend_pid()`)
+      .then(result=>{const row=result.rows[0];if(row?.waiting && waits.length<256)waits.push({phase,...row})})
+      .catch(()=>{}).finally(()=>{sampling=false})
+  },500)
+  waitTimer.unref()
+  const observed:Array<{phase:string;kind:string;status:number;elapsedMs:number;core:boolean;middle:boolean;tail:boolean;automaticMiddle:boolean;automaticTail:boolean}>=[]
   const core='先给三个要点，再给待办事项',middle='我习惯用思维导图梳理复杂概念',tail='我的长期目标是在十二月完成概率论研究报告'
   globalThis.fetch=async(...args)=>{
     const target=String(args[0] instanceof Request ? args[0].url : args[0])
@@ -30,13 +54,16 @@ test('live native memory saves, recalls semantically and extracts long-source ta
     const start=Date.now(),body=String(args[1]?.body ?? ''),currentPhase=phase
     const response=await originalFetch(...args)
     observed.push({phase:currentPhase,kind:target.includes('/embeddings')?'embedding':'chat',status:response.status,
-      elapsedMs:Date.now()-start,core:/三个要点/.test(body)&&/待办/.test(body),middle:body.includes(middle),tail:body.includes(tail)})
+      elapsedMs:Date.now()-start,core:/三个要点/.test(body)&&/待办/.test(body),middle:body.includes(middle),tail:body.includes(tail),automaticMiddle:/周六|星期六/.test(body),automaticTail:body.includes('星河')})
     return response
   }
   try {
     const {companyId,projectId,agentId}=await seedCompanyWithAgent()
     await seedUserMembership('test-owner',companyId)
-    const app=await lingxiOSControl(),memory=app.memory!
+    const app=await measured('control.initialize',()=>lingxiOSControl()),nativeMemory=app.memory!
+    const memory=new Proxy(nativeMemory,{get(target,key,receiver){const value=Reflect.get(target,key,receiver)
+      return typeof value==='function'? (...args:unknown[])=>measured('memory.'+String(key),async()=>Reflect.apply(value,target,args)):value
+    }})
     worker=createWorker({controlPlane:app,policy:new ProductRuntimePolicy(),worker:{id:'continuity-live'},
       model:runtimeModelConfiguration({id:env.OPENAI_MODEL,apiKey:env.OPENAI_API_KEY,baseUrl:env.OPENAI_BASE_URL},90000)})
     let serial=0
@@ -52,7 +79,7 @@ test('live native memory saves, recalls semantically and extracts long-source ta
         {mode:'execute',executionClass:'conversation',codeExecution:'disabled'})
       const run=accepted.runs[0];assert.ok(run);await bindProductRun(pool,run,room)
       if(revision) await app.revise(run,revision)
-      assert.equal(await worker!.runNext(),true)
+      assert.equal(await next(),true)
       const message=await app.readMessage(run)
       if(!message){
         const state=(await pool.query('SELECT status,terminal_reason FROM lingxios.agent_work_items WHERE id=$1',[run.runId])).rows[0]
@@ -75,7 +102,7 @@ test('live native memory saves, recalls semantically and extracts long-source ta
     assert.ok(observed.some(item=>item.phase==='immediate' && item.kind==='chat' && item.core),'actual provider input includes committed core')
     phase='index'
     let jobs=0
-    while(await worker.runNext()){assert.ok(++jobs<=32,'bounded index work')}
+    while(await next()){assert.ok(++jobs<=32,'bounded index work')}
     const indexed=(await pool.query(`SELECT COUNT(*)::int AS count,MIN(cardinality(e.embedding))::int AS dimensions,COUNT(DISTINCT e.model_key)::int AS spaces
       FROM lingxios.agent_memory_embeddings e JOIN lingxios.agent_memories m ON m.tenant_id=e.tenant_id AND m.id=e.memory_id AND m.version=e.version
       WHERE m.tenant_id=$1 AND m.scope_type=$2 AND m.scope_id=$3`,[companyId,personal.scopeType,personal.scopeId])).rows[0]
@@ -103,7 +130,7 @@ test('live native memory saves, recalls semantically and extracts long-source ta
     for(;;){
       assert.ok(Date.now()<extractionDeadline,'bounded extraction wall time')
       await memory.reflect(source.identity,personal)
-      while(await worker.runNext()){assert.ok(++pages<=32,'bounded extraction/index work')}
+      while(await next()){assert.ok(++pages<=32,'bounded extraction/index work')}
       const row: {status:string;segment_cursor:number;segments:number}|undefined=(await pool.query(`SELECT s.status,s.segment_cursor,(SELECT count(*)::int FROM lingxios.agent_memory_evidence_segments p WHERE p.source_run_id=s.source_run_id) AS segments
         FROM lingxios.agent_memory_evidence_scopes s WHERE s.source_run_id=$1 AND s.scope_type=$2 AND s.scope_id=$3`,[source.run.runId,personal.scopeType,personal.scopeId])).rows[0]
       assert.ok(row);if(row.status==='processed'){assert.equal(row.segment_cursor,row.segments);break}
@@ -116,11 +143,12 @@ test('live native memory saves, recalls semantically and extracts long-source ta
     phase='background-new-room'
     const inherited=await turn('live-continuity-e','我正在筹备的数学科普活动现用名称是什么，通常哪天做统计实验？请直接根据已保存资料只回答现用名称和时间，不补充历史名称，不询问补充信息。')
     assert.ok(/星河/.test(inherited.message.body) && /周六|星期六/.test(inherited.message.body),'new room uses complete background evidence')
+    assert.ok(observed.find(item=>item.phase==='background-new-room'&&item.kind==='chat')?.automaticMiddle && observed.find(item=>item.phase==='background-new-room'&&item.kind==='chat')?.automaticTail,'first new-room provider input contains committed background facts')
     assert.ok(!/海洋/.test(inherited.message.body),'effective revision replaces the obsolete name')
     const forgotten=docs.find(doc=>doc?.body.includes('星河'));assert.ok(forgotten)
     await memory.apply(source.identity,{scope:personal,changes:[{action:'delete',id:forgotten.id,expectedVersion:forgotten.version}],idempotencyKey:'live-forget-tail',sourceRef:'live-settings'})
     await memory.reindex(source.identity,personal)
-    while(await worker.runNext()){assert.ok(++pages<=48,'bounded post-forget index work')}
+    while(await next()){assert.ok(++pages<=48,'bounded post-forget index work')}
     assert.equal(await memory.read(source.identity,personal,forgotten.id),null)
     assert.ok(!(await memory.search(source.identity,personal,{query:'星河'})).items.some(item=>'excerpt' in item && item.excerpt.includes('星河')))
     assert.equal((await pool.query('SELECT 1 FROM lingxios.agent_memory_embeddings WHERE tenant_id=$1 AND memory_id=$2',[companyId,forgotten.id])).rowCount,0)
@@ -129,9 +157,15 @@ test('live native memory saves, recalls semantically and extracts long-source ta
       COUNT(*) FILTER(WHERE observation->'usage'->>'available'='true')::int AS measured
       FROM lingxios.agent_model_budget_calls c JOIN lingxios.agent_work_items w ON w.id=c.work_id WHERE w.tenant_id=$1`,[companyId])).rows[0]
     assert.ok(usage.embeddingCalls>0 && usage.measured>0 && usage.costMicros<1000000)
+    completed=true
     await mkdir('artifacts/memory/continuity-live',{recursive:true})
     await writeFile('artifacts/memory/continuity-live/model-results.json',JSON.stringify({passed:true,model:env.OPENAI_MODEL,embeddingModel:env.OPENAI_EMBEDDING_MODEL,
-      observed,initialCount,indexed,jobs,pages,usage,diagnostics:snapshot.diagnostics,checks:['explicit-middle-tail','immediate-new-room-input','hybrid-current-index','proactive-reference-injection','background-middle-tail','effective-revision','durable-cursor','forget-index'],
-      reproduce:`OPENAI_EMBEDDING_MODEL=${env.OPENAI_EMBEDDING_MODEL} EVAL_CANDIDATE_MODEL=zai-org/GLM-5.2 EVAL_CANDIDATE_INPUT_CNY_PER_MILLION=8 EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION=28 lingxi-prod model-run node e2e/server/memory-regression.mjs --live-continuity`},null,2))
-  } finally {globalThis.fetch=originalFetch;await worker?.stop();await recording.close();await teardownAll()}
+      observed,initialCount,indexed,jobs,pages,usage,diagnostics:snapshot.diagnostics,checks:['explicit-middle-tail','immediate-new-room-input','hybrid-current-index','proactive-reference-injection','background-middle-tail','background-new-room-first-input','effective-revision','durable-cursor','forget-index'],
+      reproduce:`${process.env.MEMORY_CONTINUITY_QUALIFICATION?`MEMORY_CONTINUITY_QUALIFICATION=${process.env.MEMORY_CONTINUITY_QUALIFICATION} `:''}OPENAI_EMBEDDING_MODEL=${env.OPENAI_EMBEDDING_MODEL} EVAL_CANDIDATE_MODEL=zai-org/GLM-5.2 EVAL_CANDIDATE_INPUT_CNY_PER_MILLION=8 EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION=28 lingxi-prod model-run node e2e/server/memory-regression.mjs --live-continuity`},null,2))
+  } finally {
+    clearInterval(waitTimer);globalThis.fetch=originalFetch
+    await mkdir('artifacts/memory/continuity-live',{recursive:true})
+    await writeFile('artifacts/memory/continuity-live/operation-diagnostics.json',JSON.stringify({completed,phase,operations,operationStats,slowOperations,waits,observed},null,2))
+    await worker?.stop();await recording.close();await teardownAll()
+  }
 })

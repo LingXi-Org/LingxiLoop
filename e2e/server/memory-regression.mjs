@@ -15,7 +15,11 @@ const live = continuity || process.argv.includes('--live-memory')
 assert.ok(!(continuity && process.argv.includes('--live-memory')),'choose one live suite')
 const selected = process.argv.slice(2).filter(arg => !['--live-memory','--live-continuity'].includes(arg))
 assert.ok(!live || !selected.length,'live evaluation uses its own isolated suite')
-const databaseName = continuity ? 'lingxiloop_memory_continuity_model_test' : live ? 'lingxiloop_release_memory_model_test' : 'lingxiloop_release_memory_test'
+const qualification = process.env.MEMORY_CONTINUITY_QUALIFICATION ?? ''
+const continuityDatabases = {'':'lingxiloop_memory_continuity_model_test','1':'lingxiloop_memory_continuity_qualification_test',
+  candidate:'lingxiloop_memory_continuity_candidate_test',final:'lingxiloop_memory_continuity_final_test'}
+assert.ok(Object.hasOwn(continuityDatabases,qualification),'unknown continuity qualification target')
+const databaseName = continuity ? continuityDatabases[qualification] : live ? 'lingxiloop_release_memory_model_test' : 'lingxiloop_release_memory_test'
 const cwd = resolve(import.meta.dirname,'../..'), output = resolve(cwd,'artifacts/memory',continuity ? 'continuity-live' : live ? 'live' : 'integration')
 await mkdir(output,{ recursive: true })
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
@@ -44,7 +48,7 @@ if (live) {
     assert.ok(process.env.OPENAI_EMBEDDING_MODEL?.trim(),'existing authorized embedding model is required')
     assert.equal(credentials.EVAL_CANDIDATE_BASE_URL,process.env.OPENAI_BASE_URL,'continuity uses the already authorized shared provider route')
     Object.assign(env,{OPENAI_EMBEDDING_MODEL:process.env.OPENAI_EMBEDDING_MODEL,LINGXILOOP_DISABLE_EMBEDDINGS:'0',
-      LINGXIOS_LIVE_CONTINUITY:'1',AGENT_OS_MAX_MODEL_TOKENS:'300000',AGENT_OS_MAX_MODEL_CALLS:'24',AGENT_OS_MAX_MODEL_COST_MICROS:'400000'})
+      LINGXIOS_LIVE_CONTINUITY:'1',MEMORY_CONTINUITY_QUALIFICATION:qualification,AGENT_OS_MAX_MODEL_TOKENS:'300000',AGENT_OS_MAX_MODEL_CALLS:'24',AGENT_OS_MAX_MODEL_COST_MICROS:'400000'})
   }
 }
 assert.equal(new URL(env.DATABASE_URL).pathname,`/${databaseName}`)
