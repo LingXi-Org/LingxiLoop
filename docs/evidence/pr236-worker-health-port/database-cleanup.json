@@ -1,0 +1,18 @@
+{
+  "databaseName": "lingxiloop_pr236_worker_port_20261020_test",
+  "host": "127.0.0.1",
+  "port": 55432,
+  "schema": {
+    "product_version": 48
+  },
+  "runtime": {
+    "runtime_version": "3.5.8",
+    "schema_version": 13,
+    "protocol_version": 11
+  },
+  "sizeBytes": "24763415",
+  "activeConnectionsBeforeDrop": 0,
+  "databaseDropped": true,
+  "otherDatabaseActions": 0,
+  "completedAt": "2026-10-20T11:03:15.002Z"
+}

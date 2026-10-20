@@ -1,0 +1,20 @@
+{
+  "label": "green",
+  "base": "2a1d3f286485ebe4642ec56664d16f668731d3cc",
+  "databaseName": "lingxiloop_pr236_worker_port_20261020_test",
+  "redisPort": 56437,
+  "heldSocket": {
+    "pid": 1781314,
+    "host": "127.0.0.1",
+    "port": 52992,
+    "proposedPort29092AvailableBeforeRun": true,
+    "startedAt": "2026-10-20T10:58:43.880Z",
+    "ownedControlledListener": true
+  },
+  "startedAt": "2026-10-20T11:00:19.910Z",
+  "completedAt": "2026-10-20T11:00:47.220Z",
+  "migrationExitCode": 0,
+  "exitCode": 0,
+  "serialFiles": true,
+  "realProviderCalls": 0
+}

@@ -1,0 +1,23 @@
+{
+  "completedAt": "2026-10-20T11:03:29.076430+00:00",
+  "heldListener": {
+    "pid": 1781314,
+    "commandMatchedOwnedFixture": true,
+    "signal": "SIGTERM",
+    "pidExistsAfterCleanup": false
+  },
+  "redis": {
+    "id": "2e974ca7c7c70d1803ce3544d9fb73b4ef944e6bbddf8ca6af41746449725ad4",
+    "name": "lingxiloop-pr236-worker-port-test-redis",
+    "exitCode": 0,
+    "stopped": true,
+    "removed": true
+  },
+  "closedLoopbackPorts": {
+    "52992": true,
+    "29092": true,
+    "56437": true
+  },
+  "otherProcessesStopped": 0,
+  "otherContainersChanged": 0
+}

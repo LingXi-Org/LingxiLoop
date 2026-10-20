@@ -1,0 +1,7 @@
+{
+  "databaseName": "lingxiloop_pr236_worker_port_20261020_test",
+  "host": "127.0.0.1",
+  "port": 55432,
+  "purpose": "exclusive PR236 Worker health-port tests",
+  "createdAt": "2026-10-20T10:59:27.340Z"
+}

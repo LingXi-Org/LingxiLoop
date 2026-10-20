@@ -1,0 +1,39 @@
+{
+  "base": "2a1d3f286485ebe4642ec56664d16f668731d3cc",
+  "source": {
+    "server/src/__integration__/runtime-model-context.test.ts": {
+      "sha256": "77707aedc26b62652e46584ec15d1fb9359b4512fc6b0b4c837f4c024bffe0f5",
+      "matchesBase": false
+    },
+    "server/run-integration-tests.mjs": {
+      "sha256": "c332643d76f462df1a2ff585cd6588fa0b66da61a2f30e698a2fb12db9f5a892",
+      "matchesBase": true
+    },
+    "server/src/agent-runtime/runtime.ts": {
+      "sha256": "642310cc9ce1d467c5f38e5d1ba1d778c3d5f4e560d8f0e5f71adce202c0d016",
+      "matchesBase": true
+    },
+    "server/src/env.ts": {
+      "sha256": "5bf819f58cfb3e5aa30d9f880d678945d88c8b6930cb381196179e0640937439",
+      "matchesBase": true
+    },
+    "package.json": {
+      "sha256": "f7ec0069936f2bd4f8fa5fcbcff1a1f7f9d7fdad938709dc00f6291d8a7b8aef",
+      "matchesBase": true
+    },
+    "package-lock.json": {
+      "sha256": "6725071c111e255cfff7a3c5e1ac9b512cab8df8b8d77604c64e573ad1bd97f1",
+      "matchesBase": true
+    }
+  },
+  "privateHarness": {
+    "/tmp/pr236-worker-health-port/run.mjs": "483b2634466d1ffe3e9774abb5be63dbc9c228f92d5e203f532c5af57503b8ce",
+    "/tmp/pr236-worker-health-port/hold-port.mjs": "a55d4f682eb9349fa50201826544e31e49b54f446d5276ff0878feb2728286fd",
+    "/tmp/pr236-worker-health-port/cleanup.mjs": "e2cd590636ec7c3170a5057a6f3df291f581b9ac96d5f5fa720385dab07762e5"
+  },
+  "productionChanges": [],
+  "installedRuntime": {
+    "version": "3.5.8",
+    "packageJsonSha256": "60d82b61da3aee13f26724b80ccbb055b871507c1e9e7683093161151abdd36e"
+  }
+}

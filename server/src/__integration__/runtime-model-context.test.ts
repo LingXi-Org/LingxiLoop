@@ -67,7 +67,8 @@ test('production GLM worker preserves conversation continuity across repeated co
     await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
       [conversationId, companyId, JSON.stringify({ channelType: 2, members })])
     process.env.LINGXIOS_SERVICE_TOKEN = 'model-context-isolated-service-token'
-    process.env.AGENT_OS_WORKER_PORT = '52992'
+    // Dedicated fixture port; 52992 can collide with ephemeral listeners.
+    process.env.AGENT_OS_WORKER_PORT = '29092'
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, conversationId)
     const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
     process.env.LINGXIOS_CONTROL_URL = `http://127.0.0.1:${port}`
