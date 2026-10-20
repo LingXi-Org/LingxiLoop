@@ -1,0 +1,126 @@
+(node:898869) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[db:migrate] applied 0001_v1_baseline, 0002_remove_legacy_identity, 0003_agent_os_session_affinity, 0004_backfill_personal_owner_participants, 0005_lingxios_v2_reset, 0006_observable_live_eval, 0007_install_lingxios, 0008_agent_os_execution, 0009_native_agent_tools, 0010_lingxios_native_runtime, 0011_closed_education, 0012_lingxios_3_2, 0013_native_collaboration, 0014_profile_avatars, 0015_lingxios_3_2_6, 0016_lingxios_3_2_7, 0017_lingxios_3_2_8, 0018_lingxios_3_2_9, 0019_agent_read_receipts, 0020_lingxios_3_2_10, 0021_lingxios_3_2_11, 0022_lingxios_3_2_12, 0023_lingxios_3_2_13, 0024_lingxios_3_3_0, 0025_lingxios_3_3_1, 0026_lingxios_3_3_2, 0027_learning_collaboration, 0028_lingxios_3_3_4, 0029_lingxios_3_3_5, 0030_lingxios_3_3_6, 0031_agent_capabilities, 0032_native_message_attachments, 0033_interactive_ui, 0034_retire_email_calendar, 0035_course_forum, 0036_public_run_activity, 0037_forum_comment_attachments, 0038_learning_submission_sequence, 0039_native_memory_collaboration, 0040_forum_assignment_convergence, 0041_homework_mastery, 0042_forum_submission_evidence, 0043_lingxios_3_5_0, 0044_questionnaire_wait, 0045_organization_cases, 0046_visualize · 1317ms
+[integration] selected 7/87 file(s): canvas-feedback-scope.test.ts, canvas-app-boundary.test.ts, canvas-public-assignment.test.ts, visualize.test.ts, runtime-nonthinking.test.ts, native-message-approvals.test.ts, public-run-activity.test.ts
+TAP version 13
+# Subtest: bound Canvas HTTP APIs enforce revision CAS, readback and workspace revocation
+ok 1 - bound Canvas HTTP APIs enforce revision CAS, readback and workspace revocation
+  ---
+  duration_ms: 3856.697293
+  type: 'test'
+  ...
+# Subtest: feedback rejects another canvas frame before persisting the comment
+ok 2 - feedback rejects another canvas frame before persisting the comment
+  ---
+  duration_ms: 3336.203644
+  type: 'test'
+  ...
+# Subtest: human Canvas assignments publish only the current authorized ordinary group message
+ok 3 - human Canvas assignments publish only the current authorized ordinary group message
+  ---
+  duration_ms: 1353.595173
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T01:23:52.264Z","level":"info","msg":"worker stopped","workerId":"approval-fixture","timedOut":false}
+# Subtest: HTTP approval decisions and expiry survive native message replay under a real worker lease
+ok 4 - HTTP approval decisions and expiry survive native message replay under a real worker lease
+  ---
+  duration_ms: 5021.622412
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T01:23:52.276Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T01:24:02.553Z","level":"info","msg":"worker stopped","workerId":"public-activity-fixture","timedOut":false}
+# Subtest: published worker persists authorized public activity and measured tool boundaries without private data
+ok 5 - published worker persists authorized public activity and measured tool boundaries without private data
+  ---
+  duration_ms: 3566.224351
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T01:24:02.558Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T01:24:02.558Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T01:24:02.558Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T01:24:02.558Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T01:24:11.722Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-6wo76","healthPort":29093,"maxConcurrentRuns":2}
+# {"ts":"2026-10-20T01:24:13.311Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-6wo76","timedOut":false}
+# {"ts":"2026-10-20T01:24:13.312Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-canvas-integration/node_modules/@lyyzka/lingxios/src/app/index.ts:877:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:176:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:252:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-pr212-final-http/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-20T01:24:13.315Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-canvas-integration/node_modules/@lyyzka/lingxios/src/app/index.ts:877:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:176:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:252:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-pr212-final-http/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-20T01:24:13.461Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-6wo76","healthPort":29093,"maxConcurrentRuns":2}
+# {"ts":"2026-10-20T01:24:15.395Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-6wo76","timedOut":false}
+# {"ts":"2026-10-20T01:24:15.395Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-canvas-integration/node_modules/@lyyzka/lingxios/src/app/index.ts:877:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:176:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:252:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-pr212-final-http/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-20T01:24:15.396Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-canvas-integration/node_modules/@lyyzka/lingxios/src/app/index.ts:877:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:176:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:252:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-pr212-final-http/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion
+ok 6 - production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion
+  ---
+  duration_ms: 5381.126012
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T01:24:16.949Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-6wo76","healthPort":29094,"maxConcurrentRuns":2}
+# {"ts":"2026-10-20T01:24:18.583Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-6wo76","timedOut":false}
+# {"ts":"2026-10-20T01:24:18.583Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-canvas-integration/node_modules/@lyyzka/lingxios/src/app/index.ts:877:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:176:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:252:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-pr212-final-http/server/src/__integration__/runtime-nonthinking.test.ts:232:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)"}}
+# {"ts":"2026-10-20T01:24:18.584Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-canvas-integration/node_modules/@lyyzka/lingxios/src/app/index.ts:877:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:176:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-pr212-final-http/server/src/agent-runtime/runtime.ts:252:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-pr212-final-http/server/src/__integration__/runtime-nonthinking.test.ts:232:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)"}}
+# Subtest: unavailable visualization references are repaired before durable delivery
+ok 7 - unavailable visualization references are repaired before durable delivery
+  ---
+  duration_ms: 3187.92975
+  type: 'test'
+  ...
+# Subtest: authorized output is real, bounded and delivered references are required
+ok 8 - authorized output is real, bounded and delivered references are required
+  ---
+  duration_ms: 3882.316033
+  type: 'test'
+  ...
+# Subtest: state is personal and bounded, fixed resources require a live page, and closed tokens fail
+ok 9 - state is personal and bounded, fixed resources require a live page, and closed tokens fail
+  ---
+  duration_ms: 670.261859
+  type: 'test'
+  ...
+# Subtest: replacement documents and revoked membership invalidate every old page capability
+ok 10 - replacement documents and revoked membership invalidate every old page capability
+  ---
+  duration_ms: 326.15504
+  type: 'test'
+  ...
+# Subtest: one-use gestures gate links and follow-ups and forged generic ingress is rejected
+ok 11 - one-use gestures gate links and follow-ups and forged generic ingress is rejected
+  ---
+  duration_ms: 252.302171
+  type: 'test'
+  ...
+# Subtest: durable follow-up JSONB retries reconcile a lost ACK without duplicate messages
+ok 12 - durable follow-up JSONB retries reconcile a lost ACK without duplicate messages
+  ---
+  duration_ms: 236.754742
+  type: 'test'
+  ...
+# Subtest: document replacement waits for an admitted state transaction and capacity is bounded
+ok 13 - document replacement waits for an admitted state transaction and capacity is bounded
+  ---
+  duration_ms: 541.659852
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 52527.378459

@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "scenario": "close-then-switch",
+  "document": {
+    "id": "fixture-frame",
+    "canvasId": "fixture-canvas",
+    "type": "markdown",
+    "title": "共同笔记",
+    "content": "# 旧卡片\n\n需要一起保留的内容。",
+    "x": 80,
+    "y": 80,
+    "width": 560,
+    "height": 440,
+    "data": {},
+    "revision": 1,
+    "createdBy": "teacher",
+    "updatedBy": "teacher",
+    "createdAt": "2026-10-20T01:24:40.637Z",
+    "updatedAt": "2026-10-20T01:24:40.637Z"
+  },
+  "patches": [],
+  "feedback": [
+    "引用画布卡片「共同笔记」（fixture-frame，第 1 版）：\n# 旧卡片\n\n需要一起保留的内容。\n\n用户反馈：请只在当前画布解释引用"
+  ],
+  "comments": [],
+  "finishedPatches": 0,
+  "finishedSteers": 1,
+  "failedReads": 0
+}

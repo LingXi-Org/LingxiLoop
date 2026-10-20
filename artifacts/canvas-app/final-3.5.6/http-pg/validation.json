@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-10-20T01:25:06.211868+00:00",
+  "candidate": "b249631cd95027c6fab6234191cd1ff131e03a90",
+  "runtime": {
+    "version": "3.5.6",
+    "resolved": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.6/8678395c3eb40eeb99860a05b3f532704fcb1bcb",
+    "integrity": "sha512-fg3EvMwwgZLd9QZ5aTT8IcJrj/9vfy7OK/1BGUiEvwt6FS7WlhgyoycZmxFj+Q1yT8XXppGCmmK7F+JIjCJLpg==",
+    "installedHiddenLockMatches": true
+  },
+  "node": "v22.23.3",
+  "status": "passed",
+  "counts": {
+    "tests": 13,
+    "pass": 13,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "durationMs": 52527.378459,
+  "selectedFiles": [
+    "canvas-feedback-scope.test.ts",
+    "canvas-app-boundary.test.ts",
+    "canvas-public-assignment.test.ts",
+    "visualize.test.ts",
+    "runtime-nonthinking.test.ts",
+    "native-message-approvals.test.ts",
+    "public-run-activity.test.ts"
+  ],
+  "original11Matched": true,
+  "original11Files": [
+    "canvas-public-assignment.test.ts",
+    "visualize.test.ts",
+    "runtime-nonthinking.test.ts",
+    "native-message-approvals.test.ts",
+    "public-run-activity.test.ts"
+  ],
+  "cases": [
+    "bound Canvas HTTP APIs enforce revision CAS, readback and workspace revocation",
+    "feedback rejects another canvas frame before persisting the comment",
+    "human Canvas assignments publish only the current authorized ordinary group message",
+    "HTTP approval decisions and expiry survive native message replay under a real worker lease",
+    "published worker persists authorized public activity and measured tool boundaries without private data",
+    "production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion",
+    "unavailable visualization references are repaired before durable delivery",
+    "authorized output is real, bounded and delivered references are required",
+    "state is personal and bounded, fixed resources require a live page, and closed tokens fail",
+    "replacement documents and revoked membership invalidate every old page capability",
+    "one-use gestures gate links and follow-ups and forged generic ingress is rejected",
+    "durable follow-up JSONB retries reconcile a lost ACK without duplicate messages",
+    "document replacement waits for an admitted state transaction and capacity is bounded"
+  ],
+  "scope": [
+    "Actual HTTP router, permissions, PostgreSQL and revision CAS",
+    "Same-canvas comment succeeds; cross-canvas frame comment returns404 with no persistence",
+    "Concurrent revision writes200/409, stale409, project membership revoke and company exit denied",
+    "Original11: GenUI authorization/state/replay/gesture/capacity, native Canvas assignment, approval durable replay, public activity isolation and PR204 nonthinking streaming/visualization repair"
+  ],
+  "environment": {
+    "worktree": "/workspace/LingxiLoop-pr212-final-http",
+    "branch": "codex/pr212-final-http",
+    "checkout": "normal fast-forward merge of b249631 from parent34d4; no source changes",
+    "dependencyInstall": "read-only node_modules symlink to root final integration npm ci; installed hidden-lock integrity and resolved tarball match own exact3.5.6 lock",
+    "postgres": "isolated local port55438, dedicated lingxiloop_canvas_feedback_test",
+    "redis": "isolated local port56388/db0",
+    "composeProject": "lingxiloop-pr212-security",
+    "credentials": "only existing synthetic local fixture values; no production credential or configuration access"
+  },
+  "preflight": "verify:visualize and build:visualize-runtime passed; official pinned bundle SHA78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+  "reproduce": "With dedicated migrated local PG/Redis and the repository synthetic test env, run node server/run-integration-tests.mjs --file canvas-feedback-scope.test.ts --file canvas-app-boundary.test.ts --file canvas-public-assignment.test.ts --file visualize.test.ts --file runtime-nonthinking.test.ts --file native-message-approvals.test.ts --file public-run-activity.test.ts",
+  "logNotes": [
+    "Raw log retains fixture-shutdown outbox acknowledgement warnings and control-plane-stopped messages; all test assertions pass. Those entries arise at explicit fixture teardown and are not production observations."
+  ],
+  "limits": [
+    "HTTP authentication identity is injected by test helper; this is not real gateway login",
+    "Model HTTP, WuKongIM and object storage use scripted/recording fixtures; no real provider verification",
+    "No full browser journey in this subtask (race agent owns final browser checks)",
+    "No production rollout or global long-soak claims"
+  ],
+  "sourceHashesVerified": 13
+}

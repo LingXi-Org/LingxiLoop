@@ -1,0 +1,93 @@
+{
+  "candidate": "b249631cd95027c6fab6234191cd1ff131e03a90",
+  "runtime": "3.5.6",
+  "node": "22.23.3",
+  "browser": {
+    "runId": "01a156e7-e196-7bcd-b5a5-db5793259d03",
+    "singleInvocation": true,
+    "files": 4,
+    "tests": 15,
+    "pass": 15,
+    "fail": 0,
+    "errors": 0,
+    "skipped": 0,
+    "retries": 0,
+    "durationSeconds": 87.82,
+    "junitSummedSeconds": 86.401,
+    "groups": {
+      "document": 6,
+      "draftRaces": 4,
+      "draftFailures": 3,
+      "feedbackScope": 2
+    }
+  },
+  "httpPg": {
+    "tests": 13,
+    "pass": 13,
+    "fail": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "durationSeconds": 52.527378459,
+    "sourceHashesVerified": 13,
+    "archiveFilesVerified": 14
+  },
+  "checks": [
+    {
+      "name": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-20T01:25:02.782761+00:00",
+      "durationSeconds": 0.633,
+      "log": "lint.log"
+    },
+    {
+      "name": "e2e-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "test:e2e:typecheck"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-20T01:25:03.416282+00:00",
+      "durationSeconds": 9.798,
+      "log": "e2e-typecheck.log"
+    },
+    {
+      "name": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "startedAt": "2026-10-20T01:25:13.214418+00:00",
+      "durationSeconds": 54.873,
+      "log": "build.log"
+    }
+  ],
+  "webTypecheck": "passed inside npm run build",
+  "sourceHashCount": 292,
+  "historicalArtifactCount": 118,
+  "historicalArtifactsChanged": 0,
+  "copiedTests": 4,
+  "testCopyChanges": "artifact output paths only, exactly reversible",
+  "screenshots": 14,
+  "productionActions": 0,
+  "externalProviderCalls": 0,
+  "independentCodeReview": "no unresolved P1/P2 for candidate; final evidence review pending",
+  "remaining": [
+    "exact final-evidence commit CI",
+    "independent final evidence review",
+    "sole-integrator production rollout and actual receipt"
+  ],
+  "unverified": [
+    "real gateway login/multiplayer journey",
+    "real model provider",
+    "long soak",
+    "production performance and health"
+  ]
+}

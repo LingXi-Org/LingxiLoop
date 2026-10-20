@@ -1,0 +1,68 @@
+{
+  "document": {
+    "id": "fixture-frame",
+    "canvasId": "fixture-canvas",
+    "type": "markdown",
+    "title": "共同笔记",
+    "content": "cancelled request may already commit",
+    "x": 80,
+    "y": 80,
+    "width": 560,
+    "height": 440,
+    "data": {},
+    "revision": 2,
+    "createdBy": "teacher",
+    "updatedBy": "teacher",
+    "createdAt": "2026-10-20T01:23:48.013Z",
+    "updatedAt": "2026-10-20T01:23:49.911Z"
+  },
+  "patches": [
+    {
+      "content": "cancelled request may already commit",
+      "baseRevision": 1
+    }
+  ],
+  "feedback": [],
+  "comments": [],
+  "finishedPatches": 1,
+  "finishedSteers": 0,
+  "failedReads": 0,
+  "protocol": {
+    "capabilities": {
+      "experimental": {
+        "zcode/widgetState": {}
+      },
+      "serverTools": {},
+      "updateModelContext": {
+        "structuredContent": {}
+      }
+    },
+    "rejected": [
+      {
+        "label": "unknown-tool",
+        "rejected": true
+      },
+      {
+        "label": "cross-frame",
+        "rejected": true
+      },
+      {
+        "label": "invalid-revision",
+        "rejected": true
+      },
+      {
+        "label": "direct-send",
+        "rejected": true
+      },
+      {
+        "label": "private-model-state",
+        "rejected": true
+      },
+      {
+        "label": "resource-read",
+        "rejected": true
+      }
+    ],
+    "cancelled": true
+  }
+}
