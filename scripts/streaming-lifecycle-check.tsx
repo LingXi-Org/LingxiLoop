@@ -1,24 +1,31 @@
 // Test-only input controller; the renderer, part statuses and queue are real SDK code.
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { flushSync } from 'react-dom'
 import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, MessagePrimitive, useAuiState, type ThreadMessage, type TextMessagePartProps } from '@assistant-ui/react'
 import { VisualizeText } from '../src/features/chat/visualize/VisualizeText'
 import { MarkdownText } from '../src/components/assistant-ui/markdown-text'
 import '../src/styles/globals.css'
 
-type Input = { text: string; status: 'running' | 'complete' | 'cancelled' | 'error'; tool?: boolean; id?: string; partId?: string }
+type Input = { text: string; status: 'running' | 'complete' | 'cancelled' | 'error'; tool?: boolean; id?: string; partId?: string; sync?: boolean }
 function Text() {
   const index = useAuiState(state => state.message.parts.indexOf(state.part))
   const status = useAuiState(state => state.part.status.type)
   const messageStatus = useAuiState(state => state.message.status?.type)
-  return <section data-text-index={index} data-part-status={status} data-message-status={messageStatus}><MarkdownText agent /></section>
+  const receivedLength = useAuiState(state => state.part.type === 'text' ? state.part.text.length : 0)
+  return <section data-received-length={receivedLength} data-text-index={index} data-part-status={status} data-message-status={messageStatus}><MarkdownText agent /></section>
 }
 function OriginalText(part: TextMessagePartProps) { return <VisualizeText part={part} Text={Text} readOnly /> }
 function Message() { return <MessagePrimitive.Parts components={{ Text: OriginalText }} /> }
 function App() {
   const [input, setInput] = useState<Input>({ text: '准备', status: 'running' })
   useEffect(() => {
-    const step = (event: Event) => setInput((event as CustomEvent<Input>).detail)
+    const step = (event: Event) => {
+      const next = (event as CustomEvent<Input>).detail
+      // A selected test event commits before the next animation frame.
+      if (next.sync) flushSync(() => setInput(next))
+      else setInput(next)
+    }
     window.addEventListener('streaming-lifecycle-step', step)
     return () => window.removeEventListener('streaming-lifecycle-step', step)
   }, [])

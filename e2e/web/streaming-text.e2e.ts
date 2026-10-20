@@ -174,9 +174,12 @@ test.describe('Official element integration', {
       const old = document.querySelectorAll('#body [data-streaming-fresh]')[2]
       const colors = new Set<string>()
       const before = getComputedStyle(old).color
-      await step('甲乙丙丁 English **中文**')
+      // Observe the real transition while the SDK reveals the appended text.
+      // Waiting for the full body first can miss the entire 700ms transition.
+      window.dispatchEvent(new CustomEvent('streaming-text-step', { detail: { text: '甲乙丙丁 English **中文**' } }))
       const start = performance.now()
       while (performance.now() - start < 850) { colors.add(getComputedStyle(old).color); await frame() }
+      const receivedMixed = document.querySelector('#body')!.textContent === '甲乙丙丁 English 中文'
       const end = getComputedStyle(old).color
       const identity = document.querySelectorAll('#body [data-streaming-fresh]')[2] === old
       const fresh = [...document.querySelectorAll('#body [data-streaming-fresh="true"]')].map(n => n.textContent)
@@ -191,9 +194,11 @@ test.describe('Official element integration', {
       observer.disconnect()
       const stableBlue = [...stable.querySelectorAll('[data-streaming-fresh="true"]')]
         .some(node => getComputedStyle(node).color !== getComputedStyle(node.parentElement!).color)
-      return { colors: [...colors], before, end, identity, fresh, mutations, stableBlue,
+      return { colors: [...colors], before, end, receivedMixed, identity, fresh, mutations, stableBlue,
         visibleCarets: [...document.querySelectorAll('[data-streaming-caret]')].filter(n => n.getBoundingClientRect().width > 0).length }
     })
+    console.log('Chinese transition and stable block', JSON.stringify(result))
+    expect(result.receivedMixed).toBe(true)
     expect(result.colors.length).toBeGreaterThan(3)
     expect(result.before === result.end).toBe(false)
     expect(result.identity).toBe(true)
@@ -201,7 +206,6 @@ test.describe('Official element integration', {
     expect(result.mutations).toBe(0)
     expect(result.stableBlue).toBe(false)
     expect(result.visibleCarets).toBe(1)
-    console.log('Chinese transition and stable block', JSON.stringify(result))
     await app.screenshot('chinese-mixed-tail')
   })
 

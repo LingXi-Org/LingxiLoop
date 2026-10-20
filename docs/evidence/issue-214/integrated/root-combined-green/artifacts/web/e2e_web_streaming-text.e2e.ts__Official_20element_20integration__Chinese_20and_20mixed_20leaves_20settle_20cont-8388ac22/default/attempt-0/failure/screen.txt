@@ -1,0 +1,21 @@
+# Screen at failure
+url: http://127.0.0.1:5212/scripts/streaming-browser-check.html
+revision: b1
+viewport: 1440x960
+nodes: 15
+
+#root document "连续正文浏览器回归"
+ #n3 main
+  #n4 text="甲"
+  #n5 text="乙"
+  #n6 text="丙"
+  #n7 text="丁"
+  #n8 text="English"
+  #n9 text="中"
+  #n10 text="文"
+  #n11 text="尾"
+  #n12 text="部"
+  #n13 text="继"
+  #n14 text="续"
+  #n15 text="增"
+  #n16 text="长"

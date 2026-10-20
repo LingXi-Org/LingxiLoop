@@ -98,22 +98,52 @@ test.describe('Streaming Text lifecycle', {
       const frame = () => new Promise(requestAnimationFrame)
       const root = () => document.querySelector('[data-text-index="0"]')!
       const text = '准备' + '正常结束继续显示已经收到的完整正文。'.repeat(70)
-      const step = (status: string) => window.dispatchEvent(new CustomEvent('streaming-lifecycle-step', { detail: { text, status } }))
-      step('running')
-      let start = performance.now()
-      while (performance.now() - start < 70) await frame()
-      step('complete')
-      start = performance.now()
-      const samples: number[] = []
-      while (root().textContent !== text) {
-        if (performance.now() - start > 5000) throw new Error('Completion did not drain')
+      const startedAt = performance.now()
+      const remaining = () => Math.max(0, 5000 - (performance.now() - startedAt))
+      const snapshot = () => ({ length: root().textContent!.length,
+        received: Number(root().getAttribute('data-received-length')),
+        message: root().getAttribute('data-message-status'),
+        carets: root().querySelectorAll('[data-streaming-caret]').length })
+      const step = (status: string) => window.dispatchEvent(new CustomEvent('streaming-lifecycle-step', { detail: { text, status, sync: status === 'complete' } }))
+      // Observe the committed pending queue, before another animation frame can drain it.
+      const before = await new Promise<ReturnType<typeof snapshot>>((resolve, reject) => {
+        const observer = new MutationObserver(() => {
+          const sample = snapshot()
+          if (sample.message !== 'running' || sample.received !== text.length || sample.length <= 0 || sample.length >= text.length) return
+          observer.disconnect()
+          clearTimeout(timeout)
+          step('complete')
+          resolve(sample)
+        })
+        const timeout = setTimeout(() => { observer.disconnect(); reject(new Error('No committed pending queue before completion')) }, remaining())
+        observer.observe(root(), { subtree: true, childList: true, characterData: true, attributes: true })
+        step('running')
+      })
+      while (root().getAttribute('data-message-status') !== 'complete') {
+        if (!remaining()) throw new Error('Complete message did not commit')
         await frame()
-        if (root().getAttribute('data-message-status') === 'complete') samples.push(root().textContent!.length)
       }
-      return { total: text.length, samples, carets: root().querySelectorAll('[data-streaming-caret]').length }
+      const samples: ReturnType<typeof snapshot>[] = []
+      do {
+        const sample = snapshot()
+        samples.push(sample)
+        if (root().textContent === text && sample.carets === 0) break
+        if (!remaining()) throw new Error('Completion did not drain')
+        await frame()
+      } while (true)
+      return { total: text.length, before, samples, full: root().textContent === text,
+        carets: root().querySelectorAll('[data-streaming-caret]').length }
     })
     console.log('Completion drain', JSON.stringify(result))
-    expect(result.samples.some(length => length > 0 && length < result.total)).toBe(true)
+    expect(result.before.message).toBe('running')
+    expect(result.before.received).toBe(result.total)
+    expect(result.before.length).toBeGreaterThan(0)
+    expect(result.before.length).toBeLessThan(result.total)
+    expect(result.samples.length).toBeGreaterThan(0)
+    expect(result.samples.every(sample => sample.message === 'complete' && sample.received === result.total)).toBe(true)
+    expect(result.samples.some(sample => sample.length > 0 && sample.length < result.total)).toBe(true)
+    expect(result.samples.every((sample, index) => sample.length >= (index ? result.samples[index - 1].length : result.before.length))).toBe(true)
+    expect(result.full).toBe(true)
     expect(result.carets).toBe(0)
     await browser.evaluate(() => window.dispatchEvent(new CustomEvent('streaming-lifecycle-step', { detail: { text: '历史正文', status: 'complete', id: 'history-message' } })))
     await expect(browser.locator('[data-text-index="0"]')).toHaveText('历史正文')

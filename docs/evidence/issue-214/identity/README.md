@@ -7,3 +7,5 @@ The owning official browser test was written before the production correction. B
 The first integrator combination run passed this new case with prefixes `0,18,181,475,641,641,766,850,916,944,971,979`. That complete run was **13 passed / 2 failed**, not a full pass. The remaining failures concern the existing completion-status and color-transition sampling assertions and remain under investigation. Their original reports are retained at `artifacts/root-combined-green` (the requested output name is not a success claim). Root red evidence is at `artifacts/root-identity-red`.
 
 Final exact-source verification and retained reports will follow before this PR is released. Media changes in these tests use controlled matchMedia subscriptions; native OS/CSS reduced-motion and official-site TLS validation are not claimed passed.
+
+Final combined verification is now recorded in [integrated/README.md](../integrated/README.md): all 15 browser cases pass, with the failed first run and stricter sampling correction retained. Production bytes remain `dc50fbc4`; only tests/fixtures and evidence changed after that commit.
