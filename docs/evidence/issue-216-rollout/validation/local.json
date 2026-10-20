@@ -1,0 +1,15 @@
+{
+  "productionRequests": 0,
+  "providerRequests": 0,
+  "sharedDatabaseRequests": 0,
+  "cases": [
+    "empty-native12-rejects-ordinary-upgrade",
+    "read-only-enforced",
+    "idle-other-client-rejected",
+    "live-native-session-lease-rejected",
+    "actual47-requires-fix-forward",
+    "failed48-preserves47",
+    "actual48-remains-fix-forward"
+  ],
+  "ownedContainerRemoved": true
+}
