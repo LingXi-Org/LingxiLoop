@@ -37,6 +37,7 @@
   },
   "candidateShortChecks": {
     "pruneDryRunOnExactImage": "pass; 3 dependency consumers matched explicit allowlist",
+    "pruneApplyWithPublishedImageNode22": "pass on task-owned temporary copy; 175 removed files and retained inventory hashes match dry-run",
     "pruneWrongVersion": "exit 1 before deletion; targets intact",
     "dockerignoreActualScratchCopy": "pass; copied script byte-identical under production ignore rules",
     "genericAndLegacyGetDocumentImports": "pass in exact image with candidate package mounted read-only",
