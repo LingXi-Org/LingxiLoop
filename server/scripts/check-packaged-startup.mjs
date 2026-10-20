@@ -1,6 +1,32 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+// The server deps stage removes only PDF viewer assets and unused generic maps.
+// Keep future product imports from silently depending on those removed paths.
+const pdfPackage = 'node_modules/pdfjs-dist'
+for (const path of [
+  'web', 'legacy/web', 'build/pdf.mjs.map',
+  'build/pdf.worker.mjs.map', 'build/pdf.sandbox.mjs.map',
+]) assert.equal(existsSync(join(pdfPackage, path)), false, `Unexpected PDF.js viewer payload: ${path}`)
+for (const path of ['LICENSE', 'package.json', 'build/pdf.mjs', 'legacy/build/pdf.mjs',
+  'legacy/build/pdf.worker.mjs', 'cmaps/LICENSE', 'standard_fonts/LICENSE_FOXIT',
+  'wasm/LICENSE_PDFJS_JBIG2']) {
+  assert.equal(existsSync(join(pdfPackage, path)), true, `Missing PDF.js runtime resource: ${path}`)
+}
+const inspectSources = directory => {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name)
+    if (entry.isDirectory()) inspectSources(path)
+    else if (entry.isFile() && /\.[cm]?[jt]sx?$/.test(entry.name)) {
+      assert.doesNotMatch(readFileSync(path, 'utf8'), /pdfjs-dist\/(?:web|legacy\/web)\b/,
+        `Server source imports a removed PDF.js viewer path: ${path}`)
+    }
+  }
+}
+inspectSources('server/src')
 
 // Run the production launcher against the files in this package, not a source
 // checkout. Static imports must link before the existing fail-fast env check.
