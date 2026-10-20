@@ -73,7 +73,8 @@ async function nativeSave(actor,scope,names,correct=false){
   for(const d of docs){const full=await app.memory.read(actor,scope,d.id);assert.ok(full.sources.length&&full.sources.every(ref=>ref.workId===actor.workId))}
   assert.equal(reviews,correct?2:1)
   const events=(await app.readEvents(actor,0)).events
-  const receipts=events.filter(event=>event.kind==='tool.completed'&&event.data.name==='memory.apply')
+  const startedIds=new Set(events.filter(event=>event.kind==='tool.started'&&event.data.name==='memory.apply').map(event=>event.data.toolCallId))
+  const receipts=events.filter(event=>event.kind==='tool.completed'&&startedIds.has(event.data.toolCallId)&&event.data.isError===false)
   assert.equal(receipts.length,reviews,'each old native write has a durable completion')
   result.nativeSourceWrites=(result.nativeSourceWrites??0)+reviews
   return docs
@@ -174,6 +175,7 @@ try {
   const members=JSON.stringify([peer,agent])
   await pool.query("UPDATE conversations SET members=$1::jsonb WHERE id='restore-source'",[members])
   await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$1::jsonb) WHERE channel_id='restore-source'",[members])
+  await assert.rejects(memory.scopes(await identity('restore-source')),/revoked/)
   await memory.apply(current,{scope:personal,changes:[{action:'delete',id:corrected.id,expectedVersion:3}],idempotencyKey:'current-delete',sourceRef:'synthetic-settings'})
   await memory.migrateLegacy(current,{limit:32});assert.equal(await memory.read(current,personal,corrected.id),null)
   await app.stop();app=await memoryApp();assert.equal(await app.memory.read(current,personal,corrected.id),null)
