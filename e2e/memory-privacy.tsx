@@ -1,7 +1,6 @@
 // Synthetic receipts exercise the production renderer/API seam; native persistence and authorization have owning integration coverage.
 import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AssistantRuntimeProvider, MessagePrimitive, ThreadPrimitive, useExternalStoreRuntime } from '@assistant-ui/react'
 import { createRunView } from '@lyyzka/lingxios/ui'
 import { createNativeMessage, deserializeMessage } from '../src/lib/nativeMessage'
@@ -11,12 +10,19 @@ import { harnessApi } from '../src/features/chat/runtime/harness-api'
 import { Button } from '../src/components/ui/button'
 import '../src/styles/globals.css'
 
-const client = new QueryClient()
 const facts = [ { id: 'preference', text: '偏好中文回答', version: 1, change: 'added' as const },
   { id: 'goal', text: '更新后的学习目标', version: 2, change: 'updated' as const },
   { id: 'existing', text: '已有的学习背景', version: 1, change: 'existing' as const } ]
-if (new URLSearchParams(location.search).has('reset')) localStorage.removeItem('memory-fixture-forgotten')
-harnessApi.memory = async (_target, ids) => ({ chips: facts.filter(chip => ids.includes(chip.id) && chip.id !== localStorage.getItem('memory-fixture-forgotten')) })
+if (new URLSearchParams(location.search).has('reset')) { localStorage.removeItem('memory-fixture-forgotten'); sessionStorage.removeItem('memory-fixture-retry') }
+harnessApi.memory = async (_target, ids) => {
+  const mode = new URLSearchParams(location.search).get('mode')
+  if (mode === 'loading') await new Promise(resolve => setTimeout(resolve, 1500))
+  if (mode === 'load-error' && !sessionStorage.getItem('memory-fixture-retry')) {
+    sessionStorage.setItem('memory-fixture-retry', '1')
+    throw new Error('synthetic read failure')
+  }
+  return { chips: mode === 'empty' ? [] : facts.filter(chip => ids.includes(chip.id) && chip.id !== localStorage.getItem('memory-fixture-forgotten')) }
+}
 harnessApi.readApproval = async id => ({ id, summary: '允许忘记指定范围内的记忆？', status: 'PENDING', action: { action: 'memory.forget' } })
 harnessApi.forgetMemory = async (_target, id) => {
   await new Promise(resolve => setTimeout(resolve, 250))
@@ -59,4 +65,7 @@ function Preview() {
     </ThreadPrimitive.Root></AssistantRuntimeProvider>
   </main>
 }
-createRoot(document.getElementById('root')!).render(<QueryClientProvider client={client}><Preview /></QueryClientProvider>)
+// Match production: NativeMessageContent must not require a fixture-only query provider.
+createRoot(document.getElementById('root')!, { onCaughtError: error => {
+  document.documentElement.dataset.cardException = error instanceof Error ? error.message : 'unknown'
+} }).render(<Preview />)

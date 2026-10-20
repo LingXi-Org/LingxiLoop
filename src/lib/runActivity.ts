@@ -45,6 +45,74 @@ export const toolDisplaySchema = z.object({
 export type ToolDisplay = z.infer<typeof toolDisplaySchema>
 
 const labels: Record<string, readonly [string, string]> = {
+  'catalog.discover': ['查找可用工具', '查找当前授权允许使用的工具。'],
+  'response.upgrade': ['准备完整答复', '按当前请求准备完整的答复格式。'],
+  'task.read_evidence': ['回查引用依据', '读取已收集且获授权的依据片段。'],
+  'task.read_attachment': ['回查请求附件', '按请求中的附件版本读取所需片段。'],
+  'visualize.read_reference': ['查看可视化参考', '查阅当前可视化组件的使用说明。'],
+  'visualize.save': ['保存可视化', '保存当前任务的可视化内容。'],
+  'visualize.read': ['读取可视化', '读取已保存且获授权的可视化内容。'],
+  'visualize.export': ['导出可视化', '将已保存的可视化导出为附件。'],
+  'documents.list': ['查找文档', '列出当前有权访问的文档。'],
+  'documents.recent': ['查看最近文档', '查看最近创建且有权访问的文档。'],
+  'documents.rename': ['重命名文档', '更新已授权文档的名称。'],
+  'documents.delete': ['删除文档', '删除已授权且经确认的文档。'],
+  'knowledge.check_source': ['核对课程资料', '核对课程资料当前版本与预期内容。'],
+  'knowledge.add_text': ['添加文字资料', '保存文字资料并提交资料处理任务。'],
+  'knowledge.add_url': ['添加网页资料', '添加网页资料并提交资料处理任务。'],
+  'knowledge.add_file': ['添加文件资料', '将已提交的附件添加为课程资料。'],
+  'knowledge.retry_ingestion': ['重试资料处理', '重新提交未完成的资料处理任务。'],
+  'knowledge.set_source_enabled': ['调整资料可用状态', '按已批准的资料版本更新可用状态。'],
+  'knowledge.delete_source': ['删除课程资料', '删除已批准的资料并安排关联资源清理。'],
+  'directory.self': ['查看助手身份', '查看当前助手身份及有权参与的对话。'],
+  'directory.participants': ['查找工作区成员', '查看当前工作区中可联系的成员。'],
+  'directory.statuses': ['查看助手状态', '查看当前工作区助手的可用状态。'],
+  'chat.metadata': ['查看当前对话', '读取当前对话的基本信息。'],
+  'chat.list_mutes': ['查看静音设置', '查看当前助手对话的静音设置。'],
+  'chat.add_member': ['添加对话成员', '将允许加入的成员添加到当前群聊。'],
+  'chat.set_topic': ['更新对话主题', '更新当前对话的主题。'],
+  'chat.rename': ['重命名对话', '核对当前名称后更新对话名称。'],
+  'chat.set_muted': ['调整对话静音', '更新当前助手在对话中的静音设置。'],
+  'chat.recommend': ['提出学习建议', '提供可选择的下一步学习建议。'],
+  'chat.history': ['阅读对话历史', '读取当前对话中有权查看的历史消息。'],
+  'chat.inbox': ['查看未读消息', '查看有权访问的对话中的未读消息。'],
+  'chat.search': ['搜索对话内容', '查找当前对话中已保存的消息。'],
+  'chat.ack': ['更新已读状态', '更新当前助手的对话已读状态。'],
+  'chat.react': ['回应消息', '更新当前助手对已保存消息的回应。'],
+  'canvas.current': ['查看协作画布', '查看当前画布、分工和报告。'],
+  'canvas.available_agents': ['查找画布助手', '查看当前画布可用的协作助手。'],
+  'canvas.create_frame': ['创建画布内容', '在当前画布中创建新的内容区域。'],
+  'canvas.update_frame': ['更新画布内容', '根据已读取的版本更新画布内容。'],
+  'canvas.append_content': ['补充画布内容', '向当前画布内容追加本次请求的信息。'],
+  'canvas.delete_frame': ['删除画布内容', '删除获授权的画布内容区域。'],
+  'canvas.add_comment': ['评论画布', '向当前画布添加评论。'],
+  'canvas.start_workspace': ['启动画布协作', '为当前画布创建协作分工。'],
+  'canvas.stop_assignment': ['停止协作分工', '停止指定分工及其派生任务。'],
+  'canvas.stop_workspace': ['停止画布协作', '停止当前画布的协作执行。'],
+  'canvas.submit_report': ['提交协作报告', '保存当前分工的报告及依据版本。'],
+  'canvas.submit_verification': ['提交协作核验', '保存对协作报告的独立核验结果。'],
+  'learning.list_assignments': ['查看作业列表', '查看当前课程的教师作业。'],
+  'learning.get_assignment': ['阅读作业要求', '读取当前获授权作业的具体要求。'],
+  'learning.list_submissions': ['查看作业提交', '读取当前学生有权查看的提交记录。'],
+  'learning.submit_assignment': ['提交作业答案', '保存本次请求中的作业答案。'],
+  'learning.get_homework': ['查看作业状态', '读取当前作业及提交状态。'],
+  'learning.assess_homework': ['评阅作业', '根据当前作业要求评阅提交内容。'],
+  'teacher.homework_overview': ['查看班级作业概况', '读取教师有权查看的作业完成概况。'],
+  'polls.create': ['创建投票', '创建当前对话需要的投票。'],
+  'polls.show': ['查看投票', '查看当前获授权投票的选项和状态。'],
+  'polls.vote': ['提交投票', '提交当前允许的投票选项。'],
+  'polls.close': ['结束投票', '结束当前获授权的投票。'],
+  'presentations.create': ['创建演示文稿', '创建本次请求的演示文稿任务。'],
+  'presentations.get': ['查看演示文稿', '查看演示文稿的内容与生成状态。'],
+  'presentations.approve_outline': ['确认演示大纲', '确认当前演示大纲并继续制作。'],
+  'presentations.revise_outline': ['修改演示大纲', '按本次请求修改演示大纲。'],
+  'presentations.revise': ['修改演示文稿', '按本次请求修改演示文稿。'],
+  'presentations.retry': ['重试演示制作', '重新提交未完成的演示制作任务。'],
+  'presentations.cancel': ['取消演示制作', '停止当前演示制作任务。'],
+  'routines.create': ['创建定时任务', '保存本次请求需要的定时任务。'],
+  'routines.list': ['查看定时任务', '读取当前获授权的定时任务。'],
+  'routines.activate': ['启用定时任务', '启用当前获授权的定时任务。'],
+  'routines.pause': ['暂停定时任务', '暂停当前获授权的定时任务。'],
   'memory.list': ['查看记忆', '查看当前对话可用的记忆。'],
   'memory.read': ['读取记忆', '阅读与当前任务有关的记忆。'],
   'memory.search': ['搜索记忆', '查找与当前问题相关的记忆。'],
@@ -87,9 +155,15 @@ const groups: Record<string, readonly [string, string]> = {
   conversations: ['查看对话', '读取已授权的对话信息。'],
 }
 
+/** Resolve only known public aliases; never reinterpret an arbitrary identifier. */
+export function canonicalToolName(action: string): string {
+  const dotted = action.replace('__', '.')
+  return Object.hasOwn(labels, dotted) ? dotted : action
+}
+
 /** Closed copy catalog: never use raw action identifiers or provider errors as labels. */
 export function toolDisplay(action: string, status?: unknown): ToolDisplay {
-  action = action.replace(/^memory__/, 'memory.')
+  action = canonicalToolName(action)
   const [title, purpose] = labels[action] ?? groups[action.split('.')[0]] ?? ['处理任务', '执行当前任务中已授权的操作。']
   const summaries: Record<string, string> = {
     completed: '这一步已完成。', failed: '这一步未完成，请检查相关信息后重试。',
@@ -97,4 +171,13 @@ export function toolDisplay(action: string, status?: unknown): ToolDisplay {
     'awaiting-approval': '需要你确认后才能继续。',
   }
   return { title, purpose, ...(typeof status === 'string' && summaries[status] ? { summary: summaries[status] } : {}) }
+}
+
+/** Refresh old generic titles without losing authorized inputs or recorded results. */
+export function resolveToolDisplay(action: string, status: unknown, recorded?: unknown): ToolDisplay {
+  const base = toolDisplay(action, status), parsed = toolDisplaySchema.safeParse(recorded)
+  if (!parsed.success) return base
+  const generic = parsed.data.title === '处理任务' || Object.values(groups).some(([title]) => title === parsed.data.title)
+  return { ...base, ...parsed.data, ...(generic && base.title !== '处理任务' ? { title: base.title, purpose: base.purpose } : {}),
+    ...(typeof status === 'string' && status !== 'completed' && base.summary ? { summary: base.summary } : {}) }
 }
