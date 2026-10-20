@@ -1,0 +1,165 @@
+{
+  "startedAt": "2026-10-20T15:24:31.598Z",
+  "mode": "read-only-aggregate",
+  "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "sqlSha256": "051b3a28ede3424cda28b96ccfe21247fe35e663b2eed71df2b9924ab2aaffbe",
+  "events": [
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "source",
+      "sha256": "4ad4d738a8f41d549412a71c4de8c78e5fb3f2c5365be86d5fa892db8877b050",
+      "at": "2026-10-20T15:24:39.003Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "source",
+      "sha256": "145ded6c585329317b54c2cca24e80870ab151d870a7c749bd2724dd852c5a26",
+      "at": "2026-10-20T15:24:43.235Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "at": "2026-10-20T15:24:46.813Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "source",
+      "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+      "imageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "indexDigest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "at": "2026-10-20T15:24:49.076Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "source",
+      "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+      "imageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "indexDigest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "at": "2026-10-20T15:24:49.422Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "at": "2026-10-20T15:24:52.576Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad787c4e06d5e1f798371b7",
+      "at": "2026-10-20T15:24:52.861Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad787c4e06d5e1f798371b7",
+      "at": "2026-10-20T15:24:55.686Z"
+    }
+  ],
+  "verified": true,
+  "rows": [
+    {
+      "check": "provenance_and_visibility",
+      "runtime": "3.5.8",
+      "protocol": 11,
+      "read_only": true,
+      "native_schema": 13,
+      "full_visibility": true,
+      "repeatable_read": true,
+      "installed_schema": 13,
+      "select_available": true,
+      "installation_rows": 1,
+      "product_migration_max": 48,
+      "product_migration_count": 48
+    },
+    {
+      "check": "legacy_scope_counts",
+      "counts": {
+        "total": 63,
+        "stable_documents": 0,
+        "legacy_continuity_total": 25,
+        "active_legacy_upper_bound": 25,
+        "old_namespace_non_evolved": 40,
+        "intentional_or_non_continuity_legacy": 15
+      }
+    },
+    {
+      "check": "legacy_source_reasons",
+      "count": 0,
+      "reason": "inactive"
+    },
+    {
+      "check": "legacy_source_reasons",
+      "count": 0,
+      "reason": "malformed_source_unknown"
+    },
+    {
+      "check": "legacy_source_reasons",
+      "count": 25,
+      "reason": "requires_public_authorization"
+    },
+    {
+      "check": "legacy_source_reasons",
+      "count": 0,
+      "reason": "source_revised"
+    },
+    {
+      "check": "legacy_source_reasons",
+      "count": 0,
+      "reason": "source_unavailable"
+    },
+    {
+      "check": "legacy_source_reasons",
+      "count": 0,
+      "reason": "unproven_owner_or_source"
+    },
+    {
+      "check": "index_coverage",
+      "eligible_documents": 40,
+      "configured_key_known": false,
+      "missing_current_any_key": 40,
+      "missing_current_configured_key": null
+    },
+    {
+      "check": "index_work_counts",
+      "failed": 0,
+      "leased": 0,
+      "queued": 0,
+      "cancelled": 0
+    }
+  ],
+  "originalContainersUnchanged": true,
+  "update": {
+    "id": "6ad787c4e06d5e1f798371b7",
+    "target": {
+      "type": "Stack",
+      "id": "6aa8a3e8b35d27bdd4e12ae0"
+    },
+    "operation": "RunStackService",
+    "status": "Complete",
+    "success": true,
+    "startTs": 1792509892764,
+    "endTs": 1792509893475
+  },
+  "finishedAt": "2026-10-20T15:25:00.525Z"
+}
