@@ -115,7 +115,6 @@ jobs:
               - 'workers/control-plane/wrangler.test.jsonc'
             server:
               - 'server/tsconfig.json'
-              - 'server/scripts/**'
             server_tests:
               - 'server/src/**/*.test.ts'
               - '!server/src/__integration__/**'
@@ -125,6 +124,7 @@ jobs:
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
               - 'server/.npmrc'
+              - 'server/scripts/**'
               - 'server/src/**'
               - '!server/src/**/*.test.ts'
               - '!server/src/__tests__/**'
@@ -138,6 +138,7 @@ jobs:
               - 'src/lib/canvasLayout.ts'
               - 'src/lib/canvasEventKinds.ts'
               - 'src/lib/mentions.ts'
+              - 'src/lib/participantDisplayName.ts'
               - 'src/lib/agentRunSnapshot.ts'
               - 'src/lib/nativeMessage.ts'
               - 'src/lib/userFacingError.ts'

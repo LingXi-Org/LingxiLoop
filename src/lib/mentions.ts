@@ -1,5 +1,5 @@
 import { fromMarkdown } from 'mdast-util-from-markdown'
-import { participantMentionNames } from './participantDisplayName'
+import { participantMentionNames } from './participantDisplayName.js'
 
 export interface MentionTarget {
   id: string
