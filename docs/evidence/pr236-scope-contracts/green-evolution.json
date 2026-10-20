@@ -1,0 +1,26 @@
+{
+  "runtime": "3.5.8",
+  "node": "v22.23.3",
+  "complete": true,
+  "environment": "isolated PostgreSQL; product control and IM grants; deterministic model; recording IM; no live provider",
+  "evidence": [
+    {
+      "mode": "empty",
+      "stablePersonalScopeAcrossRooms": true,
+      "proposals": 1,
+      "independentReviews": 1,
+      "successfulApplyReceipts": 1,
+      "benchmarks": 0,
+      "inactiveCandidatesWithPendingEvaluation": 0
+    },
+    {
+      "mode": "candidate",
+      "stablePersonalScopeAcrossRooms": true,
+      "proposals": 1,
+      "independentReviews": 1,
+      "successfulApplyReceipts": 1,
+      "benchmarks": 1,
+      "inactiveCandidatesWithPendingEvaluation": 1
+    }
+  ]
+}

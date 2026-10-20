@@ -1,0 +1,16 @@
+# PR236 scope-test compatibility failure model (before edits)
+
+Frozen base 28f7dc5ad27ae3cbd8cf614dad9b055f29bdc412, published LingxiOS 3.5.8. Only test contracts may change; product authorization and runtime source remain fixed. Preserve actual local red before editing assertions.
+
+1. The old group test identifies per-Agent memory by the first grant. Under issue216, a multi-Agent audience must receive no learner/learner_course grants. Its course_shared grant is shared while explicit agent_role and session grants retain native isolation. Select scopes by type, require the documented types, compare agent_role partitions (including repeated work for the same Agent), and confirm the current principal remains authorized. Scope retrieval after removal of a bound current member must fail, then normal restored membership must work.
+2. A private two-party audience now receives a stable personal learner identity. Accepting merely any prefix could hide room-specific identity regressions: verify stable-memory and that authorized private work in a second real room resolves the identical learner scope. Do not manufacture memory grants or register a benchmark in the fixture.
+3. Cold read/list/evidence scheduling with empty candidates must keep the tenant unregistered. Nonempty synthesis must still require a distinct approving call, committed apply receipt, native frozen benchmark, inactive candidate and pending evaluation. Preserve every original synthesis assertion and use deterministic model/recorded IM only.
+4. Exercise the entire two owning integration files serially against a new exclusive loopback database and own Redis fixture. Never reuse another task's data, change security settings, install dependencies, contact real provider/production, or relax unrelated assertions. Record setup failures separately from the two expected assertion reds.
+
+Source basis: server/src/modules/memory/public.ts resolveMemoryScopes; docs/issue-216-failure-model.md; existing memory-continuity.test.ts cross-room/current-audience contract; installed official 3.5.8 dist/src/memory/access.js stable and IM partition behavior.
+
+## Additional evidence after the first fixture update
+
+The first updated run retained 2/4 failures beyond the two original scope assertions. The newly added equality requirement for repeated work of the same Agent was too strong: public.ts grants agent_role without continuity; official 3.5.8 access.js intentionally partitions it by native conversation/thread/Agent/principal/audience/policy. The correct isolation assertion maps every observed role scope to its owning Agent and rejects reuse by a different Agent; it does not impose new stability on native partitions. Keep this failed attempt and its exact test source.
+
+The unchanged synthesis fixture returned {approved,confidence} but omitted the now-required coverage boolean complete. Official 3.5.8 processor.js lines164–191 rejects that verdict and makes its one bounded format-repair call, so the unchanged reviews===1 assertion fails with 2. Supply an explicit complete:true verdict for this fully known synthetic page, while preserving the original exact one-proposal/one-independent-review, cold empty behavior, committed receipt and pending-candidate checks. Do not change the expected review count or weaken the runtime gate.

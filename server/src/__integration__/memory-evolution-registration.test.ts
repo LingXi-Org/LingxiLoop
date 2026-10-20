@@ -38,16 +38,18 @@ after(async () => {
 test('cold product memory synthesis freezes only nonempty candidates and leaves evaluation pending', { timeout: 60000 }, async () => {
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
-  const conversationId = 'memory-evolution-registration', members = ['test-owner', agentId]
-  await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Fixture',$4::jsonb)",
-    [conversationId, companyId, projectId, JSON.stringify(members)])
-  await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
-    [conversationId, companyId, JSON.stringify({ channelType: 2, members })])
+  const members = ['test-owner', agentId]
+  for (const mode of ['empty', 'candidate']) {
+    const conversationId = `memory-evolution-registration-${mode}`
+    await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Fixture',$4::jsonb)",
+      [conversationId, companyId, projectId, JSON.stringify(members)])
+    await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)',
+      [conversationId, companyId, JSON.stringify({ channelType: 2, members })])
+  }
   const app = await lingxiOSControl(), memory = app.memory
   assert.ok(memory)
-  const policy = await syncConversationPolicy(app, companyId, conversationId)
   const benchmarks = () => pool.query('SELECT id,definition FROM lingxios.agent_evolution_benchmarks WHERE tenant_id=$1', [companyId])
-  let mode: 'empty' | 'candidate' = 'empty', sourceRunId = '', scope: MemoryScope | undefined
+  let mode: 'empty' | 'candidate' = 'empty', sourceRunId = '', scope: MemoryScope | undefined, firstPersonalScope: MemoryScope | undefined
   let proposals = 0, reviews = 0
   const usage = { available: true as const, inputTokens: 100, outputTokens: 30 }
   const candidateBody = 'Inspect the existing receipt before retrying a failed operation.'
@@ -73,7 +75,8 @@ test('cold product memory synthesis freezes only nonempty candidates and leaves 
         reviews++
         assert.deepEqual(batch.changes, changes())
         assert.deepEqual(batch.candidates, candidates())
-        return { value: { approved: true, confidence: 1 }, model: 'memory-evolution-registration-fixture', usage }
+        assert.match(input.instructions, /"complete":boolean/, 'independent approval must also judge extraction coverage')
+        return { value: { approved: true, complete: true, confidence: 1 }, model: 'memory-evolution-registration-fixture', usage }
       }
       assert.match(input.instructions, /Consolidate durable cognitive memory/)
       proposals++
@@ -86,6 +89,8 @@ test('cold product memory synthesis freezes only nonempty candidates and leaves 
   // explicitly freeze a benchmark or seed runtime evidence/candidates here.
   for (const currentMode of ['empty', 'candidate'] as const) {
     mode = currentMode
+    const conversationId = `memory-evolution-registration-${mode}`
+    const policy = await syncConversationPolicy(app, companyId, conversationId)
     const beforeProposals = proposals, beforeReviews = reviews
     assert.equal((await benchmarks()).rowCount, 0)
     const accepted = await app.conversations.ingest({ tenantId: companyId, conversationId, policyVersion: policy.version,
@@ -101,7 +106,9 @@ test('cold product memory synthesis freezes only nonempty candidates and leaves 
     const identity = { tenantId: companyId, principalId: 'test-owner', agentId, sessionId: source.sessionId, workId: source.runId }
     scope = (await memory.scopes(identity)).find(item => item.scopeType === 'learner')
     assert.ok(scope)
-    assert.ok(scope.scopeId.startsWith('im-memory:'))
+    assert.ok(scope.scopeId.startsWith('stable-memory:'))
+    firstPersonalScope ??= scope
+    assert.deepEqual(scope, firstPersonalScope, 'the same authorized learner retains personal scope across private rooms')
     assert.deepEqual((await memory.list(identity, scope)).items, [])
     assert.equal((await benchmarks()).rowCount, 0, 'ordinary scope/list reads must leave the tenant cold')
     assert.equal(await worker.runNext(), true)
@@ -144,7 +151,7 @@ test('cold product memory synthesis freezes only nonempty candidates and leaves 
       assert.equal(documents.items.length, 1)
       assert.equal(documents.items[0].origin, 'synthesized')
     }
-    evidence.push({ mode, proposals: proposals - beforeProposals, independentReviews: reviews - beforeReviews,
+    evidence.push({ mode, stablePersonalScopeAcrossRooms: true, proposals: proposals - beforeProposals, independentReviews: reviews - beforeReviews,
       successfulApplyReceipts: receipts.rowCount, benchmarks: registered.rowCount, inactiveCandidatesWithPendingEvaluation: evaluated.rowCount })
   }
 })
