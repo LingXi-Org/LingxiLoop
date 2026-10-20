@@ -1,0 +1,3 @@
+# Formal3.5.8 PDF packaging qualification
+
+The package version/layout or actual installed consumers may differ from the old3.5.6 image. A drift must stop before deletion. Shared dependencies must never be modified: use a new private install of the exact server lock, and reject root symlinks. Only the audited viewer/maps may disappear; every retained file hash must stay identical. Native PDF extraction, generic/legacy imports, CMaps/fonts/WASM/licenses and Worker code must remain valid. Test with a real synthetic PDF before and after pruning; compare exact bytes. This is a package compatibility qualification, not an OCI size/readiness or production receipt. No provider/DB is used, and no existing dependency directory is installed over.

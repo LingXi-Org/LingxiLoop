@@ -21,6 +21,12 @@ superseded by `formal358/README.md` and `runtime358/`.
   CI/image remain pending. No production writes have occurred; both Web/API
   and Workers require the coordinator's outstanding maintenance confirmation.
 
+The later PDF payload addition from PR23589cdee54 is reviewed and qualified on
+formal3.5.8 in `pdfjs358/`:175 audited files removed from the server dependency
+copy, all379 retained files unchanged, actual PDF output identical,24/24 owning
+contracts. It changes packaging only and needs the combined final CI/image.
+Package-copy gzip savings are not final OCI savings. Production hold remains.
+
 ## Historical09:26 checkpoint
 
 
