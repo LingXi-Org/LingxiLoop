@@ -1,0 +1,56 @@
+--- audit-before-pending-fix.py
++++ audit.py
+@@ -24,6 +24,9 @@
+ MAX_COMPRESSED = 2 * 1024**3
+ MAX_ENTRIES = 300000
+ MAX_INVENTORY_BYTES = 64 * CHUNK
++MAX_PATH_DEPTH = 128
++MAX_ANCESTORS = 300000
++MAX_ANCESTOR_BYTES = 64 * CHUNK
+ INDEX = {'application/vnd.oci.image.index.v1+json', 'application/vnd.docker.distribution.manifest.list.v2+json'}
+ MANIFEST = {'application/vnd.oci.image.manifest.v1+json', 'application/vnd.docker.distribution.manifest.v2+json'}
+ GZIP = {'application/vnd.oci.image.layer.v1.tar+gzip', 'application/vnd.docker.image.rootfs.diff.tar.gzip'}
+@@ -123,7 +126,9 @@
+     require(not any(ord(c) < 32 or ord(c) == 127 for c in value), 'unsafe_tar_path')
+     parts = value.split('/')
+     require('..' not in parts, 'unsafe_tar_path')
+-    result = '/'.join(p for p in parts if p not in ('', '.'))
++    normalized = [p for p in parts if p not in ('', '.')]
++    require(len(normalized) <= MAX_PATH_DEPTH, 'path_depth_limit')
++    result = '/'.join(normalized)
+     require(bool(result) or root_ok, 'empty_tar_path')
+     return result
+ 
+@@ -144,9 +149,18 @@
+     # Conservative hints include implicit directories. Never remove a hint:
+     # stale ancestors only cause an extra original scan, never a missed subtree.
+     ancestors = set()
++    ancestor_bytes = 0
+     def remember_ancestors(path):
++        nonlocal ancestor_bytes
+         parts = path.split('/')
+-        ancestors.update('/'.join(parts[:i]) for i in range(1, len(parts)))
++        require(len(parts) <= MAX_PATH_DEPTH, 'path_depth_limit')
++        for i in range(1, len(parts)):
++            parent = '/'.join(parts[:i])
++            if parent not in ancestors:
++                size = len(parent.encode())
++                require(len(ancestors) < MAX_ANCESTORS and ancestor_bytes + size <= MAX_ANCESTOR_BYTES, 'ancestor_index_limit')
++                ancestors.add(parent)
++                ancestor_bytes += size
+     for path in result:
+         remember_ancestors(path)
+     pending = []
+@@ -173,6 +187,12 @@
+     while pending:
+         rest = []
+         for path, entry in pending:
++            if result.get(path) is not entry:
++                continue
++            parents = path.split('/')[:-1]
++            for i in range(1, len(parents) + 1):
++                parent = '/'.join(parents[:i])
++                require(parent not in result or result[parent]['kind'] == 'directory', 'non_directory_parent')
+             target = result.get(entry['target'])
+             if target and target['kind'] in ('file', 'hardlink') and 'sha256' in target:
+                 result[path] = {**entry, 'bytes': target['bytes'], 'sha256': target['sha256']}

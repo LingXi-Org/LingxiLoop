@@ -1,0 +1,89 @@
+{
+  "status": "prepared-not-executed-against-registry",
+  "change": "monotonic ancestor hints; only merge_layer changed; original remove_path/whiteout/opaque semantics retained",
+  "originalScriptSha256": "9e1cd519ec515cc804050676447113a2362f16fcbb380ea9674aa069b99230a3",
+  "finalScriptSha256": "de5d755179a6cb715fe9537db51cd24a23725d2677b74a2b61cf4f9ee926d648",
+  "tests": {
+    "passed": 16,
+    "failed": 0,
+    "networkRequests": 0
+  },
+  "registryRequests": 0,
+  "productionRequests": 0,
+  "providerRequests": 0,
+  "files": [
+    {
+      "path": "FAILURE-MODEL.md",
+      "bytes": 3759,
+      "sha256": "dfba34fff8fdb0e7a303cb4e9bbcef310bfe6648dfda7862848f6c3d540bb99c"
+    },
+    {
+      "path": "audit.py",
+      "bytes": 23119,
+      "sha256": "de5d755179a6cb715fe9537db51cd24a23725d2677b74a2b61cf4f9ee926d648"
+    },
+    {
+      "path": "audit-before-ancestor.py",
+      "bytes": 22652,
+      "sha256": "9e1cd519ec515cc804050676447113a2362f16fcbb380ea9674aa069b99230a3"
+    },
+    {
+      "path": "test_audit.py",
+      "bytes": 10859,
+      "sha256": "bf1e882bcafe045956ff5f49c0bd3c9140a1ae27039a8f6de8915ada2a6c7170"
+    },
+    {
+      "path": "README.md",
+      "bytes": 7952,
+      "sha256": "9d5ea05554f007e2cbfe71efbedb1e81cb63464865acdedce7a7125425fb79ae"
+    },
+    {
+      "path": "local-tests.log",
+      "bytes": 112,
+      "sha256": "f1f13abad0113a87f764e7a23cb3bd05ed2b3921bcfde1d822ab688df8c43004"
+    },
+    {
+      "path": "local-tests-initial-red.log",
+      "bytes": 653,
+      "sha256": "5734265e9a7938ea62e1dd9a94a6663be47ac01299cc6b8b90f26452d4d98602"
+    },
+    {
+      "path": "local-reference-check.json",
+      "bytes": 780,
+      "sha256": "c959f0432625b22b735040ca3262f2669c4ef7706321941c3889a36494fd8d79"
+    },
+    {
+      "path": "handoff-before-ancestor.json",
+      "bytes": 1339,
+      "sha256": "025d895a37681a95a8af780fccf0c9d1823cd325b5d871a9e11f33e5ed37a971"
+    },
+    {
+      "path": "ancestor-red.log",
+      "bytes": 646,
+      "sha256": "c3b52df9cde69b23286726f5c61ca1e5d16bfbac4f9b02db24eb8aef33f85547"
+    },
+    {
+      "path": "ancestor-green.log",
+      "bytes": 115,
+      "sha256": "ebd7850d88cee2a4a37cacd13b1fcd49ec03f632fa0eb34ca89592877f8ceffa"
+    },
+    {
+      "path": "ancestor-performance.json",
+      "bytes": 1792,
+      "sha256": "a073bf10283f0639d95c95e361e79ab2e02a3f77a5b627b860ddd02ad83244e3"
+    },
+    {
+      "path": "benchmark_ancestor.py",
+      "bytes": 2614,
+      "sha256": "55606c4c4f9a7b81760cf0fd289901ca94c1290636d4a0c80a5bdd6772ab5dd6"
+    },
+    {
+      "path": "ancestor-delta.patch",
+      "bytes": 1202,
+      "sha256": "13ff1d8e0cd0cebbe4e723dd7adbfe5b3db3c6b981e0a5a4d66d3a64b1d00807"
+    }
+  ],
+  "targetIndexDigest": null,
+  "targetCommit": null,
+  "old40kBenchmarkExecuted": false
+}

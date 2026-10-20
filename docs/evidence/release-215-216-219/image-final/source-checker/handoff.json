@@ -1,0 +1,62 @@
+{
+  "status": "prepared-local-source-only; final-image-input-not-yet-available",
+  "reviewedCopyPolicyCommit": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "toolSha256": "4420a376bc0a758302b1a13ad08fdee6033de28a80c103a05ea5635363b63486",
+  "tests": {
+    "passed": 9,
+    "failed": 0,
+    "networkRequests": 0
+  },
+  "registryRequests": 0,
+  "productionRequests": 0,
+  "providerRequests": 0,
+  "frozenAuditorSha256Unchanged": "2507419a202bec96f4566a1c2bd62c584a128d52f8cb81d913ac6f56ae7aaf6f",
+  "sourcePlan": {
+    "expectedImagePaths": 521,
+    "uniqueGitFiles": 519,
+    "migrationFiles": 48,
+    "imageMatchClaimed": false
+  },
+  "files": [
+    {
+      "path": "check.py",
+      "bytes": 14536,
+      "sha256": "4420a376bc0a758302b1a13ad08fdee6033de28a80c103a05ea5635363b63486"
+    },
+    {
+      "path": "test_check.py",
+      "bytes": 8189,
+      "sha256": "111c6ce31cb0802a515db2d986c45f85a196e50e9a24bef3a168200d299f96e8"
+    },
+    {
+      "path": "FAILURE-MODEL.md",
+      "bytes": 2260,
+      "sha256": "a239a2b73de9d2ee63f84406e1e3c82a8858ea5039854eb257e64c8353e3dd79"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5985,
+      "sha256": "2f215c737420218a0073fe50ac8b0c2e52dd2f67c59d7210944f5b5f64c64846"
+    },
+    {
+      "path": "reviewed-copy-policy.json",
+      "bytes": 419,
+      "sha256": "f119077614521cb5d1566576ed36b8b1ec20921112327bfbc02715dd3df92749"
+    },
+    {
+      "path": "d107-source-plan.json",
+      "bytes": 161632,
+      "sha256": "85f6725b4ef35828958439630d2361fead268ad7af0bd6c4d6a361649b5f2ac7"
+    },
+    {
+      "path": "local-tests.log",
+      "bytes": 107,
+      "sha256": "d9165423ba19b58e8a6b71c86ee510ee02fb375591fa327c9cc0cbb307b95318"
+    },
+    {
+      "path": "local-tests-initial-warnings.log",
+      "bytes": 2171,
+      "sha256": "0dd076f567c1a2996b90e9bfcd178f8eccbf73bfa162c7ae3346fe7f7d5a18d5"
+    }
+  ]
+}

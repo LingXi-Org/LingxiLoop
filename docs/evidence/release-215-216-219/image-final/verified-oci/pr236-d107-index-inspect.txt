@@ -1,0 +1,15 @@
+Name:      ghcr.io/lingxi-org/lingxiloop-server:d1075e35e16721979b484c2d9e33eeb56468ce9d
+MediaType: application/vnd.oci.image.index.v1+json
+Digest:    sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69
+           
+Manifests: 
+  Name:        ghcr.io/lingxi-org/lingxiloop-server:d1075e35e16721979b484c2d9e33eeb56468ce9d@sha256:1c437ff4f2b2f36055fddcf179460963d9f95147406989b48355a0020e4bf862
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/amd64
+               
+  Name:        ghcr.io/lingxi-org/lingxiloop-server:d1075e35e16721979b484c2d9e33eeb56468ce9d@sha256:c8096361e0ce9432643f3160f47f9fdf9d1625c291164dd3aeee0206540cc421
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    vnd.docker.reference.digest: sha256:1c437ff4f2b2f36055fddcf179460963d9f95147406989b48355a0020e4bf862
+    vnd.docker.reference.type:   attestation-manifest

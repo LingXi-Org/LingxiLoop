@@ -1,0 +1,20 @@
+{
+  "recordedAt": "2026-10-20T11:36:20.957654+00:00",
+  "attempts": [
+    {
+      "action": "gh run view final integration log after workflow terminal, concurrently with another job log read",
+      "result": "failed to get run log: zip: not a valid zip file",
+      "authorizationDenied": false,
+      "causeEstablished": false,
+      "resolution": "after other log command finished, one sequential read succeeded; final raw integration log retained"
+    },
+    {
+      "action": "docker buildx imagetools inspect final source tag",
+      "result": "mkdir /home/agent/.docker/buildx: read-only file system; no image metadata obtained",
+      "authorizationDenied": false,
+      "resolution": "set only BUILDX_CONFIG to owned writable temporary state directory; unchanged existing credential configuration; immutable metadata read succeeded"
+    }
+  ],
+  "productionActionsAttempted": false,
+  "uncertainMutations": false
+}

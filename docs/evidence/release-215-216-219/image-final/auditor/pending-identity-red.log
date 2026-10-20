@@ -1,0 +1,14 @@
+test_equal_valued_replacement_uses_object_identity (test_audit.AuditTests.test_equal_valued_replacement_uses_object_identity) ... FAIL
+
+======================================================================
+FAIL: test_equal_valued_replacement_uses_object_identity (test_audit.AuditTests.test_equal_valued_replacement_uses_object_identity)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tmp/lingxi-225-219-preparation/final-image-audit/test_audit.py", line 216, in test_equal_valued_replacement_uses_object_identity
+    self.assertEqual(old.target_reads, 1)
+AssertionError: 2 != 1
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

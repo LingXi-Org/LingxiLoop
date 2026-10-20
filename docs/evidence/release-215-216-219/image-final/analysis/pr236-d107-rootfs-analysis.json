@@ -1,0 +1,302 @@
+{
+  "sourceCommit": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "indexDigest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+  "inputInventorySha256": "3d537b85a17d2dd22790264678a83ce64e147f2f0192f4e2bfda40d666f8c96a",
+  "analysisScriptSha256": "482dc9b07f943caeab8eb91d0c9af91aa897a0b3ceb372a2dbd0409c0da43578",
+  "scope": "regular-file path/extension classification only; no content or credentials read beyond verified metadata",
+  "regions": {
+    "app/server/": {
+      "files": 472,
+      "regularFileBytes": 3198675
+    },
+    "app/src/": {
+      "files": 20,
+      "regularFileBytes": 76040
+    },
+    "app/third_party/zcode/": {
+      "files": 29,
+      "regularFileBytes": 1182142
+    },
+    "app/dist/": {
+      "files": 1207,
+      "regularFileBytes": 66290700
+    },
+    "app/node_modules/": {
+      "files": 25234,
+      "regularFileBytes": 243634898
+    }
+  },
+  "dependencyCategories": {
+    "sourceMaps": {
+      "files": 6050,
+      "regularFileBytes": 43257857
+    },
+    "testOrFixtureDirectories": {
+      "files": 710,
+      "regularFileBytes": 3857308
+    },
+    "docOrExampleDirectories": {
+      "files": 64,
+      "regularFileBytes": 321510
+    },
+    "markdown": {
+      "files": 481,
+      "regularFileBytes": 3087136
+    }
+  },
+  "categoryOverlap": true,
+  "categoriesAreDeletionProof": false,
+  "productOwnedCandidatePaths": [],
+  "productOwnedCandidateScanExhaustive": false,
+  "hardlinks": "excluded from regular-file categories; logical bytes are reported separately in the verified receipt",
+  "largestFiles": [
+    {
+      "bytes": 124827920,
+      "path": "usr/local/bin/node"
+    },
+    {
+      "bytes": 33974784,
+      "path": "app/node_modules/@napi-rs/canvas-linux-x64-gnu/skia.linux-x64-gnu.node"
+    },
+    {
+      "bytes": 30315608,
+      "path": "app/node_modules/@napi-rs/canvas-linux-x64-musl/skia.linux-x64-musl.node"
+    },
+    {
+      "bytes": 11427952,
+      "path": "app/node_modules/@esbuild/linux-x64/bin/esbuild"
+    },
+    {
+      "bytes": 6809944,
+      "path": "usr/bin/python3.11"
+    },
+    {
+      "bytes": 5608910,
+      "path": "app/node_modules/js-tiktoken/dist/index.cjs"
+    },
+    {
+      "bytes": 5600042,
+      "path": "app/node_modules/js-tiktoken/dist/index.js"
+    },
+    {
+      "bytes": 5466926,
+      "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs.map"
+    },
+    {
+      "bytes": 5320747,
+      "path": "opt/yarn-v1.22.22/lib/cli.js"
+    },
+    {
+      "bytes": 4742424,
+      "path": "usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+    },
+    {
+      "bytes": 3804464,
+      "path": "usr/bin/perl"
+    },
+    {
+      "bytes": 3790768,
+      "path": "app/dist/assets/mermaid-HWGCJPDP-D8DOLF3i.js"
+    },
+    {
+      "bytes": 2399899,
+      "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.mjs.map"
+    },
+    {
+      "bytes": 2395538,
+      "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"
+    },
+    {
+      "bytes": 2344914,
+      "path": "app/dist/starter-avatars/nova.png"
+    },
+    {
+      "bytes": 2342808,
+      "path": "app/dist/starter-avatars/iris.png"
+    },
+    {
+      "bytes": 2325565,
+      "path": "app/node_modules/js-tiktoken/dist/ranks/o200k_base.cjs"
+    },
+    {
+      "bytes": 2325563,
+      "path": "app/node_modules/js-tiktoken/dist/ranks/o200k_base.js"
+    },
+    {
+      "bytes": 2266988,
+      "path": "app/dist/starter-avatars/bram.png"
+    },
+    {
+      "bytes": 2228489,
+      "path": "app/node_modules/pdfjs-dist/build/pdf.worker.mjs"
+    },
+    {
+      "bytes": 2209528,
+      "path": "usr/lib/x86_64-linux-gnu/libgnutls.so.30.34.3"
+    },
+    {
+      "bytes": 2190440,
+      "path": "usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30"
+    },
+    {
+      "bytes": 2167063,
+      "path": "app/dist/starter-avatars/atlas.png"
+    },
+    {
+      "bytes": 2120167,
+      "path": "app/dist/everyone.png"
+    },
+    {
+      "bytes": 2067760,
+      "path": "usr/lib/x86_64-linux-gnu/libapt-pkg.so.6.0.0"
+    },
+    {
+      "bytes": 1926232,
+      "path": "usr/lib/x86_64-linux-gnu/libc.so.6"
+    },
+    {
+      "bytes": 1843792,
+      "path": "usr/lib/x86_64-linux-gnu/libdb-5.3.so"
+    },
+    {
+      "bytes": 1792040,
+      "path": "usr/lib/x86_64-linux-gnu/libunistring.so.2.2.0"
+    },
+    {
+      "bytes": 1437848,
+      "path": "usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6"
+    },
+    {
+      "bytes": 1332480,
+      "path": "usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.1"
+    }
+  ],
+  "largestPackages": [
+    {
+      "path": "app/node_modules/@napi-rs/canvas-linux-x64-gnu",
+      "regularBytes": 33975707
+    },
+    {
+      "path": "app/node_modules/@napi-rs/canvas-linux-x64-musl",
+      "regularBytes": 30316535
+    },
+    {
+      "path": "app/node_modules/pdfjs-dist",
+      "regularBytes": 24272468
+    },
+    {
+      "path": "app/node_modules/js-tiktoken",
+      "regularBytes": 22432828
+    },
+    {
+      "path": "app/node_modules/openai",
+      "regularBytes": 12468421
+    },
+    {
+      "path": "app/node_modules/@opentelemetry/semantic-conventions",
+      "regularBytes": 12006437
+    },
+    {
+      "path": "app/node_modules/@opentelemetry/exporter-metrics-otlp-http",
+      "regularBytes": 11971470
+    },
+    {
+      "path": "app/node_modules/@esbuild/linux-x64",
+      "regularBytes": 11428465
+    },
+    {
+      "path": "app/node_modules/@opentelemetry/otlp-transformer",
+      "regularBytes": 9638682
+    },
+    {
+      "path": "app/node_modules/@dicebear/styles",
+      "regularBytes": 7745477
+    },
+    {
+      "path": "app/node_modules/zod",
+      "regularBytes": 5797652
+    },
+    {
+      "path": "app/node_modules/openlit",
+      "regularBytes": 3684168
+    },
+    {
+      "path": "app/node_modules/@aws-sdk/client-s3",
+      "regularBytes": 3295245
+    },
+    {
+      "path": "app/node_modules/protobufjs",
+      "regularBytes": 3053104
+    },
+    {
+      "path": "app/node_modules/@lyyzka/lingxios",
+      "regularBytes": 2691778
+    },
+    {
+      "path": "app/node_modules/@types/node",
+      "regularBytes": 2534873
+    },
+    {
+      "path": "app/node_modules/@opentelemetry/sdk-metrics",
+      "regularBytes": 2430671
+    },
+    {
+      "path": "app/node_modules/lib0",
+      "regularBytes": 2405826
+    },
+    {
+      "path": "app/node_modules/yjs",
+      "regularBytes": 2307010
+    },
+    {
+      "path": "app/node_modules/mammoth",
+      "regularBytes": 2171440
+    },
+    {
+      "path": "app/node_modules/@smithy/core",
+      "regularBytes": 1780749
+    },
+    {
+      "path": "app/node_modules/undici",
+      "regularBytes": 1642075
+    },
+    {
+      "path": "app/node_modules/@opentelemetry/sdk-trace",
+      "regularBytes": 1381806
+    },
+    {
+      "path": "app/node_modules/parse5",
+      "regularBytes": 1236424
+    },
+    {
+      "path": "app/node_modules/@opentelemetry/api",
+      "regularBytes": 1218213
+    },
+    {
+      "path": "app/node_modules/@opentelemetry/exporter-trace-otlp-http",
+      "regularBytes": 1195854
+    },
+    {
+      "path": "app/node_modules/assistant-stream",
+      "regularBytes": 1188685
+    },
+    {
+      "path": "app/node_modules/ajv",
+      "regularBytes": 1033496
+    },
+    {
+      "path": "app/node_modules/@opentelemetry/resources",
+      "regularBytes": 1024899
+    },
+    {
+      "path": "app/node_modules/cheerio",
+      "regularBytes": 1011246
+    }
+  ],
+  "remainingProofNeeded": [
+    "package-specific dynamic import/resource usage before further removal",
+    "licenses and diagnostic/source-map requirements",
+    "controlled same-cache-policy cold/warm builds and measured peak disk",
+    "configured exact-image readiness/isolation and production short observation"
+  ]
+}

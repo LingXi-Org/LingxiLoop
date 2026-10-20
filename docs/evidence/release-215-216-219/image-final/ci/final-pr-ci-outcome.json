@@ -1,0 +1,29 @@
+{
+  "sourceCommit": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "workflowUrl": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39412540194",
+  "testSummary": {
+    "tests": 353,
+    "passed": 340,
+    "failed": 0,
+    "skipped": 13,
+    "durationMs": 418593.482617
+  },
+  "rawLogSha256": "dfd625556ad938facd896d441810316a627ae15f5d7e67f69100da88241043c6",
+  "skippedCases": [
+    "ok 4 - live provider delivers full learning help and native cards with measured first text and total time # SKIP",
+    "ok 105 - live model uses the product collaboration rules and ends a public specialist chain # SKIP",
+    "ok 109 - [live] homework normal authentication, real production worker, measured models and independent semantic review # SKIP",
+    "ok 171 - the published result outbox acknowledges the original result after receipt recovery # SKIP",
+    "ok 172 - real pinned WuKong recovers invalid receipts and ACK loss without duplicate durable messages # SKIP",
+    "ok 184 - live native memory saves, recalls semantically and extracts long-source tails across rooms # SKIP",
+    "ok 189 - live teacher saves and recalls a checked preference with memory activity # SKIP",
+    "ok 289 - real provider publishes public explanations and a plan through the product worker # SKIP",
+    "ok 304 - real provider honestly declines retired product email and calendar requests # SKIP",
+    "ok 322 - private S3 objects cross nodes, enforce committed size, report missing bytes and transport failures # SKIP set LINGXIOS_TEST_OBJECT_BUCKET and local S3 fixture credentials",
+    "ok 335 - real provider tool turns stream through the product projection and replay # SKIP",
+    "ok 339 - real provider generates, adjusts, continues and exports a visualization through the production Web host # SKIP",
+    "ok 345 - real provider chooses useful visual explanations without a visualization keyword # SKIP"
+  ],
+  "separateLiveContinuity": "Passed 9 behaviors,39 observed HTTP200 calls with measured usage; does not promote all13 skips to passes",
+  "formalLocalEvidence": "../formal358/README.md"
+}

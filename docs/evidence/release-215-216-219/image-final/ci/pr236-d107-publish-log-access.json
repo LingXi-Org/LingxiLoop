@@ -1,0 +1,16 @@
+{
+  "recordedAt": "2026-10-20T11:38:17.134065+00:00",
+  "workflowRun": 39413726289,
+  "jobId": 118601974850,
+  "sourceCommit": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "action": "download publication job raw log",
+  "target": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39413726289/job/118601974850",
+  "status": "denied",
+  "reason": "GitHub job-log API redirected to log storage, which returned Forbidden",
+  "rawSignedRedirectRecorded": false,
+  "priorCliReads": "gh run view --job --log exited0 with empty content; empty logs were rejected as evidence",
+  "furtherRetries": false,
+  "productionMutation": false,
+  "uncertainMutation": false,
+  "availableEvidence": "successful workflow/job REST receipts prove final source and timestamps; independent registry digest/layer/config verification proves final artifact"
+}

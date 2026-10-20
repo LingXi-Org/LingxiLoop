@@ -1,0 +1,59 @@
+{
+  "scope": "synthetic metadata in memory only; no network, layers, production or provider",
+  "measuredOldNew": [
+    {
+      "lower": 0,
+      "added": 4000,
+      "before": {
+        "seconds": 1.18861,
+        "removeCalls": 4000,
+        "mapEntriesVisited": 7998000,
+        "entries": 4000,
+        "inventorySha256": "9e1df25812d97c20d64307aef21b1c983edfe59f79dd60c405a5f99502fcf154"
+      },
+      "after": {
+        "seconds": 0.018621,
+        "removeCalls": 0,
+        "mapEntriesVisited": 0,
+        "entries": 4000,
+        "inventorySha256": "9e1df25812d97c20d64307aef21b1c983edfe59f79dd60c405a5f99502fcf154"
+      },
+      "actualOutputsEqual": true
+    },
+    {
+      "lower": 10000,
+      "added": 2000,
+      "before": {
+        "seconds": 3.377531,
+        "removeCalls": 2000,
+        "mapEntriesVisited": 21999000,
+        "entries": 12000,
+        "inventorySha256": "55f6717916f8526df1ebf52a0e27726a2b0a08a6f29183cee47916d4d9df554a"
+      },
+      "after": {
+        "seconds": 0.035604,
+        "removeCalls": 0,
+        "mapEntriesVisited": 0,
+        "entries": 12000,
+        "inventorySha256": "55f6717916f8526df1ebf52a0e27726a2b0a08a6f29183cee47916d4d9df554a"
+      },
+      "actualOutputsEqual": true
+    }
+  ],
+  "largeOptimizedOnly": {
+    "lower": 0,
+    "added": 40000,
+    "after": {
+      "seconds": 0.178895,
+      "removeCalls": 0,
+      "mapEntriesVisited": 0,
+      "entries": 40000,
+      "inventorySha256": "a422f572b633788dd87ec8f7e54195aa7ae7dc37657c169277797ba430c6a435"
+    },
+    "matchesExactAppendOnlyReference": true,
+    "referenceInventorySha256": "a422f572b633788dd87ec8f7e54195aa7ae7dc37657c169277797ba430c6a435",
+    "old40kExecuted": false,
+    "oldAnalyticalRemoveCalls": 40000,
+    "oldAnalyticalMapEntriesVisited": 799980000
+  }
+}

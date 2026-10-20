@@ -1,0 +1,10 @@
+{
+  "startedAt": "2026-10-20T11:15:56.907061+00:00",
+  "expectedHead": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "priorDispatchesForThisHead": 0,
+  "exactPrCi": 39412540194,
+  "exactPrCiConclusion": "success",
+  "previousDifferentHeadFailure": 39410273533,
+  "productionWritesAuthorized": false,
+  "purpose": "candidate-image-publication-only"
+}
