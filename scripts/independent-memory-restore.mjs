@@ -8,6 +8,7 @@ import {resolve,join,dirname} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {tmpdir} from 'node:os'
 import {Pool} from 'pg'
+import {parseRehearsalLocalURL,ownedDatabaseURL} from './independent-memory-restore-url.mjs'
 import {buildMemoryBackupPlan,parseMemoryBackupReceipt} from './verify-memory-backup.mjs'
 const root=fileURLToPath(new URL('../',import.meta.url)),run=promisify(execFile)
 const SOURCE='c6c47bddeabb4488f9fe93391f15c695a528260c',APP='ac9069460e99a20fac7f2c3de87c60f2bec66924'
@@ -18,8 +19,7 @@ for(let i=2;i<process.argv.length;i++){
 }
 for(const key of ['--output','--source-tar','--target-package'])assert.ok(options[key]&&resolve(options[key])===options[key],`${key} absolute path required`)
 assert.equal(Boolean(options['--target-tar']),Boolean(options['--target-registry']))
-const input=new URL(process.env.RESTORE_REHEARSAL_LOCAL_URL??'')
-assert.equal(input.hostname,'127.0.0.1');assert.equal(input.username,'postgres');assert.equal(input.pathname,'/postgres');assert.ok(input.password)
+const input=parseRehearsalLocalURL(process.env.RESTORE_REHEARSAL_LOCAL_URL??'')
 const output=options['--output'];await mkdir(output,{mode:0o700}) // Existing output is never reused.
 const nonce=randomBytes(6).toString('hex'),owner=`restore216-${nonce}`,container=`lingxiloop-restore216-${nonce}`
 const sourceDatabase=`restore216_${nonce}_source_test`,targetDatabase=`restore216_${nonce}_target_test`
@@ -37,7 +37,7 @@ const safeEnv={PATH:process.env.PATH,DOTENV_CONFIG_PATH:'/dev/null',NODE_ENV:'te
  REDIS_URL:'redis://127.0.0.1:9/15',WUKONG_USER_TOKEN_SECRET:'memory-isolated-user-token',LINGXILOOP_GATEWAY_HMAC_SECRET:'memory-isolated-gateway',
  LINGXILOOP_INVITE_BASE_URL:'http://127.0.0.1:9',OPEN_NOTEBOOK_ENABLED:'false',DATABASE_POOL_MAX:'3',RESTORE_REHEARSAL_CHILD:'1'}
 const tools=new Set();let admin,source,target,work,phase='prepare',pgImage
-function dbURL(name){const url=new URL(input);url.port=evidence.port;url.pathname='/'+name;return url.href}
+function dbURL(name){return ownedDatabaseURL(input,evidence.port,name)}
 async function child(task,checkout,database){
  const result=await invoke(process.execPath,['--import',join(root,'node_modules/tsx/dist/loader.mjs'),join(root,'scripts/independent-memory-restore-step.mjs'),task,checkout],
  {env:{...safeEnv,DATABASE_URL:dbURL(database)},timeout:120000}).catch(error=>({stdout:error.stdout??'',stderr:error.stderr??'',failed:true}))
@@ -93,7 +93,7 @@ async function tool(args,{command,onSnapshot}={}){
  })
 }
 try{
- evidence.driverHashes={main:hash(await readFile(fileURLToPath(import.meta.url))),step:hash(await readFile(join(root,'scripts/independent-memory-restore-step.mjs')))}
+ evidence.driverHashes={main:hash(await readFile(fileURLToPath(import.meta.url))),step:hash(await readFile(join(root,'scripts/independent-memory-restore-step.mjs'))),urlGuard:hash(await readFile(join(root,'scripts/independent-memory-restore-url.mjs')))}
  const plan=await buildMemoryBackupPlan({sourceSha:SOURCE,attempt:`independent-${nonce}`})
  const sourceInputs=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db','server/src/modules/memory/public.ts']
  assert.equal((await invoke('git',['diff','--name-only',SOURCE,APP,'--',...sourceInputs])).stdout,'')

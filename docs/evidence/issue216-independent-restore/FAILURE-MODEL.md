@@ -42,3 +42,14 @@ Failures to demonstrate or reject:
 This work adds rehearsal scripts/evidence only, with no product migrations, lockfile or runtime changes.
 It does not qualify production downtime, external IM/object-store consistency, provider quality, or a
 rollback to schema12 after47 commits. That boundary remains compatible fix-forward only.
+
+Independent review follow-up, before the isolation fix: WHATWG URL.hostname/port
+checks do not constrain pg-connection-string query options. The old dbURL clone
+retains `?host=`/`?port=`, which pg prioritizes over the owned URL authority. A pure
+parser test must first demonstrate this without opening any socket. Reject all
+query/fragment components in both entry points, accept only the PostgreSQL scheme,
+and rebuild each actual connection from a fixed loopback URL with the owned port
+and database, transferring only the pre-existing local test user/password. Verify
+host/port/user/database through the actual pg parser, including percent-encoded
+passwords, then repeat the formal-package rehearsal. Existing receipts used no
+query/fragment and remain valid but do not test this newly identified boundary.
