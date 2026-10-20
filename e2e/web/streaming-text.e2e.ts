@@ -169,9 +169,28 @@ test.describe('Official element integration', {
           if (performance.now() - start > 3000) throw new Error('Text did not arrive')
           await frame()
         }
+        return start
       }
-      await step('甲乙丙丁')
+      const initialStart = await step('甲乙丙丁')
       const old = document.querySelectorAll('#body [data-streaming-fresh]')[2]
+      const initialCaret = document.querySelector('#body [data-streaming-caret]')
+      if (!old || !initialCaret) throw new Error('Initial streaming token or caret is missing')
+      const blue = getComputedStyle(initialCaret).backgroundColor
+      const foreground = getComputedStyle(old.parentElement!).color
+      const arrivalColor = getComputedStyle(old).color
+      // Text arrival can precede the fresh registry and its foreground-to-blue
+      // transition. Establish blue before testing the later blue-to-foreground
+      // transition, within the initial step's existing deadline.
+      while (true) {
+        if (!old.isConnected || document.querySelectorAll('#body [data-streaming-fresh]')[2] !== old) {
+          throw new Error('Initial streaming token was replaced before reaching blue')
+        }
+        if (old.getAttribute('data-streaming-fresh') === 'true' && getComputedStyle(old).color === blue) break
+        if (performance.now() - initialStart > 3000) throw new Error('Initial fresh token did not reach blue')
+        await frame()
+      }
+      const blueReadyMs = Math.round(performance.now() - initialStart)
+      const initialFresh = [...document.querySelectorAll('#body [data-streaming-fresh="true"]')].map(n => n.textContent)
       const colors = new Set<string>()
       const before = getComputedStyle(old).color
       // Observe the real transition while the SDK reveals the appended text.
@@ -194,13 +213,17 @@ test.describe('Official element integration', {
       observer.disconnect()
       const stableBlue = [...stable.querySelectorAll('[data-streaming-fresh="true"]')]
         .some(node => getComputedStyle(node).color !== getComputedStyle(node.parentElement!).color)
-      return { colors: [...colors], before, end, receivedMixed, identity, fresh, mutations, stableBlue,
+      return { colors: [...colors], arrivalColor, blueReadyMs, before, blue, foreground, initialFresh, end, receivedMixed, identity, fresh, mutations, stableBlue,
         visibleCarets: [...document.querySelectorAll('[data-streaming-caret]')].filter(n => n.getBoundingClientRect().width > 0).length }
     })
     console.log('Chinese transition and stable block', JSON.stringify(result))
+    expect(result.initialFresh).toEqual(['丙', '丁'])
+    expect(result.before).toBe(result.blue)
+    expect(result.before === result.foreground).toBe(false)
     expect(result.receivedMixed).toBe(true)
     expect(result.colors.length).toBeGreaterThan(3)
     expect(result.before === result.end).toBe(false)
+    expect(result.end).toBe(result.foreground)
     expect(result.identity).toBe(true)
     expect(result.fresh).toEqual(['中', '文'])
     expect(result.mutations).toBe(0)
