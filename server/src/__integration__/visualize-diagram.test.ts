@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { after, before, test } from 'node:test'
 import type { ActionContext } from '@lyyzka/lingxios'
+import { withVisualizeAuthoringFixture } from './_visualize-authoring-fixture.js'
 import { pool } from '../db/pool.js'
 import { visualizeTools } from '../agent-runtime/visualize-tools.js'
 import { visualizeSkill } from '../agent-runtime/visualize-skill.js'
@@ -31,10 +32,10 @@ before(async () => {
 after(async () => { await teardownAll() })
 const diagram = { kind: 'sequence', title: 'Process', nodes: [{ id: 'input', label: 'Input' }, { id: 'output', label: 'Output' }] }
 function context(signal = AbortSignal.timeout(10000)): ActionContext {
-  return { database: pool, signal, action: { action: 'visualize.diagram' },
+  return withVisualizeAuthoringFixture({ database: pool, signal, action: { action: 'visualize.diagram' },
     work: { id: runId, tenantId: companyId, agentId, principalId: userId, kind: 'turn', lane: 'interactive', sessionId: channelId,
       fence: 1, homeEpoch: 1, triggerRef: 'diagram-request', meta: { conversationId: channelId } },
-  } as unknown as ActionContext
+  } as unknown as ActionContext)
 }
 const count = async () => (await pool.query('SELECT count(*)::int AS count FROM im_visualize_documents')).rows[0].count
 

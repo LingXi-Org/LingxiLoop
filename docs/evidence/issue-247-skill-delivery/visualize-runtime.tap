@@ -1,0 +1,12 @@
+✔ the native skill and reference tool preserve the pinned upstream authoring contract (8.160789ms)
+✔ references remain literal final text and cannot mount during preview or inside code examples (5.160407ms)
+✔ actual pinned render.py produces an isolated standalone HTML with embedded bundled D3 (147.788888ms)
+✔ widget model context is sorted, bounded by complete entries and cannot close its untrusted wrapper (15.557644ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 539.589701

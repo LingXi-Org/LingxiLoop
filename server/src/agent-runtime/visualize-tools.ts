@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { createHash } from 'node:crypto'
 import { fromMarkdown } from 'mdast-util-from-markdown'
+import { NoEffectError, skillIndex } from '@lyyzka/lingxios'
 import type { ActionContext, RunVerificationContext, ToolDefinition, VerificationRecord } from '@lyyzka/lingxios'
 import { nativeTool, authorizeAudienceRead, compareResource } from '../agents/tools.js'
 import { productConversationId } from './identity.js'
@@ -8,7 +9,7 @@ import { readAuthorizedVisualizeDocument, saveVisualizeDocument, validateVisuali
 import { HttpError } from '../http/errors.js'
 import { DiagramInputError, sequenceDiagramSchema, renderSequenceDiagram } from '../im/visualize-diagram.js'
 import { NumericChartError, numericChartSchema, renderNumericChart } from '../im/visualize-numeric.js'
-import { readVisualizeReference } from './visualize-skill.js'
+import { readVisualizeReference, visualizeSkill } from './visualize-skill.js'
 import { renderVisualizeStandalone } from './visualize-export.js'
 import { visualizeReferences } from './visualize-projection.js'
 import { projectGenUiReferences } from '../../../src/features/chat/visualize/zcode/gen-ui/domain/references.js'
@@ -21,6 +22,11 @@ const scope = (context: Pick<ActionContext, 'work'>) => ({ companyId: context.wo
 async function authorize(context: Pick<ActionContext, 'work' | 'database'>) {
   await authorizeAudienceRead(context, { action: 'conversation:read', resource: { type: 'conversation', id: productConversationId(context.work) } })
 }
+async function activateAuthoring(context: ActionContext) {
+  if (!context.activateSkillDelivery) throw new NoEffectError('skill delivery activation is unavailable')
+  const { name,version,hash } = skillIndex(visualizeSkill)
+  await context.activateSkillDelivery({ name,version,hash })
+}
 export const visualizeTools: ToolDefinition[] = [
   nativeTool('visualize.read_reference', z.object({ path: z.string().max(200) }).strict(), {
     description: 'Read a complete unchanged visualize skill reference by its skill-relative path, e.g. SKILL.md, references/api.md, references/styles.md, tweak.md, widgets/calendar.md or examples/calendar.html. No arbitrary filesystem access.',
@@ -29,7 +35,7 @@ export const visualizeTools: ToolDefinition[] = [
   }),
   nativeTool('visualize.save', z.object({ name, html: z.string().min(1).max(5_000_000) }).strict(), {
     description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Load the visualize skill first. Derive numeric labels and decisions from the same computed data as the plot; check branches, units and same-series differences against the original inputs. name is lowercase-hyphenated without .html. Returns the actual authorized absolute path for a final ::visualize JSON reference; read back with visualize.read and reconcile calculations, labels and final prose before delivery. Saving verifies storage, not numeric correctness. Never send a full HTML document or unfinished script.',
-    effect: 'transaction', approval: false, authorize,
+    effect: 'transaction', approval: false, authorize, semanticVersion: '2',
     async execute(context, input) {
       try { validateVisualizeFragment(input.name, input.html) }
       catch (error) {
@@ -39,21 +45,22 @@ export const visualizeTools: ToolDefinition[] = [
         return { ok: false, code: 'invalid_arguments', executionState: 'no_effect',
           error: 'Expected a literal HTML fragment under 5 MB, not a full document. Remove <!doctype>, html, head and body wrappers; keep the complete style/script with the fragment. Use a lowercase-hyphenated name.' }
       }
+      await activateAuthoring(context)
       const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
-        name: input.name, html: input.html, database: context.database as Queryable })
+        name: input.name, html: input.html, requestVersion: context.requestVersion!, database: context.database as Queryable })
       return { ok: true, value: { path: document.path, bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex') } }
     },
     async verify(context, input, value) {
       await authorize(context)
       const saved = z.object({ path }).passthrough().parse(value)
-      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path })
+      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path }, context.database as Queryable)
       const hash = (html: string) => createHash('sha256').update(html).digest('hex')
       return compareResource(`visualize:${saved.path}`, { sha256: hash(input.html) }, { sha256: hash(document.html) })
     },
   }),
   nativeTool('visualize.chart', z.object({ name, chart: numericChartSchema }).strict(), {
     description: 'Create and save a bounded static numeric chart from supplied data, without authoring HTML or expressions. Use linear for intercept+slope*x comparisons with an explicit lower/higher preference and common units; optional preferenceBands shades interval interiors using computed intersections (intervals must remain distinct at 0.001 SVG units and distinct functions must remain distinguishable at interval midpoints); use trend for ordered observations and optional differences between named base series. Plots, tables, intersections and decisions use the same unrounded calculations. Up to 6 base series, 60 periods or 12 comparison samples; unique labels and finite inputs within +/-1e12, computed magnitudes <=1e15. Percent changes need a positive previous value. Return the actual saved reference, read back with visualize.read, and use the returned calculations in prose. This does not establish that the supplied data or model interpretation is correct. Other visualizations can still use visualize.save.',
-    effect: 'transaction', approval: false, authorize,
+    effect: 'transaction', approval: false, authorize, semanticVersion: '2',
     async execute(context, input) {
       context.signal.throwIfAborted()
       let rendered: ReturnType<typeof renderNumericChart>
@@ -65,15 +72,16 @@ export const visualizeTools: ToolDefinition[] = [
       }
       validateVisualizeFragment(input.name, rendered.html)
       context.signal.throwIfAborted()
+      await activateAuthoring(context)
       const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
-        name: input.name, html: rendered.html, database: context.database as Queryable })
+        name: input.name, html: rendered.html, requestVersion: context.requestVersion!, database: context.database as Queryable })
       return { ok: true, value: { path: document.path, reference: `::visualize${JSON.stringify({ path: document.path })}`,
         bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex'), summary: rendered.summary } }
     },
     async verify(context, input, value) {
       await authorize(context)
       const saved = z.object({ path }).passthrough().parse(value)
-      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path })
+      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path }, context.database as Queryable)
       const expected = renderNumericChart(input.chart, context.signal).html
       const hash = (html: string) => createHash('sha256').update(html).digest('hex')
       return compareResource(`visualize:${saved.path}`, { sha256: hash(expected) }, { sha256: hash(document.html) })
@@ -81,7 +89,7 @@ export const visualizeTools: ToolDefinition[] = [
   }),
   nativeTool('visualize.diagram', z.object({ name, diagram: sequenceDiagramSchema }).strict(), {
     description: 'Create and save a bounded static vertical sequence diagram from 2–12 ordered nodes, without authoring HTML or pixel coordinates. Supply unique lowercase node IDs, labels and optional detail; optional edges must be the complete adjacent forward chain in node order. Node heights follow wrapped text in normal document flow; connectors occupy the gaps. Arbitrary graphs, branches, cycles and spatial layouts are unsupported: use a different suitable visualization or explain the limitation. Returns the actual saved reference. Read back with visualize.read; supplied meaning and order still require checking. Ordinary prose, code and visualize.save remain valid.',
-    effect: 'transaction', approval: false, authorize,
+    effect: 'transaction', approval: false, authorize, semanticVersion: '2',
     async execute(context, input) {
       context.signal.throwIfAborted()
       let rendered: ReturnType<typeof renderSequenceDiagram>
@@ -93,15 +101,16 @@ export const visualizeTools: ToolDefinition[] = [
       }
       validateVisualizeFragment(input.name, rendered.html)
       context.signal.throwIfAborted()
+      await activateAuthoring(context)
       const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
-        name: input.name, html: rendered.html, database: context.database as Queryable })
+        name: input.name, html: rendered.html, requestVersion: context.requestVersion!, database: context.database as Queryable })
       return { ok: true, value: { path: document.path, reference: `::visualize${JSON.stringify({ path: document.path })}`,
         bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex'), summary: rendered.summary } }
     },
     async verify(context, input, value) {
       await authorize(context)
       const saved = z.object({ path }).passthrough().parse(value)
-      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path })
+      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path }, context.database as Queryable)
       const expected = renderSequenceDiagram(input.diagram, context.signal).html
       const hash = (html: string) => createHash('sha256').update(html).digest('hex')
       return compareResource(`visualize:${saved.path}`, { sha256: hash(expected) }, { sha256: hash(document.html) })
@@ -110,13 +119,13 @@ export const visualizeTools: ToolDefinition[] = [
   nativeTool('visualize.read', z.object({ path }).strict(), {
     description: 'Read back a saved visualization fragment in the current authorized conversation. Use its actual returned path for edits and exports.',
     effect: 'read', approval: false, authorize,
-    async execute(context, input) { return { ok: true, value: await readAuthorizedVisualizeDocument({ ...scope(context), path: input.path }) } },
+    async execute(context, input) { return { ok: true, value: await readAuthorizedVisualizeDocument({ ...scope(context), path: input.path }, context.database as Queryable) } },
   }),
   nativeTool('visualize.export', z.object({ path, name }).strict(), {
     description: 'When the user explicitly asks to export an existing visualization, execute the original render.py and create a downloadable standalone HTML artifact. The upstream exporter requires the source fragment under 1 MB (inline hosting supports up to 5 MB); simplify larger sources first. Replace host-only follow-up/openExternal interactions in the editable fragment first; widgetState/setWidgetState remain supported offline.',
     effect: 'read', approval: false, authorize,
     async execute(context, input) {
-      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: input.path })
+      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: input.path }, context.database as Queryable)
       const bytes = await renderVisualizeStandalone(document.html, input.name, context.signal)
       await authorize(context)
       const artifact = await context.createArtifact({ path: `visualize/${input.name}.html`, mime: 'text/html', bytes })
@@ -155,7 +164,7 @@ export async function verifyVisualizeCandidate(context: RunVerificationContext):
   await authorize(context)
   for (const { reference } of visualizeReferences(context.candidate.body)) {
     context.signal.throwIfAborted()
-    try { await readAuthorizedVisualizeDocument({ ...scope(context), path: reference.path }) }
+    try { await readAuthorizedVisualizeDocument({ ...scope(context), path: reference.path }, context.database as Queryable) }
     catch { return [{ checker, status: 'failed', evidence: { hint: 'The visualization path is unavailable in this conversation. Save and read back the fragment with visualize.save and visualize.read; reference only the returned path.' } }] }
   }
   return [{ checker, status: 'passed', evidence: { references: visualizeReferences(context.candidate.body).length } }]

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { after, before, test } from 'node:test'
 import type { ActionContext } from '@lyyzka/lingxios'
+import { withVisualizeAuthoringFixture } from './_visualize-authoring-fixture.js'
 import { pool } from '../db/pool.js'
 import { visualizeTools } from '../agent-runtime/visualize-tools.js'
 import { visualizeSkill } from '../agent-runtime/visualize-skill.js'
@@ -32,10 +33,10 @@ after(async () => { await teardownAll() })
 const chart = { kind: 'linear', title: 'General plans', inputLabel: 'Quantity', inputUnit: 'units', valueUnit: 'cost', prefer: 'lower',
   domain: { min: 0, max: 20 }, samples: [0, 5, 20], series: [{ label: 'A', intercept: 30, slope: 1 }, { label: 'B', intercept: 0, slope: 4 }] }
 function context(signal = AbortSignal.timeout(10000)): ActionContext {
-  return { database: pool, signal, action: { action: 'visualize.chart' },
+  return withVisualizeAuthoringFixture({ database: pool, signal, action: { action: 'visualize.chart' },
     work: { id: runId, tenantId: companyId, agentId, principalId: userId, kind: 'turn', lane: 'interactive', sessionId: channelId,
       fence: 1, homeEpoch: 1, triggerRef: 'numeric-request', meta: { conversationId: channelId } },
-  } as unknown as ActionContext
+  } as unknown as ActionContext)
 }
 const count = async () => (await pool.query('SELECT count(*)::int AS count FROM im_visualize_documents')).rows[0].count
 

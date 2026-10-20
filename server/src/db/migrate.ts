@@ -35,7 +35,7 @@ async function assertRetiredRuntimeEmpty(client: PoolClient): Promise<void> {
 
 async function runtimeSchema(version: number = releaseVersions.schema) {
   const resources = packageResources()
-  const sql = await readFile(version === LEGACY_RUNTIME_SCHEMA ? resources.schema011 : version===12 ? resources.schema012 : resources.schema, 'utf8')
+  const sql = await readFile(version === LEGACY_RUNTIME_SCHEMA ? resources.schema011 : version===12 ? resources.schema012 : version===13 ? resources.schema013 : resources.schema, 'utf8')
   return { sql, hash: createHash('sha256').update(sql).digest('hex') }
 }
 
@@ -52,7 +52,7 @@ async function applyRuntimeUpgrade(client: PoolClient, runtimeVersion = RUNTIME_
   let current = rows[0]?.version
   if (current !== targetSchema && targetSchema >= 12) {
     if (targetSchema>=13 && process.env.NODE_ENV==='production' && process.env.LINGXIOS_SCHEMA_UPGRADE_DRAINED!=='true') {
-      throw new Error('schema 13 requires verified drain of old Web background capture/schedulers and Workers; set LINGXIOS_SCHEMA_UPGRADE_DRAINED only after that drain')
+      throw new Error(`schema ${targetSchema} requires verified drain of old Web background capture/schedulers and Workers; set LINGXIOS_SCHEMA_UPGRADE_DRAINED only after that drain`)
     }
     await client.query("SET LOCAL lock_timeout='5s'")
     await client.query('LOCK TABLE lingxios.agent_work_items IN SHARE ROW EXCLUSIVE MODE')
@@ -68,7 +68,7 @@ async function applyRuntimeUpgrade(client: PoolClient, runtimeVersion = RUNTIME_
     const resources = packageResources()
     const migrations = current === 9 ? [resources.migration010]
       : current === 10 ? [resources.migration011, resources.migration012, resources.migration013]
-      : current === 11 ? [resources.migration014] : current === 12 ? [resources.migration015] : []
+      : current === 11 ? [resources.migration014] : current === 12 ? [resources.migration015] : current === 13 ? [resources.migration016] : []
     if (!migrations.length || current! > targetSchema) {
       throw new Error(`unsupported LingxiOS schema upgrade from ${current} to ${targetSchema}`)
     }
@@ -192,6 +192,10 @@ export async function migrateDatabase(
   migrationsUrl: URL = MIGRATIONS_URL,
 ): Promise<readonly string[]> {
   const migrations = await loadMigrations(migrationsUrl)
+  const hasDeliveryUpgrade = migrations.some(migration => migration.version===50 && migration.name==='skill_delivery')
+  if (hasDeliveryUpgrade && (releaseVersions.runtime !== '3.6.0' || releaseVersions.schema !== 14)) {
+    throw new Error('0050 requires the formally published LingxiOS 3.6.0/schema14 package')
+  }
   const client = await database.connect()
   const appliedNow: string[] = []
   try {
@@ -218,8 +222,8 @@ export async function migrateDatabase(
     const installsRuntime = migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
     const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
-    const targetSchema = hasContinuityUpgrade ? releaseVersions.schema : hasReliabilityUpgrade ? 12 : LEGACY_RUNTIME_SCHEMA
-    const targetRuntime = hasContinuityUpgrade ? releaseVersions.runtime : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
+    const targetSchema = hasDeliveryUpgrade ? 14 : hasContinuityUpgrade ? 13 : hasReliabilityUpgrade ? 12 : LEGACY_RUNTIME_SCHEMA
+    const targetRuntime = hasDeliveryUpgrade ? '3.6.0' : hasContinuityUpgrade ? '3.5.8' : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
     const cutover = installsRuntime && applied.length < NATIVE_INSTALL_VERSION
     if (cutover) {
       await client.query('BEGIN')
@@ -246,7 +250,13 @@ export async function migrateDatabase(
           await applyRuntimeUpgrade(client,'3.5.6',12)
         }
         if (migration.version === 47 && migration.name === 'memory_continuity') {
-          await applyRuntimeUpgrade(client,releaseVersions.runtime,releaseVersions.schema)
+          await applyRuntimeUpgrade(client,'3.5.8',13)
+        }
+        if (migration.version === 50 && migration.name === 'skill_delivery') {
+          // 0049 is the immutable source boundary; never adopt an unknown native
+          // schema or commit native14 outside the product 0050 transaction.
+          await assertRuntimeCurrent(client,13,'3.5.8')
+          await applyRuntimeUpgrade(client,'3.6.0',14)
         }
         await client.query('SET search_path TO public')
         await client.query(
@@ -301,7 +311,11 @@ export async function assertMigrationsCurrent(
       throw new Error(`database has ${applied.length} migration(s), but ${migrations.length} are required; run \`npm run db:migrate\``)
     }
     if (migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')) {
-      await assertRuntimeCurrent(client)
+      const hasDelivery = migrations.some(migration => migration.version===50 && migration.name==='skill_delivery')
+      const hasContinuity = migrations.some(migration => migration.version===47 && migration.name==='memory_continuity')
+      const hasReliability = migrations.some(migration => migration.version===RELIABILITY_UPGRADE_VERSION && migration.name==='lingxios_3_5_0')
+      await assertRuntimeCurrent(client,hasDelivery ? 14 : hasContinuity ? 13 : hasReliability ? 12 : LEGACY_RUNTIME_SCHEMA,
+        hasDelivery ? '3.6.0' : hasContinuity ? '3.5.8' : hasReliability ? '3.5.6' : LEGACY_RUNTIME_RELEASE)
     }
   } finally {
     client.release()
