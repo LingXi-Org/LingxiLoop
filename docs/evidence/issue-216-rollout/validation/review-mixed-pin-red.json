@@ -1,0 +1,12 @@
+{
+  "head": "8b8739dc6d34cce664b019b366e8efd0e6c1f851",
+  "scope": "actual Compose parser plus exact validatePlan image predicate; not full formal schema13 qualification",
+  "productionCalls": 0,
+  "composeConfigOnly": true,
+  "currentPinPredicateAccepts": true,
+  "resolvedServicesMatchTarget": {
+    "db-migrate": true,
+    "lingxiloop": true,
+    "worker": false
+  }
+}

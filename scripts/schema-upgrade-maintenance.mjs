@@ -8,6 +8,7 @@ import {resolve,isAbsolute} from 'node:path'
 import {fileURLToPath,pathToFileURL} from 'node:url'
 import {validateMemoryBackupPlan,executeMemoryBackup} from './verify-memory-backup.mjs'
 import {createOperations} from './schema-upgrade-komodo.mjs'
+import {assertEffectiveComposePin} from './schema-upgrade-compose.mjs'
 export {createTransport,parseMarker} from './schema-upgrade-komodo.mjs'
 const root=fileURLToPath(new URL('../',import.meta.url)),run=promisify(execFile)
 export const STACKS=['lingxiloop-app-a','lingxiloop-app-b']
@@ -133,7 +134,7 @@ export async function validatePlan(plan) {
  requireThat(equal({...derived,imageDigest:plan.target.imageDigest},plan.target),'Target descriptor mismatch')
  for(const side of ['a','b']){
   const compose=await git(['show',`${plan.pinCommit}:deploy/komodo/lingxiloop-app-${side}/compose.yml`])
-  requireThat(compose.includes(`image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:${plan.target.sha}`),'Manifest commit must pre-pin the exact target image')
+  assertEffectiveComposePin(compose,plan.target.sha)
   requireThat(!compose.includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED'),'Drain acknowledgement must not persist in Compose')
  }
  requireThat((await git(['show','-s','--format=%B',plan.pinCommit])).includes('[skip deploy]'),'Pin commit must suppress automatic rollout')

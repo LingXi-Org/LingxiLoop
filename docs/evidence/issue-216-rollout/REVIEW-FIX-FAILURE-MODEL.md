@@ -1,0 +1,11 @@
+# Review corrections before enabling maintenance
+
+Checkpoint `8b8739dc6d34cce664b019b366e8efd0e6c1f851` has three independently reproduced defects. These corrections are local only; no production/provider requests are authorized by this checkpoint.
+
+1. Both real App Compose files declare the same server image twice, through `x-runtime` and a Worker override. Counting raw occurrences rejects every ordinary release. The effective `db-migrate`, `lingxiloop` and `worker` services must all resolve to one allowed immutable image; repetition of that image is valid.
+2. The maintenance plan only checks whether the target image appears anywhere. A target anchor plus an old Worker override passes that check and is discovered after migration. The same effective-service validator must bind both immutable manifest-commit files to the exact target before execution. Missing services, mutable/interpolated images, mixed overrides or a differing A/B target must fail. Local Compose parsing must not inherit credentials, resolve environment files or invoke Docker deployment operations; parser failure/timeout must fail closed without printing rendered configuration.
+3. Komodo2.3.3 maps nonempty `services` requests to `PullStackService`, `StopStackService` and `DeployStackService` update operations. Comparing against the request enum wrongly treats an already completed operation as uncertain. Derive one exact expected receipt enum from each permitted request. Reject the base enum for a service request, the wrong service enum, stack target or update ID. `RunStackService` retains its enum; `StartStack` remains forbidden and no unknown operation is retried.
+
+Independent red receipts are retained in `validation/review-pin-red.json` and `validation/review-transport-red.json`. They use the actual original exports/manifests and official Komodo2.3.3 source, with mocked transport only. The new owning regressions are written before implementation. The original update-ID drift fixture must use the official initial service enum so it reaches the intended poll instead of failing earlier.
+
+Generated `METADATA_CODE` was independently executed successfully with formal3.5.6/schema12/product46, and its inventory expression passed six positive/negative cases. The nested regex escaping is correct and will be covered, not altered.

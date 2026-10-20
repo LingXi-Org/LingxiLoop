@@ -1,6 +1,7 @@
 // Komodo2.3.3 public API only. Fixed destinations/actions; never emit raw replies.
 import {setTimeout as delay} from 'node:timers/promises'
 import {readFile} from 'node:fs/promises'
+import {assertEffectiveComposePin} from './schema-upgrade-compose.mjs'
 const ORIGIN='https://ops.christmas1314.xyz'
 const APPS=['lingxiloop-app-a','lingxiloop-app-b'],CORE='lingxiloop-core-state'
 const SERVERS=['shanghai-a','shanghai-b'],SERVICES=['lingxiloop','worker']
@@ -49,6 +50,11 @@ export function createTransport({apiKey,apiSecret,signal,fetcher=fetch,wait=dela
   if(operation!=='RunStackService')check(APPS.includes(params.stack)&&Array.isArray(params.services)&&params.services.length>0&&params.services.every(x=>['lingxiloop','worker',...(operation==='PullStack'?['db-migrate']:[])].includes(x)),'Service not allowed')
   else check((params.stack===CORE&&params.service==='postgres'||APPS.includes(params.stack)&&params.service==='db-migrate')&&params.no_deps===true&&params.detach===false&&params.service_ports===false&&params.no_tty===true&&params.pull===false,'One-off isolation required')
   if(operation==='StopStack')check(params.stop_time===150,'Bounded drain grace required')
+  // Komodo2.3.3 helpers/update.rs maps nonempty services to the service enum.
+  // All permitted Pull/Stop/Deploy requests above require nonempty services.
+  const expectedOperation=operation==='RunStackService'?operation:{
+   PullStack:'PullStackService',StopStack:'StopStackService',DeployStack:'DeployStackService',
+  }[operation]
   const stack=await read('GetStack',{stack:params.stack}),stackId=stack?._id?.$oid
   check(ID.test(stackId??''),'Stack identity unavailable')
   let id,submitted=false,complete=false
@@ -59,7 +65,7 @@ export function createTransport({apiKey,apiSecret,signal,fetcher=fetch,wait=dela
    await onProgress({phase:'komodo',status:'pending',operation,stack:params.stack,updateId:id})
    const deadline=Date.now()+(operation==='PullStack'||operation==='DeployStack'?15:7)*60000
    while(true){
-    check(update?._id?.$oid===id&&update.operation===operation&&update.target?.type==='Stack'&&update.target.id===stackId,'Receipt identity mismatch')
+    check(update?._id?.$oid===id&&update.operation===expectedOperation&&update.target?.type==='Stack'&&update.target.id===stackId,'Receipt identity mismatch')
     if(update.status==='Complete'){check(typeof update.success==='boolean','Incomplete terminal receipt');complete=true;check(update.success===true,'Komodo operation failed');await onProgress({phase:'komodo',status:'complete',operation,stack:params.stack,updateId:id});return update}
     check(['InProgress','Queued'].includes(update.status)&&Date.now()<deadline,'Komodo operation did not reach terminal state')
     await wait(2000,undefined,{signal});update=await read('GetUpdate',{id})
@@ -193,8 +199,7 @@ export async function preflightOrdinaryRollout({apiKey,apiSecret,transport}) {
  const expected=[]
  for(const side of ['a','b']){
   const source=await readFile(new URL(`../deploy/komodo/lingxiloop-app-${side}/compose.yml`,import.meta.url),'utf8')
-  const tag=source.match(/image: accel\.way2api\.fun\/ghcr\.io\/lingxi-org\/lingxiloop-server:([a-f0-9]{40})/g)
-  check(tag?.length===1,'One immutable target pin required');expected.push(tag[0].slice(-40))
+  expected.push(assertEffectiveComposePin(source))
  }
  check(expected[0]===expected[1],'App target pins disagree')
  const metadata=await ops.metadata();check(metadata.sha===expected[0]&&Number.isSafeInteger(metadata.schema),'Metadata does not match checked-out manifest pin')

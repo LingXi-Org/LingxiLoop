@@ -71,7 +71,7 @@ test('transport does not retry unknown execute and polls only its returned updat
 test('transport rejects receipt identity drift and refuses unlisted mutations',async()=>{
  const id='d'.repeat(24),sid='e'.repeat(24);let calls=0
  const t=createTransport({apiKey:'fixture',apiSecret:'fixture',wait:async()=>{},fetcher:async url=>{
- calls++;return new Response(JSON.stringify(url.includes('GetStack')?{_id:{$oid:sid}}:url.includes('/execute/')?{_id:{$oid:id},operation:'StopStack',target:{type:'Stack',id:sid},status:'InProgress'}:{_id:{$oid:'f'.repeat(24)},operation:'StopStack',target:{type:'Stack',id:sid},status:'Complete',success:true}))}})
+ calls++;return new Response(JSON.stringify(url.includes('GetStack')?{_id:{$oid:sid}}:url.includes('/execute/')?{_id:{$oid:id},operation:'StopStackService',target:{type:'Stack',id:sid},status:'InProgress'}:{_id:{$oid:'f'.repeat(24)},operation:'StopStackService',target:{type:'Stack',id:sid},status:'Complete',success:true}))}})
  await assert.rejects(t.execute('StopStack',{stack:'lingxiloop-app-a',services:['worker'],stop_time:150}),e=>e.uncertain===true);assert.equal(calls,3)
  const before=calls;await assert.rejects(t.execute('StartStack',{stack:'lingxiloop-app-a'}));assert.equal(calls,before)
 })
@@ -114,4 +114,96 @@ test('SQL state receipts accept only fixed metadata fields and numeric aggregate
  const {validateStateReceipt}=await import('./schema-upgrade-komodo.mjs')
  assert.deepEqual(validateStateReceipt(state()),state())
  for(const value of [{...state(),body:'synthetic memory'}, {...state(),otherClients:'0'}, {...state(),runtime:'secret response text'}, {...state(),migrations:[{version:47,name:'bad text',checksum:hash}]}])assert.throws(()=>validateStateReceipt(value),e=>!e.message.includes('synthetic memory'))
+})
+test('real App manifests with repeated equal pins reach metadata and preserve same-schema ordinary rollout',async()=>{
+ const {readFile}=await import('node:fs/promises')
+ const {preflightOrdinaryRollout}=await import('./schema-upgrade-komodo.mjs')
+ const source=await readFile(new URL('../deploy/komodo/lingxiloop-app-a/compose.yml',import.meta.url),'utf8')
+ const tags=[...source.matchAll(/image: accel\.way2api\.fun\/ghcr\.io\/lingxi-org\/lingxiloop-server:([a-f0-9]{40})/g)].map(x=>x[1])
+ assert.equal(tags.length,2);assert.equal(new Set(tags).size,1)
+ for(const schema of [12,13]){
+  const executes=[]
+  const transport={async read(op,p){
+   if(op==='GetProcedureActionState')return {running:false}
+   if(op==='ListServers')return ['a','b'].map(x=>({id:x.repeat(24),name:'shanghai-'+x,info:{state:'Ok'}}))
+   if(op==='GetStackActionState')return Object.fromEntries(['pulling','deploying','starting','restarting','pausing','unpausing','stopping','destroying'].map(k=>[k,false]))
+   if(op==='GetStack')return {config:{server_id:p.stack.endsWith('-a')?'a'.repeat(24):'b'.repeat(24),repo:'LingXi-Org/LingxiLoop',branch:'main',run_directory:`deploy/komodo/${p.stack}`,auto_update:false,auto_update_all_services:false,commit:''}}
+   if(op==='ListStackServices')return []
+   throw Error('unexpected fixture read')
+  },async execute(op,p){
+   executes.push(op);assert.equal(op,'RunStackService')
+   const metadata=p.service==='db-migrate',name=metadata?'METADATA':'STATE'
+   return {status:'Complete',success:true,logs:[{stdout:`SCHEMA_UPGRADE_${name}=`+JSON.stringify(metadata?{sha:tags[0],schema:13}:state(schema,schema===12?46:48))}]}
+  }}
+  if(schema===12)await assert.rejects(preflightOrdinaryRollout({transport}),/maintenance/)
+  else assert.deepEqual(await preflightOrdinaryRollout({transport}),{sourceSchema:13,targetSchema:13,targetSha:tags[0]})
+  assert.deepEqual(executes,['RunStackService','RunStackService'])
+ }
+})
+test('effective Compose parser accepts actual inherited pins and rejects stale overrides before planning',async()=>{
+ const {readFile}=await import('node:fs/promises')
+ const {assertEffectiveComposePin}=await import('./schema-upgrade-compose.mjs')
+ for(const side of ['a','b']){
+  const source=await readFile(new URL(`../deploy/komodo/lingxiloop-app-${side}/compose.yml`,import.meta.url),'utf8')
+  const pinned=source.replace(/(image: accel\.way2api\.fun\/ghcr\.io\/lingxi-org\/lingxiloop-server:)[a-f0-9]{40}/g,`$1${targetSha}`)
+  assert.equal(assertEffectiveComposePin(pinned,targetSha),targetSha)
+  // Change only the anchor: actual Compose resolves Web/migrator new, Worker old.
+  const mixed=source.replace(/(image: accel\.way2api\.fun\/ghcr\.io\/lingxi-org\/lingxiloop-server:)[a-f0-9]{40}/,`$1${targetSha}`)
+  assert.throws(()=>assertEffectiveComposePin(mixed,targetSha),/pin/)
+  assert.throws(()=>assertEffectiveComposePin(pinned,sha),/pin/)
+  for(const invalid of [
+   pinned.replace('  worker:\n','  other-worker:\n'),
+   pinned.replaceAll(targetSha,'latest'),
+   pinned.replaceAll(targetSha,'${UNTRUSTED_IMAGE_TAG}'),
+   pinned.replace('services:\n','services: [\n'),
+  ])assert.throws(()=>assertEffectiveComposePin(invalid),/Compose|pin/)
+ }
+})
+test('ordinary gate and manifest-commit plan use the same effective-service pin validation',async()=>{
+ const {readFile}=await import('node:fs/promises')
+ const ordinary=await readFile(new URL('./schema-upgrade-komodo.mjs',import.meta.url),'utf8')
+ const maintenance=await readFile(new URL('./schema-upgrade-maintenance.mjs',import.meta.url),'utf8')
+ assert.match(ordinary,/assertEffectiveComposePin\(source\)/)
+ assert.match(maintenance,/assertEffectiveComposePin\(compose,plan\.target\.sha\)/)
+})
+test('service requests accept only the exact Komodo2.3.3 service operation at acceptance and completion',async()=>{
+ const id='d'.repeat(24),sid='e'.repeat(24)
+ for(const op of ['PullStack','StopStack','DeployStack']){
+  for(const receiptOperation of [op+'Service',op,'RunStackService']){
+   let executes=0,polls=0
+   const t=createTransport({apiKey:'fixture',apiSecret:'fixture',wait:async()=>{},fetcher:async url=>{
+    if(url.includes('GetStack'))return Response.json({_id:{$oid:sid}})
+    const submit=url.includes('/execute/');if(submit)executes++;else polls++
+    return Response.json({_id:{$oid:id},operation:receiptOperation,target:{type:'Stack',id:sid},status:submit?'InProgress':'Complete',success:!submit?true:undefined})
+   }})
+   const request={stack:'lingxiloop-app-a',services:['worker'],...(op==='StopStack'?{stop_time:150}:{})}
+   if(receiptOperation===op+'Service'){await t.execute(op,request);assert.equal(polls,1)}
+   else {await assert.rejects(t.execute(op,request),e=>e.uncertain===true);assert.equal(polls,0)}
+   assert.equal(executes,1)
+  }
+ }
+})
+test('service receipt mapping keeps stack target and polled operation identity strict; one-off enum unchanged',async()=>{
+ const id='d'.repeat(24),sid='e'.repeat(24)
+ for(const op of ['PullStack','StopStack','DeployStack','RunStackService']){
+  const params=op==='RunStackService'?{stack:'lingxiloop-app-a',service:'db-migrate',no_deps:true,detach:false,service_ports:false,no_tty:true,pull:false}:{stack:'lingxiloop-app-a',services:['worker'],...(op==='StopStack'?{stop_time:150}:{})}
+  for(const fault of ['none','target','polled-operation']){
+   let executes=0,polls=0
+   const t=createTransport({apiKey:'fixture',apiSecret:'fixture',wait:async()=>{},fetcher:async url=>{
+    if(url.includes('GetStack'))return Response.json({_id:{$oid:sid}})
+    const submit=url.includes('/execute/');if(submit)executes++;else polls++
+    return Response.json({_id:{$oid:id},operation:!submit&&fault==='polled-operation'?'StartStackService':op==='RunStackService'?op:op+'Service',target:{type:'Stack',id:fault==='target'?'f'.repeat(24):sid},status:submit?'InProgress':'Complete',success:!submit?true:undefined})
+   }})
+   if(fault==='none')await t.execute(op,params)
+   else await assert.rejects(t.execute(op,params),e=>e.uncertain===true)
+   assert.equal(executes,1);assert.equal(polls,fault==='target'?0:1)
+  }
+ }
+})
+test('generated metadata inventory escaping accepts SQL names and rejects lookalikes and gaps',async()=>{
+ const {METADATA_CODE}=await import('./schema-upgrade-komodo.mjs')
+ const expression=METADATA_CODE.match(/if\(names\.some[\s\S]*?throw Error\('inventory'\);/)?.[0];assert.ok(expression)
+ const validate=new Function('names',expression)
+ assert.doesNotThrow(()=>validate(['0001_baseline.sql','0002_next.sql']))
+ for(const names of [['0001_baselinesql'],['0001_baselineXsql'],['0002_baseline.sql'],['0001_baseline.sql.tmp'],['0001_path/evil.sql']])assert.throws(()=>validate(names),/inventory/)
 })

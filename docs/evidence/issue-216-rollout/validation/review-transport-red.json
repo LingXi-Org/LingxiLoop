@@ -1,0 +1,155 @@
+{
+  "head": "8b8739dc6d34cce664b019b366e8efd0e6c1f851",
+  "productionRequests": 0,
+  "providerRequests": 0,
+  "officialServiceReceipts": [
+    {
+      "operation": "PullStack",
+      "receiptOperation": "PullStackService",
+      "accepted": false,
+      "uncertain": true,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "uncertain"
+    },
+    {
+      "operation": "StopStack",
+      "receiptOperation": "StopStackService",
+      "accepted": false,
+      "uncertain": true,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "uncertain"
+    },
+    {
+      "operation": "DeployStack",
+      "receiptOperation": "DeployStackService",
+      "accepted": false,
+      "uncertain": true,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "uncertain"
+    }
+  ],
+  "invalidBaseReceiptsAccepted": [
+    {
+      "operation": "PullStack",
+      "receiptOperation": "PullStack",
+      "accepted": true,
+      "uncertain": false,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "complete"
+    },
+    {
+      "operation": "StopStack",
+      "receiptOperation": "StopStack",
+      "accepted": true,
+      "uncertain": false,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "complete"
+    },
+    {
+      "operation": "DeployStack",
+      "receiptOperation": "DeployStack",
+      "accepted": true,
+      "uncertain": false,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "complete"
+    }
+  ],
+  "wrongTargetRejected": [
+    {
+      "operation": "PullStack",
+      "receiptOperation": "PullStack",
+      "accepted": false,
+      "uncertain": true,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "uncertain"
+    },
+    {
+      "operation": "StopStack",
+      "receiptOperation": "StopStack",
+      "accepted": false,
+      "uncertain": true,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "uncertain"
+    },
+    {
+      "operation": "DeployStack",
+      "receiptOperation": "DeployStack",
+      "accepted": false,
+      "uncertain": true,
+      "executeCalls": 1,
+      "totalCalls": 2,
+      "lastProgress": "uncertain"
+    }
+  ],
+  "runStackService": {
+    "operation": "RunStackService",
+    "receiptOperation": "RunStackService",
+    "accepted": true,
+    "uncertain": false,
+    "executeCalls": 1,
+    "totalCalls": 2,
+    "lastProgress": "complete"
+  },
+  "startStillDenied": {
+    "operation": "StartStack",
+    "receiptOperation": "StartStackService",
+    "accepted": false,
+    "uncertain": false,
+    "executeCalls": 0,
+    "totalCalls": 0,
+    "lastProgress": null
+  },
+  "inventory": [
+    {
+      "case": 1,
+      "expectedValid": true,
+      "accepted": true
+    },
+    {
+      "case": 2,
+      "expectedValid": false,
+      "accepted": false
+    },
+    {
+      "case": 3,
+      "expectedValid": false,
+      "accepted": false
+    },
+    {
+      "case": 4,
+      "expectedValid": false,
+      "accepted": false
+    },
+    {
+      "case": 5,
+      "expectedValid": false,
+      "accepted": false
+    },
+    {
+      "case": 6,
+      "expectedValid": false,
+      "accepted": false
+    }
+  ],
+  "fullGeneratedMetadata": {
+    "exit": 0,
+    "runtime": "3.5.6",
+    "schema": 12,
+    "migrationCount": 46,
+    "stderrBytes": 0
+  },
+  "parentSuppliedReceipt": {
+    "operation": "DeployStackService",
+    "targetType": "Stack",
+    "status": "Complete",
+    "success": true
+  }
+}

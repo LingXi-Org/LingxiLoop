@@ -1,0 +1,32 @@
+{
+  "head": "8b8739dc6d34cce664b019b366e8efd0e6c1f851",
+  "productionCalls": 0,
+  "providerCalls": 0,
+  "ordinary": {
+    "counts": [
+      {
+        "side": "a",
+        "rawImageOccurrences": 2,
+        "distinctPinnedImages": 1
+      },
+      {
+        "side": "b",
+        "rawImageOccurrences": 2,
+        "distinctPinnedImages": 1
+      }
+    ],
+    "error": "One immutable target pin required",
+    "executeCount": 0,
+    "readCount": 8
+  },
+  "metadata": {
+    "exit": 0,
+    "error": null,
+    "summary": {
+      "runtime": "3.5.6",
+      "schema": 12,
+      "migrationCount": 46
+    },
+    "stderrBytes": 0
+  }
+}
