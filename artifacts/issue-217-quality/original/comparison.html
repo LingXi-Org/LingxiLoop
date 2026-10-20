@@ -1,0 +1,51 @@
+<div id="fee-compare" style="font-family:system-ui,sans-serif;max-width:760px;margin:0 auto;color:#1f2937">
+  <svg id="fee-svg" viewBox="0 0 740 420" style="width:100%;height:auto"></svg>
+  <div style="display:flex;gap:12px;align-items:center;justify-content:center;margin-top:8px">
+    <label>每月使用次数：<input id="fee-n" type="number" min="0" max="100" value="20" style="width:70px"></label>
+    <span id="fee-result" style="font-weight:600"></span>
+  </div>
+<script>
+(function(){
+  var svg = document.getElementById('fee-svg');
+  var W=740,H=420,margin={l:60,r:20,t:20,b:46};
+  var maxN=100,maxY=520;
+  function fa(n){return 100+2*n}
+  function fb(n){return 5*n}
+  var x=function(n){return margin.l+(maxN-margin.l-margin.r>0?n/maxN*(W-margin.l-margin.r):0)};
+  var y=function(v){return H-margin.b-(v/maxY)*(H-margin.t-margin.b)};
+  var svgNS='http://www.w3.org/2000/svg';
+  function el(tag,attrs,text){var e=document.createElementNS(svgNS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;svg.appendChild(e);return e;}
+  // grid
+  for(var v=0;v<=500;v+=100){el('line',{x1:margin.l,y1:y(v),x2:W-margin.r,y2:y(v),stroke:'#e5e7eb'});el('text',{x:margin.l-8,y:y(v)+4,'text-anchor':'end','font-size':12},v);}
+  for(var n=0;n<=100;n+=20){el('text',{x:x(n),y:H-18,'text-anchor':'middle','font-size':12},n);}
+  el('text',{x:W/2,y:H-2,'text-anchor':'middle','font-size':12}, '每月使用次数（0–100 次）');
+  el('text',{x:14,y:H/2,'text-anchor':'middle','font-size':12,transform:'rotate(-90 14 '+(H/2)+')'},'每月费用（元）');
+  // lines
+  el('line',{x1:x(0),y1:y(fa(0)),x2:x(100),y2:y(fa(100)),stroke:'#2563eb','stroke-width':2.5});
+  el('line',{x1:x(0),y1:y(fb(0)),x2:x(100),y2:y(fb(100)),stroke:'#dc2626','stroke-width':2.5});
+  el('text',{x:x(75)+8,y:y(fa(75)),'font-size':13,fill:'#2563eb'},'甲：100 + 2n');
+  el('text',{x:x(85),y:y(fb(85))-8,'font-size':13,fill:'#dc2626'},'乙：5n');
+  // crossover
+  var cx=100/3, cy=500/3;
+  el('line',{x1:x(cx),y1:y(cy),x2:x(cx),y2:H-margin.b,stroke:'#9ca3af','stroke-dasharray':'4 4'});
+  el('circle',{cx:x(cx),cy:y(cy),r:5,fill:'#111827'});
+  el('text',{x:x(cx)+6,y:y(cy)-10,'font-size':12,fill:'#374151'},'交叉点 n≈33.3，约 500 元');
+  // markers
+  var markerA=el('circle',{r:6,fill:'#2563eb',stroke:'#fff','stroke-width':2});
+  var markerB=el('circle',{r:6,fill:'#dc2626',stroke:'#fff','stroke-width':2});
+  var vline=el('line',{stroke:'#111827','stroke-opacity':0.3});
+  function update(){
+    var n=Math.max(0,Math.min(100,Number(document.getElementById('fee-n').value)||0));
+    var a=fa(n),b=fb(n);
+    markerA.setAttribute('cx',x(n));markerA.setAttribute('cy',y(a));
+    markerB.setAttribute('cx',x(n));markerB.setAttribute('cy',y(b));
+    vline.setAttribute('x1',x(n));vline.setAttribute('y1',margin.t);vline.setAttribute('x2',x(n));vline.setAttribute('y2',H-margin.b);
+    var better = a<b ? '选乙方案（乙 '+b+' 元 < 甲 '+a+' 元）' : (b<a ? '选甲方案（甲 '+a+' 元 < 乙 '+b+' 元）' : '两方案相同，都是 '+a+' 元');
+    // at n where a==b: 100+2n=5n -> n>33.33 a<b
+    document.getElementById('fee-result').textContent = 'n='+n+'：'+better;
+  }
+  document.getElementById('fee-n').addEventListener('input',update);
+  update();
+})();
+</script>
+</div>
