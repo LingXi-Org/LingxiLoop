@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: numeric action is public, saves through the current actor/run boundary and returns an actual reference
+ok 1 - numeric action is public, saves through the current actor/run boundary and returns an actual reference
+  ---
+  duration_ms: 1175.857546
+  type: 'test'
+  ...
+# Subtest: invalid computation and cancellation cause no save, while original authorization failures stay failures
+ok 2 - invalid computation and cancellation cause no save, while original authorization failures stay failures
+  ---
+  duration_ms: 26.906417
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3133.202464
