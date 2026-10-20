@@ -1,0 +1,940 @@
+{
+  "format": "native-schema-host-release/v1",
+  "createdAt": "2026-10-20T19:10:46.751Z",
+  "source": {
+    "sha": "7fe5b16e08dbe6634feb701d64e26c28475b917e",
+    "runtime": "3.5.8",
+    "schema": 13,
+    "protocol": 11,
+    "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+    "integrity": "sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==",
+    "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8",
+    "productVersion": 49,
+    "migrations": [
+      {
+        "version": 1,
+        "name": "v1_baseline",
+        "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+      },
+      {
+        "version": 2,
+        "name": "remove_legacy_identity",
+        "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+      },
+      {
+        "version": 3,
+        "name": "agent_os_session_affinity",
+        "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+      },
+      {
+        "version": 4,
+        "name": "backfill_personal_owner_participants",
+        "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+      },
+      {
+        "version": 5,
+        "name": "lingxios_v2_reset",
+        "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+      },
+      {
+        "version": 6,
+        "name": "observable_live_eval",
+        "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+      },
+      {
+        "version": 7,
+        "name": "install_lingxios",
+        "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+      },
+      {
+        "version": 8,
+        "name": "agent_os_execution",
+        "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+      },
+      {
+        "version": 9,
+        "name": "native_agent_tools",
+        "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+      },
+      {
+        "version": 10,
+        "name": "lingxios_native_runtime",
+        "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+      },
+      {
+        "version": 11,
+        "name": "closed_education",
+        "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+      },
+      {
+        "version": 12,
+        "name": "lingxios_3_2",
+        "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+      },
+      {
+        "version": 13,
+        "name": "native_collaboration",
+        "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+      },
+      {
+        "version": 14,
+        "name": "profile_avatars",
+        "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+      },
+      {
+        "version": 15,
+        "name": "lingxios_3_2_6",
+        "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+      },
+      {
+        "version": 16,
+        "name": "lingxios_3_2_7",
+        "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+      },
+      {
+        "version": 17,
+        "name": "lingxios_3_2_8",
+        "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+      },
+      {
+        "version": 18,
+        "name": "lingxios_3_2_9",
+        "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+      },
+      {
+        "version": 19,
+        "name": "agent_read_receipts",
+        "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+      },
+      {
+        "version": 20,
+        "name": "lingxios_3_2_10",
+        "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+      },
+      {
+        "version": 21,
+        "name": "lingxios_3_2_11",
+        "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+      },
+      {
+        "version": 22,
+        "name": "lingxios_3_2_12",
+        "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+      },
+      {
+        "version": 23,
+        "name": "lingxios_3_2_13",
+        "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+      },
+      {
+        "version": 24,
+        "name": "lingxios_3_3_0",
+        "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+      },
+      {
+        "version": 25,
+        "name": "lingxios_3_3_1",
+        "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+      },
+      {
+        "version": 26,
+        "name": "lingxios_3_3_2",
+        "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+      },
+      {
+        "version": 27,
+        "name": "learning_collaboration",
+        "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+      },
+      {
+        "version": 28,
+        "name": "lingxios_3_3_4",
+        "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+      },
+      {
+        "version": 29,
+        "name": "lingxios_3_3_5",
+        "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+      },
+      {
+        "version": 30,
+        "name": "lingxios_3_3_6",
+        "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+      },
+      {
+        "version": 31,
+        "name": "agent_capabilities",
+        "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+      },
+      {
+        "version": 32,
+        "name": "native_message_attachments",
+        "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+      },
+      {
+        "version": 33,
+        "name": "interactive_ui",
+        "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+      },
+      {
+        "version": 34,
+        "name": "retire_email_calendar",
+        "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+      },
+      {
+        "version": 35,
+        "name": "course_forum",
+        "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+      },
+      {
+        "version": 36,
+        "name": "public_run_activity",
+        "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+      },
+      {
+        "version": 37,
+        "name": "forum_comment_attachments",
+        "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+      },
+      {
+        "version": 38,
+        "name": "learning_submission_sequence",
+        "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+      },
+      {
+        "version": 39,
+        "name": "native_memory_collaboration",
+        "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+      },
+      {
+        "version": 40,
+        "name": "forum_assignment_convergence",
+        "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+      },
+      {
+        "version": 41,
+        "name": "homework_mastery",
+        "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+      },
+      {
+        "version": 42,
+        "name": "forum_submission_evidence",
+        "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+      },
+      {
+        "version": 43,
+        "name": "lingxios_3_5_0",
+        "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+      },
+      {
+        "version": 44,
+        "name": "questionnaire_wait",
+        "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+      },
+      {
+        "version": 45,
+        "name": "organization_cases",
+        "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+      },
+      {
+        "version": 46,
+        "name": "visualize",
+        "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+      },
+      {
+        "version": 47,
+        "name": "memory_continuity",
+        "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+      },
+      {
+        "version": 48,
+        "name": "native_content_documents",
+        "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+      },
+      {
+        "version": 49,
+        "name": "conversation_list_removals",
+        "checksum": "d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d"
+      }
+    ],
+    "image": {
+      "indexDigest": "sha256:c41654e956631fc258b18f7183852589cffacb358f35f9cba5e1cbdec658473d",
+      "configDigest": "sha256:c0cb153bf4eece26611d39fae4818780b2a3dcb081fc39d10f6b6e04a9755c89",
+      "manifestDigest": "sha256:463758a4c36c801917de943eab827e205b733c7b8b3d70331fb0242a9a7fd348",
+      "diffIds": [
+        "sha256:e58989146fcec76699871403b9897b5c014af1ccd85f5a9300a215e7975525d7",
+        "sha256:4990a62cab1587a2ed690c9d4f41675b9216d68120e99033d664b558662e90c8",
+        "sha256:3714bbaf32038e259cddcddea09e13fc9aaa1a86a644274a6c6e263b00972240",
+        "sha256:f6becc1249c39a0f6d687460220dcfcf9f2a46d01770a70fc0a8ed4c98a6fd49",
+        "sha256:cae24708e29a74f04cc1ec51fc52e2d283c35f243ab21912e036095a2b50dbde",
+        "sha256:9da47a83ff7040ec0be64590c4addacfe2f26d9549a467aacaafe2264797b6a9",
+        "sha256:680eb6e9dd236d7c0cd11ef7a9b79d26b3f4dd4c8b7504ea90a75f17e927fba6",
+        "sha256:c2a4a1d14410d2d2674143c67a8f8ac2e79db5317dd9eca43da1c27632a559b9",
+        "sha256:402ed8890caa6270d2d6bb5a8e768606956eef52d5df35232ceaeca14967b1ef",
+        "sha256:d80cc636c6a7dd193b755f9f9f692df157c7563930d1c3d420b2db18cef25ffb",
+        "sha256:a71d878a04a9d055a55ec2f178a60cb88cd8831942c996ac125175c362fccccc",
+        "sha256:3580c9297020c73defafaf1fa446b1fef732477ef310344cc7cccf6aaedf0800",
+        "sha256:80104b1f401c2cb072c25c72bb168c820fa805569d38707f4349939df3f2b40f",
+        "sha256:a20f5763be729eb8701a128add6a4a0136bad2485f64f18ae5c34ea38a43e108",
+        "sha256:e4251cba4e43f17769164aa1ab1c08d9bca75f3054e4cdeec8de3285efd2183d",
+        "sha256:a0ce20da984d585e8538905fb41da19a042c6a1e30e755f56b42ef84432c1c42",
+        "sha256:2043670992e8a055f70df2cd360ffb44d450f3eb7ab798a6f8b2f7534935bdc1",
+        "sha256:b4d53ab7cc0f4445b5c011ca29b699378c1cd3790b76381e6ad0ffe937877071",
+        "sha256:aa68f5a68ccebc6008b7a8f77c71eead22909ecb31bd9b62a184253d928dbc5d",
+        "sha256:cc422c4966861516fe1b81b27e04247bb8926a6a43b4a9d3f2fe9281cab92608",
+        "sha256:68a57343744a7749730053fc958933a28832c41e299bd4c3e1bd8a338e71faf1",
+        "sha256:1895e52b16556b1730fd19b09105888a126fa02afbc9e7513dbe56ec99398736"
+      ],
+      "auditSha256": "6160cd5c7d4ce2ca859c93de7ecf524288f076efdb4031539462a33510f0991d"
+    }
+  },
+  "target": {
+    "sha": "b47723d8948708cd9b1ab230776e053d4b034c5c",
+    "runtime": "3.6.0",
+    "schema": 14,
+    "protocol": 11,
+    "schemaHash": "c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f",
+    "integrity": "sha512-JT1wgF11Dtwy1tH5y/J7PQG5PF4/jCyssS8mnrMoqxwvPuKzik5hgwRI+GvXq+Wutv5+fr2H42/NxxCWNLEk/w==",
+    "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.6.0/8b546211db98fbc803e95d2e6437b99773708730",
+    "productVersion": 50,
+    "migrations": [
+      {
+        "version": 1,
+        "name": "v1_baseline",
+        "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+      },
+      {
+        "version": 2,
+        "name": "remove_legacy_identity",
+        "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+      },
+      {
+        "version": 3,
+        "name": "agent_os_session_affinity",
+        "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+      },
+      {
+        "version": 4,
+        "name": "backfill_personal_owner_participants",
+        "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+      },
+      {
+        "version": 5,
+        "name": "lingxios_v2_reset",
+        "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+      },
+      {
+        "version": 6,
+        "name": "observable_live_eval",
+        "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+      },
+      {
+        "version": 7,
+        "name": "install_lingxios",
+        "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+      },
+      {
+        "version": 8,
+        "name": "agent_os_execution",
+        "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+      },
+      {
+        "version": 9,
+        "name": "native_agent_tools",
+        "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+      },
+      {
+        "version": 10,
+        "name": "lingxios_native_runtime",
+        "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+      },
+      {
+        "version": 11,
+        "name": "closed_education",
+        "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+      },
+      {
+        "version": 12,
+        "name": "lingxios_3_2",
+        "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+      },
+      {
+        "version": 13,
+        "name": "native_collaboration",
+        "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+      },
+      {
+        "version": 14,
+        "name": "profile_avatars",
+        "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+      },
+      {
+        "version": 15,
+        "name": "lingxios_3_2_6",
+        "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+      },
+      {
+        "version": 16,
+        "name": "lingxios_3_2_7",
+        "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+      },
+      {
+        "version": 17,
+        "name": "lingxios_3_2_8",
+        "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+      },
+      {
+        "version": 18,
+        "name": "lingxios_3_2_9",
+        "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+      },
+      {
+        "version": 19,
+        "name": "agent_read_receipts",
+        "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+      },
+      {
+        "version": 20,
+        "name": "lingxios_3_2_10",
+        "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+      },
+      {
+        "version": 21,
+        "name": "lingxios_3_2_11",
+        "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+      },
+      {
+        "version": 22,
+        "name": "lingxios_3_2_12",
+        "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+      },
+      {
+        "version": 23,
+        "name": "lingxios_3_2_13",
+        "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+      },
+      {
+        "version": 24,
+        "name": "lingxios_3_3_0",
+        "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+      },
+      {
+        "version": 25,
+        "name": "lingxios_3_3_1",
+        "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+      },
+      {
+        "version": 26,
+        "name": "lingxios_3_3_2",
+        "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+      },
+      {
+        "version": 27,
+        "name": "learning_collaboration",
+        "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+      },
+      {
+        "version": 28,
+        "name": "lingxios_3_3_4",
+        "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+      },
+      {
+        "version": 29,
+        "name": "lingxios_3_3_5",
+        "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+      },
+      {
+        "version": 30,
+        "name": "lingxios_3_3_6",
+        "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+      },
+      {
+        "version": 31,
+        "name": "agent_capabilities",
+        "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+      },
+      {
+        "version": 32,
+        "name": "native_message_attachments",
+        "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+      },
+      {
+        "version": 33,
+        "name": "interactive_ui",
+        "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+      },
+      {
+        "version": 34,
+        "name": "retire_email_calendar",
+        "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+      },
+      {
+        "version": 35,
+        "name": "course_forum",
+        "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+      },
+      {
+        "version": 36,
+        "name": "public_run_activity",
+        "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+      },
+      {
+        "version": 37,
+        "name": "forum_comment_attachments",
+        "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+      },
+      {
+        "version": 38,
+        "name": "learning_submission_sequence",
+        "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+      },
+      {
+        "version": 39,
+        "name": "native_memory_collaboration",
+        "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+      },
+      {
+        "version": 40,
+        "name": "forum_assignment_convergence",
+        "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+      },
+      {
+        "version": 41,
+        "name": "homework_mastery",
+        "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+      },
+      {
+        "version": 42,
+        "name": "forum_submission_evidence",
+        "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+      },
+      {
+        "version": 43,
+        "name": "lingxios_3_5_0",
+        "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+      },
+      {
+        "version": 44,
+        "name": "questionnaire_wait",
+        "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+      },
+      {
+        "version": 45,
+        "name": "organization_cases",
+        "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+      },
+      {
+        "version": 46,
+        "name": "visualize",
+        "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+      },
+      {
+        "version": 47,
+        "name": "memory_continuity",
+        "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+      },
+      {
+        "version": 48,
+        "name": "native_content_documents",
+        "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+      },
+      {
+        "version": 49,
+        "name": "conversation_list_removals",
+        "checksum": "d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d"
+      },
+      {
+        "version": 50,
+        "name": "skill_delivery",
+        "checksum": "1e334322ad6b092c9fc9ff8356b721778c1445e7d5dc01177328032c25d6e2d1"
+      }
+    ],
+    "image": {
+      "indexDigest": "sha256:89f2b78b6c6bd7aecef5b5e19cf282189a7920ecd85d67013238ea6bfc5cd558",
+      "configDigest": "sha256:b8fb1ec8983ec4654c4eba9bf0509fe0a72e802329527daf98adf864aed39ca6",
+      "manifestDigest": "sha256:7521c15fe36e01bf8921823d63a12dea8af354da34cb20bb4a68d34951e139f5",
+      "diffIds": [
+        "sha256:e58989146fcec76699871403b9897b5c014af1ccd85f5a9300a215e7975525d7",
+        "sha256:4990a62cab1587a2ed690c9d4f41675b9216d68120e99033d664b558662e90c8",
+        "sha256:3714bbaf32038e259cddcddea09e13fc9aaa1a86a644274a6c6e263b00972240",
+        "sha256:f6becc1249c39a0f6d687460220dcfcf9f2a46d01770a70fc0a8ed4c98a6fd49",
+        "sha256:cae24708e29a74f04cc1ec51fc52e2d283c35f243ab21912e036095a2b50dbde",
+        "sha256:d8b65d63f186317e7d9b1855223c88e3a4bef1122c6495bb3d8c1da6728067b0",
+        "sha256:83046509d5d200835b007aa0e149a3683bed438280056d2c4c6cc8989e4f5fdd",
+        "sha256:a0f0e0e175f45192d56458987f3ba0354c9422278bb57cf2c510d97aeacc6406",
+        "sha256:8e5283b2a478fde2db9b179b159ef46b17e265d0f8c1faca6593e1032f2a46d7",
+        "sha256:873a2b3effde95c0744fbb2991191ea9ae8de63a24e04da82e94d59c89bad50d",
+        "sha256:52a2a351f135b1dbcbccac7f162a58b09c82377c9a7f6ce9ff2b64eb8be1021a",
+        "sha256:d9b3ba5a40b20b53d16f42f18397f981a2ca800c338e75ae9462210129504e5d",
+        "sha256:fa4283459d47437efbc99feb81795bf1f32437547fc280227b853c39c62a176e",
+        "sha256:874c0c98dac4e9dbef35b30b328e2bcfa67c0ad9f5a445526b0ebc97cba3962d",
+        "sha256:6c2c020c52c044500d709591b3fdfe5baf1dcac20834c4ae4c608877fd9a1b3f",
+        "sha256:961b09df4c82bf2afe6bc5cad74e9717f31157a556a50a7d38d0a5f14a9c4d26",
+        "sha256:0aed88454ae53177e38d3439c304208465d19ab0b20688f1f42585c7b2f03388",
+        "sha256:4590e57d9bba55bfbb49b8b16cca6c5a4e487419aec46bfc6eb0e56bd09603be",
+        "sha256:23dbc3b4e6f79c7e6907af48fe9750af9f0422e0f68ca0695960c8f9bd0b20c6",
+        "sha256:41ac2204731046f8e98b162e247c9f3e7a66bfa632ff9ed158a3237b21a6fc90",
+        "sha256:b8aad8c189f94d100018bd4ad1eae7552f9f35ec63f50f98eab51170bf020fb8",
+        "sha256:ec980a214af376548343c51a3501c27f1e9c7cd477197a01dc707f2845b012b9"
+      ],
+      "auditSha256": "dee9555a3612c6e98b3ec6895efb9ab03b07ee1dcdf828ccbe9c7535fa859cb4"
+    }
+  },
+  "sourceAcceptanceSha256": "d224c7d7828332d16199fa47330149496572063a0e2d05ea5d54ba5bb5d8aa02",
+  "qualification": {
+    "commit": "b47723d8948708cd9b1ab230776e053d4b034c5c",
+    "conclusion": "success",
+    "ciUrl": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39478308509"
+  },
+  "stacks": [
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "source": {
+        "commit": "1c2ef95cb5f1a491236b92076177035d752c681a",
+        "branch": "release/visualize-geometry-production-20261020",
+        "sha256": "03d72a21fd32b595078e92019405dc25f55a30eedb116f2203337340b74aed2a",
+        "autoPull": false,
+        "extraArgs": [
+          "--no-deps",
+          "--pull",
+          "never"
+        ]
+      },
+      "target": {
+        "commit": "f8723361ea87ef6e051484350ecaea623d091b46",
+        "branch": "release/native14-product50-production-20261020",
+        "sha256": "0d6729be8e89e273cce9d7fd0c3cbc7f749c107a9e381551054bc047d48bab5b",
+        "autoPull": false,
+        "extraArgs": [
+          "--no-deps",
+          "--pull",
+          "never"
+        ]
+      },
+      "preparation": {
+        "commit": "b1eef031e65c3d4477afc7e16d1c93a4d826e72e",
+        "sha256": "a52f35e614e7fc45da845610c8bfb0f9bdee40458cf8a8018b5b05e551ce55e6"
+      }
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "source": {
+        "commit": "1c2ef95cb5f1a491236b92076177035d752c681a",
+        "branch": "release/visualize-geometry-production-20261020",
+        "sha256": "61cf40ad7d256a2cd414c8d5a33ac610b90214e11172c9720e28e78a1f28acb8",
+        "autoPull": false,
+        "extraArgs": [
+          "--no-deps",
+          "--pull",
+          "never"
+        ]
+      },
+      "target": {
+        "commit": "f8723361ea87ef6e051484350ecaea623d091b46",
+        "branch": "release/native14-product50-production-20261020",
+        "sha256": "ded4a8a4fe1cd53656a6795c162f5086803c0011274fa1233c76eb37b7df1f9c",
+        "autoPull": false,
+        "extraArgs": [
+          "--no-deps",
+          "--pull",
+          "never"
+        ]
+      },
+      "preparation": {
+        "commit": "b1eef031e65c3d4477afc7e16d1c93a4d826e72e",
+        "sha256": "bbb402dc39f53863f0b855b63c9f4c00a0cae1ff45a6191545d28a447d71bbcf"
+      }
+    },
+    {
+      "stack": "lingxiloop-core-state",
+      "server": "shanghai-a",
+      "source": {
+        "commit": "f56db73dabbaec1e92a421bbad76c239ed8d1ae2",
+        "branch": "release/production-358-20261020",
+        "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+        "autoPull": true,
+        "extraArgs": []
+      },
+      "target": {
+        "commit": "f56db73dabbaec1e92a421bbad76c239ed8d1ae2",
+        "branch": "release/production-358-20261020",
+        "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+        "autoPull": true,
+        "extraArgs": []
+      }
+    }
+  ],
+  "backup": {
+    "format": 2,
+    "profile": "native13-product49",
+    "source": {
+      "sha": "7fe5b16e08dbe6634feb701d64e26c28475b917e",
+      "productVersion": 49,
+      "runtime": {
+        "runtime": "3.5.8",
+        "schema": 13,
+        "protocol": 11,
+        "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+        "integrity": "sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==",
+        "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8"
+      },
+      "migrations": [
+        {
+          "version": 1,
+          "name": "v1_baseline",
+          "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+        },
+        {
+          "version": 2,
+          "name": "remove_legacy_identity",
+          "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+        },
+        {
+          "version": 3,
+          "name": "agent_os_session_affinity",
+          "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+        },
+        {
+          "version": 4,
+          "name": "backfill_personal_owner_participants",
+          "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+        },
+        {
+          "version": 5,
+          "name": "lingxios_v2_reset",
+          "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+        },
+        {
+          "version": 6,
+          "name": "observable_live_eval",
+          "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+        },
+        {
+          "version": 7,
+          "name": "install_lingxios",
+          "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+        },
+        {
+          "version": 8,
+          "name": "agent_os_execution",
+          "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+        },
+        {
+          "version": 9,
+          "name": "native_agent_tools",
+          "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+        },
+        {
+          "version": 10,
+          "name": "lingxios_native_runtime",
+          "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+        },
+        {
+          "version": 11,
+          "name": "closed_education",
+          "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+        },
+        {
+          "version": 12,
+          "name": "lingxios_3_2",
+          "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+        },
+        {
+          "version": 13,
+          "name": "native_collaboration",
+          "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+        },
+        {
+          "version": 14,
+          "name": "profile_avatars",
+          "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+        },
+        {
+          "version": 15,
+          "name": "lingxios_3_2_6",
+          "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+        },
+        {
+          "version": 16,
+          "name": "lingxios_3_2_7",
+          "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+        },
+        {
+          "version": 17,
+          "name": "lingxios_3_2_8",
+          "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+        },
+        {
+          "version": 18,
+          "name": "lingxios_3_2_9",
+          "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+        },
+        {
+          "version": 19,
+          "name": "agent_read_receipts",
+          "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+        },
+        {
+          "version": 20,
+          "name": "lingxios_3_2_10",
+          "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+        },
+        {
+          "version": 21,
+          "name": "lingxios_3_2_11",
+          "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+        },
+        {
+          "version": 22,
+          "name": "lingxios_3_2_12",
+          "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+        },
+        {
+          "version": 23,
+          "name": "lingxios_3_2_13",
+          "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+        },
+        {
+          "version": 24,
+          "name": "lingxios_3_3_0",
+          "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+        },
+        {
+          "version": 25,
+          "name": "lingxios_3_3_1",
+          "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+        },
+        {
+          "version": 26,
+          "name": "lingxios_3_3_2",
+          "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+        },
+        {
+          "version": 27,
+          "name": "learning_collaboration",
+          "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+        },
+        {
+          "version": 28,
+          "name": "lingxios_3_3_4",
+          "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+        },
+        {
+          "version": 29,
+          "name": "lingxios_3_3_5",
+          "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+        },
+        {
+          "version": 30,
+          "name": "lingxios_3_3_6",
+          "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+        },
+        {
+          "version": 31,
+          "name": "agent_capabilities",
+          "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+        },
+        {
+          "version": 32,
+          "name": "native_message_attachments",
+          "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+        },
+        {
+          "version": 33,
+          "name": "interactive_ui",
+          "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+        },
+        {
+          "version": 34,
+          "name": "retire_email_calendar",
+          "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+        },
+        {
+          "version": 35,
+          "name": "course_forum",
+          "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+        },
+        {
+          "version": 36,
+          "name": "public_run_activity",
+          "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+        },
+        {
+          "version": 37,
+          "name": "forum_comment_attachments",
+          "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+        },
+        {
+          "version": 38,
+          "name": "learning_submission_sequence",
+          "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+        },
+        {
+          "version": 39,
+          "name": "native_memory_collaboration",
+          "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+        },
+        {
+          "version": 40,
+          "name": "forum_assignment_convergence",
+          "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+        },
+        {
+          "version": 41,
+          "name": "homework_mastery",
+          "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+        },
+        {
+          "version": 42,
+          "name": "forum_submission_evidence",
+          "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+        },
+        {
+          "version": 43,
+          "name": "lingxios_3_5_0",
+          "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+        },
+        {
+          "version": 44,
+          "name": "questionnaire_wait",
+          "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+        },
+        {
+          "version": 45,
+          "name": "organization_cases",
+          "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+        },
+        {
+          "version": 46,
+          "name": "visualize",
+          "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+        },
+        {
+          "version": 47,
+          "name": "memory_continuity",
+          "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+        },
+        {
+          "version": 48,
+          "name": "native_content_documents",
+          "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+        },
+        {
+          "version": 49,
+          "name": "conversation_list_removals",
+          "checksum": "d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d"
+        }
+      ]
+    },
+    "attempt": "native14-product50-b477-20261020-5e0b9f38b85f4bfe",
+    "nonce": "5e0b9f38b85f4bfe",
+    "isolatedDatabase": "memory_verify_7fe5b16e08db_5e0b9f38b85f4bfe",
+    "backupDir": "/var/lib/postgresql/data/memory-upgrade-backups/7fe5b16e08dbe6634feb701d64e26c28475b917e/native14-product50-b477-20261020-5e0b9f38b85f4bfe",
+    "migrationRehearsal": "not-performed",
+    "command": "exec timeout -k 75 3900 sh -ec 'set -eu\nset +x\ntest \"$#\" -eq 1\nprintf '\\''%s'\\'' \"$1\" | grep -Eq '\\''^[a-f0-9]{64}$'\\''\numask 077\nexport LC_ALL=C\nexport PGPASSWORD=\"$POSTGRES_PASSWORD\"\nexport PGCONNECT_TIMEOUT=15\nexport PGOPTIONS='\\''-c statement_timeout=600000 -c lock_timeout=10000 -c row_security=off -c search_path=public'\\''\nbackup_dir='\\''/var/lib/postgresql/data/memory-upgrade-backups/7fe5b16e08dbe6634feb701d64e26c28475b917e/native14-product50-b477-20261020-5e0b9f38b85f4bfe'\\''\nverify_db='\\''memory_verify_7fe5b16e08db_5e0b9f38b85f4bfe'\\''\ncreated=0\nholder='\\'''\\''\nfifo_open=0\nwork='\\'''\\''\nstage=initialization\nsuccess=0\ncleanup() {\n  result=$?\n  trap - EXIT HUP INT TERM\n  set +e\n  if [ \"$fifo_open\" = 1 ]; then exec 9>&-; fi\n  if [ -n \"$holder\" ]; then kill \"$holder\" 2>/dev/null; wait \"$holder\" 2>/dev/null; fi\n  if [ \"$created\" = 1 ]; then\n    if [ \"$verify_db\" != '\\''memory_verify_7fe5b16e08db_5e0b9f38b85f4bfe'\\'' ] || [ \"$verify_db\" = \"$POSTGRES_DB\" ]; then\n      result=1; stage=cleanup-guard\n    elif ! timeout --foreground -k 10 60 dropdb -h postgres -U \"$POSTGRES_USER\" --maintenance-db=postgres \"$verify_db\" >/dev/null 2>&1; then\n      result=1; stage=cleanup-database\n    fi\n  fi\n  if [ -n \"$work\" ]; then rm -f \"$work\"/* 2>/dev/null; rmdir \"$work\" 2>/dev/null; fi\n  if [ \"$result\" = 0 ] && [ \"$success\" = 1 ]; then\n    if ! printf '\\''{\"complete\":true,\"isolatedDatabaseRemoved\":true}\\n'\\'' > \"$backup_dir/completion.json\"; then\n      printf '\\''MEMORY_BACKUP_FAILED_STAGE=completion-evidence\\n'\\''; exit 1\n    fi\n    if ! mv \"$backup_dir/verification.pending.json\" \"$backup_dir/verification.json\"; then\n      printf '\\''MEMORY_BACKUP_FAILED_STAGE=completion-evidence\\n'\\''; exit 1\n    fi\n    printf '\\''MEMORY_BACKUP_RECEIPT='\\''; cat \"$backup_dir/verification.json\"\n    printf '\\''MEMORY_BACKUP_COMPLETE=1\\n'\\''\n  else\n    printf '\\''MEMORY_BACKUP_FAILED_STAGE=%s\\n'\\'' \"$stage\"; result=1\n  fi\n  exit \"$result\"\n}\ntrap cleanup EXIT\ntrap '\\''exit 1'\\'' HUP INT TERM\nexec 2>/dev/null\nfor utility in timeout mkfifo psql pg_dump pg_restore createdb dropdb sha256sum base64 cmp grep df awk paste cut mktemp mv; do command -v \"$utility\" >/dev/null; done\ntest -n \"$POSTGRES_USER\"; test -n \"$POSTGRES_DB\"; test \"$verify_db\" != \"$POSTGRES_DB\"\nwork=$(mktemp -d /tmp/memory-backup.XXXXXXXXXX)\nprintf '\\''%s'\\'' '\\''U0VMRUNUIDEvQ0FTRSBXSEVOICgoU0VMRUNUIGpzb25iX2FnZyhqc29uYl9idWlsZF9vYmplY3QoJ3ZlcnNpb24nLHZlcnNpb24sJ25hbWUnLG5hbWUsJ2NoZWNrc3VtJyxjaGVja3N1bSkgT1JERVIgQlkgdmVyc2lvbikgRlJPTSBwdWJsaWMuc2NoZW1hX21pZ3JhdGlvbnMpPSdbeyJ2ZXJzaW9uIjoxLCJuYW1lIjoidjFfYmFzZWxpbmUiLCJjaGVja3N1bSI6IjZkYWFlMWMyNDk2YzE2ODcxNTc0ZjU4NTE2OTY5MWJiOTdhMmQ1ZmJmNmFiMWU0ZDYxYjAzNWE0Y2NlOWZkYmQifSx7InZlcnNpb24iOjIsIm5hbWUiOiJyZW1vdmVfbGVnYWN5X2lkZW50aXR5IiwiY2hlY2tzdW0iOiJmNjIxMjExNzg0M2Y0N2U4NTIwMDRlZThlZmNhZTNmMjljNDRkY2ZiNmUxNDFkMGQ5YTM1ZmZlN2FjM2JjZTFjIn0seyJ2ZXJzaW9uIjozLCJuYW1lIjoiYWdlbnRfb3Nfc2Vzc2lvbl9hZmZpbml0eSIsImNoZWNrc3VtIjoiMTM4YmQxOWE5YjU3NGE4Y2MwOWM1NGM3OGFkMDNkMWQ2NTc5Nzk0MzY5Yjk5ZDFkMTA5ZTJhNzE0YjIzMjlmNCJ9LHsidmVyc2lvbiI6NCwibmFtZSI6ImJhY2tmaWxsX3BlcnNvbmFsX293bmVyX3BhcnRpY2lwYW50cyIsImNoZWNrc3VtIjoiNzdkYmNiZTI5MDdmNTNlNzJjNjAxOTBiYzk1MzRjYTNjYjUyZjliOGQ3ZmZkNWY0NjYyYThkMjM3OTQ0MmE1MSJ9LHsidmVyc2lvbiI6NSwibmFtZSI6Imxpbmd4aW9zX3YyX3Jlc2V0IiwiY2hlY2tzdW0iOiJiYjA0NGFkYzQwMjA3MTRmNDg1NTUwZWY2NWMxMDg0OWQ1NmQ4NGVjNzZkZWUwZDQwODRjNjNjYzBkMDg2MTFhIn0seyJ2ZXJzaW9uIjo2LCJuYW1lIjoib2JzZXJ2YWJsZV9saXZlX2V2YWwiLCJjaGVja3N1bSI6IjA2OTZhNDc1ZjgwZGY0ZTQ0ZTYyZDI4OTI3YTU1NzllZWYwZTU0ZTExMTgzNzE5ZDYyM2Y2NjQ4NDA0NzhkMGMifSx7InZlcnNpb24iOjcsIm5hbWUiOiJpbnN0YWxsX2xpbmd4aW9zIiwiY2hlY2tzdW0iOiIxMjY2N2U0ZDIyZWUzYjg5MDNmZDg5MTc5YTM3YmQ4MTk1MTMyNGExNjQwODhjZmM1MDgxNDZhMGEyNGIzYjFiIn0seyJ2ZXJzaW9uIjo4LCJuYW1lIjoiYWdlbnRfb3NfZXhlY3V0aW9uIiwiY2hlY2tzdW0iOiJhMmE2YTU5ZmU4MmU3NTgyMGVjYWVhMGMwYTczZTk1M2ZkODI2ZDU2ZjJjMDcxNjYzNDI2NTQ3MmY1ZTg1MTA5In0seyJ2ZXJzaW9uIjo5LCJuYW1lIjoibmF0aXZlX2FnZW50X3Rvb2xzIiwiY2hlY2tzdW0iOiIxMjI3N2U3NTMyMzZhYzJiMWYxOGU4ZjgwNTUxMTYyNWNkZjA0ZTk0YThmOWVkZjdlOTFmYzI2Mzc2NWJlMTk1In0seyJ2ZXJzaW9uIjoxMCwibmFtZSI6Imxpbmd4aW9zX25hdGl2ZV9ydW50aW1lIiwiY2hlY2tzdW0iOiJlYjRhNDdmZDc0MDY1OTdlMTk4MjdjNzExOThmZDU4NWYxYmQwYzFhNzZlNDBiMGI0ODdjNWEyNjUzZjRlNzE3In0seyJ2ZXJzaW9uIjoxMSwibmFtZSI6ImNsb3NlZF9lZHVjYXRpb24iLCJjaGVja3N1bSI6IjI1YzBkNDk2OWFmMzRkOWE0ZjYxMTY1YTFhNmJlODJiZmE1MDNjMGRkNGE1NmViODFhN2MyZmU5MGE0ZGMzNzgifSx7InZlcnNpb24iOjEyLCJuYW1lIjoibGluZ3hpb3NfM18yIiwiY2hlY2tzdW0iOiIxM2EyYTI4YjUxNzdlZjgyYzI1Zjk2NTkzMDRiN2Q1NmVhMTY1MjJhNzUyMjExODYyNmQ2ODZjY2ExMTA4OTlhIn0seyJ2ZXJzaW9uIjoxMywibmFtZSI6Im5hdGl2ZV9jb2xsYWJvcmF0aW9uIiwiY2hlY2tzdW0iOiI3ZDE2MWQ3ZTY3MDU3MDhiZWM2NDFiNjlhYTA2MDQxNDFiNTQ4ODcyZmEyN2QzZDk3ODE2NzU0NmEzYzg1MzdiIn0seyJ2ZXJzaW9uIjoxNCwibmFtZSI6InByb2ZpbGVfYXZhdGFycyIsImNoZWNrc3VtIjoiZjhmMjNiNzlkNTdjYTBlMzI5NjgzYzU5NDVhODExMTdlOGU4OTBiYzc5MWQ0NTYwOGFjNWNiMzFiNDgxMzRjOSJ9LHsidmVyc2lvbiI6MTUsIm5hbWUiOiJsaW5neGlvc18zXzJfNiIsImNoZWNrc3VtIjoiMDZjNzI2ZmVjNjVmNzMzMDAwMDdhMzEyYjFmODBiMzE3YTIyMjc5NDk2NmViMWIxYmFiMzY5YmE1ZGFkMGU5NyJ9LHsidmVyc2lvbiI6MTYsIm5hbWUiOiJsaW5neGlvc18zXzJfNyIsImNoZWNrc3VtIjoiMTU1ZjgzZTgyN2JiMTVjNmNkNWZmODcxMTA3OWMwODc1YzhjYjRhNjgyNTI0ODMzODFlYzM1NjcxYzBmYmQ5ZiJ9LHsidmVyc2lvbiI6MTcsIm5hbWUiOiJsaW5neGlvc18zXzJfOCIsImNoZWNrc3VtIjoiZTMyZmY3MTIxOGRmYzdiODkyNmZhNTM4ZmQxYmMwZTJhMmYxZmNlMzNlOTMyYzM2MDY5YTE2MDhhMDRlODY1ZiJ9LHsidmVyc2lvbiI6MTgsIm5hbWUiOiJsaW5neGlvc18zXzJfOSIsImNoZWNrc3VtIjoiMmUzNDZjNDU0OGJlYmQ2NzNmODUwODc4MzdlODJlNzFhNzg2ZDE5OTBhNTUwOWQ1MjM5ZjUyOTE5Yzk4ZTVmOCJ9LHsidmVyc2lvbiI6MTksIm5hbWUiOiJhZ2VudF9yZWFkX3JlY2VpcHRzIiwiY2hlY2tzdW0iOiI3OWEyNzYxZDBkNmJkNzJmNTdiZjJiNjExNzMzZjg3M2FjZDc2YmU4M2I3ZTdhYTVhZTExN2EzNTc4YWZiMDk4In0seyJ2ZXJzaW9uIjoyMCwibmFtZSI6Imxpbmd4aW9zXzNfMl8xMCIsImNoZWNrc3VtIjoiNWNjZGY5NjQ1NzRjMmI3Y2IzNTIzZDk1YjA4Mjk0NzM2YTY1NjRiNGM4NjE3ZGQwMTdkOGJkMGJmMzAzOGNmYiJ9LHsidmVyc2lvbiI6MjEsIm5hbWUiOiJsaW5neGlvc18zXzJfMTEiLCJjaGVja3N1bSI6ImU5YWQyYWUwNzVmMWI3NTJhY2MxNGY4YjZkZWMxZDQ2Zjg4N2MxMDE4N2IxNjc4YTNhNDFjNTVjYzRmYWRiMjUifSx7InZlcnNpb24iOjIyLCJuYW1lIjoibGluZ3hpb3NfM18yXzEyIiwiY2hlY2tzdW0iOiI5YTIwY2RjMTcyMmNkZTlmMTBkZDNiMzY2OTYyYTVhOTdjZWM4ZTFlNDcyZmE2NjgxZWIxNzZkMzhkZDU4M2YwIn0seyJ2ZXJzaW9uIjoyMywibmFtZSI6Imxpbmd4aW9zXzNfMl8xMyIsImNoZWNrc3VtIjoiYzU5OGJiZjlkYjgyYTIwMWI4YzgyNTcyNDRjMjBlMTc5M2Y5MmJjZWZhMGFkM2IzMjM4NjNiMDQ1NTRlNDdjZCJ9LHsidmVyc2lvbiI6MjQsIm5hbWUiOiJsaW5neGlvc18zXzNfMCIsImNoZWNrc3VtIjoiYWIzOTZkY2U2YjhiZTM3YWI5NzIzNjFjZDgwMjYyYTEyOTFmMjQzYTEyNDQyOWFiNTljMGMwYWY3NTMzMzQyNyJ9LHsidmVyc2lvbiI6MjUsIm5hbWUiOiJsaW5neGlvc18zXzNfMSIsImNoZWNrc3VtIjoiNGNkM2I4NTRmMDUwMDYwODEzZTQ2ODFiN2E4MjBiYjdlYmE4ZWJjODlmOWM2MDU3ZGJiNGE4OTRkZjE0MmZiZiJ9LHsidmVyc2lvbiI6MjYsIm5hbWUiOiJsaW5neGlvc18zXzNfMiIsImNoZWNrc3VtIjoiZTUxOWYxOTc5YmE1MTZiYWY5NTU2Mjc4OTIyNTJiMThmMmZlMTQ2NjdiMTA2MTVlYzkyMDM0ZGViMmJjNWJmYSJ9LHsidmVyc2lvbiI6MjcsIm5hbWUiOiJsZWFybmluZ19jb2xsYWJvcmF0aW9uIiwiY2hlY2tzdW0iOiJkM2VmMjQ5Nzk3NTc1MGUxYTk3NDRlODE3NjRjNDAyZjY5NzMxNmUyZjRkMDAwNzYxYWViNTBkZTAyYzRlZTVjIn0seyJ2ZXJzaW9uIjoyOCwibmFtZSI6Imxpbmd4aW9zXzNfM180IiwiY2hlY2tzdW0iOiJlZmMyN2I4Mzg3ZDk2NjQyNjc0ZDM2MjdkNzgzNzNjZDUyNjJhY2U3NTM0OWE4NmJkYzAyN2ZkNDUxN2Y0YzJhIn0seyJ2ZXJzaW9uIjoyOSwibmFtZSI6Imxpbmd4aW9zXzNfM181IiwiY2hlY2tzdW0iOiI1OGE4YmZkNzhjOTg3YjIyZWEzMWI4YWE4MmQxZGQ3ODQ3ZTlkMDg3NmZlMDcyZGVjOTBlOWM5MGM3ZjJlYWM4In0seyJ2ZXJzaW9uIjozMCwibmFtZSI6Imxpbmd4aW9zXzNfM182IiwiY2hlY2tzdW0iOiJjMjU5NGI2MDk0Nzk3MDViODM4MTljMWZlNTI5NDVkNTRiNzdlMGRiOGY0MmVkZGI1ODU4MTIwODc5ZjhlNjcyIn0seyJ2ZXJzaW9uIjozMSwibmFtZSI6ImFnZW50X2NhcGFiaWxpdGllcyIsImNoZWNrc3VtIjoiZTc3MjUzZmU2N2MxNGQ4OTE2ZGQ3Yzg0OGE5MWFmOTk3MzY3NWNlNzgyNDQyODEwMjY0ZjU2MmI5YTY3YjdlZSJ9LHsidmVyc2lvbiI6MzIsIm5hbWUiOiJuYXRpdmVfbWVzc2FnZV9hdHRhY2htZW50cyIsImNoZWNrc3VtIjoiODQ5MWMwMDY3ZGIyMDZjOTUyNzRlZWQ0YmRlNTlhNDc1ODlhYWRlYTNhMGMwNGRiNDYxYWM1MmQxYzY5MWU5NiJ9LHsidmVyc2lvbiI6MzMsIm5hbWUiOiJpbnRlcmFjdGl2ZV91aSIsImNoZWNrc3VtIjoiYTRiNzcwN2M5YjU1ZjcyYWFjY2U3YTIzYTA0MGVlZjNiMzczNjgzOGFiNDUxZjlkMGU2ZDU5NGFhM2QxYTllOSJ9LHsidmVyc2lvbiI6MzQsIm5hbWUiOiJyZXRpcmVfZW1haWxfY2FsZW5kYXIiLCJjaGVja3N1bSI6IjEzZjQxMmQwNThlMmIzZThlZDA1MWJjNzIxMjY4NDE5MGE1MzA0NzFlNDVlMmQ1NzdhYTFiZWZmNTg1MzdhZjgifSx7InZlcnNpb24iOjM1LCJuYW1lIjoiY291cnNlX2ZvcnVtIiwiY2hlY2tzdW0iOiI0NTkzNGQzNmIwZDZlYzFiMjA2MDBmN2U5NWUzMmZhNjI5YTI3NjQzZjdlYzgwZjVjZGI4YzA4YTFiNTcyODI4In0seyJ2ZXJzaW9uIjozNiwibmFtZSI6InB1YmxpY19ydW5fYWN0aXZpdHkiLCJjaGVja3N1bSI6ImU3ODgzZjVmZTJkZDM1ZTlkOTk1NWMxNTE5Yzc3ODJiNzRiYzIxYTY4ZWVkODMwN2NkY2QwZGYzZjg2OWRjMWUifSx7InZlcnNpb24iOjM3LCJuYW1lIjoiZm9ydW1fY29tbWVudF9hdHRhY2htZW50cyIsImNoZWNrc3VtIjoiNzAxMTBhNGNmMzdmN2ZkNTAzMjRiZTNlZGRkNWNkMDQwMWIwN2UwNDg3OTE2N2EwZGQyZWMxYmYyYjQ0ZGEyYyJ9LHsidmVyc2lvbiI6MzgsIm5hbWUiOiJsZWFybmluZ19zdWJtaXNzaW9uX3NlcXVlbmNlIiwiY2hlY2tzdW0iOiJkMTI3YzcwNDlhNTM1MTQ5MWI0ODYxY2Q3ZDZlN2FiYTc1MGJkNGY1MTYyODQ5NTM5YmE0MzNmODFiMWZjNWU1In0seyJ2ZXJzaW9uIjozOSwibmFtZSI6Im5hdGl2ZV9tZW1vcnlfY29sbGFib3JhdGlvbiIsImNoZWNrc3VtIjoiNzY1ODA2NTMxNjJiMDhjOWVhZWFlOTdhYzM0MzNlZDBmZmQ0NjA0N2I3YjhmYzNhOTk5ZmUwZDUyZTU3ODE5NSJ9LHsidmVyc2lvbiI6NDAsIm5hbWUiOiJmb3J1bV9hc3NpZ25tZW50X2NvbnZlcmdlbmNlIiwiY2hlY2tzdW0iOiJlMWM0YWNhMTcyNGMzYzY3MTExNDBlNWJkODQ4MGZiMzRlMTEzMTcwMWU5YzA5Mjg2ZTMzZGE3Nzk3NWI1OWM0In0seyJ2ZXJzaW9uIjo0MSwibmFtZSI6ImhvbWV3b3JrX21hc3RlcnkiLCJjaGVja3N1bSI6IjVjYzk0ZjU2MThmMzNjZDFlYTVmMzcxYzU1MDU3NDNhZGNjMWIxZTUxZjVkNzUwYjY4YzhiYjM2YjMyM2Y5MjYifSx7InZlcnNpb24iOjQyLCJuYW1lIjoiZm9ydW1fc3VibWlzc2lvbl9ldmlkZW5jZSIsImNoZWNrc3VtIjoiYjM3NGNiMmNkMWQ1MTRkYWRjYTcwNzljMzU5MDI5ZjEwYjY0MjMzMjlhOWRjODI0ZWEwZjFiMzNmOTQwOTdhMCJ9LHsidmVyc2lvbiI6NDMsIm5hbWUiOiJsaW5neGlvc18zXzVfMCIsImNoZWNrc3VtIjoiYjNjOTYxNzJhNmE3OTM2MWEwY2M5ZDJmMGI5ZTM2ZDRiODQ4MTYwZTkwYzJjMmUwY2YxNjQ4Yzc0ZDczOWEyZiJ9LHsidmVyc2lvbiI6NDQsIm5hbWUiOiJxdWVzdGlvbm5haXJlX3dhaXQiLCJjaGVja3N1bSI6IjJkMjYzMGI2MGYzZDEzZjk3ZDkwNTIyZDg2Y2U3ZDdiMGIyZTQyY2M1ODU1OGMxNGVkNDg4OTIyZmVlYmFjMTkifSx7InZlcnNpb24iOjQ1LCJuYW1lIjoib3JnYW5pemF0aW9uX2Nhc2VzIiwiY2hlY2tzdW0iOiI2OTdkNjhiMjc3MzIzMjlkNjE2MWEyNTMzN2FhNDhkNTAzYTlhNTY0MzVhNzliZWMwMmRjNTE5NDBjN2E3MjQ3In0seyJ2ZXJzaW9uIjo0NiwibmFtZSI6InZpc3VhbGl6ZSIsImNoZWNrc3VtIjoiM2Q0ODZhYWQ2NTI0YTg5OTU0NGM5NTNjYjU5ODlhOGY4YWZjYWZlNWNiNTU1YmU5ZDM2YWVkMjE1MjBhODc5YiJ9LHsidmVyc2lvbiI6NDcsIm5hbWUiOiJtZW1vcnlfY29udGludWl0eSIsImNoZWNrc3VtIjoiM2QwYzM3MmM2ZmVlNmM2MWIzY2VhNjRkMDJjZGZkNDYzNDY4YjY4ZmIwOTdlZmUyY2JjNDdkMGU4ZmUyNjNhNSJ9LHsidmVyc2lvbiI6NDgsIm5hbWUiOiJuYXRpdmVfY29udGVudF9kb2N1bWVudHMiLCJjaGVja3N1bSI6ImY0YWNiYTM2NTVhZWZhOTdhMzdjYzczNGY2YTE4ZmZkM2UyNmYwZWNjM2RjOGIxOTJlMDk0YjM4NWIwYTBkYmIifSx7InZlcnNpb24iOjQ5LCJuYW1lIjoiY29udmVyc2F0aW9uX2xpc3RfcmVtb3ZhbHMiLCJjaGVja3N1bSI6ImQ3ZDUyYTIwZDRiMDkzOTEwMDgzNTI0YWUzMjRkM2U4NjUwMTJkNzkxYzdlZWNkMjM0MGQ4MmI1MTUyOGUxNWQifV0nOjpqc29uYikgVEhFTiAxIEVMU0UgMCBFTkQ7ClNFTEVDVCAxL0NBU0UgV0hFTiAoKFNFTEVDVCBjb3VudCgqKSBGUk9NIHB1YmxpYy5saW5neGlvc19pbnN0YWxsYXRpb24pPTEgQU5EIEVYSVNUUyhTRUxFQ1QgMSBGUk9NIHB1YmxpYy5saW5neGlvc19pbnN0YWxsYXRpb24gV0hFUkUgc2luZ2xldG9uIEFORCBydW50aW1lX3ZlcnNpb249JzMuNS44JyBBTkQgc2NoZW1hX3ZlcnNpb249MTMgQU5EIHByb3RvY29sX3ZlcnNpb249MTEgQU5EIHNjaGVtYV9zaGEyNTY9JzJiYjI2NTk4OWFhMmU0ZjVjZjc2ODZkOTEwOGU3MGFiOTcwNjg4YTExMmE4YmFhYThmMDNiOTdmOTk4YmRjNDEnKSkgVEhFTiAxIEVMU0UgMCBFTkQ7ClNFTEVDVCAxL0NBU0UgV0hFTiAoKFNFTEVDVCBjb3VudCgqKSBGUk9NIGxpbmd4aW9zLnNjaGVtYV92ZXJzaW9uKT0xIEFORCBFWElTVFMoU0VMRUNUIDEgRlJPTSBsaW5neGlvcy5zY2hlbWFfdmVyc2lvbiBXSEVSRSBzaW5nbGV0b24gQU5EIHZlcnNpb249MTMpKSBUSEVOIDEgRUxTRSAwIEVORDsKU0VMRUNUIDEvQ0FTRSBXSEVOIChOT1QgRVhJU1RTKFNFTEVDVCAxIEZST00gcGdfY2xhc3MgYyBKT0lOIHBnX25hbWVzcGFjZSBuIE9OIG4ub2lkPWMucmVsbmFtZXNwYWNlIFdIRVJFIG4ubnNwbmFtZSBJTiAoJ3B1YmxpYycsJ2xpbmd4aW9zJykgQU5EIGMucmVsa2luZD0nZicpKSBUSEVOIDEgRUxTRSAwIEVORDsK'\\'' | base64 -d > \"$work/precondition.sql\"\nprintf '\\''%s'\\'' '\\''U0VMRUNUIGZvcm1hdCgnU0VMRUNUIGpzb25fYnVpbGRfYXJyYXkoJUwsJUwsY291bnQoKikpIEZST00gJUkuJUk7JyxuLm5zcG5hbWUsYy5yZWxuYW1lLG4ubnNwbmFtZSxjLnJlbG5hbWUpCkZST00gcGdfY2xhc3MgYyBKT0lOIHBnX25hbWVzcGFjZSBuIE9OIG4ub2lkPWMucmVsbmFtZXNwYWNlCldIRVJFIG4ubnNwbmFtZSBJTiAoJ3B1YmxpYycsJ2xpbmd4aW9zJykgQU5EIGMucmVsa2luZCBJTiAoJ3InLCdwJykgT1JERVIgQlkgbi5uc3BuYW1lIENPTExBVEUgIkMiLGMucmVsbmFtZSBDT0xMQVRFICJDIgpcZ2V4ZWMK'\\'' | base64 -d > \"$work/counts.sql\"\nprintf '\\''%s'\\'' '\\''U0VMRUNUIGpzb25iX2J1aWxkX29iamVjdCgncnVudGltZScsKFNFTEVDVCBqc29uYl9idWlsZF9vYmplY3QoJ3J1bnRpbWUnLHJ1bnRpbWVfdmVyc2lvbiwnc2NoZW1hJyxzY2hlbWFfdmVyc2lvbiwncHJvdG9jb2wnLHByb3RvY29sX3ZlcnNpb24sJ3NjaGVtYUhhc2gnLHNjaGVtYV9zaGEyNTYpIEZST00gcHVibGljLmxpbmd4aW9zX2luc3RhbGxhdGlvbiBXSEVSRSBzaW5nbGV0b24pLCdhY3R1YWxTY2hlbWEnLChTRUxFQ1QgdmVyc2lvbiBGUk9NIGxpbmd4aW9zLnNjaGVtYV92ZXJzaW9uIFdIRVJFIHNpbmdsZXRvbiksJ21pZ3JhdGlvbnMnLChTRUxFQ1QganNvbmJfYWdnKGpzb25iX2J1aWxkX29iamVjdCgndmVyc2lvbicsdmVyc2lvbiwnbmFtZScsbmFtZSwnY2hlY2tzdW0nLGNoZWNrc3VtKSBPUkRFUiBCWSB2ZXJzaW9uKSBGUk9NIHB1YmxpYy5zY2hlbWFfbWlncmF0aW9ucykpOw=='\\'' | base64 -d > \"$work/provenance.sql\"\nprintf '\\''%s'\\'' '\\''QkVHSU4gSVNPTEFUSU9OIExFVkVMIFJFUEVBVEFCTEUgUkVBRCBSRUFEIE9OTFk7ClNFVCBMT0NBTCByb3dfc2VjdXJpdHk9b2ZmOwpTRVQgTE9DQUwgc3RhdGVtZW50X3RpbWVvdXQ9JzEwbWluJzsKU0VUIExPQ0FMIGlkbGVfaW5fdHJhbnNhY3Rpb25fc2Vzc2lvbl90aW1lb3V0PScyNW1pbic7ClNFVCBMT0NBTCBsb2NrX3RpbWVvdXQ9JzEwcyc7ClxpIDpwcmVjb25kaXRpb25fZmlsZQpcbyA6c25hcHNob3RfZmlsZQpTRUxFQ1QgcGdfZXhwb3J0X3NuYXBzaG90KCk7ClxvIDpjb3VudHNfZmlsZQpcaSA6Y291bnRzX3F1ZXJ5X2ZpbGUKXG8gOnByb3ZlbmFuY2VfZmlsZQpcaSA6cHJvdmVuYW5jZV9xdWVyeV9maWxlClxvIDpyZWFkeV9maWxlClNFTEVDVCAncmVhZHknOwpcbyAvZGV2L251bGwK'\\'' | base64 -d > \"$work/snapshot.sql\"\nstage=reserve-attempt\nmkdir -p '\\''/var/lib/postgresql/data/memory-upgrade-backups/7fe5b16e08dbe6634feb701d64e26c28475b917e'\\''\ntest \"$(cd '\\''/var/lib/postgresql/data/memory-upgrade-backups/7fe5b16e08dbe6634feb701d64e26c28475b917e'\\'' && pwd -P)\" = '\\''/var/lib/postgresql/data/memory-upgrade-backups/7fe5b16e08dbe6634feb701d64e26c28475b917e'\\''\nmkdir \"$backup_dir\"\nprintf '\\''%s\\n'\\'' '\\''{\"source\":{\"sha\":\"7fe5b16e08dbe6634feb701d64e26c28475b917e\",\"productVersion\":49,\"runtime\":{\"runtime\":\"3.5.8\",\"schema\":13,\"protocol\":11,\"schemaHash\":\"2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41\",\"integrity\":\"sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==\",\"tarball\":\"https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8\"},\"migrations\":[{\"version\":1,\"name\":\"v1_baseline\",\"checksum\":\"6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd\"},{\"version\":2,\"name\":\"remove_legacy_identity\",\"checksum\":\"f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c\"},{\"version\":3,\"name\":\"agent_os_session_affinity\",\"checksum\":\"138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4\"},{\"version\":4,\"name\":\"backfill_personal_owner_participants\",\"checksum\":\"77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51\"},{\"version\":5,\"name\":\"lingxios_v2_reset\",\"checksum\":\"bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a\"},{\"version\":6,\"name\":\"observable_live_eval\",\"checksum\":\"0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c\"},{\"version\":7,\"name\":\"install_lingxios\",\"checksum\":\"12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b\"},{\"version\":8,\"name\":\"agent_os_execution\",\"checksum\":\"a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109\"},{\"version\":9,\"name\":\"native_agent_tools\",\"checksum\":\"12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195\"},{\"version\":10,\"name\":\"lingxios_native_runtime\",\"checksum\":\"eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717\"},{\"version\":11,\"name\":\"closed_education\",\"checksum\":\"25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378\"},{\"version\":12,\"name\":\"lingxios_3_2\",\"checksum\":\"13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a\"},{\"version\":13,\"name\":\"native_collaboration\",\"checksum\":\"7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b\"},{\"version\":14,\"name\":\"profile_avatars\",\"checksum\":\"f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9\"},{\"version\":15,\"name\":\"lingxios_3_2_6\",\"checksum\":\"06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97\"},{\"version\":16,\"name\":\"lingxios_3_2_7\",\"checksum\":\"155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f\"},{\"version\":17,\"name\":\"lingxios_3_2_8\",\"checksum\":\"e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f\"},{\"version\":18,\"name\":\"lingxios_3_2_9\",\"checksum\":\"2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8\"},{\"version\":19,\"name\":\"agent_read_receipts\",\"checksum\":\"79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098\"},{\"version\":20,\"name\":\"lingxios_3_2_10\",\"checksum\":\"5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb\"},{\"version\":21,\"name\":\"lingxios_3_2_11\",\"checksum\":\"e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25\"},{\"version\":22,\"name\":\"lingxios_3_2_12\",\"checksum\":\"9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0\"},{\"version\":23,\"name\":\"lingxios_3_2_13\",\"checksum\":\"c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd\"},{\"version\":24,\"name\":\"lingxios_3_3_0\",\"checksum\":\"ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427\"},{\"version\":25,\"name\":\"lingxios_3_3_1\",\"checksum\":\"4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf\"},{\"version\":26,\"name\":\"lingxios_3_3_2\",\"checksum\":\"e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa\"},{\"version\":27,\"name\":\"learning_collaboration\",\"checksum\":\"d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c\"},{\"version\":28,\"name\":\"lingxios_3_3_4\",\"checksum\":\"efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a\"},{\"version\":29,\"name\":\"lingxios_3_3_5\",\"checksum\":\"58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8\"},{\"version\":30,\"name\":\"lingxios_3_3_6\",\"checksum\":\"c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672\"},{\"version\":31,\"name\":\"agent_capabilities\",\"checksum\":\"e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee\"},{\"version\":32,\"name\":\"native_message_attachments\",\"checksum\":\"8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96\"},{\"version\":33,\"name\":\"interactive_ui\",\"checksum\":\"a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9\"},{\"version\":34,\"name\":\"retire_email_calendar\",\"checksum\":\"13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8\"},{\"version\":35,\"name\":\"course_forum\",\"checksum\":\"45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828\"},{\"version\":36,\"name\":\"public_run_activity\",\"checksum\":\"e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e\"},{\"version\":37,\"name\":\"forum_comment_attachments\",\"checksum\":\"70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c\"},{\"version\":38,\"name\":\"learning_submission_sequence\",\"checksum\":\"d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5\"},{\"version\":39,\"name\":\"native_memory_collaboration\",\"checksum\":\"76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195\"},{\"version\":40,\"name\":\"forum_assignment_convergence\",\"checksum\":\"e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4\"},{\"version\":41,\"name\":\"homework_mastery\",\"checksum\":\"5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926\"},{\"version\":42,\"name\":\"forum_submission_evidence\",\"checksum\":\"b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0\"},{\"version\":43,\"name\":\"lingxios_3_5_0\",\"checksum\":\"b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f\"},{\"version\":44,\"name\":\"questionnaire_wait\",\"checksum\":\"2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19\"},{\"version\":45,\"name\":\"organization_cases\",\"checksum\":\"697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247\"},{\"version\":46,\"name\":\"visualize\",\"checksum\":\"3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b\"},{\"version\":47,\"name\":\"memory_continuity\",\"checksum\":\"3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5\"},{\"version\":48,\"name\":\"native_content_documents\",\"checksum\":\"f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb\"},{\"version\":49,\"name\":\"conversation_list_removals\",\"checksum\":\"d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d\"}]},\"attempt\":\"native14-product50-b477-20261020-5e0b9f38b85f4bfe\",\"isolatedDatabase\":\"memory_verify_7fe5b16e08db_5e0b9f38b85f4bfe\",\"migrationRehearsal\":\"not-performed\"}'\\'' > \"$backup_dir/attempt.json\"\nstage=capacity-initial\ndb_bytes=$(timeout --foreground -k 10 60 psql -X -qAt -h postgres -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -v ON_ERROR_STOP=1 -c '\\''BEGIN READ ONLY; SELECT pg_database_size(current_database()); ROLLBACK;'\\'')\nprintf '\\''%s'\\'' \"$db_bytes\" | grep -Eq '\\''^[0-9]+$'\\''\nheadroom() {\n  phase=$1; factor=$2\n  df -Pk /var/lib/postgresql/data > \"$work/disk-free\"\n  free_kib=$(awk '\\''NR==2 {print $4}'\\'' \"$work/disk-free\")\n  printf '\\''%s'\\'' \"$free_kib\" | grep -Eq '\\''^[0-9]+$'\\''\n  free_bytes=$((free_kib * 1024)); required_bytes=$((db_bytes * factor + 536870912))\n  printf '\\''{\"phase\":\"%s\",\"databaseBytes\":%s,\"freeBytes\":%s,\"requiredBytes\":%s}\\n'\\'' \"$phase\" \"$db_bytes\" \"$free_bytes\" \"$required_bytes\" > \"$backup_dir/capacity-$phase.json\"\n  test \"$free_bytes\" -ge \"$required_bytes\"\n}\nheadroom initial 2\nstage=snapshot\nmkfifo \"$work/snapshot-input\"; exec 9<> \"$work/snapshot-input\"; fifo_open=1\ntimeout --foreground -k 10 2100 psql -X -qAt -h postgres -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -v ON_ERROR_STOP=1 \\\n  -v precondition_file=\"$work/precondition.sql\" -v snapshot_file=\"$work/snapshot-id\" \\\n  -v counts_file=\"$backup_dir/counts-before.jsonl\" -v counts_query_file=\"$work/counts.sql\" \\\n  -v provenance_file=\"$backup_dir/provenance-before.json\" -v provenance_query_file=\"$work/provenance.sql\" \\\n  -v ready_file=\"$work/ready\" < \"$work/snapshot-input\" > /dev/null &\nholder=$!\ncat \"$work/snapshot.sql\" >&9\nremaining=660\nwhile [ ! -s \"$work/ready\" ]; do\n  kill -0 \"$holder\"; test \"$remaining\" -gt 0; remaining=$((remaining-1)); sleep 1\ndone\ntest \"$(cat \"$work/ready\")\" = ready\nsnapshot=$(cat \"$work/snapshot-id\")\nprintf '\\''%s'\\'' \"$snapshot\" | grep -Eq '\\''^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9]+$'\\''\nprintf '\\''MEMORY_BACKUP_SNAPSHOT_READY=1\\n'\\''\nstage=dump\ntimeout --foreground -k 10 1080 pg_dump -h postgres -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -Fc --snapshot=\"$snapshot\" --lock-wait-timeout=10s -f \"$backup_dir/product.dump\"\nkill -0 \"$holder\"\nprintf '\\''ROLLBACK;\\n\\\\q\\n'\\'' >&9\nexec 9>&-; fifo_open=0\nwait \"$holder\"; holder='\\'''\\''\ndump_hash=$(sha256sum \"$backup_dir/product.dump\" | cut -d '\\'' '\\'' -f 1)\nprintf '\\''%s  product.dump\\n'\\'' \"$dump_hash\" > \"$backup_dir/sha256.txt\"\nstage=capacity-restore\nheadroom restore 1\nstage=create-isolated-database\ntimeout --foreground -k 10 60 createdb -h postgres -U \"$POSTGRES_USER\" --maintenance-db=postgres --template=template0 \"$verify_db\"\ncreated=1\nisolated() {\n  test \"$created\" = 1; test \"$verify_db\" = '\\''memory_verify_7fe5b16e08db_5e0b9f38b85f4bfe'\\''; test \"$verify_db\" != \"$POSTGRES_DB\"\n  timeout --foreground -k 10 660 psql -X -qAt -h postgres -U \"$POSTGRES_USER\" -d \"$verify_db\" -v ON_ERROR_STOP=1 \"$@\"\n}\nstage=restore\ntimeout --foreground -k 10 1200 pg_restore -h postgres -U \"$POSTGRES_USER\" -d \"$verify_db\" --no-owner --no-privileges --exit-on-error \"$backup_dir/product.dump\"\nstage=verify-restore\nisolated -c '\\''BEGIN READ ONLY'\\'' -f \"$work/precondition.sql\" -c '\\''ROLLBACK'\\'' >/dev/null\nisolated -c '\\''BEGIN READ ONLY'\\'' -f \"$work/counts.sql\" -c '\\''ROLLBACK'\\'' > \"$backup_dir/counts-restored.jsonl\"\nisolated -c '\\''BEGIN READ ONLY'\\'' -f \"$work/provenance.sql\" -c '\\''ROLLBACK'\\'' > \"$backup_dir/provenance-restored.json\"\ncmp -s \"$backup_dir/counts-before.jsonl\" \"$backup_dir/counts-restored.jsonl\"\ncmp -s \"$backup_dir/provenance-before.json\" \"$backup_dir/provenance-restored.json\"\nprintf '\\''{\"source\":%s,\"attempt\":%s,\"commandHash\":\"%s\",\"dumpSha256\":\"%s\",\"restoreCountsEqual\":true,\"restoreProvenanceEqual\":true,\"isolatedDatabaseRemoved\":true,\"migrationRehearsal\":\"not-performed\",\"countsBefore\":[%s],\"countsRestored\":[%s],\"capacity\":[%s,%s]}\\n'\\'' \\\n  '\\''{\"sha\":\"7fe5b16e08dbe6634feb701d64e26c28475b917e\",\"productVersion\":49,\"runtime\":{\"runtime\":\"3.5.8\",\"schema\":13,\"protocol\":11,\"schemaHash\":\"2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41\",\"integrity\":\"sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==\",\"tarball\":\"https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8\"},\"migrations\":[{\"version\":1,\"name\":\"v1_baseline\",\"checksum\":\"6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd\"},{\"version\":2,\"name\":\"remove_legacy_identity\",\"checksum\":\"f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c\"},{\"version\":3,\"name\":\"agent_os_session_affinity\",\"checksum\":\"138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4\"},{\"version\":4,\"name\":\"backfill_personal_owner_participants\",\"checksum\":\"77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51\"},{\"version\":5,\"name\":\"lingxios_v2_reset\",\"checksum\":\"bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a\"},{\"version\":6,\"name\":\"observable_live_eval\",\"checksum\":\"0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c\"},{\"version\":7,\"name\":\"install_lingxios\",\"checksum\":\"12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b\"},{\"version\":8,\"name\":\"agent_os_execution\",\"checksum\":\"a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109\"},{\"version\":9,\"name\":\"native_agent_tools\",\"checksum\":\"12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195\"},{\"version\":10,\"name\":\"lingxios_native_runtime\",\"checksum\":\"eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717\"},{\"version\":11,\"name\":\"closed_education\",\"checksum\":\"25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378\"},{\"version\":12,\"name\":\"lingxios_3_2\",\"checksum\":\"13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a\"},{\"version\":13,\"name\":\"native_collaboration\",\"checksum\":\"7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b\"},{\"version\":14,\"name\":\"profile_avatars\",\"checksum\":\"f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9\"},{\"version\":15,\"name\":\"lingxios_3_2_6\",\"checksum\":\"06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97\"},{\"version\":16,\"name\":\"lingxios_3_2_7\",\"checksum\":\"155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f\"},{\"version\":17,\"name\":\"lingxios_3_2_8\",\"checksum\":\"e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f\"},{\"version\":18,\"name\":\"lingxios_3_2_9\",\"checksum\":\"2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8\"},{\"version\":19,\"name\":\"agent_read_receipts\",\"checksum\":\"79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098\"},{\"version\":20,\"name\":\"lingxios_3_2_10\",\"checksum\":\"5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb\"},{\"version\":21,\"name\":\"lingxios_3_2_11\",\"checksum\":\"e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25\"},{\"version\":22,\"name\":\"lingxios_3_2_12\",\"checksum\":\"9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0\"},{\"version\":23,\"name\":\"lingxios_3_2_13\",\"checksum\":\"c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd\"},{\"version\":24,\"name\":\"lingxios_3_3_0\",\"checksum\":\"ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427\"},{\"version\":25,\"name\":\"lingxios_3_3_1\",\"checksum\":\"4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf\"},{\"version\":26,\"name\":\"lingxios_3_3_2\",\"checksum\":\"e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa\"},{\"version\":27,\"name\":\"learning_collaboration\",\"checksum\":\"d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c\"},{\"version\":28,\"name\":\"lingxios_3_3_4\",\"checksum\":\"efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a\"},{\"version\":29,\"name\":\"lingxios_3_3_5\",\"checksum\":\"58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8\"},{\"version\":30,\"name\":\"lingxios_3_3_6\",\"checksum\":\"c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672\"},{\"version\":31,\"name\":\"agent_capabilities\",\"checksum\":\"e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee\"},{\"version\":32,\"name\":\"native_message_attachments\",\"checksum\":\"8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96\"},{\"version\":33,\"name\":\"interactive_ui\",\"checksum\":\"a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9\"},{\"version\":34,\"name\":\"retire_email_calendar\",\"checksum\":\"13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8\"},{\"version\":35,\"name\":\"course_forum\",\"checksum\":\"45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828\"},{\"version\":36,\"name\":\"public_run_activity\",\"checksum\":\"e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e\"},{\"version\":37,\"name\":\"forum_comment_attachments\",\"checksum\":\"70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c\"},{\"version\":38,\"name\":\"learning_submission_sequence\",\"checksum\":\"d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5\"},{\"version\":39,\"name\":\"native_memory_collaboration\",\"checksum\":\"76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195\"},{\"version\":40,\"name\":\"forum_assignment_convergence\",\"checksum\":\"e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4\"},{\"version\":41,\"name\":\"homework_mastery\",\"checksum\":\"5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926\"},{\"version\":42,\"name\":\"forum_submission_evidence\",\"checksum\":\"b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0\"},{\"version\":43,\"name\":\"lingxios_3_5_0\",\"checksum\":\"b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f\"},{\"version\":44,\"name\":\"questionnaire_wait\",\"checksum\":\"2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19\"},{\"version\":45,\"name\":\"organization_cases\",\"checksum\":\"697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247\"},{\"version\":46,\"name\":\"visualize\",\"checksum\":\"3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b\"},{\"version\":47,\"name\":\"memory_continuity\",\"checksum\":\"3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5\"},{\"version\":48,\"name\":\"native_content_documents\",\"checksum\":\"f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb\"},{\"version\":49,\"name\":\"conversation_list_removals\",\"checksum\":\"d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d\"}]}'\\'' '\\''\"native14-product50-b477-20261020-5e0b9f38b85f4bfe\"'\\'' \"$1\" \"$dump_hash\" \\\n  \"$(paste -sd, \"$backup_dir/counts-before.jsonl\")\" \"$(paste -sd, \"$backup_dir/counts-restored.jsonl\")\" \\\n  \"$(cat \"$backup_dir/capacity-initial.json\")\" \"$(cat \"$backup_dir/capacity-restore.json\")\" > \"$backup_dir/verification.pending.json\"\nsuccess=1\n' memory-backup \"$1\"",
+    "commandHash": "80079ebe6c839ae29896536c0c0a2da9b11e853930ade20b70ccc4b434c478b1"
+  },
+  "planHash": "78549c867d29c4b5e366d2eba34bf31bff1875fd2828935394fb98f61dd297cd"
+}

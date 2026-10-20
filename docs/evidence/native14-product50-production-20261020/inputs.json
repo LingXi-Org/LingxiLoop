@@ -1,0 +1,31 @@
+{
+  "format": "native14-production-inputs/v1",
+  "targetCommit": "b47723d8948708cd9b1ab230776e053d4b034c5c",
+  "planSha256": "2744537865603fd8ff5b5bfe5f8e3c40faa218912b4829c96816e6c6054bfff4",
+  "sourceAcceptance": {
+    "path": "/workspace/geometry-release/final-acceptance.json",
+    "sha256": "d224c7d7828332d16199fa47330149496572063a0e2d05ea5d54ba5bb5d8aa02"
+  },
+  "sourceProduction": {
+    "path": "/workspace/geometry-release/production-after.json",
+    "sha256": "058efb7a8d766420b0ed4d0fcccf9b871fb61076a359fb55b36618073faaccc8"
+  },
+  "sourceAudit": {
+    "path": "/workspace/geometry-image-qualification/image-audit/receipt.json",
+    "sha256": "6160cd5c7d4ce2ca859c93de7ecf524288f076efdb4031539462a33510f0991d"
+  },
+  "targetAudit": {
+    "path": "/workspace/native14-production-release/image-audit/receipt.json",
+    "sha256": "dee9555a3612c6e98b3ec6895efb9ab03b07ee1dcdf828ccbe9c7535fa859cb4"
+  },
+  "publishCi": {
+    "path": "/workspace/native14-production-release/publish-ci.json",
+    "sha256": "54a38e31811532095cb2824169cf0d2cc3ec860d44d0ed5917f239bda79b4941"
+  },
+  "publishCiUrl": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39478308509",
+  "canonicalSeedPrecheck": {
+    "path": "/workspace/native14-production-release/seed/receipt.json",
+    "sha256": "16520fd19c15666f260bc0b8bf7a1753301f34f57cbf55007bce9446435e696e",
+    "contract": "native14-seed-precheck-receipt/v1"
+  }
+}

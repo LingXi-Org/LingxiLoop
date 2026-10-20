@@ -1,0 +1,15 @@
+{
+  "run": 39478308509,
+  "head": "b47723d8948708cd9b1ab230776e053d4b034c5c",
+  "ciSha256": "54a38e31811532095cb2824169cf0d2cc3ec860d44d0ed5917f239bda79b4941",
+  "integrationJob": 118820108601,
+  "summaryLines": [
+    "integration\tRun npm run test:integration\t2026-10-20T18:55:59.1022622Z ok 201 - 0050 upgrades only schema13, preserves historical SQL and rolls native/provenance/ledger back together",
+    "integration\tRun npm run test:integration\t2026-10-20T18:59:39.8276813Z ok 349 - published native worker loads unchanged skill, saves and reads a scoped fragment, delivers its reference and exports actual HTML",
+    "integration\tRun npm run test:integration\t2026-10-20T18:59:55.2836898Z # tests 369",
+    "integration\tRun npm run test:integration\t2026-10-20T18:59:55.2837284Z # pass 355",
+    "integration\tRun npm run test:integration\t2026-10-20T18:59:55.2837458Z # fail 0",
+    "integration\tRun npm run test:integration\t2026-10-20T18:59:55.2837918Z # skipped 14"
+  ],
+  "fullLogSha256": "4ea6e3ad70f0fe86e16e74cbbb4c7caa60ebcbe3a51fa584f2fe94e9f34d53c3"
+}

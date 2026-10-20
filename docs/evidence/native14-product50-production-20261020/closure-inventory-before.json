@@ -1,0 +1,161 @@
+{
+  "format": "lingxiloop-closure-inventory/v1",
+  "checkedAt": "2026-10-20T18:53:13Z",
+  "repository": "LingXi-Org/LingxiLoop",
+  "scope": "Historical read-only GitHub status and retained deployment evidence; no fresh production inspection.",
+  "openIssues": [
+    247
+  ],
+  "openPullRequests": [],
+  "production": {
+    "candidate": "7fe5b16e08dbe6634feb701d64e26c28475b917e",
+    "acceptedAt": "2026-10-20T18:31:51.583Z",
+    "runtime": "3.5.8",
+    "nativeSchema": 13,
+    "productSchema": 49,
+    "healthyServices": 4,
+    "successfulNativeTerminalReceipts": 34,
+    "successfulPublicHttpsChecks": 4,
+    "evidence": "/workspace/geometry-release/final-acceptance.json"
+  },
+  "inventory": [
+    {
+      "numbers": [
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        229
+      ],
+      "kind": "issue",
+      "state": "closed",
+      "deployment": "Previously delivered batch; closure followed the user-adjusted acceptance scope."
+    },
+    {
+      "numbers": [
+        242,
+        243
+      ],
+      "kind": "pull_request",
+      "state": "merged",
+      "deployment": "Included in production 7fe5b16e."
+    },
+    {
+      "numbers": [
+        244,
+        245,
+        246,
+        248
+      ],
+      "kind": "issue",
+      "state": "closed",
+      "deployment": "Corresponding fixes included in production 7fe5b16e."
+    },
+    {
+      "numbers": [
+        247
+      ],
+      "kind": "issue",
+      "state": "open",
+      "deployment": "Bounded numeric/geometry fixes live; complete generated-content quality remains unverified."
+    },
+    {
+      "numbers": [
+        249,
+        250,
+        251,
+        253,
+        256
+      ],
+      "kind": "pull_request",
+      "state": "merged",
+      "deployment": "Included in production 7fe5b16e."
+    },
+    {
+      "numbers": [
+        252
+      ],
+      "kind": "pull_request",
+      "state": "closed_unmerged",
+      "mergedAt": null,
+      "deployment": "Selectively incorporated and live. No independent GitHub PR merge.",
+      "incorporationCommits": [
+        "692b0404",
+        "88eefa58"
+      ]
+    },
+    {
+      "numbers": [
+        254
+      ],
+      "kind": "pull_request",
+      "state": "closed_unmerged",
+      "mergedAt": null,
+      "deployment": "Full reviewed head incorporated and live. No independent GitHub PR merge.",
+      "incorporationCommit": "30848d4f",
+      "incorporatedHead": "1002f0f1545ab596d85851735311ea74089b946e"
+    },
+    {
+      "numbers": [
+        255
+      ],
+      "kind": "pull_request",
+      "state": "merged",
+      "deployment": "Product49 release tooling actually used."
+    },
+    {
+      "numbers": [
+        257
+      ],
+      "kind": "pull_request",
+      "state": "merged",
+      "mergeCommit": "b0605dc62f8914e53425eb09a21ee0943afad806",
+      "deployment": "Native14 maintenance preparation; not in current production 7fe5b16e."
+    },
+    {
+      "numbers": [
+        258
+      ],
+      "kind": "pull_request",
+      "state": "merged",
+      "mergeCommit": "b47723d8948708cd9b1ab230776e053d4b034c5c",
+      "deployment": "Not deployed at snapshot time."
+    }
+  ],
+  "publication": {
+    "runId": 39478308509,
+    "headSha": "b47723d8948708cd9b1ab230776e053d4b034c5c",
+    "status": "in_progress",
+    "conclusion": null,
+    "url": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39478308509"
+  },
+  "readOnlyApiBasis": [
+    "GET /repos/LingXi-Org/LingxiLoop/issues?state=open&per_page=100 (paginated; includes PRs)",
+    "GET /repos/LingXi-Org/LingxiLoop/issues?state=all&per_page=100 (paginated; selected issue/PR numbers)",
+    "GET /repos/LingXi-Org/LingxiLoop/pulls?state=all&per_page=100 (paginated; selected PR merged_at/head/merge commit)",
+    "GET /repos/LingXi-Org/LingxiLoop/issues/252/comments",
+    "GET /repos/LingXi-Org/LingxiLoop/issues/254/comments",
+    "GET /repos/LingXi-Org/LingxiLoop/issues/247",
+    "GET /repos/LingXi-Org/LingxiLoop/actions/runs/39478308509"
+  ],
+  "localBasis": [
+    "/workspace/geometry-release/final-acceptance.json",
+    "/workspace/geometry-release/production-after.json",
+    "/workspace/geometry-release/PRODUCTION-README.md",
+    "/workspace/recovery49/final-acceptance.json",
+    "/workspace/LingxiLoop-release-229/docs/evidence/cli-memory-production-20261020/README.md",
+    "/workspace/LingxiLoop-release-229/docs/evidence/batch-close-20261020/README.md",
+    "/workspace/LingxiLoop-release-229/docs/evidence/issue-217-quality/ACCEPTANCE.md",
+    "Read-only git merge-base --is-ancestor checks against 7fe5b16e08dbe6634feb701d64e26c28475b917e and incorporation commit history."
+  ],
+  "limits": [
+    "Issue247 historical provider evidence contains 25 actual calls, not 25 cases; second-round complete visualization delivery was 0/2. No rerun or relabeling as green.",
+    "PR258 exact23e CI355 passed/0 failed/14 skipped was supplied by the parent; this inventory does not independently requalify it or infer provider numerical correctness.",
+    "Six supplemental browser scenarios, production performance percentiles and a full fault-isolation matrix are not asserted passed.",
+    "Paused runtime3.5.3 long observation remained untouched.",
+    "No comments, closures, publication or production actions were performed for this inventory."
+  ]
+}

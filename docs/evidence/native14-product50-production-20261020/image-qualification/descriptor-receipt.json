@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "sourceCommit": "b47723d8948708cd9b1ab230776e053d4b034c5c",
+  "repository": "ghcr.io/lingxi-org/lingxiloop-server",
+  "indexDigest": "sha256:89f2b78b6c6bd7aecef5b5e19cf282189a7920ecd85d67013238ea6bfc5cd558",
+  "linuxAmd64ManifestDigest": "sha256:7521c15fe36e01bf8921823d63a12dea8af354da34cb20bb4a68d34951e139f5",
+  "configDigest": "sha256:b8fb1ec8983ec4654c4eba9bf0509fe0a72e802329527daf98adf864aed39ca6",
+  "compressedLayerBytes": 192984282,
+  "layerCount": 22,
+  "scope": "descriptors only; layer audit separate"
+}
