@@ -1,0 +1,59 @@
+TAP version 13
+# [env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET
+# Subtest: public runtime terminal read honours product cancellation while the database blocker remains held
+not ok 1 - public runtime terminal read honours product cancellation while the database blocker remains held
+  ---
+  duration_ms: 969.216118
+  type: 'test'
+  location: '<worktree>/.codex-tmp/callback-public-context.test.ts:9:1079'
+  failureType: 'testCodeFailure'
+  error: |-
+    product signal did not reach the public runtime operation
+    + actual - expected
+    
+    + 'pending'
+    - 'rejected'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'rejected'
+  actual: 'pending'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (<worktree>/.codex-tmp/callback-public-context.test.ts:161:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: public runtime result read honours product cancellation while the database blocker remains held
+not ok 2 - public runtime result read honours product cancellation while the database blocker remains held
+  ---
+  duration_ms: 371.123909
+  type: 'test'
+  location: '<worktree>/.codex-tmp/callback-public-context.test.ts:9:1079'
+  failureType: 'testCodeFailure'
+  error: |-
+    product signal did not reach the public runtime operation
+    + actual - expected
+    
+    + 'pending'
+    - 'rejected'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'rejected'
+  actual: 'pending'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (<worktree>/.codex-tmp/callback-public-context.test.ts:161:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3371.510399

@@ -1,0 +1,29 @@
+{
+  "runtime": "3.5.5",
+  "postgres": "16.15 (Debian 16.15-1.pgdg12+2)",
+  "synthetic": true,
+  "realProvider": false,
+  "measurements": [
+    {
+      "scenario": "shared-admission-early-abort",
+      "submitted": 8,
+      "entered": 2,
+      "actualBlocked": 2,
+      "remainingBlocked": 0,
+      "abortThroughBackendExitAndNextCallbackMs": 93.18801200000001,
+      "blockerStillHeld": true
+    },
+    {
+      "scenario": "deadline-only",
+      "deadlineMs": 150,
+      "actualStatementEntered": true,
+      "startThroughBackendExitMs": 152.74722100000002
+    },
+    {
+      "scenario": "context-omitted",
+      "deadlineMs": 150,
+      "actualStatementEntered": true,
+      "startThroughBackendExitMs": 153.32418600000005
+    }
+  ]
+}

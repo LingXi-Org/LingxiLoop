@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: shared callback admission preserves foreground capacity and destroys cancelled lock waiters
+ok 1 - shared callback admission preserves foreground capacity and destroys cancelled lock waiters
+  ---
+  duration_ms: 297.20332
+  type: 'test'
+  ...
+# Subtest: deadlineAt alone cancels SQL, and omitted context has a finite fallback
+ok 2 - deadlineAt alone cancels SQL, and omitted context has a finite fallback
+  ---
+  duration_ms: 321.979111
+  type: 'test'
+  ...
+# Subtest: cancellation rolls back an open transaction and forbids subsequent queries
+ok 3 - cancellation rolls back an open transaction and forbids subsequent queries
+  ---
+  duration_ms: 23.883946
+  type: 'test'
+  ...
+# Subtest: autocommitted writes with cancelled acknowledgements reject and recover once by stable identity
+ok 4 - autocommitted writes with cancelled acknowledgements reject and recover once by stable identity
+  ---
+  duration_ms: 85.325157
+  type: 'test'
+  ...
+# Subtest: cancelled acquisition does not run late SQL or retain an admission slot
+ok 5 - cancelled acquisition does not run late SQL or retain an admission slot
+  ---
+  duration_ms: 86.259426
+  type: 'test'
+  ...
+# Subtest: scope rejects use after completion and errors do not poison the next callback
+ok 6 - scope rejects use after completion and errors do not poison the next callback
+  ---
+  duration_ms: 9.221245
+  type: 'test'
+  ...
+# Subtest: a cancelled connection handshake settles promptly and late clients are destroyed without SQL
+ok 7 - a cancelled connection handshake settles promptly and late clients are destroyed without SQL
+  ---
+  duration_ms: 224.99929
+  type: 'test'
+  ...
+# Subtest: callback session settings restore on success and a terminated active backend rejects without process errors
+ok 8 - callback session settings restore on success and a terminated active backend rejects without process errors
+  ---
+  duration_ms: 25.291969
+  type: 'test'
+  ...
+# Subtest: concurrent repository queries serialize configuration with SQL and preserve stricter session limits
+ok 9 - concurrent repository queries serialize configuration with SQL and preserve stricter session limits
+  ---
+  duration_ms: 70.598149
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1734.304991
