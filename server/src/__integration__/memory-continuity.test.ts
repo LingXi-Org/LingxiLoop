@@ -11,7 +11,7 @@ import {resolveMemoryScopes} from '../modules/memory/public.js'
 import {ensureSchemaOnce,resetAllTables,seedCompanyWithAgent,seedUserMembership,teardownAll} from './_helpers.js'
 import {installRecordingWukong} from './_recording-wukong.js'
 
-after(teardownAll)
+after(async()=>{await teardownAll()})
 
 // Product behavior failures: private cross-room/Agent recall, real course binding,
 // recipient or membership widening, missing actual input injection, correction,
