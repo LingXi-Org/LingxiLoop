@@ -43,7 +43,7 @@ export function computeScope(changed = {}, manual = '') {
     .map((file) => basename(file))
   const openNotebook = enabled('openNotebook') || enabled('openNotebookTests') || release
   const deployment = enabled('deployment')
-  const deployContract = deployment || enabled('ci') || enabled('serverDocker') || enabled('wukongim') || enabled('gateway') || openNotebook || release
+  const deployContract = serverSource || deployment || enabled('ci') || enabled('serverDocker') || enabled('wukongim') || enabled('gateway') || openNotebook || release
   const checkJobs = []
   if (web) checkJobs.push({ component: 'web' })
   if (admin) checkJobs.push({ component: 'admin' })

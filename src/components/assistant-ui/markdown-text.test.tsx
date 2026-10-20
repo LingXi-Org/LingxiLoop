@@ -5,6 +5,7 @@ import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, Mes
 import type { MarkdownConfidenceClaim } from './markdown-text'
 import { ConfidenceMarker } from './elements/confidence-marker'
 import { create } from 'zustand'
+import { load } from 'cheerio'
 
 mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })) } })
 const { confidenceCopyText, MarkdownText } = await import('./markdown-text')
@@ -31,7 +32,7 @@ test('streamed prose and incomplete Markdown blocks appear before completion', (
       for (const running of [true, false]) {
         const html = renderMarkdown(<Preview text={text} running={running} inlineCitations={inlineCitations} />)
         assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
-        assert.ok(html.includes('第一段'))
+        assert.ok(load(html).text().includes('第一段'))
       }
     }
   }
@@ -60,8 +61,10 @@ test('lists and paragraphs retain their semantic layout without bubble wrappers'
       for (const running of [false, true]) {
         const html = renderMarkdown(<Preview text={`${lead}\n\n${list}\n\n接下来`} running={running} />)
         assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
-        assert.match(html, /学习方面[\s\S]*<\/(?:p|h2)>\s*<(?:ul|ol)/)
-        assert.ok(html.includes('接下来'))
+        const $ = load(html)
+        assert.equal($('.im-markdown > :first-child').text(), '学习方面')
+        assert.ok($('.im-markdown > :first-child').next().is('ul, ol'))
+        assert.ok($.text().includes('接下来'))
       }
     }
   }
@@ -71,7 +74,7 @@ test('unfinished structural blocks remain visible during streaming and interrupt
   for (const tail of ['- 一\n\n- 二', '> 引用\n>\n> 继续', '```js\nconst x = 1\n\n', '| 表头 |\n| --- |\n| 值 |']) {
     for (const interrupted of [false, true]) {
       const html = renderMarkdown(<Preview text={`已展示\n\n${tail}`} running={!interrupted} interrupted={interrupted} inlineCitations />)
-      assert.match(html, /已展示/)
+      assert.match(load(html).text(), /已展示/)
       assert.match(html, /<ul|<blockquote|<table|<pre/)
     }
   }
@@ -179,8 +182,8 @@ test('new citations underline answer wording and consume internal links before L
 test('new drafts show only body text and never activate citation navigation or stale confidence', () => {
   for (const running of [true, false]) {
     const html = renderMarkdown(<Preview text={'[间隔复习](#cite-S1) [【S2】](#cite-S2) [**【S2】**](#cite-S2)\n\n第二段\n\n'} running={running} inlineCitations />)
-    assert.match(html, /间隔复习/)
-    assert.ok(html.includes('第二段'))
+    assert.match(load(html).text(), /间隔复习/)
+    assert.ok(load(html).text().includes('第二段'))
     assert.doesNotMatch(html, /data-streamdown="link"|data-confidence-id|confidence-basis|【S2】/)
     assert.equal((html.match(/class="im-markdown-bubble"/g) ?? []).length, 0)
   }

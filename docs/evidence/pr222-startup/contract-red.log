@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: server image includes the complete shared runtime import graph
+not ok 1 - server image includes the complete shared runtime import graph
+  ---
+  duration_ms: 482.764062
+  type: 'test'
+  location: '/workspace/LingxiLoop-pr222-startup-fix/scripts/production-rag-contract.test.mjs:29:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/workspace/LingxiLoop-pr222-startup-fix/src/lib/participantDisplayName'"
+  code: 'ENOENT'
+  stack: |-
+    readFileSync (node:fs:440:20)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-pr222-startup-fix/scripts/production-rag-contract.test.mjs:38:46)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: CI component matrix runs only checks enabled by the changed scope
+not ok 2 - CI component matrix runs only checks enabled by the changed scope
+  ---
+  duration_ms: 2.301481
+  type: 'test'
+  location: '/workspace/LingxiLoop-pr222-startup-fix/scripts/production-rag-contract.test.mjs:108:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+        {
+          component: 'server'
+        },
+    -   {
+    -     component: 'deploy-contract'
+    -   }
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0:
+      component: 'server'
+    1:
+      component: 'deploy-contract'
+  actual:
+    0:
+      component: 'server'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-pr222-startup-fix/scripts/production-rag-contract.test.mjs:110:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 926.919569

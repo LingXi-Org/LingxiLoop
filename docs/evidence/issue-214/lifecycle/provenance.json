@@ -1,0 +1,107 @@
+{
+  "base": "1f18e4f3cf370d853248affcb161e29395994b5c",
+  "kind": "working-tree exact source hashes before corrective commit",
+  "sources": {
+    "src/components/assistant-ui/markdown-text.tsx": {
+      "sha256": "7e5a38f29595905f2fad572f268effe39e9e59b335134562ece143ab16d0d550",
+      "gitBlob": "0a400c3c3c7937d795547ba621d91c0fffd9a0f3"
+    },
+    "e2e/web/streaming-lifecycle.e2e.ts": {
+      "sha256": "a15dc438064e6e86cffbeccb87e1be2d55ee45411375e3e406bfc2facf617c9d",
+      "gitBlob": "a6b0117d1813a6e1eb5964be75b9ccd7dc08dc96"
+    },
+    "scripts/streaming-lifecycle-check.html": {
+      "sha256": "d0cd6da24de14ec8bd60f071fca1789bc920e7ff6e8238947c0fc6fc13760398",
+      "gitBlob": "6bd55d3e28c2dcddde1e9ee2cd3321d94a19480c"
+    },
+    "scripts/streaming-lifecycle-check.tsx": {
+      "sha256": "8a718051b58bec719bbde69cdc3b93d6bcd8cb0e97e99aeb7cb9846d04d0ea23",
+      "gitBlob": "16deb709b3bdb51201b39225fd39faf90c4bb46e"
+    }
+  },
+  "unchanged": {
+    "src/components/assistant-ui/markdown-streaming.tsx": {
+      "equalBase": true,
+      "sha256": "9086344cd6571109f64475c65e1de1ed53eca48942e86feda7b288e139b9bf85"
+    },
+    "src/components/assistant-ui/elements/streaming-text.tsx": {
+      "equalBase": true,
+      "sha256": "49d36ecd234c7135414432863596fef5f9dbdc64f7ec7c9b4e2beb6ce457aedc"
+    },
+    "src/styles/chat.css": {
+      "equalBase": true,
+      "sha256": "2a535a42b9bba8cd47099499e9d68ca32a5238dfb2af51561bf002a380f18e9f"
+    },
+    "package.json": {
+      "equalBase": true,
+      "sha256": "69bf49c6e368a6b56269e5a63a39b152e2faa48ca0cc28979254737c5cd4a432"
+    },
+    "package-lock.json": {
+      "equalBase": true,
+      "sha256": "066ce021b285dc3ec0922b22138d1e79d05a2a311a5112bfa0f3421ef6ab1cdb"
+    }
+  },
+  "packages": {
+    "react": {
+      "installed": "19.2.8",
+      "lock": "19.2.8",
+      "match": true
+    },
+    "react-dom": {
+      "installed": "19.2.8",
+      "lock": "19.2.8",
+      "match": true
+    },
+    "@assistant-ui/react": {
+      "installed": "0.15.16",
+      "lock": "0.15.16",
+      "match": true
+    },
+    "@assistant-ui/core": {
+      "installed": "0.3.15",
+      "lock": "0.3.15",
+      "match": true
+    },
+    "@assistant-ui/react-streamdown": {
+      "installed": "0.3.12",
+      "lock": "0.3.12",
+      "match": true
+    },
+    "streamdown": {
+      "installed": "2.6.0",
+      "lock": "2.6.0",
+      "match": true
+    },
+    "e2e": {
+      "installed": "0.17.0",
+      "lock": "0.17.0",
+      "match": true
+    },
+    "@e2e-dev/web": {
+      "installed": "0.12.0",
+      "lock": "0.12.0",
+      "match": true
+    }
+  },
+  "checks": {
+    "newBrowserRed": {
+      "passed": 1,
+      "failed": 3
+    },
+    "newBrowserGreen": {
+      "passed": 4,
+      "failed": 0
+    },
+    "originalBrowser": {
+      "passed": 7,
+      "failed": 0
+    },
+    "webTests": {
+      "passed": 65,
+      "failed": 0
+    },
+    "lintExit": 0,
+    "buildExit": 0,
+    "e2eTypecheckExit": 0
+  }
+}

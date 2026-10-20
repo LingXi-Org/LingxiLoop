@@ -1,0 +1,57 @@
+(node:1030714) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> lingxiloop@0.1.0-beta test:e2e:web
+> cross-env E2E_TELEMETRY_DISABLED=1 E2E_PROJECT=web node e2e/web/run.mjs e2e/web/streaming-tail-window.e2e.ts --output docs/evidence/issue-214-tail/split-red
+
+(node:1030746) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1030756) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1030768) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-pr220-tail-fix
+      run 01a15737-98aa-7a96-9d4c-585fb4103bf6 · targets: web
+
+(node:1030768) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1030849) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | |web| e2e/web/streaming-tail-window.e2e.ts > Whole text-part streaming tail > inline boundaries preserve whitespace without counting it as a word
+Inline tail windows: [{"text":"one two","fresh":["one","two"]},{"text":"one two","fresh":["one","two"]},{"text":"one\t  two","fresh":["one","two"]},{"text":"甲 乙","fresh":["甲","乙"]},{"text":"甲 乙","fresh":["甲","乙"]}]
+stdout | |web| e2e/web/streaming-tail-window.e2e.ts > Whole text-part streaming tail > one word in a new block retains the preceding word across structural boundaries
+Cross-block tail windows: [{"fresh":["one","two"],"carets":1},{"fresh":["two","three"],"carets":1},{"fresh":["three","four"],"carets":1},{"fresh":["乙","丙"],"carets":1},{"fresh":["乙","丙"],"carets":1},{"fresh":["乙","丙"],"carets":1}]
+ ❯ |web| e2e/web/streaming-tail-window.e2e.ts (3 tests | 1 failed) 13.48s
+   ✓ Whole text-part streaming tail > inline boundaries preserve whitespace without counting it as a word 9.52s
+   ✓ Whole text-part streaming tail > one word in a new block retains the preceding word across structural boundaries 2.24s
+   × Whole text-part streaming tail > visualize text slices share the original text-part window 1.73s
+     → expected {"fresh":["one","two","three"],"carets":2} to equal {"fresh":["…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| e2e/web/streaming-tail-window.e2e.ts > Whole text-part streaming tail > visualize text slices share the original text-part window
+ASSERTION_FAILED: expected {"fresh":["one","two","three"],"carets":2} to equal {"fresh":["two","three"],"carets":1}
+ ❯ e2e/web/streaming-tail-window.e2e.ts:94:20
+     92|         carets: [...document.querySelectorAll('#body [data-streaming-…
+     93|     })
+     94|     expect(result).toEqual({ fresh: ['two', 'three'], carets: 1 })
+       |                    ^
+     95|     console.log('Visualize-split tail:', JSON.stringify(result))
+     96|     await app.screenshot('visualize-split-tail')
+ ❯ at http://127.0.0.1:5204/scripts/streaming-browser-check.html?visualize=1
+ ❯ screen docs/evidence/issue-214-tail/split-red/artifacts/web/e2e_web_streaming-tail-window.e2e.ts__Whole_20text-part_20streaming_20tail__visualize_20text_20slices_20share_2-810cc902/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 0 passed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  02:50:24
+   Duration  14.15s
+     Report  docs/evidence/issue-214-tail/split-red/report.json
+
+      JUnit  docs/evidence/issue-214-tail/split-red/junit.xml
+   Markdown  docs/evidence/issue-214-tail/split-red/summary.md
+   Failures  docs/evidence/issue-214-tail/split-red/failures/ (1 page)
+

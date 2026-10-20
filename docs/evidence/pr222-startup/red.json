@@ -1,0 +1,23 @@
+[
+  {
+    "name": "native-source",
+    "status": 1,
+    "missingModule": true,
+    "participantDependency": true,
+    "envBoundary": false
+  },
+  {
+    "name": "web",
+    "status": 1,
+    "missingModule": true,
+    "participantDependency": true,
+    "envBoundary": false
+  },
+  {
+    "name": "worker",
+    "status": 1,
+    "missingModule": true,
+    "participantDependency": true,
+    "envBoundary": false
+  }
+]
