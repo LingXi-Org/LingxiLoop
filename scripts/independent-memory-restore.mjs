@@ -121,7 +121,9 @@ try{
  let ready=false;for(let n=0;n<60;n++){try{await docker(['exec',container,'pg_isready','-h','127.0.0.1','-U','postgres']);ready=true;break}catch{await new Promise(r=>setTimeout(r,250))}}assert.ok(ready)
  const ports=JSON.parse(await docker(['inspect','--format','{{json .NetworkSettings.Ports}}',container]));assert.equal(ports['5432/tcp'][0].HostIp,'127.0.0.1');evidence.port=ports['5432/tcp'][0].HostPort;assert.notEqual(evidence.port,'55432')
  const mounts=JSON.parse(await docker(['inspect','--format','{{json .Mounts}}',container]))
- assert.ok(mounts.some(m=>m.Type==='tmpfs'&&m.Destination==='/var/lib/postgresql/data'))
+ const tmpfs=JSON.parse(await docker(['inspect','--format','{{json .HostConfig.Tmpfs}}',container]))
+ assert.equal(tmpfs['/var/lib/postgresql/data'],'rw,size=768m')
+ assert.equal(await docker(['exec',container,'stat','-f','-c','%T','/var/lib/postgresql/data']),'tmpfs')
  assert.ok(mounts.every(m=>m.Type!=='volume'))
  evidence.fixtureStorage={dataTmpfs:true,persistentVolumes:0}
  admin=new Pool({connectionString:dbURL('postgres'),max:1});evidence.postgresVersion=(await admin.query('SHOW server_version')).rows[0].server_version
