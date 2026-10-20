@@ -10,6 +10,7 @@ import '@/styles/globals.css'
 useAuth.setState({ activeCompanyId: 'fixture-company', ready: true })
 setWorkspaceSession({ companyId: 'fixture-company', projectId: 'fixture-project' })
 const count = Number(new URLSearchParams(location.search).get('count') ?? 1)
+const offscreen = new URLSearchParams(location.search).has('offscreen')
 await fetch('/__visualize_fixture/reset')
 function LoadingFixture() {
   const [session, setSession] = useState<string | null>(null)
@@ -26,7 +27,7 @@ function LoadingFixture() {
       <input aria-label="对话输入" placeholder="继续输入" />
     </nav>
     <p>对话正文始终可读，以下为已保存的完整交互内容。</p>
-    <div style={{ display: 'grid', gridTemplateColumns: count > 1 ? 'repeat(3,minmax(0,1fr))' : '1fr', gap: 16, maxWidth: 1100, margin: 'auto' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: count > 1 && !offscreen ? 'repeat(3,minmax(0,1fr))' : '1fr', gap: offscreen ? 1100 : 16, maxWidth: 1100, margin: 'auto' }}>
       {session && Array.from({ length: count }, (_, index) => {
         const target = { workspacePath: 'fixture-project', workspaceIdentity: 'fixture-company', sessionId: `fixture-channel-${session}`, path: '/fixture/acceptance.html', instanceKey: `loading-${index}`, sourceMessageId: 'fixture-source' }
         return <GenUiCard key={`${session}:${index}`} target={target} reference={{ path: target.path, title: `交互内容 ${index + 1}` }} />

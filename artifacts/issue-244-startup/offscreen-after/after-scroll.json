@@ -1,0 +1,15 @@
+{
+  "frames": 2,
+  "resources": 16,
+  "transport": {
+    "follows": [],
+    "external": [],
+    "denied": [],
+    "externalHits": 0,
+    "acceptedSaves": 0,
+    "activePages": 2,
+    "closedPages": 0,
+    "blocked": [],
+    "aborted": []
+  }
+}
