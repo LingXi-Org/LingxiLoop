@@ -459,6 +459,7 @@ test('initial history is ready before slow run snapshots, which merge without du
   } finally {
     unsubscribe()
     transport.disconnect()
+    await new Promise(resolve => setImmediate(resolve))
     globalThis.window = originalWindow
     mock.restoreAll()
   }

@@ -145,6 +145,8 @@ test('history paints independently of diagnostics and obsolete requests cannot m
     }
   } finally {
     transport.disconnect()
+    await setImmediate()
+    assert.ok(streams.every(stream => stream.signal.aborted))
     Reflect.deleteProperty(globalThis, 'window')
   }
 })

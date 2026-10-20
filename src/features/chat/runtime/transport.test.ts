@@ -9,6 +9,9 @@ import { RunStreamProjection } from '../../../../server/src/agent-runtime/assist
 test('run notifications and discovery subscribe before blocked history, deduplicate and recover closed streams', async () => {
   let receive!: (event: WsEvent) => void
   const opened: Array<{ runId: string; signal: AbortSignal; close(): void; receive(event: RunStreamEvent): void }> = []
+  let settled = 0
+  const timers = new Set<number>()
+  let nextTimer = 0
   const listed: Array<{ conversationId: string; agentId: string; runId: string; status: string }> = []
   let reads = 0
   const retries: Array<() => void> = []
@@ -39,10 +42,11 @@ test('run notifications and discovery subscribe before blocked history, deduplic
       const projection = new RunStreamProjection(target.runId, true)
       opened.push({ runId: target.runId, signal, close: resolve, receive: event => listener(projection.apply(event)) })
       signal.addEventListener('abort', () => resolve(), { once: true })
-    }),
+    }).then(() => { settled++ }),
   } } })
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {
-    setTimeout: (callback: () => void) => { retries.push(callback); return retries.length }, clearTimeout: () => {},
+    setTimeout: (callback: () => void) => { const id = ++nextTimer; timers.add(id); retries.push(callback); return id },
+    clearTimeout: (id: number) => { timers.delete(id) },
     addEventListener() {}, removeEventListener() {},
   } })
   const { ChatTransport } = await import('./transport')
@@ -91,8 +95,15 @@ test('run notifications and discovery subscribe before blocked history, deduplic
       attemptId: 'old', seq: 1, kind: 'snapshot', draft: '旧会话' } })
     assert.deepEqual(useChatThreadStore.getState().conversations, {})
   } finally {
+    const subscriptionCount = opened.length
     transport.disconnect()
+    // Keep the browser fixture alive while both stream loops finish abort cleanup.
+    await setImmediate()
     assert.ok(opened.every(stream => stream.signal.aborted))
+    assert.equal(settled, opened.length, 'all cancelled subscriptions must finish before removing window')
+    assert.equal(timers.size, 0, 'cancellation must release every recovery timer')
+    assert.equal(opened.length, subscriptionCount, 'disconnect must not schedule another subscription')
+    assert.deepEqual(useChatThreadStore.getState().conversations, {})
     assert.equal(reads, 0)
     Reflect.deleteProperty(globalThis, 'window')
   }

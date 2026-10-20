@@ -1,0 +1,9 @@
+# Chat transport unit-fixture teardown
+
+Baseline: `d1b42220d88026242c293482e8adf598af6f604e` with the existing local source-3.5.8 runtime dependency. Four frontend files pass their assertions, then fail outside the test with `window is not defined` or an undefined `window.setTimeout`. The separate missing WUKONG_USER_TOKEN_SECRET setup failure is not a product defect and needs no code correction.
+
+The browser fixtures synchronously remove their window immediately after ChatTransport.disconnect(). Disconnect aborts streams synchronously; resolving the mocked SSE subscription resumes the streaming loop in later microtasks. Its final abort-aware recovery wait creates and immediately clears a timer, then the polling/streaming aggregate releases listeners. Deleting window before those continuations run invalidates a browser dependency still needed for teardown. Browser disconnect itself does not delete the browser global.
+
+Failure cases to retain: the original four files fail without --test-force-exit; abort is issued to every active subscription; cancellation continuations finish before browser globals and module mocks are restored; no retry/network access or fake timers remain after disconnect; no stale stream mutates the cleared conversation state. Pending work must not be suppressed with exception handlers, catches or forced process exit.
+
+Run the unchanged four files first with module mocks enabled and no --test-force-exit. Then apply only a fixture teardown correction, keep existing behavioral assertions, and rerun the same command to natural process exit. The repository runner's default --test-force-exit may conceal these after-test rejections; changing that global runner or the runtime/browser API is outside this narrow task. No production, model/provider, database, dependency installation or release action is needed.

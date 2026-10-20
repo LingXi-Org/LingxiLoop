@@ -86,5 +86,10 @@ test('history restores stopped runs before publishing messages, without replayin
     assert.equal(useChatThreadStore.getState().conversations.room.loaded, true)
     assert.ok(useChatThreadStore.getState().conversations.room.error)
     assert.ok(reads >= 7)
-  } finally { unsubscribe(); transport.disconnect(); Reflect.deleteProperty(globalThis, 'window') }
+  } finally {
+    unsubscribe(); transport.disconnect()
+    // Aborting a subscription resumes its recovery/finally microtasks.
+    await setImmediate()
+    Reflect.deleteProperty(globalThis, 'window')
+  }
 })
