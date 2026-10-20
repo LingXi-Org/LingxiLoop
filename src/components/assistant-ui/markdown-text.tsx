@@ -8,7 +8,7 @@ import { createMathPlugin } from '@streamdown/math'
 import { createMermaidPlugin } from '@streamdown/mermaid'
 import { Block, type BlockProps, StreamdownContext, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
-import { createContext, memo, useContext, useMemo, useState } from 'react'
+import { createContext, memo, useContext, useMemo, useState, useSyncExternalStore } from 'react'
 import type { Root, ElementContent } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
 import {
@@ -27,6 +27,14 @@ export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 
 const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid: createMermaidPlugin({ config: { securityLevel: 'strict', startOnLoad: false } }) }
 const smooth = { minCommitMs: 32 }
+const motionQuery = '(prefers-reduced-motion: reduce)'
+const readReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.(motionQuery).matches
+const serverReducedMotion = () => false
+function subscribeReducedMotion(notify: () => void) {
+  const media = window.matchMedia?.(motionQuery)
+  media?.addEventListener('change', notify)
+  return () => media?.removeEventListener('change', notify)
+}
 const translations = {
   close: '关闭', copied: '已复制', copyCode: '复制代码', copyLink: '复制链接', copyTable: '复制表格',
   copyTableAsCsv: '复制为 CSV', copyTableAsMarkdown: '复制为 Markdown', copyTableAsTsv: '复制为 TSV',
@@ -179,7 +187,19 @@ const MarkdownTextImpl = ({
   const { text } = part
   // Assistant-ui may reuse a message slot across thread switches. Give its
   // smooth queue and our Markdown leaf lifetime the actual text-part identity.
-  const partKey = useAuiState(state => `${state.message.id}:${state.message.parts.indexOf(state.part)}`)
+  const partKey = useAuiState(state => JSON.stringify([state.message.id,
+    activityAnnotation(state.part)?.id ?? state.message.parts.indexOf(state.part)]))
+  // The SDK marks non-last Text parts complete when their message is stopped.
+  // Preserve normal completion draining, but settle every interrupted part now.
+  const messageInterrupted = useAuiState(state => state.message.status?.type === 'incomplete')
+  const reducedMotion = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion)
+  const [motionLifetime, setMotionLifetime] = useState({ partKey, settled: reducedMotion })
+  // Once this part has displayed its full text under reduced motion, never
+  // resume its SDK queue's older prefix. A new part starts a fresh lifetime.
+  const motionSettled = reducedMotion || motionLifetime.partKey === partKey && motionLifetime.settled
+  if (motionLifetime.partKey !== partKey || reducedMotion && !motionLifetime.settled) {
+    setMotionLifetime({ partKey, settled: reducedMotion })
+  }
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const splitTextOffset = useContext(TextOffsetContext)
   const nativeTextOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
@@ -202,7 +222,7 @@ const MarkdownTextImpl = ({
       <div data-find-content>
         <StreamdownTextPrimitive
           key={partKey}
-          smooth={agent && typeof window !== 'undefined' && part.status.type !== 'incomplete' ? smooth : false}
+          smooth={agent && typeof window !== 'undefined' && !motionSettled && !messageInterrupted && part.status.type !== 'incomplete' ? smooth : false}
           animated={false}
           containerClassName="im-markdown-host"
           plugins={plugins}
