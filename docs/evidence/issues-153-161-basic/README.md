@@ -15,8 +15,11 @@ No production verification or deployment is claimed by this task.
 
 Read both full issues/comments and merged PRs #168/#170/#174/#175/#180/#185/#194,
 plus the later #198/#206 runtime/resource changes. Historical versioned evidence
-remains historical. Source review found no additional product/runtime defect
-requiring a fix. This PR adds missing **current-version short process evidence**,
+remains historical. This task's source review found no additional defect. The
+integrator separately confirmed that product delivery/model-usage callback SQL
+can outlive the runtime callback deadline and occupy foreground pool slots;
+that defect remains an open #153 dependency tracked by PR209. These short tests
+do not cover or clear it. This PR adds **current-version short process evidence**,
 with the prior-written [failure model](FAILURE-MODEL.md), not a runtime change.
 
 ## #153: roles, resources, pool and readiness
@@ -55,9 +58,10 @@ with the prior-written [failure model](FAILURE-MODEL.md), not a runtime change.
   See [foundation receipt](foundation/regression.json), [log](foundation.log),
   and [Compose checks](foundation/config.json).
 
-**Basic-acceptance recommendation: satisfied**, subject to the integrator's
-review of this evidence. No new production code or deployment is needed solely
-for #153. Long memory/heap trends, production load and full fault/SPA matrices
+**Foundation evidence: satisfied**, subject to the integrator's review. Overall
+#153 acceptance remains pending the independently found callback deadline fix,
+its owning tests and production deployment. These fixture changes alone need
+no deployment. Long memory/heap trends, production load and full fault/SPA matrices
 remain unverified and are not silently relabelled as passing.
 
 ## #161: durable terminal, replay and next-message recovery
