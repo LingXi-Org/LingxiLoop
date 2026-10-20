@@ -1,6 +1,6 @@
 import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk, type AssistantTransportStateOperation } from 'assistant-stream'
 import type { ReadonlyJSONValue } from 'assistant-stream/utils'
-import { consumeAssistantMessage, consumeRunStreamEvent, createRunView, type AssistantMessage, type RunStreamEvent } from '@lyyzka/lingxios/ui'
+import { consumeAssistantMessage, consumeRunStreamEvent, consumePublicTextAttempts, createRunView, type AssistantMessage, type RunStreamEvent, type PublicTextAttempt } from '@lyyzka/lingxios/ui'
 import type { createLingxiOS, RunIdentity, RuntimeOperationContext } from '@lyyzka/lingxios'
 import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { createNativeMessage } from '../im/message-types.js'
@@ -33,6 +33,10 @@ export class RunStreamProjection {
   apply(item: RunStreamEvent): AgentRunSnapshot {
     this.advance(item)
     return this.snapshot
+  }
+
+  restorePublicAttempts(attempts: readonly PublicTextAttempt[]): void {
+    this.view = consumePublicTextAttempts(this.view,attempts)
   }
 
   /** Consume in order; callers must materialize and validate before emitting. */
@@ -130,7 +134,7 @@ export class RunStreamProjection {
 
   get snapshot(): AgentRunSnapshot {
     if (!this.createdAt) throw new Error('run state must precede message updates')
-    const { message, draft: _draft, preview: _preview, ...control } = this.view
+    const { message, draft: _draft, preview: _preview, publicTextParts: _publicTextParts, publicTextAttempts: _publicTextAttempts, ...control } = this.view
     // Outcome gaps are internal verification diagnostics, not product copy.
     const { gaps: _gaps, ...outcome } = control.goalOutcome ?? {}
     const harness: RunDisplayState = { ...control,
@@ -138,14 +142,21 @@ export class RunStreamProjection {
       artifacts: message?.envelope.artifacts ?? [] }
     const agentId = this.identity?.agentId ?? message?.agentId
     // Ephemeral cleanup must not retract validated model.delta text before its committed state arrives.
-    const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools)
+    // A committed answer explicitly names its streamed source part. Keep that
+    // immutable prefix in activityPage, but do not repeat it above the answer.
+    const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools,{ includeAcceptedPublicText: false })
+    const acceptedPublicParts = (this.view.publicTextParts ?? []).filter(part => part.acceptedResultId).length
     const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
     const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
     const activitySet = new Set(activity)
-    const selected = new Set([...activity.filter(part => activityAnnotation(part)?.kind !== 'attention').slice(-40), ...attention.slice(-40)])
+    const recent = activity.filter(part => activityAnnotation(part)?.kind !== 'attention').slice(-40)
+    const latestCommentary = activity.filter(part => activityAnnotation(part)?.kind === 'commentary').at(-1)
+    if (latestCommentary && !recent.includes(latestCommentary)) { recent.shift(); recent.push(latestCommentary) }
+    const selected = new Set([...recent, ...attention.slice(-40)])
     const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
       content: parts, status: runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
+        ...(acceptedPublicParts ? { activityHistory: { total: activity.length+acceptedPublicParts,attention: attention.length } } : {}),
         ...(this.questionnaireWait?.requestVersion === this.view.requestVersion && this.view.goalOutcome?.status === 'awaiting_input'
           ? { questionnaireWait: this.questionnaireWait } : {}),
         ...(agentId ? { refs: { runId: this.view.runId, agentId } } : {}),
@@ -159,7 +170,7 @@ export class RunStreamProjection {
     if (activity.length <= 80) {
       try { return { message: createNativeMessage(input) } } catch { /* preserve answer and page activity below */ }
     }
-    const compact = { ...input, custom: { ...input.custom, activityHistory: { total: activity.length, attention: attention.length } } }
+    const compact = { ...input, custom: { ...input.custom, activityHistory: { total: activity.length+acceptedPublicParts, attention: attention.length } } }
     while (selected.size) {
       compact.content = parts.filter(part => !activitySet.has(part) || selected.has(part))
       try { return { message: createNativeMessage(compact) } }
@@ -181,6 +192,7 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   while (true) {
     signal.throwIfAborted()
     const page = await api.readEvents(identity,cursor,operation)
+    projection.restorePublicAttempts(page.publicTextAttempts ?? [])
     for (const event of page.events) projection.apply({ type: 'event',event })
     if (page.events.length < 100) break
     if (page.nextSeq <= cursor) throw new Error('runtime event cursor did not advance')

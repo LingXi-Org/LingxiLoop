@@ -57,7 +57,12 @@ test('published worker persists authorized public activity and measured tool bou
     const projected = (await readRunProjection(api, identity, true)).snapshot.message
     const history = (await readRunProjection(api, identity, true)).snapshot.message
     assert.deepEqual(projected.content, history.content)
-    assert.deepEqual(projected.content.map(part => part.type), ['text', 'reasoning', 'tool-call', 'generative-ui', 'text'])
+    // Different provider attempts retain their already-published explanation,
+    // even when the model reuses the same report id on its next hop.
+    assert.deepEqual(projected.content.map(part => part.type), ['text', 'reasoning', 'tool-call', 'reasoning', 'generative-ui', 'text'])
+    assert.notEqual(activityAnnotation(projected.content[1])?.id,activityAnnotation(projected.content[3])?.id)
+    assert.deepEqual(projected.content[1].type === 'reasoning' && projected.content[1].status,{ type: 'incomplete',reason: 'other' })
+    assert.deepEqual(projected.content[3].type === 'reasoning' && projected.content[3].status,{ type: 'complete' })
     assert.equal(nativeText(projected), '最终答复。')
     const httpServer = createServer(await buildApiTestApp('test-owner'))
     await new Promise<void>(resolve => httpServer.listen(0, '127.0.0.1', resolve))
@@ -68,8 +73,8 @@ test('published worker persists authorized public activity and measured tool bou
       const response = await request('activityOffset=0')
       assert.equal(response.status, 200)
       const page = await response.json() as { message: { content: unknown[] }; total: number; nextOffset: number | null }
-      assert.equal(page.total, 4); assert.equal(page.nextOffset, null)
-      assert.equal(page.message.content.length, 4)
+      assert.equal(page.total, 5); assert.equal(page.nextOffset, null)
+      assert.equal(page.message.content.length, 5)
       assert.doesNotMatch(JSON.stringify(page), /PRIVATE_SECRET|scratchpad|system_prompt/)
       assert.notEqual((await request('activityOffset=0&threadId=another-thread')).status, 200)
       assert.notEqual((await request('activityOffset=0', 'other-company')).status, 200)

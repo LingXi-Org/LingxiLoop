@@ -1,0 +1,77 @@
+TAP version 13
+# Subtest: public provider attempts stay distinct and ordered through failure and final answer projection
+ok 1 - public provider attempts stay distinct and ordered through failure and final answer projection
+  ---
+  duration_ms: 74.857467
+  type: 'test'
+  ...
+# Subtest: same progress id cannot replace or revive an old report (same fence: false)
+ok 2 - same progress id cannot replace or revive an old report (same fence: false)
+  ---
+  duration_ms: 1.90972
+  type: 'test'
+  ...
+# Subtest: same progress id cannot replace or revive an old report (same fence: true)
+ok 3 - same progress id cannot replace or revive an old report (same fence: true)
+  ---
+  duration_ms: 0.662198
+  type: 'test'
+  ...
+# Subtest: the latest published explanation survives the 40-part snapshot window while all history stays pageable
+ok 4 - the latest published explanation survives the 40-part snapshot window while all history stays pageable
+  ---
+  duration_ms: 212.484864
+  type: 'test'
+  ...
+# [env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET
+# Subtest: cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+ok 5 - cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+  ---
+  duration_ms: 22.275943
+  type: 'test'
+  ...
+# Subtest: normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+ok 6 - normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+  ---
+  duration_ms: 1.732994
+  type: 'test'
+  ...
+# Subtest: multiple planning directives are held cumulatively before a later cluster can reject them
+ok 7 - multiple planning directives are held cumulatively before a later cluster can reject them
+  ---
+  duration_ms: 4.956906
+  type: 'test'
+  ...
+# Subtest: fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+ok 8 - fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+  ---
+  duration_ms: 13.81964
+  type: 'test'
+  ...
+# Subtest: leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+ok 9 - leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+  ---
+  duration_ms: 0.566193
+  type: 'test'
+  ...
+# Subtest: approval holds a trailing high surrogate until the pair arrives
+ok 10 - approval holds a trailing high surrogate until the pair arrives
+  ---
+  duration_ms: 0.238821
+  type: 'test'
+  ...
+# Subtest: long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+ok 11 - long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+  ---
+  duration_ms: 1.951263
+  type: 'test'
+  ...
+1..11
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3777.850759

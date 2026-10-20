@@ -1,0 +1,73 @@
+TAP version 13
+# [env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET
+# Subtest: cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+not ok 1 - cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+  ---
+  duration_ms: 12.481098
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:1:1339'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE_STREAM_SENTINEL|<think|<analysis|<system|<\|/. Input:
+    
+    'I will inspect the files.\n<system>PRIVATE_STREAM_SENTINEL'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    I will inspect the files.
+    <system>PRIVATE_STREAM_SENTINEL
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:37:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+ok 2 - normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+  ---
+  duration_ms: 1.288512
+  type: 'test'
+  ...
+# Subtest: multiple planning directives are held cumulatively before a later cluster can reject them
+ok 3 - multiple planning directives are held cumulatively before a later cluster can reject them
+  ---
+  duration_ms: 6.3675
+  type: 'test'
+  ...
+# Subtest: fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+ok 4 - fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+  ---
+  duration_ms: 16.960621
+  type: 'test'
+  ...
+# Subtest: leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+ok 5 - leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+  ---
+  duration_ms: 0.488016
+  type: 'test'
+  ...
+# Subtest: approval holds a trailing high surrogate until the pair arrives
+ok 6 - approval holds a trailing high surrogate until the pair arrives
+  ---
+  duration_ms: 0.204328
+  type: 'test'
+  ...
+# Subtest: long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+ok 7 - long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+  ---
+  duration_ms: 1.978082
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 6
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1764.019616

@@ -8,8 +8,13 @@ import { getActiveCompanyId } from '@/stores/auth'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { memoryActivitySchema } from '@/lib/memoryActivity'
+import { z } from 'zod'
 
 export interface AgentRunTarget { conversationId: string; agentId: string; runId: string; threadId?: string }
+export interface RunHistoryAnchors { sourceClientMsgNos: string[]; runIds: string[] }
+const runHistoryPageSchema = z.object({ runs: z.array(z.object({ conversationId: z.string(),agentId: z.string(),runId: z.string(),threadId: z.string().optional(),
+  requestVersion: z.number().int().nonnegative(),fence: z.number().int().nonnegative(),status: z.enum(['queued','leased','waiting','succeeded','failed','cancelled']),
+}).strict()).max(20),nextCursor: z.string().min(1).max(6000).nullable() }).strict()
 export type AgentRunResponse = AgentRunSnapshot
 const path = (target: AgentRunTarget) => `/im/channels/${encodeURIComponent(target.conversationId)}/agents/${encodeURIComponent(target.agentId)}/runs/${encodeURIComponent(target.runId)}`
 const thread = (target: AgentRunTarget): Record<string, string> => target.threadId ? { threadId: target.threadId } : {}
@@ -30,6 +35,32 @@ export const harnessApi = {
   },
   readApproval: (id: string, signal?: AbortSignal) => http<unknown>(`/im/approvals/${encodeURIComponent(id)}`, { signal }),
   list: (conversationId: string, signal?: AbortSignal) => http<(AgentRunTarget & Pick<RunState['run'], 'requestVersion' | 'fence' | 'status'>)[]>(`/im/channels/${encodeURIComponent(conversationId)}/runs`,{ signal }),
+  async history(conversationId: string, anchors: RunHistoryAnchors, signal?: AbortSignal) {
+    const entries = [...new Set(anchors.sourceClientMsgNos)].map(id => ({ source: true,id }))
+      .concat([...new Set(anchors.runIds)].map(id => ({ source: false,id })))
+    const runs = new Map<string,z.infer<typeof runHistoryPageSchema>['runs'][number]>()
+    const bounded = AbortSignal.any([AbortSignal.timeout(30_000),...(signal ? [signal] : [])])
+    for (let offset = 0; offset < entries.length; offset += 50) {
+      const group = entries.slice(offset,offset+50)
+      const body = { sourceClientMsgNos: group.filter(item => item.source).map(item => item.id),runIds: group.filter(item => !item.source).map(item => item.id) }
+      let cursor: string | undefined
+      const seen = new Set<string>()
+      do {
+        bounded.throwIfAborted()
+        const page = runHistoryPageSchema.parse(await http(`/im/channels/${encodeURIComponent(conversationId)}/runs`,{
+          method: 'POST',body: JSON.stringify({ ...body,...(cursor ? { cursor } : {}) }),signal: bounded,
+        }))
+        for (const run of page.runs) {
+          if (run.conversationId !== conversationId) throw new Error('历史任务不属于当前对话')
+          runs.set(run.runId,run)
+        }
+        cursor = page.nextCursor ?? undefined
+        if (cursor && seen.has(cursor)) throw new Error('历史任务游标未前进')
+        if (cursor) seen.add(cursor)
+      } while (cursor)
+    }
+    return [...runs.values()]
+  },
   async subscribe(target: AgentRunTarget, receive: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal): Promise<void> {
     const company = getActiveCompanyId()
     if (!company) throw new Error('请先选择工作空间')

@@ -375,6 +375,7 @@ test('initial history is ready before slow run snapshots, which merge without du
     onConnected: () => () => {},
     connect: async () => {},disconnect: () => {},subscribe: (receive: typeof receiveIm) => { receiveIm = receive; return () => {} } } } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
+    history: async () => [],
     cancel: async ({ runId }: typeof target) => {
       cancelled.push(runId)
       if (runId === 'reject') throw new Error('unavailable')

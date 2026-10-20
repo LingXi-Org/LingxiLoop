@@ -1,0 +1,13 @@
+{
+  "runtime": "3.5.6",
+  "passed": true,
+  "recent": 20,
+  "recovered": 24,
+  "pageLimit": 20,
+  "oldStoppedRecovered": true,
+  "scopeDenials": true,
+  "realLocalPostgres": true,
+  "productionRequests": 0,
+  "packageQualification": "unpublished preliminary source pack; metadata 3.5.6 is not formal-release evidence",
+  "packageSha256": "82272b9a0cdaff194df21a5baab4f99cad72819958d9daceb8b3f695986e08e0"
+}

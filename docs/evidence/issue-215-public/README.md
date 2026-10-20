@@ -1,0 +1,37 @@
+# Durable public activity — candidate evidence
+
+Product base PR221 `121de820107c00a81e77f9583322ede8ca7d33ac`, normally merged main `035a8e11f4f092e6d6535dd4455cbc32c3a5f743`. Failure model and tests preceded implementation (`06c0a1be`). Consumer implementation is fixed at `b9e94c06a20faa4304fd3f65e34a244a8f6ca61f`. No migration, formal dependency lock change, production mutation or deployment is included.
+
+The product consumes public runtime events/attempt metadata, disables ephemeral drafts and authorizes publication against the current binding and frozen audience in the runtime's bounded transaction. An incremental safety gate approves irreversible prefixes, retaining ambiguous markers or planning clusters and preserving Markdown quoted data. Its 8,192 UTF-16 live assessment threshold bounds repeated scanning; the runtime can pause optional publication while the provider and fully validated final answer continue. Final citation/completeness validation remains separate.
+
+Current IM membership, project access and original request identity authorize historical run lookup. Loaded source-message/run anchors are lookup hints, not authority. Stable opaque cursors return at most 20 product-binding rows per page, so failed/cancelled runs beyond recent 20 remain recoverable without an all-history scan or private runtime SQL. Each event retains its recorded request/fence/provider-attempt identity. Main snapshots retain the latest tool explanation and attention; explicit runtime `acceptedResultId` moves the accepted final source out of the foreground while preserving every part in paged history. No text comparison determines acceptance.
+
+## Candidate checks
+
+[Final receipts, raw logs and screenshots](final-e03c) identify the exact source pack used. It is **unpublished**, with temporary metadata 3.5.6; the formal manifests/locks still reference the published 3.5.6. This branch requires the new public API and is not ready for deployment with those old locks. The sole integrator must pin the eventual formal release and repeat affected checks and exact CI.
+
+Against final local upstream `e03cc2dbd8aa178253d37c4931fd7ba6d5e5eef6`, pack SHA256 `2d4f958f09a9faffb6802a3e05e54994d36cdb573d31f815fac4513aa7a103bc` (earlier `00f7…` results are retained in [accepted-candidate](accepted-candidate)):
+
+- Real network PostgreSQL 16.15, public Worker and Assistant Transport: 5/5 (complete, cancellation, audience revocation, unsafe split marker, final streamed answer). A prefix is durable and SSE-visible before the tool; terminal SSE and state-first reload preserve it. The actual streamed final answer appears once; its source and the tool explanation remain in history.
+- Product HTTP and prior owning integration: 2/2, including 1 failed plus 23 cancelled runs, bounded cursor pages and cross-scope/internal/cursor rejection.
+- Targeted unit checks: 23/23; server/web typechecks and lint pass. Lint retains pre-existing warnings.
+- Official `@e2e-dev/web`: 3/3, including the real Worker-produced synthetic message rendered by the actual component tree. The corresponding browser red found two visible copies of the final body; green finds one and opens all three historical activities.
+- Separate official browser render budget on the earlier `00f7…` candidate: 1/1. One visible-page sample measured synthetic receipt→paint at 17 ms and synthetic trigger→running status at 39.1 ms. These are not provider TTFT, submit→public latency or population percentiles; the 300 ms render and 1 s first-feedback values are budgets.
+
+Upstream independent review subsequently found and corrected two acceptance authorization gaps: unrelated source references and host-forged commit events. The corrected source is `e03cc2dbd8aa178253d37c4931fd7ba6d5e5eef6`, pack SHA256 `2d4f958f09a9faffb6802a3e05e54994d36cdb573d31f815fac4513aa7a103bc`. The five Worker/SSE cases, two HTTP/owning cases, 23 units, type/lint and three browser cases above were rerun successfully against this exact corrected pack; the field contract is unchanged. The browser development server restarted with forced dependency optimization before this final run.
+
+## Red evidence and limits
+
+[Original baseline evidence](preliminary-validation.json) records formally published 3.5.6 failing durable-prefix and old-run recovery cases. The preliminary pack (`82272b9a…`) later passed those cases but lacked the content gate and disclosed the split-marker sentinel in the real owning test. Upstream `1091ee6b…` plus the actual product hook passed the independent 16-case runtime/driver security matrix; this is separate from the real PostgreSQL product tests. The product additionally reproduced and corrected the already-prohibited unquoted `system` marker boundary, preserving quoted code examples. The upstream final association avoids duplicating accepted final answers and does not make EOF invent a part when no delta was received.
+
+An intermediate broader run timed out two cases; an isolated rerun completed in 3.08 seconds. Read-only local PostgreSQL logs did not establish a database cause. No model/database root cause or successful result is inferred from those timeouts. In the first `00f7…` run, two tool assertions failed because the synthetic driver emitted non-empty deltas but returned empty accumulated text; aligning the fixture with the official driver's accumulated-text contract restored both cases, without removing the tool assertions.
+
+Fixture teardown can log outbox acknowledgement warnings while retaining durable intent; these tests do not claim full outbox drain. Candidate packs are installed only in this worktree's private `node_modules`. Earlier unit sets overlap and should not be summed. Full production fault matrices, production provider equivalence and long soak are unverified. Formal release, final exact locks/CI, independent review and deployed acceptance remain the sole integrator's gates.
+
+## One configured-provider timing case
+
+[Count-only receipt](live-configured-provider.json): one finite synthetic request used the executor's existing `zai-org/GLM-5.2` configuration at `https://api.siliconflow.cn/v1`, product commit `b9e94c06…`, and candidate `00f7d7ae…` / pack `d4c1438e…`. This differs from the production model configuration and is not production-equivalent or the final `e03c…` package check. The isolated PostgreSQL tenant and IM were synthetic; no production database/IM requests occurred. No prompt, answer, raw reasoning or credentials are in the receipt.
+
+The clock starts immediately before conversation ingest, after synthetic tenant/policy setup. Ingest returned in 14.25 ms; the first actual non-empty commentary decoded from Assistant Transport SSE arrived at 2,979.56 ms, **above the 1,000 ms first-public-content budget**. `worker.runNext` returned at 5,330.35 ms, which is not a full outbox-drain measurement. The shared product ledger recorded two successful model calls: 19,789/3,699 input tokens, 7/40 output tokens, 2,633/2,027 ms call latency, estimated combined cost USD 0.01551143. The case was limited to three model calls and 60 seconds; it was not repeated to seek a better number.
+
+The separate browser receipt→paint sample above is 17 ms, under 300 ms. Neither a loading status nor that rendering result stands in for provider first-content latency. No comparable pre-change provider baseline was measured, so no before/after provider speedup or general latency percentile is claimed.

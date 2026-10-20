@@ -39,6 +39,7 @@ test('history restores stopped runs before publishing messages, without replayin
   } } })
   mock.module('./outbox', { namedExports: { readChatOutbox: () => [], forgetChatOutbox() {}, rememberChatOutbox() {} } })
   mock.module('./harness-api', { namedExports: { harnessApi: {
+    history: async () => [],
     list: async () => [target], read: async () => { reads++; return read() },
     subscribe: (_target: unknown, _receive: unknown, signal: AbortSignal) => {
       streams++

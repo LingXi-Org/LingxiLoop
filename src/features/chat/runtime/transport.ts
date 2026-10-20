@@ -37,7 +37,7 @@ import {
   useChatThreadStore,
   type ConversationChatState,
 } from './store'
-import { harnessApi, type AgentRunTarget } from './harness-api'
+import { harnessApi, type AgentRunTarget, type RunHistoryAnchors } from './harness-api'
 import { applyRunSnapshot, needsRunStream } from './run-updates'
 import { canCancelRun, isOlderRun, isRunMessage } from './harness'
 import { attachmentMessage, uploadedAttachment } from './attachment-messages'
@@ -108,6 +108,21 @@ function oldestSequence(messages: readonly ThreadMessage[]): number | null {
     .map((message) => messageMetadata(message).sequence)
     .filter((value): value is number => value !== null && value > 0)
   return values.length > 0 ? Math.min(...values) : null
+}
+
+function historyAnchors(envelopes: readonly ImEnvelope[]): RunHistoryAnchors {
+  const sourceClientMsgNos = new Set<string>(), runIds = new Set<string>()
+  for (const envelope of envelopes) {
+    if (envelope.clientMsgNo) sourceClientMsgNos.add(envelope.clientMsgNo)
+    const refs = envelope.payload.metadata.custom.refs
+    const runId = refs && typeof refs === 'object' ? Reflect.get(refs,'runId') : undefined
+    if (typeof runId === 'string' && runId) runIds.add(runId)
+    // Durable terminal notifications are system IM messages with custom.runId,
+    // even when no assistant result/refs could ever be committed.
+    const terminalRun = envelope.payload.metadata.custom.runId
+    if (envelope.payload.role !== 'user' && typeof terminalRun === 'string' && terminalRun) runIds.add(terminalRun)
+  }
+  return { sourceClientMsgNos: [...sourceClientMsgNos],runIds: [...runIds] }
 }
 
 export class ChatTransport {
@@ -225,9 +240,9 @@ export class ChatTransport {
     this.historyRequests.set(conversationId, request)
     updateConversation(conversationId, (state) => ({ ...state, isLoading: true, error: null }))
     try {
-      const [envelopes, recovery] = await Promise.all([
-        lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE), this.readRunRecovery(conversationId, request),
-      ])
+      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE)
+      if (!request.current()) return
+      const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
       if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
       updateConversation(conversationId, (state) => restoreStoppedRuns({
@@ -256,9 +271,9 @@ export class ChatTransport {
     if (!this.includesChannel(conversationId)) return
     const request = this.captureRequest()
     try {
-      const [envelopes, recovery] = await Promise.all([
-        lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE), this.readRunRecovery(conversationId, request),
-      ])
+      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE)
+      if (!request.current()) return
+      const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
       if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
       updateConversation(conversationId, state => restoreStoppedRuns({ ...state,
@@ -284,9 +299,9 @@ export class ChatTransport {
     this.historyRequests.set(conversationId, request)
     updateConversation(conversationId, (state) => ({ ...state, isLoadingOlder: true }))
     try {
-      const [envelopes, recovery] = await Promise.all([
-        lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE, before), this.readRunRecovery(conversationId, request),
-      ])
+      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE, before)
+      if (!request.current()) return
+      const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
       if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
         .filter((message) => (messageMetadata(message).sequence ?? Number.MAX_SAFE_INTEGER) < before)
@@ -546,11 +561,13 @@ export class ChatTransport {
     }
   }
 
-  private async readRunRecovery(conversationId: string, request: RequestContext): Promise<RunRecovery> {
+  private async readRunRecovery(conversationId: string, request: RequestContext, anchors?: RunHistoryAnchors): Promise<RunRecovery> {
     const recovery: RunRecovery = { targets: [], snapshots: [], error: null }
     const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)])
     try {
-      recovery.targets = await harnessApi.list(conversationId, signal)
+      const [recent, historical] = await Promise.all([harnessApi.list(conversationId,signal),
+        anchors && (anchors.sourceClientMsgNos.length || anchors.runIds.length) ? harnessApi.history(conversationId,anchors,signal) : []])
+      recovery.targets = [...new Map([...recent,...historical].map(target => [target.runId,target])).values()]
       if (!request.current()) return recovery
       // Stopped runs may have no committed IM message. Restore their durable
       // snapshot before publishing history, so an old running bubble never paints.

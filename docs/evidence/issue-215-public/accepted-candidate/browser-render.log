@@ -1,0 +1,26 @@
+
+> lingxiloop@0.1.0-beta test:e2e:web
+> cross-env E2E_TELEMETRY_DISABLED=1 E2E_PROJECT=web node e2e/web/run.mjs e2e/web/activity-presentation.e2e.ts --grep client public-receipt render budget --output artifacts/issue215-public/browser-timing
+
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-public-activity
+      run 01a1576b-6ffe-75e3-91d8-72020416a469 · targets: web
+
+ ✓ |web| e2e/web/activity-presentation.e2e.ts (1 test) 1.72s
+   ✓ Public activity presentation > client public-receipt render budget 1.72s
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  03:47:01
+   Duration  2.38s
+     Report  artifacts/issue215-public/browser-timing/report.json
+
+      JUnit  artifacts/issue215-public/browser-timing/junit.xml
+   Markdown  artifacts/issue215-public/browser-timing/summary.md
+
+Canvas export validation: not applicable to this selection.
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

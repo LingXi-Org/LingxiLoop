@@ -17,6 +17,7 @@ import { imChannelsApplication } from './channels-facade.js'
 import { imMessagesApplication } from './messages-facade.js'
 import { imSessionApplication } from './session-facade.js'
 import { visualizeRouter } from './visualize-router.js'
+import { runHistoryCursor, runHistoryQuerySchema } from './run-history.js'
 import { getQuestionnaireState, submitQuestionnaire } from './questionnaires.js'
 import {
   approvalResolutionRequestSchema,
@@ -134,6 +135,35 @@ imRouter.get('/channels/:id/runs', safe(async (req, res) => {
     return run ? { ...target,requestVersion: run.requestVersion,fence: run.fence,status: run.status } : null
   }))
   res.json(runs.filter(Boolean))
+}))
+
+// Read-only POST keeps bounded IM anchors out of URLs/access logs. The source
+// message and run references are hints; current product and runtime ACLs own access.
+imRouter.post('/channels/:id/runs', safe(async (req, res) => {
+  const { userId,companyId } = await identity(req), conversationId = String(req.params.id)
+  const access = await requireConversationMember(req,conversationId,'conversation:read')
+  const projectId = requestedProjectId(req)
+  if (projectId && projectId !== access.projectId) throw new HttpError(403,'conversation belongs to another workspace')
+  await assertTeacherRoomAccessible(conversationId,companyId,userId)
+  const query = runHistoryCursor({ companyId,principalId: userId,conversationId },requestInput(runHistoryQuerySchema,req.body))
+  const rows = (await pool.query<{ runId: string; agentId: string; conversationId: string; threadId: string | null; sessionId: string; createdAt: string }>(`
+    SELECT run_id AS "runId",agent_id AS "agentId",conversation_id AS "conversationId",thread_id AS "threadId",session_id AS "sessionId",
+      to_char(created_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS "createdAt"
+    FROM agent_run_bindings WHERE company_id=$1 AND conversation_id=$2 AND principal_id=$3 AND NOT internal AND message_protocol=2
+      AND (source_client_msg_no=ANY($4::text[]) OR run_id=ANY($5::text[]))
+      AND ($6::timestamptz IS NULL OR (created_at,run_id)<($6::timestamptz,$7::text))
+    ORDER BY created_at DESC,run_id DESC LIMIT 21`,[companyId,conversationId,userId,query.sourceClientMsgNos,query.runIds,
+    query.position?.createdAt ?? null,query.position?.runId ?? null])).rows
+  const app = await lingxiOSControl(), signal = AbortSignal.timeout(30_000)
+  const runs = []
+  for (const { sessionId,createdAt,threadId,...target } of rows.slice(0,20)) {
+    await loadRuntimeBinding({ tenantId: companyId,principalId: userId,agentId: target.agentId,conversationId,createdAt })
+    const state = await app.readRunState({ tenantId: companyId,principalId: userId,sessionId,...target,...(threadId ? { threadId } : {}) },{ signal })
+    if (state) runs.push({ ...target,...(threadId ? { threadId } : {}),requestVersion: state.run.requestVersion,fence: state.run.fence,status: state.run.status })
+  }
+  const last = rows[Math.min(20,rows.length)-1]
+  res.setHeader('Cache-Control','no-store')
+  res.json({ runs,nextCursor: rows.length > 20 && last ? query.encode({ createdAt: last.createdAt,runId: last.runId }) : null })
 }))
 
 // The tenant in the URL and the workspace headers remain subject to membership checks.
