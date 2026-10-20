@@ -1,0 +1,46 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from probe.Dockerfile
+#1 transferring dockerfile: 2.67kB done
+#1 DONE 0.0s
+
+#2 [internal] load build context
+#2 transferring context: 222.05kB 0.0s done
+#2 DONE 0.0s
+
+#3 [ 1/11] WORKDIR /app
+#3 CACHED
+
+#4 [ 2/11] COPY server ./server
+#4 DONE 0.0s
+
+#5 [ 3/11] COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/memoryActivity.ts ./src/lib/
+#5 DONE 0.0s
+
+#6 [ 4/11] COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
+#6 DONE 0.0s
+
+#7 [ 5/11] COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
+#7 DONE 0.0s
+
+#8 [ 6/11] COPY src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts ./src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts
+#8 DONE 0.0s
+
+#9 [ 7/11] COPY third_party/zcode/skills/visualize ./third_party/zcode/skills/visualize
+#9 DONE 0.0s
+
+#10 [ 8/11] COPY third_party/zcode/upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js ./third_party/zcode/upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js
+#10 DONE 0.0s
+
+#11 [ 9/11] COPY third_party/zcode/LICENSE third_party/zcode/README.md third_party/zcode/manifest.json ./third_party/zcode/
+#11 DONE 0.0s
+
+#12 [10/11] COPY third_party/zcode/upstream/LICENSE ./third_party/zcode/upstream/LICENSE
+#12 DONE 0.0s
+
+#13 [11/11] COPY third_party/assistant-ui/streaming-text/LICENSE ./dist/licenses/assistant-ui-streaming-text.txt
+#13 DONE 0.0s
+
+#14 exporting to client directory
+#14 copying files 4.47MB 0.0s done
+#14 DONE 0.0s
