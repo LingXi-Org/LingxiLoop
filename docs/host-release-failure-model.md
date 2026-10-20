@@ -34,3 +34,44 @@ Local Compose2.40.3 uses `--no-TTY`/`-T`, whereas the reviewed Komodo2.3.3 build
 ## Delivery boundary
 
 The ordinary trigger remains fail-closed for host/pinned stacks. This first driver is explicit and does not call the legacy rollout. Persistent ResourceSync declarations and ordinary CI dispatch need a separately sealed integration before any generic rollout is reenabled. No production execution is part of local development/tests.
+# Product-only 48 → 49 boundary (before implementation)
+
+The reviewed 0049 SQL adds an empty `conversation_list_removals` table and its
+foreign keys, inside the existing migrator transaction with a 5-second lock
+timeout. It does not rewrite conversations, messages, membership or native
+runtime tables. The only approved new migration is
+`conversation_list_removals`, SHA256
+`d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d`.
+
+Targeted failure cases:
+
+- Treating native13 alone as compatibility accepts altered first-48 checksums,
+  a different migration49, runtime/protocol changes, or a downgrade. The explicit
+  product-schema format must permit only exact 48→49; same-schema retains complete
+  equality and supports only reviewed inventories48 and49.
+- New Web list queries start before migration49 commits. Both old Workers must
+  stop and pass the existing two zero-lease observations first; old Web stays
+  healthy. Run exactly one A `db-migrate` before any new Web, then verify complete
+  target provenance. Preserve WebA/WebB/WorkerA/WorkerB ordering and all source,
+  container, config, image and host-file guards.
+- Same-schema49→49 or online image preparation accidentally executes migration.
+  Only the explicit product-schema release may invoke the migration method.
+- Migration targets the wrong image, uses dependencies/ports, adds environment
+  variables, or supplies the native-upgrade drain marker. Use the existing
+  Komodo RunStackService isolation and verify exact public target metadata before
+  importing the public product migration entrypoint; no environment override.
+- A known failed migration has nevertheless committed49. Fresh full inventory
+  classifies only exact48 as source unchanged, exact49 as fix-forward, and anything
+  else as unknown. Never automatically restart old48 or repeat migration.
+- An uncertain native result or post-migration state read is followed by another
+  request. Retain the existing update receipt, mark uncertainty, and stop all
+  further requests. The adapter must reject a second migration submission.
+
+Reuse the current transport receipt, actual image ID/layers, host-source and
+full-config tests. Add only transition/order/failure tests for these new
+boundaries. Existing local migration49 evidence already covers rollback,
+foreign-key scope, preserved conversations and a no-op repeat; do not redo
+production migration, add a backup/restore exercise, or claim browser/provider
+latency verification. The operations skill's full backup/all-writer drain rule
+applies to native schema upgrades; this change keeps native13 and runtime3.5.8.
+
