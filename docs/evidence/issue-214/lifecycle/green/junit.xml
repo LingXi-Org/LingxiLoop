@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="4" failures="0" errors="0" skipped="0" time="12.683">
+  <testsuite name="e2e/web/streaming-lifecycle.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="12.683">
+    <testcase name="Streaming Text lifecycle &gt; non-last Text immediately settles on cancelled [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="4.010"/>
+    <testcase name="Streaming Text lifecycle &gt; non-last Text immediately settles on error [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="2.572"/>
+    <testcase name="Streaming Text lifecycle &gt; reduced motion settles this part without retraction and a new part can stream [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="3.487"/>
+    <testcase name="Streaming Text lifecycle &gt; normal completion drains pending text and replaced history stays static [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="2.614"/>
+  </testsuite>
+</testsuites>

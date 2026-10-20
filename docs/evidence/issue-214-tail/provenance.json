@@ -1,0 +1,42 @@
+{
+  "baseCommit": "1f18e4f3cf370d853248affcb161e29395994b5c",
+  "sourceSha256": {
+    "scripts/streaming-browser-check.tsx": "6df42e8b0d06e496c00c711c88bd31274edd1e16886453059cc735660daabed9",
+    "src/components/assistant-ui/elements/streaming-text.tsx": "e5c0fb26653ef03fa709b55ad87ffd2f8ff3b3df74ccabcbf34b32bf567174c2",
+    "src/components/assistant-ui/markdown-streaming.tsx": "1f18ddf9f956a969a2fc968dc8dc01b89e0ab1bf4653fd3c4a8236eed20f6327",
+    "src/components/assistant-ui/streaming-tail.tsx": "601a78cb198e6d896354db982c9a4ed06e99ccfb80f11a711df295d628b46468",
+    "src/components/assistant-ui/markdown-text.tsx": "c42c1083c37f26c92f9476efdfe5fe3e6ebc238ee1d2c678424e6ee52c80753c",
+    "src/features/chat/visualize/VisualizeText.tsx": "277263924f8b26d3d81cae16e6847ac34641fbac3416bb7b6a51ecc8d75d793d",
+    "src/styles/chat.css": "cba4430d50b3ac8f7ca1065fff27f3fcc73a3cd1bdff0339f2eb8ae0bc41ab51",
+    "e2e/web/streaming-tail-window.e2e.ts": "fb610ad059970e595158a7c9693617e8e177511f99a461723bc14228bbce95f3",
+    "e2e/web/streaming-text.e2e.ts": "04e1f4fd3ed956adbf56b4fe05111105ea248029ad4234f74761df01ffa1ba10",
+    "package-lock.json": "066ce021b285dc3ec0922b22138d1e79d05a2a311a5112bfa0f3421ef6ab1cdb"
+  },
+  "tests": {
+    "redSettled": {
+      "failed": 2
+    },
+    "splitRed": {
+      "passed": 2,
+      "failed": 1
+    },
+    "combinedGreen": {
+      "passed": 10,
+      "failed": 0
+    },
+    "finalTailGreen": {
+      "passed": 3,
+      "failed": 0
+    },
+    "owningMarkdown": {
+      "passed": 12,
+      "failed": 0
+    },
+    "web": {
+      "passed": 65,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "scope": "renderer fixtures; no provider, deployment or motion/status lifecycle claim"
+}

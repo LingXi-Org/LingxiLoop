@@ -1,0 +1,45 @@
+(node:1032566) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> lingxiloop@0.1.0-beta test:e2e:web
+> cross-env E2E_TELEMETRY_DISABLED=1 E2E_PROJECT=web node e2e/web/run.mjs e2e/web/streaming-tail-window.e2e.ts e2e/web/streaming-text.e2e.ts --video on --output docs/evidence/issue-214-tail/green
+
+(node:1032579) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1032587) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1032599) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-pr220-tail-fix
+      run 01a15738-7465-7d3d-afc7-cd110e1254ab · targets: web
+
+(node:1032646) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | |web| e2e/web/streaming-tail-window.e2e.ts > Whole text-part streaming tail > inline boundaries preserve whitespace without counting it as a word
+Inline tail windows: [{"text":"one two","fresh":["one","two"]},{"text":"one two","fresh":["one","two"]},{"text":"one\t  two","fresh":["one","two"]},{"text":"甲 乙","fresh":["甲","乙"]},{"text":"甲 乙","fresh":["甲","乙"]}]
+stdout | |web| e2e/web/streaming-tail-window.e2e.ts > Whole text-part streaming tail > one word in a new block retains the preceding word across structural boundaries
+Cross-block tail windows: [{"fresh":["one","two"],"carets":1},{"fresh":["two","three"],"carets":1},{"fresh":["three","four"],"carets":1},{"fresh":["乙","丙"],"carets":1},{"fresh":["乙","丙"],"carets":1},{"fresh":["乙","丙"],"carets":1}]
+stdout | |web| e2e/web/streaming-tail-window.e2e.ts > Whole text-part streaming tail > visualize text slices share the original text-part window
+Visualize-split tail: {"fresh":["two","three"],"carets":1}
+ ✓ |web| e2e/web/streaming-tail-window.e2e.ts (3 tests) 9.41s
+stdout | |web| e2e/web/streaming-text.e2e.ts > Streaming renderer > bursts reveal continuously and the tail settles (light)
+Streaming frame samples (light): {"lengths":[2,7,57,94,125,154,170,201,211,220,229,242,250,260,267,276,278],"entry":true}
+stdout | |web| e2e/web/streaming-text.e2e.ts > Streaming renderer > bursts reveal continuously and the tail settles (dark)
+Streaming frame samples (dark): {"lengths":[2,6,41,72,98,121,143,171,186,199,217,226,234,241,250,258,267,278],"entry":true}
+stdout | |web| e2e/web/streaming-text.e2e.ts > Official element integration > same input retains upstream entry, color transition and caret styles
+Official vs product {"result":[{"text":"Here","fresh":["Here"]},{"text":"Here is","fresh":["Here","is"]},{"text":"Here is what","fresh":["is","what"]},{"text":"Here is what changed","fresh":["what","changed"]},{"text":"Here is what changed in","fresh":["changed","in"]},{"text":"Here is what changed in the","fresh":["in","the"]},{"text":"Here is what changed in the latest","fresh":["the","latest"]},{"text":"Here is what changed in the latest release:","fresh":["latest","release:"]},{"text":"Here is what changed in the latest release: the","fresh":["release:","the"]},{"text":"Here is what changed in the latest release: the composer","fresh":["the","composer"]},{"text":"Here is what changed in the latest release: the composer now","fresh":["composer","now"]}],"official":{"entry":"enter","entryDuration":"0.5s","transition":"color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to","duration":"0.7s","width":"2px","height":"16px","margin":"2px","radius":"3.35544e+07px","pulse":"pulse","background":"oklch(0.623 0.214 259.815)"},"product":{"entry":"enter","entryDuration":"0.5s","transition":"color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to","duration":"0.7s","width":"2px","height":"16px","margin":"2px","radius":"3.35544e+07px","pulse":"pulse","background":"oklch(0.623 0.214 259.815)"}}
+stdout | |web| e2e/web/streaming-text.e2e.ts > Official element integration > Chinese and mixed leaves settle continuously without replaying stable blocks
+Chinese transition and stable block {"colors":["oklab(0.611808 -0.0369306 -0.205849)","oklab(0.604509 -0.0363369 -0.202732)","oklab(0.594621 -0.0355327 -0.19851)","oklab(0.581951 -0.0345021 -0.193099)","oklab(0.565833 -0.0331912 -0.186217)","oklab(0.546062 -0.0315831 -0.177775)","oklab(0.522222 -0.029644 -0.167595)","oklab(0.494716 -0.0274067 -0.15585)","oklab(0.464704 -0.0249657 -0.143034)","oklab(0.433357 -0.022416 -0.129649)","oklab(0.402665 -0.0199196 -0.116543)","oklab(0.37333 -0.0175336 -0.104017)","oklab(0.346717 -0.015369 -0.0926532)","oklab(0.322534 -0.013402 -0.0823266)","oklab(0.300881 -0.0116408 -0.0730807)","oklab(0.281674 -0.0100786 -0.0648793)","oklab(0.264546 -0.00868545 -0.0575653)","oklab(0.249093 -0.00742856 -0.0509668)","oklab(0.235471 -0.00632065 -0.0451504)","oklab(0.223302 -0.00533083 -0.039954)","oklab(0.212362 -0.004441 -0.0352825)","oklab(0.202588 -0.00364601 -0.0311089)","oklab(0.193908 -0.00294003 -0.0274026)","oklab(0.186071 -0.00230257 -0.024056)","oklab(0.179212 -0.00174472 -0.0211274)","oklab(0.173005 -0.00123986 -0.018477)","oklab(0.167574 -0.000798112 -0.0161578)","oklab(0.162755 -0.000406173 -0.0141002)","oklab(0.158555 -0.0000645527 -0.0123068)","oklab(0.154857 0.000236251 -0.0107276)","oklab(0.151708 0.00049236 -0.00938303)","oklab(0.149011 0.000711723 -0.00823141)","oklab(0.146766 0.000894316 -0.00727282)","oklab(0.144918 0.0010447 -0.00648335)","oklab(0.143453 0.00116379 -0.00585812)","oklab(0.142356 0.00125308 -0.00538938)","oklab(0.14159 0.00131537 -0.00506235)","oklab(0.141146 0.00135149 -0.00487269)","oklch(0.141 0.005 285.823)"],"before":"oklch(0.623 0.214 259.815)","end":"oklch(0.141 0.005 285.823)","identity":true,"fresh":["中","文"],"mutations":0,"stableBlue":false,"visibleCarets":1}
+ ✓ |web| e2e/web/streaming-text.e2e.ts (7 tests) 28.88s
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  02:51:20
+   Duration  39.27s
+     Report  docs/evidence/issue-214-tail/green/report.json
+
+      JUnit  docs/evidence/issue-214-tail/green/junit.xml
+   Markdown  docs/evidence/issue-214-tail/green/summary.md
+
+Canvas export validation: not applicable to this selection.

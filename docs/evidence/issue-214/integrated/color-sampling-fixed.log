@@ -1,0 +1,27 @@
+(node:1084312) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1084342) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-review-pr220
+      run 01a1574b-fe88-7504-b2c2-b3bfb87b47b1 · targets: web
+
+(node:1084342) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1084396) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | |web| e2e/web/streaming-text.e2e.ts > Official element integration > Chinese and mixed leaves settle continuously without replaying stable blocks
+Chinese transition and stable block {"colors":["oklch(0.623 0.214 259.815)","oklab(0.623 -0.0378409 -0.210628)","oklab(0.620496 -0.0376372 -0.209558)","oklab(0.617075 -0.037359 -0.208098)","oklab(0.611846 -0.0369337 -0.205865)","oklab(0.604509 -0.0363369 -0.202732)","oklab(0.594689 -0.0355382 -0.198539)","oklab(0.582036 -0.0345091 -0.193136)","oklab(0.565941 -0.0331999 -0.186263)","oklab(0.546062 -0.0315831 -0.177775)","oklab(0.522222 -0.029644 -0.167595)","oklab(0.49489 -0.0274209 -0.155924)","oklab(0.46489 -0.0249808 -0.143114)","oklab(0.433545 -0.0224313 -0.129729)","oklab(0.402665 -0.0199196 -0.116543)","oklab(0.373666 -0.0175609 -0.10416)","oklab(0.346717 -0.015369 -0.0926532)","oklab(0.322671 -0.0134132 -0.0823852)","oklab(0.301126 -0.0116608 -0.0731854)","oklab(0.281783 -0.0100875 -0.0649259)","oklab(0.264546 -0.00868545 -0.0575653)","oklab(0.249266 -0.00744269 -0.051041)","oklab(0.235549 -0.00632696 -0.0451835)","oklab(0.223302 -0.00533083 -0.039954)","oklab(0.212362 -0.004441 -0.0352825)","oklab(0.202643 -0.0036505 -0.0311325)","oklab(0.193908 -0.00294003 -0.0274026)","oklab(0.186115 -0.00230615 -0.0240748)","oklab(0.179212 -0.00174472 -0.0211274)","oklab(0.17304 -0.00124269 -0.0184918)","oklab(0.167605 -0.000800613 -0.016171)","oklab(0.162782 -0.000408372 -0.0141118)","oklab(0.158555 -0.0000645527 -0.0123068)","oklab(0.154877 0.000234586 -0.0107363)","oklab(0.151708 0.00049236 -0.00938303)","oklab(0.149026 0.000710519 -0.00823773)","oklab(0.146779 0.000893317 -0.00727806)","oklab(0.144927 0.00104389 -0.00648758)","oklab(0.143461 0.00116317 -0.00586139)","oklab(0.142356 0.00125308 -0.00538938)","oklab(0.141593 0.00131508 -0.00506389)","oklab(0.141147 0.00135135 -0.00487345)","oklab(0.141 0.00136333 -0.00481055)","oklch(0.141 0.005 285.823)"],"before":"oklch(0.623 0.214 259.815)","end":"oklch(0.141 0.005 285.823)","receivedMixed":true,"identity":true,"fresh":["中","文"],"mutations":0,"stableBlue":false,"visibleCarets":1}
+ ✓ |web| e2e/web/streaming-text.e2e.ts (1 test) 4.06s
+   ✓ Official element integration > Chinese and mixed leaves settle continuously without replaying stable blocks 4.06s
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  03:12:42
+   Duration  5.21s
+     Report  artifacts/root-color-sampling-fixed/report.json
+
+      JUnit  artifacts/root-color-sampling-fixed/junit.xml
+   Markdown  artifacts/root-color-sampling-fixed/summary.md
+
+Canvas export validation: not applicable to this selection.

@@ -1,0 +1,71 @@
+{
+  "originalTrace": "/workspace/LingxiLoop-review-pr220/artifacts/root-combined-green/artifacts/web/e2e_web_streaming-lifecycle.e2e.ts__Streaming_20Text_20lifecycle__normal_20completion_20drains_20pending_20text-0d86a8ff/default/attempt-0/trace/trace.zip",
+  "sha256": "98a471d49a9748c881d99e0e4237ec7b0b932da9abe7d79e7a602570ec2ac46e",
+  "events": [
+    {
+      "type": "after",
+      "callId": "call@79",
+      "endTime": 23168.036,
+      "result": {
+        "value": {
+          "o": [
+            {
+              "k": "ok",
+              "v": {
+                "b": true
+              }
+            },
+            {
+              "k": "value",
+              "v": {
+                "o": [
+                  {
+                    "k": "total",
+                    "v": {
+                      "n": 1262
+                    }
+                  },
+                  {
+                    "k": "samples",
+                    "v": {
+                      "a": [],
+                      "id": 3
+                    }
+                  },
+                  {
+                    "k": "carets",
+                    "v": {
+                      "n": 1
+                    }
+                  }
+                ],
+                "id": 2
+              }
+            }
+          ],
+          "id": 1
+        }
+      }
+    },
+    {
+      "callId": "call@79",
+      "phase": "after",
+      "timestamp": 23589.718,
+      "section": {
+        "data-text-index": "0",
+        "data-part-status": "running",
+        "data-message-status": "running"
+      }
+    },
+    {
+      "callId": "call@85",
+      "phase": "before",
+      "timestamp": 24175.742,
+      "section": {
+        "data-text-index": "0",
+        "data-part-status": "complete",
+        "data-message-status": "complete"
+      }
+    }
+  ]
+}

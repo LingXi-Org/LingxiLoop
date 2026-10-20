@@ -1,0 +1,14 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/streaming-lifecycle.e2e.ts",
+    "--output",
+    "artifacts/pr220-lifecycle-red"
+  ],
+  "buildMode": "external app via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "build": null
+}

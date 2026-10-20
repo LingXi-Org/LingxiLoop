@@ -6,14 +6,17 @@ import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@ass
 import { code } from '@streamdown/code'
 import { createMathPlugin } from '@streamdown/math'
 import { createMermaidPlugin } from '@streamdown/mermaid'
-import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
+import { Block, type BlockProps, StreamdownContext, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
-import { createContext, memo, useContext, useMemo, useState } from 'react'
+import { createContext, memo, useContext, useMemo, useState, useSyncExternalStore } from 'react'
 import type { Root, ElementContent } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
 import {
   ConfidenceMarker, ConfidenceMarkerInline,
 } from '@/components/assistant-ui/elements/confidence-marker'
+
+import { StreamingLeaf, rehypeStreamingText } from './markdown-streaming'
+import { StreamingBlock, StreamingPart, useStreamingBlock } from './streaming-tail'
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 import { activityAnnotation } from '@/lib/runActivity'
@@ -25,7 +28,14 @@ export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 
 const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid: createMermaidPlugin({ config: { securityLevel: 'strict', startOnLoad: false } }) }
 const smooth = { minCommitMs: 32 }
-const animated = { animation: 'fadeIn', duration: 180, sep: 'word' as const }
+const motionQuery = '(prefers-reduced-motion: reduce)'
+const readReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.(motionQuery).matches
+const serverReducedMotion = () => false
+function subscribeReducedMotion(notify: () => void) {
+  const media = window.matchMedia?.(motionQuery)
+  media?.addEventListener('change', notify)
+  return () => media?.removeEventListener('change', notify)
+}
 const translations = {
   close: '关闭', copied: '已复制', copyCode: '复制代码', copyLink: '复制链接', copyTable: '复制表格',
   copyTableAsCsv: '复制为 CSV', copyTableAsMarkdown: '复制为 Markdown', copyTableAsTsv: '复制为 TSV',
@@ -58,6 +68,7 @@ const MentionTargets = createContext<readonly Participant[]>([])
 
 const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['span'] = ({ node, children, ...props }) => {
   const targets = useContext(MentionTargets)
+  if (node?.data?.streamingText) return <StreamingLeaf node={node} />
   const id = node?.data?.mentionId
   const target = id === 'all' ? EVERYONE_BLOUB_PARTICIPANT : targets.find(target => target.id === id)
   if (id && target) return <MentionBadge participant={target} id={id} />
@@ -148,11 +159,17 @@ function CitationBlock(props: BlockProps) {
 const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, agent, ...props }: BlockProps & {
   offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean
 }) {
+  const { isAnimating } = useContext(StreamdownContext)
+  const [initialContent] = useState(props.content)
+  const [decorated, setDecorated] = useState(agent && isAnimating)
+  if (!decorated && agent && isAnimating && props.content !== initialContent) setDecorated(true)
+  const streamingBlock = useStreamingBlock(props.index, agent && isAnimating, decorated)
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
     [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
-  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets, agent])
-  return <Block {...props} rehypePlugins={rehypePlugins} />
+    ...decorated ? [rehypeStreamingText] : [],
+  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets, agent, decorated])
+  return <StreamingBlock.Provider value={streamingBlock}><Block {...props} rehypePlugins={rehypePlugins} /></StreamingBlock.Provider>
 })
 
 const MarkdownTextImpl = ({
@@ -169,6 +186,21 @@ const MarkdownTextImpl = ({
   const [hoveredId, setHoveredId] = useState('')
   const part = useMessagePartText()
   const { text } = part
+  // Assistant-ui may reuse a message slot across thread switches. Give its
+  // smooth queue and our Markdown leaf lifetime the actual text-part identity.
+  const partKey = useAuiState(state => JSON.stringify([state.message.id,
+    activityAnnotation(state.part)?.id ?? state.message.parts.indexOf(state.part)]))
+  // The SDK marks non-last Text parts complete when their message is stopped.
+  // Preserve normal completion draining, but settle every interrupted part now.
+  const messageInterrupted = useAuiState(state => state.message.status?.type === 'incomplete')
+  const reducedMotion = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion)
+  const [motionLifetime, setMotionLifetime] = useState({ partKey, settled: reducedMotion })
+  // Once this part has displayed its full text under reduced motion, never
+  // resume its SDK queue's older prefix. A new part starts a fresh lifetime.
+  const motionSettled = reducedMotion || motionLifetime.partKey === partKey && motionLifetime.settled
+  if (motionLifetime.partKey !== partKey || reducedMotion && !motionLifetime.settled) {
+    setMotionLifetime({ partKey, settled: reducedMotion })
+  }
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const splitTextOffset = useContext(TextOffsetContext)
   const nativeTextOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
@@ -189,10 +221,11 @@ const MarkdownTextImpl = ({
   return <ConfidenceMarker claims={confidenceClaims} hoveredId={hoveredId} onHover={setHoveredId} floatingBasis={inlineCitations}>
     <MentionTargets.Provider value={mentionTargets}><CitationBlocks.Provider value={citationBlocks}>
       <div data-find-content>
+        <StreamingPart key={partKey} offset={textOffset}>
         <StreamdownTextPrimitive
-          smooth={agent && typeof window !== 'undefined' && part.status.type !== 'incomplete' ? smooth : false}
-          animated={agent ? animated : false}
-          caret={agent ? 'block' : undefined}
+          key={partKey}
+          smooth={agent && typeof window !== 'undefined' && !motionSettled && !messageInterrupted && part.status.type !== 'incomplete' ? smooth : false}
+          animated={false}
           containerClassName="im-markdown-host"
           plugins={plugins}
           translations={translations}
@@ -201,9 +234,10 @@ const MarkdownTextImpl = ({
           components={confidenceComponents}
           controls
           parseIncompleteMarkdown
-          {...hasCitations ? { BlockComponent: CitationBlock } : {}}
+          {...hasCitations || agent ? { BlockComponent: CitationBlock } : {}}
           className={`im-markdown${agent ? ' im-markdown-agent' : ''}`}
         />
+        </StreamingPart>
       </div>
     </CitationBlocks.Provider></MentionTargets.Provider>
   </ConfidenceMarker>

@@ -1,0 +1,2 @@
+web: packaged entrypoint linked; stopped at environment validation
+worker: packaged entrypoint linked; stopped at environment validation

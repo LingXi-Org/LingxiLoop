@@ -47,7 +47,7 @@ test('server image includes the complete shared runtime import graph', () => {
       if (specifier && ts.isStringLiteral(specifier) && specifier.text.startsWith('.')) {
         const target = resolve(dirname(file), specifier.text.replace(/\.js$/, '.ts'))
         const path = relative(root, target).replaceAll('\\', '/')
-        if (path.startsWith('src/lib/')) {
+        if (path.startsWith('src/')) {
           if (!copied.some(item => path === item || path.startsWith(`${item}/`))) missing.add(path)
           pending.push(target)
         }
@@ -107,7 +107,7 @@ test('packaged and published stacks select the RAG-only image', () => {
 
 test('CI component matrix runs only checks enabled by the changed scope', () => {
   assert.deepEqual(computeScope({ web: true }).check_jobs, [{ component: 'web' }])
-  assert.deepEqual(computeScope({ serverSource: true }).check_jobs, [{ component: 'server' }])
+  assert.deepEqual(computeScope({ serverSource: true }).check_jobs, [{ component: 'server' }, { component: 'deploy-contract' }])
   assert.ok(computeScope({ deployment: true }).check_jobs.some(({ component }) => component === 'deploy-contract'))
   assert.ok(computeScope({}, 'release').check_jobs.some(({ component }) => component === 'release'))
 })
