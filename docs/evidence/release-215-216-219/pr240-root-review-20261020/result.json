@@ -1,0 +1,91 @@
+{
+  "source": "7769b041dc75f9968aeba911758966e87035dd0c",
+  "reviewedFiles": 9,
+  "selected": 6,
+  "browserTestsExecuted": 0,
+  "browserTestsPassed": 0,
+  "browserTestsFailed": 0,
+  "notRunDueToBrowserBootstrap": 6,
+  "bootstrapAttempts": 1,
+  "bootstrapExitCode": 134,
+  "bootstrapError": "No usable sandbox",
+  "sandboxBypassUsed": false,
+  "tlsBypassUsed": false,
+  "officialWebsiteRetested": false,
+  "e2eTypecheck": {
+    "command": "node node_modules/typescript/bin/tsc -p e2e/tsconfig.json",
+    "exitCode": 0
+  },
+  "listOnlyNotPass": true,
+  "tests": [
+    {
+      "file": "e2e/web/activity-presentation.e2e.ts",
+      "title": "known aliases, persisted generic titles and distinct official cards 390",
+      "titlePath": [
+        "Public activity presentation",
+        "known aliases, persisted generic titles and distinct official cards 390"
+      ],
+      "kind": "test",
+      "tags": [],
+      "target": "web",
+      "disposition": "run"
+    },
+    {
+      "file": "e2e/web/activity-presentation.e2e.ts",
+      "title": "known aliases, persisted generic titles and distinct official cards 1440",
+      "titlePath": [
+        "Public activity presentation",
+        "known aliases, persisted generic titles and distinct official cards 1440"
+      ],
+      "kind": "test",
+      "tags": [],
+      "target": "web",
+      "disposition": "run"
+    },
+    {
+      "file": "e2e/web/streaming-text.e2e.ts",
+      "title": "native reduced motion shows complete text without entry, color or caret animation",
+      "titlePath": [
+        "Streaming renderer",
+        "native reduced motion shows complete text without entry, color or caret animation"
+      ],
+      "kind": "test",
+      "tags": [],
+      "target": "web",
+      "disposition": "run"
+    },
+    {
+      "file": "e2e/content-editor/browser.e2e.ts",
+      "title": "upstream native schema, slash menus, tables, blocks, undo and lossless reopen",
+      "titlePath": [
+        "upstream native schema, slash menus, tables, blocks, undo and lossless reopen"
+      ],
+      "kind": "test",
+      "tags": [],
+      "target": "native",
+      "disposition": "run"
+    },
+    {
+      "file": "e2e/content-editor/browser.e2e.ts",
+      "title": "native formatting, links, emoji, block menu and table operations remain complete",
+      "titlePath": [
+        "native formatting, links, emoji, block menu and table operations remain complete"
+      ],
+      "kind": "test",
+      "tags": [],
+      "target": "native",
+      "disposition": "run"
+    },
+    {
+      "file": "e2e/forum/issue219-states.e2e.ts",
+      "title": "forum loading, HTTP retry and empty filters retain navigation and keyboard access",
+      "titlePath": [
+        "forum loading, HTTP retry and empty filters retain navigation and keyboard access"
+      ],
+      "kind": "test",
+      "tags": [],
+      "target": "forum",
+      "disposition": "run"
+    }
+  ]
+}
