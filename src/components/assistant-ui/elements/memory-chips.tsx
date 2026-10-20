@@ -34,7 +34,7 @@ export function MemoryChips({
       <div className="flex items-center gap-1.5">
         <BrainIcon className="text-muted-foreground size-3.5" />
         <span className={cn(mono, "text-muted-foreground")}>
-          {fresh > 0 ? `remembered ${fresh}` : "memory"}
+          {fresh > 0 ? `已更新 ${fresh} 条记忆` : "记忆"}
         </span>
       </div>
 
@@ -53,7 +53,7 @@ export function MemoryChips({
             {onForget && (
               <button
                 type="button"
-                aria-label={`Forget "${chip.text}"`}
+                aria-label={`忘记“${chip.text}”`}
                 onClick={() => onForget(chip.id)}
                 className={cn(ghostButton, "size-4")}
               >

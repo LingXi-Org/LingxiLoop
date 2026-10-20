@@ -1,7 +1,7 @@
 import { useAui, useAuiState, type ToolCallMessagePartProps, type ToolCallMessagePartStatus } from '@assistant-ui/react'
 import { type ReactNode, useRef, useState } from 'react'
 import { ToolCall } from '@/components/assistant-ui/elements/tool-call'
-import { toolDisplay, toolDisplaySchema } from '@/lib/runActivity'
+import { toolDisplaySchema, canonicalToolName, resolveToolDisplay } from '@/lib/runActivity'
 import { ElicitationForm } from '@/components/assistant-ui/elements/elicitation-form'
 import { MessageFooterContents } from '@/components/assistant-ui/message-footer'
 import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
@@ -17,12 +17,16 @@ import { MemoryTool } from './MemoryTool'
 import { memoryActivitySchema } from '@/lib/memoryActivity'
 import { hasQuestionnaireWait } from '../runtime/questionnaire-wait'
 
-export const hasRichTool = (name: string) => Object.hasOwn(TOOL_DETAILS,name) || /^(email|calendar)\./.test(name) || name === 'research.search'
+const richTool = (name: string) => Object.hasOwn(TOOL_DETAILS,name) || /^(email|calendar)\./.test(name) || name === 'research.search'
   || /^memory(?:\.|__)/.test(name)
   || ['knowledge.search', 'knowledge.read_source', 'knowledge.list_sources'].includes(name)
 
+export const hasRichTool = (name: string) => richTool(canonicalToolName(name))
+
 export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean; children?: ReactNode }) {
-  const { toolCallId, toolName, result, isError, approval, interrupt, status, readOnly, children } = props
+  const { toolCallId, toolName: receivedToolName, result, isError, approval, interrupt, status, readOnly, children } = props
+  const toolName = canonicalToolName(receivedToolName)
+  const canonicalProps = { ...props, toolName }
   const Detail = TOOL_DETAILS[toolName as keyof typeof TOOL_DETAILS]
   const aui = useAui()
   const message = useAuiState(state => state.message)
@@ -30,29 +34,29 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   const questionnaireWait = hasQuestionnaireWait(custom)
   const [answer, setAnswer] = useState(''), [busy, setBusy] = useState(false), [accepted, setAccepted] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
-  const projected = toolDisplaySchema.safeParse(result && typeof result === 'object' ? Reflect.get(result, 'display') : undefined)
-  const display = projected.success ? projected.data : toolDisplay(toolName)
   const publicInput = toolDisplaySchema.shape.input.safeParse(props.args.fields)
   const [error, setError] = useState<string | null>(null)
   const inFlight = useRef(false)
   const resultStatus = result && typeof result === 'object' && 'status' in result ? result.status : undefined
+  const display = resolveToolDisplay(toolName, resultStatus, result && typeof result === 'object' ? Reflect.get(result, 'display') : undefined)
   const memory = memoryActivitySchema.safeParse(result && typeof result === 'object' ? Reflect.get(result, 'memory') : undefined)
   const ended = message.status?.type === 'complete' || message.status?.type === 'incomplete'
   const pending = approval && approval.approved === undefined && !approval.resolution && !ended
   const permitted = !readOnly && custom.harnessControl === true && typeof custom.runId === 'string'
   const cancelled = approval?.resolution === 'cancelled' || resultStatus === 'cancelled' || status.type === 'incomplete' && status.reason === 'cancelled'
-  const failed = isError || resultStatus === 'failed' || status.type === 'incomplete' && status.reason === 'error'
+  const unknown = resultStatus === 'unknown'
+  const failed = !cancelled && !unknown && (isError || resultStatus === 'failed' || status.type === 'incomplete' && status.reason === 'error')
   const label = approval?.resolution === 'expired' ? '审批已过期'
     : cancelled ? '已取消' : approval?.approved === false ? '已拒绝' : failed ? '执行失败'
     : pending ? '等待审批' : interrupt && !ended ? questionnaireWait ? '等待问卷回答' : '等待补充信息'
-    : resultStatus === 'unknown' ? '结果待核对' : resultStatus === 'completed' ? '已完成' : status.type === 'running' ? '执行中'
+    : unknown ? '结果待核对' : resultStatus === 'completed' ? '已完成' : status.type === 'running' ? '执行中'
     : approval?.approved ? '已批准 · 等待执行' : '未完成'
   const displayStatus: ToolCallMessagePartStatus = failed ? { type: 'incomplete', reason: 'error' }
     : cancelled || approval?.resolution || approval?.approved === false ? { type: 'incomplete', reason: cancelled ? 'cancelled' : 'other' }
     : pending || interrupt && !ended ? { type: 'requires-action', reason: interrupt ? 'interrupt' : 'tool-calls' }
-    : resultStatus === 'completed' ? { type: 'complete' } : status.type === 'running' ? status : { type: 'incomplete', reason: 'other' }
-  const lifecycle = cancelled ? 'cancelled' : failed ? 'failed' : displayStatus.type === 'running' ? 'leased' : 'succeeded'
-  const retrieval = knowledgeProgress(toolCallId, [props], lifecycle, String(custom.senderName ?? '助手'))
+    : unknown ? { type: 'incomplete', reason: 'other' } : resultStatus === 'completed' ? { type: 'complete' } : status.type === 'running' ? status : { type: 'incomplete', reason: 'other' }
+  const lifecycle = cancelled ? 'cancelled' : failed ? 'failed' : unknown ? 'waiting' : displayStatus.type === 'running' ? 'leased' : 'succeeded'
+  const retrieval = knowledgeProgress(toolCallId, [canonicalProps], lifecycle, String(custom.senderName ?? '助手'))
 
   async function act(work: (current: ReturnType<typeof aui.message.getState>) => Promise<void>) {
     if (inFlight.current || accepted) return
@@ -94,10 +98,10 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
         {props.timing?.completedAt !== undefined && <p>耗时 {((props.timing.completedAt - props.timing.startedAt) / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒</p>}
       </div>}
       {hasRichTool(toolName) && (result !== undefined || displayStatus.type === 'running') && <MessagePartBoundary resetKey={result} running={displayStatus.type === 'running'}>
-        {Detail && <Detail {...props} readOnly={readOnly} />}
+        {Detail && <Detail {...canonicalProps} readOnly={readOnly} />}
         {/^memory(?:\.|__)/.test(toolName) && resultStatus === 'completed' && !isError && memory.success && <MemoryTool memory={memory.data} readOnly={readOnly} />}
-        {toolName === 'research.search' && <ResearchSources calls={[props]} lifecycle={lifecycle} />}
-        {retrieval && <ProgressTracker {...retrieval} />}
+        {toolName === 'research.search' && <ResearchSources calls={[canonicalProps]} lifecycle={lifecycle} />}
+        {retrieval && <ProgressTracker {...retrieval} className="min-w-0" />}
       </MessagePartBoundary>}
       {failed && <p role="alert" className="text-xs text-destructive">这一步未完成，请重试。</p>}
       {approval && <div className="space-y-2">

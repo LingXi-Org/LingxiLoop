@@ -1,0 +1,52 @@
+{
+  "repository": "https://github.com/assistant-ui/assistant-ui",
+  "commit": "5402b93a1e991d0a3e44e253d7bd67880931c835",
+  "license": "MIT",
+  "components": [
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/run-activity.tsx",
+      "sha256": "1b838ae6054c2c45535701af231291436e77da1d6215a2c2a80a313de5aaeace",
+      "productPath": "src/components/assistant-ui/elements/run-activity.tsx"
+    },
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/memory-chips.tsx",
+      "sha256": "43b9d2ff8c27c00df9c67fec6433bc47767ebec3563fc92273cf1ebad5b9ef1a",
+      "productPath": "src/components/assistant-ui/elements/memory-chips.tsx"
+    },
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/reasoning.tsx",
+      "sha256": "02c42a1cad5fd56f4479fe65c779e9f9934c03a6e935ac92ebf98cbb46ef3cc7",
+      "productPath": "src/components/assistant-ui/elements/reasoning.tsx"
+    },
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/tool-call.tsx",
+      "sha256": "71c673d273b02d5757ae06c8b3be006b29f6a522ebea344243e66977c2b7259b",
+      "productPath": "src/components/assistant-ui/elements/tool-call.tsx"
+    },
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/tool-timeline.tsx",
+      "sha256": "bb9e3cf5d498c0339ab33590db5f86c3412a06e80db0094287e48380d997adfe",
+      "productPath": "src/components/assistant-ui/elements/tool-timeline.tsx"
+    },
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/tool-group.aui.tsx",
+      "sha256": "757caf28ee232d4f500c8af7d6837fe7d6d2b144774a6a0bcdaff8c0c517bd9e",
+      "productPath": "src/components/assistant-ui/elements/tool-group-primitives.tsx"
+    },
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/agent-plan.tsx",
+      "sha256": "4cfc56bbe121fdd8269f4e894bdb60b2acb8d5e23bd7cc8359d47949f57336b2",
+      "productPath": "src/components/assistant-ui/elements/agent-plan.tsx"
+    },
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/web-search.tsx",
+      "sha256": "579137a4c9ce3bbe8299712033cab89ee0a76ac327e9b41e0e83a5a93218644a",
+      "productPath": "src/components/assistant-ui/elements/web-search.tsx"
+    },
+    {
+      "path": "packages/ui/src/components/react/assistant-ui/elements/error-state.tsx",
+      "sha256": "92f5158080a3fcabaa6c4959f175785f0532a8534f03ad39393ee6b0ebe08428",
+      "productPath": "src/components/assistant-ui/elements/error-state.tsx"
+    }
+  ]
+}
