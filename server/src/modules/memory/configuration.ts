@@ -18,6 +18,7 @@ export function memoryEmbeddings(): MemoryOptions['embeddings'] {
   // Official price checked 2026-10-20: bge-m3 free; Qwen 8B CNY 0.28 / million.
   const inputCostMicrosPerMillion=configuredPrice ? Number(configuredPrice) : bge ? 0 : known && rate>0 ? Math.ceil(280000/rate) : NaN
   if(!Number.isSafeInteger(inputCostMicrosPerMillion) || inputCostMicrosPerMillion<0) throw new Error('embedding price configuration is required')
-  return {id,apiKey:env.OPENAI_API_KEY,baseUrl,dimensions:integer('AGENT_OS_EMBEDDING_DIMENSIONS',known?1024:undefined),
+  const dimensions=integer('AGENT_OS_EMBEDDING_DIMENSIONS',known?1024:undefined)
+  return {id,apiKey:env.OPENAI_API_KEY,baseUrl,...(bge?{expectedDimensions:dimensions}:{dimensions}),
     indexVersion:process.env.AGENT_OS_EMBEDDING_INDEX_VERSION?.trim() || 'memory-v1',requestTimeoutMs:3000,inputCostMicrosPerMillion}
 }

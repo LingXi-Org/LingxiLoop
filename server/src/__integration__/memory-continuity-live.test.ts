@@ -81,7 +81,7 @@ test('live native memory saves, recalls semantically and extracts long-source ta
       WHERE m.tenant_id=$1 AND m.scope_type=$2 AND m.scope_id=$3`,[companyId,personal.scopeType,personal.scopeId])).rows[0]
     assert.ok(indexed.count>=initialCount);assert.equal(indexed.dimensions,1024);assert.equal(indexed.spaces,1)
     phase='semantic'
-    const semantic=await turn('live-continuity-c','遇到相互关联的抽象知识时，怎样组织呈现方式才适合我？请用一句话回答，不要搜索历史对话。')
+    const semantic=await turn('live-continuity-c','我平时把彼此相连的知识节点画成什么形式，以便看清它们之间的关系？按我的已有习惯回答，一句话即可，不要搜索历史对话。')
     assert.ok(/思维导图|导图/.test(semantic.message.body),'nonlexical question recalls the correct presentation preference')
     // The public event projection intentionally strips internal diagnostics.
     // Inspect only the native sanitized diagnostic, never stored prompts/bodies.
@@ -104,7 +104,7 @@ test('live native memory saves, recalls semantically and extracts long-source ta
       assert.ok(Date.now()<extractionDeadline,'bounded extraction wall time')
       await memory.reflect(source.identity,personal)
       while(await worker.runNext()){assert.ok(++pages<=32,'bounded extraction/index work')}
-      const row=(await pool.query(`SELECT s.status,s.segment_cursor,(SELECT count(*)::int FROM lingxios.agent_memory_evidence_segments p WHERE p.source_run_id=s.source_run_id) AS segments
+      const row: {status:string;segment_cursor:number;segments:number}|undefined=(await pool.query(`SELECT s.status,s.segment_cursor,(SELECT count(*)::int FROM lingxios.agent_memory_evidence_segments p WHERE p.source_run_id=s.source_run_id) AS segments
         FROM lingxios.agent_memory_evidence_scopes s WHERE s.source_run_id=$1 AND s.scope_type=$2 AND s.scope_id=$3`,[source.run.runId,personal.scopeType,personal.scopeId])).rows[0]
       assert.ok(row);if(row.status==='processed'){assert.equal(row.segment_cursor,row.segments);break}
       assert.equal(row.status,'pending','rejected extraction must fail acceptance')

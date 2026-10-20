@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createServer, type Server } from 'node:http'
 import { after, before, test } from 'node:test'
+import type { MemoryIdentity } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
@@ -24,7 +25,7 @@ test('HTTP historical cards reauthorize stable memory across rooms after forgett
   const {companyId,projectId,agentId}=await seedCompanyWithAgent()
   await seedUserMembership('test-owner',companyId)
   const app=await lingxiOSControl(),memory=app.memory!,members=['test-owner',agentId]
-  const actors=[]
+  const actors:Array<{identity:MemoryIdentity;url:string}>=[]
   for(const room of ['stable-card-a','stable-card-b']) {
     await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Cards',$4::jsonb)`,[room,companyId,projectId,JSON.stringify(members)])
     await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)`,[room,companyId,JSON.stringify({channelType:2,members})])
@@ -38,7 +39,7 @@ test('HTTP historical cards reauthorize stable memory across rooms after forgett
   const scope=(await memory.scopes(actors[0].identity)).find(item=>item.scopeType==='learner')!
   const docs=(await memory.initialize(actors[0].identity,{scope,documents:['shared-card','retained-card'].map(path=>({path:`${path}.md`,title:'Preference',description:'Current summary',body:'PRIVATE BODY',layer:'core' as const})),idempotencyKey:'cards',sourceRef:'settings'})).documents
   const headers={'x-company-id':companyId,'x-project-id':projectId,'Content-Type':'application/json'}
-  const read=async(index:number,id:string)=>(await fetch(`${actors[index].url}?ids=${id}`,{headers})).json()
+  const read=async(index:number,id:string)=>(await (await fetch(`${actors[index].url}?ids=${id}`,{headers})).json()) as {chips:unknown[]}
   for(const index of [0,1]) assert.equal((await read(index,docs[0].id)).chips.length,1)
   assert.equal((await fetch(`${actors[0].url}/${docs[0].id}`,{method:'DELETE',headers,body:JSON.stringify({expectedVersion:1})})).status,200)
   for(const index of [0,1]) assert.deepEqual(await read(index,docs[0].id),{chips:[]},'both historical cards read the current deletion')
@@ -50,6 +51,7 @@ test('HTTP historical cards reauthorize stable memory across rooms after forgett
 // Failure cases: stale or repeated forget removes a newer/other fact, raw bodies leak,
 // or a browser request crosses tenant/project/user/agent/room/thread/audience boundaries.
 test('memory chips and explicit forgetting preserve native authorization and versions', async () => {
+  await resetAllTables()
   const { companyId,projectId,agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner',companyId)
   await seedUserMembership('memory-other',companyId)

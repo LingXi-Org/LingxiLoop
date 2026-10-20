@@ -5,5 +5,13 @@
   "model": "Qwen/Qwen3-Embedding-8B",
   "inputCnyPerMillion": 0.28,
   "maximumDimensions": 4096,
-  "selectedDimensions": 1024
+  "selectedDimensions": 1024,
+  "productionModel": {
+    "id": "BAAI/bge-m3",
+    "inputCnyPerMillion": 0,
+    "fixedDimensions": 1024,
+    "dimensionsParameter": false,
+    "source": "https://www.siliconflow.cn/pricing",
+    "protocolSource": "https://docs.siliconflow.com/cn/api-reference/embeddings/create-embeddings"
+  }
 }
