@@ -11,6 +11,6 @@ test('the LingxiOS registry exposes every product capability exactly once', () =
     'polls', 'chat', 'knowledge', 'presentations', 'routines',
   ])
   assert.deepEqual(actions.filter(action => action.startsWith('visualize.')), [
-    'visualize.read_reference', 'visualize.save', 'visualize.chart', 'visualize.read', 'visualize.export',
+    'visualize.read_reference', 'visualize.save', 'visualize.chart', 'visualize.diagram', 'visualize.read', 'visualize.export',
   ])
 })
