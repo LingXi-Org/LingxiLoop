@@ -1,0 +1,28 @@
+import { test } from '@e2e-dev/web'
+import { expect } from 'e2e'
+
+test('forum loading, HTTP retry and empty filters retain navigation and keyboard access',async({app,browser,screen})=>{
+  await app.open('/')
+  await browser.evaluate(async()=>{await fetch('/api/fixture-role/teacher');await fetch('/api/fixture-forum-list/hold',{method:'POST'});return true})
+  await app.open('/?project=e2e-classroom&view=forum')
+  const loading=screen.getByRole('status').filter({hasText:'正在加载学习论坛'})
+  await expect(loading).toBeVisible({timeout:120000})
+  await expect(screen.getByLabel('搜索学习论坛')).toBeVisible()
+  await app.screenshot('forum-list-loading')
+  await browser.evaluate(async()=>(await fetch('/api/fixture-forum-list/pass',{method:'POST'})).ok)
+  await expect(loading).toHaveCount(0)
+  await expect(screen.getByRole('link','Forum homework',{exact:true})).toBeVisible()
+  await browser.evaluate(async()=>(await fetch('/api/fixture-forum-list/fail',{method:'POST'})).ok)
+  await screen.getByLabel('搜索学习论坛').fill('没有这条状态记录219')
+  await expect(screen.getByRole('alert').filter({hasText:'服务暂时不可用'})).toBeVisible()
+  await app.screenshot('forum-list-error')
+  await screen.getByRole('button','重试',{exact:true}).focus()
+  await browser.keyboard.press('Enter')
+  await expect(screen.getByText('没有符合条件的内容。',{exact:true})).toBeVisible()
+  await expect(screen.getByRole('alert')).toHaveCount(0)
+  await browser.setViewport({width:390,height:900})
+  await screen.getByLabel('搜索学习论坛').focus()
+  await browser.keyboard.press('Tab')
+  expect(await browser.evaluate(()=>document.activeElement!==document.body&&document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+  await app.screenshot('forum-list-empty-mobile-keyboard')
+})

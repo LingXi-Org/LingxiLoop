@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util'
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
@@ -6,7 +7,7 @@ import { LearningApplicationError } from './errors.js'
 import { forumCommentSchema, forumFlagsSchema, forumPostSchema, forumQuerySchema, forumSubmissionSchema, forumFeedbackSchema, forumReactionSchema, type ForumCommentInput, type ForumFlags, type ForumPostInput, type ForumQuery, type ForumTarget, type LearningAttachment } from './forum-contracts.js'
 import { listForumItems, listSubmissionVersions, listSubmissionStudents } from './forum-repository.js'
 import { requireLearningCourseProjectScope } from './project-scope-repository.js'
-import { assertOwnedLearningAttachments } from './submission-attachments.js'
+import { assertDocumentAttachments, assertOwnedLearningAttachments } from './submission-attachments.js'
 export { canReadLearningFile } from './submission-attachments.js'
 
 import { captureConversationEvidence, evidenceConversations, evidenceMessages } from './forum-evidence.js'
@@ -52,10 +53,11 @@ export class ForumApplication {
       const project = await this.scope(db, scope, courseId, data.kind === 'assignment' ? 'manage' : 'write')
       await this.reference(db, scope.companyId, project.projectId, data.sourceId)
       await assertOwnedLearningAttachments(db, scope, data.attachments)
-      await db.query(`INSERT INTO course_forum_posts(id,company_id,project_id,author_user_id,kind,title,body,tags,links,attachments,source_id,due_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12)`,
+      assertDocumentAttachments(data.attachments, data.editorDocument)
+      await db.query(`INSERT INTO course_forum_posts(id,company_id,project_id,author_user_id,kind,title,body,tags,links,attachments,source_id,due_at,editor_document)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13::jsonb)`,
       [id,scope.companyId,project.projectId,scope.userId,data.kind,data.title,data.body,[...new Set(data.tags)],
-        JSON.stringify(data.links),JSON.stringify(data.attachments),data.sourceId ?? null,data.kind === 'assignment' ? data.dueAt ?? null : null])
+        JSON.stringify(data.links),JSON.stringify(data.attachments),data.sourceId ?? null,data.kind === 'assignment' ? data.dueAt ?? null : null,JSON.stringify(data.editorDocument ?? null)])
     })
     return this.detail(scope, courseId, 'post', id)
   }
@@ -79,7 +81,7 @@ export class ForumApplication {
     const project = await this.scope(this.db, scope, courseId)
     await this.item(this.db, scope.companyId, project.projectId, type, id)
     const { rows } = await this.db.query<{ id: string; authorId: string; authorName: string; authorAvatarUrl: string | null; body: string; links: string[]; attachments: LearningAttachment[]; createdAt: string }>(`
-      SELECT c.id,c.author_user_id AS "authorId",u.display_name AS "authorName",u.avatar_url AS "authorAvatarUrl",c.body,c.links,c.attachments,c.created_at AS "createdAt"
+      SELECT c.id,c.author_user_id AS "authorId",u.display_name AS "authorName",u.avatar_url AS "authorAvatarUrl",c.body,c.editor_document AS "editorDocument",c.links,c.attachments,c.created_at AS "createdAt"
       FROM course_forum_comments c JOIN users u ON u.id=c.author_user_id
       WHERE c.company_id=$1 AND c.project_id=$2 AND c.target_type=$3 AND c.target_id=$4 AND c.deleted_at IS NULL
       ORDER BY c.created_at,c.id LIMIT 51 OFFSET $5`, [scope.companyId,project.projectId,type,id,offset])
@@ -92,10 +94,11 @@ export class ForumApplication {
       const project = await this.scope(db, scope, courseId, 'write')
       await this.item(db, scope.companyId, project.projectId, type, id)
       await assertOwnedLearningAttachments(db, scope, data.attachments)
+      assertDocumentAttachments(data.attachments, data.editorDocument)
       const commentId = randomUUID()
-      await db.query(`INSERT INTO course_forum_comments(id,company_id,project_id,target_type,target_id,author_user_id,body,links,attachments)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb)`, [commentId,scope.companyId,project.projectId,type,id,scope.userId,data.body,
-        JSON.stringify(data.links),JSON.stringify(data.attachments)])
+      await db.query(`INSERT INTO course_forum_comments(id,company_id,project_id,target_type,target_id,author_user_id,body,links,attachments,editor_document)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb)`, [commentId,scope.companyId,project.projectId,type,id,scope.userId,data.body,
+        JSON.stringify(data.links),JSON.stringify(data.attachments),JSON.stringify(data.editorDocument ?? null)])
       return { id: commentId }
     })
   }
@@ -144,10 +147,11 @@ export class ForumApplication {
       await this.reference(db,scope.companyId,project.projectId,data.sourceId)
       // Existing attachments retain their ownership; newly attached files must be owned by this author.
       await assertOwnedLearningAttachments(db,scope,data.attachments)
+        assertDocumentAttachments(data.attachments, data.editorDocument)
       await db.query(`UPDATE course_forum_posts SET title=$4,body=$5,tags=$6,links=$7::jsonb,attachments=$8::jsonb,
-        source_id=$9,due_at=$10,updated_at=NOW() WHERE company_id=$1 AND project_id=$2 AND id=$3`,
+        source_id=$9,due_at=$10,editor_document=$11::jsonb,updated_at=NOW() WHERE company_id=$1 AND project_id=$2 AND id=$3`,
         [scope.companyId,project.projectId,id,data.title,data.body,[...new Set(data.tags)],JSON.stringify(data.links),
-          JSON.stringify(data.attachments),data.sourceId ?? null,data.kind === 'assignment' ? data.dueAt ?? null : null])
+          JSON.stringify(data.attachments),data.sourceId ?? null,data.kind === 'assignment' ? data.dueAt ?? null : null,JSON.stringify(data.editorDocument ?? null)])
     })
     return this.detail(scope,courseId,'post',id)
   }
@@ -191,12 +195,12 @@ export class ForumApplication {
         WHERE company_id=$1 AND project_id=$2 AND id=$3 AND kind='assignment' AND deleted_at IS NULL FOR UPDATE`, [scope.companyId,project.projectId,id])
       const assignment = locked.rows[0]
       if (!assignment) throw new LearningApplicationError('not_found','assignment not found')
-      const prior = await db.query<{ id: string; answer: string; links: unknown; attachments: unknown; source: string; submitted_by_agent: string | null; conversation_references: import('./forum-evidence.js').ConversationEvidence[] }>(`SELECT id,answer,links,attachments,source,submitted_by_agent,conversation_references FROM course_forum_submissions
+      const prior = await db.query<{ id: string; answer: string; editor_document: unknown; links: unknown; attachments: unknown; source: string; submitted_by_agent: string | null; conversation_references: import('./forum-evidence.js').ConversationEvidence[] }>(`SELECT id,answer,editor_document,links,attachments,source,submitted_by_agent,conversation_references FROM course_forum_submissions
         WHERE company_id=$1 AND project_id=$2 AND assignment_id=$3 AND learner_id=$4 AND client_submission_id=$5`,
         [scope.companyId,project.projectId,id,scope.userId,data.idempotencyKey])
       if (prior.rows[0]) {
         const previous = prior.rows[0]
-        if (previous.answer !== data.answer || JSON.stringify(previous.links) !== JSON.stringify(data.links)
+        if (!isDeepStrictEqual(previous.editor_document ?? null, data.editorDocument ?? null) || previous.answer !== data.answer || JSON.stringify(previous.links) !== JSON.stringify(data.links)
           || JSON.stringify(previous.attachments) !== JSON.stringify(data.attachments) || previous.source !== (agent?.source ?? 'STUDENT_ORIGINAL')
           || previous.submitted_by_agent !== (agent?.id ?? null)
           || JSON.stringify(previous.conversation_references.map(({channelId,messageIds})=>({channelId,messageIds}))) !== JSON.stringify(data.conversationReferences)) throw new LearningApplicationError('conflict','submission key already used for different content')
@@ -205,13 +209,14 @@ export class ForumApplication {
       if (assignment.status !== 'PUBLISHED') throw new LearningApplicationError('conflict','assignment is closed')
       const assignmentContent = await this.item(db,scope.companyId,project.projectId,'post',id)
       await assertOwnedLearningAttachments(db,scope,data.attachments)
+        assertDocumentAttachments(data.attachments, data.editorDocument)
       const references = await captureConversationEvidence(db,scope,project.projectId,data.conversationReferences)
       const submissionId = randomUUID()
       await db.query(`INSERT INTO course_forum_submissions(id,company_id,project_id,assignment_id,learner_id,answer,links,attachments,
-        source,submitted_by_agent,agent_work_id,assistance,late,client_submission_id,conversation_references)
-        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9,$10,$11,$12,$13::timestamptz IS NOT NULL AND NOW()>$13,$14,$15::jsonb)`,
+        source,submitted_by_agent,agent_work_id,assistance,late,client_submission_id,conversation_references,editor_document)
+        VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9,$10,$11,$12,$13::timestamptz IS NOT NULL AND NOW()>$13,$14,$15::jsonb,$16::jsonb)`,
         [submissionId,scope.companyId,project.projectId,id,scope.userId,data.answer,JSON.stringify(data.links),JSON.stringify(data.attachments),
-          agent?.source ?? 'STUDENT_ORIGINAL',agent?.id ?? null,agent?.workId ?? null,agent?.source === 'AGENT_GENERATED' ? 'GUIDED' : 'NONE',assignment.due_at,data.idempotencyKey,JSON.stringify(references)])
+          agent?.source ?? 'STUDENT_ORIGINAL',agent?.id ?? null,agent?.workId ?? null,agent?.source === 'AGENT_GENERATED' ? 'GUIDED' : 'NONE',assignment.due_at,data.idempotencyKey,JSON.stringify(references),JSON.stringify(data.editorDocument ?? null)])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'forum.assess',effectKey:submissionId,
         payload:{submissionId,userId:scope.userId,projectId:project.projectId,requirements:{title:assignmentContent.title,body:assignmentContent.body,links:assignmentContent.links,attachments:assignmentContent.attachments}}})
       return { attemptId: submissionId }
@@ -225,8 +230,10 @@ export class ForumApplication {
       await this.item(db,scope.companyId,project.projectId,'post',assignmentId)
       const submission = await db.query('SELECT id FROM course_forum_submissions WHERE company_id=$1 AND project_id=$2 AND assignment_id=$3 AND id=$4 FOR SHARE', [scope.companyId,project.projectId,assignmentId,submissionId])
       if (!submission.rows.length) throw new LearningApplicationError('not_found','submission not found')
+      await assertOwnedLearningAttachments(db,scope,data.attachments)
+      assertDocumentAttachments(data.attachments, data.editorDocument)
       const id = randomUUID()
-      await db.query('INSERT INTO course_forum_feedback(id,company_id,project_id,submission_id,author_id,body) VALUES($1,$2,$3,$4,$5,$6)', [id,scope.companyId,project.projectId,submissionId,scope.userId,data.body])
+      await db.query('INSERT INTO course_forum_feedback(id,company_id,project_id,submission_id,author_id,body,editor_document,attachments,links) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb,$9::jsonb)', [id,scope.companyId,project.projectId,submissionId,scope.userId,data.body,JSON.stringify(data.editorDocument ?? null),JSON.stringify(data.attachments),JSON.stringify(data.links)])
       return { id }
     })
   }
@@ -243,7 +250,8 @@ export class ForumApplication {
       }
       if (data) {
         await assertOwnedLearningAttachments(db,scope,data.attachments)
-        await db.query('UPDATE course_forum_comments SET body=$2,links=$3::jsonb,attachments=$4::jsonb,updated_at=NOW() WHERE id=$1', [commentId,data.body,JSON.stringify(data.links),JSON.stringify(data.attachments)])
+        assertDocumentAttachments(data.attachments, data.editorDocument)
+        await db.query('UPDATE course_forum_comments SET body=$2,links=$3::jsonb,attachments=$4::jsonb,editor_document=$5::jsonb,updated_at=NOW() WHERE id=$1', [commentId,data.body,JSON.stringify(data.links),JSON.stringify(data.attachments),JSON.stringify(data.editorDocument ?? null)])
       } else await db.query('UPDATE course_forum_comments SET deleted_at=NOW(),updated_at=NOW() WHERE id=$1',[commentId])
       return {ok:true}
     })

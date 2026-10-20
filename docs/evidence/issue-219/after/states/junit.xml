@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="15.190">
+  <testsuite name="e2e/forum/issue219-states.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="15.190">
+    <testcase name="forum loading, HTTP retry and empty filters retain navigation and keyboard access [forum]" classname="e2e/forum/issue219-states.e2e.ts" time="15.190"/>
+  </testsuite>
+</testsuites>

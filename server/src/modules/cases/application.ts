@@ -1,3 +1,4 @@
+import { documentFileUrls } from '../content-editor/contracts.js'
 import { randomUUID } from 'node:crypto'
 import { fromMarkdown } from 'mdast-util-from-markdown'
 import type { Queryable } from '../../db/queryable.js'
@@ -54,14 +55,14 @@ function visitMarkdown(tree: MarkdownNode, visitor: (node: MarkdownNode) => void
 }
 function contentImageUrls(content: CaseContent): string[] {
   // Parse exactly the Markdown image forms supported by the reader, including definitions.
-  const tree = fromMarkdown(content.body)
+  const tree = fromMarkdown(`${content.body}\n\n${content.summary}`)
   const definitions = new Map<string,string>()
   visitMarkdown(tree, node => {
     if (node.type === 'definition' && !definitions.has(node.identifier)) definitions.set(node.identifier, node.url)
   })
-  const urls: string[] = []
+  const urls: string[] = [...documentFileUrls(content.editorDocument), ...documentFileUrls(content.summaryDocument)]
   visitMarkdown(tree, node => {
-    if (node.type === 'image') urls.push(node.url)
+    if (node.type === 'image' || node.type === 'link' && node.url.startsWith('/api/files?')) urls.push(node.url)
     if (node.type === 'imageReference') {
       const url = definitions.get(node.identifier)
       if (url) urls.push(url)
@@ -189,6 +190,17 @@ export class CasesApplication {
       : mime==='image/gif' ? /^GIF8[79]a/.test(bytes.subarray(0,6).toString())
       : mime==='image/webp' && bytes.subarray(0,4).toString()==='RIFF' && bytes.subarray(8,12).toString()==='WEBP'
     if (!valid) throw new HttpError(400,'图片格式与内容不符')
+    return this.storeAsset(scope,id,mime,bytes)
+  }
+  async uploadFile(scope: CaseScope, id: string, mime: string, data: string) {
+    if (mime.startsWith('image/')) return this.uploadImage(scope,id,mime,data)
+    if (!/^[A-Za-z0-9+/]*={0,2}$/.test(data)) throw new HttpError(400,'invalid file data')
+    const bytes = Buffer.from(data,'base64')
+    if (!bytes.length || bytes.length>8*1024*1024) throw new HttpError(400,'附件最大为 8 MB')
+    return this.storeAsset(scope,id,mime,bytes)
+  }
+  private async storeAsset(scope: CaseScope, id: string, mime: string, bytes: Buffer) {
+    // Keep the existing namespace/table so authorization and old readers cannot fall through.
     const key = `case-images/${scope.companyId}/${id}/${randomUUID()}`
     await this.infrastructure.transaction(async db => {
       await access(db,scope,true,true); await row(db,scope,id,true)

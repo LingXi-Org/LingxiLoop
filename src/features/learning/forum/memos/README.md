@@ -1,5 +1,7 @@
 # Memos source reuse
 
+Issue #219 replaces every live narrative editing entry with the full official BlockNote editor. The editor/toolbar rows and historic editor checks below document the earlier Memos integration; those editor components are no longer imported by product entry points. Retained Markdown, tag grammar, search, task and presentation helpers still serve existing content and shared chat. Current source/version/license, native controls and business boundaries are recorded in [the BlockNote integration](../../../../../docs/evidence/issue-219/BLOCKNOTE.md).
+
 The source is pinned to [usememos/memos commit 8120a6cee03003ee7968b49b2109f816fa4d96a4](https://github.com/usememos/memos/tree/8120a6cee03003ee7968b49b2109f816fa4d96a4), retrieved from GitHub on 2026-10-13. The upstream MIT license is retained in `LICENSE`; adapted files carry source notices. This is frontend source reuse; no Memos Go service or parallel resource store is introduced.
 
 Posts, details, comments and submission history share Memos content components. Generic buttons, inputs, menus, dialogs, popovers, tooltips, checkboxes and confirmations use the existing LingxiLoop shadcn components and theme variables.

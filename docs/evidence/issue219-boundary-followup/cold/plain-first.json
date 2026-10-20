@@ -1,0 +1,163 @@
+{
+  "initial": {
+    "paragraphs": 2,
+    "text": "Explain the first inferenceVerify the second result"
+  },
+  "base": {
+    "id": "boundary-homework",
+    "courseId": "boundary-course",
+    "title": "Synthetic criteria",
+    "instructions": "Synthetic current instructions",
+    "criteria": [
+      "Explain the first inference",
+      "Verify the second result"
+    ],
+    "links": [],
+    "attachments": [],
+    "dueAt": null,
+    "status": "DRAFT",
+    "revision": 1,
+    "visibleHash": "synthetic",
+    "createdBy": "boundary-teacher",
+    "validation": {
+      "status": "READY",
+      "revision": 1,
+      "feedback": ""
+    },
+    "canEditDraft": true,
+    "canPublish": true
+  },
+  "homework": {
+    "id": "boundary-homework",
+    "courseId": "boundary-course",
+    "title": "Synthetic criteria",
+    "instructions": "Synthetic current instructions",
+    "criteria": [
+      "Explain the first inference",
+      "Verify the second resultreviewed"
+    ],
+    "links": [],
+    "attachments": [],
+    "dueAt": null,
+    "status": "DRAFT",
+    "revision": 2,
+    "visibleHash": "synthetic",
+    "createdBy": "boundary-teacher",
+    "validation": {
+      "status": "READY",
+      "revision": 1,
+      "feedback": ""
+    },
+    "canEditDraft": true,
+    "canPublish": true,
+    "expectedRevision": 1,
+    "editorDocument": null,
+    "criteriaDocument": {
+      "format": "blocknote",
+      "version": 1,
+      "blocks": [
+        {
+          "id": "73fa014a-d21b-4d40-8a47-fbfc0f2ae58a",
+          "type": "paragraph",
+          "props": {
+            "backgroundColor": "default",
+            "textColor": "default",
+            "textAlignment": "left"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Explain the first inference",
+              "styles": {}
+            }
+          ],
+          "children": []
+        },
+        {
+          "id": "75364246-1e69-4d86-bdbc-263048ea91ca",
+          "type": "paragraph",
+          "props": {
+            "backgroundColor": "default",
+            "textColor": "default",
+            "textAlignment": "left"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Verify the second resultreviewed",
+              "styles": {}
+            }
+          ],
+          "children": []
+        }
+      ],
+      "projection": "Explain the first inference\n\nVerify the second resultreviewed\n",
+      "sections": [
+        "Explain the first inference",
+        "Verify the second resultreviewed"
+      ],
+      "legacyMarkdown": "Explain the first inference\n\nVerify the second result"
+    }
+  },
+  "patches": [
+    {
+      "expectedRevision": 1,
+      "title": "Synthetic criteria",
+      "instructions": "Synthetic current instructions",
+      "editorDocument": null,
+      "criteriaDocument": {
+        "format": "blocknote",
+        "version": 1,
+        "blocks": [
+          {
+            "id": "73fa014a-d21b-4d40-8a47-fbfc0f2ae58a",
+            "type": "paragraph",
+            "props": {
+              "backgroundColor": "default",
+              "textColor": "default",
+              "textAlignment": "left"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Explain the first inference",
+                "styles": {}
+              }
+            ],
+            "children": []
+          },
+          {
+            "id": "75364246-1e69-4d86-bdbc-263048ea91ca",
+            "type": "paragraph",
+            "props": {
+              "backgroundColor": "default",
+              "textColor": "default",
+              "textAlignment": "left"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Verify the second resultreviewed",
+                "styles": {}
+              }
+            ],
+            "children": []
+          }
+        ],
+        "projection": "Explain the first inference\n\nVerify the second resultreviewed\n",
+        "sections": [
+          "Explain the first inference",
+          "Verify the second resultreviewed"
+        ],
+        "legacyMarkdown": "Explain the first inference\n\nVerify the second result"
+      },
+      "criteria": [
+        "Explain the first inference",
+        "Verify the second resultreviewed"
+      ],
+      "links": [],
+      "attachments": [],
+      "dueAt": null
+    }
+  ]
+}

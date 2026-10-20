@@ -1,9 +1,10 @@
+import type { ContentDocument } from '@/features/content-editor'
 // Adapted from Memos useAutoSave/cacheService lifecycle: debounce, pagehide and unmount flush.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { useAuth } from '@/stores/auth'
 
-export const contentDraftSchema = z.object({ body: z.string().max(20000), links: z.string().max(42000),
+export const contentDraftSchema = z.object({ editorDocument: z.custom<ContentDocument>(value => Boolean(value && typeof value === 'object' && 'format' in value && value.format === 'blocknote' && 'blocks' in value && Array.isArray(value.blocks))).nullish(), body: z.string().max(20000), links: z.string().max(42000),
   attachments: z.array(z.object({ key: z.string().max(1024), name: z.string().max(255) }).strict()).max(20) }).strict()
 export const composerDraftSchema = contentDraftSchema.extend({ title: z.string().max(200), tags: z.string().max(1000),
   sourceId: z.string().max(200), dueAt: z.string().max(40) })

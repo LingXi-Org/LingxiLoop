@@ -12,6 +12,7 @@ await mkdir(output, { recursive: true })
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
   /^(XDG_CACHE_HOME|PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|HOME|HOMEDRIVE|HOMEPATH|USERPROFILE|APPDATA|LOCALAPPDATA|COMSPEC|PROGRAMFILES(?:\(X86\))?|PROGRAMDATA|PROGRAMW6432|ALLUSERSPROFILE)$/i.test(name)))
 Object.assign(env, {
+  LINGXILOOP_VITE_CACHE_DIR: resolve(cwd, 'node_modules/.vite-cases'),
   NODE_ENV: 'test', DOTENV_CONFIG_PATH: resolve(output, '__no_dotenv__'),
   DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_cases_browser_test',
   INTEGRATION_DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_cases_browser_test',

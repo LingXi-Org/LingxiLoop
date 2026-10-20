@@ -1,0 +1,12 @@
+(node:1259905) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> lingxiloop@0.1.0-beta server:typecheck
+> tsc -p server/tsconfig.json --noEmit
+
+server/src/__integration__/homework.test.ts(1420,16): error TS18046: 'submitted' is of type 'unknown'.
+server/src/__integration__/homework.test.ts(1421,20): error TS18046: 'submitted' is of type 'unknown'.
+server/src/__integration__/homework.test.ts(1422,87): error TS18046: 'submitted' is of type 'unknown'.
+server/src/__integration__/homework.test.ts(1423,95): error TS18046: 'submitted' is of type 'unknown'.
+server/src/__integration__/homework.test.ts(1428,6): error TS18046: 'submitted' is of type 'unknown'.
+server/src/__integration__/homework.test.ts(1439,90): error TS18046: 'submitted' is of type 'unknown'.

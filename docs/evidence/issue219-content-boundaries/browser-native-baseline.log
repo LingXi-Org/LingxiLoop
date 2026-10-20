@@ -1,0 +1,23 @@
+(node:1269012) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-issue219-boundaries
+      run 01a157a6-97b8-7ba9-8f8f-f73a5549dee7 · targets: native
+
+(node:1269012) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1269045) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+interrupted: stopping the running test and tearing down (interrupt again to force)
+ ❯ |native| e2e/content-editor/browser.e2e.ts (1 test | 1 interrupted) 63.09s
+   × native formatting, links, emoji, block menu and table operations remain complete (interrupted) 63.09s
+
+ Test Files  1 interrupted | 0 passed (1)
+      Tests  1 interrupted | 0 passed (1)
+   Start at  04:51:38
+   Duration  63.83s (1m 4s)
+     Report  .codex-tmp/content-boundary-native-baseline/report.json
+
+      JUnit  .codex-tmp/content-boundary-native-baseline/junit.xml
+   Markdown  .codex-tmp/content-boundary-native-baseline/summary.md
+

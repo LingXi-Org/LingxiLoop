@@ -1,0 +1,16 @@
+{
+  "commit": "1a5f1f871319ffa7433a2748191869eb39be8907",
+  "job": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39368490445/job/118450951904",
+  "status": "failed before integration tests",
+  "error": "migration sequence must be contiguous from 0001; expected 47, found 48",
+  "dependency": "#216 owns 0047, absent from current main and deliberately not copied into this independent PR",
+  "localCheck": "Exact borrowed 0047 a1e51a0c + 0048; owning 58/58 passed; does not certify final combined runtime OS13 release",
+  "passedChecks": [
+    "changes",
+    "checks (web)",
+    "checks (admin)",
+    "checks (control)",
+    "checks (server)",
+    "checks (deploy-contract)"
+  ]
+}

@@ -1,4 +1,5 @@
 import { NoEffectError } from '@lyyzka/lingxios'
+import { homeworkAnswerText } from './homework-answer.js'
 import type { Queryable } from '../../db/queryable.js'
 import type { LearningScope } from './contracts.js'
 import type { HomeworkReport } from './homework-contracts.js'
@@ -76,7 +77,7 @@ export async function learnerHomeworkRead(db:Queryable,scope:LearningScope,cours
       }
       content=materials;break
     }
-    case 'answer': content=state.answer;break
+    case 'answer': content=homeworkAnswerText(state.answer);break
     case 'report': content=state.report?visibleReport(state.report):null;break
   }
   return textPage({homeworkId:hw.id,section:input.section,sourceVersion:homeworkHash(content)},content,input.offset)
@@ -103,7 +104,7 @@ export async function teacherHomeworkOverview(db:Queryable,scope:LearningScope,c
     const report=submitted?.report
     const content=input.section==='shared_evidence'
       ? state.manual_evidence?{evidence:state.manual_evidence.evidence,sharedAt:state.manual_evidence.sharedAt}:null
-      : input.section==='answer'?submitted?.answer??null
+      : input.section==='answer'?submitted?homeworkAnswerText(submitted.answer):null
         : report?visibleReport(report):null
     return textPage({homeworkId:hw.id,learnerId:input.learnerId,learnerName:label(rows[0].name,80),status:view.status,
       submission:submitted?{id:submitted.id,version:submitted.version,submittedAt:submitted.submittedAt,late:submitted.late,reviewStatus:submitted.reviewStatus}:null,

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="2" errors="0" skipped="0" time="18.673">
+  <testsuite name="e2e/content-boundaries/browser.e2e.ts" tests="3" failures="2" errors="0" skipped="0" time="18.673">
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: plain [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="14.417">
+      <failure message="expected [&quot;Explain the first inference\\\n Verify the second result reviewed&quot;] to have length 2, got 1" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected [&quot;Explain the first inference\\\n Verify the second result reviewed&quot;] to have length 2, got 1</failure>
+    </testcase>
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: multiline-literal [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="2.749">
+      <failure message="expected [&quot;Explain **literal** criterion\\\n and its second line\\\n Verify the resultreviewed&quot;] to have length 2, got 1" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected [&quot;Explain **literal** criterion\\\n and its second line\\\n Verify the resultreviewed&quot;] to have length 2, got 1</failure>
+    </testcase>
+    <testcase name="private legacy recovery remains available after editing current content [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="1.507"/>
+  </testsuite>
+</testsuites>

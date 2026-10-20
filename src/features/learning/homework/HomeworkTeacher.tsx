@@ -4,10 +4,12 @@ import { MemoCard } from '../forum/memos/MemoCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import type { ContentDocument } from '@/features/content-editor'
 import { userFacingError } from '@/lib/userFacingError'
 import { homeworkApi } from './api'
 import { type Homework, type HomeworkDetail, type HomeworkLearner, homeworkStatus, localDeadline } from './contracts'
+import { ForumContentFields, contentLinks } from '../forum/ForumContentFields'
+import type { ForumAttachment } from '../forum/contracts'
 import { HomeworkSubmissionView } from './HomeworkReport'
 
 export function HomeworkTeacher({ homework, canReview, canEdit, onUpdated }: { homework: Homework; canReview: boolean; canEdit: boolean; onUpdated(detail: HomeworkDetail): void }) {
@@ -63,6 +65,8 @@ export function HomeworkTeacher({ homework, canReview, canEdit, onUpdated }: { h
 
 function Learner({ learner, homework, canReview, onChanged }: { learner: HomeworkLearner; homework: Homework; canReview: boolean; onChanged(): Promise<void> }) {
   const id = useId()
+  const [reasonFiles,setReasonFiles]=useState<ForumAttachment[]>([]), [reasonLinks,setReasonLinks]=useState(''), [uploading,setUploading]=useState(false)
+  const [reasonDocument,setReasonDocument] = useState<ContentDocument | null>(null)
   const [reason, setReason] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('')
   const trigger=useRef<HTMLButtonElement>(null)
   const scroll=useRef(0)
@@ -74,7 +78,7 @@ function Learner({ learner, homework, canReview, onChanged }: { learner: Homewor
   const act = async (work: () => Promise<unknown>) => {
     if (busy || !canReview) return
     setBusy(true); setError('')
-    try { await work(); setReason(''); await onChanged() }
+    try { await work(); setReason(''); setReasonDocument(null); setReasonFiles([]); setReasonLinks(''); await onChanged() }
     catch (cause) { setError(userFacingError(cause, '验收未能保存，请刷新进度后重试。')) }
     finally { setBusy(false) }
   }
@@ -87,10 +91,10 @@ function Learner({ learner, homework, canReview, onChanged }: { learner: Homewor
     {learner.missingCriteria.length > 0 && <div className="space-y-1 text-sm"><p className="font-medium">待核实或待巩固</p><ul className="list-disc space-y-1 ps-5 text-muted-foreground">{learner.missingCriteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul></div>}
     {submission && <HomeworkSubmissionView submission={submission} framed={false} />}
     {submission && canReview && <form className="space-y-3" onSubmit={event => event.preventDefault()}>
-      <div className="space-y-2"><Label htmlFor={`${id}-reason`}>验收意见</Label><Textarea id={`${id}-reason`} value={reason} required maxLength={4000} disabled={busy} placeholder="说明通过的依据，或需要改进的内容" onChange={event => setReason(event.target.value)} /></div>
+      <ForumContentFields label="验收意见" body={reason} editorDocument={reasonDocument} setBody={(value,document)=>{setReason(value);setReasonDocument(document ?? null)}} attachments={reasonFiles} setAttachments={setReasonFiles} links={reasonLinks} setLinks={setReasonLinks} onUploading={setUploading} disabled={busy || uploading} maxLength={4000} focusCanvas/>
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" disabled={busy || !reason.trim() || submission.reviewStatus === 'RETURNED'} onClick={() => void act(() => homeworkApi.review(homework.courseId, homework.id, { learnerId: learner.learnerId, expectedSubmissionId: submission.id, decision: 'RETURNED', reason: reason.trim() }))}>退回</Button>
-        <Button type="button" disabled={busy || !reason.trim() || submission.reviewStatus !== 'PENDING'} onClick={() => void act(() => homeworkApi.review(homework.courseId, homework.id, { learnerId: learner.learnerId, expectedSubmissionId: submission.id, decision: 'PASSED', reason: reason.trim() }))}>通过</Button>
+        <Button type="button" variant="outline" disabled={busy || uploading || reason.length > 4000 || !reason.trim() || submission.reviewStatus === 'RETURNED'} onClick={() => void act(() => homeworkApi.review(homework.courseId, homework.id, { learnerId: learner.learnerId, expectedSubmissionId: submission.id, decision: 'RETURNED', reason: reason.trim(), editorDocument:reasonDocument, attachments:reasonFiles, links:contentLinks(reasonLinks) }))}>退回</Button>
+        <Button type="button" disabled={busy || uploading || reason.length > 4000 || !reason.trim() || submission.reviewStatus !== 'PENDING'} onClick={() => void act(() => homeworkApi.review(homework.courseId, homework.id, { learnerId: learner.learnerId, expectedSubmissionId: submission.id, decision: 'PASSED', reason: reason.trim(), editorDocument:reasonDocument, attachments:reasonFiles, links:contentLinks(reasonLinks) }))}>通过</Button>
       </div>
     </form>}
     {learner.manualReview && <details className="space-y-3"><summary className="cursor-pointer rounded-sm text-sm font-medium focus-visible:outline-2 focus-visible:outline-ring">已分享的复核证据</summary>

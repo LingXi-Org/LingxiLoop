@@ -1,0 +1,17 @@
+{
+  "stoppedFixturePids": [
+    1250682,
+    1264978,
+    1268854,
+    1270948,
+    1272534,
+    1274954
+  ],
+  "lastFixturePid": 1274954,
+  "port": 5391,
+  "listenerClosed": true,
+  "activeCachedBrowserPids": [],
+  "cacheRetained": true,
+  "noFilesDeleted": true,
+  "scope": "Only own fixture PIDs stopped; no unrelated process or file removal"
+}

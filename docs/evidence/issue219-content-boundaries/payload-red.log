@@ -1,0 +1,15 @@
+(node:1255352) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1255352) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+/workspace/LingxiLoop-issue219-boundaries/server/src/db/pool.ts:6
+if (!databaseUrl) throw new Error('[env] Missing required environment variable: DATABASE_URL')
+                        ^
+
+Error: [env] Missing required environment variable: DATABASE_URL
+    at <anonymous> (/workspace/LingxiLoop-issue219-boundaries/server/src/db/pool.ts:6:25)
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.3

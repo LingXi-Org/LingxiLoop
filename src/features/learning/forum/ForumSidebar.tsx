@@ -1,5 +1,6 @@
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useState } from 'react'
-import { ArrowLeftIcon, ClipboardListIcon, MenuIcon, MessageCircleIcon } from 'lucide-react'
+import { ArrowLeftIcon, ClipboardListIcon, MenuIcon, MessageCircleIcon, CalendarIcon } from 'lucide-react'
 import { zhCN } from 'react-day-picker/locale'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -39,5 +40,8 @@ export function ForumSidebar({ kind, onSelect, date, onDate }: { kind: ForumSect
       <div className="border-t p-4"><Button variant="ghost" className="h-11 w-full justify-start gap-2" onClick={() => { setOpen(false); useApp.getState().setView('conversations') }}><ArrowLeftIcon aria-hidden="true" />返回对话</Button></div>
     </SheetContent>
   </Sheet>
-  return <aside aria-label="学习论坛侧栏" className="sticky top-0 min-w-0 self-start">{content}</aside>
+  return <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
+    <nav aria-label="学习论坛版块" className="flex flex-wrap gap-1">{forumSections.map(({kind:value,label})=><Button key={value} size="sm" variant={kind===value?'secondary':'ghost'} aria-pressed={kind===value} onClick={()=>onSelect(value)}>{label}</Button>)}</nav>
+    <Popover><PopoverTrigger asChild><Button variant="ghost" size="sm" aria-label="按日期筛选"><CalendarIcon className="size-4"/>{date?date.toLocaleDateString('zh-CN'):'日期'}</Button></PopoverTrigger><PopoverContent className="w-auto p-2" align="end"><Calendar mode="single" selected={date} onSelect={onDate} locale={zhCN} labels={{labelNext:()=>'下个月',labelPrevious:()=>'上个月'}}/>{date&&<Button variant="ghost" size="sm" onClick={()=>onDate(undefined)}>清除日期筛选</Button>}</PopoverContent></Popover>
+  </div>
 }

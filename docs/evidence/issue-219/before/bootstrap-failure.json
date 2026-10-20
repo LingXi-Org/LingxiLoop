@@ -1,0 +1,420 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15725-582f-7fc4-a929-af201a679902",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "error",
+    "exitCode": 3,
+    "startedAt": "2026-10-20T02:30:29.433Z",
+    "finishedAt": "2026-10-20T02:31:18.044Z",
+    "project": {
+      "id": "lingxiloop-cases",
+      "configDigest": "1a8f93d722e524270b6160f700eaa6be0500363734ed900ac6dea696fe664c61"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "b7b165fd704f8d1f22fe8b70b47bfc8d70e02275",
+      "branch": "codex/issue219-cases-forum-blocknote",
+      "dirty": false
+    },
+    "targets": [
+      {
+        "id": "cases",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53108",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "06709e889e4b501dffea372a5280b74e88cd681e6457424e1c20c506f6e28811",
+        "testId": "e2e/cases/browser.e2e.ts::organization%20case%20publication%2C%20cross-course%20access%2C%20isolation%20and%20responsive%20navigation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "organization case publication, cross-course access, isolation and responsive navigation"
+        ],
+        "file": "e2e/cases/browser.e2e.ts",
+        "source": {
+          "file": "e2e/cases/browser.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "cases",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a15725-6767-7c89-b3a0-5b702f7a13e9",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-20T02:30:31.527Z",
+            "durationMs": 11872,
+            "artifacts": [
+              {
+                "id": "01a15725-6767-7c89-b3a0-5b702f7a13e9:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/001-failure.png",
+                "size": 6489,
+                "sha256": "cb9c3b8047859412e8abcaed51ad9ecefb4bd820c8849af4992e593d500d1836"
+              },
+              {
+                "id": "01a15725-6767-7c89-b3a0-5b702f7a13e9:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/trace/trace.zip",
+                "size": 166629,
+                "sha256": "5ac3d71a8339145549e79e91bba0747871221739fa1ebda12582a235fd1fd222"
+              }
+            ],
+            "error": {
+              "category": "infrastructure",
+              "code": "ENGINE_FAILURE",
+              "message": "evaluate failed: page.evaluate: Execution context was destroyed, most likely because of a navigation.",
+              "retryable": false,
+              "phase": "body"
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "screenshot": "01a15725-6767-7c89-b3a0-5b702f7a13e9:artifact:0"
+            },
+            "steps": [
+              {
+                "id": "01a15725-6767-7c89-b3a0-5b702f7a13e9:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:30:32.309Z",
+                "durationMs": 2410,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 8,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15725-6767-7c89-b3a0-5b702f7a13e9:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:30:34.725Z",
+                "durationMs": 481,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15725-6767-7c89-b3a0-5b702f7a13e9:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:30:35.208Z",
+                "durationMs": 839,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15725-6767-7c89-b3a0-5b702f7a13e9:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "failed",
+                "startedAt": "2026-10-20T02:30:36.047Z",
+                "durationMs": 6616,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                },
+                "error": {
+                  "category": "infrastructure",
+                  "code": "ENGINE_FAILURE",
+                  "message": "evaluate failed: page.evaluate: Execution context was destroyed, most likely because of a navigation.",
+                  "retryable": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7916031b213f49612e7ad95bc1e198d2df8daa9db1eb77f2d0f6719439cd5f46",
+        "testId": "e2e/cases/browser.e2e.ts::teacher%20authors%20and%20publishes%20cover%20and%20body%20images%20through%20the%20UI",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "teacher authors and publishes cover and body images through the UI"
+        ],
+        "file": "e2e/cases/browser.e2e.ts",
+        "source": {
+          "file": "e2e/cases/browser.e2e.ts",
+          "line": 145,
+          "column": 1
+        },
+        "targetId": "cases",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a15725-95db-7acc-90d9-230082aebe59",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-20T02:30:43.419Z",
+            "durationMs": 34489,
+            "artifacts": [
+              {
+                "id": "01a15725-95db-7acc-90d9-230082aebe59:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__teacher_20authors_20and_20publishes_20cover_20and_20body_20images_20through_20the_20U-a7af4f19/default/attempt-0/failure/screen.txt",
+                "size": 260,
+                "sha256": "e322cd147478d52f653d507ef30686e67d1f98ca75f4912d9cdeb263d9106745"
+              },
+              {
+                "id": "01a15725-95db-7acc-90d9-230082aebe59:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__teacher_20authors_20and_20publishes_20cover_20and_20body_20images_20through_20the_20U-a7af4f19/default/attempt-0/screenshots/001-failure.png",
+                "size": 17292,
+                "sha256": "8aa20f235fdc65e1f903355ba83d954629eb936f7f7d960e968aefd660fb20a0"
+              },
+              {
+                "id": "01a15725-95db-7acc-90d9-230082aebe59:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__teacher_20authors_20and_20publishes_20cover_20and_20body_20images_20through_20the_20U-a7af4f19/default/attempt-0/trace/trace.zip",
+                "size": 2225045,
+                "sha256": "c4f173136f31c07360b25a4ed8624e493bc6df1a78e1e29f5dd6e5b5161768a0"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "LOCATOR_NOT_FOUND",
+              "message": "locator matched no nodes within getByRole(\"button\", name: \"新建案例\")",
+              "retryable": false,
+              "phase": "body",
+              "details": {
+                "locator": "getByRole(\"button\", name: \"新建案例\")",
+                "role": "button",
+                "name": "新建案例",
+                "waitedMs": 30062
+              },
+              "source": {
+                "file": "e2e/cases/browser.e2e.ts",
+                "line": 149,
+                "column": 3
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:53108/cases?project=cases-classroom&view=cases",
+              "screen": "01a15725-95db-7acc-90d9-230082aebe59:artifact:0",
+              "screenshot": "01a15725-95db-7acc-90d9-230082aebe59:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a15725-95db-7acc-90d9-230082aebe59:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:30:43.478Z",
+                "durationMs": 754,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 146,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15725-95db-7acc-90d9-230082aebe59:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:30:44.233Z",
+                "durationMs": 284,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 147,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15725-95db-7acc-90d9-230082aebe59:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:30:44.518Z",
+                "durationMs": 445,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 148,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15725-95db-7acc-90d9-230082aebe59:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"新建案例\")",
+                "status": "failed",
+                "startedAt": "2026-10-20T02:30:44.964Z",
+                "durationMs": 30063,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 149,
+                  "column": 56
+                },
+                "error": {
+                  "category": "test",
+                  "code": "LOCATOR_NOT_FOUND",
+                  "message": "locator matched no nodes within getByRole(\"button\", name: \"新建案例\")",
+                  "retryable": false,
+                  "details": {
+                    "locator": "getByRole(\"button\", name: \"新建案例\")",
+                    "role": "button",
+                    "name": "新建案例",
+                    "waitedMs": 30062
+                  },
+                  "source": {
+                    "file": "e2e/cases/browser.e2e.ts",
+                    "line": 149,
+                    "column": 3
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 2,
+      "executed": 2,
+      "passed": 0,
+      "failed": 2,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 2415715,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

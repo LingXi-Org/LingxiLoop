@@ -1,0 +1,9 @@
+{
+  "checkedAt": "2026-10-20T04:23:00Z",
+  "candidate": "1a5f1f871319ffa7433a2748191869eb39be8907",
+  "testedBase": "0a7fd57cca2e4d203a217a27f95882af5e3d2fd5",
+  "latestMain": "0e93870f196f0c01ddf90f1c76ffc9bc6d722391",
+  "mergeTreeExitCode": 0,
+  "syntheticMergeTree": "34ed5fb6d12430a6fd17c523d1a2617f5424a7e6",
+  "note": "Read-only merge compatibility inspection; no merge commit, build or runtime qualification of this synthetic combined tree."
+}

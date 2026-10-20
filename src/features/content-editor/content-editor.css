@@ -1,0 +1,12 @@
+/* Host layout only. Upstream BlockNote UI/styles are imported without replacement. */
+.content-editor { min-width: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--background); }
+.content-editor:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
+.content-editor .bn-editor { min-height: 160px; padding: 16px 40px; background: var(--background); color: var(--foreground); }
+.content-editor-compact .bn-editor { min-height: 44px; }
+.content-document { min-width: 0; }
+.content-document .bn-editor { padding: 0; background: transparent; color: var(--foreground); }
+.content-editor .bn-container, .content-document .bn-container { font-family: inherit; }
+.content-editor .bn-block-content, .content-document .bn-block-content { overflow-wrap: anywhere; }
+/* Keep every upstream button. Its native horizontal scrolling remains intact. */
+.content-editor .bn-toolbar { max-width: calc(100vw - 16px); }
+@media (max-width: 640px) { .content-editor .bn-editor { padding-inline: 28px 12px; font-size: 16px; } }

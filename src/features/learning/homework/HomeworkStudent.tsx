@@ -1,3 +1,5 @@
+import { equalContent } from '@/features/content-editor/document'
+import { ForumBody } from '../forum/ForumBody'
 import { ConversationReferencePicker } from '../forum/ConversationReferences'
 import type { ConversationReference } from '../forum/contracts'
 import { useRef, useState } from 'react'
@@ -7,7 +9,6 @@ import { userFacingError } from '@/lib/userFacingError'
 import { useApp } from '@/stores/app'
 import type { LearningSpace } from '../contracts'
 import { contentLinks, ForumContentFields, ForumFiles } from '../forum/ForumContentFields'
-import { MemoContent } from '../forum/memos/MemoContent'
 import { contentDraftSchema, useForumDraft } from '../forum/useForumDraft'
 import { homeworkApi } from './api'
 import { type Homework, homeworkStatus, type HomeworkStudent as StudentState } from './contracts'
@@ -18,14 +19,14 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
   onUpdated(value: StudentState): void; onSubmitted(): Promise<void>; onUploading(value: boolean): void; onRefresh(): Promise<void>
 }) {
   const { draft, setDraft, storageError, discard } = useForumDraft(`homework:${homework.courseId}:${homework.id}`, contentDraftSchema,
-    { body: student.answer.text, links: student.answer.links.join('\n'), attachments: student.answer.attachments }, space.canSubmit && student.status !== 'PASSED')
+    { body: student.answer.text, editorDocument:student.answer.editorDocument, links: student.answer.links.join('\n'), attachments: student.answer.attachments }, space.canSubmit && student.status !== 'PASSED')
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
   const [references,setReferences]=useState<ConversationReference[]>([])
   const [preview, setPreview] = useState(false)
   const pending = useRef<{ reportId: string; key: string } | null>(null)
   const inFlight = useRef(false)
-  const answer = { text: draft.body, links: contentLinks(draft.links), attachments: draft.attachments }
-  const dirty = JSON.stringify(answer) !== JSON.stringify(student.answer)
+  const answer = { text: draft.body, editorDocument:draft.editorDocument, links: contentLinks(draft.links), attachments: draft.attachments }
+  const dirty = !equalContent(answer, student.answer)
   const disabled = busy || uploading || !space.canSubmit
   const report = !dirty && student.reportStatus === 'READY' && student.report?.answerRevision === student.answerRevision ? student.report : null
   const editable = student.status !== 'PASSED'
@@ -40,7 +41,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
   return <div className="space-y-6">
     <section aria-label="我的学习进度" className="space-y-3">
       <div className="flex items-center gap-3 text-sm"><h3 className="font-medium">我的学习进度</h3><span className="text-muted-foreground">{homeworkStatus[student.status]}</span></div>
-      {student.feedback && <p role="status" className="whitespace-pre-wrap border-s-2 ps-3 text-sm">教师意见：{student.feedback}</p>}
+      {student.feedback && <div role="status" className="space-y-2 border-s-2 ps-3 text-sm"><p>教师意见</p><ForumBody content={student.feedback} document={student.feedbackDocument}/><ForumFiles attachments={student.feedbackAttachments ?? []} links={student.feedbackLinks ?? []}/></div>}
       {homework.status === 'CLOSED' && <p role="status" className="text-sm text-muted-foreground">{student.status === 'RETURNED' ? '作业已关闭。你可以根据退回意见修订作答，更新报告后补交一次。已有学习记录仍然有效。' : '作业已关闭，仍可继续学习和查看记录，暂不接收提交。'}</p>}
       {student.status === 'PASSED' ? <p className="text-sm text-muted-foreground">作业已通过。</p> : <p className="text-sm text-muted-foreground">{student.hasLearningRecord ? '保存作答后自动生成学习报告。' : '先与助手讨论作业，再保存作答生成报告。'}</p>}
       {student.criteria.length>0 && <details><summary className="cursor-pointer text-sm text-muted-foreground focus-visible:outline-2">查看学习进度</summary><HomeworkCriteria criteria={student.criteria} /></details>}
@@ -61,7 +62,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
     {editable && <ConversationReferencePicker courseId={homework.courseId} channelId={student.channelId} value={references} onChange={setReferences} disabled={disabled}/>}
     {editable && (preview && report ? <section aria-label="提交预览" className="space-y-5 rounded-xl border p-4">
       <h3 className="font-semibold">提交预览</h3><p className="text-sm text-muted-foreground">以下作答和学习报告将一起提交，仅你和本课程教师可见。</p>
-      <MemoContent content={answer.text} /><ForumFiles links={answer.links} attachments={answer.attachments} /><HomeworkReport report={report} />
+      <ForumBody content={answer.text} document={answer.editorDocument} /><ForumFiles links={answer.links} attachments={answer.attachments} /><HomeworkReport report={report} />
       <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-popover py-3">
         <Button variant="outline" disabled={disabled} onClick={() => setPreview(false)}>返回修改</Button>
         <Button disabled={disabled || !canSubmit} onClick={() => void act(async () => {
@@ -73,7 +74,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
       </div>
     </section> : <section aria-label="我的作答草稿" className="space-y-4">
       <div className="space-y-1"><h3 className="font-semibold">我的作答</h3><p className="text-sm text-muted-foreground">草稿仅自己可见。正式提交后，教师才能看到作答和报告。</p></div>
-      <ForumContentFields label="我的作答" body={draft.body} setBody={body => setDraft(previous => ({ ...previous, body }))} links={draft.links} setLinks={links => setDraft(previous => ({ ...previous, links }))} attachments={draft.attachments} setAttachments={attachments => setDraft(previous => ({ ...previous, attachments }))} disabled={disabled} onUploading={value => { setUploading(value); onUploading(value) }} />
+      <ForumContentFields label="我的作答" body={draft.body} editorDocument={draft.editorDocument} setBody={(body,editorDocument) => setDraft(previous => ({ ...previous, body,editorDocument }))} links={draft.links} setLinks={links => setDraft(previous => ({ ...previous, links }))} attachments={draft.attachments} setAttachments={attachments => setDraft(previous => ({ ...previous, attachments }))} disabled={disabled} onUploading={value => { setUploading(value); onUploading(value) }} />
       <p className="text-xs text-muted-foreground">可核对文字、公开网页、含可提取文字的 PDF 和 Word 文档（.docx）。图片、扫描件、音视频需要补充文字说明；上传完成不代表已被阅读。</p>
       {storageError && <p role="alert" className="text-sm text-destructive">本地草稿无法保存，请先保存到课程或复制内容。</p>}
       <div className="flex flex-wrap gap-2">
@@ -86,7 +87,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
         })}>{student.reportStatus === 'PENDING' ? '报告更新中…' : '更新报告'}</Button>
         <Button disabled={disabled || !canSubmit} onClick={() => setPreview(true)}>预览并提交</Button>
       </div>
-      {dirty && <div className="space-y-1"><p role="status" className="text-sm text-muted-foreground">本地作答与已保存的草稿不同，请保存并更新报告后再提交。</p><Button variant="link" size="sm" disabled={disabled} onClick={() => { setDraft({ body: student.answer.text, links: student.answer.links.join('\n'), attachments: student.answer.attachments }); discard() }}>放弃本地修改，恢复已保存的草稿</Button></div>}
+      {dirty && <div className="space-y-1"><p role="status" className="text-sm text-muted-foreground">本地作答与已保存的草稿不同，请保存并更新报告后再提交。</p><Button variant="link" size="sm" disabled={disabled} onClick={() => { setDraft({ body: student.answer.text, editorDocument:student.answer.editorDocument, links: student.answer.links.join('\n'), attachments: student.answer.attachments }); discard() }}>放弃本地修改，恢复已保存的草稿</Button></div>}
       {student.reportStatus === 'INVALID' && !dirty && <p role="status" className="text-sm text-muted-foreground">{student.reportFeedback || '报告暂未生成，请重试。已保存的作答和学习记录仍会保留。'}</p>}
       {report && <><p className="text-xs text-muted-foreground">报告由你的助手根据学习证据整理。可以继续对话、补充证据来更新报告。</p><HomeworkReport report={report} /></>}
     </section>)}

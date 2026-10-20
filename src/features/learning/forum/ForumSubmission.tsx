@@ -1,3 +1,5 @@
+import type { ContentDocument } from '@/features/content-editor'
+import { ForumBody } from './ForumBody'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -5,7 +7,7 @@ import { ConversationReferencePicker, ConversationReferences, openReference } fr
 import { userFacingError } from '@/lib/userFacingError'
 import type { LearningSpace } from '../contracts'
 import { forumApi } from './api'
-import type { ConversationReference, ForumItem, SubmissionAssessment, SubmissionStudent, SubmissionVersion } from './contracts'
+import type { ConversationReference, ForumAttachment, ForumItem, SubmissionAssessment, SubmissionStudent, SubmissionVersion } from './contracts'
 import { contentLinks, ForumContentFields, ForumFiles } from './ForumContentFields'
 import { MemoCard } from './memos/MemoCard'
 import { MemoContent } from './memos/MemoContent'
@@ -15,14 +17,14 @@ const sourceLabels = { STUDENT_ORIGINAL: '学生原创',AGENT_RELAY: 'Agent 代�
 export function Version({ submission, framed = true }: { submission: SubmissionVersion; framed?: boolean }) {
   const content = <div className="w-full space-y-3">
     <p className="text-xs text-muted-foreground">{sourceLabels[submission.source]}{submission.late && ' · 迟交'}</p>
-    <MemoContent content={submission.answer} />
+    <ForumBody content={submission.answer} document={submission.editorDocument} />
     <p className="text-sm">学习评价：{assessmentLabel(submission.assessment)}</p>
     {submission.assessment?.reason && <MemoContent content={submission.assessment.reason}/>}
     {submission.assessment?.evidence?.map((quote,index)=><a key={index} className="text-sm underline" href={`#${submission.id}-reference-${quote.reference}`} onClick={event=>{event.preventDefault();openReference(submission.id,quote.reference)}}>依据：{quote.excerpt}</a>)}
     <ConversationReferences references={submission.conversationReferences} id={submission.id}/>
     <p className="text-xs text-muted-foreground">学习评价供教师参考，不等同于正式成绩。</p>
     <ForumFiles links={submission.links} attachments={submission.attachments} />
-    {submission.feedback?.map(feedback => <div key={feedback.id} className="border-s-2 ps-3"><p className="mb-2 text-xs text-muted-foreground">{feedback.kind === 'TEACHER' ? '教师反馈' : '历史 Agent 评价'}{feedback.status !== 'ACCEPTED' ? ` · ${feedback.status === 'PENDING' ? '待审核' : '未采纳'}` : ''} · {new Date(feedback.createdAt).toLocaleString()}</p><MemoContent content={feedback.body} /></div>)}
+    {submission.feedback?.map(feedback => <div key={feedback.id} className="border-s-2 ps-3"><p className="mb-2 text-xs text-muted-foreground">{feedback.kind === 'TEACHER' ? '教师反馈' : '历史 Agent 评价'}{feedback.status !== 'ACCEPTED' ? ` · ${feedback.status === 'PENDING' ? '待审核' : '未采纳'}` : ''} · {new Date(feedback.createdAt).toLocaleString()}</p><ForumBody content={feedback.body} document={feedback.editorDocument} /><ForumFiles attachments={feedback.attachments ?? []} links={feedback.links ?? []}/></div>)}
   </div>
   return framed ? <MemoCard label={`第 ${submission.version} 版提交`} author={submission.learnerName} authorId={submission.learnerId} authorAvatarUrl={submission.learnerAvatarUrl} createdAt={submission.submittedAt} actions={<span className="text-xs text-muted-foreground">第 {submission.version} 版</span>}>{content}</MemoCard> : content
 }
@@ -57,13 +59,13 @@ export function ForumSubmission({ space, item }: { space: LearningSpace; item: F
     {item.dueAt && <p className="text-xs text-muted-foreground">截止：{new Date(item.dueAt).toLocaleString()}；截止后提交将标记为迟交。</p>}
     {item.status==='CLOSED'?<p role="status" className="text-sm">作业已关闭，停止接收提交。</p>:space.canSubmit&&<form className="space-y-4" onSubmit={async event=>{
       event.preventDefault();if(disabled||!references.length)return
-      const content={answer,links:contentLinks(links),attachments,conversationReferences:references},fingerprint=JSON.stringify(content)
+      const content={answer,editorDocument:draft.editorDocument,links:contentLinks(links),attachments,conversationReferences:references},fingerprint=JSON.stringify(content)
       if(pending.current?.fingerprint!==fingerprint)pending.current={fingerprint,key:crypto.randomUUID()}
       setBusy(true);setError('');setSaved(false)
       try {await forumApi.submit(space.courseId!,item.id,{...content,idempotencyKey:pending.current.key});pending.current=null;setDraft(emptyContent);discard();setReferences([]);setSaved(true);await load()}
       catch(reason){setError(userFacingError(reason,'提交失败，请检查对话引用和作业状态后重试。'))}finally{setBusy(false)}
     }}>
-      <ForumContentFields body={answer} setBody={body=>setDraft(old=>({...old,body}))} label="作业内容" links={links} setLinks={links=>setDraft(old=>({...old,links}))} attachments={attachments} setAttachments={attachments=>setDraft(old=>({...old,attachments}))} disabled={disabled} onUploading={setUploading}/>
+      <ForumContentFields body={answer} editorDocument={draft.editorDocument} setBody={(body,editorDocument)=>setDraft(old=>({...old,body,editorDocument}))} label="作业内容" links={links} setLinks={links=>setDraft(old=>({...old,links}))} attachments={attachments} setAttachments={attachments=>setDraft(old=>({...old,attachments}))} disabled={disabled} onUploading={setUploading}/>
       <ConversationReferencePicker courseId={space.courseId!} value={references} onChange={setReferences} disabled={disabled}/>
       {storageError&&<p role="status">无法保存本地草稿，请先复制内容。</p>}
       <Button type="submit" disabled={disabled||!references.length||!answer.trim()&&!links.trim()&&!attachments.length}>{busy?'提交中…':'提交作业'}</Button>
@@ -109,6 +111,8 @@ function SubmissionStudents({space,item}:{space:LearningSpace;item:ForumItem}) {
 }
 
 function StudentRow({student,space,item}:{student:SubmissionStudent;space:LearningSpace;item:ForumItem}) {
+  const [feedbackFiles,setFeedbackFiles]=useState<ForumAttachment[]>([]), [feedbackLinks,setFeedbackLinks]=useState(''), [uploading,setUploading]=useState(false)
+  const [feedback,setFeedback]=useState(''),[feedbackDocument,setFeedbackDocument]=useState<ContentDocument | null>(null)
   const trigger=useRef<HTMLButtonElement>(null)
   const scroll=useRef(0)
   const expand=()=>{if(!open)scroll.current=trigger.current?.closest('[data-forum-scroll]')?.scrollTop??0;setOpen(true)}
@@ -134,10 +138,10 @@ function StudentRow({student,space,item}:{student:SubmissionStudent;space:Learni
       {busy&&!latest&&<p role="status">正在加载作答…</p>}
       {error&&<p role="alert">{error}<Button onClick={()=>void load()}>重试</Button></p>}
       {latest&&<Version submission={{...latest,assessment}} framed={false}/>}
-      {latest&&<form className="flex gap-2" onSubmit={async event=>{
-        event.preventDefault();const form=event.currentTarget,body=String(new FormData(form).get('feedback')??'').trim();if(!body||busy)return
-        setBusy(true);try{await forumApi.feedback(space.courseId!,item,latest.id,body);form.reset();await load()}catch(reason){setError(userFacingError(reason,'反馈保存失败。'))}finally{setBusy(false)}
-      }}><Input name="feedback" aria-label={`反馈：${student.learnerName}`} placeholder="给这次提交留下反馈" required maxLength={10000}/><Button disabled={busy}>保存反馈</Button></form>}
+      {latest&&<form className="space-y-2" onSubmit={async event=>{
+        event.preventDefault();const body=feedback.trim();if(!body||busy)return
+        setBusy(true);try{await forumApi.feedback(space.courseId!,item,latest.id,body,feedbackDocument,feedbackFiles,contentLinks(feedbackLinks));setFeedback('');setFeedbackDocument(null);setFeedbackFiles([]);setFeedbackLinks('');await load()}catch(reason){setError(userFacingError(reason,'反馈保存失败。'))}finally{setBusy(false)}
+      }}><ForumContentFields label={`反馈：${student.learnerName}`} body={feedback} editorDocument={feedbackDocument} setBody={(value,document)=>{setFeedback(value);setFeedbackDocument(document ?? null)}} attachments={feedbackFiles} setAttachments={setFeedbackFiles} links={feedbackLinks} setLinks={setFeedbackLinks} onUploading={setUploading} disabled={busy || uploading} maxLength={10000} focusCanvas/><Button disabled={busy || uploading || feedback.length > 10000}>保存反馈</Button></form>}
       {latest&&versions.slice(1).map(version=><details key={version.id}><summary className="cursor-pointer text-sm focus-visible:outline-2">历史版本 · 第 {version.version} 版 · {new Date(version.submittedAt).toLocaleString()}</summary><Version submission={version} framed={false}/></details>)}
       {latest&&next!==null&&<Button variant="outline" disabled={busy} onClick={()=>void load(next)}>更多历史版本</Button>}
       <Button variant="ghost" size="sm" onClick={collapse}>收起作答</Button>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="16.937">
+  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="16.937">
+    <testcase name="native formatting, links, emoji, block menu and table operations remain complete [native]" classname="e2e/content-editor/browser.e2e.ts" time="16.937"/>
+  </testsuite>
+</testsuites>

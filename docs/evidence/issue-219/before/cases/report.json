@@ -1,0 +1,2406 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15726-e4c0-7068-94ad-94e8033a853f",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-20T02:32:10.044Z",
+    "finishedAt": "2026-10-20T02:32:59.360Z",
+    "project": {
+      "id": "lingxiloop-cases",
+      "configDigest": "1a8f93d722e524270b6160f700eaa6be0500363734ed900ac6dea696fe664c61"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "b7b165fd704f8d1f22fe8b70b47bfc8d70e02275",
+      "branch": "codex/issue219-cases-forum-blocknote",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "cases",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53108",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "06709e889e4b501dffea372a5280b74e88cd681e6457424e1c20c506f6e28811",
+        "testId": "e2e/cases/browser.e2e.ts::organization%20case%20publication%2C%20cross-course%20access%2C%20isolation%20and%20responsive%20navigation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "organization case publication, cross-course access, isolation and responsive navigation"
+        ],
+        "file": "e2e/cases/browser.e2e.ts",
+        "source": {
+          "file": "e2e/cases/browser.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "cases",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T02:32:10.940Z",
+            "durationMs": 41357,
+            "artifacts": [
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15726-ebbc-7116-9f7b-d5515a65a76b:24"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/001-student-editorial-grid-light.png",
+                "size": 50523,
+                "sha256": "fd2138580eda89ab4829f5a7ed41f52e09c3eae2b061090bff8d6a24fb5afbcf"
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15726-ebbc-7116-9f7b-d5515a65a76b:37"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/002-student-article-images.png",
+                "size": 50065,
+                "sha256": "185ea8ff6e964fb1194f9bb4d626434fb56dbbec78fe24037ead48f61fd510ff"
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15726-ebbc-7116-9f7b-d5515a65a76b:53"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/003-other-teacher-unpublished-draft.png",
+                "size": 62800,
+                "sha256": "4c2d6a69823346b949c049eea741c9b87b50687c3dea93277d6706e0e7d095b6"
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:3",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15726-ebbc-7116-9f7b-d5515a65a76b:76"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/004-mobile-dark-single-column-keyboard.png",
+                "size": 42127,
+                "sha256": "0e6950bee8cb607ac1cdd83bf89e65e7939a8acf11b06822bf109628b25d9b70"
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:4",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15726-ebbc-7116-9f7b-d5515a65a76b:85"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/005-cross-organization-deep-link-denied.png",
+                "size": 29904,
+                "sha256": "eaa2719b2b5443b9fc1538868a27f3ce925a9f8f6e2a058fb936655d506a3c59"
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:5",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15726-ebbc-7116-9f7b-d5515a65a76b:102"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/006-sidebar-independent-case-library.png",
+                "size": 48829,
+                "sha256": "dc4998d3fe863e123045eb10b6e56f11a3fb60db302963295b4a7869cdfd73fc"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:11.065Z",
+                "durationMs": 356,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 8,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:11.425Z",
+                "durationMs": 266,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:11.691Z",
+                "durationMs": 386,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:12.078Z",
+                "durationMs": 315,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:12.394Z",
+                "durationMs": 228,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:12.623Z",
+                "durationMs": 540,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:13.164Z",
+                "durationMs": 540,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:13.704Z",
+                "durationMs": 840,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:14.549Z",
+                "durationMs": 1240,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:15.790Z",
+                "durationMs": 587,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:16.378Z",
+                "durationMs": 428,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:16.807Z",
+                "durationMs": 352,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:17.161Z",
+                "durationMs": 94,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:17.256Z",
+                "durationMs": 131,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:17.388Z",
+                "durationMs": 109,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:17.498Z",
+                "durationMs": 688,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:18.186Z",
+                "durationMs": 167,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:18.353Z",
+                "durationMs": 84,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 41,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:18.438Z",
+                "durationMs": 288,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:19",
+                "index": 19,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:18.728Z",
+                "durationMs": 355,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 46,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:19.086Z",
+                "durationMs": 3088,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 47,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"新建案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:22.175Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 48,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:22.206Z",
+                "durationMs": 246,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 49,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:22.452Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 50,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:24",
+                "index": 24,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "student-editorial-grid-light",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:22.467Z",
+                "durationMs": 216,
+                "events": [],
+                "artifacts": [
+                  "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 51,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:25",
+                "index": 25,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:22.683Z",
+                "durationMs": 89,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 53,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:26",
+                "index": 26,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"社区口述历史\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:22.773Z",
+                "durationMs": 242,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 54,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.016Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 55,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:28",
+                "index": 28,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.026Z",
+                "durationMs": 48,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 56,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.selectOption",
+                "label": "getByLabel(\"分类\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.075Z",
+                "durationMs": 59,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 57,
+                  "column": 46
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.134Z",
+                "durationMs": 261,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 58,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"heading\", name: \"社区口述历史\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.396Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 59,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:32",
+                "index": 32,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"link\", name: /河流生态调查/)",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.422Z",
+                "durationMs": 182,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 60,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:33",
+                "index": 33,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.604Z",
+                "durationMs": 74,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 61,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"编辑案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.678Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 62,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"link\", name: \"调查资料\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.686Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 63,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:36",
+                "index": 36,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.705Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 64,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:37",
+                "index": 37,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "student-article-images",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.716Z",
+                "durationMs": 91,
+                "events": [],
+                "artifacts": [
+                  "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 65,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:38",
+                "index": 38,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:23.807Z",
+                "durationMs": 203,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 66,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:24.011Z",
+                "durationMs": 2399,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 67,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:40",
+                "index": 40,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"返回案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:26.410Z",
+                "durationMs": 184,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 68,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:41",
+                "index": 41,
+                "kind": "resource",
+                "api": "browser.back",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:26.602Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 69,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:26.619Z",
+                "durationMs": 135,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 70,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.forward",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:26.754Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 71,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:44",
+                "index": 44,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:26.784Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 72,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:45",
+                "index": 45,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-f445c567-6fa2-4a63-8811-dbb6b13c61dd?project=cases-other-course&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:26.811Z",
+                "durationMs": 170,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 73,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:46",
+                "index": 46,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:26.981Z",
+                "durationMs": 2365,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 74,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:47",
+                "index": 47,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:29.346Z",
+                "durationMs": 52,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:48",
+                "index": 48,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-f445c567-6fa2-4a63-8811-dbb6b13c61dd?project=cases-other-course&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:29.398Z",
+                "durationMs": 309,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 77,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:49",
+                "index": 49,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"编辑案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:29.708Z",
+                "durationMs": 3165,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 78,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:50",
+                "index": 50,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"正文（Markdown）\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:32.874Z",
+                "durationMs": 84,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 79,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:51",
+                "index": 51,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存草稿\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:32.960Z",
+                "durationMs": 133,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 80,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:52",
+                "index": 52,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:33.094Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 81,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:53",
+                "index": 53,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "other-teacher-unpublished-draft",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:33.122Z",
+                "durationMs": 99,
+                "events": [],
+                "artifacts": [
+                  "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 82,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:54",
+                "index": 54,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:33.222Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:55",
+                "index": 55,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:33.246Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:56",
+                "index": 56,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:33.273Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:57",
+                "index": 57,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-f445c567-6fa2-4a63-8811-dbb6b13c61dd?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:33.303Z",
+                "durationMs": 185,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 87,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:58",
+                "index": 58,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:33.488Z",
+                "durationMs": 2395,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 88,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:59",
+                "index": 59,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"heading\", name: \"新的实地方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:35.884Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 89,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:60",
+                "index": 60,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:35.898Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:61",
+                "index": 61,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-f445c567-6fa2-4a63-8811-dbb6b13c61dd?project=cases-other-course&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:35.920Z",
+                "durationMs": 165,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 91,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:62",
+                "index": 62,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"编辑案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:36.085Z",
+                "durationMs": 2386,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 92,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:63",
+                "index": 63,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:38.471Z",
+                "durationMs": 124,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 93,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:64",
+                "index": 64,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:38.595Z",
+                "durationMs": 130,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 94,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:65",
+                "index": 65,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:38.726Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:66",
+                "index": 66,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:38.741Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:67",
+                "index": 67,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:38.773Z",
+                "durationMs": 231,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 97,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:68",
+                "index": 68,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:39.004Z",
+                "durationMs": 233,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 98,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:69",
+                "index": 69,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:39.238Z",
+                "durationMs": 1660,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 99,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:70",
+                "index": 70,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:40.900Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 100,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:71",
+                "index": 71,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:40.905Z",
+                "durationMs": 136,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 101,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:72",
+                "index": 72,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Tab",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.041Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 102,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:73",
+                "index": 73,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.053Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 103,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:74",
+                "index": 74,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.069Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 108,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:75",
+                "index": 75,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.083Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 109,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:76",
+                "index": 76,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "mobile-dark-single-column-keyboard",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.108Z",
+                "durationMs": 108,
+                "events": [],
+                "artifacts": [
+                  "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:3"
+                ],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 113,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:77",
+                "index": 77,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.217Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:78",
+                "index": 78,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.236Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:79",
+                "index": 79,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.263Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:80",
+                "index": 80,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.286Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:81",
+                "index": 81,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.321Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 119,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:82",
+                "index": 82,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-f445c567-6fa2-4a63-8811-dbb6b13c61dd?project=cases-outsider-course&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.341Z",
+                "durationMs": 165,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 120,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:83",
+                "index": 83,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:41.506Z",
+                "durationMs": 1996,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 121,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:84",
+                "index": 84,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:43.502Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 122,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:85",
+                "index": 85,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "cross-organization-deep-link-denied",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:43.519Z",
+                "durationMs": 126,
+                "events": [],
+                "artifacts": [
+                  "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:4"
+                ],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 123,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:86",
+                "index": 86,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:43.646Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:87",
+                "index": 87,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:43.663Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 126,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:88",
+                "index": 88,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-f445c567-6fa2-4a63-8811-dbb6b13c61dd?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:43.732Z",
+                "durationMs": 189,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 127,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:89",
+                "index": 89,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"下架案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:43.921Z",
+                "durationMs": 2063,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 128,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:90",
+                "index": 90,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:45.985Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 129,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:91",
+                "index": 91,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:46.028Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 10,
+                  "column": 126
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:92",
+                "index": 92,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:46.046Z",
+                "durationMs": 36,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:93",
+                "index": 93,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:46.082Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 11,
+                  "column": 127
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:94",
+                "index": 94,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:46.115Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 133,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:95",
+                "index": 95,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=cases-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:46.137Z",
+                "durationMs": 189,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 134,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:96",
+                "index": 96,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:46.327Z",
+                "durationMs": 3484,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 135,
+                  "column": 45
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:97",
+                "index": 97,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"navigation\", name: \"学习论坛版块\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:49.812Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 137,
+                  "column": 46
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:98",
+                "index": 98,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"navigation\", name: \"学习论坛版块\") >> getByRole(\"button\", name: \"资料\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:49.832Z",
+                "durationMs": 101,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 138,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:99",
+                "index": 99,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:49.933Z",
+                "durationMs": 145,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 139,
+                  "column": 55
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:100",
+                "index": 100,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:50.078Z",
+                "durationMs": 356,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 140,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:101",
+                "index": 101,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"社区口述历史\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:50.436Z",
+                "durationMs": 226,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 141,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a15726-ebbc-7116-9f7b-d5515a65a76b:102",
+                "index": 102,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "sidebar-independent-case-library",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:50.662Z",
+                "durationMs": 71,
+                "events": [],
+                "artifacts": [
+                  "01a15726-ebbc-7116-9f7b-d5515a65a76b:artifact:5"
+                ],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 142,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7916031b213f49612e7ad95bc1e198d2df8daa9db1eb77f2d0f6719439cd5f46",
+        "testId": "e2e/cases/browser.e2e.ts::teacher%20authors%20and%20publishes%20cover%20and%20body%20images%20through%20the%20UI",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "teacher authors and publishes cover and body images through the UI"
+        ],
+        "file": "e2e/cases/browser.e2e.ts",
+        "source": {
+          "file": "e2e/cases/browser.e2e.ts",
+          "line": 145,
+          "column": 1
+        },
+        "targetId": "cases",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T02:32:52.302Z",
+            "durationMs": 6956,
+            "artifacts": [
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:16"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__teacher_20authors_20and_20publishes_20cover_20and_20body_20images_20through_20the_20U-a7af4f19/default/attempt-0/screenshots/001-teacher-create-image-preview.png",
+                "size": 64617,
+                "sha256": "c242312f9b06fa1a04a715b6e48a505fba9bf86dbb3e76b9cf169ca9bec9b7e6"
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:20"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__teacher_20authors_20and_20publishes_20cover_20and_20body_20images_20through_20the_20U-a7af4f19/default/attempt-0/screenshots/002-teacher-authored-published-article.png",
+                "size": 56717,
+                "sha256": "be6589ba0fcb7f207fee19d2ee1686a4520dbcc1f0c39279bd3daf05dac3efd4"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:52.321Z",
+                "durationMs": 456,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 146,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:52.777Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 147,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:52.875Z",
+                "durationMs": 191,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 148,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"新建案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:53.067Z",
+                "durationMs": 3861,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 149,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"标题\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:56.931Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 150,
+                  "column": 46
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"摘要\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:57.029Z",
+                "durationMs": 83,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 151,
+                  "column": 46
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"分类\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:57.112Z",
+                "durationMs": 73,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 152,
+                  "column": 46
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"标签（逗号分隔）\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:57.185Z",
+                "durationMs": 70,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 153,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"正文（Markdown）\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:57.255Z",
+                "durationMs": 149,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 154,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.setInputFiles",
+                "label": "getByLabel(\"上传封面\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:57.405Z",
+                "durationMs": 302,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 155,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:57.708Z",
+                "durationMs": 220,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 156,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:11",
+                "index": 11,
+                "kind": "locator",
+                "api": "locator.setInputFiles",
+                "label": "getByLabel(\"插入正文图片\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:57.928Z",
+                "durationMs": 85,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 157,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.014Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 158,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.126Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 158,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"预览正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.134Z",
+                "durationMs": 136,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 159,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:15",
+                "index": 15,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"正文预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.271Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 160,
+                  "column": 51
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:16",
+                "index": 16,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "teacher-create-image-preview",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.286Z",
+                "durationMs": 152,
+                "events": [],
+                "artifacts": [
+                  "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 161,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:17",
+                "index": 17,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.439Z",
+                "durationMs": 153,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 162,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:18",
+                "index": 18,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.594Z",
+                "durationMs": 187,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 163,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"从观察到设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.781Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 164,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:20",
+                "index": 20,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "teacher-authored-published-article",
+                "status": "passed",
+                "startedAt": "2026-10-20T02:32:58.816Z",
+                "durationMs": 126,
+                "events": [],
+                "artifacts": [
+                  "01a15727-8d4e-77d3-8d1c-2db8e9da1c4e:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/cases/browser.e2e.ts",
+                  "line": 165,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 405582,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

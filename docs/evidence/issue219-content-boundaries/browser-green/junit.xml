@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="15.605">
+  <testsuite name="e2e/content-boundaries/browser.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="15.605">
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: plain [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="5.763"/>
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: multiline-literal [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="7.126"/>
+    <testcase name="private legacy recovery remains available after editing current content [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="2.716"/>
+  </testsuite>
+</testsuites>

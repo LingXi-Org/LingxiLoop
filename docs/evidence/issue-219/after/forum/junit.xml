@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="194.817">
+  <testsuite name="e2e/forum/issue219.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="194.817">
+    <testcase name="native forum menus, table, task state, scoped draft, upload retry, publish retry and JSON reopen [forum]" classname="e2e/forum/issue219.e2e.ts" time="79.318"/>
+    <testcase name="legacy submission, native teacher feedback media and private history keep the same audience [forum]" classname="e2e/forum/issue219.e2e.ts" time="30.311"/>
+    <testcase name="real homework draft card persists both native fields, publishes, and reopens answer and acceptance [forum]" classname="e2e/forum/issue219.e2e.ts" time="85.188"/>
+  </testsuite>
+</testsuites>
