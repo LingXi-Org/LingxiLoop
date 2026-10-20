@@ -32,7 +32,7 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, conversationId)
     const usage = { available: true, inputTokens: 100, outputTokens: 20 }
     const html = '<div id="native-fixture"><label for="value">Value</label><input id="value" type="range" min="1" max="10" value="3"><output>3</output></div>\n<script>document.getElementById("value").oninput=(e)=>{document.querySelector("#native-fixture output").textContent=e.target.value}</script>'
-    let phase = 0, calls = 0, path = '', exporting = false, omittedReference = false
+    let phase = 0, calls = 0, path = '', exporting = false, omittedReference = false, repairedMissingReference = false
     let observation: { actionKey: string; sha256: string; text: string } | undefined
     let completeSkillRead = false
     let maxRangeResponseCharacters = 0, consumedSkillSha256 = ''
@@ -80,6 +80,7 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
                 assert.equal(result.ok, true); assert.equal(result.value.html, html); omittedReference = true
                 return answer('已保存可视化。') // Activation must force repair before delivery.
               }
+              repairedMissingReference = true
               return answer(`::visualize${JSON.stringify({ path, mode: 'wide' })}`)
           }
         } },
@@ -98,6 +99,7 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
     }
     const first = await turn('visualize-generate', '用滑杆探索数值变化。')
     assert.equal(omittedReference, true)
+    assert.equal(repairedMissingReference, true)
     assert.match(first.state.message?.body ?? '', /::visualize/)
     assert.equal((await readAuthorizedVisualizeDocument({ companyId, channelId: conversationId, userId: 'test-owner', path })).html, html)
     await assert.rejects(readAuthorizedVisualizeDocument({ companyId, channelId: 'different-room', userId: 'test-owner', path }))
@@ -115,6 +117,6 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
     await writeFile('artifacts/visualize/runtime/native-fixture.html', exported.bytes)
     await writeFile('artifacts/visualize/runtime/generation.json', JSON.stringify({ skillLoaded: true, completeSkillRead, referenceRead: true, savedAndRead: true,
       skillSha256: createHash('sha256').update(visualizeSkill.body).digest('hex'), consumedSkillSha256, maxRangeResponseCharacters,
-      realOutputFile: true, repairedMissingReference: omittedReference, delivered: true, exportedByOriginalRender: true, modelCalls: calls, ledgerCalls: ledger.count, unauthorizedReadRejected: true }, null, 2))
+      realOutputFile: true, repairedMissingReference, delivered: true, exportedByOriginalRender: true, modelCalls: calls, ledgerCalls: ledger.count, unauthorizedReadRejected: true }, null, 2))
   } finally { await worker?.stop(); await teardownAll(); await im.close() }
 })

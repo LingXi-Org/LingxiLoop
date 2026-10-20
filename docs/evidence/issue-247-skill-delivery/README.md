@@ -23,7 +23,9 @@ Base: `492bba8732a970a2ebf60f3c203a6e9cfb6173cc`.
 - Native-confirmed unavailable contracts can resolve as `unsupported` only with an
   exact public non-delivery explanation. An arbitrary model failure claim, a narrow
   chart/diagram rejection or export limit is insufficient. Repairable/unknown gaps
-  stay pending; native repair exhaustion owns terminal failure. No product code
+  stay pending. A separate public failed verification record drives the native
+  repair loop; honest terminal non-delivery produces an inconclusive record so the
+  public envelope remains partial. Native repair exhaustion owns terminal failure. No product code
   reads private receipts or writes native activation/resolution tables.
 
 Readback establishes saved content and current access. It does not establish model
@@ -85,3 +87,23 @@ Record actual results and artifacts here before marking the branch integration
 ready. Exact-commit CI and independent review remain gates; this checkpoint makes
 no claim of passing unrun integration, browser or provider checks. No production
 operation is performed by this branch.
+
+## First CI failure and repair
+
+Run `39473522903` on `f749849e` finished with 351 passed, four failed and
+14 skipped. The real 0050/native14 atomic upgrade test passed. Three failures were
+fixtures: a schema10 rewind retained the new native14 table, and the new checker
+fixture omitted the seeded course project required by existing authorization.
+Those fixtures were corrected without changing product authorization or SQL.
+
+The remaining native-worker failure exposed a real product integration gap:
+native `pending` decisions map to inconclusive checks, while the worker's repair
+loop consumes failed checks only. An initial missing-reference answer therefore
+reached the unchanged final guard and failed. The product now emits a separate
+public failed verification record for an activated pending gap, keeping the
+native decision pending; honest unsupported/failed decisions produce an
+inconclusive product record to prevent a satisfied envelope. The worker regression
+retains the first omitted reference and requires the repaired literal reference.
+No upstream patch, private receipt access or native guard relaxation is needed.
+Original failure excerpts are retained in `ci-first-failure.txt`. Final exact-head
+CI is still required after this repair.

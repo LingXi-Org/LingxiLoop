@@ -299,7 +299,7 @@ async function restoreSchema10(database: Pool, version: string): Promise<void> {
     DROP TRIGGER IF EXISTS agent_work_release_budget_hold ON lingxios.agent_work_items;
     DROP FUNCTION IF EXISTS lingxios.capture_terminal_feedback();
     DROP FUNCTION IF EXISTS lingxios.release_child_budget_hold();
-    DROP TABLE IF EXISTS lingxios.agent_terminal_outbox,lingxios.agent_model_budget_holds,lingxios.agent_budget_denials;
+    DROP TABLE IF EXISTS lingxios.agent_skill_activations,lingxios.agent_terminal_outbox,lingxios.agent_model_budget_holds,lingxios.agent_budget_denials;
     ALTER TABLE lingxios.agent_work_items DROP COLUMN IF EXISTS terminal_reason;
     ALTER TABLE lingxios.agent_model_budgets DROP COLUMN IF EXISTS child_admission,DROP COLUMN IF EXISTS cumulative_execution;
     DROP TABLE lingxios.agent_workspace_checkpoints;

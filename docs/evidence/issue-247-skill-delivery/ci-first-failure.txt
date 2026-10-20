@@ -1,0 +1,15 @@
+Original head: f749849e767250979469a21529fa390cf6d66daa
+Workflow: https://github.com/LingXi-Org/LingxiLoop/actions/runs/39473522903
+Integration job: 118803570129
+This first failure is retained; it is not an accepted release result.
+2026-10-20T18:24:34.4094667Z ok 201 - 0050 upgrades only schema13, preserves historical SQL and rolls native/provenance/ledger back together
+2026-10-20T18:25:13.7461545Z not ok 222 - a recorded runtime patch repairs a stale LingxiOS schema before serving
+2026-10-20T18:25:13.7493600Z   error: 'relation "agent_skill_activations" already exists'
+2026-10-20T18:29:33.6364962Z not ok 344 - actual current-request reference uses transaction readback; old request and corrupted storage cannot deliver
+2026-10-20T18:29:33.6397273Z not ok 346 - capability resolver and both final visualize checks never reacquire the product pool
+2026-10-20T18:29:42.7574366Z not ok 349 - published native worker loads unchanged skill, saves and reads a scoped fragment, delivers its reference and exports actual HTML
+2026-10-20T18:30:07.3570120Z # tests 369
+2026-10-20T18:30:07.3570961Z # pass 351
+2026-10-20T18:30:07.3571194Z # fail 4
+2026-10-20T18:30:07.3571640Z # skipped 14
+2026-10-20T18:30:07.7038422Z  2026-10-20 18:25:13.627 UTC [1022] ERROR:  relation "agent_skill_activations" already exists

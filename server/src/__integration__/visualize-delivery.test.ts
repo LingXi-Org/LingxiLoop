@@ -7,13 +7,13 @@ import { withTransaction } from '../db/transaction.js'
 import { saveVisualizeDocument, readAuthorizedVisualizeDocument } from '../im/visualize.js'
 import { visualizeSkill } from '../agent-runtime/visualize-skill.js'
 import { visualizeTools, verifyVisualizeCandidate } from '../agent-runtime/visualize-tools.js'
-import { verifyVisualizeDelivery, VISUALIZE_UNAVAILABLE_TEXT } from '../agent-runtime/visualize-delivery.js'
+import { verifyVisualizeDelivery, verifyVisualizeAuthoringCandidate, VISUALIZE_UNAVAILABLE_TEXT } from '../agent-runtime/visualize-delivery.js'
 import { createProductContext } from '../agent-runtime/context.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Owning database boundary tests; failure model was recorded before implementation
 // in docs/evidence/issue-247-skill-delivery/FAILURE-MODEL.md.
-let companyId: string, agentId: string
+let companyId: string, projectId: string, agentId: string
 const channelId = 'delivery-room', userId = 'test-owner', runId = 'delivery-run'
 const html = '<div>Actual saved delivery</div>'
 const checks: string[] = []
@@ -30,11 +30,11 @@ function context(body: string, requestVersion = 1): RunVerificationContext {
 const reference = (path: string) => `::visualize${JSON.stringify({ path })}`
 before(async () => {
   await ensureSchemaOnce(); await resetAllTables()
-  ;({ companyId, agentId } = await seedCompanyWithAgent())
+  ;({ companyId, projectId, agentId } = await seedCompanyWithAgent())
   await seedUserMembership(userId, companyId)
   await seedUserMembership('delivery-peer', companyId)
   const members = [userId, agentId]
-  await pool.query(`INSERT INTO conversations(id,company_id,kind,title,members) VALUES($1,$2,'group','Delivery',$3::jsonb)`, [channelId,companyId,JSON.stringify(members)])
+  await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Delivery',$4::jsonb)`, [channelId,companyId,projectId,JSON.stringify(members)])
   await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)`, [channelId,companyId,JSON.stringify({ channelType: 2,members })])
   await pool.query(`INSERT INTO agent_run_bindings(run_id,company_id,conversation_id,session_id,agent_id,principal_id,message_protocol)
     VALUES($1,$2,$3,$3,$4,$5,2)`, [runId,companyId,channelId,agentId,userId])
@@ -50,6 +50,7 @@ after(async () => {
 test('no activation leaves ordinary code, reads and export answers inert', async () => {
   const c = context('Here is ordinary code: `const value = 1`'); c.skillActivations = []
   assert.deepEqual(await verifyVisualizeDelivery(c), [])
+  assert.deepEqual(await verifyVisualizeAuthoringCandidate(c), [])
   checks.push('unactivated-inert')
 })
 test('all authoring actions reject a missing public activation hook before saving', async () => {
@@ -85,8 +86,11 @@ test('actual current-request reference uses transaction readback; old request an
     [{ request_version: 2,version: before+1 }])
   const c = context(reference(doc.path), 2)
   assert.equal((await verifyVisualizeDelivery(c))[0].outcome, 'delivered')
+  assert.deepEqual(await verifyVisualizeAuthoringCandidate(c), [])
   for (const body of ['', 'No visualization was produced.', 'Unsupported.', 'Failed.', `\`${reference(doc.path)}\``, `::visualize{"path":`]) {
-    assert.equal((await verifyVisualizeDelivery({ ...c,candidate: { ...c.candidate,body } }))[0].outcome, 'pending')
+    const missing = { ...c,candidate: { ...c.candidate,body } }
+    assert.equal((await verifyVisualizeDelivery(missing))[0].outcome, 'pending')
+    assert.equal((await verifyVisualizeAuthoringCandidate(missing))[0].status, 'failed', 'public failed verification must drive repair while native obligation remains pending')
   }
   await pool.query(`UPDATE im_visualize_documents SET source_hash=repeat('0',64) WHERE path=$1`, [doc.path])
   assert.equal((await verifyVisualizeDelivery(c))[0].outcome, 'pending')
@@ -113,6 +117,8 @@ test('unavailable native contract accepts only the explicit non-delivery explana
   const result = await verifyVisualizeDelivery({ ...c,candidate: { ...c.candidate,body: VISUALIZE_UNAVAILABLE_TEXT } })
   assert.equal(result[0].outcome, 'unsupported')
   assert.notEqual(result[0].outcome, 'delivered')
+  const records = await verifyVisualizeAuthoringCandidate({ ...c,candidate: { ...c.candidate,body: VISUALIZE_UNAVAILABLE_TEXT } })
+  assert.equal(records[0].status, 'inconclusive', 'honest non-delivery must not become a satisfied authoring envelope')
   checks.push('honest-unavailable')
 })
 test('capability resolver and both final visualize checks never reacquire the product pool', async () => {

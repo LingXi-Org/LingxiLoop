@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { basename } from 'node:path'
-import { NoEffectError, skillIndex, type RunVerificationContext, type SkillDeliveryDecision } from '@lyyzka/lingxios'
+import { NoEffectError, skillIndex, type RunVerificationContext, type SkillDeliveryDecision, type VerificationRecord } from '@lyyzka/lingxios'
 import { authorizeAudienceRead } from '../agents/tools.js'
 import { ForbiddenError } from '../modules/access/public.js'
 import { HttpError } from '../http/errors.js'
@@ -16,6 +16,26 @@ import { projectGenUiReferences } from '../../../src/features/chat/visualize/zco
 export const VISUALIZE_UNAVAILABLE_TEXT = '当前可视化交付所需的授权或技能版本已不可用，因此未交付可视化。'
 const checker = 'product:visualize-delivery'
 const pending = (activationId: string, hint: string): SkillDeliveryDecision => ({ activationId,outcome: 'pending',evidence: { hint } })
+
+/** Native pending decisions keep the final guard closed but are inconclusive.
+ * The public failed-check channel explicitly asks the worker to repair the gap;
+ * it does not resolve the obligation as failed or delivered. */
+export async function verifyVisualizeAuthoringCandidate(context: RunVerificationContext): Promise<VerificationRecord[]> {
+  const decisions = await verifyVisualizeDelivery(context)
+  const gaps = decisions.filter(decision => decision.outcome === 'pending')
+  const nonDelivery = decisions.filter(decision => decision.outcome === 'unsupported' || decision.outcome === 'failed')
+  const records: VerificationRecord[] = gaps.length ? [{ checker: 'product:visualize-authoring',status: 'failed',evidence: {
+    hint: gaps.map(gap => String(gap.evidence.hint)).join('\n'),
+    pendingActivationIds: gaps.map(gap => gap.activationId),deliveryProven: false,
+  } }] : []
+  // Native may durably resolve an honest non-delivery, but it cannot satisfy
+  // authoring. Keep a real resource gap so the public envelope remains partial.
+  if (nonDelivery.length) records.push({ checker: 'product:visualize-nondelivery',status: 'inconclusive',evidence: {
+    reason: 'Activated visualization authoring was not delivered.',
+    outcomes: nonDelivery.map(({ activationId,outcome }) => ({ activationId,outcome })),deliveryProven: false,
+  } })
+  return records
+}
 
 /** Final transaction readback checks storage/access, not model or browser execution.
  * Native owns activation and resolution persistence; no private receipt is read. */

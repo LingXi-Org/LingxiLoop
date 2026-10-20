@@ -27,12 +27,14 @@ claim model readback, browser rendering, provider quality, or numerical correctn
 | Activation | Runtime lacks the public host hook | Explicit unavailable error before save; no silent opt-out | Transactional authoring action test |
 | Activation | Invalid arguments, no effect, throw, abort, or denied current authorization | No new activation or document commit; separately committed explicit activation stays pending | Native worker/action transaction test |
 | Inert paths | Code, skill load, reference read, export, authorize, or checker read | No new delivery obligation | Existing generation/export worker test plus checker test |
+| Repair | Native pending decisions are inconclusive and do not enter the runtime failed-check repair path | A separate public product failed verification record drives repair; native decision remains pending and final guard stays closed | First missing-reference native worker regression |
 | Candidate | Activated run returns no reference, code-wrapped reference, or unavailable/pending reference | Obligation remains unsatisfied with an actionable repair hint | Scoped final checker test |
 | Provenance | Foreign tenant/channel/principal/agent/run or an older request version | No delivered decision | Database-backed final checker test |
 | Provenance | Same HTML is saved in a later request on the same run | Persist the new trusted request version; the old request cannot satisfy the new one | Document save/readback test |
 | Integrity | Stored hash differs, fragment is invalid, or document is missing | No delivered decision | Database-backed final checker test |
 | Authorization | Grant revoked, membership changed, or a referenced document is no longer allowed | Fresh final transaction rejects delivery | Database-backed final checker test |
 | Partial result | Some actual references are invalid or unauthorized | No whole-obligation delivery success | Scoped final checker test |
+| Honest failure | A native unsupported/failed resolution is mistaken for satisfied authoring | Product verification remains inconclusive so final envelope carries a real gap/partial outcome | Unavailable-contract decision regression |
 | Honest failure | Model merely claims unsupported/failed, a specialized tool rejects input, or export reaches a size cap | Do not manufacture a terminal successful resolution; native repair/failure path remains authoritative | Decision boundary test |
 | Lifecycle | Waiting, cancellation, steer/request change, or partial action failure | Preserve native lifecycle semantics; do not resolve an obligation from stale evidence | Existing native lifecycle tests plus product request-version test |
 | Transaction scope | Final resolver/checker reacquires a global pool connection with pool.max=1 | All database-backed resolution and final readback use the borrowed queryable | Single-connection regression |
