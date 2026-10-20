@@ -212,7 +212,8 @@
 .im-markdown-agent :where(h3, h4, h5, h6) { font-size: 1em; }
 .im-markdown-agent :where(pre, table) { max-width: 100%; overflow-x: auto; }
 @media (prefers-reduced-motion: reduce) {
-  .im-markdown [data-sd-animate], .im-markdown [data-sd-animate-marker]::marker { animation: none; }
+  .im-markdown [data-streaming-word], .im-markdown [data-streaming-caret] { animation: none; }
+  .im-markdown [data-streaming-fresh] { transition: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -512,9 +513,9 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .thinking-card-dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--skype); animation: thinking-dot 1.05s ease-in-out infinite; }
 .thinking-card-dots i:nth-child(2) { animation-delay: 130ms; }
 .thinking-card-dots i:nth-child(3) { animation-delay: 260ms; }
-.im-markdown-host { --streaming-tail-color: var(--color-blue-500); }
-:root[data-theme='dark'] .im-markdown-host { --streaming-tail-color: var(--color-blue-400); }
-.im-markdown-agent > :last-child::after { color: var(--streaming-tail-color); }
+/* The official element uses .dark; conversation themes also support data-theme. */
+:root[data-theme='dark'] .im-markdown [data-streaming-fresh='true'] { color: var(--color-blue-400); }
+:root[data-theme='dark'] .im-markdown [data-streaming-caret] { background-color: var(--color-blue-400); }
 @keyframes thinking-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-3px); opacity: 1; } }
 
 @keyframes bloub-avatar-float {
@@ -563,3 +564,8 @@ input:focus, textarea:focus, button:focus { outline: none; }
 .chat-question-index-button:hover { background: var(--accent); color: var(--foreground); }
 .chat-question-index-button:focus-visible { outline: 2px solid var(--ring); outline-offset: -3px; }
 .chat-question-index-button:disabled { opacity: .5; cursor: wait; }
+
+/* Markdown blocks share the official element; only the visual tail owns its
+   decoration. CSS changes the color target, retaining upstream's 700ms fade. */
+.im-markdown > :not(:last-child) [data-streaming-caret] { display: none; }
+:root .im-markdown > :not(:last-child) [data-streaming-fresh='true'] { color: inherit; }

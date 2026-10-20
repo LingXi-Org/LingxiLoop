@@ -6,7 +6,7 @@ import { StreamdownTextPrimitive, type StreamdownTextPrimitiveProps } from '@ass
 import { code } from '@streamdown/code'
 import { createMathPlugin } from '@streamdown/math'
 import { createMermaidPlugin } from '@streamdown/mermaid'
-import { Block, type BlockProps, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
+import { Block, type BlockProps, StreamdownContext, defaultRehypePlugins, parseMarkdownIntoBlocks } from 'streamdown'
 import { useAuiState, useMessagePartText } from '@assistant-ui/react'
 import { createContext, memo, useContext, useMemo, useState } from 'react'
 import type { Root, ElementContent } from 'hast'
@@ -14,6 +14,8 @@ import { SKIP, visit } from 'unist-util-visit'
 import {
   ConfidenceMarker, ConfidenceMarkerInline,
 } from '@/components/assistant-ui/elements/confidence-marker'
+
+import { StreamingBlock, StreamingLeaf, rehypeStreamingText } from './markdown-streaming'
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 import { activityAnnotation } from '@/lib/runActivity'
@@ -25,7 +27,6 @@ export type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 
 const plugins = { code, math: createMathPlugin({ singleDollarTextMath: true }), mermaid: createMermaidPlugin({ config: { securityLevel: 'strict', startOnLoad: false } }) }
 const smooth = { minCommitMs: 32 }
-const animated = { animation: 'fadeIn', duration: 180, sep: 'word' as const }
 const translations = {
   close: '关闭', copied: '已复制', copyCode: '复制代码', copyLink: '复制链接', copyTable: '复制表格',
   copyTableAsCsv: '复制为 CSV', copyTableAsMarkdown: '复制为 Markdown', copyTableAsTsv: '复制为 TSV',
@@ -58,6 +59,7 @@ const MentionTargets = createContext<readonly Participant[]>([])
 
 const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['span'] = ({ node, children, ...props }) => {
   const targets = useContext(MentionTargets)
+  if (node?.data?.streamingText) return <StreamingLeaf node={node} />
   const id = node?.data?.mentionId
   const target = id === 'all' ? EVERYONE_BLOUB_PARTICIPANT : targets.find(target => target.id === id)
   if (id && target) return <MentionBadge participant={target} id={id} />
@@ -148,11 +150,17 @@ function CitationBlock(props: BlockProps) {
 const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, agent, ...props }: BlockProps & {
   offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean
 }) {
+  const { isAnimating } = useContext(StreamdownContext)
+  const [initialContent] = useState(props.content)
+  const [decorated, setDecorated] = useState(agent && isAnimating)
+  if (!decorated && agent && isAnimating && props.content !== initialContent) setDecorated(true)
+  const streamingBlock = useMemo(() => ({ streaming: agent && isAnimating, animate: decorated }), [agent, isAnimating, decorated])
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
     [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
-  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets, agent])
-  return <Block {...props} rehypePlugins={rehypePlugins} />
+    ...decorated ? [rehypeStreamingText] : [],
+  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets, agent, decorated])
+  return <StreamingBlock.Provider value={streamingBlock}><Block {...props} rehypePlugins={rehypePlugins} /></StreamingBlock.Provider>
 })
 
 const MarkdownTextImpl = ({
@@ -169,6 +177,9 @@ const MarkdownTextImpl = ({
   const [hoveredId, setHoveredId] = useState('')
   const part = useMessagePartText()
   const { text } = part
+  // Assistant-ui may reuse a message slot across thread switches. Give its
+  // smooth queue and our Markdown leaf lifetime the actual text-part identity.
+  const partKey = useAuiState(state => `${state.message.id}:${state.message.parts.indexOf(state.part)}`)
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const splitTextOffset = useContext(TextOffsetContext)
   const nativeTextOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
@@ -190,9 +201,9 @@ const MarkdownTextImpl = ({
     <MentionTargets.Provider value={mentionTargets}><CitationBlocks.Provider value={citationBlocks}>
       <div data-find-content>
         <StreamdownTextPrimitive
+          key={partKey}
           smooth={agent && typeof window !== 'undefined' && part.status.type !== 'incomplete' ? smooth : false}
-          animated={agent ? animated : false}
-          caret={agent ? 'block' : undefined}
+          animated={false}
           containerClassName="im-markdown-host"
           plugins={plugins}
           translations={translations}
@@ -201,7 +212,7 @@ const MarkdownTextImpl = ({
           components={confidenceComponents}
           controls
           parseIncompleteMarkdown
-          {...hasCitations ? { BlockComponent: CitationBlock } : {}}
+          {...hasCitations || agent ? { BlockComponent: CitationBlock } : {}}
           className={`im-markdown${agent ? ' im-markdown-agent' : ''}`}
         />
       </div>
