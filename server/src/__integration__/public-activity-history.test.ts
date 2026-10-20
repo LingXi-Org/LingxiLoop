@@ -2,7 +2,8 @@ import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import { createServer } from 'node:http'
 import { mkdir, writeFile } from 'node:fs/promises'
-import { releaseVersions } from '@lyyzka/lingxios'
+import { NoEffectError, releaseVersions } from '@lyyzka/lingxios'
+import { createWorker } from '@lyyzka/lingxios/worker'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
@@ -30,7 +31,15 @@ test('loaded IM anchors recover stopped runs beyond recent 20 through scoped sta
     { mode: 'chat',codeExecution: 'disabled',executionClass: 'conversation' })
     const run = accepted.runs[0]; assert.ok(run)
     await bindProductRun(pool,run,conversationId,false,source)
-    await api.cancel(run)
+    if (index === 0) {
+      const worker = createWorker({ controlPlane: api,worker: { id: 'issue215-history-failure',concurrency: 1 },
+        model: { modelId: 'issue215-history-failure',contextWindowTokens: 200000,
+          async run() { throw new NoEffectError('synthetic failure before answer','forbidden') },
+          async structured() { throw new Error('not reached') },async compact() { throw new Error('not reached') },
+        } })
+      try { assert.equal(await worker.runNext(),true); assert.equal((await api.readRun(run))?.status,'failed') }
+      finally { await worker.stop() }
+    } else await api.cancel(run)
     runs.push(run.runId); sources.push(source)
   }
   const server = createServer(await buildApiTestApp(principalId))
@@ -45,7 +54,9 @@ test('loaded IM anchors recover stopped runs beyond recent 20 through scoped sta
     const first = await history({ sourceClientMsgNos: [sources[0]],runIds: [] })
     assert.equal(first.status,200,'history anchors must discover an old stopped run; recent-20 is insufficient')
     const old = await first.json() as { runs: { runId: string; status: string }[]; nextCursor: string | null }
-    assert.deepEqual(old.runs.map(run => [run.runId,run.status]),[[runs[0],'cancelled']]); assert.equal(old.nextCursor,null)
+    assert.deepEqual(old.runs.map(run => [run.runId,run.status]),[[runs[0],'failed']]); assert.equal(old.nextCursor,null)
+    const cancelled = await history({ sourceClientMsgNos: [sources[1]],runIds: [] })
+    assert.deepEqual(((await cancelled.json()) as typeof old).runs.map(run => [run.runId,run.status]),[[runs[1],'cancelled']])
     const ids: string[] = []; let cursor: string | undefined
     do {
       const response = await history({ sourceClientMsgNos: sources,runIds: [],...(cursor ? { cursor } : {}) })
@@ -68,6 +79,8 @@ test('loaded IM anchors recover stopped runs beyond recent 20 through scoped sta
     await pool.query('UPDATE agent_run_bindings SET internal=TRUE WHERE run_id=$1',[runs[0]])
     assert.deepEqual(((await (await history({ sourceClientMsgNos: [sources[0]],runIds: [runs[0]] })).json()) as typeof old).runs,[])
     await pool.query('UPDATE agent_run_bindings SET internal=FALSE,principal_id=$2 WHERE run_id=$1',[runs[0],'another-person'])
+    assert.deepEqual(((await (await history({ sourceClientMsgNos: [sources[0]],runIds: [runs[0]] })).json()) as typeof old).runs,[])
+    await pool.query('UPDATE agent_run_bindings SET principal_id=$2,message_protocol=1 WHERE run_id=$1',[runs[0],principalId])
     assert.deepEqual(((await (await history({ sourceClientMsgNos: [sources[0]],runIds: [runs[0]] })).json()) as typeof old).runs,[])
     await pool.query('DELETE FROM project_memberships WHERE project_id=$1 AND user_id=$2',[projectId,principalId])
     assert.notEqual((await history({ sourceClientMsgNos: sources,runIds: [] })).status,200)

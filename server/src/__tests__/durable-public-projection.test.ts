@@ -4,6 +4,7 @@ import { createRunView, type RunEvent } from '@lyyzka/lingxios/ui'
 import { harnessToolParts, runMessageParts } from '../agent-runtime/message-projection.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeText, createNativeMessage } from '../../../src/lib/nativeMessage.js'
+import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
 
 // Failure model: docs/evidence/issue-215-public/FAILURE-MODEL.md, cases 2/3/4.
 test('public provider attempts stay distinct and ordered through failure and final answer projection', () => {
@@ -37,4 +38,29 @@ for (const sameFence of [false,true]) test(`same progress id cannot replace or r
   assert.deepEqual(parts[0].type === 'text' && parts[0].status,{ type: 'incomplete',reason: 'other' })
   assert.deepEqual(parts[1].type === 'text' && parts[1].status,{ type: 'running' })
   assert.notEqual(activityAnnotation(parts[0])?.id,activityAnnotation(parts[1])?.id)
+})
+
+test('the latest published explanation survives the 40-part snapshot window while all history stays pageable', () => {
+  const projection = new RunStreamProjection('run',true)
+  projection.advance({ type: 'state',state: { run: { id: 'run',status: 'leased',fence: 1,requestVersion: 1,resultId: null,resultFence: null,
+    kind: 'turn',attempts: 1,createdAt: '2026-10-20T00:00:00Z',availableAt: '',heartbeatAt: null,lastProgressAt: null,goalOutcome: null,error: null },message: null,delivery: null } })
+  const identity = { version: 1,requestVersion: 1,fence: 1,attemptId: 'attempt',partId: 'part',partIndex: 0 }
+  projection.advance({ type: 'event',event: { runId: 'run',seq: 1,kind: 'public.text.delta',visibility: 'user',stage: 'delta',data: { ...identity,chunkIndex: 0,text: 'Latest explanation before many tools.' } } })
+  projection.advance({ type: 'event',event: { runId: 'run',seq: 2,kind: 'public.text.ended',visibility: 'user',stage: 'completed',data: { ...identity,chunkCount: 1,reason: 'tool' } } })
+  for (let index = 0; index < 85; index++) {
+    const toolCallId = `host:many-${index}`
+    projection.advance({ type: 'event',event: { runId: 'run',seq: 3+index*2,kind: 'tool.started',visibility: 'user',stage: 'started',data: { toolCallId,name: 'files.list' } } })
+    projection.advance({ type: 'event',event: { runId: 'run',seq: 4+index*2,kind: 'tool.completed',visibility: 'user',stage: 'completed',data: { toolCallId,result: { status: 'completed' } } } })
+  }
+  const message = projection.snapshot.message
+  assert.ok(message.content.some(part => part.type === 'text' && part.text === 'Latest explanation before many tools.'))
+  assert.ok(message.content.length <= 80)
+  const ids: string[] = []; let offset = 0
+  do {
+    const page = projection.activityPage(offset)
+    ids.push(...page.message.content.map(part => activityAnnotation(part)!.id))
+    if (page.nextOffset === null) break
+    offset = page.nextOffset
+  } while (offset < 86)
+  assert.equal(ids.length,86); assert.equal(new Set(ids).size,86)
 })

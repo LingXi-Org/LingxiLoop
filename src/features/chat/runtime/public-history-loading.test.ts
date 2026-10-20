@@ -27,7 +27,7 @@ test('initial, older and reload history discover only their loaded IM anchors', 
   mock.module('./harness-api',{ namedExports: { harnessApi: { list: async () => [],
     history: async (_room: string, anchors: { sourceClientMsgNos: string[]; runIds: string[] }) => {
       calls.push({ sources: anchors.sourceClientMsgNos,runs: anchors.runIds })
-      return anchors.sourceClientMsgNos.includes('old-source') ? [old] : []
+      return anchors.sourceClientMsgNos.includes('old-source') || anchors.runIds.includes('old') ? [old] : []
     },
     read: async (target: typeof old) => { reads.push(target.runId); return { message: createNativeMessage({ id: 'run-old',role: 'assistant',createdAt: new Date(1000).toISOString(),
       content: [{ type: 'text',text: 'Published before cancellation.',providerMetadata: { lingxiloop: { activity: { version: 1,id: 'old-public',kind: 'commentary',label: '公开说明' } } } }],
@@ -49,7 +49,9 @@ test('initial, older and reload history discover only their loaded IM anchors', 
     const recovered = useChatThreadStore.getState().conversations.room.messages.filter(message => message.id === 'run-old')
     assert.equal(recovered.length,1); assert.deepEqual(recovered[0].status,{ type: 'incomplete',reason: 'cancelled' })
     assert.equal(recovered[0].content[0].type === 'text' && recovered[0].content[0].text,'Published before cancellation.')
+    envelopes = [{ ...envelope('old-terminal',2),payload: createNativeMessage({ id: 'old-terminal',role: 'system',content: [{ type: 'text',text: 'Cancelled.' }],custom: { runId: 'old',terminalStatus: 'cancelled' } }) }]
     await transport.reloadConversation('room')
+    assert.deepEqual(calls.at(-1),{ sources: ['old-terminal'],runs: ['old'] },'terminal IM messages have a durable custom.runId without refs')
     assert.equal(useChatThreadStore.getState().conversations.room.messages.filter(message => message.id === 'run-old').length,1)
     assert.deepEqual(reads,['old','old'])
   } finally { transport.disconnect() }

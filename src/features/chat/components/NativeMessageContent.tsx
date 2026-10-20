@@ -120,8 +120,7 @@ function ActivityParts({ Text, footer, mediaFooter, attention }: { Text: TextMes
   const labels = { running: '正在处理', 'requires-action': '需要你确认', complete: '已完成', cancelled: '已停止', incomplete: '尚未完成', error: '任务未完成' }
   // Only explicitly classified, durable public reports use this slot. Runtime
   // answer previews retain their native retraction/commit semantics.
-  const foregroundIndex = nativeStatus.type === 'running' || nativeStatus.type === 'requires-action'
-    ? message.parts.findLastIndex(part => activityAnnotation(part)?.kind === 'commentary') : -1
+  const foregroundIndex = message.parts.findLastIndex(part => activityAnnotation(part)?.kind === 'commentary')
   const parts = message.parts.map((part, index) => {
     const entry = activityAnnotation(part)
     const resultStatus = part.type === 'tool-call' && part.result && typeof part.result === 'object' ? Reflect.get(part.result, 'status') : undefined

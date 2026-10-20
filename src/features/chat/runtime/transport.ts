@@ -117,6 +117,10 @@ function historyAnchors(envelopes: readonly ImEnvelope[]): RunHistoryAnchors {
     const refs = envelope.payload.metadata.custom.refs
     const runId = refs && typeof refs === 'object' ? Reflect.get(refs,'runId') : undefined
     if (typeof runId === 'string' && runId) runIds.add(runId)
+    // Durable terminal notifications are system IM messages with custom.runId,
+    // even when no assistant result/refs could ever be committed.
+    const terminalRun = envelope.payload.metadata.custom.runId
+    if (envelope.payload.role !== 'user' && typeof terminalRun === 'string' && terminalRun) runIds.add(terminalRun)
   }
   return { sourceClientMsgNos: [...sourceClientMsgNos],runIds: [...runIds] }
 }

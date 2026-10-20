@@ -146,7 +146,10 @@ export class RunStreamProjection {
     const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
     const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
     const activitySet = new Set(activity)
-    const selected = new Set([...activity.filter(part => activityAnnotation(part)?.kind !== 'attention').slice(-40), ...attention.slice(-40)])
+    const recent = activity.filter(part => activityAnnotation(part)?.kind !== 'attention').slice(-40)
+    const latestCommentary = activity.filter(part => activityAnnotation(part)?.kind === 'commentary').at(-1)
+    if (latestCommentary && !recent.includes(latestCommentary)) { recent.shift(); recent.push(latestCommentary) }
+    const selected = new Set([...recent, ...attention.slice(-40)])
     const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
       content: parts, status: runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },

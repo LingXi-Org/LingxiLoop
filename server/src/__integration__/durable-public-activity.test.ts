@@ -18,9 +18,9 @@ import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAge
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); installFakeWukong() })
 after(async () => { await teardownAll() })
 
-test('a user-text prefix is durable and streamed before the real tool, then survives state-first reload', { timeout: 20000 }, async () => {
+for (const outcome of ['complete','cancelled','revoked'] as const) test(`durable prefix crosses real Worker/SSE and state-first reload (${outcome})`, { timeout: 20000 }, async () => {
   const { companyId,projectId,agentId } = await seedCompanyWithAgent()
-  const principalId = 'issue215-public-human', conversationId = 'issue215-public-room'
+  const principalId = `issue215-public-human-${outcome}`, conversationId = `issue215-public-room-${outcome}`
   await seedUserMembership(principalId,companyId)
   await pool.query("UPDATE participants SET capabilities='[\"files\"]'::jsonb WHERE id=$1",[agentId])
   const members = [principalId,agentId]
@@ -41,6 +41,7 @@ test('a user-text prefix is durable and streamed before the real tool, then surv
         calls++
         if (calls === 1) {
           await request.onTextDelta?.('I will inspect the available files.'); emitted(); await gate
+          if (outcome !== 'complete') await request.onTextDelta?.('PRIVATE_AFTER_REVOKE_OR_CANCEL')
           return { text: '',output: [{ type: 'function_call',callId: 'issue215-files',name: 'files__list',arguments: '{}' }],usage }
         }
         return { text: 'The inspection is complete.',output: [{ role: 'assistant',content: 'The inspection is complete.' }],usage }
@@ -79,15 +80,19 @@ test('a user-text prefix is durable and streamed before the real tool, then surv
     assert.equal(nativeText(beforeTool),'','public commentary cannot masquerade as a validated answer')
     const published = beforeTool.content.filter(part => activityAnnotation(part)?.kind === 'commentary')
     assert.equal(published.length,1)
+    if (outcome === 'cancelled') await api.cancel(identity)
+    if (outcome === 'revoked') await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1",
+      [conversationId,JSON.stringify([...members,'new-recipient'])])
     release(); await running
     const replay = (await readRunProjection(api,identity,true)).snapshot.message
-    assert.equal(nativeText(replay),'The inspection is complete.')
+    assert.equal(nativeText(replay),outcome === 'complete' ? 'The inspection is complete.' : '')
     const retained = replay.content.filter(part => activityAnnotation(part)?.kind === 'commentary')
     assert.equal(retained.length,1); assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
-    assert.equal(replay.content.some(part => part.type === 'tool-call' && part.toolName === 'files.list'),true)
-    assert.doesNotMatch(JSON.stringify(replay),/candidate-json|PRIVATE_REASONING|PRIVATE_ARGUMENTS/)
+    assert.equal(replay.content.some(part => part.type === 'tool-call' && part.toolName === 'files.list'),outcome === 'complete')
+    if (outcome !== 'complete') assert.deepEqual(replay.status,{ type: 'incomplete',reason: outcome === 'cancelled' ? 'cancelled' : 'error' })
+    assert.doesNotMatch(JSON.stringify(replay),/candidate-json|PRIVATE_REASONING|PRIVATE_ARGUMENTS|PRIVATE_AFTER_REVOKE_OR_CANCEL/)
     await mkdir('artifacts/issue215-public',{ recursive: true })
-    await writeFile('artifacts/issue215-public/worker-stream.json',JSON.stringify({ passed: true,runtime: releaseVersions.runtime,
+    await writeFile(`artifacts/issue215-public/worker-stream-${outcome}.json`,JSON.stringify({ passed: true,runtime: releaseVersions.runtime,outcome,
       realLocalPostgres: true,realWorker: true,syntheticDriver: true,publicBeforeTool: true,officialAssistantTransport: true,
       stateFirstReload: true,commentaryCount: retained.length,modelCalls: calls,productionRequests: 0 },null,2))
   } finally { release(); cancellation.abort(); await running; await streamRead; await worker.stop() }
