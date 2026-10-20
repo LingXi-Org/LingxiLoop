@@ -1,0 +1,17 @@
+{
+  "base": "5b2f6e43",
+  "test": "memory-public-streaming.test.ts",
+  "result": "failed as expected",
+  "failure": "assembled prompt lacked public content before tools instruction",
+  "gatedAssertionsBeforeFailure": [
+    "public text before tool start",
+    "second text before tool release",
+    "final text before provider completion",
+    "state-first replay",
+    "private reasoning excluded"
+  ],
+  "provider": "local deterministic HTTP SSE",
+  "runtime": "3.5.8",
+  "productionRequests": 0,
+  "promptLoggedInEvidence": false
+}

@@ -1,16 +1,12 @@
 import { VisualizeText } from '../visualize/VisualizeText'
-import { MessagePrimitive, MessagePartPrimitive, PartByIndexProvider, useScrollLock, useAui, useAuiState, type PartState, type SourceMessagePartProps, type TextMessagePartComponent } from '@assistant-ui/react'
-import { createContext, type ReactNode, useContext, useRef, useState } from 'react'
+import { MessagePrimitive, MessagePartPrimitive, useAui, useAuiState, type PartState, type SourceMessagePartProps, type TextMessagePartComponent } from '@assistant-ui/react'
+import { createContext, type ReactNode, useContext } from 'react'
 import { z } from 'zod'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { DocumentReference } from '@/components/assistant-ui/elements/document-reference'
 import { Reasoning } from '@/components/assistant-ui/elements/reasoning'
 import { AgentPlan, type AgentPlanStep } from '@/components/assistant-ui/elements/agent-plan'
-import { RunActivity, type RunActivityStatus } from '@/components/assistant-ui/elements/run-activity'
-import { activityAnnotation, canonicalToolName, resolveToolDisplay } from '@/lib/runActivity'
 import { ToolGroup } from '@/components/assistant-ui/elements/tool-group'
-import { ToolTimeline } from '@/components/assistant-ui/elements/tool-timeline'
-import { WrenchIcon } from 'lucide-react'
 import { MarkdownText, type MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 import { MessageFooterContext, MessageFooterContents } from '@/components/assistant-ui/message-footer'
 import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/generative-ui'
@@ -19,7 +15,6 @@ import { generativeComponentSchemas } from '@/lib/nativeMessage'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { BusinessMessagePart } from './BusinessMessagePart'
 import { MessagePartBoundary } from './MessagePartBoundary'
-import { RunActivityHistory } from './RunActivityHistory'
 import { NativeTool, hasRichTool } from './NativeTool'
 
 const ReadOnlyMessage = createContext(false)
@@ -79,7 +74,7 @@ function PartFrame({ children, footer, mediaFooter }: { children: ReactNode; foo
   </MessageFooterContext.Provider>
 }
 
-function NativePart({ Text = DefaultText, footer = null, mediaFooter = null, foreground = false }: { Text?: TextMessagePartComponent; footer?: ReactNode; mediaFooter?: ReactNode; foreground?: boolean }) {
+function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: { Text?: TextMessagePartComponent; footer?: ReactNode; mediaFooter?: ReactNode }) {
   const aui = useAui()
   const readOnly = useContext(ReadOnlyMessage)
   const part = useAuiState(state => state.part)
@@ -87,7 +82,7 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null, for
   let content: ReactNode
   switch (part.type) {
     case 'text': content = <VisualizeText part={part} Text={Text} readOnly={readOnly} />; break
-    case 'reasoning': content = <Reasoning defaultOpen={foreground} streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning>; break
+    case 'reasoning': content = <Reasoning streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning>; break
     case 'source': content = <SourcePart {...part} />; break
     case 'image': content = <AttachmentCard filename={part.filename ?? '图片'} data={part.image} mimeType="image/*" sourceType="url" />; break
     case 'file': content = <AttachmentCard filename={part.filename ?? '附件'} data={part.data} mimeType={part.mimeType} sourceType={part.sourceType} />; break
@@ -107,52 +102,6 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null, for
   return <PartFrame footer={footer} mediaFooter={mediaFooter}>{content}</PartFrame>
 }
 
-function ActivityParts({ Text, footer, mediaFooter, attention }: { Text: TextMessagePartComponent; footer: ReactNode; mediaFooter: ReactNode; attention: ReactNode }) {
-  const message = useAuiState(state => state.message)
-  const [open, setOpen] = useState(false)
-  const [timelineOpen, setTimelineOpen] = useState(false)
-  const [visible, setVisible] = useState(40)
-  const root = useRef<HTMLDivElement>(null)
-  const lockScroll = useScrollLock(root, 200)
-  const nativeStatus = message.status!
-  const status: RunActivityStatus = nativeStatus.type === 'incomplete'
-    ? nativeStatus.reason === 'cancelled' || nativeStatus.reason === 'error' ? nativeStatus.reason : 'incomplete' : nativeStatus.type
-  const labels = { running: '正在处理', 'requires-action': '需要你确认', complete: '已完成', cancelled: '已停止', incomplete: '尚未完成', error: '任务未完成' }
-  // Only explicitly classified, durable public reports use this slot. Runtime
-  // answer previews retain their native retraction/commit semantics.
-  const foregroundIndex = message.parts.findLastIndex(part => activityAnnotation(part)?.kind === 'commentary')
-  const parts = message.parts.map((part, index) => {
-    const entry = activityAnnotation(part)
-    const resultStatus = part.type === 'tool-call' && part.result && typeof part.result === 'object' ? Reflect.get(part.result, 'status') : undefined
-    const attention = entry?.kind === 'attention' || part.type === 'tool-call' && (canonicalToolName(part.toolName) === 'teacher.draft_homework' || ['failed', 'cancelled', 'unknown'].includes(String(resultStatus)) || Boolean(part.approval || part.interrupt || part.isError || part.status.type === 'requires-action' || part.status.type === 'incomplete'))
-    const label = part.type === 'tool-call' ? resolveToolDisplay(part.toolName, undefined, part.result && typeof part.result === 'object' ? Reflect.get(part.result, 'display') : undefined).title : entry?.label ?? '其他内容'
-    return { foreground: index === foregroundIndex, id: entry?.id ?? `part:${index}`, kind: entry?.kind, label, attention, running: part.status.type === 'running',
-      content: <PartByIndexProvider key={entry?.id ?? index} index={index}><NativePart Text={Text} footer={footer} mediaFooter={mediaFooter} foreground={index === foregroundIndex} /></PartByIndexProvider> }
-  })
-  const activities = parts.filter(part => !part.attention && !part.foreground && (part.kind === 'tool' || part.kind === 'commentary'))
-  const entries: { id: string; kind: 'tool' | 'commentary'; label: string; content: ReactNode }[] = []
-  for (let index = 0; index < Math.min(visible, activities.length); index++) {
-    const part = activities[index]
-    if (part.kind !== 'tool') { entries.push({ ...part, kind: 'commentary' }); continue }
-    const tools = [part]
-    while (index + 1 < Math.min(visible, activities.length) && activities[index + 1].kind === 'tool') tools.push(activities[++index])
-    entries.push({ ...part, kind: 'tool', content: tools.length === 1 ? part.content
-      : <ToolGroup count={tools.length} active={tools.some(tool => tool.running)}>{tools.map(tool => tool.content)}</ToolGroup> })
-  }
-  if (visible < activities.length) entries.push({ id: 'more-activity', kind: 'commentary', label: '显示更多活动', content:
-    <button type="button" className="rounded text-sm underline outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setVisible(value => value + 40)}>显示更多活动（还有 {activities.length - visible} 条）</button> })
-  const tools = parts.filter(part => part.kind === 'tool')
-  if (tools.length > 1) entries.unshift({ id: 'tool-timeline', kind: 'tool', label: '工具执行记录', content: <ToolTimeline
-    steps={tools.map(tool => ({ id: tool.id, verb: tool.label, chip: tool.running ? '处理中' : '查看记录', icon: WrenchIcon }))}
-    visibleSteps={Math.min(visible, tools.length)} streaming={tools.some(tool => tool.running)} open={timelineOpen} onOpenChange={setTimelineOpen}
-    restingLabel={`工具执行记录 · ${tools.length} 项`} activeLabel="工具正在处理" stats={[]} /> })
-  return <div ref={root}><RunActivity status={status} statusLabel={message.metadata.custom.runConnection ? '状态待确认' : labels[status]} open={open} onOpenChange={next => { lockScroll(); setOpen(next) }}
-    entries={entries}
-    attention={<>{parts.filter(part => part.foreground && !part.attention).map(part => <div key={part.id} data-public-activity={part.id}>{part.content}</div>)}{parts.filter(part => part.attention).map(part => <div key={part.id} role="group" aria-label={part.label}>{part.content}</div>)}<RunActivityHistory message={message} />{attention}</>}>
-    {parts.filter(part => !part.attention && part.kind !== 'tool' && part.kind !== 'commentary').map(part => part.content)}
-  </RunActivity></div>
-}
-
 export function NativeMessageContent({ Text = DefaultText, footer = null, mediaFooter = null, attention = null }: {
   Text?: TextMessagePartComponent; footer?: ReactNode; mediaFooter?: ReactNode; attention?: ReactNode
 }) {
@@ -160,10 +109,8 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   const message = useAuiState(state => state.message)
   const attachments = message.role === 'user' ? message.attachments : []
   const last = message.content.reduce((last, part, index) => part.type !== 'data' || part.name !== 'citation-claims' ? index : last, -1)
-  const hasActivity = Boolean(message.metadata.custom.activityHistory) || message.parts.some(part =>
-    part.type === 'tool-call' || ['commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
   return <GroupOwnsFooter.Provider value={false}><div className="native-message-content grid min-w-0 gap-2" data-aui-theme="elements">
-    {message.role === 'assistant' && message.metadata.custom.activityPresentation && hasActivity ? <ActivityParts Text={Text} footer={footer} mediaFooter={mediaFooter} attention={attention} /> : <MessagePrimitive.GroupedParts groupBy={groupParts} indicator="never">
+    <MessagePrimitive.GroupedParts groupBy={groupParts} indicator="never">
       {({ part, children }) => {
         if (part.type === 'indicator') return null
         if (part.type === 'group-reasoning' || part.type === 'group-tools') {
@@ -183,8 +130,8 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
         }
         return <NativePart Text={Text} footer={footer} mediaFooter={mediaFooter} />
       }}
-    </MessagePrimitive.GroupedParts>}
-    {!(message.role === 'assistant' && message.metadata.custom.activityPresentation && hasActivity) && attention}
+    </MessagePrimitive.GroupedParts>
+    {attention}
     {attachments.map(attachment => <div key={attachment.id} data-native-attachment={attachment.id} className="grid min-w-0 gap-1">
       {attachment.content.map((part, index) => <MessageFooterContext.Provider key={index} value={!message.content.length && attachment === attachments.at(-1) && index === attachment.content.length - 1 ? mediaFooter : null}>
         <MessagePartBoundary resetKey={part}>

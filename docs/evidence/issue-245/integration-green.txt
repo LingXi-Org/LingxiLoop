@@ -1,0 +1,84 @@
+
+> lingxiloop@0.1.0-beta test:e2e:server
+> node e2e/server/run.mjs --file memory-public-streaming.test.ts --file durable-public-activity.test.ts
+
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-postgres-1  Healthy
+ Container lingxiloop-e2e-redis-1  Healthy
+[db:migrate] already current · 122ms
+[integration] selected 2/93 file(s): memory-public-streaming.test.ts, durable-public-activity.test.ts
+TAP version 13
+# {"ts":"2026-10-20T16:33:21.566Z","level":"info","msg":"worker stopped","workerId":"issue215-public-worker","timedOut":false}
+# Subtest: durable prefix crosses real Worker/SSE and state-first reload (complete)
+ok 1 - durable prefix crosses real Worker/SSE and state-first reload (complete)
+  ---
+  duration_ms: 2721.303546
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T16:33:22.258Z","level":"info","msg":"worker stopped","workerId":"issue215-public-worker","timedOut":false}
+# Subtest: durable prefix crosses real Worker/SSE and state-first reload (cancelled)
+ok 2 - durable prefix crosses real Worker/SSE and state-first reload (cancelled)
+  ---
+  duration_ms: 691.233473
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T16:33:22.367Z","level":"warn","msg":"terminal feedback failed","error":"Background operation failed"}
+# {"ts":"2026-10-20T16:33:22.881Z","level":"info","msg":"worker stopped","workerId":"issue215-public-worker","timedOut":false}
+# Subtest: durable prefix crosses real Worker/SSE and state-first reload (revoked)
+ok 3 - durable prefix crosses real Worker/SSE and state-first reload (revoked)
+  ---
+  duration_ms: 623.203844
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T16:33:22.902Z","level":"warn","msg":"terminal feedback failed","error":"Background operation failed"}
+# {"ts":"2026-10-20T16:33:23.969Z","level":"info","msg":"worker stopped","workerId":"issue215-public-worker","timedOut":false}
+# Subtest: durable prefix crosses real Worker/SSE and state-first reload (unsafe)
+ok 4 - durable prefix crosses real Worker/SSE and state-first reload (unsafe)
+  ---
+  duration_ms: 1087.725838
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T16:33:24.177Z","level":"warn","msg":"deliveries failed","error":"Background operation failed"}
+# {"ts":"2026-10-20T16:33:25.252Z","level":"info","msg":"worker stopped","workerId":"issue215-public-worker","timedOut":false}
+# {"ts":"2026-10-20T16:33:25.262Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T16:33:25.262Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T16:33:25.262Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# Subtest: durable prefix crosses real Worker/SSE and state-first reload (final-stream)
+ok 5 - durable prefix crosses real Worker/SSE and state-first reload (final-stream)
+  ---
+  duration_ms: 1283.267655
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T16:33:33.564Z","level":"info","msg":"worker stopped","workerId":"memory-public-worker","timedOut":false}
+# {"ts":"2026-10-20T16:33:33.568Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T16:33:33.569Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T16:33:33.569Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T16:33:33.569Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T16:33:33.569Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T16:33:33.569Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T16:33:33.569Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T16:33:33.570Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T16:33:33.570Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# Subtest: memory public content crosses provider, durable ledger and SSE before tool/final completion
+ok 6 - memory public content crosses provider, durable ledger and SSE before tool/final completion
+  ---
+  duration_ms: 2848.62518
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 19969.508234
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

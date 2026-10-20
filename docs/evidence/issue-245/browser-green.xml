@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="21" failures="0" errors="0" skipped="0" time="162.744">
+  <testsuite name="e2e/web/activity-presentation.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="10.545">
+    <testcase name="Public activity presentation &gt; client public-receipt render budget [web]" classname="e2e/web/activity-presentation.e2e.ts" time="3.254"/>
+    <testcase name="Public activity presentation &gt; known aliases, persisted generic titles and distinct official cards 390 [web]" classname="e2e/web/activity-presentation.e2e.ts" time="3.373"/>
+    <testcase name="Public activity presentation &gt; known aliases, persisted generic titles and distinct official cards 1440 [web]" classname="e2e/web/activity-presentation.e2e.ts" time="3.918"/>
+  </testsuite>
+  <testsuite name="e2e/web/activity-regressions.e2e.ts" tests="5" failures="0" errors="0" skipped="0" time="19.698">
+    <testcase name="Activity integration regressions &gt; latest committed public explanation stays visible through the next tool and terminal history [web]" classname="e2e/web/activity-regressions.e2e.ts" time="3.504"/>
+    <testcase name="Activity integration regressions &gt; memory renders with the product context and reloads authorized history [web]" classname="e2e/web/activity-regressions.e2e.ts" time="4.066"/>
+    <testcase name="Activity integration regressions &gt; memory empty is explicit and recoverable [web]" classname="e2e/web/activity-regressions.e2e.ts" time="5.274"/>
+    <testcase name="Activity integration regressions &gt; memory loading is explicit and recoverable [web]" classname="e2e/web/activity-regressions.e2e.ts" time="3.315"/>
+    <testcase name="Activity integration regressions &gt; memory load-error is explicit and recoverable [web]" classname="e2e/web/activity-regressions.e2e.ts" time="3.539"/>
+  </testsuite>
+  <testsuite name="e2e/web/memory-privacy.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="65.913">
+    <testcase name="Official memory activity &gt; forget invalidates cards from two runs without receipt fallback [web]" classname="e2e/web/memory-privacy.e2e.ts" time="4.925"/>
+    <testcase name="Official memory activity &gt; memory activity, attention and forgetting (1440) [web]" classname="e2e/web/memory-privacy.e2e.ts" time="31.776"/>
+    <testcase name="Official memory activity &gt; memory activity, attention and forgetting (390) [web]" classname="e2e/web/memory-privacy.e2e.ts" time="29.212"/>
+  </testsuite>
+  <testsuite name="e2e/web/memory-public-streaming.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="4.462">
+    <testcase name="Memory public streaming &gt; public explanations and a memory tool stay in order while SSE remains open [web]" classname="e2e/web/memory-public-streaming.e2e.ts" time="4.462"/>
+  </testsuite>
+  <testsuite name="e2e/web/public-activity-history.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="8.747">
+    <testcase name="Public activity history &gt; legacy attention counts do not hide current explanation, decisions or answer [web]" classname="e2e/web/public-activity-history.e2e.ts" time="5.189"/>
+    <testcase name="Public activity history &gt; the captured Worker final answer appears once while its durable source remains in history [web]" classname="e2e/web/public-activity-history.e2e.ts" time="3.558"/>
+  </testsuite>
+  <testsuite name="e2e/web/run-activity.e2e.ts" tests="7" failures="0" errors="0" skipped="0" time="53.379">
+    <testcase name="Public run activity &gt; native chronology, Markdown, attention and replay light 390 [web]" classname="e2e/web/run-activity.e2e.ts" time="9.713"/>
+    <testcase name="Public run activity &gt; native chronology, Markdown, attention and replay light 1440 [web]" classname="e2e/web/run-activity.e2e.ts" time="7.943"/>
+    <testcase name="Public run activity &gt; native chronology, Markdown, attention and replay dark 390 [web]" classname="e2e/web/run-activity.e2e.ts" time="6.639"/>
+    <testcase name="Public run activity &gt; native chronology, Markdown, attention and replay dark 1440 [web]" classname="e2e/web/run-activity.e2e.ts" time="7.337"/>
+    <testcase name="Public run activity &gt; long histories keep early calls and reveal all later calls [web]" classname="e2e/web/run-activity.e2e.ts" time="6.411"/>
+    <testcase name="Public run activity &gt; legacy history metadata does not resurrect aggregate controls [web]" classname="e2e/web/run-activity.e2e.ts" time="7.933"/>
+    <testcase name="Public run activity &gt; math fonts load through the production asset pipeline [web]" classname="e2e/web/run-activity.e2e.ts" time="7.403"/>
+  </testsuite>
+</testsuites>
