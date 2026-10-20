@@ -1,0 +1,829 @@
+(node:1225338) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1225345) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: SPA image includes the transitive source graph and pinned vendor license
+not ok 1 - SPA image includes the transitive source graph and pinned vendor license
+  ---
+  duration_ms: 1207.460923
+  type: 'test'
+  location: '/workspace/LingxiLoop-pr227-spa-package/scripts/production-rag-contract.test.mjs:63:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    SPA COPY and context must include every transitive source input
+    + actual - expected
+    
+    + [
+    +   'third_party/assistant-ui/streaming-text/upstream/utils/range.ts'
+    + ]
+    - []
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0: 'third_party/assistant-ui/streaming-text/upstream/utils/range.ts'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-pr227-spa-package/scripts/production-rag-contract.test.mjs:104:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+  ...
+# Subtest: workflow path filters route real changed paths to their owning checks
+not ok 2 - workflow path filters route real changed paths to their owning checks
+  ---
+  duration_ms: 1.46544
+  type: 'test'
+  location: '/workspace/LingxiLoop-pr227-spa-package/scripts/production-rag-contract.test.mjs:422:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /if: matrix\.component == 'web'\r?\n\s+run: node --test --test-name-pattern='SPA image' scripts\/production-rag-contract\.test\.mjs/. Input:
+    
+    'name: LingxiLoop scoped CI and CD\n' +
+      '\n' +
+      'on:\n' +
+      '  pull_request:\n' +
+      '    branches: [main]\n' +
+      '  push:\n' +
+      '    branches: [main]\n' +
+      '  workflow_dispatch:\n' +
+      '    inputs:\n' +
+      '      scope:\n' +
+      '        description: Component to verify, release production images, or run deep integration checks\n' +
+      '        required: true\n' +
+      '        type: choice\n' +
+      '        options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration]\n' +
+      '      publish_only:\n' +
+      '        description: Verify and publish immutable images without changing production manifests or deploying\n' +
+      '        type: boolean\n' +
+      '        default: false\n' +
+      '\n' +
+      'concurrency:\n' +
+      '  group: lingxiloop-${{ github.ref }}\n' +
+      "  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}\n" +
+      '\n' +
+      'permissions:\n' +
+      '  contents: read\n' +
+      '  packages: read\n' +
+      '  pull-requests: read\n' +
+      '\n' +
+      'env:\n' +
+      '  NODE_VERSION: "22"\n' +
+      '  ELECTRON_SKIP_BINARY_DOWNLOAD: "1"\n' +
+      '\n' +
+      'jobs:\n' +
+      '  changes:\n' +
+      '    runs-on: ubuntu-latest\n' +
+      '    outputs:\n' +
+      '      admin_build: ${{ steps.scope.outputs.admin_build }}\n' +
+      '      integration_files: ${{ steps.scope.outputs.integration_files }}\n' +
+      '      deep_integration: ${{ steps.scope.outputs.deep_integration }}\n' +
+      '      open_notebook: ${{ steps.scope.outputs.open_notebook }}\n' +
+      '      deployment: ${{ steps.scope.outputs.deployment }}\n' +
+      '      web_build: ${{ steps.scope.outputs.web_build }}\n' +
+      '      web_tests: ${{ steps.paths.outputs.web_tests_files }}\n' +
+      '      admin_tests: ${{ steps.paths.outputs.admin_tests_files }}\n' +
+      '      server_tests: ${{ steps.paths.outputs.server_tests_files }}\n' +
+      '      web: ${{ steps.scope.outputs.web }}\n' +
+      '      admin: ${{ steps.scope.outputs.admin }}\n' +
+      '      control: ${{ steps.scope.outputs.control }}\n' +
+      '      server: ${{ steps.scope.outputs.server }}\n' +
+      '      integration: ${{ steps.scope.outputs.integration }}\n' +
+      '      deploy_contract: ${{ steps.scope.outputs.deploy_contract }}\n' +
+      '      control_deploy: ${{ steps.scope.outputs.control_deploy }}\n' +
+      '      control_migrations: ${{ steps.scope.outputs.control_migrations }}\n' +
+      '      release: ${{ steps.scope.outputs.release }}\n' +
+      '      checks: ${{ steps.scope.outputs.checks }}\n' +
+      '      publish: ${{ steps.scope.outputs.publish }}\n' +
+      '      images: ${{ steps.scope.outputs.images }}\n' +
+      '      packages: ${{ steps.scope.outputs.packages }}\n' +
+      '      check_jobs: ${{ steps.scope.outputs.check_jobs }}\n' +
+      '    steps:\n' +
+      '      - uses: actions/checkout@v5\n' +
+      '        with: { fetch-depth: 0 }\n' +
+      '      - uses: dorny/paths-filter@v4\n' +
+      '        id: paths\n' +
+      '        with:\n' +
+      '          list-files: json\n' +
+      '          predicate-quantifier: some-with-excludes\n' +
+      '          filters: |\n' +
+      '            shared_frontend:\n' +
+      "              - '.npmrc'\n" +
+      "              - 'package.json'\n" +
+      "              - 'package-lock.json'\n" +
+      '            lint_config:\n' +
+      "              - 'biome.json'\n" +
+      '            test_runner:\n' +
+      "              - 'scripts/run-tests.mjs'\n" +
+      "              - 'scripts/test-selectors.test.mjs'\n" +
+      '            web:\n' +
+      "              - 'third_party/zcode/**'\n" +
+      "              - 'scripts/verify-zcode-visualize.mjs'\n" +
+      "              - 'scripts/build-visualize-runtime.mjs'\n" +
+      "              - 'src/**'\n" +
+      "              - 'public/**'\n" +
+      "              - 'index.html'\n" +
+      "              - 'vite.config.ts'\n" +
+      "              - 'tsconfig.json'\n" +
+      "              - 'tsconfig.node.json'\n" +
+      "              - 'postcss.config.js'\n" +
+      "              - 'tailwind.config.ts'\n" +
+      "              - '!src/**/*.test.*'\n" +
+      "              - '!src/**/__tests__/**'\n" +
+      '            web_tests:\n' +
+      "              - 'src/**/*.test.*'\n" +
+      '            admin:\n' +
+      "              - 'admin/**'\n" +
+      "              - 'vite.admin.config.ts'\n" +
+      "              - 'tsconfig.admin.json'\n" +
+      "              - 'src/components/GlobalInteractionProvider.tsx'\n" +
+      "              - 'src/components/ResourceSkeleton.tsx'\n" +
+      "              - 'src/components/ui/**'\n" +
+      "              - 'src/lib/actionToast.ts'\n" +
+      "              - 'src/lib/confirmAction.ts'\n" +
+      "              - '!**/*.test.*'\n" +
+      '            admin_tests:\n' +
+      "              - 'admin/**/*.test.*'\n" +
+      '            control:\n' +
+      "              - 'workers/control-plane/**'\n" +
+      "              - 'worker-configuration.d.ts'\n" +
+      "              - '!workers/control-plane/**/*.test.*'\n" +
+      "              - '!workers/control-plane/vitest.config.ts'\n" +
+      "              - '!workers/control-plane/wrangler.test.jsonc'\n" +
+      '            control_tests:\n' +
+      "              - 'workers/control-plane/**/*.test.*'\n" +
+      "              - 'workers/control-plane/vitest.config.ts'\n" +
+      "              - 'workers/control-plane/wrangler.test.jsonc'\n" +
+      '            server:\n' +
+      "              - 'server/tsconfig.json'\n" +
+      '            server_tests:\n' +
+      "              - 'server/src/**/*.test.ts'\n" +
+      "              - '!server/src/__integration__/**'\n" +
+      '            # Include shared sources loaded by the server runtime and copied by its image.\n' +
+      '            server_source:\n' +
+      "              - 'third_party/zcode/**'\n" +
+      "              - 'scripts/verify-zcode-visualize.mjs'\n" +
+      "              - 'scripts/build-visualize-runtime.mjs'\n" +
+      "              - 'server/.npmrc'\n" +
+      "              - 'server/scripts/**'\n" +
+      "              - 'server/src/**'\n" +
+      "              - '!server/src/**/*.test.ts'\n" +
+      "              - '!server/src/__tests__/**'\n" +
+      "              - '!server/src/__integration__/**'\n" +
+      "              - 'server/package.json'\n" +
+      "              - 'server/package-lock.json'\n" +
+      "              - 'server/*.conf'\n" +
+      "              - 'src/lib/agentToolCards.ts'\n" +
+      "              - 'src/lib/researchSources.ts'\n" +
+      "              - 'src/lib/agentCapabilities.ts'\n" +
+      "              - 'src/lib/canvasLayout.ts'\n" +
+      "              - 'src/lib/canvasEventKinds.ts'\n" +
+      "              - 'src/lib/mentions.ts'\n" +
+      "              - 'src/lib/participantDisplayName.ts'\n" +
+      "              - 'src/lib/agentRunSnapshot.ts'\n" +
+      "              - 'src/lib/nativeMessage.ts'\n" +
+      "              - 'src/lib/userFacingError.ts'\n" +
+      "              - 'src/lib/runActivity.ts'\n" +
+      "              - 'src/lib/memoryActivity.ts'\n" +
+      "              - 'src/features/chat/visualize/zcode/shared/gen-ui/**'\n" +
+      "              - 'src/features/chat/visualize/zcode/gen-ui/domain/**'\n" +
+      "              - 'src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts'\n" +
+      '            integration_tests:\n' +
+      "              - 'server/src/__integration__/*.test.ts'\n" +
+      '            integration_runner:\n' +
+      "              - 'server/run-integration-tests.mjs'\n" +
+      "              - 'server/src/__integration__/**'\n" +
+      "              - '!server/src/__integration__/*.test.ts'\n" +
+      '            server_docker:\n' +
+      "              - 'server/docker/lingxiloop-server.Dockerfile'\n" +
+      "              - 'server/docker/lingxiloop-server.Dockerfile.dockerignore'\n" +
+      '            open_notebook:\n' +
+      "              - 'third_party/open-notebook/Dockerfile'\n" +
+      "              - 'third_party/open-notebook/.dockerignore'\n" +
+      "              - 'third_party/open-notebook/pyproject.toml'\n" +
+      "              - 'third_party/open-notebook/uv.lock'\n" +
+      "              - 'third_party/open-notebook/rag_commands.py'\n" +
+      "              - 'third_party/open-notebook/supervisord.rag.conf'\n" +
+      "              - 'third_party/open-notebook/api/__init__.py'\n" +
+      "              - 'third_party/open-notebook/api/middleware.py'\n" +
+      "              - 'third_party/open-notebook/api/rag_*.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/__init__.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/config.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/exceptions.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/artifact_storage.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/database/**'\n" +
+      "              - 'third_party/open-notebook/open_notebook/domain/__init__.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/domain/base.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/rag/**'\n" +
+      "              - 'third_party/open-notebook/open_notebook/utils/__init__.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/utils/proxy.py'\n" +
+      "              - 'third_party/open-notebook/open_notebook/utils/url_validation.py'\n" +
+      '            open_notebook_tests:\n' +
+      "              - 'third_party/open-notebook/tests/**'\n" +
+      "              - 'third_party/open-notebook/Makefile'\n" +
+      '            wukongim:\n' +
+      "              - 'server/wukongim/**'\n" +
+      "              - 'server/docker/wukongim.Dockerfile'\n" +
+      '            gateway:\n' +
+      "              - 'deploy/komodo/lingxiloop-app-b/gateway.conf'\n" +
+      "              - 'deploy/komodo/lingxiloop-app-b/gateway.Dockerfile'\n" +
+      '            ci:\n' +
+      "              - '.github/workflows/ci.yml'\n" +
+      "              - 'scripts/ci-scope.mjs'\n" +
+      "              - 'scripts/production-rag-contract.test.mjs'\n" +
+      "              - 'scripts/release-smoke*.mjs'\n" +
+      "              - 'scripts/update-deployment-images.mjs'\n" +
+      "              - 'scripts/trigger-komodo-rollout.mjs'\n" +
+      "              - 'scripts/prepare-forum-rollout.mjs'\n" +
+      "              - 'scripts/sync-komodo-config.mjs'\n" +
+      "              - 'scripts/test-distributed-realtime.mjs'\n" +
+      "              - 'scripts/test-native-agent-*.mjs'\n" +
+      '            deployment:\n' +
+      "              - 'scripts/trigger-komodo-rollout.mjs'\n" +
+      "              - 'scripts/prepare-forum-rollout.mjs'\n" +
+      "              - 'scripts/sync-komodo-config.mjs'\n" +
+      "              - 'deploy/**'\n" +
+      "              - '!deploy/**/*.md'\n" +
+      '            control_migrations:\n' +
+      "              - 'workers/control-plane/migrations/**'\n" +
+      '            release:\n' +
+      "              - 'VERSION'\n" +
+      '      - id: scope\n' +
+      '        shell: bash\n' +
+      '        env:\n' +
+      '          INTEGRATION_FILES: ${{ steps.paths.outputs.integration_tests_files }}\n' +
+      '          EVENT: ${{ github.event_name }}\n' +
+      '          MANUAL_SCOPE: ${{ inputs.scope }}\n' +
+      '          SHARED_FRONTEND: ${{ steps.paths.outputs.shared_frontend }}\n' +
+      '          TEST_RUNNER: ${{ steps.paths.outputs.test_runner }}\n' +
+      '          LINT_CONFIG: ${{ steps.paths.outputs.lint_config }}\n' +
+      '          WEB_TESTS: ${{ steps.paths.outputs.web_tests }}\n' +
+      '          ADMIN_TESTS: ${{ steps.paths.outputs.admin_tests }}\n' +
+      '          CONTROL_TESTS: ${{ steps.paths.outputs.control_tests }}\n' +
+      '          SERVER_TESTS: ${{ steps.paths.outputs.server_tests }}\n' +
+      '          INTEGRATION_RUNNER: ${{ steps.paths.outputs.integration_runner }}\n' +
+      '          INTEGRATION_TESTS: ${{ steps.paths.outputs.integration_tests }}\n' +
+      '          OPEN_NOTEBOOK_TESTS: ${{ steps.paths.outputs.open_notebook_tests }}\n' +
+      '          CI_CONFIG: ${{ steps.paths.outputs.ci }}\n' +
+      '          WEB: ${{ steps.paths.outputs.web }}\n' +
+      '          ADMIN: ${{ steps.paths.outputs.admin }}\n' +
+      '          CONTROL: ${{ steps.paths.outputs.control }}\n' +
+      '          SERVER: ${{ steps.paths.outputs.server }}\n' +
+      '          SER'... 14780 more characters
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    name: LingxiLoop scoped CI and CD
+    
+    on:
+      pull_request:
+        branches: [main]
+      push:
+        branches: [main]
+      workflow_dispatch:
+        inputs:
+          scope:
+            description: Component to verify, release production images, or run deep integration checks
+            required: true
+            type: choice
+            options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration]
+          publish_only:
+            description: Verify and publish immutable images without changing production manifests or deploying
+            type: boolean
+            default: false
+    
+    concurrency:
+      group: lingxiloop-${{ github.ref }}
+      cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+    
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: read
+    
+    env:
+      NODE_VERSION: "22"
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    
+    jobs:
+      changes:
+        runs-on: ubuntu-latest
+        outputs:
+          admin_build: ${{ steps.scope.outputs.admin_build }}
+          integration_files: ${{ steps.scope.outputs.integration_files }}
+          deep_integration: ${{ steps.scope.outputs.deep_integration }}
+          open_notebook: ${{ steps.scope.outputs.open_notebook }}
+          deployment: ${{ steps.scope.outputs.deployment }}
+          web_build: ${{ steps.scope.outputs.web_build }}
+          web_tests: ${{ steps.paths.outputs.web_tests_files }}
+          admin_tests: ${{ steps.paths.outputs.admin_tests_files }}
+          server_tests: ${{ steps.paths.outputs.server_tests_files }}
+          web: ${{ steps.scope.outputs.web }}
+          admin: ${{ steps.scope.outputs.admin }}
+          control: ${{ steps.scope.outputs.control }}
+          server: ${{ steps.scope.outputs.server }}
+          integration: ${{ steps.scope.outputs.integration }}
+          deploy_contract: ${{ steps.scope.outputs.deploy_contract }}
+          control_deploy: ${{ steps.scope.outputs.control_deploy }}
+          control_migrations: ${{ steps.scope.outputs.control_migrations }}
+          release: ${{ steps.scope.outputs.release }}
+          checks: ${{ steps.scope.outputs.checks }}
+          publish: ${{ steps.scope.outputs.publish }}
+          images: ${{ steps.scope.outputs.images }}
+          packages: ${{ steps.scope.outputs.packages }}
+          check_jobs: ${{ steps.scope.outputs.check_jobs }}
+        steps:
+          - uses: actions/checkout@v5
+            with: { fetch-depth: 0 }
+          - uses: dorny/paths-filter@v4
+            id: paths
+            with:
+              list-files: json
+              predicate-quantifier: some-with-excludes
+              filters: |
+                shared_frontend:
+                  - '.npmrc'
+                  - 'package.json'
+                  - 'package-lock.json'
+                lint_config:
+                  - 'biome.json'
+                test_runner:
+                  - 'scripts/run-tests.mjs'
+                  - 'scripts/test-selectors.test.mjs'
+                web:
+                  - 'third_party/zcode/**'
+                  - 'scripts/verify-zcode-visualize.mjs'
+                  - 'scripts/build-visualize-runtime.mjs'
+                  - 'src/**'
+                  - 'public/**'
+                  - 'index.html'
+                  - 'vite.config.ts'
+                  - 'tsconfig.json'
+                  - 'tsconfig.node.json'
+                  - 'postcss.config.js'
+                  - 'tailwind.config.ts'
+                  - '!src/**/*.test.*'
+                  - '!src/**/__tests__/**'
+                web_tests:
+                  - 'src/**/*.test.*'
+                admin:
+                  - 'admin/**'
+                  - 'vite.admin.config.ts'
+                  - 'tsconfig.admin.json'
+                  - 'src/components/GlobalInteractionProvider.tsx'
+                  - 'src/components/ResourceSkeleton.tsx'
+                  - 'src/components/ui/**'
+                  - 'src/lib/actionToast.ts'
+                  - 'src/lib/confirmAction.ts'
+                  - '!**/*.test.*'
+                admin_tests:
+                  - 'admin/**/*.test.*'
+                control:
+                  - 'workers/control-plane/**'
+                  - 'worker-configuration.d.ts'
+                  - '!workers/control-plane/**/*.test.*'
+                  - '!workers/control-plane/vitest.config.ts'
+                  - '!workers/control-plane/wrangler.test.jsonc'
+                control_tests:
+                  - 'workers/control-plane/**/*.test.*'
+                  - 'workers/control-plane/vitest.config.ts'
+                  - 'workers/control-plane/wrangler.test.jsonc'
+                server:
+                  - 'server/tsconfig.json'
+                server_tests:
+                  - 'server/src/**/*.test.ts'
+                  - '!server/src/__integration__/**'
+                # Include shared sources loaded by the server runtime and copied by its image.
+                server_source:
+                  - 'third_party/zcode/**'
+                  - 'scripts/verify-zcode-visualize.mjs'
+                  - 'scripts/build-visualize-runtime.mjs'
+                  - 'server/.npmrc'
+                  - 'server/scripts/**'
+                  - 'server/src/**'
+                  - '!server/src/**/*.test.ts'
+                  - '!server/src/__tests__/**'
+                  - '!server/src/__integration__/**'
+                  - 'server/package.json'
+                  - 'server/package-lock.json'
+                  - 'server/*.conf'
+                  - 'src/lib/agentToolCards.ts'
+                  - 'src/lib/researchSources.ts'
+                  - 'src/lib/agentCapabilities.ts'
+                  - 'src/lib/canvasLayout.ts'
+                  - 'src/lib/canvasEventKinds.ts'
+                  - 'src/lib/mentions.ts'
+                  - 'src/lib/participantDisplayName.ts'
+                  - 'src/lib/agentRunSnapshot.ts'
+                  - 'src/lib/nativeMessage.ts'
+                  - 'src/lib/userFacingError.ts'
+                  - 'src/lib/runActivity.ts'
+                  - 'src/lib/memoryActivity.ts'
+                  - 'src/features/chat/visualize/zcode/shared/gen-ui/**'
+                  - 'src/features/chat/visualize/zcode/gen-ui/domain/**'
+                  - 'src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts'
+                integration_tests:
+                  - 'server/src/__integration__/*.test.ts'
+                integration_runner:
+                  - 'server/run-integration-tests.mjs'
+                  - 'server/src/__integration__/**'
+                  - '!server/src/__integration__/*.test.ts'
+                server_docker:
+                  - 'server/docker/lingxiloop-server.Dockerfile'
+                  - 'server/docker/lingxiloop-server.Dockerfile.dockerignore'
+                open_notebook:
+                  - 'third_party/open-notebook/Dockerfile'
+                  - 'third_party/open-notebook/.dockerignore'
+                  - 'third_party/open-notebook/pyproject.toml'
+                  - 'third_party/open-notebook/uv.lock'
+                  - 'third_party/open-notebook/rag_commands.py'
+                  - 'third_party/open-notebook/supervisord.rag.conf'
+                  - 'third_party/open-notebook/api/__init__.py'
+                  - 'third_party/open-notebook/api/middleware.py'
+                  - 'third_party/open-notebook/api/rag_*.py'
+                  - 'third_party/open-notebook/open_notebook/__init__.py'
+                  - 'third_party/open-notebook/open_notebook/config.py'
+                  - 'third_party/open-notebook/open_notebook/exceptions.py'
+                  - 'third_party/open-notebook/open_notebook/artifact_storage.py'
+                  - 'third_party/open-notebook/open_notebook/database/**'
+                  - 'third_party/open-notebook/open_notebook/domain/__init__.py'
+                  - 'third_party/open-notebook/open_notebook/domain/base.py'
+                  - 'third_party/open-notebook/open_notebook/rag/**'
+                  - 'third_party/open-notebook/open_notebook/utils/__init__.py'
+                  - 'third_party/open-notebook/open_notebook/utils/proxy.py'
+                  - 'third_party/open-notebook/open_notebook/utils/url_validation.py'
+                open_notebook_tests:
+                  - 'third_party/open-notebook/tests/**'
+                  - 'third_party/open-notebook/Makefile'
+                wukongim:
+                  - 'server/wukongim/**'
+                  - 'server/docker/wukongim.Dockerfile'
+                gateway:
+                  - 'deploy/komodo/lingxiloop-app-b/gateway.conf'
+                  - 'deploy/komodo/lingxiloop-app-b/gateway.Dockerfile'
+                ci:
+                  - '.github/workflows/ci.yml'
+                  - 'scripts/ci-scope.mjs'
+                  - 'scripts/production-rag-contract.test.mjs'
+                  - 'scripts/release-smoke*.mjs'
+                  - 'scripts/update-deployment-images.mjs'
+                  - 'scripts/trigger-komodo-rollout.mjs'
+                  - 'scripts/prepare-forum-rollout.mjs'
+                  - 'scripts/sync-komodo-config.mjs'
+                  - 'scripts/test-distributed-realtime.mjs'
+                  - 'scripts/test-native-agent-*.mjs'
+                deployment:
+                  - 'scripts/trigger-komodo-rollout.mjs'
+                  - 'scripts/prepare-forum-rollout.mjs'
+                  - 'scripts/sync-komodo-config.mjs'
+                  - 'deploy/**'
+                  - '!deploy/**/*.md'
+                control_migrations:
+                  - 'workers/control-plane/migrations/**'
+                release:
+                  - 'VERSION'
+          - id: scope
+            shell: bash
+            env:
+              INTEGRATION_FILES: ${{ steps.paths.outputs.integration_tests_files }}
+              EVENT: ${{ github.event_name }}
+              MANUAL_SCOPE: ${{ inputs.scope }}
+              SHARED_FRONTEND: ${{ steps.paths.outputs.shared_frontend }}
+              TEST_RUNNER: ${{ steps.paths.outputs.test_runner }}
+              LINT_CONFIG: ${{ steps.paths.outputs.lint_config }}
+              WEB_TESTS: ${{ steps.paths.outputs.web_tests }}
+              ADMIN_TESTS: ${{ steps.paths.outputs.admin_tests }}
+              CONTROL_TESTS: ${{ steps.paths.outputs.control_tests }}
+              SERVER_TESTS: ${{ steps.paths.outputs.server_tests }}
+              INTEGRATION_RUNNER: ${{ steps.paths.outputs.integration_runner }}
+              INTEGRATION_TESTS: ${{ steps.paths.outputs.integration_tests }}
+              OPEN_NOTEBOOK_TESTS: ${{ steps.paths.outputs.open_notebook_tests }}
+              CI_CONFIG: ${{ steps.paths.outputs.ci }}
+              WEB: ${{ steps.paths.outputs.web }}
+              ADMIN: ${{ steps.paths.outputs.admin }}
+              CONTROL: ${{ steps.paths.outputs.control }}
+              SERVER: ${{ steps.paths.outputs.server }}
+              SERVER_SOURCE: ${{ steps.paths.outputs.server_source }}
+              SERVER_DOCKER: ${{ steps.paths.outputs.server_docker }}
+              OPEN_NOTEBOOK: ${{ steps.paths.outputs.open_notebook }}
+              WUKONGIM: ${{ steps.paths.outputs.wukongim }}
+              GATEWAY: ${{ steps.paths.outputs.gateway }}
+              DEPLOYMENT: ${{ steps.paths.outputs.deployment }}
+              CONTROL_MIGRATIONS: ${{ steps.paths.outputs.control_migrations }}
+              RELEASE: ${{ steps.paths.outputs.release }}
+            run: node scripts/ci-scope.mjs
+    
+      checks:
+        needs: changes
+        if: needs.changes.outputs.checks == 'true'
+        strategy:
+          fail-fast: false
+          matrix: ${{ fromJSON(needs.changes.outputs.check_jobs) }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 25
+        services:
+          redis:
+            image: ${{ matrix.component == 'server' && 'redis:7-alpine' || '' }}
+            ports: ["6379:6379"]
+            options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
+        steps:
+          - uses: actions/checkout@v5
+          - uses: actions/setup-node@v5
+            if: matrix.component != 'open-notebook'
+            with:
+              node-version: "22"
+              cache: ${{ matrix.component != 'release' && 'npm' || '' }}
+              cache-dependency-path: package-lock.json
+          # Version synchronization reads JSON with Node builtins; it needs no packages.
+          - if: matrix.component != 'open-notebook' && matrix.component != 'release'
+            run: npm ci --prefer-offline
+            env:
+              NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+          - if: matrix.component != 'open-notebook' && matrix.component != 'release'
+            name: Record installed dependency footprint
+            run: du -sb node_modules
+          - if: matrix.component == 'web'
+            run: npm run lint && npm test
+            env:
+              CI_TEST_FILES: ${{ needs.changes.outputs.web_tests }}
+          - if: matrix.component == 'web' && needs.changes.outputs.web_build == 'true' && !(github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true'))
+            run: npm run build
+          - if: matrix.component == 'web' && needs.changes.outputs.web == 'true' && needs.changes.outputs.web_build != 'true'
+            run: npm run typecheck
+          - if: matrix.component == 'admin'
+            run: npm run admin:lint && npm run admin:test
+            env:
+              CI_TEST_FILES: ${{ needs.changes.outputs.admin_tests }}
+          - if: matrix.component == 'admin' && needs.changes.outputs.admin_build == 'true' && !(github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true'))
+            run: npm run admin:build
+          - if: matrix.component == 'admin' && needs.changes.outputs.admin_build == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true')
+            run: npm run admin:build
+            env:
+              VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
+              VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9
+          - if: matrix.component == 'admin' && needs.changes.outputs.admin_build == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true')
+            uses: actions/upload-artifact@v4
+            with:
+              name: admin-dist-${{ github.sha }}
+              path: dist-admin/
+              if-no-files-found: error
+              retention-days: 1
+          - if: matrix.component == 'admin' && needs.changes.outputs.admin == 'true' && needs.changes.outputs.admin_build != 'true'
+            run: npm run admin:typecheck
+          - if: matrix.component == 'server'
+            run: npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs
+            env:
+              CI_TEST_FILES: ${{ needs.changes.outputs.server_tests }}
+          - if: matrix.component == 'control'
+            run: npm run control:lint && npm run control:typecheck && npm run control:test
+          - if: matrix.component == 'open-notebook'
+            uses: astral-sh/setup-uv@v6
+            with: { enable-cache: true, cache-dependency-glob: third_party/open-notebook/uv.lock }
+          - if: matrix.component == 'open-notebook'
+            working-directory: third_party/open-notebook
+            run: uv run --frozen --python 3.12 pytest -q
+          - if: matrix.component == 'deploy-contract'
+            run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs
+          - if: matrix.component == 'release'
+            run: npm run version:check
+    
+      integration:
+        needs: changes
+        if: needs.changes.outputs.integration == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        services:
+          postgres:
+            image: pgvector/pgvector:pg16
+            env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres, POSTGRES_DB: lingxiloop_test }
+            ports: ["5432:5432"]
+            options: --health-cmd "pg_isready -U postgres -d lingxiloop_test" --health-interval 5s --health-timeout 5s --health-retries 12
+          redis:
+            image: redis:7-alpine
+            ports: ["6379:6379"]
+            options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
+        env:
+          INTEGRATION_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/lingxiloop_test
+          REDIS_URL: redis://127.0.0.1:6379
+          LINGXIOS_TEST_REDIS_URL: redis://127.0.0.1:6379
+          OPENAI_API_KEY: integration-test-key
+          OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+          LINGXILOOP_INVITE_BASE_URL: http://127.0.0.1:5180
+          LINGXILOOP_GATEWAY_HMAC_SECRET: integration-gateway-secret
+          WUKONG_USER_TOKEN_SECRET: integration-wukong-user-token-secret
+          AGENT_OS_INPUT_COST_MICROS_PER_MILLION: "1"
+          AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: "1"
+        steps:
+          - uses: actions/checkout@v5
+          - uses: actions/setup-node@v5
+            with:
+              node-version: "22"
+              cache: npm
+              cache-dependency-path: package-lock.json
+          - run: npm ci --prefer-offline
+            env:
+              NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+          - run: npm run verify:visualize && npm run build:visualize-runtime
+          - run: npm run db:migrate
+          - if: needs.changes.outputs.server != 'true'
+            run: node --test scripts/test-selectors.test.mjs
+          - run: npm run test:integration
+            env:
+              INTEGRATION_TEST_FILES: ${{ needs.changes.outputs.integration_files }}
+          - if: needs.changes.outputs.deep_integration == 'true'
+            name: Distributed SSE with a real Redis restart
+            run: node --import tsx scripts/test-distributed-realtime.mjs
+            env:
+              LINGXIOS_BENCH_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+          - if: needs.changes.outputs.deep_integration == 'true'
+            name: Native product Worker flows on empty databases
+            env:
+              PGHOST: 127.0.0.1
+              PGUSER: postgres
+              PGPASSWORD: postgres
+              LINGXIOS_NATIVE_TEST_REDIS_URL: redis://127.0.0.1:6379
+            run: |
+              for capability in documents canvas eval; do
+                createdb "native_${capability}"
+                LINGXIOS_NATIVE_TEST_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/native_${capability}" \
+                  node "scripts/test-native-agent-${capability}.mjs"
+              done
+    
+      publish:
+        if: >-
+          always() &&
+          ((github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true')) ||
+           (github.event_name == 'workflow_dispatch' && inputs.publish_only)) &&
+          needs.changes.outputs.publish == 'true' &&
+          needs.checks.result == 'success' &&
+          (needs.integration.result == 'success' || needs.integration.result == 'skipped')
+        needs: [changes, checks, integration]
+        runs-on: ubuntu-latest
+        timeout-minutes: 60
+        permissions: { contents: read, packages: write }
+        strategy:
+          fail-fast: false
+          matrix: ${{ fromJSON(needs.changes.outputs.images) }}
+        steps:
+          - uses: actions/checkout@v5
+          - uses: docker/setup-buildx-action@v3
+          - id: metadata
+            shell: bash
+            run: |
+              echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+              echo "version=$(tr -d '[:space:]' < VERSION)" >> "$GITHUB_OUTPUT"
+          - uses: docker/login-action@v3
+            with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+          - uses: docker/build-push-action@v6
+            with:
+              context: ${{ matrix.context }}
+              file: ${{ matrix.dockerfile }}
+              target: ${{ matrix.target }}
+              platforms: linux/amd64
+              push: true
+              secrets: |
+                npm_token=${{ matrix.package == 'lingxiloop-server' && (secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN) || '' }}
+              tags: ghcr.io/${{ steps.metadata.outputs.owner }}/${{ matrix.package }}:${{ github.sha }}
+              build-args: |
+                LINGXILOOP_VERSION=${{ steps.metadata.outputs.version }}
+                LINGXILOOP_COMMIT_SHA=${{ github.sha }}
+                WUKONG_COMMIT=${{ matrix.wukong_commit }}
+                VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEsX5eyOl1nAe5i9
+              cache-from: type=gha,scope=${{ matrix.package }}
+              cache-to: type=gha,mode=max,scope=${{ matrix.package }}
+    
+      update-manifests:
+        if: >-
+          always() && !inputs.publish_only && !contains(github.event.head_commit.message, '[skip deploy]') &&
+          github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
+          needs.checks.result == 'success' &&
+          (needs.integration.result == 'success' || needs.integration.result == 'skipped') &&
+          (needs.publish.result == 'success' ||
+           (needs.changes.outputs.publish == 'false' && needs.changes.outputs.deployment == 'true'))
+        needs: [changes, checks, integration, publish]
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        permissions: { contents: write }
+        outputs:
+          commit-sha: ${{ steps.pin.outputs.commit-sha }}
+        steps:
+          - uses: actions/checkout@v5
+            with: { ref: main, fetch-depth: 0 }
+          - name: Pin images published by this change
+            id: pin
+            run: |
+              git pull --rebase origin main
+              if [ "${{ needs.changes.outputs.publish }}" = "true" ]; then
+                node scripts/update-deployment-images.mjs "$GITHUB_SHA" ${{ needs.changes.outputs.packages }}
+              fi
+              if ! git diff --quiet; then
+                git config user.name github-actions[bot]
+                git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+                git add deploy/komodo/*/compose.yml
+                git commit -m "deploy: pin images to ${GITHUB_SHA} [skip ci]"
+                git push origin HEAD:main
+              fi
+              git config user.name github-actions[bot]
+              git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+              deployment_tree=$(printf '040000 tree %s\tdeploy\n' "$(git rev-parse HEAD:deploy)" | git mktree)
+              deployment_parents=()
+              if git ls-remote --exit-code origin refs/heads/codex/production >/dev/null; then
+                git fetch origin refs/heads/codex/production
+                deployment_parents=(-p "$(git rev-parse FETCH_HEAD)")
+              fi
+              deployment_commit=$(git commit-tree "$deployment_tree" "${deployment_parents[@]}" -m "Deploy $(git rev-parse HEAD)")
+              git push origin "$deployment_commit:refs/heads/codex/production"
+              echo "commit-sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+    
+      deploy:
+        if: >-
+          always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
+          github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          needs.changes.outputs.control_deploy == 'true' && needs.checks.result == 'success' &&
+          (needs.integration.result == 'success' || needs.integration.result == 'skipped')
+        needs: [changes, checks, integration]
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        environment: production
+        steps:
+          - uses: actions/checkout@v5
+          - uses: actions/setup-node@v5
+            with:
+              node-version: "22"
+              cache: npm
+              cache-dependency-path: package-lock.json
+          - run: npm ci --prefer-offline
+            env:
+              NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+          - name: Build Refine before production changes
+            if: needs.changes.outputs.admin_build != 'true'
+            run: npm run admin:build
+            env:
+              VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
+              VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9
+          - if: needs.changes.outputs.admin_build == 'true'
+            uses: actions/download-artifact@v4
+            with:
+              name: admin-dist-${{ github.sha }}
+              path: dist-admin/
+          - if: needs.changes.outputs.control_migrations == 'true'
+            name: Apply D1 migrations
+            run: npm run control:d1:remote
+            env:
+              CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+              CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          - name: Deploy Refine and control-plane Worker
+            run: |
+              npx wrangler versions upload --config workers/control-plane/wrangler.jsonc --tag "$GITHUB_SHA"
+              npx wrangler versions deploy --config workers/control-plane/wrangler.jsonc --version-tag "$GITHUB_SHA" --yes
+            env:
+              CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+              CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+              VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
+              VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9
+    
+      rollout:
+        if: >-
+          always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
+          github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
+          needs.update-manifests.result == 'success' &&
+          (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
+        needs: [changes, update-manifests, deploy]
+        runs-on: ubuntu-latest
+        timeout-minutes: 35
+        environment: production
+        env:
+          KOMODO_WEBHOOK_URL: ${{ secrets.KOMODO_WEBHOOK_URL }}
+          KOMODO_WEBHOOK_SECRET: ${{ secrets.KOMODO_WEBHOOK_SECRET }}
+          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
+        steps:
+          - uses: actions/checkout@v5
+            with: { ref: main }
+          - name: Trigger Komodo rollout
+            run: node scripts/trigger-komodo-rollout.mjs
+    
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-pr227-spa-package/scripts/production-rag-contract.test.mjs:427:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1613.465346

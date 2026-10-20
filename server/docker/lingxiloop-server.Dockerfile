@@ -65,6 +65,8 @@ COPY tsconfig.node.json ./
 COPY postcss.config.js ./
 COPY tailwind.config.ts ./
 COPY third_party/zcode ./third_party/zcode
+# StreamingText imports the pinned upstream range helper; include its license and provenance.
+COPY third_party/assistant-ui/streaming-text ./third_party/assistant-ui/streaming-text
 COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs ./scripts/
 RUN npm run build
 
@@ -104,6 +106,7 @@ COPY --from=spa-build /app/server/assets/visualize-runtime ./server/assets/visua
 # When this is absent (e.g. an older runtime image) the server falls
 # back to a JSON `/` response.
 COPY --from=spa-build /app/dist ./dist
+COPY third_party/assistant-ui/streaming-text/LICENSE ./dist/licenses/assistant-ui-streaming-text.txt
 
 ENV NODE_ENV=production \
     LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \

@@ -77,6 +77,7 @@ jobs:
               - 'scripts/test-selectors.test.mjs'
             web:
               - 'third_party/zcode/**'
+              - 'third_party/assistant-ui/streaming-text/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
               - 'src/**'
@@ -267,6 +268,8 @@ jobs:
       - if: matrix.component != 'open-notebook' && matrix.component != 'release'
         name: Record installed dependency footprint
         run: du -sb node_modules
+      - if: matrix.component == 'web'
+        run: node --test --test-name-pattern='SPA image' scripts/production-rag-contract.test.mjs
       - if: matrix.component == 'web'
         run: npm run lint && npm test
         env:

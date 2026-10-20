@@ -20,6 +20,7 @@
 !postcss.config.js
 !tailwind.config.ts
 !third_party/zcode/**
+!third_party/assistant-ui/streaming-text/**
 !scripts/verify-zcode-visualize.mjs
 !scripts/build-visualize-runtime.mjs
 # Don't bake source maps / built assets / huge logs into the layer.

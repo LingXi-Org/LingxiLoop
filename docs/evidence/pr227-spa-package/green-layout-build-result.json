@@ -1,0 +1,8 @@
+{
+  "command": "npm run build",
+  "exitCode": 0,
+  "elapsedMs": 57620,
+  "sourceMount": false,
+  "dependenciesSymlink": true,
+  "finalImage": false
+}
