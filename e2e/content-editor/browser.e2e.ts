@@ -1,6 +1,24 @@
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 import { nativeBlock, nativeLink } from './native'
+test('case GFM imports retain literal HTML text, currency and setext headings',async({app,browser,screen})=>{
+  await app.open('/e2e/content-editor.html?format=markdown')
+  const editor=screen.getByLabel('原生正文',{exact:true})
+  await expect(editor).toContainText('literal <em>sample</em>',{timeout:120000})
+  await expect(editor).toContainText('$5 and $3')
+  await expect(editor.getByRole('heading','Case heading',{exact:true})).toBeVisible()
+  await expect(browser.locator('[aria-label="原生正文"] em')).toHaveCount(0)
+  await editor.focus()
+  await browser.keyboard.press('Control+End')
+  await browser.keyboard.press('Enter')
+  await browser.keyboard.type('追加记录')
+  await screen.getByRole('button','保存并重新打开',{exact:true}).tap()
+  const saved=await browser.evaluate(()=>JSON.parse(localStorage.getItem('native-219')!).document)
+  expect(saved.legacyMarkdown).toContain('literal <em>sample</em>')
+  expect(JSON.stringify(saved.blocks)).toContain('literal <em>sample</em>')
+  await expect(editor).toContainText('literal <em>sample</em>')
+  await app.screenshot('case-legacy-literal-roundtrip')
+})
 test('upstream native schema, slash menus, tables, blocks, undo and lossless reopen',async({app,browser,screen})=>{
   await app.open('/e2e/content-editor.html')
   const editor=()=>screen.getByLabel('原生正文',{exact:true})
@@ -128,5 +146,6 @@ test('native formatting, links, emoji, block menu and table operations remain co
   if(toolbar.scroll>toolbar.width) expect(toolbar.overflow).toBe('auto')
   await screen.getByRole('button','颜色',{exact:true}).tap()
   await expect(browser.locator('[data-test="text-color-red"]')).toBeVisible()
+  await expect.poll(()=>browser.evaluate(()=>document.getAnimations().filter(animation=>animation.playState==='running'&&animation.effect?.getTiming().iterations!==Infinity).length)).toBe(0)
   await app.screenshot('native-mobile-formatting-controls')
 })

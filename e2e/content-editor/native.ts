@@ -38,14 +38,15 @@ export async function nativeUpload(browser: Browser, screen: Screen, label: stri
 }
 
 /** Synthetic clipboard event exercises upstream's real Markdown paste handler. */
-export async function nativePaste(browser: Browser, screen: Screen, label: string, markdown: string) {
-  await browser.locator(`[aria-label="${label}"][contenteditable="true"]:visible`).fill('')
-  await browser.evaluate(({label,markdown})=>{
+export async function nativePaste(browser: Browser, screen: Screen, label: string, markdown: string, scope = '') {
+  const selector=`${scope ? `${scope} ` : ''}[aria-label="${label}"][contenteditable="true"]`
+  await browser.locator(`${selector}:visible`).fill('')
+  await browser.evaluate(({selector,markdown})=>{
     const clipboardData=new DataTransfer();clipboardData.setData('text/plain',markdown)
-    const target=Array.from(document.querySelectorAll(`[aria-label="${label}"][contenteditable="true"]`)).find(node=>node.getClientRects().length)!
+    const target=Array.from(document.querySelectorAll(selector)).find(node=>node.getClientRects().length)!
     target.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData}))
     return true
-  },{label,markdown})
+  },{selector,markdown})
 }
 export async function nativeLink(browser: Browser, screen: Screen, label: string, url: string) {
   await screen.getByLabel(label,{exact:true}).focus()

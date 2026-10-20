@@ -7,9 +7,10 @@ import '@/styles/globals.css'
 if (!import.meta.env.DEV) throw new Error('Isolated fixture requires development mode')
 const legacy = '# 原有内容\n\n原价 $5，折后 $3。\n下一行仍保留。\n\n保持普通段落\n---\n\n保留中文、[资料](https://example.org)和公式 $x^2$。\n\n- [ ] 核对资料\n\n```ts\nconst value = 2\n```\n\n```mermaid\ngraph LR\n A[观察] --> B[结论]\n```\n\n$$\nx^2+y^2=z^2\n$$\n\n文末段落'
 function Fixture() {
-  const [value,setValue]=useState(legacy),[document,setDocument]=useState<ContentDocument|null>(null),[key,setKey]=useState(0),[preview,setPreview]=useState(false)
+  const format=new URLSearchParams(location.search).get('format')==='markdown'?'markdown':'forum'
+  const [value,setValue]=useState(format==='markdown'?'literal <em>sample</em>\n\n$5 and $3\n\nCase heading\n---':legacy),[document,setDocument]=useState<ContentDocument|null>(null),[key,setKey]=useState(0),[preview,setPreview]=useState(false)
   return <AppThemeProvider><main className="mx-auto max-w-3xl space-y-4 p-4"><h1>官方原生编辑器 · 隔离 UI 验收</h1>
-    <ContentEditor key={key} label="原生正文" value={value} document={document} onChange={(next,doc)=>{setValue(next);setDocument(doc)}}/>
+    <ContentEditor key={key} legacyFormat={format} label="原生正文" value={value} document={document} onChange={(next,doc)=>{setValue(next);setDocument(doc)}}/>
     <button type="button" onClick={()=>{localStorage.setItem('native-219',JSON.stringify({value,document}));setKey(key+1);setPreview(true)}}>保存并重新打开</button>
     {preview&&document&&<section aria-label="已保存文档"><ContentDocumentView document={document}/></section>}
   </main></AppThemeProvider>

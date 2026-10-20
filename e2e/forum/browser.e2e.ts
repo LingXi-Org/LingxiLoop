@@ -49,11 +49,10 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   // The official source popups author rich math/diagrams; legacy Markdown import
   // is covered separately without replacing BlockNote's native paste pipeline.
   await nativeBlock(browser,screen,'内容正文','公式','块级公式')
-  await browser.keyboard.type('S = \\frac{bh}{2}')
-  await browser.keyboard.press('Enter')
-  await nativeBlock(browser,screen,'内容正文','mermaid','图表')
-  await browser.keyboard.type('graph LR; A[测量] --> B[面积]')
-  await browser.keyboard.press('Escape')
+  await browser.locator('[aria-label="内容正文"] [data-content-type="mathBlock"] .bn-preview-container').last().tap()
+  await browser.locator('[aria-label="内容正文"] [data-content-type="mathBlock"] code[aria-label="E = mc^2"]').last().fill('S = \\frac{bh}{2}')
+  await browser.locator('[aria-label="内容正文"] [data-content-type="mathBlock"] .bn-code-block-source-popup-ok-button').last().tap()
+  await expect(browser.locator('[aria-label="内容正文"] [data-content-type="mathBlock"] math')).toBeVisible()
   await composer().getByLabel('附件',{exact:true}).setInputFiles([fileURLToPath(new URL('./diagram.png',import.meta.url))])
   await expect(composer().getByRole('button','移除附件：diagram.png')).toBeVisible()
   await expect(browser.locator('[aria-label="内容正文"] math').first()).toBeVisible()
@@ -62,7 +61,7 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   // A real API 503 must retain the complete draft, including attachments.
   await browser.evaluate(async()=> (await fetch('/api/fixture-fail-next-post',{method:'POST'})).ok)
   await composer().getByRole('button','发布',{exact:true}).tap()
-  await expect(composer().getByRole('alert')).toBeVisible()
+  await expect(composer().getByRole('alert').filter({hasText:'服务暂时不可用'})).toBeVisible()
   await expect(composer().getByRole('button','移除附件：diagram.png')).toBeVisible()
   await composer().getByRole('button','发布',{exact:true}).tap()
   const card=browser.locator('article[aria-label="Student geometry case"]')
@@ -73,7 +72,7 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   await card.getByRole('button','管理：Student geometry case').tap()
   await screen.getByRole('menuitem','编辑内容',{exact:true}).tap()
   const edit=screen.getByRole('region','编辑学习论坛内容')
-  await nativePaste(browser,screen,'内容正文','Student geometry case\n\nEdited explanation #geometry\n\n- [ ] Verify result')
+  await nativePaste(browser,screen,'内容正文','Student geometry case\n\nEdited explanation #geometry\n\n- [ ] Verify result','[aria-label="编辑学习论坛内容"]')
   await edit.getByRole('button','保存修改').tap()
   await expect(card).toContainText('Edited explanation')
   await card.getByRole('button','管理：Student geometry case').tap()

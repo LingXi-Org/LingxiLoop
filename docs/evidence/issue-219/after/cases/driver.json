@@ -10,8 +10,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-20T03:19:13.406Z",
-      "finishedAt": "2026-10-20T03:19:14.312Z",
+      "startedAt": "2026-10-20T04:01:17.423Z",
+      "finishedAt": "2026-10-20T04:01:18.707Z",
       "exitCode": 0
     },
     {
@@ -21,8 +21,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-20T03:19:14.312Z",
-      "finishedAt": "2026-10-20T03:19:14.964Z",
+      "startedAt": "2026-10-20T04:01:18.707Z",
+      "finishedAt": "2026-10-20T04:01:20.257Z",
       "exitCode": 0
     },
     {
@@ -33,8 +33,8 @@
         "--config",
         "e2e.cases.config.ts"
       ],
-      "startedAt": "2026-10-20T03:19:22.580Z",
-      "finishedAt": "2026-10-20T03:21:08.035Z",
+      "startedAt": "2026-10-20T04:01:33.677Z",
+      "finishedAt": "2026-10-20T04:04:14.951Z",
       "exitCode": 0
     }
   ],
