@@ -117,6 +117,12 @@ inventory before any new Web deployment. Old Web remains online.
 The migrator owns its advisory lock, transaction, checksum ledger and the new
 table's 5-second lock timeout. Migration49 adds an empty preference table and
 foreign keys; it does not rewrite shared history, membership or native state.
+The existing public migrator also upserts the fixed education plan, entitlement
+definitions and plan-entitlement values after migrations. Those definitions and
+the seed implementation are unchanged from the accepted product48 source; this
+is not a claim that the entire command performs no other writes. It does not
+reassign companies to another plan. Preserve this public entrypoint behavior
+instead of bypassing it with a private SQL runner.
 The existing skill's snapshot/restore and all-writer shutdown requirement for a
 native schema upgrade does not apply to this additive product-only transition.
 No additional backup/restore, browser or provider acceptance suite is introduced.
