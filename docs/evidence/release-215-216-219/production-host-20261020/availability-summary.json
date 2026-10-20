@@ -1,0 +1,30 @@
+{
+  "samples": 583,
+  "failedSamples": 36,
+  "lastGoodBefore": {
+    "at": "2026-10-20T14:16:30.321Z",
+    "status": 200,
+    "ok": true,
+    "elapsedMs": 488
+  },
+  "firstFailed": {
+    "at": "2026-10-20T14:16:35.811Z",
+    "status": 504,
+    "ok": false,
+    "elapsedMs": 1307
+  },
+  "lastFailed": {
+    "at": "2026-10-20T14:19:50.238Z",
+    "status": 502,
+    "ok": false,
+    "elapsedMs": 302
+  },
+  "firstGoodAfter": {
+    "at": "2026-10-20T14:19:55.543Z",
+    "status": 200,
+    "ok": true,
+    "elapsedMs": 358
+  },
+  "firstFailureToRecoverySeconds": 199.732,
+  "scope": "Public readiness samples; not authenticated conversation or Worker availability."
+}
