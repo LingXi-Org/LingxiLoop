@@ -76,11 +76,11 @@ for (const outcome of ['complete','cancelled','revoked','unsafe'] as const) test
       } finally { await reader.cancel(); reader.releaseLock() }
     })()
     running = worker.runNext()
-    await firstDelta
+    await Promise.race([firstDelta,running.then(() => { throw new Error('Worker returned before its first public prefix') })])
     const page = await api.readEvents(identity)
     assert.ok(page.events.some(event => event.kind === 'public.text.delta'),'the prefix must commit before driver/tool completion')
     assert.equal(page.events.some(event => event.kind === 'tool.started'),false)
-    await visible
+    await Promise.race([visible,running.then(() => { throw new Error('Worker returned before the public prefix reached SSE') })])
     const beforeTool = (await readRunProjection(api,identity,true)).snapshot.message
     assert.equal(nativeText(beforeTool),'','public commentary cannot masquerade as a validated answer')
     const published = beforeTool.content.filter(part => activityAnnotation(part)?.kind === 'commentary')
