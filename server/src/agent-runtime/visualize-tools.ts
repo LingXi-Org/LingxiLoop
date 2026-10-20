@@ -6,6 +6,7 @@ import { nativeTool, authorizeAudienceRead, compareResource } from '../agents/to
 import { productConversationId } from './identity.js'
 import { readAuthorizedVisualizeDocument, saveVisualizeDocument, validateVisualizeFragment } from '../im/visualize.js'
 import { HttpError } from '../http/errors.js'
+import { NumericChartError, numericChartSchema, renderNumericChart } from '../im/visualize-numeric.js'
 import { readVisualizeReference } from './visualize-skill.js'
 import { renderVisualizeStandalone } from './visualize-export.js'
 import { visualizeReferences } from './visualize-projection.js'
@@ -47,6 +48,34 @@ export const visualizeTools: ToolDefinition[] = [
       const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path })
       const hash = (html: string) => createHash('sha256').update(html).digest('hex')
       return compareResource(`visualize:${saved.path}`, { sha256: hash(input.html) }, { sha256: hash(document.html) })
+    },
+  }),
+  nativeTool('visualize.chart', z.object({ name, chart: numericChartSchema }).strict(), {
+    description: 'Create and save a bounded static numeric chart from supplied data, without authoring HTML or expressions. Use linear for intercept+slope*x comparisons with an explicit lower/higher preference and common units; use trend for ordered observations and optional differences between named base series. Plots, tables, intersections and decisions use the same unrounded calculations. Up to 6 base series, 60 periods or 12 comparison samples; unique labels and finite inputs within +/-1e12, computed magnitudes <=1e15. Percent changes need a positive previous value. Return the actual saved reference, read back with visualize.read, and use the returned calculations in prose. This does not establish that the supplied data or model interpretation is correct. Other visualizations can still use visualize.save.',
+    effect: 'transaction', approval: false, authorize,
+    async execute(context, input) {
+      context.signal.throwIfAborted()
+      let rendered: ReturnType<typeof renderNumericChart>
+      try { rendered = renderNumericChart(input.chart, context.signal) }
+      catch (error) {
+        if (!(error instanceof NumericChartError) && !(error instanceof z.ZodError)) throw error
+        return { ok: false, code: 'invalid_arguments', executionState: 'no_effect',
+          error: 'Numeric chart requires distinct labels/samples, matching series lengths and existing base-series references. Check the domain, common units, finite inputs and computed magnitude bounds. No document was saved.' }
+      }
+      validateVisualizeFragment(input.name, rendered.html)
+      context.signal.throwIfAborted()
+      const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
+        name: input.name, html: rendered.html, database: context.database as Queryable })
+      return { ok: true, value: { path: document.path, reference: `::visualize${JSON.stringify({ path: document.path })}`,
+        bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex'), summary: rendered.summary } }
+    },
+    async verify(context, input, value) {
+      await authorize(context)
+      const saved = z.object({ path }).passthrough().parse(value)
+      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path })
+      const expected = renderNumericChart(input.chart, context.signal).html
+      const hash = (html: string) => createHash('sha256').update(html).digest('hex')
+      return compareResource(`visualize:${saved.path}`, { sha256: hash(expected) }, { sha256: hash(document.html) })
     },
   }),
   nativeTool('visualize.read', z.object({ path }).strict(), {
