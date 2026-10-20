@@ -1,0 +1,36 @@
+{
+  "head": "ebe818fe9f702199382aa998995da24b55e4b356",
+  "scope": "official E2E/actual product component and SDK; controlled API delayed ACK and explicit scope transition; not real provider or full login journey",
+  "expectedComments": 0,
+  "evidence": {
+    "document": {
+      "id": "fixture-frame",
+      "canvasId": "fixture-canvas",
+      "type": "markdown",
+      "title": "共同笔记",
+      "content": "# 旧卡片\n\n需要一起保留的内容。",
+      "x": 80,
+      "y": 80,
+      "width": 560,
+      "height": 440,
+      "data": {},
+      "revision": 1,
+      "createdBy": "teacher",
+      "updatedBy": "teacher",
+      "createdAt": "2026-10-20T00:56:08.785Z",
+      "updatedAt": "2026-10-20T00:56:08.785Z"
+    },
+    "patches": [],
+    "feedback": [
+      "引用画布卡片「共同笔记」（fixture-frame，第 1 版）：\n# 旧卡片\n\n需要一起保留的内容。\n\n用户反馈：请只在当前画布解释引用"
+    ],
+    "comments": [
+      {
+        "body": "引用画布卡片「共同笔记」（fixture-frame，第 1 版）：\n# 旧卡片\n\n需要一起保留的内容。\n\n用户反馈：请只在当前画布解释引用",
+        "frameId": "fixture-frame",
+        "canvasId": "destination-canvas"
+      }
+    ],
+    "finishedPatches": 0
+  }
+}

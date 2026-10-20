@@ -108,7 +108,10 @@ async function addCanvasComment(input: {
   companyId: string; actorId: string; actorKind: CanvasActorKind; canvasId?: string; projectId?: string; frameId?: string | null; body: string
 }): Promise<CanvasComment> {
   const canvas = await resolveCanvas(input.companyId, input.actorId, input.canvasId, input.projectId)
-  if (input.frameId) await requireFrame(input.companyId, input.frameId)
+  if (input.frameId) {
+    const frame = await requireFrame(input.companyId, input.frameId)
+    if (frame.canvasId !== canvas.id) throw Object.assign(new Error('canvas frame not found'), { status: 404 })
+  }
   const body = input.body.trim().slice(0, 8_000)
   if (!body) throw new Error('body is required')
   const id = `comment-${randomUUID()}`

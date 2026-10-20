@@ -38,14 +38,14 @@ export const canvasApi = {
     http<{ id: string; canvasId: string }>(`/canvas/frames/${encodeURIComponent(frameId)}`, { method: 'DELETE' }),
   setCanvasStatus: (status: string, frameId: string | null, canvasId: string, cursor?: { x: number; y: number }) =>
     http<CanvasPresence | null>('/canvas/status', { method: 'POST', body: JSON.stringify({ status, frameId, canvasId, cursorX: cursor?.x, cursorY: cursor?.y }) }),
-  addCanvasComment: (body: string, frameId: string | null, canvasId: string) =>
-    http<CanvasComment>('/canvas/comments', { method: 'POST', body: JSON.stringify({ body, frameId, canvasId }) }),
-  assignCanvasWork: (canvasId: string, agentId: string, assignment: string) =>
+  addCanvasComment: (body: string, frameId: string | null, canvasId: string, signal?: AbortSignal) =>
+    http<CanvasComment>('/canvas/comments', { method: 'POST', body: JSON.stringify({ body, frameId, canvasId }), signal }),
+  assignCanvasWork: (canvasId: string, agentId: string, assignment: string, signal?: AbortSignal) =>
     http<CanvasSnapshot>(`/canvases/${encodeURIComponent(canvasId)}/assignments`, {
-      method: 'POST', body: JSON.stringify({ agentId, assignment }),
+      method: 'POST', body: JSON.stringify({ agentId, assignment }), signal,
     }),
-  steerCanvasAssignment: (canvasId: string, agentId: string, text: string) =>
-    http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/assignments/${encodeURIComponent(agentId)}/steer`, { method: 'POST', body: JSON.stringify({ text }) }),
+  steerCanvasAssignment: (canvasId: string, agentId: string, text: string, signal?: AbortSignal) =>
+    http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/assignments/${encodeURIComponent(agentId)}/steer`, { method: 'POST', body: JSON.stringify({ text }), signal }),
   stopCanvasAssignment: (canvasId: string, agentId: string) =>
     http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/assignments/${encodeURIComponent(agentId)}/stop`, { method: 'POST' }),
   stopCanvas: (canvasId: string) => http<{ ok: boolean }>(`/canvases/${encodeURIComponent(canvasId)}/stop`, { method: 'POST' })

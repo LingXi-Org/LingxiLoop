@@ -1,0 +1,64 @@
+{
+  "createdAt": "2026-10-20T01:04:45.801187+00:00",
+  "baseline": "ebe818fe9f702199382aa998995da24b55e4b356",
+  "sourceIdentity": "source-sha256.json; final commit recorded in handoff to avoid self-referential hashes",
+  "environment": {
+    "node": "22.23.3",
+    "chromium": "154.0.8037.57",
+    "runtime": "3.5.5 exact published root dependency",
+    "browserEngine": "official tester-army/e2e 0.17.0 + @e2e-dev/web"
+  },
+  "results": {
+    "browserFinal": {
+      "pass": 8,
+      "fail": 0,
+      "skip": 0,
+      "scope": "2 feedback scope cases + original 6 product/SDK compatibility cases",
+      "seconds": 62.04
+    },
+    "httpIntegration": {
+      "pass": 2,
+      "fail": 0,
+      "skip": 0,
+      "scope": "new cross-canvas comment boundary + owning canvas-public-assignment; disposable real HTTP/PG/Redis",
+      "milliseconds": 18216.161522
+    },
+    "webOwning": {
+      "pass": 76,
+      "fail": 0,
+      "skip": 0
+    },
+    "serverOwning": {
+      "pass": 106,
+      "fail": 0,
+      "skip": 0
+    },
+    "lint": "passed; existing warnings only",
+    "serverLint": "passed",
+    "webTypecheck": "passed",
+    "serverTypecheck": "passed",
+    "e2eTypecheck": "passed; separate direct check covers new config before integration of wildcard",
+    "productionBuild": "passed; existing chunk/highlight warnings only"
+  },
+  "redEvidence": {
+    "browser": "browser-red.json/browser-red.log; one late comment crossed to destination-canvas after origin dialog unmount",
+    "http": "http-red.log; actual 201 instead of expected404"
+  },
+  "fix": "Captured user/company/project/canvas/frame and live dialog generation, synchronous cancellation, revalidation after each async boundary, captured destination for every write, server frame.canvasId equality check",
+  "fixtureDependency": {
+    "path": "e2e/canvas-app/serve.mjs",
+    "owner": "canvas_race_review parallel normal-append fix",
+    "sha256": "9e682126d182c9e42a99dbacb64a5961b5beb6303cb3f42d81d71fd979006b73",
+    "scope": "Only test-server parameters steerDelay/finishedSteers added alongside readDelay; used as private copy on port 5338 for these receipts. Product files are the source hashes in this directory.",
+    "commit": "0767aaaf70053798807319e0f7c89d4c909c6c4d"
+  },
+  "limits": [
+    "Synthetic browser API and explicit workspace-store transition are not a real login complete shell journey",
+    "HTTP session identity uses test helper; permissions/router/PostgreSQL are actual",
+    "Already accepted first request may complete after cancellation; this is not rollback or exactly-once",
+    "Existing steer/assign + comment two-step atomicity remains",
+    "No new production/schema/runtime changes; no live provider, long soak or production rollout in this subtask",
+    "New commit still needs independent review and exact combined-head CI by root"
+  ],
+  "originalArtifactsPreserved": true
+}

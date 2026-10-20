@@ -1,0 +1,7 @@
+{
+  "path": "e2e/canvas-app/serve.mjs",
+  "owner": "canvas_race_review parallel normal-append fix",
+  "sha256": "9e682126d182c9e42a99dbacb64a5961b5beb6303cb3f42d81d71fd979006b73",
+  "scope": "Only test-server parameters steerDelay/finishedSteers added alongside readDelay; used as private copy on port 5338 for these receipts. Product files are the source hashes in this directory.",
+  "commit": "0767aaaf70053798807319e0f7c89d4c909c6c4d"
+}
