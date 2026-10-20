@@ -1,0 +1,5 @@
+
+> lingxiloop@0.1.0-beta version:check
+> node scripts/sync-version.mjs --check
+
+Version contract passed: 0.1.0-beta.

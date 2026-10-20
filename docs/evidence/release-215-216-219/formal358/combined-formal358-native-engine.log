@@ -1,0 +1,16 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-integration-215-216-219
+      run 01a158c2-2b81-7897-a1af-a84026e99231 · targets: native
+
+ ✓ |native| e2e/content-boundaries/browser.e2e.ts (3 tests) 11.13s
+ ✓ |native| e2e/content-editor/browser.e2e.ts (4 tests) 25.50s
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  10:01:23
+   Duration  37.41s
+     Report  artifacts/combined-formal358-native/report.json
+
+      JUnit  artifacts/combined-formal358-native/junit.xml
+   Markdown  artifacts/combined-formal358-native/summary.md
+

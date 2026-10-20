@@ -1,0 +1,28 @@
+e2e.final-combination.config.ts:1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Sort these imports.
+  
+  > 1 │ import base from './e2e.config'
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 2 │ import type { E2EConfig } from 'e2e'
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    3 │ export default { ...base, projectId: 'lingxiloop-ui-release-combination', tests: ['e2e/web/**/*.e2e.ts', 'e2e/chat-213/**/*.e2e.ts'] } satisfies E2EConfig
+    4 │ 
+  
+  i Safe fix: Organize imports and exports (Biome)
+  
+    1   │ - import·base·from·'./e2e.config'
+    2   │ - import·type·{·E2EConfig·}·from·'e2e'
+      1 │ + import·type·{·E2EConfig·}·from·'e2e'
+      2 │ + import·base·from·'./e2e.config'
+    3 3 │   export default { ...base, projectId: 'lingxiloop-ui-release-combination', tests: ['e2e/web/**/*.e2e.ts', 'e2e/chat-213/**/*.e2e.ts'] } satisfies E2EConfig
+    4 4 │   
+  
+
+Checked 2 files in 6ms. No fixes applied.
+Found 1 error.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
