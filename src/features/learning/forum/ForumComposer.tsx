@@ -18,6 +18,7 @@ import { forumApi } from './api'
 import type { ForumItem } from './contracts'
 import { contentLinks, ForumContentFields } from './ForumContentFields'
 import { composerDraftSchema, emptyContent, useForumDraft } from './useForumDraft'
+import { markdownText } from '@/features/content-editor/document'
 
 export function ForumComposer({ space, item, onCreated, onCancel }: { space: LearningSpace; item?: ForumItem; onCreated(): void; onCancel?(): void }) {
   const [focus,setFocus]=useState(false)
@@ -65,19 +66,22 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     return ()=>{active=false}
   },[space.projectId])
   const disabled=busy||uploading
+  const bodyText=editorDocument?markdownText(body):body
   useEffect(()=>{onWorking(disabled);return()=>onWorking(false)},[disabled,onWorking])
   return <form className="forum-focus-form" onKeyDown={event=>{
-    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !event.nativeEvent.isComposing) {
+    if (!event.defaultPrevented && (event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'Enter' && !event.nativeEvent.isComposing
+      && event.target instanceof Element && event.target.closest('.bn-editor')) {
       event.preventDefault()
-      if (!disabled) event.currentTarget.requestSubmit()
+      const submit=event.currentTarget.querySelector<HTMLButtonElement>('button[type="submit"]')
+      if (!disabled && submit && !submit.disabled) event.currentTarget.requestSubmit(submit)
     }
   }} onSubmit={async event=>{
     event.preventDefault()
     if(disabled||!space.courseId) return
     setBusy(true);setError('')
     try {
-      const data={kind,title:title.trim() || body.trim().split('\n')[0].slice(0,200) || '附件讨论',body,editorDocument,
-        tags:[...new Set([...tags.split(/[,，]/),...Array.from(body.matchAll(/(?:^|\s)#([^\s#]+)/gu),match=>match[1])].map(value=>value.trim()).filter(Boolean))].slice(0,10),
+      const data={kind,title:title.trim() || bodyText.trim().split('\n')[0].slice(0,200) || '附件讨论',body,editorDocument,
+        tags:[...new Set([...tags.split(/[,，]/),...Array.from(bodyText.matchAll(/(?:^|\s)#([^\s#]+)/gu),match=>match[1])].map(value=>value.trim()).filter(Boolean))].slice(0,10),
         links:contentLinks(links),attachments,sourceId:sourceId==='none'?null:sourceId,dueAt:kind==='assignment'&&dueAt?new Date(dueAt).toISOString():null}
       if(item) await forumApi.update(space.courseId,item,data)
       else await forumApi.create(space.courseId,data)
@@ -86,7 +90,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     } catch(reason){setError(userFacingError(reason,'发布失败，输入与附件已保留，请重试。'))}
     finally{setBusy(false)}
   }}>
-    {!expanded&&<button type="button" onClick={onExpand} className="w-full truncate rounded-sm px-2 py-2 text-start text-sm text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring">{body.trim().split('\n')[0] || '发起讨论…'}</button>}
+    {!expanded&&<button type="button" onClick={onExpand} className="w-full truncate rounded-sm px-2 py-2 text-start text-sm text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring">{bodyText.trim().split('\n')[0] || '发起讨论…'}</button>}
     <div hidden={!expanded}>
     {kind==='assignment'&&<div hidden={!expanded} className="forum-focus-assignment space-y-2"><Label htmlFor={`forum-title-${item?.id ?? kind}`}>作业标题</Label><Input id={`forum-title-${item?.id ?? kind}`} value={title} onChange={e=>setDraft(previous=>({...previous,title:e.target.value}))} maxLength={200} required disabled={disabled}/></div>}
     <ForumContentFields focusCanvas compact={!expanded} onFocus={onExpand} body={body} editorDocument={draft.editorDocument} setBody={(body,editorDocument)=>setDraft(previous=>({...previous,body,editorDocument}))} links={links} setLinks={links=>setDraft(previous=>({...previous,links}))}
@@ -102,7 +106,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     {storageError&&<p role="status" className="forum-focus-status text-destructive">本地草稿保存失败，请复制内容后重试。</p>}
     <footer className="forum-focus-foot"><span className="me-auto text-xs text-muted-foreground">{storageError ? '草稿未保存' : '草稿自动保存'}</span>
       {item&&<Button type="button" variant="ghost" onClick={onCancel} disabled={disabled}>收起编辑</Button>}
-      <Button type="submit" disabled={disabled || (kind==='assignment'&&!title.trim()) || (!body.trim()&&!links.trim()&&!attachments.length)}>{uploading?'上传中…':busy?'发布中…':item?'保存修改':kind==='assignment'?'发布作业':'发布'}</Button>
+      <Button type="submit" title="Ctrl/⌘ + Shift + Enter" aria-keyshortcuts="Control+Shift+Enter Meta+Shift+Enter" disabled={disabled || (kind==='assignment'&&!title.trim()) || (!body.trim()&&!links.trim()&&!attachments.length)}>{uploading?'上传中…':busy?'发布中…':item?'保存修改':kind==='assignment'?'发布作业':'发布'}</Button>
     </footer>
     </div>
     </div>

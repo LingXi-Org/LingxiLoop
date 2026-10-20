@@ -53,6 +53,8 @@ const app = express()
 
 // #219 only: deterministic authoring/review fixtures; no live model claim.
 if (process.env.FORUM_ISSUE219 === '1') {
+  await pool.query("UPDATE participants SET preset_key='nova' WHERE id='forum-evidence-agent'")
+  await pool.query("UPDATE conversations SET members=members || '[\"forum-evidence-agent\"]'::jsonb WHERE id=(SELECT study_room_conversation_id FROM courses WHERE id='e2e-course') AND NOT members ? 'forum-evidence-agent'")
   const { HomeworkApplication } = await import('../../server/src/modules/learning/homework-application')
   const { withTransaction } = await import('../../server/src/db/transaction')
   const homework = new HomeworkApplication(pool, work => withTransaction(pool, work))
@@ -64,6 +66,28 @@ if (process.env.FORUM_ISSUE219 === '1') {
   })
   app.post('/api/fixture-native-homework/:id/ready',async(req,res)=>{
     await pool.query("UPDATE homeworks SET validation_status='READY',validated_revision=revision WHERE company_id='e2e-school' AND id=$1 AND status='DRAFT'",[req.params.id])
+    res.sendStatus(200)
+  })
+  app.post('/api/fixture-native-homework/:id/evidence',async(req,res)=>{
+    const thread=await homework.start({companyId:'e2e-school',userId:'forum-student'},'e2e-course',req.params.id)
+    for(const role of ['user','assistant'] as const) {
+      const id=`native-219-${role}-${im.messages.length+1}`
+      im.messages.push({channelId:thread.channelId,channelType:2,messageId:id,clientMsgNo:id,messageSeq:im.messages.length+1,
+        fromUid:role==='user'?'forum-student':thread.agentId,timestamp:Date.now()/1000,
+        payload:createNativeMessage({id,role,content:[{type:'text',text:role==='user'?'Issue219 学习记录：我用两个三角形解释面积的一半。':'请再解释一个不同的底和高。'}]})})
+    }
+    res.json(thread)
+  })
+  // Recorded loopback provider: malformed judgment deliberately exercises the
+  // production unverified-report fallback. No live model or mastery claim.
+  const OpenAI=(await import('openai')).default
+  const {__setLlmClientOverrideForTesting}=await import('../../server/src/llm')
+  __setLlmClientOverrideForTesting(()=>new OpenAI({apiKey:'isolated-native-fixture',baseURL:'http://127.0.0.1:53097/api/fixture-model/v1'}))
+  app.post('/api/fixture-model/v1/chat/completions',express.json(),(_req,res)=>res.json({id:'native-219-recorded',model:'recorded-fixture',
+    choices:[{index:0,finish_reason:'stop',message:{role:'assistant',content:'{"recorded":"unverified"}'}}],usage:{prompt_tokens:1,completion_tokens:1,total_tokens:2}}))
+  app.post('/api/fixture-native-effects',async(_req,res)=>{
+    const {runLearningEffects}=await import('../../server/src/modules/learning/worker')
+    await runLearningEffects()
     res.sendStatus(200)
   })
 }

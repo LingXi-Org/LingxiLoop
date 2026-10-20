@@ -3,6 +3,18 @@ import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
 import { visit } from 'unist-util-visit'
 import type { ContentBlock as Block } from './schema'
+import type { Nodes } from 'mdast'
+
+/** UI labels and hashtag extraction use text, never Markdown serialization syntax. */
+export function markdownText(markdown: string): string {
+  const plain = (node: Nodes): string => {
+    if ('value' in node) return node.value
+    if ('alt' in node) return node.alt ?? ''
+    if ('children' in node) return node.children.map(plain).join(['root','list','table','tableRow'].includes(node.type) ? '\n' : '')
+    return ''
+  }
+  return plain(fromMarkdown(markdown, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] }))
+}
 
 /** Markdown remains the search/export/legacy-reader projection; blocks are canonical. */
 export interface ContentDocument {

@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { ArrowLeft, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { usableDocument } from '@/features/content-editor/document'
+import { markdownText, usableDocument } from '@/features/content-editor/document'
 import { ContentEditor, ContentDocumentView } from '@/features/content-editor'
 import { useAuth } from '@/stores/auth'
 import { userFacingError } from '@/lib/userFacingError'
@@ -185,7 +185,7 @@ export function CasesPage() {
         <div className="mt-6 flex flex-wrap gap-3 border-t pt-3 text-xs text-muted-foreground">{article.tags.map(tag => <span key={tag}>#{tag}</span>)}</div>
       </article> : !id ? <div className="divide-y">{list.items.map(item => <article key={item.id} className="min-w-0">
         <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="group flex items-start gap-4 rounded-sm py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-          <div className="min-w-0 flex-1"><h2 className="break-words text-base font-semibold leading-6 group-hover:text-primary">{item.title}</h2><p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{item.summary}</p><div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground"><span>{item.category || '未分类'}</span>{list.canManage && <span>· {statusLabels[item.status]}</span>}{item.tags.slice(0,3).map(tag=><span key={tag}>#{tag}</span>)}</div></div>
+          <div className="min-w-0 flex-1"><h2 className="break-words text-base font-semibold leading-6 group-hover:text-primary">{item.title}</h2><p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{markdownText(item.summary)}</p><div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground"><span>{item.category || '未分类'}</span>{list.canManage && <span>· {statusLabels[item.status]}</span>}{item.tags.slice(0,3).map(tag=><span key={tag}>#{tag}</span>)}</div></div>
           {item.cover && <img src={item.cover} alt="" loading="lazy" className="h-20 w-24 shrink-0 rounded-md object-cover sm:w-32"/>}
         </a>
       </article>)}

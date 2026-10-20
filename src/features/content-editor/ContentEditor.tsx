@@ -61,7 +61,8 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
       if (ids.length) editor.removeBlocks(ids)
     },
   }), [editor])
-  return <div data-content-editor className={`content-editor ${compact ? 'content-editor-compact' : ''}`} onFocusCapture={onFocus}>
+  return <div data-content-editor className={`content-editor ${compact ? 'content-editor-compact' : ''}`} onFocusCapture={onFocus}
+    onSubmit={event => event.stopPropagation()}>
     <NativeView editor={editor} editable={!disabled} theme={resolvedTheme === 'dark' ? 'dark' : 'light'} onChange={() => {
       if (syncing.current) return
       const markdown = editor.blocksToMarkdownLossy()

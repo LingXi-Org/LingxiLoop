@@ -1,6 +1,6 @@
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
-import { nativeBlock } from './native'
+import { nativeBlock, nativeLink } from './native'
 test('upstream native schema, slash menus, tables, blocks, undo and lossless reopen',async({app,browser,screen})=>{
   await app.open('/e2e/content-editor.html')
   const editor=()=>screen.getByLabel('原生正文',{exact:true})
@@ -62,4 +62,52 @@ test('all 14 default blocks and official free math and diagram blocks remain ins
   await screen.getByRole('button','保存并重新打开',{exact:true}).tap()
   expect(await browser.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('native-219')!).document.blocks))).toContain('"bold":true')
   await app.screenshot('default-native-controls')
+})
+
+test('native formatting, links, emoji, block menu and table operations remain complete',async({app,browser,screen})=>{
+  await app.open('/e2e/content-editor.html')
+  const editor=()=>screen.getByLabel('原生正文',{exact:true})
+  await expect(editor()).toBeVisible({timeout:120000})
+  await editor().fill('原生格式')
+  await browser.keyboard.press('Control+a')
+  for(const label of ['加粗','斜体','下划线','删除线']) await screen.getByRole('button',label,{exact:true}).tap()
+  await screen.getByRole('button','颜色',{exact:true}).tap()
+  await browser.locator('[data-test="text-color-red"]').tap()
+  await screen.getByRole('button','居中',{exact:true}).tap()
+  await screen.getByRole('button','保存并重新打开',{exact:true}).tap()
+  const styled=await browser.evaluate(()=>JSON.parse(localStorage.getItem('native-219')!).document.blocks[0])
+  expect(styled.props.textAlignment).toBe('center')
+  for(const style of ['bold','italic','underline','strike']) expect(styled.content[0].styles[style]).toBe(true)
+  expect(styled.content[0].styles.textColor).toBe('red')
+  // Native code intentionally excludes formatting marks; test it separately.
+  await editor().focus()
+  await browser.keyboard.press('Control+a')
+  await browser.keyboard.press('Control+e')
+  await screen.getByRole('button','保存并重新打开',{exact:true}).tap()
+  expect(await browser.evaluate(()=>JSON.parse(localStorage.getItem('native-219')!).document.blocks[0].content[0].styles.code)).toBe(true)
+  await nativeLink(browser,screen,'原生正文','https://example.org/native-219')
+  await expect(browser.locator('[aria-label="原生正文"] a[href="https://example.org/native-219"]')).toBeVisible()
+  await nativeBlock(browser,screen,'原生正文','emoji','表情符号')
+  await expect(screen.getByRole('grid')).toBeVisible()
+  await screen.getByRole('grid').getByRole('option').first().tap()
+  await browser.locator('[aria-label="原生正文"] [data-content-type="paragraph"]').first().hover()
+  await screen.getByRole('button','打开菜单',{exact:true}).tap()
+  await expect(screen.getByRole('menuitem','删除',{exact:true})).toBeVisible()
+  await expect(screen.getByRole('menuitem','颜色',{exact:true})).toBeVisible()
+  await app.screenshot('native-block-menu')
+  await browser.keyboard.press('Escape')
+  await nativeBlock(browser,screen,'原生正文','table','表格')
+  const dimensions=()=>browser.evaluate(()=>{
+    const table=document.querySelector<HTMLTableElement>('[aria-label="原生正文"] table')!
+    return {rows:table.rows.length,columns:table.rows[0].cells.length}
+  })
+  const before=await dimensions()
+  await browser.locator('[aria-label="原生正文"] table tr:first-child :is(th,td)').first().hover()
+  await browser.locator('[data-test="tableHandle"]').first().tap()
+  await screen.getByRole('menuitem',/右侧添加列|下方添加行/).tap()
+  const after=await dimensions()
+  expect(after.rows>before.rows||after.columns>before.columns).toBe(true)
+  await screen.getByRole('button','保存并重新打开',{exact:true}).tap()
+  expect(await browser.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('native-219')!).document.blocks))).toMatch(/\p{Extended_Pictographic}/u)
+  await app.screenshot('native-formatting-link-emoji-table')
 })

@@ -100,6 +100,8 @@ test('issue184 materials, body links, upload states, drafts and publish retry us
   await editor().focus()
   await browser.keyboard.press('Control+End')
   await nativeLink(browser,screen,'内容正文',bodyLink)
+  // Enter in the upstream link form must not submit the enclosing business form.
+  await expect(composer()).toHaveAttribute('data-forum-composer-expanded', 'true')
   await expect(editor()).toContainText(bodyLink)
   await expect(materials(3)).toBeVisible()
   await tray().getByRole('button', '插入正文：diagram.png', { exact: true }).tap()
@@ -148,7 +150,7 @@ test('issue184 materials, body links, upload states, drafts and publish retry us
   await expect(materials(2)).toBeVisible()
   await app.screenshot('issue184-publish-failed-preserves-draft')
   await editor().focus()
-  await browser.keyboard.press('Control+Enter')
+  await browser.keyboard.press('Control+Shift+Enter')
   await expect(browser.locator('article[aria-label="Issue184 材料与草稿"]')).toBeVisible()
   const post = await savedPost(browser, 'Issue184 材料与草稿')
   expect(post?.links).toEqual([materialLink])
@@ -204,16 +206,16 @@ test('issue184 responsive focus canvas: compact, editor, closed/open materials, 
         const publish = section.querySelector('button[type="submit"]')!
         const rects = [editor, material, extras, publish].map(node => node.getBoundingClientRect())
         const bounds = section.getBoundingClientRect()
-        const controls = [...section.querySelectorAll('button,input,summary')].filter(node => node.getClientRects().length && !node.classList.contains('sr-only'))
+        const controls = [...section.querySelectorAll('button,input,summary')].filter(node => node.checkVisibility({ visibilityProperty: true, opacityProperty: true }) && !node.classList.contains('sr-only'))
         return { ordered: rects.every((rect, index) => index === 0 || rect.top >= rects[index - 1].bottom - 1),
           overflow: document.documentElement.scrollWidth > innerWidth,
-          outside: controls.filter(node => { const rect = node.getBoundingClientRect(); return rect.left < bounds.left - 1 || rect.right > bounds.right + 1 }).length,
+          outside: controls.filter(node => { const rect = node.getBoundingClientRect(); return rect.left < bounds.left - 1 || rect.right > bounds.right + 1 }).map(node => ({ label: node.getAttribute('aria-label') ?? node.textContent, rect: node.getBoundingClientRect().toJSON() })),
           surface: getComputedStyle(section).backgroundColor, expectedSurface: getComputedStyle(document.querySelector('[data-ui-page="forum"]')!).backgroundColor, material: getComputedStyle(material).backgroundColor,
           primary: getComputedStyle(publish).backgroundColor, bodyHeight: editor.clientHeight }
       })
       expect(geometry.ordered).toBe(true)
       expect(geometry.overflow).toBe(false)
-      expect(geometry.outside).toBe(0)
+      expect(geometry.outside).toEqual([])
       expect(geometry.surface).not.toBe('rgba(0, 0, 0, 0)')
       expect(geometry.primary).not.toBe(geometry.surface)
       await expect(screen.getByText('/ 课程讨论', { exact: true })).toHaveCount(0)

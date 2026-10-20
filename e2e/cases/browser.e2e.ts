@@ -1,9 +1,31 @@
-import { nativeHeading, nativeUpload } from '../content-editor/native'
+import { nativeHeading, nativeUpload, nativePaste } from '../content-editor/native'
 import { fileURLToPath } from 'node:url'
 import { test } from '@e2e-dev/web'
 import { expect, type JsonValue } from 'e2e'
 
 type CaseResponse = { id: string; version: number; body: string }
+
+test('case loading, retry and empty filters retain reachable controls',async({app,browser,screen})=>{
+  await app.open('/')
+  await browser.evaluate(async()=>{await fetch('/api/fixture-role/student');await fetch('/api/fixture-case-list/hold',{method:'POST'});return true})
+  await app.open('/cases?project=cases-classroom&view=cases')
+  await expect(screen.getByRole('status')).toContainText('正在加载案例')
+  await app.screenshot('cases-loading')
+  await browser.evaluate(async()=>(await fetch('/api/fixture-case-list/pass',{method:'POST'})).ok)
+  await expect(screen.getByRole('status')).toHaveCount(0)
+  await browser.evaluate(async()=>(await fetch('/api/fixture-case-list/fail',{method:'POST'})).ok)
+  await screen.getByLabel('关键词搜索').fill('不可用状态')
+  await expect(screen.getByRole('alert')).toBeVisible()
+  await app.screenshot('cases-retry')
+  await screen.getByRole('button','重新加载',{exact:true}).tap()
+  await expect(screen.getByRole('alert')).toHaveCount(0)
+  await expect(screen.getByRole('heading','没有找到匹配的案例',{exact:true})).toBeVisible()
+  await browser.setViewport({width:390,height:900})
+  expect(await browser.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+  await app.screenshot('cases-empty-mobile')
+  await screen.getByRole('button','清除筛选',{exact:true}).tap()
+  await expect(screen.getByLabel('关键词搜索')).toHaveValue('')
+})
 
 test('organization case publication, cross-course access, isolation and responsive navigation', async ({ app, browser, screen }) => {
   await app.open('/')
@@ -149,7 +171,7 @@ test('teacher authors and publishes cover and body images through the UI',async(
   await app.open('/cases?project=cases-classroom&view=cases')
   await screen.getByRole('button','新建案例',{exact:true}).tap()
   await screen.getByLabel('标题',{exact:true}).fill('教师图文创作验收')
-  await screen.getByLabel('摘要',{exact:true}).fill('通过真实图片上传与发布')
+  await nativePaste(browser,screen,'摘要','**通过真实图片上传与发布**')
   await screen.getByLabel('分类',{exact:true}).fill('设计实践')
   await screen.getByLabel('标签（逗号分隔）').fill('设计,协作')
   await nativeHeading(browser,screen,'正文','从观察到设计','这篇图文案例由教师主动编写。')
@@ -179,4 +201,7 @@ test('teacher authors and publishes cover and body images through the UI',async(
   await expect(screen.getByRole('status').first()).toContainText('草稿已保存')
   const reopened=await browser.evaluate(async id=>(await fetch(`/api/cases/${id}`,{headers:{'x-company-id':'cases-school'}}).then(r=>r.json())).editorDocument,saved.id)
   expect(reopened).toEqual(saved.document)
+  await screen.getByRole('button','返回案例库',{exact:true}).tap()
+  await expect(screen.getByText('通过真实图片上传与发布',{exact:true})).toBeVisible()
+  await expect(screen.getByText('**通过真实图片上传与发布**',{exact:true})).toHaveCount(0)
 })
