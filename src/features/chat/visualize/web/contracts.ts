@@ -11,9 +11,9 @@ export interface PluginSandboxPlatformPort {
   copyImage(input: { sandboxId: string; initId: string; viewportSize: {width: number; height: number}; captureRect: {x: number; y: number; width: number; height: number} }): Promise<void>
 }
 export interface IGenUiService {
-  readDocument(target: GenUiStateTarget): Promise<GenUiDocument>
-  prepareSandbox(input: GenUiStateTarget & { html: string; instanceKey: string; ownerWebContentsId: number }): Promise<PluginSandboxHandle>
-  getState(target: GenUiStateTarget): Promise<GenUiWidgetState | null>
+  readDocument(target: GenUiStateTarget, signal?: AbortSignal): Promise<GenUiDocument>
+  prepareSandbox(input: GenUiStateTarget & { html: string; instanceKey: string; ownerWebContentsId: number }, signal?: AbortSignal): Promise<PluginSandboxHandle>
+  getState(target: GenUiStateTarget, signal?: AbortSignal): Promise<GenUiWidgetState | null>
   setState(input: {target: GenUiStateTarget; state: GenUiWidgetState}): Promise<void>
   onStateChanged(listener: (change: GenUiStateChange) => void): {dispose(): void}
   validate(): Promise<void>

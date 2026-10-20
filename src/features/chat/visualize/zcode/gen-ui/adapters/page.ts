@@ -53,7 +53,9 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
   let handle: PluginSandboxHandle | null = null;
   let bridge: AppBridge | null = null;
   let stopState: { dispose(): void } | null = null;
-  let handshake: ReturnType<typeof setTimeout> | undefined;
+  const initialization = new AbortController();
+  let initializationStage = "读取文档";
+  let initializationTimer: ReturnType<typeof setTimeout> | undefined;
   let saves: Promise<void> = Promise.resolve();
   let operations = 0;
   let preparing = true;
@@ -63,8 +65,17 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
       for (const listener of listeners) listener();
     }
   };
-  const fail = (error: unknown) =>
+  const fail = (error: unknown) => {
+    if (disposed || snapshot.phase === "error") return;
+    clearTimeout(initializationTimer);
+    initialization.abort(error);
     update({ phase: "error", error: error instanceof Error ? error.message : String(error) });
+    plane.unmount();
+    void bridge?.close();
+    if (handle) void platform.disposeSandbox(handle.sandboxId, handle.initId);
+    preparing = false;
+    input.onSettled?.();
+  };
   const plane = createPluginUiPagePlane({
     onVisibility: (value) => {
       visible = value;
@@ -111,7 +122,7 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
     }
   };
   const offPorts = platform.onPorts((event) => {
-    if (disposed || event.sandboxId !== handle?.sandboxId || event.initId !== handle.initId) return;
+    if (disposed || initialization.signal.aborted || event.sandboxId !== handle?.sandboxId || event.initId !== handle.initId) return;
     void bridge?.close();
     // SDK 持有上一份上下文用于差异比较，不能与可写投影共享同一对象。
     const active = new AppBridge(
@@ -123,7 +134,8 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
     bridge = active;
     active.onerror = fail;
     active.oninitialized = () => {
-      clearTimeout(handshake);
+      if (disposed || initialization.signal.aborted || bridge !== active) return;
+      clearTimeout(initializationTimer);
       update({ phase: "ready" });
       pushContext();
     };
@@ -236,9 +248,6 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
         return {};
       },
     );
-    clearTimeout(handshake);
-    // 超时只报告握手失败，不参与同步或恢复。
-    handshake = setTimeout(() => fail(new Error("Gen UI handshake timed out")), 15_000);
     void active.connect(createPluginUiMessagePortTransport(event.port)).catch(fail);
   });
   const themes = new MutationObserver(() => {
@@ -250,10 +259,16 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
     attributes: true,
     attributeFilter: ["class", "style", "data-theme"],
   });
-  const preparation = (async () => {
-    const document = await input.files.readDocument(stateTarget);
+  // One budget covers preparation and SDK initialization. A failed attempt
+  // cannot become ready later; retry creates a new controller and capability.
+  initializationTimer = setTimeout(
+    () => fail(new Error(`交互视图${initializationStage}超时，请重试。`)),
+    15_000,
+  );
+  void (async () => {
+    const document = await input.files.readDocument(stateTarget, initialization.signal);
     stateTarget = { ...stateTarget, path: document.path };
-    if (disposed) return;
+    if (disposed || initialization.signal.aborted) return;
     let stateRevision = 0;
     stopState = input.state.onStateChanged((change) => {
       if (buildGenUiStateKey(change.target) === buildGenUiStateKey(stateTarget)) {
@@ -262,22 +277,27 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
         pushContext();
       }
     });
+    initializationStage = "准备运行资源";
+    const ownerWebContentsId = await platform.getOwnerWebContentsId();
+    if (disposed || initialization.signal.aborted) return;
     const prepared = await input.state.prepareSandbox({
       ...stateTarget,
       html: document.html,
       instanceKey: target.instanceKey,
-      ownerWebContentsId: await platform.getOwnerWebContentsId(),
-    });
-    if (disposed) {
+      ownerWebContentsId,
+    }, initialization.signal);
+    if (disposed || initialization.signal.aborted) {
       await platform.disposeSandbox(prepared.sandboxId, prepared.initId);
       return;
     }
     handle = prepared;
     // 登记 HTML 含状态快照；随后读取最新状态，且不以迟到查询覆盖期间已收到的通知。
     const revision = stateRevision;
-    const latest = await input.state.getState(stateTarget);
+    initializationStage = "读取最新状态";
+    const latest = await input.state.getState(stateTarget, initialization.signal);
     if (revision === stateRevision) context[GEN_UI_STATE_CONTEXT_KEY] = latest;
-    if (disposed) return;
+    if (disposed || initialization.signal.aborted) return;
+    initializationStage = "初始化";
     plane.mount(prepared);
   })()
     .catch(fail)
@@ -353,20 +373,17 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
     },
     isBusy: () => preparing || sending || operations > 0,
     async dispose() {
+      if (disposed) return;
       disposed = true;
-      clearTimeout(handshake);
+      clearTimeout(initializationTimer);
+      initialization.abort(new Error("Interactive view closed"));
       offPorts();
       stopState?.dispose();
       themes.disconnect();
-      plane.prepareUnmount();
+      plane.dispose();
       await bridge?.close();
-      await preparation;
       listeners.clear();
-      try {
-        if (handle) await platform.disposeSandbox(handle.sandboxId, handle.initId);
-      } finally {
-        plane.dispose();
-      }
+      if (handle) await platform.disposeSandbox(handle.sandboxId, handle.initId);
     },
   };
 }

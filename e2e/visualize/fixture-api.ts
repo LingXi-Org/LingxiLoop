@@ -10,14 +10,17 @@ export function visualizeFixtureApi(): Plugin {
   const pages=new Map<string,Page>(),states=new Map<string,unknown>(),revisions=new Map<string,number>()
   const follows:string[]=[],external:string[]=[],denied:string[]=[]
   let failOnce=false,closedPages=0,externalHits=0,acceptedSaves=0
+  let fault=''
+  const held=new Set<()=>void>(),blocked:string[]=[],aborted:string[]=[]
   const stateKey=(page:Pick<Page,'channel'|'path'>)=>JSON.stringify([page.channel,page.path])
   return {name:'issue193-presentation-api',configureServer(server){
     server.middlewares.use(async(req,res,next)=>{
       const url=new URL(req.url??'/', 'http://127.0.0.1:5193')
       const reply=(value:unknown,status=200)=>{res.statusCode=status;res.setHeader('content-type','application/json');res.end(JSON.stringify(value))}
       if(url.pathname==='/__visualize_fixture/ready'){reply({},process.env.E2E_VISUALIZE_READY==='1'?200:503);return}
-      if(url.pathname==='/__visualize_fixture/evidence') {reply({follows,external,denied,externalHits,acceptedSaves,activePages:[...pages.values()].filter(page=>page.active).length,closedPages});return}
-      if(url.pathname==='/__visualize_fixture/reset') {pages.clear();states.clear();revisions.clear();follows.length=external.length=denied.length=0;closedPages=externalHits=acceptedSaves=0;failOnce=url.searchParams.get('failOnce')==='1';reply({});return}
+      if(url.pathname==='/__visualize_fixture/fault') {fault=url.searchParams.get('stage')??'';if(url.searchParams.has('release')){for(const release of held)release();held.clear()}reply({});return}
+      if(url.pathname==='/__visualize_fixture/evidence') {reply({follows,external,denied,externalHits,acceptedSaves,activePages:[...pages.values()].filter(page=>page.active).length,closedPages,blocked,aborted});return}
+      if(url.pathname==='/__visualize_fixture/reset') {fault='';for(const release of held)release();held.clear();blocked.length=aborted.length=0;pages.clear();states.clear();revisions.clear();follows.length=external.length=denied.length=0;closedPages=externalHits=acceptedSaves=0;failOnce=url.searchParams.get('failOnce')==='1';reply({});return}
       if(url.pathname==='/__visualize_fixture/invalidate') {for(const page of pages.values())if(page.active)page.stale=true;reply({});return}
       if(url.pathname==='/__visualize_fixture/external') {externalHits++;res.setHeader('content-type','text/plain');res.end('Local fictional visualization link');return}
       const match=/^\/api\/im\/channels\/([^/]+)\/visualize\/pages(?:\/([^/]+)(?:\/(.*))?)?$/.exec(url.pathname)
@@ -26,6 +29,16 @@ export function visualizeFixtureApi(): Plugin {
         const [,,id,action]=match,channel=match[1]
         const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk))
         const input=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):{}
+        const stage=!id&&req.method==='POST'?'create':req.method==='DELETE'?'delete':action
+        if(fault.split(',').includes(stage ?? '') && fault && req.method!=='PUT'){
+          blocked.push(stage!)
+          await new Promise<void>(resolve=>{
+            const release=()=>{held.delete(release);resolve()}
+            held.add(release)
+            res.on('close',()=>{if(!res.writableEnded)aborted.push(stage!);release()})
+          })
+          if(res.destroyed)return
+        }
         if(!id&&req.method==='POST'){
           if(failOnce){failOnce=false;reply({error:'Deterministic first acquisition failure'},503);return}
           const pageId=randomUUID(),initId=randomUUID(),page:Page={channel,path:input.path,initId,active:true,stale:false,gestures:new Set()};pages.set(pageId,page)
@@ -40,6 +53,7 @@ export function visualizeFixtureApi(): Plugin {
           const name=url.searchParams.get('name')??''
           const allowed=['visualize.css','visualize.html','calendar.js','gen-ui.js','vendor/d3-7.9.0.min.js','vendor/floating-ui-core-1.7.3.min.js','vendor/floating-ui-dom-1.7.4.min.js','vendor/lucide-1.17.0.js']
           if(!allowed.includes(name)){reply({},404);return}
+          if(fault.split(',').includes('handshake')&&name==='gen-ui.js'){res.setHeader('content-type','text/plain');res.end('/* fault fixture: runtime unavailable */');return}
           const file=name==='gen-ui.js'?'server/assets/visualize-runtime/gen-ui.js':path.join('third_party/zcode/skills/visualize/assets',name)
           const delay = Number(process.env.E2E_VISUALIZE_RESOURCE_DELAY ?? 0)
           if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay))

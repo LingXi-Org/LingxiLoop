@@ -1,0 +1,28 @@
+{
+  "phase": "error",
+  "elapsed": 16507.60000000149,
+  "phases": [
+    {
+      "phase": "loading",
+      "at": 722
+    },
+    {
+      "phase": "error",
+      "at": 15740.79999999702
+    }
+  ],
+  "input": "等待时仍可输入",
+  "transport": {
+    "follows": [],
+    "external": [],
+    "denied": [],
+    "externalHits": 0,
+    "acceptedSaves": 0,
+    "activePages": 1,
+    "closedPages": 0,
+    "blocked": [
+      "delete"
+    ],
+    "aborted": []
+  }
+}
