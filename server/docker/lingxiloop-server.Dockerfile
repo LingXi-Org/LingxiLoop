@@ -94,7 +94,7 @@ COPY server ./server
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
-COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/memoryActivity.ts ./src/lib/
+COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/memoryActivity.ts ./src/lib/
 COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
 COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
 COPY src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts ./src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts
@@ -108,6 +108,13 @@ COPY --from=spa-build /app/dist ./dist
 ENV NODE_ENV=production \
     LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \
     LINGXILOOP_COMMIT_SHA=${LINGXILOOP_COMMIT_SHA}
+
+# Check the final package, after every runtime COPY. The dependency-free helper
+# loads with native Node type stripping; Web/Worker use their production tsx
+# launcher and stop at the required-environment guard without credentials.
+# This is import/link coverage, not a DB-backed readiness or health check.
+RUN node --experimental-strip-types --input-type=module -e 'await import("./src/lib/participantDisplayName.ts")' \
+  && node server/scripts/check-packaged-startup.mjs
 
 # tini for PID-1 reaping. Default command runs the server; the
 # production Compose migration job overrides this with `npm run db:migrate`.
