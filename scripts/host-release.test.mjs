@@ -7,6 +7,11 @@ const migrations=Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(
 const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:hash,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations}
 const migration49={version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}
 const formal49={...formal,productVersion:49,migrations:[...migrations,migration49]}
+
+const formal50={...formal49,runtime:'3.6.0',schema:14,productVersion:50,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.6.0/fixture',migrations:[...formal49.migrations,{version:50,name:'native_skill_delivery',checksum:hash}]}
+function nativeBackup(){return {format:2,profile:'native13-product49',source:{sha,productVersion:49,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,formal49[k]])),migrations:formal49.migrations},attempt:'synthetic-native14',nonce:'0123456789abcdef',isolatedDatabase:'memory_verify_'+sha.slice(0,12)+'_0123456789abcdef',backupDir:'/var/lib/postgresql/data/memory-upgrade-backups/'+sha+'/synthetic-native14',migrationRehearsal:'not-performed',command:'synthetic-not-executable',commandHash:'c'.repeat(64)}}
+function backupReceipt(){return {...nativeBackup(),status:'Complete',success:true,updateId:'a'.repeat(24),dumpSha256:hash,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}
+
 const image={indexDigest:digest,configDigest:'sha256:'+'d'.repeat(64),manifestDigest:'sha256:'+'e'.repeat(64),diffIds:[digest],auditSha256:hash}
 const source={sha,...formal,image},target={...source,sha:next}
 const apps=['lingxiloop-app-a','lingxiloop-app-b'],core='lingxiloop-core-state'
@@ -15,17 +20,18 @@ const targetRef={commit:next,branch:'release/target',sha256:'d'.repeat(64),autoP
 const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:hash,qualification:{commit:next,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/123'},stacks:[...apps,core].map((stack,i)=>({stack,server:i===1?'shanghai-b':'shanghai-a',source:sourceRef,target:i===2?sourceRef:targetRef,...(i!==2?{preparation:{commit:next,sha256:'e'.repeat(64)}}:{})}))})
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
- const releasePlan=sealHostPlan({...plan,...(fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
-  source:{...source,...(fault.product49?formal49:formal)},target:{...target,...(fault.upgrade||fault.product49?formal49:formal)}})
+ const releasePlan=sealHostPlan({...plan,...(fault.native14?{format:'native-schema-host-release/v1',backup:nativeBackup()} : fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
+  source:{...source,...(fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.upgrade||fault.product49||fault.native14?formal49:formal)}})
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
  let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0,migrated=false
  const ops={
   async assertIdle(){trace.push('idle');if(fault.idle)throw Error('idle')},
   async inspect(){trace.push('inspect');if(fault.replacedTarget&&deployed===1&&++targetInspections===2)rows[0].id='e'+rows[0].id.slice(1);return structuredClone(rows)},
-  async state(){trace.push('state');if(++stateReads>fault.stateUnknownAfter||migrated&&fault.migrationStateUnknown)throw Object.assign(Error('unknown state'),{uncertain:true});const s=state(migrated?releasePlan.target:releasePlan.source);if(fault.busy&&stops===2)s.liveWork=1;if(fault.schema&&deployed)s.schemaHash='e'.repeat(64);return s},
+  async state(){trace.push('state');if(++stateReads>fault.stateUnknownAfter||migrated&&fault.migrationStateUnknown)throw Object.assign(Error('unknown state'),{uncertain:true});const s=state(migrated?releasePlan.target:releasePlan.source);s.installedSchema=s.schema;if(fault.native14)s.otherClients=stops===4?0:4;if(fault.otherClients&&stops===4)s.otherClients=1;if(fault.busy&&stops===2)s.liveWork=1;if(fault.schema&&deployed)s.schemaHash='e'.repeat(64);return s},
   async verifyImages(which='target'){trace.push('images:'+which);if(fault.image&&which==='target')throw Error('missing image')},
   async stage(stack){trace.push('stage:'+stack);staged++;if(fault.stage&&staged===2)throw Object.assign(Error('unknown'),{uncertain:true})},
   async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...(fault.metadata&&stack===apps[1]?{schema:14}:{})}},
+  async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
   async migrate(){trace.push('migrate');if(fault.migrationUnknown)throw Object.assign(Error('unknown migration'),{uncertain:true});if(fault.migrationFailed)throw Error('migration failed');migrated=true;if(fault.migrationCommittedFailure)throw Error('migration committed before failure')},
   async stop(stack,service){trace.push('stop:'+stack+':'+service);stops++;if(fault.stopUnknown)throw Object.assign(Error('unknown'),{uncertain:true});const row=rows.find(x=>x.stack===stack&&x.service===service);if(!fault.stillRunning){row.running=false;row.pid=0}},
   async deploy(stack,service){trace.push('deploy:'+stack+':'+service);deployed++;if(fault.deployUnknown)throw Object.assign(Error('unknown'),{uncertain:true});const row=rows.find(x=>x.stack===stack&&x.service===service);Object.assign(row,{source:next,id:'f'+row.id.slice(1),running:true,pid:2});if(fault.policy)row.policy.readOnly=!row.policy.readOnly},
@@ -149,4 +155,36 @@ test('unknown migration or post-migration state forbids all further requests',as
   assert.equal(f.events.at(-1).recovery,'unknown')
   assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false)
  }
+})
+
+test('native14 explicit profile rejects wrong boundary, altered49 history and missing/fake source backup',()=>{
+ const p=fixture({native14:true}).plan;assert.doesNotThrow(()=>validateHostPlanShape(p))
+ for(const change of [p=>delete p.backup,p=>p.source.productVersion=48,p=>p.target.schema=15,p=>p.target.runtime='3.6.1',p=>p.target.protocol=12,p=>p.target.migrations[4].checksum='e'.repeat(64),p=>p.backup.source.runtime.schema=12,p=>p.backup.profile='native12-product46',p=>p.format='product-schema-host-release/v1']){
+  const bad=JSON.parse(JSON.stringify(p));change(bad);assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)))
+ }
+})
+test('native14 stops all4 writers, makes fresh backup between full barriers, migrates once then ordered recovery',async()=>{
+ const f=fixture({native14:true}),result=await f.run();assert.equal(result.state.schema,14);assert.equal(result.state.product,50)
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)))
+ assert.equal(f.trace.filter(x=>x==='backup').length,1);assert.equal(f.trace.filter(x=>x==='migrate').length,1)
+ assert.ok(f.trace.indexOf('backup')>f.trace.indexOf('wait')&&f.trace.indexOf('migrate')>f.trace.indexOf('backup'))
+ assert.equal(f.events.filter(e=>e.phase==='drain'&&e.status==='zero-leases'&&e.state.product===49).length,4)
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)))
+ assert.equal(f.events.find(e=>e.phase==='backup').receipt.commandHash,nativeBackup().commandHash)
+})
+test('native14 busy Web/invalid restore/unknown backup prevents migration and unknown makes no further request',async()=>{
+ for(const fault of [{otherClients:true},{badBackup:true},{backupUnknown:true}]){
+  const f=fixture({native14:true,...fault});await assert.rejects(f.run());assert.equal(f.trace.includes('migrate'),false)
+  if(fault.backupUnknown){assert.equal(f.trace.at(-1),'backup');assert.equal(f.events.at(-1).status,'uncertain')}
+ }
+})
+test('native14 known failures classify unchanged source13 or target14, uncertainty remains final',async()=>{
+ for(const [fault,recovery] of [[{migrationFailed:true},'source-unchanged-recovery-requires-review'],[{migrationCommittedFailure:true},'fix-forward'],[{migrationUnknown:true},'unknown'],[{migrationStateUnknown:true},'unknown']]){
+  const f=fixture({native14:true,...fault});await assert.rejects(f.run());assert.equal(f.events.at(-1).recovery,recovery)
+  assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);assert.equal(f.trace.filter(x=>x==='migrate').length,1)
+ }
+ const f=fixture({native14:true,metadata:true,stateUnknownAfter:1});await assert.rejects(f.run(),e=>e.uncertain===true);assert.equal(f.trace.at(-1),'state')
+})
+test('native14 image preparation never drains, backs up or migrates',async()=>{
+ const f=fixture({native14:true});await f.prepare();assert.equal(f.trace.some(x=>x==='backup'||x==='migrate'||x.startsWith('stop:')),false)
 })

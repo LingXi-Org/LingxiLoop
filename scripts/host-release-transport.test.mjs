@@ -33,3 +33,17 @@ test('native config patch changes only exact app provenance and cache/dependency
  }
  const a=fixture();await assert.rejects(a.transport.writeHostFile('lingxiloop-core-state','services: {}'));assert.equal(a.calls.length,0)
 })
+
+test('native-maintenance terminal confirmation reads exact update and stops on contradictory/unknown result',async()=>{
+ for(const fault of [undefined,'reread-unknown','reread-pending','reread-target']){
+  const calls=[],events=[],transport=createTransport({apiKey:'fixture',apiSecret:'fixture',confirmTerminal:true,wait:async()=>{},onProgress:async e=>events.push(e),fetcher:async(url)=>{
+   const op=url.split('/').at(-1);calls.push(op)
+   if(op==='GetStack')return Response.json({_id:{$oid:sid}})
+   if(op==='GetUpdate'&&fault==='reread-unknown')throw Error('SECRET')
+   return Response.json({_id:{$oid:id},operation:'StopStackService',target:{type:'Stack',id:op==='GetUpdate'&&fault==='reread-target'?'d'.repeat(24):sid},status:op==='GetUpdate'&&fault==='reread-pending'?'InProgress':'Complete',success:true})
+  }})
+  if(fault)await assert.rejects(transport.execute('StopStack',{stack,services:['worker'],stop_time:150}),e=>e.uncertain===true&&!e.message.includes('SECRET'))
+  else {await transport.execute('StopStack',{stack,services:['worker'],stop_time:150});assert.deepEqual(calls,['GetStack','StopStack','GetUpdate'])}
+  assert.equal(calls.filter(x=>x==='StopStack').length,1)
+ }
+})
