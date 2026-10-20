@@ -1,0 +1,52 @@
+(node:505490) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:505498) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:505510) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:505523) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:505523) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[db:migrate] applied 0001_v1_baseline, 0002_remove_legacy_identity, 0003_agent_os_session_affinity, 0004_backfill_personal_owner_participants, 0005_lingxios_v2_reset, 0006_observable_live_eval, 0007_install_lingxios, 0008_agent_os_execution, 0009_native_agent_tools, 0010_lingxios_native_runtime, 0011_closed_education, 0012_lingxios_3_2, 0013_native_collaboration, 0014_profile_avatars, 0015_lingxios_3_2_6, 0016_lingxios_3_2_7, 0017_lingxios_3_2_8, 0018_lingxios_3_2_9, 0019_agent_read_receipts, 0020_lingxios_3_2_10, 0021_lingxios_3_2_11, 0022_lingxios_3_2_12, 0023_lingxios_3_2_13, 0024_lingxios_3_3_0, 0025_lingxios_3_3_1, 0026_lingxios_3_3_2, 0027_learning_collaboration, 0028_lingxios_3_3_4, 0029_lingxios_3_3_5, 0030_lingxios_3_3_6, 0031_agent_capabilities, 0032_native_message_attachments, 0033_interactive_ui, 0034_retire_email_calendar, 0035_course_forum, 0036_public_run_activity, 0037_forum_comment_attachments, 0038_learning_submission_sequence, 0039_native_memory_collaboration, 0040_forum_assignment_convergence, 0041_homework_mastery, 0042_forum_submission_evidence, 0043_lingxios_3_5_0, 0044_questionnaire_wait, 0045_organization_cases, 0046_visualize, 0047_memory_continuity · 3309ms
+(node:505623) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:505623) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[db:migrate] already current · 107ms
+(node:505660) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[integration] selected 1/90 file(s): memory-continuity-live.test.ts
+(node:505687) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:505697) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:505697) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"ts":"2026-10-20T08:38:09.911Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:7d1f2731b8bf9ec3023fa80e7f315beb"}
+# {"ts":"2026-10-20T08:38:09.919Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:7d1f2731b8bf9ec3023fa80e7f315beb"}
+# {"ts":"2026-10-20T08:38:10.563Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:3275f38527f3bb50aba7e9c26af18251"}
+# {"ts":"2026-10-20T08:38:10.568Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:3275f38527f3bb50aba7e9c26af18251"}
+# {"ts":"2026-10-20T08:38:11.141Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:c761dac4206c5af1ee05c64fa4ce7735"}
+# {"ts":"2026-10-20T08:38:11.147Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:c761dac4206c5af1ee05c64fa4ce7735"}
+# {"ts":"2026-10-20T08:40:21.000Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:b25b648317fb8ab0b82791854ad58c1e"}
+# {"ts":"2026-10-20T08:40:21.009Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:b25b648317fb8ab0b82791854ad58c1e"}
+# {"ts":"2026-10-20T08:40:29.383Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:51b94beaef71b7eb66f4514a703b5b89"}
+# {"ts":"2026-10-20T08:40:29.395Z","level":"warn","msg":"prior session authorization failed; starting with fresh context","runId":"memory-index:51b94beaef71b7eb66f4514a703b5b89"}
+# {"ts":"2026-10-20T08:40:40.394Z","level":"info","msg":"worker stopped","workerId":"continuity-live","timedOut":false}
+# Subtest: live native memory saves, recalls semantically and extracts long-source tails across rooms
+ok 1 - live native memory saves, recalls semantically and extracts long-source tails across rooms
+  ---
+  duration_ms: 181880.606195
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 186309.467292

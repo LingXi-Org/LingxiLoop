@@ -1,0 +1,464 @@
+{
+  "passed": true,
+  "model": "zai-org/GLM-5.2",
+  "embeddingModel": "BAAI/bge-m3",
+  "observed": [
+    {
+      "phase": "save",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 1457,
+      "core": false,
+      "middle": false,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1934,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1568,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1732,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1360,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1146,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1507,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1104,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1212,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2218,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1639,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "immediate",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 304,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "immediate",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1195,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "immediate",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2726,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "index",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 359,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "index",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 374,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 357,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1081,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1829,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "capture",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 465,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "capture",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1363,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "capture",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1654,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1810,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 4178,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2761,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2734,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1604,
+      "core": true,
+      "middle": true,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 3284,
+      "core": true,
+      "middle": true,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1572,
+      "core": true,
+      "middle": false,
+      "tail": true
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 3225,
+      "core": true,
+      "middle": false,
+      "tail": true
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1344,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2732,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1979,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2807,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 666,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2653,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2169,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 3929,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 531,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 376,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1549,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1209,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2033,
+      "core": true,
+      "middle": false,
+      "tail": false
+    }
+  ],
+  "initialCount": 2,
+  "indexed": {
+    "count": 2,
+    "dimensions": 1024,
+    "spaces": 1
+  },
+  "jobs": 2,
+  "pages": 10,
+  "usage": {
+    "calls": 43,
+    "costMicros": 497473,
+    "embeddingCalls": 9,
+    "measured": 43
+  },
+  "diagnostics": {
+    "indices": [
+      {
+        "key": "d1ec5e7d7c8a3b10a1612c8b8068b4b972582ebb1bb16d837414ed9a7a9d62e9",
+        "model": "BAAI/bge-m3",
+        "dimensions": 1024,
+        "matchedCurrent": 2
+      },
+      {
+        "key": "d1ec5e7d7c8a3b10a1612c8b8068b4b972582ebb1bb16d837414ed9a7a9d62e9",
+        "model": "BAAI/bge-m3",
+        "dimensions": 1024,
+        "matchedCurrent": 0
+      },
+      {
+        "key": "d1ec5e7d7c8a3b10a1612c8b8068b4b972582ebb1bb16d837414ed9a7a9d62e9",
+        "model": "BAAI/bge-m3",
+        "dimensions": 1024,
+        "matchedCurrent": 0
+      },
+      {
+        "key": "d1ec5e7d7c8a3b10a1612c8b8068b4b972582ebb1bb16d837414ed9a7a9d62e9",
+        "model": "BAAI/bge-m3",
+        "dimensions": 1024,
+        "matchedCurrent": 0
+      },
+      {
+        "key": "d1ec5e7d7c8a3b10a1612c8b8068b4b972582ebb1bb16d837414ed9a7a9d62e9",
+        "model": "BAAI/bge-m3",
+        "dimensions": 1024,
+        "matchedCurrent": 0
+      }
+    ],
+    "coreRead": 1,
+    "injected": 2,
+    "recalled": 1,
+    "elapsedMs": 511,
+    "omissions": [
+      {
+        "id": "mem-52953fa4bd4d58e823445f81f601156811d5dff63fef9b82b99766c4ae60c271",
+        "field": "directory",
+        "reason": "allocation"
+      }
+    ]
+  },
+  "checks": [
+    "explicit-middle-tail",
+    "immediate-new-room-input",
+    "hybrid-current-index",
+    "proactive-reference-injection",
+    "background-middle-tail",
+    "effective-revision",
+    "durable-cursor",
+    "forget-index"
+  ],
+  "reproduce": "OPENAI_EMBEDDING_MODEL=BAAI/bge-m3 EVAL_CANDIDATE_MODEL=zai-org/GLM-5.2 EVAL_CANDIDATE_INPUT_CNY_PER_MILLION=8 EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION=28 lingxi-prod model-run node e2e/server/memory-regression.mjs --live-continuity"
+}
