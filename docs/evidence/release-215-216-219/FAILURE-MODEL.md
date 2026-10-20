@@ -38,3 +38,9 @@ Use the immutable public `schema012` resource and verify its exact source hash
 and installed schema12. Keep the actual13/47/48 classification assertions.
 Write each new fixture receipt exclusively to a fresh output, preserving the
 previous committed source12 evidence.
+
+Final combined provider qualification must not reuse/truncate the author's
+baseline or successful fixture databases. A new exact `combined358` target was
+first refused by the existing allowlist before database/provider access. Add
+only its fixed isolated test database to both allowlists; retain all model,
+per-root budget, cancellation, extraction and overall timeout bounds.
