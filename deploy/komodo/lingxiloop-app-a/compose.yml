@@ -106,7 +106,7 @@ services:
 
   worker:
     <<: *runtime
-    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:9a5cfda82ad105d666bf0452df1d615daf6c6a28
+    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:10db48ad8254f3d74918ae5aabed46c239505f6f
     environment:
       <<: *runtime-environment
       NODE_OPTIONS: --max-old-space-size=640
