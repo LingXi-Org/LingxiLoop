@@ -1,0 +1,106 @@
+(node:1709395) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1709408) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1709408) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[db:migrate] applied 0001_v1_baseline, 0002_remove_legacy_identity, 0003_agent_os_session_affinity, 0004_backfill_personal_owner_participants, 0005_lingxios_v2_reset, 0006_observable_live_eval, 0007_install_lingxios, 0008_agent_os_execution, 0009_native_agent_tools, 0010_lingxios_native_runtime, 0011_closed_education, 0012_lingxios_3_2, 0013_native_collaboration, 0014_profile_avatars, 0015_lingxios_3_2_6, 0016_lingxios_3_2_7, 0017_lingxios_3_2_8, 0018_lingxios_3_2_9, 0019_agent_read_receipts, 0020_lingxios_3_2_10, 0021_lingxios_3_2_11, 0022_lingxios_3_2_12, 0023_lingxios_3_2_13, 0024_lingxios_3_3_0, 0025_lingxios_3_3_1, 0026_lingxios_3_3_2, 0027_learning_collaboration, 0028_lingxios_3_3_4, 0029_lingxios_3_3_5, 0030_lingxios_3_3_6, 0031_agent_capabilities, 0032_native_message_attachments, 0033_interactive_ui, 0034_retire_email_calendar, 0035_course_forum, 0036_public_run_activity, 0037_forum_comment_attachments, 0038_learning_submission_sequence, 0039_native_memory_collaboration, 0040_forum_assignment_convergence, 0041_homework_mastery, 0042_forum_submission_evidence, 0043_lingxios_3_5_0, 0044_questionnaire_wait, 0045_organization_cases, 0046_visualize, 0047_memory_continuity, 0048_native_content_documents · 1108ms
+(node:1709469) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[integration] selected 2/92 file(s): group-mentions.test.ts, memory-evolution-registration.test.ts
+(node:1709477) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1709484) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1709484) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"ts":"2026-10-20T10:06:26.631Z","level":"info","msg":"worker started","workerId":"group-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-20T10:06:29.382Z","level":"info","msg":"worker stopped","workerId":"group-mentions","timedOut":false}
+# Subtest: committed formatted mentions drive A → B → C → A and a plain reply ends the chain
+not ok 1 - committed formatted mentions drive A → B → C → A and a plain reply ends the chain
+  ---
+  duration_ms: 3516.495173
+  type: 'test'
+  location: '/workspace/LingxiLoop-pr236-scope-tests/server/src/__integration__/group-mentions.test.ts:1:1229'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+    +   'course_shared',
+    +   'session',
+    -   'learner',
+    -   'course',
+        'agent_role'
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0: 'learner'
+    1: 'course'
+    2: 'agent_role'
+  actual:
+    0: 'course_shared'
+    1: 'session'
+    2: 'agent_role'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-pr236-scope-tests/server/src/__integration__/group-mentions.test.ts:94:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: message admission freezes canonical mentions across renames and preserves citation coordinates
+ok 2 - message admission freezes canonical mentions across renames and preserves citation coordinates
+  ---
+  duration_ms: 387.060743
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T10:06:30.233Z","level":"info","msg":"worker started","workerId":"introduction-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-20T10:06:32.800Z","level":"info","msg":"worker stopped","workerId":"introduction-mentions","timedOut":false}
+# Subtest: a leader introduction wakes all five inline-code mentioned specialists once
+ok 3 - a leader introduction wakes all five inline-code mentioned specialists once
+  ---
+  duration_ms: 3013.911135
+  type: 'test'
+  ...
+# (node:1709699) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1709699) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"ts":"2026-10-20T10:06:35.452Z","level":"info","msg":"worker stopped","workerId":"memory-evolution-registration","timedOut":false}
+# Subtest: cold product memory synthesis freezes only nonempty candidates and leaves evaluation pending
+not ok 4 - cold product memory synthesis freezes only nonempty candidates and leaves evaluation pending
+  ---
+  duration_ms: 602.277363
+  type: 'test'
+  location: '/workspace/LingxiLoop-pr236-scope-tests/server/src/__integration__/memory-evolution-registration.test.ts:1:1466'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(scope.scopeId.startsWith('im-memory:'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-pr236-scope-tests/server/src/__integration__/memory-evolution-registration.test.ts:104:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 2
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11944.35063

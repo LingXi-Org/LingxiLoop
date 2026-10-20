@@ -1,0 +1,7 @@
+{
+  "runtime": "3.5.8",
+  "node": "v22.23.3",
+  "complete": false,
+  "environment": "isolated PostgreSQL; product control and IM grants; deterministic model; recording IM; no live provider",
+  "evidence": []
+}

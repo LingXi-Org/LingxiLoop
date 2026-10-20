@@ -1,0 +1,69 @@
+(node:1715939) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1715969) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1715969) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[db:migrate] already current · 87ms
+(node:1716003) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[integration] selected 2/92 file(s): group-mentions.test.ts, memory-evolution-registration.test.ts
+(node:1716011) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1716018) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1716018) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"ts":"2026-10-20T10:10:09.963Z","level":"info","msg":"worker started","workerId":"group-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-20T10:10:14.357Z","level":"info","msg":"worker stopped","workerId":"group-mentions","timedOut":false}
+# Subtest: committed formatted mentions drive A → B → C → A and a plain reply ends the chain
+ok 1 - committed formatted mentions drive A → B → C → A and a plain reply ends the chain
+  ---
+  duration_ms: 5740.446302
+  type: 'test'
+  ...
+# Subtest: message admission freezes canonical mentions across renames and preserves citation coordinates
+ok 2 - message admission freezes canonical mentions across renames and preserves citation coordinates
+  ---
+  duration_ms: 504.769023
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T10:10:15.718Z","level":"info","msg":"worker started","workerId":"introduction-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-20T10:10:18.992Z","level":"info","msg":"worker stopped","workerId":"introduction-mentions","timedOut":false}
+# Subtest: a leader introduction wakes all five inline-code mentioned specialists once
+not ok 3 - a leader introduction wakes all five inline-code mentioned specialists once
+  ---
+  duration_ms: 3893.588005
+  type: 'test'
+  location: '/workspace/LingxiLoop-pr236-scope-tests/server/src/__integration__/group-mentions.test.ts:3:9723'
+  failureType: 'testCodeFailure'
+  error: "EEXIST: file already exists, open '/tmp/pr236-scope-contracts/green-artifacts/group-mentions/introduction.json'"
+  code: 'EEXIST'
+  stack: |-
+    async open (node:internal/fs/promises:639:25)
+    async writeFile (node:internal/fs/promises:1222:14)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-pr236-scope-tests/server/src/__integration__/group-mentions.test.ts:225:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# (node:1716308) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1716308) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"ts":"2026-10-20T10:10:23.364Z","level":"info","msg":"worker stopped","workerId":"memory-evolution-registration","timedOut":false}
+# Subtest: cold product memory synthesis freezes only nonempty candidates and leaves evaluation pending
+ok 4 - cold product memory synthesis freezes only nonempty candidates and leaves evaluation pending
+  ---
+  duration_ms: 2341.661712
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16927.988116

@@ -1,0 +1,12 @@
+{
+  "label": "green",
+  "base": "28f7dc5ad27ae3cbd8cf614dad9b055f29bdc412",
+  "databaseName": "lingxiloop_pr236_scope_20261020_test",
+  "redisPort": 56436,
+  "startedAt": "2026-10-20T10:08:10.030Z",
+  "completedAt": "2026-10-20T10:08:25.034Z",
+  "migrationExitCode": 0,
+  "exitCode": 1,
+  "serialFiles": true,
+  "realProviderCalls": 0
+}

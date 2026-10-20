@@ -1,0 +1,59 @@
+(node:1716878) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1716891) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1716891) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[db:migrate] already current · 60ms
+(node:1716924) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[integration] selected 2/92 file(s): group-mentions.test.ts, memory-evolution-registration.test.ts
+(node:1716932) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1716939) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1716939) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"ts":"2026-10-20T10:10:48.667Z","level":"info","msg":"worker started","workerId":"group-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-20T10:10:51.228Z","level":"info","msg":"worker stopped","workerId":"group-mentions","timedOut":false}
+# Subtest: committed formatted mentions drive A → B → C → A and a plain reply ends the chain
+ok 1 - committed formatted mentions drive A → B → C → A and a plain reply ends the chain
+  ---
+  duration_ms: 3387.720696
+  type: 'test'
+  ...
+# Subtest: message admission freezes canonical mentions across renames and preserves citation coordinates
+ok 2 - message admission freezes canonical mentions across renames and preserves citation coordinates
+  ---
+  duration_ms: 376.474001
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T10:10:52.215Z","level":"info","msg":"worker started","workerId":"introduction-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-20T10:10:54.877Z","level":"info","msg":"worker stopped","workerId":"introduction-mentions","timedOut":false}
+# Subtest: a leader introduction wakes all five inline-code mentioned specialists once
+ok 3 - a leader introduction wakes all five inline-code mentioned specialists once
+  ---
+  duration_ms: 3102.71085
+  type: 'test'
+  ...
+# (node:1717121) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1717121) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"ts":"2026-10-20T10:10:58.855Z","level":"info","msg":"worker stopped","workerId":"memory-evolution-registration","timedOut":false}
+# Subtest: cold product memory synthesis freezes only nonempty candidates and leaves evaluation pending
+ok 4 - cold product memory synthesis freezes only nonempty candidates and leaves evaluation pending
+  ---
+  duration_ms: 2240.131959
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 12631.547172

@@ -88,13 +88,25 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
   await worker.stop()
   const messages = recording.messages.filter(message => message.payload.role === 'assistant')
   assert.deepEqual(messages.map(message => message.fromUid), [agentId, second, third, agentId])
-  const memoryScopes = new Map<string,string>()
+  const agentRoleScopes = new Map<string,string>(), roleOwners = new Map<string,string>(), sharedCourseScopes = new Set<string>()
   for (const work of claimed.values()) {
     const scopes = await api.memory!.scopes({ tenantId: companyId,agentId: work.agentId,principalId: work.principalId!,sessionId: work.sessionId,workId: work.id })
-    assert.deepEqual(scopes.map(scope => scope.scopeType), ['learner','course','agent_role'])
-    memoryScopes.set(work.agentId,scopes[0].scopeId)
+    assert.deepEqual(scopes.map(scope => scope.scopeType), ['course_shared','session','agent_role'])
+    assert.ok(!scopes.some(scope => scope.scopeType === 'learner' || scope.scopeType === 'learner_course'),
+      'a multi-Agent audience must not receive private learner scopes')
+    const role = scopes.find(scope => scope.scopeType === 'agent_role')!
+    const course = scopes.find(scope => scope.scopeType === 'course_shared')!
+    assert.ok(course.scopeId.startsWith('stable-memory:'), 'shared course identity is stable across collaborating Agents')
+    sharedCourseScopes.add(course.scopeId)
+    // Native role partitions include the work's audience/policy; unlike learner
+    // continuity, another work for the same Agent may have a different scope.
+    if (roleOwners.has(role.scopeId)) assert.equal(roleOwners.get(role.scopeId), work.agentId,
+      'a role scope must never be shared by different Agents')
+    roleOwners.set(role.scopeId, work.agentId)
+    agentRoleScopes.set(work.agentId, role.scopeId)
   }
-  assert.equal(new Set(memoryScopes.values()).size,3,'each collaborating agent retains its own memory scope')
+  assert.equal(sharedCourseScopes.size, 1, 'the same authorized project has one shared course scope')
+  assert.equal(new Set(agentRoleScopes.values()).size,3,'each collaborating Agent retains its own role scope')
   const bindings = (await pool.query('SELECT run_id,principal_id,internal FROM agent_run_bindings ORDER BY created_at,run_id')).rows
   assert.equal(bindings.length, 4)
   assert.ok(bindings.every(row => row.principal_id === 'test-owner' && !row.internal))
@@ -116,9 +128,18 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
   await receiveAgentRequest(input)
   assert.equal(recording.messages.length, 5)
   assert.equal((await pool.query('SELECT 1 FROM agent_run_bindings')).rows.length, 4)
+  const identity = { tenantId: companyId,agentId: work.agentId,principalId: work.principalId!,sessionId: work.sessionId,workId: work.id }
+  // The committed run and IM binding cannot override current product membership.
+  await pool.query('UPDATE conversations SET members=$3::jsonb WHERE company_id=$1 AND id=$2',
+    [companyId,channelId,JSON.stringify(members.filter(member => member !== 'test-owner'))])
+  try { await assert.rejects(api.memory!.scopes(identity), /revoked/) }
+  finally { await pool.query('UPDATE conversations SET members=$3::jsonb WHERE company_id=$1 AND id=$2',
+    [companyId,channelId,JSON.stringify(members)]) }
+  assert.deepEqual((await api.memory!.scopes(identity)).map(scope => scope.scopeType), ['course_shared','session','agent_role'])
   const artifact = { passed: true, messages: recording.messages.map(message => ({ author: message.fromUid, text: nativeText(message.payload) })),
     runs: bindings, inheritedEvidencePreserved: true,
-    checks: ['formatted-mention', 'public-causal-chain', 'explicit-return', 'silent-stop', 'shared-human', 'replay', 'no-hidden-children', 'inherited-attachment-evidence'] }
+    checks: ['formatted-mention', 'public-causal-chain', 'explicit-return', 'silent-stop', 'shared-human', 'replay', 'no-hidden-children', 'inherited-attachment-evidence',
+      'no-private-group-scopes', 'shared-course-identity', 'agent-role-isolation', 'current-membership-revalidation'] }
   await mkdir(`${acceptanceOutput}/group-mentions`, { recursive: true })
   await writeFile(`${acceptanceOutput}/group-mentions/conversation.json`, JSON.stringify(artifact, null, 2), { flag: 'wx' })
 })
