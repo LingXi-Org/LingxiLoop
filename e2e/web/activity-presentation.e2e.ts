@@ -46,15 +46,36 @@ test.describe('Public activity presentation', {
     }
     await expect(browser.locator('[data-slot="memory-chips"]')).toBeVisible()
     await expect(browser.locator('[data-slot="web-search"]')).toBeVisible()
-    await screen.getByRole('button', '已完成 查看可视化参考').press('Enter')
+    const referenceTrigger = browser.locator('section[aria-label="查看可视化参考"] [data-slot="tool-call"] > [data-slot="collapsible-trigger"]')
+    await expect(referenceTrigger).toHaveAttribute('aria-expanded', 'false')
+    await referenceTrigger.press('Enter')
+    await expect(referenceTrigger).toHaveAttribute('aria-expanded', 'true')
+    await expect(browser.locator('section[aria-label="查看可视化参考"] [data-slot="tool-call"] > [data-slot="collapsible-content"]')).toBeVisible()
     await expect(screen.getByText('查阅当前可视化组件的使用说明。', { exact: true })).toBeVisible()
     expect(await browser.evaluate(() => document.body.textContent)).not.toMatch(/处理任务|历史通用说明|visualize__|memory__/)
     expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await app.screenshot(`known-official-cards-${width}`)
+    await referenceTrigger.press('Enter')
+    await expect(referenceTrigger).toHaveAttribute('aria-expanded', 'false')
     for (const label of ['运行中', '失败', '取消', '结果待核对']) {
       await screen.getByRole('button', label, { exact: true }).press('Enter')
       const stateLabel = label === '运行中' ? '正在处理' : label === '失败' ? '执行失败' : label === '取消' ? '已取消' : '结果待核对'
       await expect(screen.getByRole('button', `${stateLabel} 查找资料${label === '失败' ? ' 未完成' : ''}`, { exact: true })).toBeVisible()
+      const summary = label === '运行中' ? '正在执行这一步。' : label === '失败' ? '这一步未完成，请检查相关信息后重试。'
+        : label === '取消' ? '这一步已停止。' : '操作结果尚未确认，请先核对结果，避免重复执行。'
+      for (const title of ['查找资料', '检索课程资料']) {
+        const trigger = browser.locator(`section[aria-label="${title}"] [data-slot="tool-call"] > [data-slot="collapsible-trigger"]`)
+        const details = browser.locator(`section[aria-label="${title}"] [data-slot="tool-call"] > [data-slot="collapsible-content"]`)
+        await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+        await trigger.press('Enter')
+        await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+        await expect(details).toBeVisible()
+        await expect(details).toContainText('操作目的')
+        await expect(details).toContainText(summary)
+        await app.screenshot(`known-${title}-${label}-expanded-${width}`)
+        await trigger.press('Enter')
+        await expect(trigger).toHaveAttribute('aria-expanded', 'false')
+      }
       if (label === '取消' || label === '结果待核对') {
         expect(await browser.locator('section[aria-label="查找资料"]').textContent()).not.toMatch(/失败|请重试/)
         expect(await browser.locator('section[aria-label="检索课程资料"]').textContent()).not.toMatch(/已完成|检索未完成|请重试/)
