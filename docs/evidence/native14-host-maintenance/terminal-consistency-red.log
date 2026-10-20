@@ -1,0 +1,133 @@
+TAP version 13
+# Subtest: public host file write binds real WriteStackContents receipt and re-reads exact update
+ok 1 - public host file write binds real WriteStackContents receipt and re-reads exact update
+  ---
+  duration_ms: 20.598293
+  type: 'test'
+  ...
+# Subtest: wrong receipt/unknown write is never retried or treated as success
+ok 2 - wrong receipt/unknown write is never retried or treated as success
+  ---
+  duration_ms: 2.769582
+  type: 'test'
+  ...
+# Subtest: native config patch changes only exact app provenance and cache/dependency policy
+ok 3 - native config patch changes only exact app provenance and cache/dependency policy
+  ---
+  duration_ms: 0.932414
+  type: 'test'
+  ...
+# Subtest: native-maintenance terminal confirmation reads exact update and stops on contradictory/unknown result
+not ok 4 - native-maintenance terminal confirmation reads exact update and stops on contradictory/unknown result
+  ---
+  duration_ms: 3.099639
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-host-maintenance/scripts/host-release-transport.test.mjs:37:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The validation function is expected to return "true". Received false
+    
+    Caught error:
+    
+    Error: Komodo operation failed
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release-transport.test.mjs:45:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: planning binds exact source and contains no candidate migration or remote call
+ok 5 - planning binds exact source and contains no candidate migration or remote call
+  ---
+  duration_ms: 180.066345
+  type: 'test'
+  ...
+# Subtest: malformed identities and altered source or command fail before any remote call
+ok 6 - malformed identities and altered source or command fail before any remote call
+  ---
+  duration_ms: 337.203352
+  type: 'test'
+  ...
+# Subtest: receipt parser requires terminal success, consistent counts, and no duplicate markers
+ok 7 - receipt parser requires terminal success, consistent counts, and no duplicate markers
+  ---
+  duration_ms: 64.225589
+  type: 'test'
+  ...
+# Subtest: execution uses only reviewed fixed service operation and persists its update id
+ok 8 - execution uses only reviewed fixed service operation and persists its update id
+  ---
+  duration_ms: 158.396295
+  type: 'test'
+  ...
+# Subtest: lost execute acknowledgement remains uncertain and is never retried
+ok 9 - lost execute acknowledgement remains uncertain and is never retried
+  ---
+  duration_ms: 133.535408
+  type: 'test'
+  ...
+# Subtest: pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+ok 10 - pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+  ---
+  duration_ms: 190.899898
+  type: 'test'
+  ...
+# Subtest: overall timeout reaches the generated inner timeout group before killing cleanup
+ok 11 - overall timeout reaches the generated inner timeout group before killing cleanup
+  ---
+  duration_ms: 1373.012395
+  type: 'test'
+  ...
+# Subtest: native13/product49 backup profile derives exact formal source and preserves snapshot/restore command
+ok 12 - native13/product49 backup profile derives exact formal source and preserves snapshot/restore command
+  ---
+  duration_ms: 167.521846
+  type: 'test'
+  ...
+# Subtest: native13 backup exact Stack/operation and fresh terminal required; unknown read stops without retry
+not ok 13 - native13 backup exact Stack/operation and fresh terminal required; unknown read stops without retry
+  ---
+  duration_ms: 449.598728
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-host-maintenance/scripts/verify-memory-backup.test.mjs:141:1'
+  failureType: 'testCodeFailure'
+  error: 'Missing expected rejection.'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/verify-memory-backup.test.mjs:153:13)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: native13 backup refuses undocumented nonterminal status without a poll or retry
+not ok 14 - native13 backup refuses undocumented nonterminal status without a poll or retry
+  ---
+  duration_ms: 169.988237
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-host-maintenance/scripts/verify-memory-backup.test.mjs:160:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    true !== false
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: false
+  actual: true
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/verify-memory-backup.test.mjs:165:142)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 11
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3290.058365

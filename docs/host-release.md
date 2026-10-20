@@ -12,6 +12,12 @@ provenance and the first48 migrations must match exactly; migration49 must be
 No downgrade or arbitrary migration number/checksum is accepted. Subsequent
 49→49 releases use the same-schema format with the complete identical49 inventory.
 
+Native13/product49→native14/product50 uses the separate
+`native-schema-host-release/v1` format and the mandatory full-writer drain,
+fresh snapshot/isolated restore and migration sequence in
+[Native14 maintenance](native14-host-maintenance.md). The old numeric format2
+maintenance plan remains limited to its historical12→13 transition.
+
 ## Qualification and plan
 
 All input paths below are absolute. A plan is sealed from a descriptor by the offline default mode. The CLI independently checks the accepted source receipt, image audit bytes, Git objects, four package manifests/locks, migration files, effective Compose and locally installed formal package. Use the already qualified dependency installation; no installation, image build, credential discovery or remote request is performed by plan mode.
@@ -20,7 +26,7 @@ Descriptor fields:
 
 | Field | Contract |
 | --- | --- |
-| `format` | `same-schema-host-release/v1`, or explicit `product-schema-host-release/v1` for the reviewed48→49 transition only. Neither supports a native schema upgrade. |
+| `format` | `same-schema-host-release/v1`, or explicit `product-schema-host-release/v1` for the reviewed48→49 transition only. Native14 uses `native-schema-host-release/v1` with the extra `backup` field described in its runbook. |
 | `createdAt` | ISO timestamp. |
 | `source`, `target` | `releaseDescriptor(commit, formalRelease)` output plus `image` below. |
 | `sourceAcceptanceSha256` | SHA256 of the previous successful acceptance JSON bytes. It must have `passed:true`, exact source `candidate`, and every named check true. |
@@ -103,7 +109,7 @@ node scripts/host-release.mjs --execute \
 
 The receipt is exclusively created and records every known update ID. Only one designated executor may own a production release. Native action/procedure guards and exclusive local files are not a distributed release lock.
 
-The driver first verifies actual source DB and images, stages exact target public files, makes the narrow app-only provenance/`auto_pull`/`extra_args` update with full config readback, and runs actual DB-free target metadata on both hosts. Both old Workers then stop with bounded grace. Two read-only observations must show zero live work/session/attempt/capture/outbox leases and no prepared transaction. Web connections and queued work are allowed.
+The driver first verifies actual source DB and images, stages exact target public files, makes the narrow app-only provenance/`auto_pull`/`extra_args` update with full config readback, and runs actual DB-free target metadata on both hosts. For same-schema and product-only formats, both old Workers then stop with bounded grace. Two read-only observations must show zero live work/session/attempt/capture/outbox leases and no prepared transaction. Web connections and queued work are allowed.
 
 For the product-schema format only, after both old Workers stop and the two
 zero-lease observations pass, the driver submits exactly one native
@@ -127,7 +133,7 @@ The existing skill's snapshot/restore and all-writer shutdown requirement for a
 native schema upgrade does not apply to this additive product-only transition.
 No additional backup/restore, browser or provider acceptance suite is introduced.
 
-It then deploys Web A, Web B, Worker A, Worker B with exact host source, image and health checks. It checks the expected complete DB provenance throughout and retains each newly healthy target's container identity. It does not require new Worker A's legitimate leases to be zero before starting Worker B.
+All formats then deploy Web A, Web B, Worker A, Worker B with exact host source, image and health checks. It checks the expected complete DB provenance throughout and retains each newly healthy target's container identity. It does not require new Worker A's legitimate leases to be zero before starting Worker B.
 
 `auto_pull=false` suppresses Komodo's separate pre-deploy pull. `extra_args=["--no-deps","--pull","never"]` suppresses Compose dependency creation and pulling during `up`; all three services' `pull_policy: never` also covers metadata `run`, whose public Komodo request does not expose a pull-policy override. Core's unchanged read-only SQL oneoff retains its current source/image policy and is still an availability dependency.
 

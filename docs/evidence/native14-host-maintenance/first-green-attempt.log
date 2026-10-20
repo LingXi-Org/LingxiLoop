@@ -1,0 +1,341 @@
+TAP version 13
+# Subtest: real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration
+ok 1 - real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration
+  ---
+  duration_ms: 25.571664
+  type: 'test'
+  ...
+# Subtest: product migration adapter runs exact isolated A command once, no env override or old-Web stop
+ok 2 - product migration adapter runs exact isolated A command once, no env override or old-Web stop
+  ---
+  duration_ms: 19.494817
+  type: 'test'
+  ...
+# Subtest: ordinary or unstaged adapter cannot migrate, uncertain native migration ends all requests
+ok 3 - ordinary or unstaged adapter cannot migrate, uncertain native migration ends all requests
+  ---
+  duration_ms: 9.080335
+  type: 'test'
+  ...
+# Subtest: host errors, platform mismatch and unexpected full-config change fail before stops
+ok 4 - host errors, platform mismatch and unexpected full-config change fail before stops
+  ---
+  duration_ms: 11.562885
+  type: 'test'
+  ...
+# Subtest: actual container image must equal verified host ID, not merely declared source
+ok 5 - actual container image must equal verified host ID, not merely declared source
+  ---
+  duration_ms: 7.389052
+  type: 'test'
+  ...
+# Subtest: explicit online preparation uses pull template then restores exact original files and config
+ok 6 - explicit online preparation uses pull template then restores exact original files and config
+  ---
+  duration_ms: 4.387157
+  type: 'test'
+  ...
+# Subtest: native14 adapter requires all4 stopped and fresh verified backup before one drain-marked public migration
+ok 7 - native14 adapter requires all4 stopped and fresh verified backup before one drain-marked public migration
+  ---
+  duration_ms: 18.714157
+  type: 'test'
+  ...
+# Subtest: public host file write binds real WriteStackContents receipt and re-reads exact update
+ok 8 - public host file write binds real WriteStackContents receipt and re-reads exact update
+  ---
+  duration_ms: 31.634502
+  type: 'test'
+  ...
+# Subtest: wrong receipt/unknown write is never retried or treated as success
+ok 9 - wrong receipt/unknown write is never retried or treated as success
+  ---
+  duration_ms: 3.207168
+  type: 'test'
+  ...
+# Subtest: native config patch changes only exact app provenance and cache/dependency policy
+ok 10 - native config patch changes only exact app provenance and cache/dependency policy
+  ---
+  duration_ms: 0.88816
+  type: 'test'
+  ...
+# Subtest: native-maintenance terminal confirmation reads exact update and stops on contradictory/unknown result
+ok 11 - native-maintenance terminal confirmation reads exact update and stops on contradictory/unknown result
+  ---
+  duration_ms: 2.37437
+  type: 'test'
+  ...
+# Subtest: same formal package and all48 checksums required; native13 alone is insufficient
+ok 12 - same formal package and all48 checksums required; native13 alone is insufficient
+  ---
+  duration_ms: 2.519394
+  type: 'test'
+  ...
+# Subtest: distinct format and sealed per-stack core identity; exact app policy only
+ok 13 - distinct format and sealed per-stack core identity; exact app policy only
+  ---
+  duration_ms: 5.993285
+  type: 'test'
+  ...
+# Subtest: worker barrier allows Web clients and queue but rejects every live lease and prepared transaction
+ok 14 - worker barrier allows Web clients and queue but rejects every live lease and prepared transaction
+  ---
+  duration_ms: 0.548759
+  type: 'test'
+  ...
+# Subtest: actual per-host image ID is not inferred from config digest
+ok 15 - actual per-host image ID is not inferred from config digest
+  ---
+  duration_ms: 0.251521
+  type: 'test'
+  ...
+# Subtest: online qualification precedes stop; only both Workers stop; WebA/B then WorkerA/B
+ok 16 - online qualification precedes stop; only both Workers stop; WebA/B then WorkerA/B
+  ---
+  duration_ms: 5.179365
+  type: 'test'
+  ...
+# Subtest: missing image never stages; partial unknown stage never stops or makes further requests
+ok 17 - missing image never stages; partial unknown stage never stops or makes further requests
+  ---
+  duration_ms: 4.454687
+  type: 'test'
+  ...
+# Subtest: metadata mismatch leaves all services running
+ok 18 - metadata mismatch leaves all services running
+  ---
+  duration_ms: 0.996078
+  type: 'test'
+  ...
+# Subtest: known failure followed by uncertain classification oneoff remains finally uncertain
+ok 19 - known failure followed by uncertain classification oneoff remains finally uncertain
+  ---
+  duration_ms: 2.160645
+  type: 'test'
+  ...
+# Subtest: live leases, ineffective stop and unknown stop prevent new Web
+ok 20 - live leases, ineffective stop and unknown stop prevent new Web
+  ---
+  duration_ms: 3.718101
+  type: 'test'
+  ...
+# Subtest: unknown deploy stops immediately; health/policy/schema failure prevents remaining rollout
+ok 21 - unknown deploy stops immediately; health/policy/schema failure prevents remaining rollout
+  ---
+  duration_ms: 9.889278
+  type: 'test'
+  ...
+# Subtest: explicit image preparation restores accepted host source and never stops/deploys
+ok 22 - explicit image preparation restores accepted host source and never stops/deploys
+  ---
+  duration_ms: 2.254283
+  type: 'test'
+  ...
+# Subtest: product-only format permits exact48→49 and same-schema49, never altered history/package or downgrade
+ok 23 - product-only format permits exact48→49 and same-schema49, never altered history/package or downgrade
+  ---
+  duration_ms: 9.448819
+  type: 'test'
+  ...
+# Subtest: 48→49 retains old Web, drains two Workers, migrates once after two barriers and before any deploy
+ok 24 - 48→49 retains old Web, drains two Workers, migrates once after two barriers and before any deploy
+  ---
+  duration_ms: 3.286054
+  type: 'test'
+  ...
+# Subtest: 49→49 and48→49 image preparation never execute a migration
+ok 25 - 49→49 and48→49 image preparation never execute a migration
+  ---
+  duration_ms: 4.129397
+  type: 'test'
+  ...
+# Subtest: failed migration classifies fresh exact source or committed49 without deploy or retry
+ok 26 - failed migration classifies fresh exact source or committed49 without deploy or retry
+  ---
+  duration_ms: 3.084518
+  type: 'test'
+  ...
+# Subtest: unknown migration or post-migration state forbids all further requests
+ok 27 - unknown migration or post-migration state forbids all further requests
+  ---
+  duration_ms: 5.922399
+  type: 'test'
+  ...
+# Subtest: native14 explicit profile rejects wrong boundary, altered49 history and missing/fake source backup
+not ok 28 - native14 explicit profile rejects wrong boundary, altered49 history and missing/fake source backup
+  ---
+  duration_ms: 1.196844
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:160:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception.
+    Actual message: "Only reviewed formal3.5.8/native13/product49→3.6.0/native14/product50 supported"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: 'Only reviewed formal3.5.8/native13/product49→3.6.0/native14/product50 supported'
+  stack: |-
+    check (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:15:48)
+    assertNativeSchemaUpgrade (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:47:2)
+    validateHostPlanShape (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:62:3)
+    file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:161:64
+    getActual (node:assert:609:5)
+    Function.doesNotThrow (node:assert:777:32)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:161:47)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+  operator: 'doesNotThrow'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:161:47)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: native14 stops all4 writers, makes fresh backup between full barriers, migrates once then ordered recovery
+not ok 29 - native14 stops all4 writers, makes fresh backup between full barriers, migrates once then ordered recovery
+  ---
+  duration_ms: 0.965733
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:166:1'
+  failureType: 'testCodeFailure'
+  error: 'Only reviewed formal3.5.8/native13/product49→3.6.0/native14/product50 supported'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    check (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:15:48)
+    assertNativeSchemaUpgrade (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:47:2)
+    validateHostPlanShape (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:62:3)
+    runHostRelease (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:137:2)
+    Object.run (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:44:52)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:167:50)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+  ...
+# Subtest: native14 busy Web/invalid restore/unknown backup prevents migration and unknown makes no further request
+not ok 30 - native14 busy Web/invalid restore/unknown backup prevents migration and unknown makes no further request
+  ---
+  duration_ms: 3.563343
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:175:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + undefined
+    - 'backup'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'backup'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:178:34)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: native14 known failures classify unchanged source13 or target14, uncertainty remains final
+not ok 31 - native14 known failures classify unchanged source13 or target14, uncertainty remains final
+  ---
+  duration_ms: 1.337832
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:181:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'recovery')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:183:103)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: native14 image preparation never drains, backs up or migrates
+not ok 32 - native14 image preparation never drains, backs up or migrates
+  ---
+  duration_ms: 0.669687
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:188:1'
+  failureType: 'testCodeFailure'
+  error: 'Only reviewed formal3.5.8/native13/product49→3.6.0/native14/product50 supported'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    check (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:15:48)
+    assertNativeSchemaUpgrade (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:47:2)
+    validateHostPlanShape (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:62:3)
+    runImagePreparation (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.mjs:189:2)
+    Object.prepare (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:44:138)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-host-maintenance/scripts/host-release.test.mjs:189:43)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+  ...
+# Subtest: planning binds exact source and contains no candidate migration or remote call
+ok 33 - planning binds exact source and contains no candidate migration or remote call
+  ---
+  duration_ms: 209.789015
+  type: 'test'
+  ...
+# Subtest: malformed identities and altered source or command fail before any remote call
+ok 34 - malformed identities and altered source or command fail before any remote call
+  ---
+  duration_ms: 819.841629
+  type: 'test'
+  ...
+# Subtest: receipt parser requires terminal success, consistent counts, and no duplicate markers
+ok 35 - receipt parser requires terminal success, consistent counts, and no duplicate markers
+  ---
+  duration_ms: 115.5434
+  type: 'test'
+  ...
+# Subtest: execution uses only reviewed fixed service operation and persists its update id
+ok 36 - execution uses only reviewed fixed service operation and persists its update id
+  ---
+  duration_ms: 228.110452
+  type: 'test'
+  ...
+# Subtest: lost execute acknowledgement remains uncertain and is never retried
+ok 37 - lost execute acknowledgement remains uncertain and is never retried
+  ---
+  duration_ms: 203.644036
+  type: 'test'
+  ...
+# Subtest: pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+ok 38 - pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+  ---
+  duration_ms: 201.637459
+  type: 'test'
+  ...
+# Subtest: overall timeout reaches the generated inner timeout group before killing cleanup
+ok 39 - overall timeout reaches the generated inner timeout group before killing cleanup
+  ---
+  duration_ms: 1369.51836
+  type: 'test'
+  ...
+# Subtest: native13/product49 backup profile derives exact formal source and preserves snapshot/restore command
+ok 40 - native13/product49 backup profile derives exact formal source and preserves snapshot/restore command
+  ---
+  duration_ms: 160.303607
+  type: 'test'
+  ...
+# Subtest: native13 backup exact Stack/operation and fresh terminal required; unknown read stops without retry
+ok 41 - native13 backup exact Stack/operation and fresh terminal required; unknown read stops without retry
+  ---
+  duration_ms: 369.46266
+  type: 'test'
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 36
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3855.418625

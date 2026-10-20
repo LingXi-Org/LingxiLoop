@@ -7,8 +7,13 @@ function fixture(fault={}){
  const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:h,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations:Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(i+1),checksum:h}))}
  const image={indexDigest:d,configDigest:'sha256:'+'d'.repeat(64),manifestDigest:'sha256:'+'e'.repeat(64),diffIds:[d],auditSha256:h}
  const source={sha:a,...formal,image},target={sha:b,...formal,image},files=new Map(),configs=new Map(),actualFiles=new Map(),events=[],calls=[]
+ if(fault.native14){
+  const m49={version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}
+  Object.assign(source,{productVersion:49,migrations:[...formal.migrations,m49]});Object.assign(target,{runtime:'3.6.0',schema:14,productVersion:50,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.6.0/fixture',migrations:[...source.migrations,{version:50,name:'native_skill_delivery',checksum:h}]})
+ }
+ const backup={format:2,profile:'native13-product49',source:{sha:a,productVersion:source.productVersion,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,source[k]])),migrations:source.migrations},commandHash:h,attempt:'synthetic',nonce:'0123456789abcdef',command:'synthetic',migrationRehearsal:'not-performed',isolatedDatabase:'memory_verify_synthetic',backupDir:'/synthetic'}
  if(fault.upgrade){target.productVersion=49;target.migrations=[...formal.migrations,{version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}]}
- const plan=sealHostPlan({format:fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
+ const plan=sealHostPlan({format:fault.native14?'native-schema-host-release/v1':fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',...(fault.native14?{backup}:{}),createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
   const source='public source '+stack,target=i===2?source:'public target '+stack,preparation='public pull '+stack
   files.set(stack,{source,target,preparation});actualFiles.set(stack,source)
   const s={commit:a,branch:'release/source',sha256:hash(source),autoPull:true,extraArgs:[]}
@@ -27,7 +32,7 @@ function fixture(fault={}){
   State:{Running:true,Restarting:false,Pid:1,OOMKilled:false,Health:{Status:'healthy'}},RestartCount:0,
   HostConfig:{ReadonlyRootfs:service==='worker',Privileged:false,SecurityOpt:[],CapAdd:[],CapDrop:[],PidsLimit:128},
  })))
- const state={...formal,installedSchema:13,product:48,count:48,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:4,queued:3,pendingCapture:1}
+ const state={...formal,migrations:source.migrations,installedSchema:13,product:source.productVersion,count:source.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:4,queued:3,pendingCapture:1}
  delete state.integrity;delete state.tarball;delete state.productVersion
  const t={
   async read(op,p){
@@ -49,13 +54,14 @@ function fixture(fault={}){
    if(op==='RunStackService'){
     assert.equal(p.no_deps,true);assert.equal(p.pull,false);assert.equal(p.service_ports,false);assert.equal(p.detach,false)
     if(JSON.stringify(p).includes('migrate-bin')){
-     assert.equal(fault.upgrade,true);assert.equal(p.stack,APPS[0]);assert.equal(p.service,'db-migrate')
-     assert.equal(Object.hasOwn(p,'env'),false);assert.equal(JSON.stringify(p).includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED'),false)
+     assert.ok(fault.upgrade||fault.native14);assert.equal(p.stack,APPS[0]);assert.equal(p.service,'db-migrate')
+     assert.equal(Object.hasOwn(p,'env'),Boolean(fault.native14));assert.equal(JSON.stringify(p).includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED'),Boolean(fault.native14));if(fault.native14){assert.deepEqual(p.env,{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'});assert.ok(containers.every(c=>!c.State.Running))}
      assert.equal(containers.filter(c=>c.service==='worker').every(c=>!c.State.Running),true)
      if(fault.migrationUnknown)throw Object.assign(Error('unknown native migration'),{uncertain:true})
-     Object.assign(state,{product:49,count:49,migrations:target.migrations})
-     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:b,schema:13,product:49})}]}
+     Object.assign(state,{runtime:target.runtime,schema:target.schema,installedSchema:target.schema,product:target.productVersion,count:target.productVersion,migrations:target.migrations})
+     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:b,schema:target.schema,product:target.productVersion})}]}
     }
+    if(fault.native14)state.otherClients=containers.every(c=>!c.State.Running)?0:4;
     const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:target
     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_'+marker+'='+JSON.stringify(value)}]}
    }
@@ -67,7 +73,7 @@ function fixture(fault={}){
    if(fault.containerImage)c.Image='sha256:'+'0'.repeat(64)
   },
  }
- const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,transport:t,onProgress,wait:async()=>{}})
+ const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
  return {plan,ops,calls,events,configs,actualFiles,files,run:()=>runHostRelease({plan,ops,onProgress})}
 }
 test('real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration',async()=>{
@@ -115,4 +121,15 @@ test('explicit online preparation uses pull template then restores exact origina
  assert.deepEqual(f.calls.filter(c=>c.op==='PullStack').map(c=>c.stack),APPS)
  assert.equal(f.calls.some(c=>['StopStack','DeployStack','UpdateStack'].includes(c.op)),false)
  for(const stack of [...APPS,CORE])assert.equal(f.actualFiles.get(stack),f.files.get(stack).source)
+})
+
+test('native14 adapter requires all4 stopped and fresh verified backup before one drain-marked public migration',async()=>{
+ const f=fixture({native14:true});await f.run()
+ const migrations=f.calls.filter(c=>c.op==='RunStackService'&&JSON.stringify(c.command).includes('migrate-bin'))
+ assert.equal(migrations.length,1);assert.deepEqual(migrations[0].env,{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'})
+ assert.equal(f.calls.filter(c=>c.op==='SnapshotRestore').length,1)
+ assert.deepEqual(f.calls.filter(c=>c.op==='StopStack').map(c=>c.stack+':'+c.services[0]),['worker','lingxiloop'].flatMap(s=>APPS.map(a=>a+':'+s)))
+ assert.equal(f.calls.filter(c=>c.op==='UpdateStack').some(c=>Object.hasOwn(c,'env')),false)
+ const before=f.calls.length;await assert.rejects(f.ops.migrate());assert.equal(f.calls.length,before)
+ const b=fixture({native14:true});await assert.rejects(b.ops.migrate());await assert.rejects(b.ops.backup());assert.equal(b.calls.length,0)
 })
