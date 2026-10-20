@@ -79,7 +79,12 @@ test('all 14 default blocks and official free math and diagram blocks remain ins
   await editor().fill('')
   await editor().focus()
   await browser.keyboard.press('Control+Alt+0')
-  await expect(browser.locator('[aria-label="原生正文"] [data-content-type="paragraph"]')).toBeVisible()
+  await expect.poll(()=>browser.evaluate(()=>{
+    const anchor=window.getSelection()?.anchorNode
+    const element=anchor instanceof Element ? anchor : anchor?.parentElement
+    if(!element?.closest('[aria-label="原生正文"]')) return null
+    return element.closest('[data-content-type]')?.getAttribute('data-content-type') ?? null
+  })).toBe('paragraph')
   await browser.keyboard.press('Control+b')
   await browser.keyboard.type('原生粗体')
   await expect(browser.locator('[aria-label="原生正文"] strong')).toHaveText('原生粗体')

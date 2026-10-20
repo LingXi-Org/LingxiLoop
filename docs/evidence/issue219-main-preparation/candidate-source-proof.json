@@ -1,0 +1,26 @@
+{
+  "pr225": {
+    "candidate": "e608ae2cfd8bf314a7a0aea5160c1e91cfbfe006",
+    "candidateTree": "5787a10143984fb391ebb0b909ce0c954fd84b29",
+    "source": "b1f96106b9d0442ee4e044451ce51e53f64ee71f",
+    "main": "c6c47bddeabb4488f9fe93391f15c695a528260c",
+    "allChangedBlobsEqualOriginal": true,
+    "allOtherMainBlobsPreserved": true,
+    "changedPaths": 108,
+    "runtimePin": "3.5.6",
+    "runtimeLocksUnchanged": true,
+    "newMigration47Present": false
+  },
+  "issue219": {
+    "candidate": "58e5036cdac569e39d3457863996878cff30f8b1",
+    "candidateTree": "117e1c7320c5e3635830406308ca6722f8ba9901",
+    "source": "945fd9cd2cda8c906d78f7b42b9db30f89478337",
+    "main": "c6c47bddeabb4488f9fe93391f15c695a528260c",
+    "allChangedBlobsEqualOriginal": true,
+    "allOtherMainBlobsPreserved": true,
+    "changedPaths": 484,
+    "runtimePin": "3.5.6",
+    "runtimeLocksUnchanged": true,
+    "newMigration47Present": false
+  }
+}

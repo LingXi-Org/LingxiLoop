@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="7" failures="1" errors="0" skipped="0" time="37.959">
+  <testsuite name="e2e/content-boundaries/browser.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="11.591">
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: plain [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="5.623"/>
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: multiline-literal [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="4.514"/>
+    <testcase name="private legacy recovery remains available after editing current content [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="1.454"/>
+  </testsuite>
+  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="4" failures="1" errors="0" skipped="0" time="26.368">
+    <testcase name="case GFM imports retain literal HTML text, currency and setext headings [native]" classname="e2e/content-editor/browser.e2e.ts" time="1.256"/>
+    <testcase name="upstream native schema, slash menus, tables, blocks, undo and lossless reopen [native]" classname="e2e/content-editor/browser.e2e.ts" time="4.108"/>
+    <testcase name="all 14 default blocks and official free math and diagram blocks remain insertable [native]" classname="e2e/content-editor/browser.e2e.ts" time="12.896">
+      <failure message="locator matched 5 nodes, expected exactly one: locator(&quot;[aria-label=\&quot;原生正文\&quot;] [data-content-type=\&quot;paragraph\&quot;]&quot;)" type="LOCATOR_AMBIGUOUS">LOCATOR_AMBIGUOUS (body): locator matched 5 nodes, expected exactly one: locator(&quot;[aria-label=\&quot;原生正文\&quot;] [data-content-type=\&quot;paragraph\&quot;]&quot;)</failure>
+    </testcase>
+    <testcase name="native formatting, links, emoji, block menu and table operations remain complete [native]" classname="e2e/content-editor/browser.e2e.ts" time="8.108"/>
+  </testsuite>
+</testsuites>
