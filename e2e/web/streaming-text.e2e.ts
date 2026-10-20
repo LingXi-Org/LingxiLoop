@@ -1,5 +1,6 @@
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
+import { assertNativeReducedMotion } from '../native-reduced-motion'
 
 // Serve with: node node_modules/vite/bin/vite.js --port 5196 --strictPort
 // Run with E2E_STREAMING_FIXTURE=1 E2E_BASE_URL=http://127.0.0.1:5196:
@@ -110,6 +111,52 @@ test.describe('Streaming renderer', {
     expect(rendered.text).toBe(text)
     expect(rendered.lengths.every(length => length === 2 || length === text.length)).toBe(true)
     await app.screenshot('streaming-reduced-motion')
+  })
+  test('native reduced motion shows complete text without entry, color or caret animation', {
+    ...(process.env.E2E_NATIVE_REDUCED_MOTION === '1' ? {} : { skip: 'Requires a browser with native reduced-motion media.' }),
+  }, async ({ app, browser }) => {
+    await app.open('/scripts/streaming-browser-check.html')
+    await assertNativeReducedMotion(browser)
+    await expect(browser.locator('#body')).toContainText('准备')
+    const text = '减少动态效果时直接显示正文。'.repeat(20)
+    const rendered = await browser.evaluate(async text => {
+      window.dispatchEvent(new CustomEvent('streaming-text-step', { detail: { text, done: false } }))
+      const lengths: number[] = []
+      const start = performance.now()
+      while (document.querySelector('#body')!.textContent !== text) {
+        if (performance.now() - start > 1500) throw new Error('Native reduced-motion text did not commit')
+        lengths.push(document.querySelector('#body')!.textContent!.length)
+        await new Promise(requestAnimationFrame)
+      }
+      const word = document.querySelector<HTMLElement>('#body [data-streaming-word]')!
+      const fresh = document.querySelector<HTMLElement>('#body [data-streaming-fresh]')!
+      const caret = document.querySelector<HTMLElement>('#body [data-streaming-caret]')!
+      if (!word || !fresh || !caret) throw new Error('Streaming decoration did not render')
+      const value = {
+        text: document.querySelector('#body')!.textContent,
+        lengths,
+        wordAnimation: getComputedStyle(word).animationName,
+        wordAfterAnimation: getComputedStyle(word, '::after').animationName,
+        colorTransition: getComputedStyle(fresh).transitionProperty,
+        colorDuration: getComputedStyle(fresh).transitionDuration,
+        caretAnimation: getComputedStyle(caret).animationName,
+        caretAfterAnimation: getComputedStyle(caret, '::after').animationName,
+      }
+      return value
+    }, text)
+    console.log('Native reduced-motion streaming styles', JSON.stringify(rendered))
+    expect(rendered.text).toBe(text)
+    expect(rendered.lengths.every(length => length === 2 || length === text.length)).toBe(true)
+    expect(rendered.wordAnimation).toBe('none')
+    expect(rendered.wordAfterAnimation).toBe('none')
+    expect(rendered.colorTransition).toBe('none')
+    expect(rendered.colorDuration).toBe('0s')
+    expect(rendered.caretAnimation).toBe('none')
+    expect(rendered.caretAfterAnimation).toBe('none')
+    await app.screenshot('streaming-native-reduced-motion')
+    await browser.evaluate(text => window.dispatchEvent(new CustomEvent('streaming-text-step', { detail: { text, done: true } })), text)
+    await expect(browser.locator('#body')).toHaveText(text)
+    await expect(browser.locator('#body [data-streaming-caret]')).toHaveCount(0)
   })
 })
 

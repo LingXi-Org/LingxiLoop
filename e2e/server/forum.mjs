@@ -2,16 +2,18 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { mkdir, writeFile, readFile } from 'node:fs/promises'
 import { appendFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { resolve, sep } from 'node:path'
 import pg from 'pg'
 
 const cwd = resolve(import.meta.dirname, '../..')
 assert.ok(process.argv.slice(2).every(arg => ['--browser','--browser-only','--resources-only','--core-only','--states-only','--issue146','--issue163','--issue184','--issue187','--issue219'].includes(arg)), 'Unknown forum validation option')
-const output = resolve(cwd, process.argv.includes('--states-only')?'artifacts/forum/states':process.argv.includes('--core-only')?'artifacts/forum/core':process.argv.includes('--issue219')?'artifacts/forum/issue219':process.argv.includes('--issue187')?'artifacts/issue-187/forum':process.argv.includes('--issue184')?'artifacts/forum/issue184':process.argv.includes('--issue163')?'artifacts/forum/issue163':process.argv.includes('--issue146')?'artifacts/forum/issue146':'artifacts/forum')
+const output = resolve(cwd, process.env.FORUM_ACCEPTANCE_OUTPUT ?? (process.argv.includes('--states-only')?'artifacts/forum/states':process.argv.includes('--core-only')?'artifacts/forum/core':process.argv.includes('--issue219')?'artifacts/forum/issue219':process.argv.includes('--issue187')?'artifacts/issue-187/forum':process.argv.includes('--issue184')?'artifacts/forum/issue184':process.argv.includes('--issue163')?'artifacts/forum/issue163':process.argv.includes('--issue146')?'artifacts/forum/issue146':'artifacts/forum'))
+assert.ok(output.startsWith(resolve(cwd, 'artifacts') + sep), 'Forum output must be inside this repository artifacts directory')
 await mkdir(output, { recursive: true })
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
-  /^(XDG_CACHE_HOME|PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|HOME|HOMEDRIVE|HOMEPATH|USERPROFILE|APPDATA|LOCALAPPDATA|COMSPEC|PROGRAMFILES(?:\(X86\))?|PROGRAMDATA|PROGRAMW6432|ALLUSERSPROFILE)$/i.test(name)))
+  /^(XDG_CACHE_HOME|PATH|PATHEXT|SYSTEMROOT|WINDIR|TEMP|TMP|HOME|HOMEDRIVE|HOMEPATH|USERPROFILE|APPDATA|LOCALAPPDATA|COMSPEC|PROGRAMFILES(?:\(X86\))?|PROGRAMDATA|PROGRAMW6432|ALLUSERSPROFILE|E2E_CDP_URL|E2E_NATIVE_REDUCED_MOTION|PLAYWRIGHT_BROWSERS_PATH)$/i.test(name)))
 Object.assign(env, {
+  FORUM_BROWSER_OUTPUT: resolve(output, 'browser'),
   LINGXILOOP_VITE_CACHE_DIR: resolve(cwd, 'node_modules/.vite-forum'),
   NODE_ENV: 'test', DOTENV_CONFIG_PATH: resolve(output, '__no_dotenv__'),
   DATABASE_URL: 'postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_forum_test',

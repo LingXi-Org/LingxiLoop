@@ -1,8 +1,10 @@
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
+import { assertNativeReducedMotion } from '../native-reduced-motion'
 
 test('forum loading, HTTP retry and empty filters retain navigation and keyboard access',async({app,browser,screen})=>{
   await app.open('/')
+  if (process.env.E2E_NATIVE_REDUCED_MOTION === '1') await assertNativeReducedMotion(browser)
   await browser.evaluate(async()=>{await fetch('/api/fixture-role/teacher');await fetch('/api/fixture-forum-list/hold',{method:'POST'});return true})
   await app.open('/?project=e2e-classroom&view=forum')
   const loading=screen.getByRole('status').filter({hasText:'正在加载学习论坛'})

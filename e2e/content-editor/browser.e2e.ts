@@ -1,6 +1,7 @@
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 import { nativeBlock, nativeLink } from './native'
+import { assertNativeReducedMotion } from '../native-reduced-motion'
 test('case GFM imports retain literal HTML text, currency and setext headings',async({app,browser,screen})=>{
   await app.open('/e2e/content-editor.html?format=markdown')
   const editor=screen.getByLabel('原生正文',{exact:true})
@@ -21,6 +22,7 @@ test('case GFM imports retain literal HTML text, currency and setext headings',a
 })
 test('upstream native schema, slash menus, tables, blocks, undo and lossless reopen',async({app,browser,screen})=>{
   await app.open('/e2e/content-editor.html')
+  if (process.env.E2E_NATIVE_REDUCED_MOTION === '1') await assertNativeReducedMotion(browser)
   const editor=()=>screen.getByLabel('原生正文',{exact:true})
   await expect(editor()).toBeVisible({timeout:120000})
   await expect(editor()).toContainText('原有内容')
@@ -96,6 +98,7 @@ test('all 14 default blocks and official free math and diagram blocks remain ins
 
 test('native formatting, links, emoji, block menu and table operations remain complete',async({app,browser,screen})=>{
   await app.open('/e2e/content-editor.html')
+  if (process.env.E2E_NATIVE_REDUCED_MOTION === '1') await assertNativeReducedMotion(browser)
   const editor=()=>screen.getByLabel('原生正文',{exact:true})
   await expect(editor()).toBeVisible({timeout:120000})
   await editor().fill('原生格式')
