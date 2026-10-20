@@ -51,16 +51,34 @@ Before source changes, `FAILURE-MODEL.md` and owning PostgreSQL/native-worker te
 were written. `syntax-prepublication.json` records TypeScript syntax parsing only.
 Historical SQL hash verification and `git diff --check` passed at this checkpoint.
 
-**Package/lock pins, typecheck and runtime tests are pending.** The release owner
-has not yet confirmed formal 3.6.0 publication. No source-tree build or unformal
-runtime substitute is an acceptable replacement. Shared 3.5.8 dependencies remain
-untouched; qualification must use a private small runtime overlay once authorized.
+Formal runtime `3.6.0` from source
+`bbe5d4892ea1a805f5c923611bbd91d4320e472a` is now pinned in both
+root/server manifests and locks. `formal-runtime.json` and
+`dependency-qualification.json` retain the verified tar SHA256/integrity, packaged
+schema14/schema013/native016 hashes and proof that all other lock entries are
+unchanged. The formal package alone is extracted into this workspace's private
+runtime directory; other dependencies are read-only symlinks to the existing
+3.5.8 qualification tree. Shared dependencies remain untouched.
 
-After formal publication and exact root/server locks, run server typecheck and the
-owning integration files on a dedicated disposable test database/Redis:
+Local checks passed: `npm run server:typecheck`, `npm run server:lint`, and all four
+pure `visualize-runtime.test.ts` tests, including the actual unchanged Python
+standalone exporter. Their transcripts are retained alongside the initial typecheck
+failure and its fixture fixes. Old direct-callback chart/diagram/admission fixtures
+explicitly acknowledge the public host hook; they do not pretend to establish a
+native activation transaction. The real scripted native-worker test owns that gate.
+
+There is no local PostgreSQL/Redis binary or service after environment recovery.
+Database/worker integration is **not locally run**. The existing draft-PR CI
+integration job supplies PostgreSQL/Redis, migrates the disposable database and
+runs the repository's selected integration suite. CI must pass on the exact final
+candidate before this branch is integration-ready. No provider/browser matrix is
+claimed or added.
+
+The owning integration files are the following (CI uses its existing suite
+selection on a dedicated disposable test database/Redis):
 
 ```
-npm run test:integration -- --file migration.test.ts --file visualize-delivery.test.ts --file visualize-generation.test.ts --file visualize.test.ts --file visualize-runtime.test.ts
+npm run test:integration -- --file migration.test.ts --file visualize-delivery.test.ts --file visualize-generation.test.ts --file visualize.test.ts --file visualize-runtime.test.ts --file visualize-numeric.test.ts --file visualize-diagram.test.ts --file visualize-quality-contract.test.ts
 ```
 
 Record actual results and artifacts here before marking the branch integration

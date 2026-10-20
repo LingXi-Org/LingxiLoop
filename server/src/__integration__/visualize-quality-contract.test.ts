@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { after, before, test } from 'node:test'
 import type { ActionContext, RunVerificationContext } from '@lyyzka/lingxios'
+import { withVisualizeAuthoringFixture } from './_visualize-authoring-fixture.js'
 import { pool } from '../db/pool.js'
 import { saveVisualizeDocument } from '../im/visualize.js'
 import { verifyVisualizeCandidate, visualizeTools } from '../agent-runtime/visualize-tools.js'
@@ -25,7 +26,7 @@ before(async () => {
 })
 after(async () => { await teardownAll() })
 function context(body: string, id = runId): RunVerificationContext {
-  return { candidate: { body, requestVersion: 1, artifacts: [] }, requestVersion: 1,
+  return { skillActivations: [],unavailableSkillActivationIds: [],candidate: { body, requestVersion: 1, artifacts: [] }, requestVersion: 1,
     database: pool, signal: AbortSignal.timeout(10_000), deadlineAt: new Date(Date.now() + 10_000).toISOString(),
     work: { id, tenantId: companyId, agentId, principalId: userId, kind: 'turn', lane: 'interactive',
       sessionId: channelId, fence: 1, homeEpoch: 1, triggerRef: 'quality-request', meta: { conversationId: channelId } },
@@ -36,7 +37,7 @@ test('full HTML gets actionable native input failure and never writes a document
   const input = tool.parse({ name: 'full-document', html: '<!doctype html><html><body><p>Chart</p></body></html>' })
   // Only the public product authorize/execute callbacks are under test. No
   // runtime or provider is simulated; unused ActionContext capabilities omitted.
-  const ctx = { ...context(''), action: { action: tool.action } } as unknown as ActionContext
+  const ctx = withVisualizeAuthoringFixture({ ...context(''), action: { action: tool.action } } as unknown as ActionContext)
   await tool.authorize(ctx, input)
   const result = await tool.execute(ctx, input)
   assert.equal(result.ok, false)

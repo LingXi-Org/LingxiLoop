@@ -1,0 +1,21 @@
+
+> lingxiloop@0.1.0-beta server:typecheck
+> tsc -p server/tsconfig.json --noEmit
+
+server/src/__integration__/homework-live.test.ts(20,36): error TS2307: Cannot find module '../../../e2e/homework/meter.js' or its corresponding type declarations.
+server/src/__integration__/homework-live.test.ts(165,46): error TS7006: Parameter 'receipt' implicitly has an 'any' type.
+server/src/__integration__/homework-live.test.ts(165,136): error TS7006: Parameter 'material' implicitly has an 'any' type.
+server/src/__integration__/homework-live.test.ts(202,64): error TS7006: Parameter 'receipt' implicitly has an 'any' type.
+server/src/__integration__/homework-live.test.ts(204,95): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+server/src/__integration__/homework-live.test.ts(204,100): error TS7006: Parameter 'receipt' implicitly has an 'any' type.
+server/src/__integration__/homework-live.test.ts(205,96): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+server/src/__integration__/homework-live.test.ts(205,101): error TS7006: Parameter 'receipt' implicitly has an 'any' type.
+server/src/__integration__/visualize-delivery.test.ts(23,10): error TS2352: Conversion of type '{ work: { id: string; tenantId: string; agentId: string; principalId: string; sessionId: string; kind: "turn"; lane: "interactive"; meta: { conversationId: string; }; createdAt: string; }; candidate: { ...; }; ... 5 more ...; skillActivations: { ...; }[]; }' to type 'RunVerificationContext' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'work' are incompatible.
+    Type '{ id: string; tenantId: string; agentId: string; principalId: string; sessionId: string; kind: "turn"; lane: "interactive"; meta: { conversationId: string; }; createdAt: string; }' is missing the following properties from type 'Omit<WorkItem, "leaseToken">': fence, homeEpoch, triggerRef
+server/src/__integration__/visualize-quality-contract.test.ts(28,3): error TS2739: Type '{ candidate: { body: string; requestVersion: number; artifacts: never[]; }; requestVersion: number; database: Pool; signal: AbortSignal; deadlineAt: string; work: { id: string; ... 9 more ...; meta: { ...; }; }; }' is missing the following properties from type 'RunVerificationContext': skillActivations, unavailableSkillActivationIds
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

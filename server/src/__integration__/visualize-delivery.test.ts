@@ -21,7 +21,7 @@ const actor = () => ({ companyId, channelId, userId })
 function context(body: string, requestVersion = 1): RunVerificationContext {
   const { name, version, hash } = skillIndex(visualizeSkill)
   return { work: { id: runId, tenantId: companyId, agentId, principalId: userId, sessionId: channelId,
-    kind: 'turn', lane: 'interactive', meta: { conversationId: channelId }, createdAt: new Date().toISOString() },
+    kind: 'turn', lane: 'interactive', fence: 1,homeEpoch: 1,triggerRef: 'delivery-request',meta: { conversationId: channelId }, createdAt: new Date().toISOString() },
     candidate: { body, requestVersion,artifacts: [] }, requestVersion, database: pool, signal: AbortSignal.timeout(5000),
     deadlineAt: new Date(Date.now()+5000).toISOString(), unavailableSkillActivationIds: [],
     skillActivations: [{ id: 'activation', tenantId: companyId, runId, requestVersion,

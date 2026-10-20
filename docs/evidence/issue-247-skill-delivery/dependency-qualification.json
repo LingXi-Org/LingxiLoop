@@ -1,0 +1,18 @@
+{
+  "runtime": "3.6.0",
+  "nativeSchema": 14,
+  "source": "bbe5d4892ea1a805f5c923611bbd91d4320e472a",
+  "tarSha256": "aae419aef9b9f22f96377f420e585f0b60c2ebfee421f198864639cb50bd893d",
+  "integrity": "sha512-JT1wgF11Dtwy1tH5y/J7PQG5PF4/jCyssS8mnrMoqxwvPuKzik5hgwRI+GvXq+Wutv5+fr2H42/NxxCWNLEk/w==",
+  "schemaHash": "c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f",
+  "schema013Hash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+  "migration016Hash": "45e382104d9d8d83a9aaf38ffec6192389f884a95ec1590fde7948af6b6066f2",
+  "privateOverlay": true,
+  "sharedBase": "/workspace/LingxiLoop-integration-215-216-219/node_modules",
+  "sharedRuntimeVersion": "3.5.8",
+  "locksVerified": [
+    "package-lock.json",
+    "server/package-lock.json"
+  ],
+  "otherLockEntriesUnchanged": true
+}
