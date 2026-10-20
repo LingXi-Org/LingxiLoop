@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { mkdir, writeFile } from 'node:fs/promises'
+import { dirname } from 'node:path'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createWorker } from '@lyyzka/lingxios/worker'
@@ -16,9 +17,13 @@ let recording: Awaited<ReturnType<typeof installRecordingWukong>>
 const receipts: unknown[] = []
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => {
-  await mkdir('docs/evidence/provider-matrix-20261019', { recursive: true })
-  await writeFile('docs/evidence/provider-matrix-20261019/product-fault-results.json', JSON.stringify(receipts, null, 2))
-  await teardownAll(); await recording?.close()
+  try {
+    const output = process.env.PROVIDER_MATRIX_RECEIPTS
+    if (output) {
+      await mkdir(dirname(output), { recursive: true })
+      await writeFile(output, JSON.stringify(receipts, null, 2), { flag: 'wx' })
+    }
+  } finally { await teardownAll(); await recording?.close() }
 })
 const until = async (check: () => Promise<boolean>) => {
   for (let n = 0; n < 200; n++) { if (await check()) return; await delay(25) }

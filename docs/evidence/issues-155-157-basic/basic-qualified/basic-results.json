@@ -1,0 +1,43 @@
+[
+  {
+    "scenario": "fallback-available",
+    "status": "succeeded",
+    "primaryCalls": 1,
+    "secondaryCalls": 1,
+    "authorizationChecks": 1,
+    "ledgerRows": 2,
+    "rootBudgets": 1,
+    "syntheticProvider": true
+  },
+  {
+    "scenario": "fallback-absent",
+    "status": "failed",
+    "primaryCalls": 1,
+    "secondaryCalls": 0,
+    "authorizationChecks": 0,
+    "ledgerRows": 1,
+    "rootBudgets": 1,
+    "syntheticProvider": true
+  },
+  {
+    "scenario": "fallback-revoked",
+    "status": "failed",
+    "primaryCalls": 1,
+    "secondaryCalls": 0,
+    "authorizationChecks": 1,
+    "ledgerRows": 1,
+    "rootBudgets": 1,
+    "syntheticProvider": true
+  },
+  {
+    "scenario": "shared-root-product-fanout",
+    "notStarted": 2,
+    "children": 0,
+    "notices": 1,
+    "rootResultPreserved": true,
+    "oldBudgetUnchanged": true,
+    "nextStatus": "succeeded",
+    "independentRootBudgets": 2,
+    "syntheticProvider": true
+  }
+]

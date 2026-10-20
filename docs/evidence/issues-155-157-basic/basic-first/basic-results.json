@@ -1,0 +1,12 @@
+[
+  {
+    "scenario": "fallback-absent",
+    "status": "failed",
+    "primaryCalls": 1,
+    "secondaryCalls": 0,
+    "authorizationChecks": 0,
+    "ledgerRows": 1,
+    "rootBudgets": 1,
+    "syntheticProvider": true
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "productMatrix": {
+    "tests": 14,
+    "pass": 14,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "productSupplement": {
+    "tests": 4,
+    "pass": 4,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "upstreamFocused": {
+    "pass": 14,
+    "fail": 0,
+    "skipped": 0
+  },
+  "upstreamBoundaries": {
+    "pass": 20,
+    "fail": 0,
+    "skipped": 0
+  },
+  "postgresStores": "passed; real PostgreSQL; eight concurrent contenders admit two and reject six",
+  "typecheck": "passed",
+  "lint": "passed",
+  "syntax": "passed",
+  "testDatabaseLeaks": 0,
+  "paidProviderCalls": 0,
+  "productionMutations": 0,
+  "testedFiles": {
+    "scripts/runtime-acceptance/provider-fault-matrix.mjs": "7c4a88eccfd2482fbc5a93ddd6d537916c2ff96a736ee05ce541c242671ae67c",
+    "server/src/__integration__/runtime-provider-fault-matrix.test.ts": "a23cfa0274f7bdd25ca2707301b8cc6de9e9f390a5e84e6649f403a502306731",
+    "server/src/__integration__/runtime-basic-acceptance.test.ts": "ff2f744d15c5a8e1010381f414f2b50d36f0dfc5d4947c203ba1089c41627fe8"
+  },
+  "remaining": [
+    "real paid provider fault qualification",
+    "provider billing receipt",
+    "full current-version Worker+SPA fault journey",
+    "current browser rerun",
+    "long soak",
+    "direct production SQL migration46 reread",
+    "sole integrator review/merge/deployment/closure"
+  ]
+}
