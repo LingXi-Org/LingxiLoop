@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "reproduce": "XDG_CACHE_HOME=/workspace/.cache node e2e/server/cases.mjs --browser-only",
+  "database": "lingxiloop_cases_browser_test",
+  "results": [
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-20T03:19:13.406Z",
+      "finishedAt": "2026-10-20T03:19:14.312Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-20T03:19:14.312Z",
+      "finishedAt": "2026-10-20T03:19:14.964Z",
+      "exitCode": 0
+    },
+    {
+      "command": [
+        "node",
+        "/workspace/LingxiLoop/node_modules/e2e/dist/cli/bin.js",
+        "run",
+        "--config",
+        "e2e.cases.config.ts"
+      ],
+      "startedAt": "2026-10-20T03:19:22.580Z",
+      "finishedAt": "2026-10-20T03:21:08.035Z",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Synthetic identities and in-memory object storage; real HTTP API and isolated PostgreSQL. No live Open Notebook ingestion or vector retrieval is exercised."
+  ]
+}

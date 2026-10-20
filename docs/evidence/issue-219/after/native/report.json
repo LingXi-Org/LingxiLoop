@@ -1,0 +1,3635 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15757-e95d-746d-8814-227ff84e6e9b",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-20T03:25:42.585Z",
+    "finishedAt": "2026-10-20T03:26:34.548Z",
+    "project": {
+      "id": "lingxiloop-native-content",
+      "configDigest": "56dead834e006e22e6184a80d21fb4e1fa7990b00860c777f92e54f0e9fc0a70"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "c1f96321b43630b2ec16f5cf7dc2651f061421e4",
+      "branch": "codex/issue219-cases-forum-blocknote",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "native",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53109",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "2752ba9cdaa7c24cf0d0853a619ba8bc5bf05962a9bbbf6d6291d4a1a72a1cc8",
+        "testId": "e2e/content-editor/browser.e2e.ts::upstream%20native%20schema%2C%20slash%20menus%2C%20tables%2C%20blocks%2C%20undo%20and%20lossless%20reopen",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "upstream native schema, slash menus, tables, blocks, undo and lossless reopen"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15757-f136-7c2f-8a38-0451db15e185",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T03:25:43.606Z",
+            "durationMs": 6497,
+            "artifacts": [
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15757-f136-7c2f-8a38-0451db15e185:28"
+                },
+                "path": "native/e2e_content-editor_browser.e2e.ts__upstream_20native_20schema_2C_20slash_20menus_2C_20tables_2C_20blocks_2C_20u-f531afb8/default/attempt-0/screenshots/001-native-desktop-roundtrip.png",
+                "size": 53231,
+                "sha256": "e62393f7e58c789619400bc86e4f1c32214e7beb71f67e6e41cf0b8c77860aad"
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15757-f136-7c2f-8a38-0451db15e185:31"
+                },
+                "path": "native/e2e_content-editor_browser.e2e.ts__upstream_20native_20schema_2C_20slash_20menus_2C_20tables_2C_20blocks_2C_20u-f531afb8/default/attempt-0/screenshots/002-native-mobile-table.png",
+                "size": 37165,
+                "sha256": "2159b20e7e56fe7729c20896c42365ce37a169b83d44bf37e5aa659368ae7f65"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-editor.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:43.777Z",
+                "durationMs": 587,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 5,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:44.374Z",
+                "durationMs": 1466,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 7,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:45.842Z",
+                "durationMs": 365,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 8,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] [data-content-type=\\\"checkListItem\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.207Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 9,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] math\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.228Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 10,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] [data-content-type=\\\"diagram\\\"] svg\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.242Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 11,
+                  "column": 90
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.257Z",
+                "durationMs": 101,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 12,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.359Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.386Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "4 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.485Z",
+                "durationMs": 161,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 15,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+z",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.646Z",
+                "durationMs": 65,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:46.713Z",
+                "durationMs": 1029,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 17,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+Shift+z",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:47.742Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 18,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:47.793Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 19,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:47.832Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:47.926Z",
+                "durationMs": 187,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:48.114Z",
+                "durationMs": 285,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^表格/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:48.400Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:48.423Z",
+                "durationMs": 100,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "2 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:48.523Z",
+                "durationMs": 70,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 21,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Tab",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:48.593Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 22,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "2 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:48.614Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 23,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:22",
+                "index": 22,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:48.694Z",
+                "durationMs": 243,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 24,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:23",
+                "index": 23,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[aria-label=\\\"已保存文档\\\"] table\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:48.938Z",
+                "durationMs": 308,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 25,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:49.248Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 26,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:49.270Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 29,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:49.295Z",
+                "durationMs": 199,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 30,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:49.495Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 31,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:28",
+                "index": 28,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "native-desktop-roundtrip",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:49.519Z",
+                "durationMs": 139,
+                "events": [],
+                "artifacts": [
+                  "01a15757-f136-7c2f-8a38-0451db15e185:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 32,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:49.659Z",
+                "durationMs": 111,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 33,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:49.770Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 34,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a15757-f136-7c2f-8a38-0451db15e185:31",
+                "index": 31,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "native-mobile-table",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:49.793Z",
+                "durationMs": 104,
+                "events": [],
+                "artifacts": [
+                  "01a15757-f136-7c2f-8a38-0451db15e185:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 35,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "dd9dc1160afdbd88ad17c6ae1127cafa10d9eae3feb29e2bd185d17f5632cd01",
+        "testId": "e2e/content-editor/browser.e2e.ts::all%2014%20default%20blocks%20and%20official%20free%20math%20and%20diagram%20blocks%20remain%20insertable",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "all 14 default blocks and official free math and diagram blocks remain insertable"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 38,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15758-0a99-7eee-882b-0dabe0923d1f",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T03:25:50.108Z",
+            "durationMs": 44200,
+            "artifacts": [
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15758-0a99-7eee-882b-0dabe0923d1f:168"
+                },
+                "path": "native/e2e_content-editor_browser.e2e.ts__all_2014_20default_20blocks_20and_20official_20free_20math_20and_20diagram_2-128a25db/default/attempt-0/screenshots/001-default-native-controls.png",
+                "size": 20013,
+                "sha256": "7b8043818c4052e78ea388b99b1fe9e1d9986a7707d495456163d3419073b337"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-editor.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:50.144Z",
+                "durationMs": 475,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 39,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:50.619Z",
+                "durationMs": 1756,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:52.376Z",
+                "durationMs": 189,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:52.583Z",
+                "durationMs": 83,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:52.667Z",
+                "durationMs": 202,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "2 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:52.869Z",
+                "durationMs": 187,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^二级标题/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:53.057Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:53.092Z",
+                "durationMs": 222,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:53.314Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:53.347Z",
+                "durationMs": 426,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:53.773Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:11",
+                "index": 11,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:53.787Z",
+                "durationMs": 54,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:53.873Z",
+                "durationMs": 393,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:54.267Z",
+                "durationMs": 279,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "9 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:54.546Z",
+                "durationMs": 1316,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:15",
+                "index": 15,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^段落/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:55.864Z",
+                "durationMs": 236,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:56.100Z",
+                "durationMs": 297,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:56.397Z",
+                "durationMs": 65,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:56.464Z",
+                "durationMs": 241,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:56.706Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:20",
+                "index": 20,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:56.737Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:21",
+                "index": 21,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:56.814Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 9,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:56.876Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 10,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:56.897Z",
+                "durationMs": 133,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 11,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:57.030Z",
+                "durationMs": 216,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "6 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:57.247Z",
+                "durationMs": 911,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:26",
+                "index": 26,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^无序列表/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:58.158Z",
+                "durationMs": 103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:58.263Z",
+                "durationMs": 174,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:58.437Z",
+                "durationMs": 59,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:58.496Z",
+                "durationMs": 226,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:58.723Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:31",
+                "index": 31,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:58.754Z",
+                "durationMs": 72,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:32",
+                "index": 32,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:58.848Z",
+                "durationMs": 229,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:59.077Z",
+                "durationMs": 274,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:34",
+                "index": 34,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "6 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:25:59.351Z",
+                "durationMs": 1034,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^有序列表/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:00.385Z",
+                "durationMs": 88,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:36",
+                "index": 36,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:00.473Z",
+                "durationMs": 205,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:37",
+                "index": 37,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:00.678Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:38",
+                "index": 38,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:00.759Z",
+                "durationMs": 236,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:39",
+                "index": 39,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:00.997Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:40",
+                "index": 40,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:01.012Z",
+                "durationMs": 57,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:01.095Z",
+                "durationMs": 240,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:42",
+                "index": 42,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:01.335Z",
+                "durationMs": 232,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "9 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:01.567Z",
+                "durationMs": 1188,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:44",
+                "index": 44,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^检查清单/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:02.755Z",
+                "durationMs": 173,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:45",
+                "index": 45,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:02.928Z",
+                "durationMs": 254,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:46",
+                "index": 46,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:03.182Z",
+                "durationMs": 103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:47",
+                "index": 47,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:03.286Z",
+                "durationMs": 424,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:48",
+                "index": 48,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:03.710Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:49",
+                "index": 49,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:03.736Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:50",
+                "index": 50,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:03.826Z",
+                "durationMs": 379,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:51",
+                "index": 51,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:04.205Z",
+                "durationMs": 351,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:52",
+                "index": 52,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "2 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:04.556Z",
+                "durationMs": 627,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:53",
+                "index": 53,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^可折叠列表/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:05.183Z",
+                "durationMs": 68,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:54",
+                "index": 54,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:05.252Z",
+                "durationMs": 290,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:55",
+                "index": 55,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:05.543Z",
+                "durationMs": 57,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:56",
+                "index": 56,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:05.601Z",
+                "durationMs": 398,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:57",
+                "index": 57,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:05.999Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:58",
+                "index": 58,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:06.015Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:59",
+                "index": 59,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:06.098Z",
+                "durationMs": 376,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:60",
+                "index": 60,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:06.475Z",
+                "durationMs": 304,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:61",
+                "index": 61,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "4 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:06.780Z",
+                "durationMs": 1372,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:62",
+                "index": 62,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^代码块/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:08.153Z",
+                "durationMs": 466,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:63",
+                "index": 63,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:08.621Z",
+                "durationMs": 491,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:64",
+                "index": 64,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:09.112Z",
+                "durationMs": 177,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:65",
+                "index": 65,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:09.289Z",
+                "durationMs": 617,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:66",
+                "index": 66,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:09.906Z",
+                "durationMs": 72,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:67",
+                "index": 67,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:09.980Z",
+                "durationMs": 266,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:68",
+                "index": 68,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:10.295Z",
+                "durationMs": 109,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:69",
+                "index": 69,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:10.404Z",
+                "durationMs": 217,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:70",
+                "index": 70,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:10.621Z",
+                "durationMs": 652,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:71",
+                "index": 71,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^引用/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:11.274Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:72",
+                "index": 72,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:11.307Z",
+                "durationMs": 141,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:73",
+                "index": 73,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:11.450Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:74",
+                "index": 74,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:11.464Z",
+                "durationMs": 179,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:75",
+                "index": 75,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:11.643Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:76",
+                "index": 76,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:11.661Z",
+                "durationMs": 118,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:77",
+                "index": 77,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:11.811Z",
+                "durationMs": 94,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:78",
+                "index": 78,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:11.905Z",
+                "durationMs": 166,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:79",
+                "index": 79,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:12.071Z",
+                "durationMs": 953,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:80",
+                "index": 80,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^表格/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:13.024Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:81",
+                "index": 81,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:13.039Z",
+                "durationMs": 116,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:82",
+                "index": 82,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:13.158Z",
+                "durationMs": 385,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:83",
+                "index": 83,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:13.546Z",
+                "durationMs": 464,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:84",
+                "index": 84,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:14.012Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:85",
+                "index": 85,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:14.040Z",
+                "durationMs": 161,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:86",
+                "index": 86,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:14.235Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 9,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:87",
+                "index": 87,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:14.273Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 10,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:88",
+                "index": 88,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:14.290Z",
+                "durationMs": 53,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 11,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:89",
+                "index": 89,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:14.343Z",
+                "durationMs": 187,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:90",
+                "index": 90,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:14.530Z",
+                "durationMs": 531,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:91",
+                "index": 91,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^图片/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.061Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:92",
+                "index": 92,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.084Z",
+                "durationMs": 210,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:93",
+                "index": 93,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.295Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:94",
+                "index": 94,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.322Z",
+                "durationMs": 223,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:95",
+                "index": 95,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.545Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:96",
+                "index": 96,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.562Z",
+                "durationMs": 100,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:97",
+                "index": 97,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.690Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 9,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:98",
+                "index": 98,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.723Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 10,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:99",
+                "index": 99,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.743Z",
+                "durationMs": 61,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 11,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:100",
+                "index": 100,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.804Z",
+                "durationMs": 186,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:101",
+                "index": 101,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:15.991Z",
+                "durationMs": 487,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:102",
+                "index": 102,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^音频/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.478Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:103",
+                "index": 103,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.497Z",
+                "durationMs": 116,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:104",
+                "index": 104,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.614Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:105",
+                "index": 105,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.641Z",
+                "durationMs": 163,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:106",
+                "index": 106,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.804Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:107",
+                "index": 107,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.821Z",
+                "durationMs": 95,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:108",
+                "index": 108,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.927Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 9,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:109",
+                "index": 109,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.952Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 10,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:110",
+                "index": 110,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:16.964Z",
+                "durationMs": 59,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 11,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:111",
+                "index": 111,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:17.023Z",
+                "durationMs": 177,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:112",
+                "index": 112,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:17.200Z",
+                "durationMs": 340,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:113",
+                "index": 113,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^视频/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:17.542Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:114",
+                "index": 114,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:17.558Z",
+                "durationMs": 125,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:115",
+                "index": 115,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:17.683Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:116",
+                "index": 116,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:17.704Z",
+                "durationMs": 218,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:117",
+                "index": 117,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:17.923Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:118",
+                "index": 118,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:17.932Z",
+                "durationMs": 84,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:119",
+                "index": 119,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.047Z",
+                "durationMs": 67,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 9,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:120",
+                "index": 120,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.116Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 10,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:121",
+                "index": 121,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.134Z",
+                "durationMs": 58,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 11,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:122",
+                "index": 122,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.192Z",
+                "durationMs": 180,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:123",
+                "index": 123,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "4 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.374Z",
+                "durationMs": 353,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:124",
+                "index": 124,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^文件/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.729Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:125",
+                "index": 125,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.743Z",
+                "durationMs": 143,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:126",
+                "index": 126,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.886Z",
+                "durationMs": 47,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:127",
+                "index": 127,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:18.935Z",
+                "durationMs": 235,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:128",
+                "index": 128,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:19.170Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:129",
+                "index": 129,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:19.186Z",
+                "durationMs": 113,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:130",
+                "index": 130,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:19.314Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 9,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:131",
+                "index": 131,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:19.346Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 10,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:132",
+                "index": 132,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:19.360Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 11,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:133",
+                "index": 133,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:19.407Z",
+                "durationMs": 147,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:134",
+                "index": 134,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "7 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:19.554Z",
+                "durationMs": 1458,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:135",
+                "index": 135,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^分隔线/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:21.014Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:136",
+                "index": 136,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:21.043Z",
+                "durationMs": 274,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:137",
+                "index": 137,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:21.317Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:138",
+                "index": 138,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:21.331Z",
+                "durationMs": 409,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:139",
+                "index": 139,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:21.740Z",
+                "durationMs": 50,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:140",
+                "index": 140,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:21.792Z",
+                "durationMs": 246,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:141",
+                "index": 141,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:22.084Z",
+                "durationMs": 131,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 9,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:142",
+                "index": 142,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:22.216Z",
+                "durationMs": 37,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 10,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:143",
+                "index": 143,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:22.253Z",
+                "durationMs": 248,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 11,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:144",
+                "index": 144,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:22.501Z",
+                "durationMs": 713,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:145",
+                "index": 145,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "2 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:23.215Z",
+                "durationMs": 468,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:146",
+                "index": 146,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^块级公式/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:23.683Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:147",
+                "index": 147,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:23.710Z",
+                "durationMs": 317,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:148",
+                "index": 148,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:24.027Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:149",
+                "index": 149,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:24.079Z",
+                "durationMs": 253,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:150",
+                "index": 150,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:24.333Z",
+                "durationMs": 49,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:151",
+                "index": 151,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:24.383Z",
+                "durationMs": 247,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 48,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:152",
+                "index": 152,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:24.699Z",
+                "durationMs": 297,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:153",
+                "index": 153,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:24.996Z",
+                "durationMs": 906,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:154",
+                "index": 154,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "7 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:25.904Z",
+                "durationMs": 2246,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:155",
+                "index": 155,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^图表/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:28.150Z",
+                "durationMs": 48,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:156",
+                "index": 156,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:28.198Z",
+                "durationMs": 347,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:157",
+                "index": 157,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:28.545Z",
+                "durationMs": 236,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 50,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:158",
+                "index": 158,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:28.783Z",
+                "durationMs": 421,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 51,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:159",
+                "index": 159,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:29.204Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 52,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:160",
+                "index": 160,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-editor.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:29.213Z",
+                "durationMs": 438,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 55,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:161",
+                "index": 161,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:29.654Z",
+                "durationMs": 2129,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 56,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:162",
+                "index": 162,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+Alt+0",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:31.785Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 57,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:163",
+                "index": 163,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+b",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:31.819Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 58,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:164",
+                "index": 164,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "4 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:31.847Z",
+                "durationMs": 145,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 59,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:165",
+                "index": 165,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+b",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:31.993Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 60,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:166",
+                "index": 166,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:32.027Z",
+                "durationMs": 274,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 61,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:167",
+                "index": 167,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:32.301Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 62,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a15758-0a99-7eee-882b-0dabe0923d1f:168",
+                "index": 168,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "default-native-controls",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:26:32.346Z",
+                "durationMs": 276,
+                "events": [],
+                "artifacts": [
+                  "01a15758-0a99-7eee-882b-0dabe0923d1f:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 63,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 110409,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

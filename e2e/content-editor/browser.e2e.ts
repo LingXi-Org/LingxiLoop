@@ -7,6 +7,8 @@ test('upstream native schema, slash menus, tables, blocks, undo and lossless reo
   await expect(editor()).toBeVisible({timeout:120000})
   await expect(editor()).toContainText('原有内容')
   await expect(browser.locator('[aria-label="原生正文"] [data-content-type="checkListItem"]')).toBeVisible()
+  await expect(browser.locator('[aria-label="原生正文"] math').first()).toBeVisible()
+  await expect(browser.locator('[aria-label="原生正文"] [data-content-type="diagram"] svg')).toBeVisible()
   await editor().focus()
   await browser.keyboard.press('Control+End')
   await browser.keyboard.press('Enter')
@@ -24,6 +26,7 @@ test('upstream native schema, slash menus, tables, blocks, undo and lossless reo
   const before=await browser.evaluate(()=>JSON.parse(localStorage.getItem('native-219')!))
   expect(before.document.blocks.some((block:{type:string})=>block.type==='table')).toBe(true)
   expect(before.document.legacyMarkdown).toContain('$x^2$')
+  expect(before.document.blocks.some((block:{content?:{type:string;content?:{text:string}[]}[]})=>Array.isArray(block.content)&&block.content.some(item=>item.type==='math'))).toBe(true)
   await expect(editor()).toContainText('结论')
   await screen.getByRole('button','保存并重新打开',{exact:true}).tap()
   expect(await browser.evaluate(()=>JSON.parse(localStorage.getItem('native-219')!).document)).toEqual(before.document)
@@ -33,7 +36,7 @@ test('upstream native schema, slash menus, tables, blocks, undo and lossless reo
   await app.screenshot('native-mobile-table')
 })
 
-test('all 14 default native block types remain insertable with official controls',async({app,browser,screen})=>{
+test('all 14 default blocks and official free math and diagram blocks remain insertable',async({app,browser,screen})=>{
   await app.open('/e2e/content-editor.html')
   const editor=()=>screen.getByLabel('原生正文',{exact:true})
   await expect(editor()).toBeVisible({timeout:120000})
@@ -41,7 +44,7 @@ test('all 14 default native block types remain insertable with official controls
     ['h2','二级标题','heading'],['paragraph','段落','paragraph'],['bullet','无序列表','bulletListItem'],
     ['number','有序列表','numberedListItem'],['checklist','检查清单','checkListItem'],['折叠','可折叠列表','toggleListItem'],
     ['code','代码块','codeBlock'],['quote','引用','quote'],['table','表格','table'],['image','图片','image'],
-    ['audio','音频','audio'],['video','视频','video'],['file','文件','file'],['separator','分页符','divider'],
+    ['audio','音频','audio'],['video','视频','video'],['file','文件','file'],['divider','分隔线','divider'],['公式','块级公式','mathBlock'],['mermaid','图表','diagram'],
   ]) {
     await editor().fill('')
     await nativeBlock(browser,screen,'原生正文',query,title)
@@ -50,7 +53,9 @@ test('all 14 default native block types remain insertable with official controls
     const blocks=await browser.evaluate(()=>JSON.parse(localStorage.getItem('native-219')!).document?.blocks.map((block:{type:string})=>block.type))
     expect(blocks).toContain(type)
   }
+  await app.open('/e2e/content-editor.html')
   await editor().fill('')
+  await browser.keyboard.press('Control+Alt+0')
   await browser.keyboard.press('Control+b')
   await browser.keyboard.type('原生粗体')
   await browser.keyboard.press('Control+b')

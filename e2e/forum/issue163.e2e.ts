@@ -1,3 +1,4 @@
+import { nativePaste } from '../content-editor/native'
 import { fileURLToPath } from 'node:url'
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
@@ -7,6 +8,10 @@ import { expect } from 'e2e'
 test('compact inline editor preserves drafts and binds every avatar to its account', async ({ app, browser, screen }) => {
   const composer = () => screen.getByRole('region', '发布学习论坛内容')
   const editor = () => composer().getByLabel('内容正文')
+  const expandEditor=async()=>{
+    if(await composer().getAttribute('data-forum-composer-expanded')==='false') await composer().getByRole('button','展开发布框',{exact:true}).tap()
+    await editor().focus()
+  }
   const openAs = async (role: string) => {
     await app.open('/')
     await browser.evaluate(async role => {
@@ -39,7 +44,7 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
     const section = document.querySelector('[aria-label="发布学习论坛内容"]')!.getBoundingClientRect()
     const card = document.querySelector('[data-memo-card]')!.getBoundingClientRect()
     return { height: section.height, cardTop: card.top, overflow: document.documentElement.scrollWidth > innerWidth,
-      font: parseFloat(getComputedStyle(document.querySelector('.cm-content')!).fontSize) }
+      font: parseFloat(getComputedStyle(document.querySelector('.bn-editor')!).fontSize) }
     })
   }
   await openAs('teacher')
@@ -56,11 +61,11 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
     await app.screenshot(`issue163-compact-light-${width}`)
   }
   await browser.setViewport({ width: 1440, height: 1000 })
-  await editor().focus()
+  await expandEditor()
   await expect(composer().getByRole('button', '添加材料')).toBeVisible()
-  await editor().fill('教师讨论草稿\n' + '长文本保持内部滚动。\n'.repeat(180))
+  await nativePaste(browser,screen,'内容正文','教师讨论草稿\n' + '长文本保持内部滚动。\n'.repeat(180))
   expect(await browser.evaluate(() => {
-    const el = document.querySelector('[aria-label="发布学习论坛内容"] .cm-scroller')!
+    const el = document.querySelector('[aria-label="发布学习论坛内容"] .bn-editor')!
     return el.scrollHeight > el.clientHeight && el.clientHeight <= 300
   })).toBe(true)
   await composer().getByLabel('附件', { exact: true }).setInputFiles([fileURLToPath(new URL('./diagram.png', import.meta.url))])
@@ -70,7 +75,7 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
   expect((await geometry()).height).toBeLessThanOrEqual(110)
   await composer().getByRole('button', '展开发布框', { exact: true }).focus()
   await browser.keyboard.press('Enter')
-  await editor().focus()
+  await expandEditor()
   await browser.keyboard.press('Control+Home')
   await expect(editor()).toContainText('教师讨论草稿')
   await expect(composer().getByRole('button', '移除附件：diagram.png')).toBeVisible()
@@ -83,7 +88,7 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
   await expect(composer().getByRole('button', '移除附件：diagram.png')).toBeVisible()
   await browser.reload()
   await expect(editor()).toContainText('教师讨论草稿')
-  await editor().focus()
+  await expandEditor()
   await composer().getByRole('button', '材料 1', { exact: true }).tap()
   await expect(composer().getByRole('button', '移除附件：diagram.png')).toBeVisible()
   await browser.evaluate(async () => (await fetch('/api/fixture-fail-next-post', { method: 'POST' })).ok)
@@ -108,6 +113,7 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
   expect(studentAvatar).not.toBe(teacherAvatar)
   await browser.reload()
   await expect(avatar('student')).toHaveAttribute('src', studentAvatar)
+  await expandEditor()
   await editor().fill('Issue163 学生讨论')
   await composer().getByRole('button', '发布', { exact: true }).tap()
   const studentCard = browser.locator('article[aria-label="Issue163 学生讨论"]')
@@ -148,20 +154,19 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
   await app.screenshot('issue163-account-avatar-roster-refresh')
   await openAs('peer')
   await expect(composer().getByRole('img', 'Forum peer未设置头像或头像加载失败', { exact: true })).toBeVisible()
-  await editor().focus()
+  await expandEditor()
   await editor().fill('窄屏键盘草稿')
-  await composer().getByRole('button', '预览正文', { exact: true }).tap()
   await composer().getByRole('button', '收起发布框', { exact: true }).tap()
-  await editor().focus()
+  await expandEditor()
   await expect(editor()).toContainText('窄屏键盘草稿')
   await browser.setViewport({ width: 390, height: 844 })
-  await editor().focus()
+  await expandEditor()
   await expect(composer().getByRole('button', '收起发布框', { exact: true })).toBeVisible()
   // Let the actual ThemeProvider restore both class/data-theme and color-scheme.
   // Changing only the class can capture mixed light/dark styles mid-transition.
   await browser.evaluate(() => { localStorage.setItem('lingxiloop-theme', 'dark'); return true })
   await browser.reload()
-  await editor().focus()
+  await expandEditor()
   await expect(composer().getByRole('button', '收起发布框', { exact: true })).toBeVisible()
   await expect(editor()).toContainText('窄屏键盘草稿')
   await expect(browser.locator('[data-memo-card]').first()).toBeVisible()
@@ -169,12 +174,13 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
     const root=document.documentElement
     const section=document.querySelector('[aria-label="发布学习论坛内容"]')!
     const card=document.querySelector('[data-memo-card]')!
-    const toolbar=document.querySelector('[aria-label="预览正文"]')!
+    const toolbar=document.querySelector('[data-forum-focus-canvas] button[type="submit"]')!
     const probe=document.createElement('span')
-    probe.style.backgroundColor='var(--card)';probe.style.color='var(--card-foreground)'
+    probe.style.backgroundColor='var(--card)';probe.style.color='var(--primary-foreground)'
     document.body.append(probe)
     const expectedBackground=getComputedStyle(probe).backgroundColor
     section.append(probe)
+    probe.style.backgroundColor='var(--background)'
     const expected=getComputedStyle(probe)
     const state={
       theme:root.dataset.theme ?? '',darkClass:root.classList.contains('dark'),lightClass:root.classList.contains('light'),

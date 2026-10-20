@@ -66,7 +66,12 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
   },[space.projectId])
   const disabled=busy||uploading
   useEffect(()=>{onWorking(disabled);return()=>onWorking(false)},[disabled,onWorking])
-  return <form className="forum-focus-form" onSubmit={async event=>{
+  return <form className="forum-focus-form" onKeyDown={event=>{
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !event.nativeEvent.isComposing) {
+      event.preventDefault()
+      if (!disabled) event.currentTarget.requestSubmit()
+    }
+  }} onSubmit={async event=>{
     event.preventDefault()
     if(disabled||!space.courseId) return
     setBusy(true);setError('')

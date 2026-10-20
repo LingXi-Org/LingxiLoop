@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import { test, type Browser } from '@e2e-dev/web'
 import { expect, type App, type Screen } from 'e2e'
-import { nativeBlock, nativeUpload } from '../content-editor/native'
+import { nativeBlock, nativeUpload, nativePaste } from '../content-editor/native'
 
 const url='/?project=e2e-classroom&view=forum'
 const file=(name:string)=>fileURLToPath(new URL(name,import.meta.url))
@@ -26,14 +26,13 @@ test('native forum menus, table, task state, scoped draft, upload retry, publish
   await browser.keyboard.press('Enter')
   const editor=()=>composer().getByLabel('内容正文',{exact:true})
   // Every default block is discoverable through the upstream slash controller.
-  for(const [query,title] of [['h2','二级标题'],['paragraph','段落'],['bullet','无序列表'],['number','有序列表'],['checklist','检查清单'],['折叠','可折叠列表'],['code','代码块'],['quote','引用'],['table','表格'],['image','图片'],['audio','音频'],['video','视频'],['file','文件'],['separator','分页符']]) {
+  for(const [query,title] of [['h2','二级标题'],['paragraph','段落'],['bullet','无序列表'],['number','有序列表'],['checklist','检查清单'],['折叠','可折叠列表'],['code','代码块'],['quote','引用'],['table','表格'],['image','图片'],['audio','音频'],['video','视频'],['file','文件'],['divider','分隔线']]) {
     await editor().fill('')
-    await browser.keyboard.press('/')
-  await browser.keyboard.type(query)
-    await expect(screen.getByRole('option',new RegExp(title)).first()).toBeVisible()
+    await nativeBlock(browser,screen,'内容正文',query,title)
     await browser.keyboard.press('Escape')
   }
-  await editor().fill('Issue219 原生编辑\n正文保留中文、标点和链接。')
+  await nativePaste(browser,screen,'内容正文','Issue219 原生编辑\n\n正文保留中文、标点和链接。')
+  await expect(editor()).toContainText('正文保留中文')
   await fixture(browser,'/api/fixture-attachment-upload/hold')
   await composer().getByLabel('附件',{exact:true}).setInputFiles([file('./submission.txt')])
   await expect(composer().getByRole('button','上传中…',{exact:true})).toBeDisabled()
@@ -128,7 +127,7 @@ test('legacy submission, native teacher feedback media and private history keep 
   await nativeUpload(browser,screen,'反馈：Forum student',file('./diagram.png'))
   await screen.getByRole('button','保存反馈',{exact:true}).tap()
   await expect(screen.getByText('Issue219 教师反馈：解释完整，保留观察图。',{exact:true})).toBeVisible()
-  const versions=await browser.evaluate(async()=> (await fetch('/api/courses/e2e-course/forum/post/issue146-assignment/submissions?learnerId=forum-student',{headers:{'x-company-id':'e2e-school'}}).then(r=>r.json())).items)
+  const versions=await browser.evaluate(async()=> (await fetch('/api/courses/e2e-course/forum/post/issue146-assignment/students/forum-student/submissions',{headers:{'x-company-id':'e2e-school'}}).then(r=>r.json())).items)
   expect(versions[0].editorDocument.format).toBe('blocknote')
   const feedback=versions[0].feedback.find((f:{body:string})=>f.body.includes('Issue219 教师反馈'))
   expect(feedback.editorDocument.format).toBe('blocknote')
@@ -138,6 +137,7 @@ test('legacy submission, native teacher feedback media and private history keep 
   await openAs(app,browser,screen,'student')
   expect(await browser.evaluate(async url=>(await fetch(url)).status,asset)).toBe(200)
   await screen.getByRole('link','Memos 详情与作答验收',{exact:true}).tap()
+  await browser.locator('[aria-label="提交记录"] summary').filter({hasText:'第 1 版'}).tap()
   await expect(screen.getByText('Issue219 教师反馈：解释完整，保留观察图。',{exact:true})).toBeVisible()
   await openAs(app,browser,screen,'peer')
   expect(await browser.evaluate(async url=>(await fetch(url)).status,asset)).toBe(404)
@@ -168,7 +168,7 @@ test('real homework draft card persists both native fields, publishes, and reope
   await expect(screen.getByText('已发布',{exact:true})).toBeVisible()
   await openAs(app,browser,screen,'student')
   await screen.getByRole('link','Issue219 原生作业草稿',{exact:true}).tap()
-  await expect(screen.getByText('独立解释计算步骤。',{exact:true})).toBeVisible()
+  await expect(screen.getByRole('region','作业要求',{exact:true}).getByText('独立解释计算步骤。',{exact:true})).toBeVisible()
   await screen.getByLabel('我的作答',{exact:true}).fill('Issue219 新作答：底乘高除以二。')
   await screen.getByRole('button','保存草稿',{exact:true}).tap()
   await expect(screen.getByRole('button','保存草稿',{exact:true})).toBeDisabled()

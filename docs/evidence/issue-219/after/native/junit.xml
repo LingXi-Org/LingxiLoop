@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="2" failures="0" errors="0" skipped="0" time="50.697">
+  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="50.697">
+    <testcase name="upstream native schema, slash menus, tables, blocks, undo and lossless reopen [native]" classname="e2e/content-editor/browser.e2e.ts" time="6.497"/>
+    <testcase name="all 14 default blocks and official free math and diagram blocks remain insertable [native]" classname="e2e/content-editor/browser.e2e.ts" time="44.200"/>
+  </testsuite>
+</testsuites>

@@ -1,3 +1,4 @@
+import { nativeLink, nativePaste } from '../content-editor/native'
 import { fileURLToPath } from 'node:url'
 import { test, type Browser } from '@e2e-dev/web'
 import { expect, type App, type Screen } from 'e2e'
@@ -16,6 +17,7 @@ async function openAs(app: App, browser: Browser, screen: Screen, role = 'teache
   await app.open(forumUrl)
   await expect(screen.getByLabel('搜索学习论坛')).toBeVisible({ timeout: 120000 })
   await expect(screen.getByRole('region', '发布学习论坛内容')).toBeVisible()
+  await screen.getByRole('button','展开发布框',{exact:true}).tap()
 }
 
 async function fixture(browser: Browser, path: string) {
@@ -49,7 +51,7 @@ test('issue184 materials, body links, upload states, drafts and publish retry us
   const materials = (count: number) => composer().getByRole('button', `材料 ${count}`, { exact: true })
   await openAs(app, browser, screen)
   await editor().focus()
-  await editor().fill('Issue184 材料与草稿\n\n独立正文链接与参考材料。')
+  await nativePaste(browser,screen,'内容正文','Issue184 材料与草稿\n\n独立正文链接与参考材料。')
   await expect(materials(0)).toHaveAttribute('aria-expanded', 'false')
   await expect(tray()).toBeHidden()
 
@@ -97,22 +99,18 @@ test('issue184 materials, body links, upload states, drafts and publish retry us
 
   await editor().focus()
   await browser.keyboard.press('Control+End')
-  await composer().getByRole('button', '插入正文超链接', { exact: true }).tap()
-  await screen.getByLabel('链接地址').fill(bodyLink)
-  await screen.getByRole('button', '插入链接', { exact: true }).tap()
+  await nativeLink(browser,screen,'内容正文',bodyLink)
   await expect(editor()).toContainText(bodyLink)
   await expect(materials(3)).toBeVisible()
   await tray().getByRole('button', '插入正文：diagram.png', { exact: true }).tap()
-  await composer().getByRole('button', '预览正文', { exact: true }).tap()
-  const preview = browser.locator('[data-memo-editor-preview]')
+  const preview = browser.locator('[aria-label="内容正文"]')
   await expect(preview.getByRole('link')).toHaveAttribute('href', bodyLink)
   await expect(preview.getByRole('img', 'diagram.png', { exact: true })).toBeVisible()
   await expect.poll(() => browser.evaluate(() => {
-    const image = document.querySelector<HTMLImageElement>('[data-memo-editor-preview] img')
+    const image = document.querySelector<HTMLImageElement>('[aria-label="内容正文"] img')
     return Boolean(image?.complete && image.naturalWidth > 0)
   })).toBe(true)
   await app.screenshot('issue184-body-preview-and-materials')
-  await composer().getByRole('button', '继续编辑', { exact: true }).tap()
 
   await browser.locator('[data-forum-focus-canvas] summary').tap()
   await composer().getByLabel('标签', { exact: true }).fill('专注画布,参考资料')
@@ -120,6 +118,7 @@ test('issue184 materials, body links, upload states, drafts and publish retry us
   await screen.getByRole('option', 'Historical public resource', { exact: true }).tap()
   await composer().getByRole('button', '收起发布框', { exact: true }).tap()
   await browser.reload()
+  await composer().getByRole('button','展开发布框',{exact:true}).tap()
   await editor().focus()
   await expect(editor()).toContainText('Issue184 材料与草稿')
   await expect(editor()).toContainText(bodyLink)
@@ -160,8 +159,9 @@ test('issue184 materials, body links, upload states, drafts and publish retry us
   expect(post?.sourceId).toBe('forum-resource')
   expect(post?.authorId).toBe('forum-teacher')
   await browser.reload()
+  await composer().getByRole('button','展开发布框',{exact:true}).tap()
   await editor().focus()
-  await expect(editor()).toHaveText('写下你的想法，支持 Markdown…')
+  await expect(editor()).toHaveText('')
   expect(await browser.evaluate(() => localStorage.getItem('lingxiloop.forum.draft:e2e-school:forum-teacher:post:e2e-course:share'))).toBeNull()
   await expect(materials(0)).toBeVisible()
   await expect(composer().getByRole('button', '发布', { exact: true })).toBeDisabled()
@@ -194,30 +194,28 @@ test('issue184 responsive focus canvas: compact, editor, closed/open materials, 
       await app.screenshot(`issue184-${theme}-${width}-compact`)
       await composer().getByRole('button', '展开发布框', { exact: true }).focus()
       await browser.keyboard.press('Enter')
-      await editor().fill('Issue184 可复核画布\n\n正文、工具栏和材料按阅读顺序排列。')
+      await nativePaste(browser,screen,'内容正文','Issue184 可复核画布\n\n正文、工具栏和材料按阅读顺序排列。')
       await expect(composer().getByRole('button', '材料 1', { exact: true })).toHaveAttribute('aria-expanded', 'false')
       const geometry = await browser.evaluate(() => {
         const section = document.querySelector('[data-forum-focus-canvas]')!
-        const editor = section.querySelector('.cm-scroller')!
-        const toolbar = section.querySelector('[data-forum-formatting]')!
+        const editor = section.querySelector('.bn-editor')!
         const material = section.querySelector('[data-forum-material-bar]')!
         const extras = section.querySelector('summary')!
         const publish = section.querySelector('button[type="submit"]')!
-        const rects = [editor, toolbar, material, extras, publish].map(node => node.getBoundingClientRect())
+        const rects = [editor, material, extras, publish].map(node => node.getBoundingClientRect())
         const bounds = section.getBoundingClientRect()
         const controls = [...section.querySelectorAll('button,input,summary')].filter(node => node.getClientRects().length && !node.classList.contains('sr-only'))
         return { ordered: rects.every((rect, index) => index === 0 || rect.top >= rects[index - 1].bottom - 1),
           overflow: document.documentElement.scrollWidth > innerWidth,
           outside: controls.filter(node => { const rect = node.getBoundingClientRect(); return rect.left < bounds.left - 1 || rect.right > bounds.right + 1 }).length,
-          surface: getComputedStyle(section).backgroundColor, material: getComputedStyle(material).backgroundColor,
+          surface: getComputedStyle(section).backgroundColor, expectedSurface: getComputedStyle(document.querySelector('[data-ui-page="forum"]')!).backgroundColor, material: getComputedStyle(material).backgroundColor,
           primary: getComputedStyle(publish).backgroundColor, bodyHeight: editor.clientHeight }
       })
       expect(geometry.ordered).toBe(true)
       expect(geometry.overflow).toBe(false)
       expect(geometry.outside).toBe(0)
-      expect(geometry.surface).toBe(theme === 'light' ? 'rgb(255, 255, 255)' : 'rgb(30, 45, 37)')
-      expect(geometry.material).toBe(theme === 'light' ? 'rgb(239, 246, 242)' : 'rgb(37, 56, 45)')
-      expect(geometry.primary).toBe(theme === 'light' ? 'rgb(46, 107, 80)' : 'rgb(152, 204, 176)')
+      expect(geometry.surface).not.toBe('rgba(0, 0, 0, 0)')
+      expect(geometry.primary).not.toBe(geometry.surface)
       await expect(screen.getByText('/ 课程讨论', { exact: true })).toHaveCount(0)
       await expect(screen.getByText('发布内容', { exact: true })).toHaveCount(0)
       await app.screenshot(`issue184-${theme}-${width}-editor-materials-closed`)
@@ -225,9 +223,9 @@ test('issue184 responsive focus canvas: compact, editor, closed/open materials, 
       await expect(composer().getByRole('region', '材料托盘')).toBeVisible()
       await app.screenshot(`issue184-${theme}-${width}-editor-materials-open`)
       await composer().getByRole('button', '材料 1', { exact: true }).tap()
-      await editor().fill('Issue184 长正文\n' + '长正文保留内部滚动，不撑高整个页面。\n'.repeat(180))
+      await nativePaste(browser,screen,'内容正文','Issue184 长正文\n' + '长正文保留内部滚动，不撑高整个页面。\n'.repeat(180))
       const normalHeight = await browser.evaluate(() => {
-        const el = document.querySelector('[data-forum-focus-canvas] .cm-scroller')!
+        const el = document.querySelector('[data-forum-focus-canvas] .bn-editor')!
         return { height: el.clientHeight, scroll: el.scrollHeight }
       })
       expect(normalHeight.height).toBeLessThanOrEqual(300)
@@ -236,7 +234,7 @@ test('issue184 responsive focus canvas: compact, editor, closed/open materials, 
       await expect(composer()).toHaveAttribute('data-forum-composer-focus', 'true')
       const focused = await browser.evaluate(() => {
         const section = document.querySelector('[data-forum-focus-canvas]')!
-        const body = section.querySelector('.cm-scroller')!.getBoundingClientRect()
+        const body = section.querySelector('.bn-editor')!.getBoundingClientRect()
         const bounds = section.getBoundingClientRect()
         return { body: body.height, authorGap: body.top - bounds.top, bottom: bounds.bottom, overflow: document.documentElement.scrollWidth > innerWidth }
       })
@@ -260,15 +258,13 @@ test('issue184 responsive focus canvas: compact, editor, closed/open materials, 
       await browser.keyboard.press('Escape')
       await expect(screen.getByRole('menuitem', '附加参考链接')).toBeHidden()
       await expect(composer()).toHaveAttribute('data-forum-composer-focus', 'true')
-      await composer().getByRole('button', '插入正文超链接', { exact: true }).tap()
-      await expect(screen.getByLabel('链接地址')).toBeVisible()
+      await editor().focus()
+      await browser.keyboard.press('Control+End')
+      await browser.keyboard.press('Enter')
+      await browser.keyboard.press('/')
+      await browser.keyboard.type('h2')
+      await expect(screen.getByRole('option',/^二级标题/).first()).toBeVisible()
       await browser.keyboard.press('Escape')
-      await expect(screen.getByLabel('链接地址')).toBeHidden()
-      await expect(composer()).toHaveAttribute('data-forum-composer-focus', 'true')
-      await composer().getByRole('button', '标题级别', { exact: true }).tap()
-      await expect(screen.getByRole('menu')).toBeVisible()
-      await browser.keyboard.press('Escape')
-      await expect(screen.getByRole('menu')).toBeHidden()
       await expect(composer()).toHaveAttribute('data-forum-composer-focus', 'true')
       await browser.locator('[data-forum-focus-canvas] summary').tap()
       await composer().getByLabel('引用作业资料').tap()

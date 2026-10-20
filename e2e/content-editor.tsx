@@ -5,7 +5,7 @@ import { AppThemeProvider } from '@/components/AppThemeProvider'
 import { ContentEditor, ContentDocumentView, type ContentDocument } from '@/features/content-editor'
 import '@/styles/globals.css'
 if (!import.meta.env.DEV) throw new Error('Isolated fixture requires development mode')
-const legacy = '# 原有内容\n\n保留中文、[资料](https://example.org)和公式 $x^2$。\n\n- [ ] 核对资料\n\n```ts\nconst value = 2\n```'
+const legacy = '# 原有内容\n\n保留中文、[资料](https://example.org)和公式 $x^2$。\n\n- [ ] 核对资料\n\n```ts\nconst value = 2\n```\n\n```mermaid\ngraph LR\n A[观察] --> B[结论]\n```\n\n$$\nx^2+y^2=z^2\n$$\n\n文末段落'
 function Fixture() {
   const [value,setValue]=useState(legacy),[document,setDocument]=useState<ContentDocument|null>(null),[key,setKey]=useState(0),[preview,setPreview]=useState(false)
   return <AppThemeProvider><main className="mx-auto max-w-3xl space-y-4 p-4"><h1>官方原生编辑器 · 隔离 UI 验收</h1>

@@ -8,8 +8,9 @@
 .forum-focus-modes button[aria-pressed="true"] { color: var(--primary); background: var(--accent); }
 .forum-focus-composer .content-editor { border: 0; border-radius: 0; }
 .forum-focus-composer .content-editor:focus-within { outline-offset: -2px; }
+.forum-focus-composer .bn-editor { max-height: 300px; overflow-y: auto; }
 .forum-focus-composer[data-forum-composer-focus="true"] { box-shadow: 0 8px 40px #0002; }
-.forum-focus-composer[data-forum-composer-focus="true"] .bn-editor { min-height: 45dvh; }
+.forum-focus-composer[data-forum-composer-focus="true"] .bn-editor { min-height: 45dvh; max-height: 45dvh; }
 .forum-focus-composer[data-forum-composer-expanded="false"] { display: grid; grid-template-columns: 28px minmax(0,1fr) 28px; align-items: center; gap: 6px; padding: 6px 10px; }
 .forum-focus-composer[data-forum-composer-expanded="false"] .forum-focus-head { display: contents; }
 .forum-focus-composer[data-forum-composer-expanded="false"] .forum-focus-author { grid-column: 1; grid-row: 1; }

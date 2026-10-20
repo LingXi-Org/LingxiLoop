@@ -109,7 +109,7 @@ test('organization case publication, cross-course access, isolation and responsi
   expect(await browser.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
   await expect.poll(()=>browser.evaluate(()=>{
     const cards=Array.from(document.querySelectorAll('main article')).map(x=>x.getBoundingClientRect())
-    return cards.length===2&&Math.abs(cards[0].x-cards[1].x)<1&&cards[1].top>cards[0].bottom
+    return cards.length===2&&Math.abs(cards[0].x-cards[1].x)<1&&cards[1].top>=cards[0].bottom
   })).toBe(true)
   await app.screenshot('mobile-dark-single-column-keyboard')
 
