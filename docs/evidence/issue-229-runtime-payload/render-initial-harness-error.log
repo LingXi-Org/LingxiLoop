@@ -1,0 +1,3 @@
+usage: render.py [-h] [--title TITLE] [--force] [--serve] [--port PORT]
+                 fragment [destination]
+render.py: error: unrecognized arguments: --output

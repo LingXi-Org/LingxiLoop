@@ -59,6 +59,47 @@ test('server image includes the complete shared runtime import graph', () => {
   assert.deepEqual([...missing].sort(), [])
 })
 
+// Failures: the final image carries desktop/reference source, or slimming drops
+// the immutable skill, the one served upstream script, or license/provenance.
+test('server image ships only the required pinned ZCode runtime payload', () => {
+  const finalStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1)
+  const root = fileURLToPath(new URL('../', import.meta.url))
+  const copied = finalStage.split(/\r?\n/).filter(line => /^COPY third_party\/zcode[ /]/.test(line))
+    .flatMap(line => {
+      const [, ...args] = line.trim().split(/\s+/), destination = args.pop()
+      return args.map(source => ({ source, destination: resolve(root, destination) }))
+    })
+  const packaged = path => copied.some(({ source, destination }) => {
+    if (path !== source && !path.startsWith(`${source}/`)) return false
+    const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
+    // COPY of one file to an exact filename does not append that filename.
+    const target = !ts.sys.directoryExists(resolve(root, source)) && destination === resolve(root, path)
+      ? destination : resolve(destination, suffix)
+    return target === resolve(root, path)
+  })
+  const manifest = JSON.parse(read('third_party/zcode/manifest.json'))
+  const runtimeScript = 'upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js'
+  for (const file of manifest.files.filter(file => file.kind === 'skill')) {
+    assert.ok(packaged(`third_party/zcode/${file.path}`), `Missing skill runtime file: ${file.path}`)
+  }
+  assert.ok(packaged(`third_party/zcode/${runtimeScript}`), 'Missing served tweak.js source')
+  for (const path of ['LICENSE', 'README.md', 'manifest.json']) {
+    assert.ok(packaged(`third_party/zcode/${path}`), `Missing license or provenance: ${path}`)
+  }
+  const shippedReferenceSource = manifest.files.filter(file => file.path.startsWith('upstream/')
+    && file.path !== runtimeScript && file.path !== 'upstream/LICENSE'
+    && packaged(`third_party/zcode/${file.path}`)).map(file => file.path)
+  assert.deepEqual(shippedReferenceSource, [], 'Reference/build source must stay out of the final runtime image')
+  const payloadBytes = ts.sys.readDirectory(resolve(root, 'third_party/zcode'), undefined)
+    .filter(file => packaged(relative(root, file).replaceAll('\\', '/')))
+    .reduce((bytes, file) => bytes + readFileSync(file).byteLength, 0)
+  assert.ok(payloadBytes <= 1_250_000, `Pinned ZCode runtime payload exceeds 1.25 MB: ${payloadBytes}`)
+  const spaStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
+    .find(part => /^.* AS spa-build\r?\n/.test(part))
+  assert.match(spaStage, /^COPY third_party\/zcode \.\/third_party\/zcode$/m,
+    'SPA build still requires the complete pinned upstream inputs')
+})
+
 // Failure: checkout resolves frontend imports that COPY or the build context omits.
 test('SPA image includes the transitive source graph and pinned vendor license', () => {
   const root = fileURLToPath(new URL('../', import.meta.url))
