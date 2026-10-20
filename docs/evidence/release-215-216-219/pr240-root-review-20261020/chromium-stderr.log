@@ -1,0 +1,26 @@
+[2218242:2218242:1020/161012.645896:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/agent/.config/google-chrome-for-testing/Crash Reports/settings.dat: Read-only file system (30)
+[2218242:2218242:1020/161012.646049:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/agent/.config/google-chrome-for-testing/Crash Reports/settings.dat: Read-only file system (30)
+[2218242:2218242:1020/161012.647654:FATAL:content/browser/zygote_host/zygote_host_impl_linux.cc:129] No usable sandbox! If you are running on Ubuntu 23.10+ or another Linux distro that has disabled unprivileged user namespaces with AppArmor, see https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md. Otherwise see https://chromium.googlesource.com/chromium/src/+/main/docs/linux/suid_sandbox_development.md for more information on developing with the (older) SUID sandbox. If you want to live dangerously and need an immediate workaround, you can try using --no-sandbox.
+[1020/161012.652604:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:208] open /home/agent/.config/google-chrome-for-testing/Crash Reports/settings.dat: Read-only file system (30)
+[1020/161012.665468:ERROR:third_party/crashpad/crashpad/util/file/file_io_posix.cc:153] open /home/agent/.config/google-chrome-for-testing/Crash Reports/new/8b310dc6-33b7-4742-a6c4-751a392e0784.dmp: Read-only file system (30)
+[1020/161012.665540:ERROR:third_party/crashpad/crashpad/handler/linux/crash_report_exception_handler.cc:209] PrepareNewCrashReport failed
+Received signal 6
+#0 0x55b9f0ee1bc3 (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x6a9abc2)
+#1 0x55b9f5ba7494 (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0xb760493)
+#2 0x7f461593dd70 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x3fd6f)
+#3 0x55b9f5b5e14d (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0xb71714c)
+#4 0x55b9f5b5e0de (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0xb7170dd)
+#5 0x55b9f0ca8603 (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x6861602)
+#6 0x55b9ef9411f9 (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x54fa1f8)
+#7 0x55b9f0d2428b (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x68dd28a)
+#8 0x55b9f4dfcd01 (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0xa9b5d00)
+#9 0x55b9f0415687 (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x5fce686)
+#10 0x55b9f0414b00 (/workspace/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome+0x5fcdaff)
+#11 0x7f4615927ca8 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x29ca7)
+  r8: 00001980000bc269  r9: 0000000000000001 r10: 00001980000bc269 r11: 0000000000000246
+ r12: 00007ffcfdd6be88 r13: 0000000000000006 r14: 0000000000000269 r15: 00007ffcfdd6c3b8
+  di: 000000000021d902  si: 000000000021d902  bp: 00007ffcfdd6be20  bx: 000000000021d902
+  dx: 0000000000000006  ax: 0000000000000000  cx: 00007f461599269c  sp: 00007ffcfdd6bd10
+  ip: 00007f461599269c efl: 0000000000000246 cgf: 002b000000000033 erf: 0000000000000000
+ trp: 0000000000000000 msk: 0000000000000000 cr2: 0000000000000000
+[end of stack trace]

@@ -1,0 +1,2173 @@
+{
+  "startedAt": "2026-10-20T16:03:38.107Z",
+  "mode": "execute",
+  "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+  "codeSha256": "d7eeed3847179f28538625e1a5bd19df295ed33f4a85692cfd87e471afae9c34",
+  "events": [
+    {
+      "phase": "accepted-target-guard",
+      "status": "verified",
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "acceptanceSha256": "c67b628c068bcdee245e086947ee876b982957d12290b6da52e10853e819d85d",
+      "stacks": [
+        {
+          "stack": "lingxiloop-app-a",
+          "id": "6aa8a411b35d27bdd4e12aef",
+          "server": "shanghai-a",
+          "serverId": "6aa8a1bcb35d27bdd4e12a26",
+          "composeSha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+          "configSha256": "26f433d46a898a4f405dd8f07478b419a4b5244a950c9b4037d7c7caddd8f700"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "id": "6aa8a414b35d27bdd4e12af1",
+          "server": "shanghai-b",
+          "serverId": "6aa8a1b9b35d27bdd4e12a24",
+          "composeSha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+          "configSha256": "0559be019a71c71b4ab2d47a09ed695b4104b6641ef759bd873f5062a24ca985"
+        },
+        {
+          "stack": "lingxiloop-core-state",
+          "id": "6aa8a3e8b35d27bdd4e12ae0",
+          "server": "shanghai-a",
+          "serverId": "6aa8a1bcb35d27bdd4e12a26",
+          "composeSha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+          "configSha256": "2a0e34c058089eb11aa0a29498fa4e13bac28f1189542861bb20a592e6232763"
+        }
+      ],
+      "containers": [
+        {
+          "stack": "lingxiloop-app-a",
+          "service": "lingxiloop",
+          "id": "e70de555750c34f786d91bd26f9e74bee3c4816c00bbf9d29ca5a27725844bfb",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-a",
+          "service": "worker",
+          "id": "a27c736d258293d0ade0595e78fd1668f13df59aaa44f1b447253b46c8d40b2a",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "service": "lingxiloop",
+          "id": "52b8a51e126ebf900b763cbe22711b85bb931e35a08c8c8a8ea81cd11b91061c",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "service": "worker",
+          "id": "7aaa9cf9ef24976ccfde3d75e14135c811266b474a005cb1029da0096f07c98c",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        }
+      ],
+      "at": "2026-10-20T16:03:55.171Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "at": "2026-10-20T16:03:55.520Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "at": "2026-10-20T16:03:56.265Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "service": "lingxiloop",
+      "at": "2026-10-20T16:03:58.947Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "service": "lingxiloop",
+      "updateId": "6ad790f0e06d5e1f798373b5",
+      "at": "2026-10-20T16:04:00.172Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "service": "lingxiloop",
+      "updateId": "6ad790f0e06d5e1f798373b5",
+      "nativeTerminal": true,
+      "at": "2026-10-20T16:04:48.852Z"
+    },
+    {
+      "phase": "accepted-target-guard",
+      "status": "verified",
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "acceptanceSha256": "c67b628c068bcdee245e086947ee876b982957d12290b6da52e10853e819d85d",
+      "stacks": [
+        {
+          "stack": "lingxiloop-app-a",
+          "id": "6aa8a411b35d27bdd4e12aef",
+          "server": "shanghai-a",
+          "serverId": "6aa8a1bcb35d27bdd4e12a26",
+          "composeSha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+          "configSha256": "26f433d46a898a4f405dd8f07478b419a4b5244a950c9b4037d7c7caddd8f700"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "id": "6aa8a414b35d27bdd4e12af1",
+          "server": "shanghai-b",
+          "serverId": "6aa8a1b9b35d27bdd4e12a24",
+          "composeSha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+          "configSha256": "0559be019a71c71b4ab2d47a09ed695b4104b6641ef759bd873f5062a24ca985"
+        },
+        {
+          "stack": "lingxiloop-core-state",
+          "id": "6aa8a3e8b35d27bdd4e12ae0",
+          "server": "shanghai-a",
+          "serverId": "6aa8a1bcb35d27bdd4e12a26",
+          "composeSha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+          "configSha256": "2a0e34c058089eb11aa0a29498fa4e13bac28f1189542861bb20a592e6232763"
+        }
+      ],
+      "containers": [
+        {
+          "stack": "lingxiloop-app-a",
+          "service": "lingxiloop",
+          "id": "e70de555750c34f786d91bd26f9e74bee3c4816c00bbf9d29ca5a27725844bfb",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-a",
+          "service": "worker",
+          "id": "a27c736d258293d0ade0595e78fd1668f13df59aaa44f1b447253b46c8d40b2a",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "service": "lingxiloop",
+          "id": "52b8a51e126ebf900b763cbe22711b85bb931e35a08c8c8a8ea81cd11b91061c",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "service": "worker",
+          "id": "7aaa9cf9ef24976ccfde3d75e14135c811266b474a005cb1029da0096f07c98c",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        }
+      ],
+      "at": "2026-10-20T16:05:10.745Z"
+    }
+  ],
+  "verified": true,
+  "update": {
+    "id": "6ad790f0e06d5e1f798373b5",
+    "target": {
+      "type": "Stack",
+      "id": "6aa8a411b35d27bdd4e12aef"
+    },
+    "operation": "RunStackService",
+    "status": "Complete",
+    "success": true,
+    "startTs": 1792512240076,
+    "endTs": 1792512286368
+  },
+  "nativeTerminal": true,
+  "rows": [
+    {
+      "phase": "identity-discovery",
+      "complete": true,
+      "coverage": {
+        "discovered": 25,
+        "documentsWithoutUsableSource": 0,
+        "nativeUnavailable": 0,
+        "bindingMissing": 0,
+        "cancelled": 0,
+        "revoked": 0,
+        "authorized": 25,
+        "scanComplete": 0,
+        "scanRevoked": 0
+      }
+    },
+    {
+      "phase": "inspect-before",
+      "complete": true,
+      "coverage": {
+        "discovered": 25,
+        "documentsWithoutUsableSource": 0,
+        "nativeUnavailable": 0,
+        "bindingMissing": 0,
+        "cancelled": 0,
+        "revoked": 0,
+        "authorized": 25,
+        "scanComplete": 25,
+        "scanRevoked": 0
+      },
+      "result": {
+        "distinctDocuments": 40,
+        "eligibleDistinct": 5,
+        "migratedDistinct": 0,
+        "isolatedDistinct": 35,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 35,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 13,
+            "eligibleDistinct": 3,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "course": {
+            "distinctDocuments": 12,
+            "eligibleDistinct": 2,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 15,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 15
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 25,
+        "eligibleDistinct": 5,
+        "migratedDistinct": 0,
+        "isolatedDistinct": 20,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 20,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 13,
+            "eligibleDistinct": 3,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "course": {
+            "distinctDocuments": 12,
+            "eligibleDistinct": 2,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "execution-budget",
+      "complete": true,
+      "counts": {
+        "callsUsed": 91,
+        "eligibleIdentities": 10,
+        "authorizedScopes": 31,
+        "requiredRemainingCalls": 398,
+        "remainingCalls": 421,
+        "budgetSufficient": true
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 1,
+      "result": {
+        "distinctDocuments": 16,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 3,
+        "isolatedDistinct": 13,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 13,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 6,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 3
+          },
+          "course": {
+            "distinctDocuments": 1,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 1
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 7,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 3,
+        "isolatedDistinct": 4,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 4,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 6,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 3
+          },
+          "course": {
+            "distinctDocuments": 1,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 1
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 2,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 3,
+        "isolatedDistinct": 16,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 16,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 3
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 3,
+        "isolatedDistinct": 7,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 7,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 3
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 3,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 15,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 15,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 6,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 6,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 4,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 15,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 15,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 6,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 6,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 5,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 15,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 15,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 6,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 6,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 6,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 15,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 15,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 6,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 6,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 7,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 15,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 15,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 6,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 6,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 8,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 15,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 15,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 6,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 6,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 9,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 15,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 15,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 6,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 6,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 10,
+      "result": {
+        "distinctDocuments": 19,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 15,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 15,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 9
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 10,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 4,
+        "isolatedDistinct": 6,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 6,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 7,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 4
+          },
+          "course": {
+            "distinctDocuments": 3,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 1,
+            "isolatedDistinct": 2
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration-progress",
+      "complete": false,
+      "confirmedPages": 11,
+      "result": {
+        "distinctDocuments": 27,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 5,
+        "isolatedDistinct": 22,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 22,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 6
+          },
+          "course": {
+            "distinctDocuments": 6,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 2,
+            "isolatedDistinct": 4
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 12,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 12
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 15,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 5,
+        "isolatedDistinct": 10,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 10,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 6
+          },
+          "course": {
+            "distinctDocuments": 6,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 2,
+            "isolatedDistinct": 4
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "migration",
+      "complete": true,
+      "result": {
+        "distinctDocuments": 27,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 5,
+        "isolatedDistinct": 22,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 22,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 6
+          },
+          "course": {
+            "distinctDocuments": 6,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 2,
+            "isolatedDistinct": 4
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 12,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 12
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 15,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 5,
+        "isolatedDistinct": 10,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 10,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 6
+          },
+          "course": {
+            "distinctDocuments": 6,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 2,
+            "isolatedDistinct": 4
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "inspect-after",
+      "complete": true,
+      "result": {
+        "distinctDocuments": 35,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 0,
+        "isolatedDistinct": 35,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 35,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 10,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "course": {
+            "distinctDocuments": 10,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 15,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 15
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "originalContinuity": {
+        "distinctDocuments": 20,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 0,
+        "isolatedDistinct": 20,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 20,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 10,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "course": {
+            "distinctDocuments": 10,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      }
+    },
+    {
+      "phase": "original-continuity-accounting",
+      "complete": true,
+      "counts": {
+        "originalCandidates": 25,
+        "observedUnique": 25,
+        "unobservedUnique": 0,
+        "eligibleAtLeastOnce": 5,
+        "migratedUnique": 5,
+        "after": {
+          "baseline_total": 25,
+          "no_longer_present": 0,
+          "still_legacy": 20,
+          "now_stable": 5,
+          "other_scope": 0
+        }
+      }
+    },
+    {
+      "phase": "authorized-index-before",
+      "complete": true,
+      "counts": {
+        "scopes": 31,
+        "configuredScopes": 31,
+        "eligible": 20,
+        "indexed": 0,
+        "missing": 20
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 1,
+        "queued": 2,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 2,
+        "queued": 5,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 3,
+        "queued": 6,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 4,
+        "queued": 7,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 5,
+        "queued": 8,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 6,
+        "queued": 10,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 7,
+        "queued": 13,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 8,
+        "queued": 14,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 9,
+        "queued": 17,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 10,
+        "queued": 19,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-progress",
+      "complete": false,
+      "counts": {
+        "scopesAttempted": 11,
+        "queued": 20,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "reindex-queue",
+      "complete": true,
+      "counts": {
+        "scopesAttempted": 11,
+        "queued": 20,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      }
+    },
+    {
+      "phase": "authorized-index-after",
+      "complete": true,
+      "counts": {
+        "scopes": 31,
+        "configuredScopes": 31,
+        "eligible": 20,
+        "indexed": 0,
+        "missing": 20
+      }
+    },
+    {
+      "phase": "cleanup-progress",
+      "resource": "control",
+      "status": "pending",
+      "elapsedMs": 0
+    },
+    {
+      "phase": "cleanup-progress",
+      "resource": "control",
+      "status": "complete",
+      "elapsedMs": 1
+    },
+    {
+      "phase": "cleanup-progress",
+      "resource": "business-redis",
+      "status": "pending",
+      "elapsedMs": 0
+    },
+    {
+      "phase": "cleanup-progress",
+      "resource": "business-redis",
+      "status": "complete",
+      "elapsedMs": 2
+    },
+    {
+      "phase": "cleanup-progress",
+      "resource": "database",
+      "status": "pending",
+      "elapsedMs": 0
+    },
+    {
+      "phase": "cleanup-progress",
+      "resource": "database",
+      "status": "complete",
+      "elapsedMs": 0
+    },
+    {
+      "phase": "final",
+      "status": "complete",
+      "mode": "execute",
+      "operationsComplete": true,
+      "legacyInspectionPerformed": true,
+      "migrationPerformed": true,
+      "apiCalls": 225,
+      "coverage": {
+        "discovered": 25,
+        "documentsWithoutUsableSource": 0,
+        "nativeUnavailable": 0,
+        "bindingMissing": 0,
+        "cancelled": 0,
+        "revoked": 0,
+        "authorized": 25,
+        "scanComplete": 25,
+        "scanRevoked": 0
+      },
+      "continuity": {
+        "originalCandidates": 25,
+        "observedUnique": 25,
+        "unobservedUnique": 0,
+        "eligibleAtLeastOnce": 5,
+        "migratedUnique": 5,
+        "after": {
+          "baseline_total": 25,
+          "no_longer_present": 0,
+          "still_legacy": 20,
+          "now_stable": 5,
+          "other_scope": 0
+        }
+      },
+      "inspect": {
+        "distinctDocuments": 35,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 0,
+        "isolatedDistinct": 35,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 35,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 10,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "course": {
+            "distinctDocuments": 10,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 10
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 15,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 15
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "migration": {
+        "distinctDocuments": 27,
+        "eligibleDistinct": 0,
+        "migratedDistinct": 5,
+        "isolatedDistinct": 22,
+        "isolationReasonDistinctDocuments": {
+          "inactive": 0,
+          "unproven_owner_or_source": 0,
+          "source_unavailable": 0,
+          "source_revised": 0,
+          "source_authorization_revoked": 0,
+          "ownership_or_audience_not_proven": 22,
+          "source_predates_forgetting": 0,
+          "path_requires_explicit_merge": 0,
+          "destination_unavailable": 0
+        },
+        "byScopeType": {
+          "learner": {
+            "distinctDocuments": 9,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 3,
+            "isolatedDistinct": 6
+          },
+          "course": {
+            "distinctDocuments": 6,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 2,
+            "isolatedDistinct": 4
+          },
+          "session": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          },
+          "agent_role": {
+            "distinctDocuments": 12,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 12
+          },
+          "other": {
+            "distinctDocuments": 0,
+            "eligibleDistinct": 0,
+            "migratedDistinct": 0,
+            "isolatedDistinct": 0
+          }
+        }
+      },
+      "authorizedIndex": {
+        "scopes": 31,
+        "configuredScopes": 31,
+        "eligible": 20,
+        "indexed": 0,
+        "missing": 20
+      },
+      "queue": {
+        "scopesAttempted": 11,
+        "queued": 20,
+        "configuredFalse": 0,
+        "zeroQueuedWithMissing": 0
+      },
+      "globalCoverageClaimed": false,
+      "indexingCompleteForAuthorizedScopes": false,
+      "workCompletion": "existing-workers-only",
+      "remainingPolicy": "do-not-index-inaccessible-legacy-scopes",
+      "cleanupComplete": true
+    }
+  ],
+  "applicationOutcome": "complete",
+  "confirmedMigrations": 5,
+  "confirmedQueued": 20,
+  "final": {
+    "phase": "final",
+    "status": "complete",
+    "mode": "execute",
+    "operationsComplete": true,
+    "legacyInspectionPerformed": true,
+    "migrationPerformed": true,
+    "apiCalls": 225,
+    "coverage": {
+      "discovered": 25,
+      "documentsWithoutUsableSource": 0,
+      "nativeUnavailable": 0,
+      "bindingMissing": 0,
+      "cancelled": 0,
+      "revoked": 0,
+      "authorized": 25,
+      "scanComplete": 25,
+      "scanRevoked": 0
+    },
+    "continuity": {
+      "originalCandidates": 25,
+      "observedUnique": 25,
+      "unobservedUnique": 0,
+      "eligibleAtLeastOnce": 5,
+      "migratedUnique": 5,
+      "after": {
+        "baseline_total": 25,
+        "no_longer_present": 0,
+        "still_legacy": 20,
+        "now_stable": 5,
+        "other_scope": 0
+      }
+    },
+    "inspect": {
+      "distinctDocuments": 35,
+      "eligibleDistinct": 0,
+      "migratedDistinct": 0,
+      "isolatedDistinct": 35,
+      "isolationReasonDistinctDocuments": {
+        "inactive": 0,
+        "unproven_owner_or_source": 0,
+        "source_unavailable": 0,
+        "source_revised": 0,
+        "source_authorization_revoked": 0,
+        "ownership_or_audience_not_proven": 35,
+        "source_predates_forgetting": 0,
+        "path_requires_explicit_merge": 0,
+        "destination_unavailable": 0
+      },
+      "byScopeType": {
+        "learner": {
+          "distinctDocuments": 10,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 0,
+          "isolatedDistinct": 10
+        },
+        "course": {
+          "distinctDocuments": 10,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 0,
+          "isolatedDistinct": 10
+        },
+        "session": {
+          "distinctDocuments": 0,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 0,
+          "isolatedDistinct": 0
+        },
+        "agent_role": {
+          "distinctDocuments": 15,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 0,
+          "isolatedDistinct": 15
+        },
+        "other": {
+          "distinctDocuments": 0,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 0,
+          "isolatedDistinct": 0
+        }
+      }
+    },
+    "migration": {
+      "distinctDocuments": 27,
+      "eligibleDistinct": 0,
+      "migratedDistinct": 5,
+      "isolatedDistinct": 22,
+      "isolationReasonDistinctDocuments": {
+        "inactive": 0,
+        "unproven_owner_or_source": 0,
+        "source_unavailable": 0,
+        "source_revised": 0,
+        "source_authorization_revoked": 0,
+        "ownership_or_audience_not_proven": 22,
+        "source_predates_forgetting": 0,
+        "path_requires_explicit_merge": 0,
+        "destination_unavailable": 0
+      },
+      "byScopeType": {
+        "learner": {
+          "distinctDocuments": 9,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 3,
+          "isolatedDistinct": 6
+        },
+        "course": {
+          "distinctDocuments": 6,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 2,
+          "isolatedDistinct": 4
+        },
+        "session": {
+          "distinctDocuments": 0,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 0,
+          "isolatedDistinct": 0
+        },
+        "agent_role": {
+          "distinctDocuments": 12,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 0,
+          "isolatedDistinct": 12
+        },
+        "other": {
+          "distinctDocuments": 0,
+          "eligibleDistinct": 0,
+          "migratedDistinct": 0,
+          "isolatedDistinct": 0
+        }
+      }
+    },
+    "authorizedIndex": {
+      "scopes": 31,
+      "configuredScopes": 31,
+      "eligible": 20,
+      "indexed": 0,
+      "missing": 20
+    },
+    "queue": {
+      "scopesAttempted": 11,
+      "queued": 20,
+      "configuredFalse": 0,
+      "zeroQueuedWithMissing": 0
+    },
+    "globalCoverageClaimed": false,
+    "indexingCompleteForAuthorizedScopes": false,
+    "workCompletion": "existing-workers-only",
+    "remainingPolicy": "do-not-index-inaccessible-legacy-scopes",
+    "cleanupComplete": true
+  },
+  "terminalReadbackPending": false,
+  "terminalReadback": true,
+  "originalContainersUnchanged": true,
+  "finishedAt": "2026-10-20T16:05:10.746Z"
+}
