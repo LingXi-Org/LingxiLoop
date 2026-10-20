@@ -75,7 +75,7 @@ if (process.env.FORUM_ISSUE219 === '1') {
   const homework = new HomeworkApplication(pool, work => withTransaction(pool, work))
   app.post('/api/fixture-native-homework', async (_req,res) => {
     const detail=await homework.draft({companyId:'e2e-school',userId:'forum-teacher'},'e2e-course',{
-      title:'Issue219 原生作业草稿',instructions:'先观察，再说明。',criteria:['说明观察依据'],links:[],attachments:[],dueAt:null,
+      title:'Issue219 原生作业草稿',instructions:'先观察，再说明。',criteria:['独立解释计算步骤。','核对 **原文** 标记。\n第二行仍属于同一标准。'],links:[],attachments:[],dueAt:null,
     })
     res.json(detail)
   })
@@ -98,8 +98,13 @@ if (process.env.FORUM_ISSUE219 === '1') {
   const OpenAI=(await import('openai')).default
   const {__setLlmClientOverrideForTesting}=await import('../../server/src/llm')
   __setLlmClientOverrideForTesting(()=>new OpenAI({apiKey:'isolated-native-fixture',baseURL:'http://127.0.0.1:53097/api/fixture-model/v1'}))
-  app.post('/api/fixture-model/v1/chat/completions',express.json(),(_req,res)=>res.json({id:'native-219-recorded',model:'recorded-fixture',
-    choices:[{index:0,finish_reason:'stop',message:{role:'assistant',content:'{"recorded":"unverified"}'}}],usage:{prompt_tokens:1,completion_tokens:1,total_tokens:2}}))
+  const modelRequests: unknown[] = []
+  app.get('/api/fixture-native-model-inputs',(_req,res)=>res.json(modelRequests))
+  app.post('/api/fixture-model/v1/chat/completions',express.json(),(req,res)=>{
+    modelRequests.push(req.body)
+    res.json({id:'native-219-recorded',model:'recorded-fixture',
+      choices:[{index:0,finish_reason:'stop',message:{role:'assistant',content:'{"recorded":"unverified"}'}}],usage:{prompt_tokens:1,completion_tokens:1,total_tokens:2}})
+  })
   app.post('/api/fixture-native-effects',async(_req,res)=>{
     const {runLearningEffects}=await import('../../server/src/modules/learning/worker')
     await runLearningEffects()

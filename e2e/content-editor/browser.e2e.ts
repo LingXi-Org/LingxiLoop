@@ -75,10 +75,14 @@ test('all 14 default blocks and official free math and diagram blocks remain ins
     expect(blocks).toContain(type)
   }
   await app.open('/e2e/content-editor.html')
+  await expect(editor()).toContainText('原有内容')
   await editor().fill('')
+  await editor().focus()
   await browser.keyboard.press('Control+Alt+0')
+  await expect(browser.locator('[aria-label="原生正文"] [data-content-type="paragraph"]')).toBeVisible()
   await browser.keyboard.press('Control+b')
   await browser.keyboard.type('原生粗体')
+  await expect(browser.locator('[aria-label="原生正文"] strong')).toHaveText('原生粗体')
   await browser.keyboard.press('Control+b')
   await screen.getByRole('button','保存并重新打开',{exact:true}).tap()
   expect(await browser.evaluate(()=>JSON.stringify(JSON.parse(localStorage.getItem('native-219')!).document.blocks))).toContain('"bold":true')
@@ -135,6 +139,7 @@ test('native formatting, links, emoji, block menu and table operations remain co
   await editor().focus()
   await browser.keyboard.press('Control+Home')
   await browser.keyboard.press('Shift+End')
+  await expect.poll(()=>browser.evaluate(()=>window.getSelection()?.toString() ?? null)).toBe('原生格式')
   await expect(screen.getByRole('button','颜色',{exact:true})).toBeVisible()
   const toolbar=await browser.evaluate(()=>{
     const node=document.querySelector<HTMLElement>('.bn-formatting-toolbar')!

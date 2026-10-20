@@ -1,0 +1,43 @@
+{
+  "base": "dc4bc88b81f0b9011c7540e4dc7f0889cab23778",
+  "sources": {
+    "server/src/modules/learning/homework-effects.ts": "1eaebabc59cedce0e621aa461080bb3303714f7e4abb701476e2297199a929ef",
+    "server/src/modules/learning/homework-application.ts": "44ef5c08898052095c4aab0e04c9dd29d14ad03a45b6bb2f3e40812cf5f28bca",
+    "server/src/modules/learning/homework-repository.ts": "fafe5181822a445fcf51ead8486d21614bbf5356013f496ec8aad6d84e22a4c1",
+    "server/src/modules/learning/homework-reporting.ts": "9ac39049a19b4f3cb728d22e2b90e60174644fa3e676ba1719506cf7c743f464",
+    "server/src/modules/learning/homework-answer.ts": "5e6ef5cbc71d2373cd980b24b9fa693c57602cc59eb75f79fb0f970fece7200f"
+  },
+  "counts": [
+    {
+      "name": "actual report payload and model serializer omit recovery/native state",
+      "status": "passed"
+    },
+    {
+      "name": "actual submission INSERT snapshots current native document only",
+      "status": "passed"
+    },
+    {
+      "name": "actual submission repository hides old recovery metadata without mutating stored row",
+      "status": "passed"
+    },
+    {
+      "name": "actual learner answer text-tool projection omits private recovery",
+      "status": "passed"
+    },
+    {
+      "name": "actual teacher answer text-tool projection omits native recovery",
+      "status": "passed"
+    },
+    {
+      "name": "private draft native content and legacy recovery are unchanged",
+      "status": "passed"
+    }
+  ],
+  "passed": 6,
+  "failed": 0,
+  "limitations": [
+    "Actual source expressions/private serializer executed with synthetic inputs and capture sink",
+    "Repository query returns a synthetic old stored row; not live SQL or authorization acceptance",
+    "No complete effect worker, HTTP, provider or production calls"
+  ]
+}

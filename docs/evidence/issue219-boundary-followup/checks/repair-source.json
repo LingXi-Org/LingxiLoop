@@ -1,0 +1,46 @@
+{
+  "baseRepair": "f80924de67dd8bd8734c1af62b1f442bae2ce8a6",
+  "files": [
+    {
+      "path": "server/src/__integration__/homework.test.ts",
+      "sha256": "fb5cbef33c1f6580a605089913bd552d886600b0c31d36e4208c2c914cf73243"
+    },
+    {
+      "path": "server/src/modules/learning/homework-answer.ts",
+      "sha256": "5e6ef5cbc71d2373cd980b24b9fa693c57602cc59eb75f79fb0f970fece7200f"
+    },
+    {
+      "path": "server/src/modules/learning/homework-application.ts",
+      "sha256": "44ef5c08898052095c4aab0e04c9dd29d14ad03a45b6bb2f3e40812cf5f28bca"
+    },
+    {
+      "path": "server/src/modules/learning/homework-effects.ts",
+      "sha256": "1eaebabc59cedce0e621aa461080bb3303714f7e4abb701476e2297199a929ef"
+    },
+    {
+      "path": "server/src/modules/learning/homework-reporting.ts",
+      "sha256": "9ac39049a19b4f3cb728d22e2b90e60174644fa3e676ba1719506cf7c743f464"
+    },
+    {
+      "path": "server/src/modules/learning/homework-repository.ts",
+      "sha256": "fafe5181822a445fcf51ead8486d21614bbf5356013f496ec8aad6d84e22a4c1"
+    },
+    {
+      "path": "src/features/content-editor/ContentEditor.tsx",
+      "sha256": "db743b30571d125b750f1bb3d7ee163fd4067cfec95e4b52a6c7c7bdba07e2bb"
+    },
+    {
+      "path": "src/features/content-editor/document.ts",
+      "sha256": "254d1294cdbbdbfbb81763ac6ee3f3a3b694c3134bcf14d9b4835c1275a245f4"
+    },
+    {
+      "path": "src/features/learning/forum/ForumContentFields.tsx",
+      "sha256": "ee6c4773b0abff89cf6a212ae857c8fa2fab918c90a9de798d50dd0be2c8de89"
+    },
+    {
+      "path": "src/features/learning/homework/HomeworkDraftCard.tsx",
+      "sha256": "794895d28b2e01d98a4d765cad67edd9ccc760ab489f9336610480a5fc01a084"
+    }
+  ],
+  "note": "Follow-up changes only harnesses and acceptance evidence; no product, dependency, Docker or permission change."
+}

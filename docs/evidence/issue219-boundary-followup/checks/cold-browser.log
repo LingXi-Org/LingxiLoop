@@ -1,0 +1,16 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop
+      run 01a157cd-0699-793b-8cd9-4b1c4ab4cf5e · targets: native
+
+ ✓ |native| e2e/content-boundaries/browser.e2e.ts (3 tests) 21.88s
+ ✓ |native| e2e/content-editor/browser.e2e.ts (4 tests) 52.45s
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  05:33:38
+   Duration  76.51s (1m 17s)
+     Report  artifacts/issue219-followup/cold/report.json
+
+      JUnit  artifacts/issue219-followup/cold/junit.xml
+   Markdown  artifacts/issue219-followup/cold/summary.md
+

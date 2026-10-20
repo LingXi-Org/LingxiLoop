@@ -1,7 +1,12 @@
-import { createServer } from 'vite'
+import { createServer, loadConfigFromFile } from 'vite'
 import react from '@vitejs/plugin-react'
 import { readFileSync, realpathSync } from 'node:fs'
 const root = process.cwd(), port = Number(process.env.CONTENT_BOUNDARY_PORT || 5391)
+// Reuse the product's complete native dependency graph before opening a browser.
+// The synthetic HomeworkDraftCard export exists only after our Vite transform,
+// so it must not be an esbuild entry. Keep optimized code under node_modules so
+// React's source transform does not transpile those already-built dependencies.
+const { config: productConfig } = await loadConfigFromFile({ command: 'serve', mode: 'development' })
 const base = {id:'boundary-homework',courseId:'boundary-course',title:'Synthetic criteria',instructions:'Synthetic current instructions',criteria:['Explain the first inference','Verify the second result'],links:[],attachments:[],dueAt:null,status:'DRAFT',revision:1,visibleHash:'synthetic',createdBy:'boundary-teacher',validation:{status:'READY',revision:1,feedback:''},canEditDraft:true,canPublish:true}
 let homework = structuredClone(base), patches = []
 const fixture = {name:'content-boundary-fixture',enforce:'pre',transform(source,id) {
@@ -25,5 +30,5 @@ const fixture = {name:'content-boundary-fixture',enforce:'pre',transform(source,
   if(req.url?.startsWith('/api/')) return send({error:'unhandled isolated fixture route'},404)
   next()
 })}}
-const server = await createServer({configFile:false,root,cacheDir:root+'/.codex-tmp/content-boundary-vite',plugins:[fixture,react()],resolve:{alias:{'@':root+'/src'},dedupe:['@assistant-ui/react','@assistant-ui/core','@assistant-ui/store','@assistant-ui/tap','yjs','y-prosemirror','prosemirror-model','prosemirror-state','prosemirror-view','prosemirror-transform']},optimizeDeps:{entries:['e2e/content-boundaries/fixture.html','e2e/content-editor.html']},server:{host:'127.0.0.1',port,strictPort:true,fs:{allow:[root,realpathSync(root+'/node_modules')]},watch:{ignored:['**/.codex-tmp/**','**/docs/evidence/**']}}})
+const server = await createServer({configFile:false,root,cacheDir:root+'/node_modules/.vite-content-boundaries',plugins:[fixture,react()],resolve:{alias:{'@':root+'/src'},dedupe:productConfig.resolve.dedupe},optimizeDeps:{...productConfig.optimizeDeps,entries:['index.html','e2e/content-editor.html']},server:{host:'127.0.0.1',port,strictPort:true,fs:{allow:[root,realpathSync(root+'/node_modules')]},watch:{ignored:['**/.codex-tmp/**','**/docs/evidence/**']}}})
 await server.listen();console.log('content boundary fixture ready')
