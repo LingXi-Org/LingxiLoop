@@ -1,0 +1,16 @@
+{
+  "e2e/canvas-app/document.e2e.ts": "8a986a770b7e862a38d7fc05ffca15bb22ad1ab134872ccea30527659747e7e5",
+  "e2e/canvas-app/index.html": "38affd6f15a60107d95830c95f981b970d3a19a85ff5cd8b722aff712428e6bd",
+  "e2e/canvas-app/index.tsx": "5922fb19b4d961171829691a33a6c7912f10e18ae63ab54ccdbc51c0399f4cbb",
+  "e2e/canvas-app/probe.js": "7545c64e5c2fa0ee9a94a4d1228bfbfb4acf2171aa116cc53fda06aaf83c4ce5",
+  "e2e/canvas-app/serve.mjs": "76a2ea178b7e1038f0ec8a976f9a571466ae4cd46e145bcef7740a8221e591c3",
+  "e2e.canvas-app.config.ts": "7ad7b154517efd7b1b6c871513c7ad889deb651b3812de452d4fe9003735a5ee",
+  "server/src/__integration__/canvas-app-boundary.test.ts": "2a957dbbf50c6c14835f891ad7aa44b33d521af16875b4f32fdfc1dabd0fdc03",
+  "src/features/canvas/api.ts": "45df49980c75a07962f7519c94a674215670cd145efcf5a2bb5688242164fa7e",
+  "src/features/canvas/components/CanvasDocumentEditor.tsx": "6ed5a59af098c873bcd758b4423252d7a1e4cc66c165b0481d926d0c538116af",
+  "src/features/canvas/components/CanvasView.tsx": "515b1c9ea3fe398efe0462f188f8d8e95ccb650124600cb1ef324b88357e6ec8",
+  "src/features/canvas/mcp-app/contract.ts": "66a4cf644ad6eebf177c7f836ccf6ed016fd3971e92c91c0429e1c0260d81db1",
+  "src/features/canvas/mcp-app/document.ts": "32400c68331212e3508b693ad535d60b0866e677fde41b262c225c3dd911411c",
+  "src/features/canvas/mcp-app/editor.js": "8cdeb6fec1dd48fd70489f17714ebd464a75dbae0fe973fd16fe8684c9b90aa7",
+  "src/features/canvas/mcp-app/host.ts": "646cd8d50a3576cbb0662e3643b63732b3256709b96e451738139931127397fb"
+}

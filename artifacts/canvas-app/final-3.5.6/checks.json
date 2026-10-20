@@ -1,0 +1,38 @@
+[
+  {
+    "name": "lint",
+    "command": [
+      "npm",
+      "run",
+      "lint"
+    ],
+    "exitCode": 0,
+    "startedAt": "2026-10-20T01:25:02.782761+00:00",
+    "durationSeconds": 0.633,
+    "log": "lint.log"
+  },
+  {
+    "name": "e2e-typecheck",
+    "command": [
+      "npm",
+      "run",
+      "test:e2e:typecheck"
+    ],
+    "exitCode": 0,
+    "startedAt": "2026-10-20T01:25:03.416282+00:00",
+    "durationSeconds": 9.798,
+    "log": "e2e-typecheck.log"
+  },
+  {
+    "name": "build",
+    "command": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "exitCode": 0,
+    "startedAt": "2026-10-20T01:25:13.214418+00:00",
+    "durationSeconds": 54.873,
+    "log": "build.log"
+  }
+]

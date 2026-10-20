@@ -1,0 +1,25 @@
+(node:897913) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:897913) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-canvas-integration
+      run 01a156e7-e196-7bcd-b5a5-db5793259d03 · targets: web
+
+ ✓ target "web" command ready 525ms
+(node:898057) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ |web| .codex-tmp/canvas-final-356/document.e2e.ts (6 tests) 29.60s
+ ✓ |web| .codex-tmp/canvas-final-356/draft-failures.e2e.ts (3 tests) 16.98s
+ ✓ |web| .codex-tmp/canvas-final-356/draft-races.e2e.ts (4 tests) 31.80s
+ ✓ |web| .codex-tmp/canvas-final-356/feedback-scope.e2e.ts (2 tests) 8.02s
+
+ Test Files  4 passed (4)
+      Tests  15 passed (15)
+   Start at  01:23:20
+   Duration  87.82s (1m 28s, startup 525ms)
+     Report  .codex-tmp/canvas-final-356/browser-output/report.json
+
+      JUnit  .codex-tmp/canvas-final-356/browser-output/junit.xml
+   Markdown  .codex-tmp/canvas-final-356/browser-output/summary.md
+

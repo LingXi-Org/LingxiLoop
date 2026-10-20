@@ -1,0 +1,5 @@
+Independent review of combined 0ec4d731 found that save conflict/readback failures did not retain edit generation when the user's new input undid to the original baseline. Preserve the independent 1-fail receipt unchanged before editing product code.
+
+For save conflict, reload HTTP failure, and SDK request cancellation: start from original O/revision1, dirty A, remote R/revision2; during the request undo to O. O must remain logically dirty both while pending and after rejection, the return action must ask before discarding it, and its original CAS revision1 must remain. A later failed save must not overwrite R/revision2. Only successful acknowledged save or explicit completed reload clears retained-draft state. Cancellation does not promise server rollback.
+
+Use actual product CanvasView and official App/AppBridge through tester-army/e2e, synthetic fixture delays/failures, and a test-only App probe to cancel the real official SDK request. No production/provider activity; do not change source/origin/authorization boundaries.

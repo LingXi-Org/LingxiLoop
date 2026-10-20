@@ -14,7 +14,11 @@ import { userFacingError } from '@/lib/userFacingError'
 import type { CanvasAgentAssignment, CanvasFrame, CanvasFrameType } from '../contracts'
 import { canvasStatusLabel, isCanvasAssignmentActive } from '../lib/collaboration'
 import { useCanvas } from '../state'
+import { canvasApi } from '../api'
+import { useCanvasFeedbackScope } from '../mcp-app/useCanvasFeedbackScope'
 import { CanvasFrameContent } from './CanvasFrameContent'
+import { CanvasDocumentEditor } from './CanvasDocumentEditor'
+import type { CanvasReference } from '../mcp-app/contract'
 import { CanvasHeader } from './CanvasHeader'
 import { CanvasSkeleton } from './CanvasSkeleton'
 import { localizeCanvasStatus as localizeStatus } from './canvasLabels'
@@ -57,6 +61,8 @@ export function CanvasView({ canvasId, onBack }: { canvasId: string; onBack?: ()
   const [frameMenu, setFrameMenu] = useState<FrameMenu | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [feedbackFrameId, setFeedbackFrameId] = useState<string | null>(null)
+  const [reference, setReference] = useState<CanvasReference | null>(null)
+  const dirtyFrames = useRef(new Set<string>())
   const cursorSentAt = useRef(0)
   const fittedCanvasId = useRef<string | null>(null)
   const gesturePoints = useRef(new Map<number, GesturePoint>())
@@ -278,7 +284,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId: string; onBack?: ()
   </div>
 
   return <div data-canvas-ui="root" aria-busy={loading} className="ui-enter canvas-shell relative h-full min-h-0 overflow-hidden">
-    <CanvasHeader onBack={onBack} onFocusFrame={focusFrame} />
+    <CanvasHeader onBack={onBack ? () => { void (async () => { if (!dirtyFrames.current.size || await confirmSensitiveAction({ title: '离开画布？', description: '文档中仍有未保存的修改。离开会丢弃这些草稿。', confirmLabel: '离开画布', tone: 'warning' })) onBack() })() } : undefined} onFocusFrame={focusFrame} />
     <ContextMenu onOpenChange={(open) => { if (!open) { setMenu(null); setFrameMenu(null) } }}>
     <ContextMenuTrigger asChild>
     <div
@@ -298,7 +304,7 @@ export function CanvasView({ canvasId, onBack }: { canvasId: string; onBack?: ()
         {snapshot && visibleFrames.map((frame) => {
           const assignment = assignmentForFrame(frame, snapshot.assignments)
           const livePresence = assignment ? snapshot.presence.find((presence) => presence.participantId === assignment.agentId && presence.frameId === frame.id && presence.status !== 'offline') : undefined
-          return <FrameCard key={frame.id} frame={frame} assignment={assignment} status={livePresence?.status} selected={selectedId === frame.id} zoom={viewport.zoom} allowActivation={() => !gestureMoved.current} />
+          return <FrameCard key={frame.id} frame={frame} assignment={assignment} status={livePresence?.status} selected={selectedId === frame.id} zoom={viewport.zoom} allowActivation={() => !gestureMoved.current} onDirty={dirty => { if (dirty) dirtyFrames.current.add(frame.id); else dirtyFrames.current.delete(frame.id) }} onReference={value => { setReference(value); setFeedbackFrameId(frame.id) }} />
         })}
       </div>
       {snapshot && visibleFrames.length === 0 && <div className="pointer-events-none fixed inset-0 grid place-items-center"><div data-canvas-empty className="canvas-empty-state px-5 py-4 text-center" style={{ transform: `scale(${viewport.zoom})` }}><div className="text-sm font-semibold text-ink">画布还没有卡片</div><div className="mt-1 text-xs text-ink-secondary">在空白处单击右键，选择“新增”或“对话”。</div></div></div>}
@@ -308,11 +314,11 @@ export function CanvasView({ canvasId, onBack }: { canvasId: string; onBack?: ()
     </ContextMenuTrigger>
     <ContextMenuContent aria-label={frameMenu && snapshot ? `${snapshot.frames.find((frame) => frame.id === frameMenu.frameId)?.title ?? ''}卡片操作` : '画布操作'} className="min-w-[200px]">
       {frameMenu && snapshot
-        ? <CanvasFrameMenu frame={snapshot.frames.find((frame) => frame.id === frameMenu.frameId)} onClose={() => setFrameMenu(null)} onFeedback={(frameId) => { setFrameMenu(null); setFeedbackFrameId(frameId) }} />
+        ? <CanvasFrameMenu frame={snapshot.frames.find((frame) => frame.id === frameMenu.frameId)} onClose={() => setFrameMenu(null)} onFeedback={(frameId) => { setFrameMenu(null); setReference(null); setFeedbackFrameId(frameId) }} />
         : menu && <CanvasContextMenu menu={menu} onTalk={() => { setMenu(null); setDialogOpen(true) }} onCreate={createAt} />}
     </ContextMenuContent>
     </ContextMenu>
-    {feedbackFrame && <FrameFeedbackDialog frame={feedbackFrame} onClose={() => setFeedbackFrameId(null)} />}
+    {feedbackFrame && <FrameFeedbackDialog key={`${feedbackFrame.canvasId}:${feedbackFrame.id}`} frame={feedbackFrame} reference={reference} onClose={() => { setFeedbackFrameId(null); setReference(null) }} />}
     {dialogOpen && snapshot && <CanvasAgentDialog onClose={() => setDialogOpen(false)} />}
   </div>
 }
@@ -452,13 +458,15 @@ async function downloadFrame(frame: CanvasFrame) {
   saveBlob(new Blob([frameTextContent(frame)], { type: format.mime }), `${base}.${format.extension}`)
 }
 
-function FrameCard({ frame, assignment, status, selected, zoom, allowActivation }: {
+function FrameCard({ frame, assignment, status, selected, zoom, allowActivation, onReference, onDirty }: {
   frame: CanvasFrame
   assignment?: CanvasAgentAssignment
   status?: string
   selected: boolean
   zoom: number
   allowActivation: () => boolean
+  onReference(reference: CanvasReference): void
+  onDirty(dirty: boolean): void
 }) {
   const selectFrame = useCanvas((state) => state.selectFrame)
   const patchLocalFrame = useCanvas((state) => state.patchLocalFrame)
@@ -466,58 +474,14 @@ function FrameCard({ frame, assignment, status, selected, zoom, allowActivation 
   const ownerId = assignment?.agentId ?? frame.updatedBy ?? frame.createdBy
   const owner = useParticipants((state) => ownerId ? state.byId[ownerId] : undefined)
   const moved = useRef(false)
-  const editorRef = useRef<HTMLTextAreaElement>(null)
-  const draftRef = useRef(frame.content)
-  const savingRef = useRef(false)
-  const queuedSaveRef = useRef(false)
   const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(frame.content)
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const [opened, setOpened] = useState(false)
+  const [dirty, setDirty] = useState(false)
   const color = assignment?.color ?? 'var(--primary)'
-
-  useEffect(() => {
-    if (!editing) {
-      draftRef.current = frame.content
-      setDraft(frame.content)
-    }
-  }, [editing, frame.content])
-
-  useEffect(() => {
-    if (!editing) return
-    editorRef.current?.focus()
-    editorRef.current?.setSelectionRange(editorRef.current.value.length, editorRef.current.value.length)
-  }, [editing])
-
-  useEffect(() => {
-    if (!editing || draft === frame.content) return
-    const timer = window.setTimeout(() => void persistContent(draft), 650)
-    return () => window.clearTimeout(timer)
-  }, [draft, editing, frame.content, frame.revision])
-
-  async function persistContent(content = draftRef.current) {
-    if (savingRef.current) {
-      queuedSaveRef.current = true
-      return
-    }
-    const currentFrame = useCanvas.getState().snapshot?.frames.find((item) => item.id === frame.id)
-    if (!currentFrame || currentFrame.content === content) return
-    savingRef.current = true
-    setSaving(true); setSaveError(null)
-    try {
-      await updateFrame(frame.id, { content }, true, currentFrame.revision)
-    } catch (cause) {
-      setSaveError(userFacingError(cause, '画布内容保存失败，请稍后重试。'))
-      setEditing(true)
-    } finally {
-      savingRef.current = false
-      setSaving(false)
-      if (queuedSaveRef.current || draftRef.current !== content) {
-        queuedSaveRef.current = false
-        void persistContent(draftRef.current)
-      }
-    }
-  }
+  const editable = EDITABLE_FRAME_TYPES.has(frame.type)
+  const dirtyCallback = useRef(onDirty)
+  dirtyCallback.current = onDirty
+  useEffect(() => () => dirtyCallback.current(false), [])
 
   function beginMove(event: React.PointerEvent) {
     if (event.pointerType === 'touch') {
@@ -551,16 +515,21 @@ function FrameCard({ frame, assignment, status, selected, zoom, allowActivation 
   return <article data-canvas-frame={frame.id} className={`canvas-frame-card absolute overflow-hidden ${selected ? 'is-selected' : ''} ${status ? 'is-live-editing' : ''}`} style={{ left: frame.x, top: frame.y, width: frame.width, height: frame.height, '--canvas-frame-accent': color } as CSSProperties} onPointerDown={(event) => { event.stopPropagation(); selectFrame(frame.id) }}>
     <header onPointerDown={beginMove} className="canvas-frame-header cursor-grab active:cursor-grabbing" aria-label={`移动${frame.title}`} />
     {ownerId && <span className="canvas-frame-agent-label"><i aria-hidden />{owner?.name ?? '智能助教'}</span>}
-    <div className={`canvas-frame-body relative h-[calc(100%-40px)] overflow-auto ${EDITABLE_FRAME_TYPES.has(frame.type) ? 'cursor-text' : ''}`} onClick={(event) => {
+    <div className={`canvas-frame-body relative h-[calc(100%-40px)] overflow-auto ${editable ? 'cursor-text' : ''}`} onClick={(event) => {
       event.stopPropagation()
-      if (EDITABLE_FRAME_TYPES.has(frame.type) && allowActivation() && !editing) setEditing(true)
+      if (editable && allowActivation() && !editing) { setOpened(true); setEditing(true) }
     }}>
-      {editing
-        ? <div className="canvas-inline-editor flex h-full min-h-0 flex-col p-2" onPointerDown={(event) => event.stopPropagation()}>
-          <Textarea ref={editorRef} value={draft} onChange={(event) => { draftRef.current = event.target.value; setDraft(event.target.value) }} onBlur={() => { void persistContent(draftRef.current); setEditing(false) }} onKeyDown={(event) => { if (event.key === 'Escape') event.currentTarget.blur() }} spellCheck className="canvas-panel-input canvas-content-input min-h-0 flex-1 resize-none text-xs leading-5" aria-label={`编辑${frame.title}`} />
-          {(saving || saveError) && <div aria-live="polite" className={`canvas-save-status pointer-events-none absolute bottom-3 right-4 px-2 py-1 text-[9px] ${saveError ? 'is-error' : ''}`}>{saveError ?? '自动保存中…'}</div>}
+      {opened && editable && <div className="canvas-inline-editor flex h-full min-h-0 flex-col" onPointerDown={event => event.stopPropagation()}>
+        <div className="flex items-center justify-between gap-2 px-2 py-1 text-[10px]">
+          <span aria-live="polite">{dirty ? '未保存的修改' : '文档编辑'}</span>
+          <Button size="sm" variant="ghost" onClick={event => { event.stopPropagation(); setEditing(value => !value) }}>{editing ? '预览' : '继续编辑'}</Button>
         </div>
-        : <CanvasFrameContent frame={frame} />}
+        <div className="min-h-0 flex-1">
+          <CanvasDocumentEditor frame={frame} visible={editing} onReference={onReference} onDirty={value => { setDirty(value); onDirty(value) }} />
+          {!editing && <CanvasFrameContent frame={frame} />}
+        </div>
+      </div>}
+      {(!opened || !editable) && <CanvasFrameContent frame={frame} />}
     </div>
     <Button type="button" aria-label="调整卡片大小" onPointerDown={beginResize} onClick={(event) => event.stopPropagation()} className="canvas-frame-resize-handle absolute bottom-0 right-0 size-5 cursor-nwse-resize rounded-tl before:absolute before:bottom-1 before:right-1 before:size-2 before:border-b before:border-r" />
   </article>
@@ -583,11 +552,9 @@ function writeFeedbackDraft(canvasId: string, frameId: string, body: string) {
   } catch { /* Session storage can be unavailable in privacy-restricted webviews. */ }
 }
 
-function FrameFeedbackDialog({ frame, onClose }: { frame: CanvasFrame; onClose: () => void }) {
+function FrameFeedbackDialog({ frame, reference, onClose }: { frame: CanvasFrame; reference?: CanvasReference | null; onClose: () => void }) {
   const snapshot = useCanvas((state) => state.snapshot)!
-  const steerAgent = useCanvas((state) => state.steerAgent)
-  const assignAgent = useCanvas((state) => state.assignAgent)
-  const addComment = useCanvas((state) => state.addComment)
+  const { beginSend, cancel } = useCanvasFeedbackScope(frame, onClose)
   const byId = useParticipants((state) => state.byId)
   const [body, setBody] = useState(() => readFeedbackDraft(frame.canvasId, frame.id))
   const bodyRef = useRef(body)
@@ -601,22 +568,38 @@ function FrameFeedbackDialog({ frame, onClose }: { frame: CanvasFrame; onClose: 
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
-    const text = body.trim()
-    if (!text || busy) return
+    const question = body.trim()
+    if (!question || busy) return
+    const text = reference ? `引用画布卡片「${reference.title}」（${reference.frameId}，第 ${reference.revision} 版）：\n${reference.text}\n\n用户反馈：${question}` : question
+    if (text.length > 4000) { setError('引用与反馈合计不能超过 4000 字符，请缩短后发送。'); return }
+    let send: ReturnType<typeof beginSend>
+    try { send = beginSend() } catch { cancel(); return }
     setBusy(true); setError(null)
     try {
       if (agentId) {
-        if (targetAssignment && isCanvasAssignmentActive(targetAssignment.status)) await steerAgent(agentId, text)
-        else await assignAgent(agentId, text)
+        if (targetAssignment && isCanvasAssignmentActive(targetAssignment.status)) {
+          await canvasApi.steerCanvasAssignment(send.canvasId, agentId, text, send.signal)
+          send.assertCurrent()
+        } else {
+          const saved = await canvasApi.assignCanvasWork(send.canvasId, agentId, text, send.signal)
+          send.assertCurrent()
+          useCanvas.setState(state => ({ snapshot: saved, previews: { ...state.previews, [send.canvasId]: saved } }))
+        }
       }
-      await addComment(text, frame.id)
-      writeFeedbackDraft(frame.canvasId, frame.id, '')
+      send.assertCurrent()
+      const comment = await canvasApi.addCanvasComment(text, send.frameId, send.canvasId, send.signal)
+      send.assertCurrent()
+      useCanvas.setState(state => state.snapshot?.id === send.canvasId ? {
+        snapshot: { ...state.snapshot, comments: [comment, ...state.snapshot.comments.filter(item => item.id !== comment.id)] },
+      } : {})
+      writeFeedbackDraft(send.canvasId, send.frameId, '')
       onClose()
-    } catch (cause) { setError(userFacingError(cause, '反馈发送失败，请稍后重试。')) }
-    finally { setBusy(false) }
+    } catch (cause) {
+      if (!send.signal.aborted) setError(userFacingError(cause, '反馈发送失败，请稍后重试。'))
+    } finally { if (!send.signal.aborted) setBusy(false) }
   }
 
-  return <Dialog open onOpenChange={(open) => { if (!open) { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); onClose() } }}><DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-sm"><form onSubmit={submit}>
+  return <Dialog open onOpenChange={(open) => { if (!open) { writeFeedbackDraft(frame.canvasId, frame.id, bodyRef.current); cancel() } }}><DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-sm"><form onSubmit={submit}>
     <DialogHeader className="pe-10"><div className="flex items-center gap-3">
       {participant ? <AvatarMini p={participant} size={34} /> : <span className="canvas-feedback-avatar grid size-9 place-items-center text-sm font-bold">评</span>}
       <div className="min-w-0 flex-1"><DialogTitle className="truncate">反馈给 {participant?.name ?? '智能助教'}</DialogTitle><DialogDescription className="truncate">{frame.title}{targetAssignment ? ` · ${localizeStatus(canvasStatusLabel(targetAssignment.status))}` : ''}</DialogDescription></div>
@@ -626,9 +609,11 @@ function FrameFeedbackDialog({ frame, onClose }: { frame: CanvasFrame; onClose: 
       return <Button key={item.agentId} type="button" size="sm" variant={agentId === item.agentId ? 'default' : 'outline'} onClick={() => setAgentId(item.agentId)}>{agent && <AvatarMini p={agent} size={20} />}@{agent?.name ?? '智能助教'}</Button>
     })}</div>}
     {comments.length > 0 && <div className="mt-3 space-y-1.5">{comments.map((comment) => <div key={comment.id} className="rounded-md bg-muted px-2.5 py-2 text-xs leading-4 text-muted-foreground">{comment.body}</div>)}</div>}
-    <Textarea autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="mt-3 resize-none text-xs" />
+    {reference && <blockquote className="mt-3 max-h-36 overflow-auto rounded-md bg-muted p-3 text-xs whitespace-pre-wrap" aria-label="待发送的画布引用">{reference.text}<footer className="mt-1 text-muted-foreground">{reference.title} · 第 {reference.revision} 版 · 确认发送后交给智能助教</footer></blockquote>}
+    <Textarea aria-label="画布反馈" maxLength={4000} autoFocus value={body} onChange={(event) => { bodyRef.current = event.target.value; setBody(event.target.value); writeFeedbackDraft(frame.canvasId, frame.id, event.target.value) }} rows={3} placeholder="说明需要修改或继续完成的内容…" className="mt-3 resize-none text-xs" />
     {error && <div className="mt-2 text-[10px] text-destructive">{error}</div>}
-    <DialogFooter className="mt-3"><Button type="submit" disabled={!agentId || !body.trim() || busy}><ISend className="size-3.5" />发送反馈</Button></DialogFooter>
+    {busy && <p className="mt-2 text-xs text-muted-foreground">已发送的请求可能完成；停止等待会取消后续操作。</p>}
+    <DialogFooter className="mt-3"><Button type="button" variant="outline" onClick={cancel}>{busy ? '停止等待' : '取消'}</Button><Button type="submit" disabled={!agentId || !body.trim() || busy}><ISend className="size-3.5" />发送反馈</Button></DialogFooter>
   </form></DialogContent></Dialog>
 }
 

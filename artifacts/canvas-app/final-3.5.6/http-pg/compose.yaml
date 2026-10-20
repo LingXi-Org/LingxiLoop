@@ -1,0 +1,22 @@
+name: lingxiloop-pr212-security
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports: ["127.0.0.1:55438:5432"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: lingxiloop-e2e-local
+      POSTGRES_DB: lingxiloop_canvas_feedback_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lingxiloop_canvas_feedback_test"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    ports: ["127.0.0.1:56388:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30

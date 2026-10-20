@@ -1,0 +1,7 @@
+import base from './e2e.canvas-app.config'
+export default {
+  ...base,
+  projectId: 'lingxiloop-canvas-final-runtime-3.5.6',
+  tests: ['.codex-tmp/canvas-final-356/document.e2e.ts', '.codex-tmp/canvas-final-356/draft-races.e2e.ts', '.codex-tmp/canvas-final-356/draft-failures.e2e.ts', '.codex-tmp/canvas-final-356/feedback-scope.e2e.ts'],
+  output: '.codex-tmp/canvas-final-356/browser-output',
+}

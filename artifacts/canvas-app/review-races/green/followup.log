@@ -1,0 +1,23 @@
+(node:859808) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:859808) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-review-pr212-race
+      run 01a156d4-7ab9-72d6-ae3d-9058a693b068 · targets: web
+
+ ✓ target "web" command ready 798ms
+(node:860032) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ |web| e2e/canvas-app/draft-races.e2e.ts (1 test) 19.64s
+   ✓ typing after reload confirmation retains the original CAS baseline: undo-to-old-baseline 19.64s
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  01:02:09
+   Duration  23.05s (startup 798ms)
+     Report  .codex-tmp/pr212-race/final-followup-output/report.json
+
+      JUnit  .codex-tmp/pr212-race/final-followup-output/junit.xml
+   Markdown  .codex-tmp/pr212-race/final-followup-output/summary.md
+

@@ -1,0 +1,777 @@
+(node:855490) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> lingxiloop@0.1.0-beta server:test
+> node scripts/run-tests.mjs server
+
+(node:855518) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:855554) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:855587) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:855587) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: admin resource lists enforce bounds and return an opaque next cursor
+ok 1 - admin resource lists enforce bounds and return an opaque next cursor
+  ---
+  duration_ms: 20.646035
+  type: 'test'
+  ...
+# Subtest: native delivery operations page failures and retry only a validated identity
+ok 2 - native delivery operations page failures and retry only a validated identity
+  ---
+  duration_ms: 2.63255
+  type: 'test'
+  ...
+# Subtest: suspending revokes WS tickets while restore creates no ticket
+ok 3 - suspending revokes WS tickets while restore creates no ticket
+  ---
+  duration_ms: 0.614938
+  type: 'test'
+  ...
+# Subtest: platform message history uses the company-scoped channel profile
+ok 4 - platform message history uses the company-scoped channel profile
+  ---
+  duration_ms: 9.374096
+  type: 'test'
+  ...
+# Subtest: observability dashboard returns validated OpenPlait frames with collapsed run detail data
+ok 5 - observability dashboard returns validated OpenPlait frames with collapsed run detail data
+  ---
+  duration_ms: 2.207179
+  type: 'test'
+  ...
+# Subtest: platform Agent operations resolve the authoritative run identity
+ok 6 - platform Agent operations resolve the authoritative run identity
+  ---
+  duration_ms: 0.755559
+  type: 'test'
+  ...
+# Subtest: admin association filters are exact, validated and preserve knowledge ownership
+ok 7 - admin association filters are exact, validated and preserve knowledge ownership
+  ---
+  duration_ms: 10.326023
+  type: 'test'
+  ...
+# Subtest: admin record names resolve in batches and secret fields remain omitted
+ok 8 - admin record names resolve in batches and secret fields remain omitted
+  ---
+  duration_ms: 1.365349
+  type: 'test'
+  ...
+# Subtest: administrator command auditing accepts Chinese reasons in JSON bodies
+ok 9 - administrator command auditing accepts Chinese reasons in JSON bodies
+  ---
+  duration_ms: 105.421411
+  type: 'test'
+  ...
+# (node:855997) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:855997) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the LingxiOS registry exposes every product capability exactly once
+ok 10 - the LingxiOS registry exposes every product capability exactly once
+  ---
+  duration_ms: 8.126305
+  type: 'test'
+  ...
+# (node:856503) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:856503) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: HTTP and WebSocket composition keeps authentication and authorization at the boundary
+ok 11 - HTTP and WebSocket composition keeps authentication and authorization at the boundary
+  ---
+  duration_ms: 17.881646
+  type: 'test'
+  ...
+# (node:856567) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:856567) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: rejects protocol leakage and repeated paragraphs without clipping normal reasoning vocabulary
+ok 12 - rejects protocol leakage and repeated paragraphs without clipping normal reasoning vocabulary
+  ---
+  duration_ms: 2.984701
+  type: 'test'
+  ...
+# Subtest: plain-text fast path and every directive prefix match the pinned reference parser
+ok 13 - plain-text fast path and every directive prefix match the pinned reference parser
+  ---
+  duration_ms: 16.625021
+  type: 'test'
+  ...
+# (node:856704) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:856704) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: native state operations stream text once, retract it, and end with canonical content
+ok 14 - native state operations stream text once, retract it, and end with canonical content
+  ---
+  duration_ms: 168.947882
+  type: 'test'
+  ...
+# Subtest: projection owns gaps, cancellation, failures, approvals and filtered tool/memory replay
+ok 15 - projection owns gaps, cancellation, failures, approvals and filtered tool/memory replay
+  ---
+  duration_ms: 62.490687
+  type: 'test'
+  ...
+# Subtest: truncated native frames and old browser wire format fail instead of falling back
+ok 16 - truncated native frames and old browser wire format fail instead of falling back
+  ---
+  duration_ms: 4.030508
+  type: 'test'
+  ...
+# Subtest: prefetched upstream failure survives downstream backpressure
+ok 17 - prefetched upstream failure survives downstream backpressure
+  ---
+  duration_ms: 300.720993
+  type: 'test'
+  ...
+# Subtest: commit handoff and tool activity preserve the live answer part
+ok 18 - commit handoff and tool activity preserve the live answer part
+  ---
+  duration_ms: 30.263869
+  type: 'test'
+  ...
+# Subtest: every changing public snapshot round-trips through the actual stream decoder
+ok 19 - every changing public snapshot round-trips through the actual stream decoder
+  ---
+  duration_ms: 103.361331
+  type: 'test'
+  ...
+# Subtest: concurrent protocol responses retain separate prior state and control permissions
+ok 20 - concurrent protocol responses retain separate prior state and control permissions
+  ---
+  duration_ms: 61.475676
+  type: 'test'
+  ...
+# Subtest: JSON normalization, structural replacements and append paths keep every wire state exact
+ok 21 - JSON normalization, structural replacements and append paths keep every wire state exact
+  ---
+  duration_ms: 42.323274
+  type: 'test'
+  ...
+# (node:856856) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:856856) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: ordinary Canvas reports reject verifier fields at native parse admission
+ok 22 - ordinary Canvas reports reject verifier fields at native parse admission
+  ---
+  duration_ms: 4.224541
+  type: 'test'
+  ...
+# Subtest: independent verification has a strict required role-specific public contract
+ok 23 - independent verification has a strict required role-specific public contract
+  ---
+  duration_ms: 1.292139
+  type: 'test'
+  ...
+# (node:857058) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857058) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: product policy requires answer wording instead of source labels and preserves Markdown examples
+ok 24 - product policy requires answer wording instead of source labels and preserves Markdown examples
+  ---
+  duration_ms: 17.037533
+  type: 'test'
+  ...
+# (node:857493) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857493) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: conversation activity reads scoped public runtime state without tool outputs or prompts
+ok 25 - conversation activity reads scoped public runtime state without tool outputs or prompts
+  ---
+  duration_ms: 10.084708
+  type: 'test'
+  ...
+# (node:857560) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857560) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [documents] edit not persisted; retained for retry Error: database offline
+#     at Object.query (/workspace/LingxiLoop-review-pr212-security/server/src/__tests__/document-collaboration.test.ts:184:49)
+#     at persistDocumentUpdate (/workspace/LingxiLoop-review-pr212-security/server/src/modules/documents/collaboration-repository.ts:71:29)
+#     at <anonymous> (/workspace/LingxiLoop-review-pr212-security/server/src/modules/documents/collaboration-application.ts:168:17)
+#     at async <anonymous> (/workspace/LingxiLoop-review-pr212-security/server/src/modules/documents/collaboration-application.ts:155:9)
+# [documents] fanout failed; durable replay will recover Error: Redis offline
+#     at Object.publish (/workspace/LingxiLoop-review-pr212-security/server/src/__tests__/document-collaboration.test.ts:200:36)
+#     at <anonymous> (/workspace/LingxiLoop-review-pr212-security/server/src/modules/documents/collaboration-application.ts:181:38)
+# [documents] recovery will retry Error: compaction failed
+#     at Object.query (/workspace/LingxiLoop-review-pr212-security/server/src/__tests__/document-collaboration.test.ts:189:61)
+#     at compactDocumentUpdates (/workspace/LingxiLoop-review-pr212-security/server/src/modules/documents/collaboration-repository.ts:99:12)
+#     at async <anonymous> (/workspace/LingxiLoop-review-pr212-security/server/src/modules/documents/collaboration-application.ts:128:7)
+#     at async DocumentRoomRuntime.maybeCompact (/workspace/LingxiLoop-review-pr212-security/server/src/modules/documents/collaboration-application.ts:121:5)
+#     at async DocumentRoomRuntime.recover (/workspace/LingxiLoop-review-pr212-security/server/src/modules/documents/collaboration-application.ts:203:11)
+#     at async TestContext.<anonymous> (/workspace/LingxiLoop-review-pr212-security/server/src/__tests__/document-collaboration.test.ts:226:3)
+#     at async Test.run (node:internal/test_runner/test:1054:7)
+#     at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+# Subtest: document collaboration persists and publishes one local Yjs update with its true origin
+ok 26 - document collaboration persists and publishes one local Yjs update with its true origin
+  ---
+  duration_ms: 14.165352
+  type: 'test'
+  ...
+# Subtest: a warm document room cannot be reused under another tenant
+ok 27 - a warm document room cannot be reused under another tenant
+  ---
+  duration_ms: 1.77026
+  type: 'test'
+  ...
+# Subtest: remote document updates are applied only to the matching tenant room
+ok 28 - remote document updates are applied only to the matching tenant room
+  ---
+  duration_ms: 2.768925
+  type: 'test'
+  ...
+# Subtest: project document lookup carries company and project tenant predicates
+ok 29 - project document lookup carries company and project tenant predicates
+  ---
+  duration_ms: 3.650335
+  type: 'test'
+  ...
+# Subtest: failed persistence is retained, retries include dependent deltas, and durable replay heals missed fanout
+ok 30 - failed persistence is retained, retries include dependent deltas, and durable replay heals missed fanout
+  ---
+  duration_ms: 160.904474
+  type: 'test'
+  ...
+# (node:857670) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857670) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: domain mutation and event append share one caller-owned transaction
+ok 31 - domain mutation and event append share one caller-owned transaction
+  ---
+  duration_ms: 1.918874
+  type: 'test'
+  ...
+# Subtest: an exact idempotent retry returns the original event without another insert
+ok 32 - an exact idempotent retry returns the original event without another insert
+  ---
+  duration_ms: 0.330638
+  type: 'test'
+  ...
+# Subtest: idempotency key reuse with a changed typed payload is rejected
+ok 33 - idempotency key reuse with a changed typed payload is rejected
+  ---
+  duration_ms: 0.491982
+  type: 'test'
+  ...
+# Subtest: payload and cursor bounds fail before persistence
+ok 34 - payload and cursor bounds fail before persistence
+  ---
+  duration_ms: 0.43104
+  type: 'test'
+  ...
+# Subtest: event cursor reads are tenant scoped, optional-Project scoped and bounded
+ok 35 - event cursor reads are tenant scoped, optional-Project scoped and bounded
+  ---
+  duration_ms: 0.199491
+  type: 'test'
+  ...
+# (node:857719) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857719) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: typed entitlements preserve boolean, number, and string values without coercion
+ok 36 - typed entitlements preserve boolean, number, and string values without coercion
+  ---
+  duration_ms: 2.153227
+  type: 'test'
+  ...
+# (node:857749) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857749) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: gateway assertion binds identity, method, path and freshness
+ok 37 - gateway assertion binds identity, method, path and freshness
+  ---
+  duration_ms: 1.698802
+  type: 'test'
+  ...
+# Subtest: gateway middleware consumes a signed nonce only once
+ok 38 - gateway middleware consumes a signed nonce only once
+  ---
+  duration_ms: 0.800227
+  type: 'test'
+  ...
+# Subtest: registration service binds capability, verified subject and all business input
+ok 39 - registration service binds capability, verified subject and all business input
+  ---
+  duration_ms: 0.539483
+  type: 'test'
+  ...
+# Subtest: bootstrap platform identity service binds the verified bootstrap subject
+ok 40 - bootstrap platform identity service binds the verified bootstrap subject
+  ---
+  duration_ms: 0.15924
+  type: 'test'
+  ...
+# (node:857864) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857864) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857864) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# Subtest: retrieval numbers distinct chunks of one PDF and preserves Markdown after hybrid deduplication
+ok 41 - retrieval numbers distinct chunks of one PDF and preserves Markdown after hybrid deduplication
+  ---
+  duration_ms: 292.138123
+  type: 'test'
+  ...
+# (node:857943) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:857943) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: LingxiLit instruments a preloaded OpenAI module without exporting message content
+ok 42 - LingxiLit instruments a preloaded OpenAI module without exporting message content
+  ---
+  duration_ms: 821.906269
+  type: 'test'
+  ...
+# Subtest: model calls fail open when pricing and OTLP are unavailable
+ok 43 - model calls fail open when pricing and OTLP are unavailable
+  ---
+  duration_ms: 939.390123
+  type: 'test'
+  ...
+# (node:858238) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858238) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: host judgments price measured primary-model tokens with the configured runtime rates
+ok 44 - host judgments price measured primary-model tokens with the configured runtime rates
+  ---
+  duration_ms: 3.68036
+  type: 'test'
+  ...
+# Subtest: SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates
+ok 45 - SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates
+  ---
+  duration_ms: 0.301815
+  type: 'test'
+  ...
+# Subtest: product LLM completions disable thinking and record the authoritative call ledger
+ok 46 - product LLM completions disable thinking and record the authoritative call ledger
+  ---
+  duration_ms: 0.419743
+  type: 'test'
+  ...
+# Subtest: failed product LLM calls are recorded and propagate
+ok 47 - failed product LLM calls are recorded and propagate
+  ---
+  duration_ms: 0.585633
+  type: 'test'
+  ...
+# Subtest: successful provider results are not returned until the ledger write succeeds
+ok 48 - successful provider results are not returned until the ledger write succeeds
+  ---
+  duration_ms: 0.916353
+  type: 'test'
+  ...
+# Subtest: a missing authoritative ledger record fails the product call
+ok 49 - a missing authoritative ledger record fails the product call
+  ---
+  duration_ms: 0.738544
+  type: 'test'
+  ...
+# Subtest: caller-supplied call identity makes uncertain ledger retries idempotent
+ok 50 - caller-supplied call identity makes uncertain ledger retries idempotent
+  ---
+  duration_ms: 0.650031
+  type: 'test'
+  ...
+# Subtest: GLM Flash host calls use the same cache-aware CN tariff as Agent observations
+ok 51 - GLM Flash host calls use the same cache-aware CN tariff as Agent observations
+  ---
+  duration_ms: 1.315564
+  type: 'test'
+  ...
+# (node:858358) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858358) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: shared model calls bound retries, sanitize per-attempt ledger metadata and keep SDK retries disabled
+ok 52 - shared model calls bound retries, sanitize per-attempt ledger metadata and keep SDK retries disabled
+  ---
+  duration_ms: 150.196981
+  type: 'test'
+  ...
+# Subtest: caller cancellation releases a hung request and embeddings never switch models
+ok 53 - caller cancellation releases a hung request and embeddings never switch models
+  ---
+  duration_ms: 1.622377
+  type: 'test'
+  ...
+# (node:858453) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858453) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858453) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# Subtest: teacher and ordinary memory have the same authorized scopes and reject revocation
+ok 54 - teacher and ordinary memory have the same authorized scopes and reject revocation
+  ---
+  duration_ms: 191.590714
+  type: 'test'
+  ...
+# (node:858492) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858492) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: native evolution fixture rewards recovery and blocks unsafe strategy actions
+ok 55 - native evolution fixture rewards recovery and blocks unsafe strategy actions
+  ---
+  duration_ms: 7.258636
+  type: 'test'
+  ...
+# (node:858558) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858558) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# [access] permission resolution unavailable { action: 'unknown:action' }
+# Subtest: creator policies deny missing ownership facts instead of treating them as public
+ok 56 - creator policies deny missing ownership facts instead of treating them as public
+  ---
+  duration_ms: 1.208993
+  type: 'test'
+  ...
+# Subtest: users can edit their own Canvas frames after the workspace finishes
+ok 57 - users can edit their own Canvas frames after the workspace finishes
+  ---
+  duration_ms: 0.177688
+  type: 'test'
+  ...
+# Subtest: platform administrators bypass tenant membership but not entitlements or resource state
+ok 58 - platform administrators bypass tenant membership but not entitlements or resource state
+  ---
+  duration_ms: 0.269096
+  type: 'test'
+  ...
+# Subtest: runtime failures and unregistered actions fail closed without a context
+ok 59 - runtime failures and unregistered actions fail closed without a context
+  ---
+  duration_ms: 1.702117
+  type: 'test'
+  ...
+# Subtest: ResourceAccessMode centralizes Project lifecycle restrictions
+ok 60 - ResourceAccessMode centralizes Project lifecycle restrictions
+  ---
+  duration_ms: 0.297058
+  type: 'test'
+  ...
+# Subtest: invalid Company and Project lifecycle contexts fail closed with their owning state denial
+ok 61 - invalid Company and Project lifecycle contexts fail closed with their owning state denial
+  ---
+  duration_ms: 0.414084
+  type: 'test'
+  ...
+# Subtest: close-out, transfer, read-only, and retention policies fail closed by action
+ok 62 - close-out, transfer, read-only, and retention policies fail closed by action
+  ---
+  duration_ms: 0.331069
+  type: 'test'
+  ...
+# Subtest: retention and archived institutional reads require a Company manager or Project owner
+ok 63 - retention and archived institutional reads require a Company manager or Project owner
+  ---
+  duration_ms: 0.312361
+  type: 'test'
+  ...
+# Subtest: ordinary teachers remain managers in MANAGER_ONLY Project contexts
+ok 64 - ordinary teachers remain managers in MANAGER_ONLY Project contexts
+  ---
+  duration_ms: 0.229666
+  type: 'test'
+  ...
+# Subtest: teachers cannot submit as students
+ok 65 - teachers cannot submit as students
+  ---
+  duration_ms: 0.369517
+  type: 'test'
+  ...
+# Subtest: Company and Project lifecycle restrictions are both enforced
+ok 66 - Company and Project lifecycle restrictions are both enforced
+  ---
+  duration_ms: 0.189235
+  type: 'test'
+  ...
+# Subtest: company administrators manage course groups but do not inherit private email or direct-message membership
+ok 67 - company administrators manage course groups but do not inherit private email or direct-message membership
+  ---
+  duration_ms: 0.138699
+  type: 'test'
+  ...
+# (node:858598) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858598) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: avatars preserve their seeded style and accept only owned, bounded raster uploads
+ok 68 - avatars preserve their seeded style and accept only owned, bounded raster uploads
+  ---
+  duration_ms: 14.954152
+  type: 'test'
+  ...
+# (node:858638) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858638) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: public tool projection strips private values before transport
+ok 69 - public tool projection strips private values before transport
+  ---
+  duration_ms: 7.144805
+  type: 'test'
+  ...
+# Subtest: memory publishes the official chip shape from successful native receipts only
+ok 70 - memory publishes the official chip shape from successful native receipts only
+  ---
+  duration_ms: 4.275167
+  type: 'test'
+  ...
+# (node:858677) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858677) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858677) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# Subtest: natural results use original safe URLs, normalized text and stable deduplication
+ok 71 - natural results use original safe URLs, normalized text and stable deduplication
+  ---
+  duration_ms: 18.157522
+  type: 'test'
+  ...
+# Subtest: only explicit no-match pages are empty; challenges and broken markup fail
+ok 72 - only explicit no-match pages are empty; challenges and broken markup fail
+  ---
+  duration_ms: 2.269643
+  type: 'test'
+  ...
+# Subtest: result thumbnails preserve lazy image URLs without treating favicons or unsafe URLs as previews
+ok 73 - result thumbnails preserve lazy image URLs without treating favicons or unsafe URLs as previews
+  ---
+  duration_ms: 5.877213
+  type: 'test'
+  ...
+# Subtest: search stays within two pages, preserves order, validates inputs and propagates failures
+ok 74 - search stays within two pages, preserves order, validates inputs and propagates failures
+  ---
+  duration_ms: 3.555141
+  type: 'test'
+  ...
+# Subtest: result payload stays below the native runtime 8000-character tool output limit
+ok 75 - result payload stays below the native runtime 8000-character tool output limit
+  ---
+  duration_ms: 18.166326
+  type: 'test'
+  ...
+# (node:858735) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:858735) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: public activity is explicit and replayable while the answer keeps its native part index
+ok 76 - public activity is explicit and replayable while the answer keeps its native part index
+  ---
+  duration_ms: 25.380194
+  type: 'test'
+  ...
+# Subtest: incremental public explanations update one original position; arbitrary results cannot impersonate them
+ok 77 - incremental public explanations update one original position; arbitrary results cannot impersonate them
+  ---
+  duration_ms: 1.042872
+  type: 'test'
+  ...
+# Subtest: every user-visible call survives a history longer than 256 calls, with stable outcome and identity
+ok 78 - every user-visible call survives a history longer than 256 calls, with stable outcome and identity
+  ---
+  duration_ms: 56.38173
+  type: 'test'
+  ...
+# Subtest: wire pages preserve more than 512 calls, attention and final answer without raising protocol limits
+ok 79 - wire pages preserve more than 512 calls, attention and final answer without raising protocol limits
+  ---
+  duration_ms: 61608.639162
+  type: 'test'
+  ...
+# Subtest: server projection removes diagnostics and private outcome gaps before transport
+ok 80 - server projection removes diagnostics and private outcome gaps before transport
+  ---
+  duration_ms: 1.790461
+  type: 'test'
+  ...
+# (node:862905) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:862905) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: upload boundaries reject unsafe or cross-workspace storage paths
+ok 81 - upload boundaries reject unsafe or cross-workspace storage paths
+  ---
+  duration_ms: 14.226333
+  type: 'test'
+  ...
+# Subtest: bounded storage reads stop as soon as a streamed body crosses the cap
+ok 82 - bounded storage reads stop as soon as a streamed body crosses the cap
+  ---
+  duration_ms: 2.091154
+  type: 'test'
+  ...
+# Subtest: storage use requires an explicitly installed provider
+ok 83 - storage use requires an explicitly installed provider
+  ---
+  duration_ms: 0.385942
+  type: 'test'
+  ...
+# Subtest: readiness requires both PostgreSQL and Redis
+ok 84 - readiness requires both PostgreSQL and Redis
+  ---
+  duration_ms: 2.626091
+  type: 'test'
+  ...
+# (node:862982) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:862982) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: conversation summaries tolerate unsupported previews without weakening native validation
+ok 85 - conversation summaries tolerate unsupported previews without weakening native validation
+  ---
+  duration_ms: 24.15062
+  type: 'test'
+  ...
+# Subtest: WuKong channel reconciliation uses the v3 integer-switch contract
+ok 86 - WuKong channel reconciliation uses the v3 integer-switch contract
+  ---
+  duration_ms: 1.331918
+  type: 'test'
+  ...
+# Subtest: WuKong adapter uses v3 message endpoints and preserves client_msg_no
+ok 87 - WuKong adapter uses v3 message endpoints and preserves client_msg_no
+  ---
+  duration_ms: 2.914235
+  type: 'test'
+  ...
+# Subtest: WuKong sends retry only transient missing membership with the same message identity
+ok 88 - WuKong sends retry only transient missing membership with the same message identity
+  ---
+  duration_ms: 304.37322
+  type: 'test'
+  ...
+# Subtest: WuKong rejects permanent denial, exhausted membership retries and invalid durable receipts
+ok 89 - WuKong rejects permanent denial, exhausted membership retries and invalid durable receipts
+  ---
+  duration_ms: 317.496822
+  type: 'test'
+  ...
+# Subtest: WuKong membership retries respect cancellation
+ok 90 - WuKong membership retries respect cancellation
+  ---
+  duration_ms: 7.224464
+  type: 'test'
+  ...
+# Subtest: WuKong adapter syncs channel history and decodes Lingxi payloads
+ok 91 - WuKong adapter syncs channel history and decodes Lingxi payloads
+  ---
+  duration_ms: 1.7642
+  type: 'test'
+  ...
+# Subtest: WuKong history starts at the latest page and walks older pages without overlap
+ok 92 - WuKong history starts at the latest page and walks older pages without overlap
+  ---
+  duration_ms: 2.594037
+  type: 'test'
+  ...
+# Subtest: WuKong history fills native pages across retired records without overlap
+ok 93 - WuKong history fills native pages across retired records without overlap
+  ---
+  duration_ms: 3.498836
+  type: 'test'
+  ...
+# Subtest: WuKong history repairs authoritative membership once before retrying
+ok 94 - WuKong history repairs authoritative membership once before retrying
+  ---
+  duration_ms: 1.338278
+  type: 'test'
+  ...
+# Subtest: WuKong history applies normal error handling after membership repair
+ok 95 - WuKong history applies normal error handling after membership repair
+  ---
+  duration_ms: 2.716347
+  type: 'test'
+  ...
+# Subtest: WuKong history rejects invalid pagination before making a provider request
+ok 96 - WuKong history rejects invalid pagination before making a provider request
+  ---
+  duration_ms: 0.40503
+  type: 'test'
+  ...
+# Subtest: WuKong adapter treats missing empty-channel sync state as empty results
+ok 97 - WuKong adapter treats missing empty-channel sync state as empty results
+  ---
+  duration_ms: 0.787067
+  type: 'test'
+  ...
+# Subtest: WuKong client sets the exact remaining unread count for partial visibility
+ok 98 - WuKong client sets the exact remaining unread count for partial visibility
+  ---
+  duration_ms: 0.782129
+  type: 'test'
+  ...
+# Subtest: WuKong adapter accepts v3 empty-state errors returned as HTTP 400
+ok 99 - WuKong adapter accepts v3 empty-state errors returned as HTTP 400
+  ---
+  duration_ms: 1.563288
+  type: 'test'
+  ...
+# Subtest: WuKong adapter treats the empty-channel 500 response as empty results
+ok 100 - WuKong adapter treats the empty-channel 500 response as empty results
+  ---
+  duration_ms: 0.753787
+  type: 'test'
+  ...
+# Subtest: WuKong adapter recognizes structured and localized empty-channel 500 responses
+ok 101 - WuKong adapter recognizes structured and localized empty-channel 500 responses
+  ---
+  duration_ms: 1.182864
+  type: 'test'
+  ...
+# Subtest: WuKong adapter does not hide unrelated history failures
+ok 102 - WuKong adapter does not hide unrelated history failures
+  ---
+  duration_ms: 0.449007
+  type: 'test'
+  ...
+# Subtest: WuKong adapter does not hide unrelated HTTP 400 failures
+ok 103 - WuKong adapter does not hide unrelated HTTP 400 failures
+  ---
+  duration_ms: 1.302194
+  type: 'test'
+  ...
+# Subtest: WuKong webhook signatures are constant-time HMAC contracts
+ok 104 - WuKong webhook signatures are constant-time HMAC contracts
+  ---
+  duration_ms: 1.397428
+  type: 'test'
+  ...
+# Subtest: WuKong msg.notify batches normalize to the Agent OS webhook contract
+ok 105 - WuKong msg.notify batches normalize to the Agent OS webhook contract
+  ---
+  duration_ms: 2.661383
+  type: 'test'
+  ...
+# Subtest: production enables authenticated WuKong callbacks without inheriting the local proxy
+ok 106 - production enables authenticated WuKong callbacks without inheriting the local proxy
+  ---
+  duration_ms: 17.591509
+  type: 'test'
+  ...
+1..106
+# tests 106
+# suites 0
+# pass 106
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 104144.213313

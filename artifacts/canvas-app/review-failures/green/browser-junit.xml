@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="13" failures="1" errors="0" skipped="0" time="72.987">
+  <testsuite name=".codex-tmp/pr212-failures/legacy.e2e.ts" tests="6" failures="0" errors="0" skipped="0" time="30.304">
+    <testcase name="official SDK edits a legacy document, retains one live page and stages explicit feedback [web]" classname=".codex-tmp/pr212-failures/legacy.e2e.ts" time="8.147"/>
+    <testcase name="remote revision conflicts preserve the draft, reload is explicit, preview remains live [web]" classname=".codex-tmp/pr212-failures/legacy.e2e.ts" time="4.970"/>
+    <testcase name="lost save response is reconciled by readback and survives reload without replaying the write [web]" classname=".codex-tmp/pr212-failures/legacy.e2e.ts" time="5.744"/>
+    <testcase name="forged parent messages cannot call tools and scope invalidation closes the App [web]" classname=".codex-tmp/pr212-failures/legacy.e2e.ts" time="2.916"/>
+    <testcase name="late save ACK retains newer remote revision and typing during the pending save [web]" classname=".codex-tmp/pr212-failures/legacy.e2e.ts" time="4.538"/>
+    <testcase name="same-source SDK requests reject undeclared capabilities and honor request cancellation [web]" classname=".codex-tmp/pr212-failures/legacy.e2e.ts" time="3.989"/>
+  </testsuite>
+  <testsuite name=".codex-tmp/pr212-failures/success-races.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="27.586">
+    <testcase name="save notifications retain an undo to the former baseline and the next save uses the acknowledged revision [web]" classname=".codex-tmp/pr212-failures/success-races.e2e.ts" time="6.227"/>
+    <testcase name="multiple edits during a pending save preserve the latest draft [web]" classname=".codex-tmp/pr212-failures/success-races.e2e.ts" time="6.256"/>
+    <testcase name="typing after reload confirmation retains the original CAS baseline: new-text [web]" classname=".codex-tmp/pr212-failures/success-races.e2e.ts" time="7.548"/>
+    <testcase name="typing after reload confirmation retains the original CAS baseline: undo-to-old-baseline [web]" classname=".codex-tmp/pr212-failures/success-races.e2e.ts" time="7.555"/>
+  </testsuite>
+  <testsuite name="e2e/canvas-app/draft-failures.e2e.ts" tests="3" failures="1" errors="0" skipped="0" time="15.097">
+    <testcase name="save conflict readback retains undo and leave protection after failure [web]" classname="e2e/canvas-app/draft-failures.e2e.ts" time="5.897"/>
+    <testcase name="reload http-failure retains input generation and the original CAS baseline [web]" classname="e2e/canvas-app/draft-failures.e2e.ts" time="5.106"/>
+    <testcase name="reload sdk-cancellation retains input generation and the original CAS baseline [web]" classname="e2e/canvas-app/draft-failures.e2e.ts" time="4.094">
+      <failure message="locator matched 2 nodes, expected exactly one: frameLocator(&quot;iframe[data-canvas-document-app]&quot;) &gt;&gt; getByRole(&quot;status&quot;)" type="LOCATOR_AMBIGUOUS">LOCATOR_AMBIGUOUS (body): locator matched 2 nodes, expected exactly one: frameLocator(&quot;iframe[data-canvas-document-app]&quot;) &gt;&gt; getByRole(&quot;status&quot;)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

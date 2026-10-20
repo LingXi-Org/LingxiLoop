@@ -1,0 +1,30 @@
+{
+  "document": {
+    "id": "fixture-frame",
+    "canvasId": "fixture-canvas",
+    "type": "markdown",
+    "title": "共同笔记",
+    "content": "远端已保存的新版本",
+    "x": 80,
+    "y": 80,
+    "width": 560,
+    "height": 440,
+    "data": {},
+    "revision": 2,
+    "createdBy": "teacher",
+    "updatedBy": "teacher",
+    "createdAt": "2026-10-20T01:13:18.110Z",
+    "updatedAt": "2026-10-20T01:13:19.826Z"
+  },
+  "patches": [
+    {
+      "content": "未保存的本地草稿",
+      "baseRevision": 1
+    }
+  ],
+  "feedback": [],
+  "comments": [],
+  "finishedPatches": 0,
+  "finishedSteers": 0,
+  "failedReads": 0
+}

@@ -1,0 +1,805 @@
+{
+  "protocol": "assistant-transport",
+  "runtime": "published worker",
+  "snapshots": [
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 0,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 0,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "queued",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 0,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "leased",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 1,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "leased",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "question",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+            "toolName": "chat.ask",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+                  "kind": "tool",
+                  "label": "补充信息"
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 8,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "leased",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "question",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+            "toolName": "chat.ask",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "failed",
+              "display": {
+                "title": "补充信息",
+                "purpose": "收集继续完成任务所需的信息。",
+                "summary": "这一步未完成，请检查相关信息后重试。"
+              }
+            },
+            "isError": true,
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+                  "kind": "attention",
+                  "label": "补充信息"
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 9,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "leased",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "question",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "第一段",
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "answer:1:0",
+                  "kind": "answer",
+                  "label": "答复"
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+            "toolName": "chat.ask",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "failed",
+              "display": {
+                "title": "补充信息",
+                "purpose": "收集继续完成任务所需的信息。",
+                "summary": "这一步未完成，请检查相关信息后重试。"
+              }
+            },
+            "isError": true,
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+                  "kind": "attention",
+                  "label": "补充信息"
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 9,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "leased",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "question",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "第一段\n\n第二段 **正文**",
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "answer:1:0",
+                  "kind": "answer",
+                  "label": "答复"
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+            "toolName": "chat.ask",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "failed",
+              "display": {
+                "title": "补充信息",
+                "purpose": "收集继续完成任务所需的信息。",
+                "summary": "这一步未完成，请检查相关信息后重试。"
+              }
+            },
+            "isError": true,
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+                  "kind": "attention",
+                  "label": "补充信息"
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 9,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "leased",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "question",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "第一段\n\n第二段 **正文**",
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "answer:1:0",
+                  "kind": "answer",
+                  "label": "答复"
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+            "toolName": "chat.ask",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "failed",
+              "display": {
+                "title": "补充信息",
+                "purpose": "收集继续完成任务所需的信息。",
+                "summary": "这一步未完成，请检查相关信息后重试。"
+              }
+            },
+            "isError": true,
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+                  "kind": "attention",
+                  "label": "补充信息"
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "running"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 18,
+              "goalOutcome": null,
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 0,
+              "resultId": null,
+              "lifecycle": "leased",
+              "delivery": null,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "question",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "第一段\n\n第二段 **正文**",
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "answer:1:0",
+                  "kind": "answer",
+                  "label": "答复"
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+            "toolName": "chat.ask",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "failed",
+              "display": {
+                "title": "补充信息",
+                "purpose": "收集继续完成任务所需的信息。",
+                "summary": "这一步未完成，请检查相关信息后重试。"
+              }
+            },
+            "isError": true,
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+                  "kind": "attention",
+                  "label": "补充信息"
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "incomplete",
+          "reason": "other"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 18,
+              "goalOutcome": {
+                "status": "partial",
+                "verification": "inconclusive",
+                "requestVersion": 1
+              },
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 1,
+              "resultId": "result:c76e8613b4348a00ec8314692890a432d2b091466c2debbfc87daeb28511c75d",
+              "lifecycle": "partial",
+              "delivery": "pending",
+              "previewClosedFence": 1,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "question",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    },
+    {
+      "message": {
+        "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+        "createdAt": "2026-10-20T01:24:13.386Z",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "第一段\n\n第二段 **正文**",
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "answer:1:0",
+                  "kind": "answer",
+                  "label": "答复"
+                }
+              }
+            }
+          },
+          {
+            "type": "tool-call",
+            "toolCallId": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+            "toolName": "chat.ask",
+            "args": {
+              "fields": []
+            },
+            "argsText": "",
+            "result": {
+              "status": "failed",
+              "display": {
+                "title": "补充信息",
+                "purpose": "收集继续完成任务所需的信息。",
+                "summary": "这一步未完成，请检查相关信息后重试。"
+              }
+            },
+            "isError": true,
+            "providerMetadata": {
+              "lingxiloop": {
+                "activity": {
+                  "version": 1,
+                  "id": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+                  "kind": "attention",
+                  "label": "补充信息"
+                }
+              }
+            }
+          }
+        ],
+        "status": {
+          "type": "incomplete",
+          "reason": "other"
+        },
+        "metadata": {
+          "custom": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "harness": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "lastSeq": 19,
+              "goalOutcome": {
+                "status": "partial",
+                "verification": "inconclusive",
+                "requestVersion": 1
+              },
+              "requestVersion": 1,
+              "fence": 1,
+              "messageFence": 1,
+              "resultId": "result:c76e8613b4348a00ec8314692890a432d2b091466c2debbfc87daeb28511c75d",
+              "lifecycle": "partial",
+              "delivery": "pending",
+              "previewClosedFence": 1,
+              "artifacts": []
+            },
+            "harnessControl": true,
+            "activityPresentation": {
+              "version": 1
+            },
+            "refs": {
+              "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+              "agentId": "a-213c9b21"
+            },
+            "controlPrincipalId": "test-owner",
+            "sourceRef": "question",
+            "suppressAgentWake": true
+          },
+          "unstable_state": null,
+          "unstable_annotations": [],
+          "unstable_data": [],
+          "steps": []
+        }
+      }
+    }
+  ],
+  "final": {
+    "message": {
+      "id": "run-im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+      "createdAt": "2026-10-20T01:24:13.386Z",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "第一段\n\n第二段 **正文**",
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "answer:1:0",
+                "kind": "answer",
+                "label": "答复"
+              }
+            }
+          }
+        },
+        {
+          "type": "tool-call",
+          "toolCallId": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+          "toolName": "chat.ask",
+          "args": {
+            "fields": []
+          },
+          "argsText": "",
+          "result": {
+            "status": "failed",
+            "display": {
+              "title": "补充信息",
+              "purpose": "收集继续完成任务所需的信息。",
+              "summary": "这一步未完成，请检查相关信息后重试。"
+            }
+          },
+          "isError": true,
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "host:[\"im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72\",\"step:9886cc05-96b4-4508-b058-6ec6c0684bbf\",0]",
+                "kind": "attention",
+                "label": "补充信息"
+              }
+            }
+          }
+        }
+      ],
+      "status": {
+        "type": "incomplete",
+        "reason": "other"
+      },
+      "metadata": {
+        "custom": {
+          "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+          "harness": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "lastSeq": 19,
+            "goalOutcome": {
+              "status": "partial",
+              "verification": "inconclusive",
+              "requestVersion": 1
+            },
+            "requestVersion": 1,
+            "fence": 1,
+            "messageFence": 1,
+            "resultId": "result:c76e8613b4348a00ec8314692890a432d2b091466c2debbfc87daeb28511c75d",
+            "lifecycle": "partial",
+            "delivery": "delivered",
+            "previewClosedFence": 1,
+            "artifacts": []
+          },
+          "harnessControl": true,
+          "activityPresentation": {
+            "version": 1
+          },
+          "refs": {
+            "runId": "im:8d01af7fe0d9627bebf074c691b834553cb177fd1c5e671abf339359a1f62b72",
+            "agentId": "a-213c9b21"
+          },
+          "controlPrincipalId": "test-owner",
+          "sourceRef": "question",
+          "suppressAgentWake": true
+        },
+        "unstable_state": null,
+        "unstable_annotations": [],
+        "unstable_data": [],
+        "steps": []
+      }
+    }
+  },
+  "streamedBeforeCompletion": true,
+  "deliveredOnce": true,
+  "tenantAndThreadIsolation": true
+}

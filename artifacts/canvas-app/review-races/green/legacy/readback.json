@@ -1,0 +1,29 @@
+{
+  "document": {
+    "id": "fixture-frame",
+    "canvasId": "fixture-canvas",
+    "type": "markdown",
+    "title": "共同笔记",
+    "content": "丢失回执后核对的文档",
+    "x": 80,
+    "y": 80,
+    "width": 560,
+    "height": 440,
+    "data": {},
+    "revision": 2,
+    "createdBy": "teacher",
+    "updatedBy": "teacher",
+    "createdAt": "2026-10-20T00:59:59.911Z",
+    "updatedAt": "2026-10-20T01:00:01.515Z"
+  },
+  "patches": [
+    {
+      "content": "丢失回执后核对的文档",
+      "baseRevision": 1
+    }
+  ],
+  "feedback": [],
+  "comments": [],
+  "finishedPatches": 1,
+  "finishedSteers": 0
+}

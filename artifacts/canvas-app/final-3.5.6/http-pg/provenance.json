@@ -1,0 +1,25 @@
+{
+  "head": "b249631cd95027c6fab6234191cd1ff131e03a90",
+  "node": "v22.23.3",
+  "runtime": {
+    "version": "3.5.6",
+    "resolved": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.6/8678395c3eb40eeb99860a05b3f532704fcb1bcb",
+    "integrity": "sha512-fg3EvMwwgZLd9QZ5aTT8IcJrj/9vfy7OK/1BGUiEvwt6FS7WlhgyoycZmxFj+Q1yT8XXppGCmmK7F+JIjCJLpg==",
+    "installedHiddenLockMatches": true
+  },
+  "sourceHashes": {
+    "package.json": "69bf49c6e368a6b56269e5a63a39b152e2faa48ca0cc28979254737c5cd4a432",
+    "package-lock.json": "066ce021b285dc3ec0922b22138d1e79d05a2a311a5112bfa0f3421ef6ab1cdb",
+    "server/package.json": "b5b700d223b3f82cc79e7e1a82810f1636438dad6033e1fe7a9ad603d189fbed",
+    "server/package-lock.json": "ac1e0a879e058a90e132d04eee05b10e8db060a912502830ef272bbbfa0f5731",
+    "server/src/__integration__/canvas-app-boundary.test.ts": "2a957dbbf50c6c14835f891ad7aa44b33d521af16875b4f32fdfc1dabd0fdc03",
+    "server/src/__integration__/canvas-feedback-scope.test.ts": "0f293fb31e0c8038a142af6306daf8d601d8c57439ff1a1eab4f56f24efaffcf",
+    "server/src/__integration__/canvas-public-assignment.test.ts": "e8929b1bee180bba88b16e46c2d990ed51aa97f7b59d3964fc388dbced3900a6",
+    "server/src/__integration__/visualize.test.ts": "8e6ff0aedab5092d65b8ab89c8dd9a39da0cbddaad0b6acc4f35eb58467fe733",
+    "server/src/__integration__/runtime-nonthinking.test.ts": "4e6a7da1feb618bab92f19a5baecf75b8a3fb8765c1a7d36b2edda9ad545ece9",
+    "server/src/__integration__/native-message-approvals.test.ts": "075ec69018ad962cf835abae9d4f1f2dc8a964ba2a2979861e0079a6bdf36bae",
+    "server/src/__integration__/public-run-activity.test.ts": "6d56ca9cdd89fae7a8277af4c69362ca17ee75a1f51a7debf8ff7dd8af2f72f6",
+    "server/src/modules/canvas/collaboration-application.ts": "6a94797d9be0a83746b4ca96b9a033af0b27c8a1762b04567fbd7f95e4dcce0c",
+    "src/features/canvas/mcp-app/useCanvasFeedbackScope.ts": "2a430237b33324ecb2e7c4b62e1e814ad9efa7d8f063e46addd38a2d76fc07d7"
+  }
+}

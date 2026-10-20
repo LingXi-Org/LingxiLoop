@@ -1,0 +1,138 @@
+(node:851796) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> lingxiloop@0.1.0-beta lint
+> biome lint src vite.config.ts
+
+src/components/assistant-ui/elements/tool-call.tsx:62:11 lint/complexity/noUselessFragments  FIXABLE  ━━━━━━━━━━
+
+  i This fragment is unnecessary.
+  
+    60 │             {activeLabel}
+    61 │           </ShimmerLabel>
+  > 62 │           <>{label}</>
+       │           ^^^^^^^^^^^^
+    63 │         </SwapLabel>
+    64 │         <span
+  
+  i A fragment is redundant if it contains only one child, or if it is the child of a html element, and is not a keyed fragment.
+  
+  i Unsafe fix: Remove the Fragment
+  
+    62 │ ··········<>{label}</>
+       │           --       ---
+
+src/components/assistant-ui/elements/tool-timeline.tsx:68:11 lint/complexity/noUselessFragments  FIXABLE  ━━━━━━━━━━
+
+  i This fragment is unnecessary.
+  
+    66 │             {activeLabel}
+    67 │           </ShimmerLabel>
+  > 68 │           <>{restingLabel}</>
+       │           ^^^^^^^^^^^^^^^^^^^
+    69 │         </SwapLabel>
+    70 │       </CollapsibleTrigger>
+  
+  i A fragment is redundant if it contains only one child, or if it is the child of a html element, and is not a keyed fragment.
+  
+  i Unsafe fix: Remove the Fragment
+  
+    68 │ ··········<>{restingLabel}</>
+       │           --              ---
+
+src/components/ui/sidebar.tsx:86:7 lint/suspicious/noDocumentCookie ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! Direct assigning to document.cookie is not recommended.
+  
+    85 │       // This sets the cookie to keep the sidebar state.
+  > 86 │       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+       │       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    87 │     },
+    88 │     [setOpenProp, open]
+  
+  i Consider using the Cookie Store API.
+  
+
+src/features/canvas/components/CanvasView.tsx:152:5 lint/suspicious/noFocusedTests  FIXABLE  ━━━━━━━━━━
+
+  ! Don't focus the test.
+  
+    150 │       }
+    151 │     }
+  > 152 │     fit()
+        │     ^^^
+    153 │   }
+    154 │ 
+  
+  i The 'fit' method is often used for debugging or during implementation.
+  
+  i Consider removing 'f' prefix from 'fit' to ensure all tests are executed.
+  
+  i Unsafe fix: Remove focus from test.
+  
+    150 150 │         }
+    151 151 │       }
+    152     │ - ····fit()
+        152 │ + ····it()
+    153 153 │     }
+    154 154 │   
+  
+
+src/features/chat/visualize/zcode/components/ui/button.tsx:1:8 lint/style/useImportType  FIXABLE  ━━━━━━━━━━
+
+  ! All these imports are only used as types.
+  
+  > 1 │ import * as React from "react";
+      │        ^^^^^^^^^^^^^^^^^^^^^^^
+    2 │ import { cva, type VariantProps } from "class-variance-authority";
+    3 │ import { Slot } from "radix-ui";
+  
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+  
+  i Safe fix: Use import type.
+  
+    1 │ import·type·*·as·React·from·"react";
+      │        +++++                        
+
+src/features/chat/visualize/zcode/components/ui/dialog.tsx:1:8 lint/style/useImportType  FIXABLE  ━━━━━━━━━━
+
+  ! All these imports are only used as types.
+  
+  > 1 │ import * as React from "react";
+      │        ^^^^^^^^^^^^^^^^^^^^^^^
+    2 │ import { useZCodeIntl } from "@/features/chat/visualize/zcode/i18n/IntlProvider.js";
+    3 │ import { Dialog as DialogPrimitive } from "radix-ui";
+  
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+  
+  i Safe fix: Use import type.
+  
+    1 │ import·type·*·as·React·from·"react";
+      │        +++++                        
+
+src/features/chat/visualize/zcode/plugin-ui/app/pluginUiPageManager.ts:8:39 lint/suspicious/noConfusingVoidType  FIXABLE  ━━━━━━━━━━
+
+  ! void is confusing inside a union type.
+  
+     6 │   busy(): boolean;
+     7 │   running(): boolean;
+   > 8 │   suspend(): void | Promise<boolean | void>;
+       │                                       ^^^^
+     9 │   destroy(): void;
+    10 │ }
+  
+  i Unsafe fix: Use undefined instead.
+  
+      6   6 │     busy(): boolean;
+      7   7 │     running(): boolean;
+      8     │ - ··suspend():·void·|·Promise<boolean·|·void>;
+          8 │ + ··suspend():·void·|·Promise<boolean·|·undefined>;
+      9   9 │     destroy(): void;
+     10  10 │   }
+  
+
+Checked 551 files in 973ms. No fixes applied.
+Found 5 warnings.
+Found 2 infos.
+(node:851843) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)

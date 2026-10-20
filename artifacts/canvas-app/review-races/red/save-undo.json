@@ -1,0 +1,34 @@
+{
+  "head": "ebe818fe9f702199382aa998995da24b55e4b356",
+  "scope": "official E2E actual product component/SDK, synthetic HTTP fixture",
+  "expectedDraft": "# 旧卡片\n\n需要一起保留的内容。",
+  "status": "已保存 · 第 2 版",
+  "evidence": {
+    "document": {
+      "id": "fixture-frame",
+      "canvasId": "fixture-canvas",
+      "type": "markdown",
+      "title": "共同笔记",
+      "content": "已经提交但尚未确认的修改",
+      "x": 80,
+      "y": 80,
+      "width": 560,
+      "height": 440,
+      "data": {},
+      "revision": 2,
+      "createdBy": "teacher",
+      "updatedBy": "teacher",
+      "createdAt": "2026-10-20T00:54:53.953Z",
+      "updatedAt": "2026-10-20T00:54:55.919Z"
+    },
+    "patches": [
+      {
+        "content": "已经提交但尚未确认的修改",
+        "baseRevision": 1
+      }
+    ],
+    "feedback": [],
+    "comments": [],
+    "finishedPatches": 1
+  }
+}

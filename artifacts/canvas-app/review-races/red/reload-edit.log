@@ -1,0 +1,39 @@
+(node:841397) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:841397) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-review-pr212-race
+      run 01a156ce-ce9d-7640-a4bb-6fa7bfd4ff9e · targets: web
+
+ ✓ target "web" command ready 331ms
+(node:841495) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ |web| .codex-tmp/pr212-race/reload.e2e.ts (1 test | 1 failed) 11.21s
+   × confirmed reload retains typing entered after confirmation while read is pending 11.21s
+     → expect.toHaveValue failed
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| .codex-tmp/pr212-race/reload.e2e.ts > confirmed reload retains typing entered after confirmation while read is pending
+ASSERTION_FAILED: expect.toHaveValue failed
+locator: frameLocator("iframe[data-canvas-document-app]") >> getByLabel("编辑文档")
+expected: value "确认以后新写的草稿"
+observed: value "远端已保存的新版本" (match count 1)
+ ❯ .codex-tmp/pr212-race/reload.e2e.ts:22:3
+ ❯ at http://127.0.0.1:5337/e2e/canvas-app/index.html
+ ❯ screen .codex-tmp/pr212-race/reload-output/artifacts/web/.codex-tmp_pr212-race_reload.e2e.ts__confirmed_20reload_20retains_20typing_20entered_20after_20confirmation_20w-e4fa7fe5/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 0 passed (1)
+      Tests  1 failed | 0 passed (1)
+   Start at  00:55:56
+   Duration  12.32s (startup 331ms)
+     Report  .codex-tmp/pr212-race/reload-output/report.json
+
+      JUnit  .codex-tmp/pr212-race/reload-output/junit.xml
+   Markdown  .codex-tmp/pr212-race/reload-output/summary.md
+   Failures  .codex-tmp/pr212-race/reload-output/failures/ (1 page)
+

@@ -30,10 +30,12 @@ test('canvas text cards create, edit, move, persist, download and delete', {
   const frame = browser.locator('[data-canvas-frame]')
   await expect(frame).toHaveCount(1)
   await browser.locator('[data-canvas-frame] .canvas-frame-body').tap()
-  await screen.getByLabel('编辑文本笔记').fill(content)
-  await screen.getByLabel('编辑文本笔记').press('Tab')
+  const editor = browser.frameLocator('iframe[data-canvas-document-app]')
+  await editor.getByLabel('编辑文档').fill(content)
+  await editor.getByRole('button', '保存修改', { exact: true }).press('Enter')
+  await expect(editor.getByRole('status')).toContainText('已保存')
+  await screen.getByRole('button', '预览', { exact: true }).tap()
   await expect(screen.getByText(content, { exact: true })).toBeVisible()
-  await expect(screen.getByText('自动保存中…')).toBeHidden()
   const position = await browser.evaluate(() => {
     const header = document.querySelector<HTMLElement>('[data-canvas-frame] header')!
     const rect = header.getBoundingClientRect()
