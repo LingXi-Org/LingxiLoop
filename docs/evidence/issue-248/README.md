@@ -30,3 +30,7 @@ Final check summary:
 - Web lint: passed (5 existing warnings, 3 infos); server typecheck and targeted server lint: passed.
 - Integration: initial 43/47, four old expectations corrected, then affected five cases passed. See server-checks.md for exact scope and isolation.
 - Independent source review on `9c355f3b83319b8391d49e201fad1cf04099fa1a` found no remaining blockers after the recorded fixes. Final retry-state adjustment prevents an empty-state flash when retrying a failed empty history.
+
+- Final Web build (including typecheck): passed, Vite 53.65s; existing CSS/large-chunk warnings retained in web-build.txt.
+- Final affected loading/deletion regressions after retry adjustment: **5/5 passed**, final-focused.txt.
+- Independent final code review: `d5085fdbd745883a75ea1e2c2324fa1e4543c1f0`, no remaining blocker; subsequent commit changes evidence only.
