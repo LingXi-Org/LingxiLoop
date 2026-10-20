@@ -11,6 +11,8 @@ import { bindProductRun } from '../agent-runtime/identity.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
+const acceptanceOutput = process.env.RUNTIME_ACCEPTANCE_OUTPUT_DIR || `.e2e/runtime-acceptance/${Date.now()}-${process.pid}`
+
 test('a nonresponsive provider stops after bounded attempts and settles failed calls', { timeout: 30000 }, async () => {
   await ensureSchemaOnce(); await resetAllTables()
   const im = await installRecordingWukong(), originalBaseUrl = env.OPENAI_BASE_URL
@@ -61,8 +63,8 @@ test('a nonresponsive provider stops after bounded attempts and settles failed c
     assert.equal(notices.length,1)
     assert.equal(notices[0]?.payload.role,'system')
     assert.equal(notices[0]?.payload.metadata.custom.suppressAgentWake,true)
-    await mkdir('.codex-tmp/harness-recovery', { recursive: true })
-    await writeFile('.codex-tmp/harness-recovery/provider-timeout.json', JSON.stringify({ elapsedMs, attempts, disconnected, status: state.run.status, ledgerSettled: true }))
+    await mkdir(acceptanceOutput, { recursive: true })
+    await writeFile(`${acceptanceOutput}/provider-timeout.json`, JSON.stringify({ elapsedMs, attempts, disconnected, status: state.run.status, ledgerSettled: true }), { flag: 'wx' })
   } finally {
     provider.closeAllConnections()
     await worker?.stop(); await teardownAll(); await im.close()

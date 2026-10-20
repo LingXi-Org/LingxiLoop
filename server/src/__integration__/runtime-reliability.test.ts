@@ -17,6 +17,7 @@ import { installRecordingWukong } from './_recording-wukong.js'
 
 let recording: Awaited<ReturnType<typeof installRecordingWukong>>
 let worker: ReturnType<typeof createWorker> | undefined
+const acceptanceOutput = process.env.RUNTIME_ACCEPTANCE_OUTPUT_DIR || `.e2e/runtime-acceptance/${Date.now()}-${process.pid}`
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => { await worker?.stop(); await teardownAll(); await recording?.close() })
 
@@ -138,7 +139,7 @@ test('failed and cancelled turns persist one system feedback, preserve work stat
   await until(async () => (await api.readTerminal(cancelled))?.delivery === 'delivered')
   assert.equal((await api.readRun(cancelled))?.status,'cancelled'); assert.equal(modelCalls,beforeCancel)
   assert.equal(messages().filter(message => message.payload.role === 'system').length,2)
-  await mkdir('artifacts/runtime-reliability',{ recursive: true })
-  await writeFile('artifacts/runtime-reliability/terminal.json',JSON.stringify({ failedWorkStatus: 'failed',failedResultId: null,
-    providerFailureCalls: 1,terminalReplayExtraMessages: 0,systemMessages: 2,nextWorkStatus: 'succeeded',cancelExtraModelCalls: 0 },null,2)+'\n')
+  await mkdir(`${acceptanceOutput}/runtime-reliability`,{ recursive: true })
+  await writeFile(`${acceptanceOutput}/runtime-reliability/terminal.json`,JSON.stringify({ failedWorkStatus: 'failed',failedResultId: null,
+    providerFailureCalls: 1,terminalReplayExtraMessages: 0,systemMessages: 2,nextWorkStatus: 'succeeded',cancelExtraModelCalls: 0 },null,2)+'\n', { flag: 'wx' })
 })

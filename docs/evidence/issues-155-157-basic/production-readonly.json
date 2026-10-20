@@ -1,11 +1,7 @@
 {
   "status": "passed",
   "readOnly": true,
-  "expectedSha": "7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-  "startedAt": "2026-10-20T00:14:48.930Z",
-  "komodoApiVersion": "2.3.3",
-  "komodoOrigin": "https://ops.christmas1314.xyz",
-  "publicOrigin": "https://loop.lingxilearn.cn",
+  "expectedSource": "7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
   "expectedRuntime": {
     "name": "@lyyzka/lingxios",
     "runtime": "3.5.5",
@@ -14,378 +10,57 @@
     "schema": 12,
     "assistantMessage": 2
   },
+  "startedAt": "2026-10-20T00:14:48.930Z",
+  "completedAt": "2026-10-20T00:15:01.664Z",
   "observations": [
     {
       "startedAt": "2026-10-20T00:14:48.930Z",
       "completedAt": "2026-10-20T00:14:55.980Z",
-      "servers": [
-        {
-          "name": "manager",
-          "id": "6ad11a22d8838102d0fa5f5e",
-          "state": "Ok"
-        },
-        {
-          "name": "shanghai-a",
-          "id": "6aa8a1bcb35d27bdd4e12a26",
-          "state": "Ok"
-        },
-        {
-          "name": "shanghai-b",
-          "id": "6aa8a1b9b35d27bdd4e12a24",
-          "state": "Ok"
-        }
-      ],
-      "stacks": [
-        {
-          "name": "lingxiloop-app-a",
-          "id": "6aa8a411b35d27bdd4e12aef",
-          "server": "shanghai-a",
-          "serverId": "6aa8a1bcb35d27bdd4e12a26",
-          "state": "running",
-          "actionsBefore": {
-            "pulling": false,
-            "deploying": false,
-            "starting": false,
-            "restarting": false,
-            "pausing": false,
-            "unpausing": false,
-            "stopping": false,
-            "destroying": false
-          },
-          "actionsAfter": {
-            "pulling": false,
-            "deploying": false,
-            "starting": false,
-            "restarting": false,
-            "pausing": false,
-            "unpausing": false,
-            "stopping": false,
-            "destroying": false
-          },
-          "services": [
-            {
-              "service": "lingxiloop",
-              "state": "Running",
-              "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-              "reportedImageDigests": [
-                "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33"
-              ],
-              "container": {
-                "id": "55c8e3e4ce8571035d0379b7903838d960e0809ee336880f3b272896f0b151dc",
-                "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-                "imageId": "sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33",
-                "state": "running",
-                "health": "healthy"
-              }
-            },
-            {
-              "service": "worker",
-              "state": "Running",
-              "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-              "reportedImageDigests": [
-                "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33"
-              ],
-              "container": {
-                "id": "7ebffcdd9d14ba26ff39f011ade4c47da63e10ce51a93c8528705b6e396adb83",
-                "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-                "imageId": "sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33",
-                "state": "running",
-                "health": "healthy"
-              }
-            }
-          ]
-        },
-        {
-          "name": "lingxiloop-app-b",
-          "id": "6aa8a414b35d27bdd4e12af1",
-          "server": "shanghai-b",
-          "serverId": "6aa8a1b9b35d27bdd4e12a24",
-          "state": "running",
-          "actionsBefore": {
-            "pulling": false,
-            "deploying": false,
-            "starting": false,
-            "restarting": false,
-            "pausing": false,
-            "unpausing": false,
-            "stopping": false,
-            "destroying": false
-          },
-          "actionsAfter": {
-            "pulling": false,
-            "deploying": false,
-            "starting": false,
-            "restarting": false,
-            "pausing": false,
-            "unpausing": false,
-            "stopping": false,
-            "destroying": false
-          },
-          "services": [
-            {
-              "service": "lingxiloop",
-              "state": "Running",
-              "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-              "reportedImageDigests": [
-                "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33"
-              ],
-              "container": {
-                "id": "19bad0d2875c5405797a78ff7bc8fc62f2677bcabab5bcc6aa659f07c60420e2",
-                "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-                "imageId": "sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33",
-                "state": "running",
-                "health": "healthy"
-              }
-            },
-            {
-              "service": "worker",
-              "state": "Running",
-              "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-              "reportedImageDigests": [
-                "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33"
-              ],
-              "container": {
-                "id": "f9dd79f72782e51652dd016e54f15afde2546dfeaf9119bbef75adb61ea0e742",
-                "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-                "imageId": "sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33",
-                "state": "running",
-                "health": "healthy"
-              }
-            }
-          ]
-        }
-      ],
-      "publicHttp": {
-        "meta": {
-          "httpStatus": 200,
-          "product": "LingxiLoop",
-          "version": "0.1.0-beta",
-          "commitSha": "7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-          "reasoningRuntime": {
-            "name": "@lyyzka/lingxios",
-            "runtime": "3.5.5",
-            "controlPlane": 11,
-            "kernel": 2,
-            "schema": 12,
-            "assistantMessage": 2
-          }
-        },
-        "dependencies": {
-          "httpStatus": 200,
-          "ok": true,
-          "dependencies": {
-            "database": true,
-            "redis": true,
-            "openNotebook": true
-          }
-        },
-        "ready": {
-          "path": "/readyz",
-          "httpStatus": 200,
-          "ok": true,
-          "dependencies": {
-            "database": true,
-            "redis": true,
-            "control": true
-          }
-        },
-        "protectedApiReady": {
-          "path": "/api/readyz",
-          "httpStatus": 401,
-          "authenticationRequired": true,
-          "countsAsReadiness": false
-        }
+      "sourceMatchesExpected": true,
+      "runtimeMatchesExpected": true,
+      "applicationServices": {
+        "checked": 4,
+        "running": 4,
+        "healthy": 4
+      },
+      "administrativeActionInProgress": false,
+      "publicChecks": {
+        "metadataHttpStatus": 200,
+        "dependenciesHttpStatus": 200,
+        "dependenciesHealthy": true,
+        "readinessHttpStatus": 200,
+        "readinessHealthy": true,
+        "protectedReadyRequiresAuthentication": true,
+        "protectedReadyCountsAsReadiness": false
       }
     },
     {
       "startedAt": "2026-10-20T00:14:55.980Z",
       "completedAt": "2026-10-20T00:15:01.664Z",
-      "servers": [
-        {
-          "name": "manager",
-          "id": "6ad11a22d8838102d0fa5f5e",
-          "state": "Ok"
-        },
-        {
-          "name": "shanghai-a",
-          "id": "6aa8a1bcb35d27bdd4e12a26",
-          "state": "Ok"
-        },
-        {
-          "name": "shanghai-b",
-          "id": "6aa8a1b9b35d27bdd4e12a24",
-          "state": "Ok"
-        }
-      ],
-      "stacks": [
-        {
-          "name": "lingxiloop-app-a",
-          "id": "6aa8a411b35d27bdd4e12aef",
-          "server": "shanghai-a",
-          "serverId": "6aa8a1bcb35d27bdd4e12a26",
-          "state": "running",
-          "actionsBefore": {
-            "pulling": false,
-            "deploying": false,
-            "starting": false,
-            "restarting": false,
-            "pausing": false,
-            "unpausing": false,
-            "stopping": false,
-            "destroying": false
-          },
-          "actionsAfter": {
-            "pulling": false,
-            "deploying": false,
-            "starting": false,
-            "restarting": false,
-            "pausing": false,
-            "unpausing": false,
-            "stopping": false,
-            "destroying": false
-          },
-          "services": [
-            {
-              "service": "lingxiloop",
-              "state": "Running",
-              "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-              "reportedImageDigests": [
-                "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33"
-              ],
-              "container": {
-                "id": "55c8e3e4ce8571035d0379b7903838d960e0809ee336880f3b272896f0b151dc",
-                "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-                "imageId": "sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33",
-                "state": "running",
-                "health": "healthy"
-              }
-            },
-            {
-              "service": "worker",
-              "state": "Running",
-              "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-              "reportedImageDigests": [
-                "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33"
-              ],
-              "container": {
-                "id": "7ebffcdd9d14ba26ff39f011ade4c47da63e10ce51a93c8528705b6e396adb83",
-                "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-                "imageId": "sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33",
-                "state": "running",
-                "health": "healthy"
-              }
-            }
-          ]
-        },
-        {
-          "name": "lingxiloop-app-b",
-          "id": "6aa8a414b35d27bdd4e12af1",
-          "server": "shanghai-b",
-          "serverId": "6aa8a1b9b35d27bdd4e12a24",
-          "state": "running",
-          "actionsBefore": {
-            "pulling": false,
-            "deploying": false,
-            "starting": false,
-            "restarting": false,
-            "pausing": false,
-            "unpausing": false,
-            "stopping": false,
-            "destroying": false
-          },
-          "actionsAfter": {
-            "pulling": false,
-            "deploying": false,
-            "starting": false,
-            "restarting": false,
-            "pausing": false,
-            "unpausing": false,
-            "stopping": false,
-            "destroying": false
-          },
-          "services": [
-            {
-              "service": "lingxiloop",
-              "state": "Running",
-              "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-              "reportedImageDigests": [
-                "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33"
-              ],
-              "container": {
-                "id": "19bad0d2875c5405797a78ff7bc8fc62f2677bcabab5bcc6aa659f07c60420e2",
-                "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-                "imageId": "sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33",
-                "state": "running",
-                "health": "healthy"
-              }
-            },
-            {
-              "service": "worker",
-              "state": "Running",
-              "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-              "reportedImageDigests": [
-                "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33"
-              ],
-              "container": {
-                "id": "f9dd79f72782e51652dd016e54f15afde2546dfeaf9119bbef75adb61ea0e742",
-                "image": "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-                "imageId": "sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33",
-                "state": "running",
-                "health": "healthy"
-              }
-            }
-          ]
-        }
-      ],
-      "publicHttp": {
-        "meta": {
-          "httpStatus": 200,
-          "product": "LingxiLoop",
-          "version": "0.1.0-beta",
-          "commitSha": "7bdb7db9a7fb52ad304ea7d653742abc77e0e7e5",
-          "reasoningRuntime": {
-            "name": "@lyyzka/lingxios",
-            "runtime": "3.5.5",
-            "controlPlane": 11,
-            "kernel": 2,
-            "schema": 12,
-            "assistantMessage": 2
-          }
-        },
-        "dependencies": {
-          "httpStatus": 200,
-          "ok": true,
-          "dependencies": {
-            "database": true,
-            "redis": true,
-            "openNotebook": true
-          }
-        },
-        "ready": {
-          "path": "/readyz",
-          "httpStatus": 200,
-          "ok": true,
-          "dependencies": {
-            "database": true,
-            "redis": true,
-            "control": true
-          }
-        },
-        "protectedApiReady": {
-          "path": "/api/readyz",
-          "httpStatus": 401,
-          "authenticationRequired": true,
-          "countsAsReadiness": false
-        }
+      "sourceMatchesExpected": true,
+      "runtimeMatchesExpected": true,
+      "applicationServices": {
+        "checked": 4,
+        "running": 4,
+        "healthy": 4
+      },
+      "administrativeActionInProgress": false,
+      "publicChecks": {
+        "metadataHttpStatus": 200,
+        "dependenciesHttpStatus": 200,
+        "dependenciesHealthy": true,
+        "readinessHttpStatus": 200,
+        "readinessHealthy": true,
+        "protectedReadyRequiresAuthentication": true,
+        "protectedReadyCountsAsReadiness": false
       }
     }
   ],
-  "failedChecks": [],
+  "failedCheckCount": 0,
   "limitations": {
-    "containerStatus": "Komodo ListStackServices status cache; no direct container inspection or per-replica HTTP probe",
-    "digest": "Docker image ID and Komodo reported image_digests are separate fields; registry manifest digest is not independently resolved",
-    "sql": "Not checked: release owner must separately verify schema 46, original 0033 tables and four Visualize tables using read-only SQL",
-    "scope": "No deployment, backup, authenticated user workflow or soak operation; bounded observations are not a future availability guarantee"
-  },
-  "completedAt": "2026-10-20T00:15:01.664Z"
+    "scope": "Read-only administrative status and public HTTP metadata/readiness observations; no fault injection or production mutation.",
+    "containerStatus": "Aggregate health only; administrative origins, server/stack inventory and actual container identifiers are omitted.",
+    "digest": "An independent registry image-index digest was not resolved by this check.",
+    "sql": "Production migration 46 was not independently read through SQL in this subtask."
+  }
 }

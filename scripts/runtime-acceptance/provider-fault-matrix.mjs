@@ -30,6 +30,7 @@ Object.assign(env, { NODE_ENV: 'test', DOTENV_CONFIG_PATH: '/tmp/lingxiloop-no-p
   LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:5180', LINGXILOOP_GATEWAY_HMAC_SECRET: 'integration-gateway-secret',
   WUKONG_USER_TOKEN_SECRET: 'integration-wukong-user-token-secret', AGENT_OS_INPUT_COST_MICROS_PER_MILLION: '1',
   AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION: '1', LINGXILOOP_DISABLE_EMBEDDINGS: '1', RESEND_LIVE_TEST: '0', LINGXIOS_LIVE_PROTOCOL: '0',
+  RUNTIME_ACCEPTANCE_OUTPUT_DIR: output,
   PROVIDER_MATRIX_RECEIPTS: `${output}/product-fault-results.json`, BASIC_ACCEPTANCE_RECEIPTS: `${output}/basic-results.json` })
 const log = `${output}/integration.log`
 await writeFile(log, '', { flag: 'wx' })

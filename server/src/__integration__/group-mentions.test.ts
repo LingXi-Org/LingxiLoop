@@ -19,6 +19,7 @@ import { installRecordingWukong } from './_recording-wukong.js'
 // or inherited attachment evidence rejected as an unrecorded child read.
 let recording: Awaited<ReturnType<typeof installRecordingWukong>>
 let worker: ReturnType<typeof createWorker> | undefined
+const acceptanceOutput = process.env.RUNTIME_ACCEPTANCE_OUTPUT_DIR || `.e2e/runtime-acceptance/${Date.now()}-${process.pid}`
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => { await worker?.stop(); await recording?.close(); await teardownAll() })
 
@@ -118,8 +119,8 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
   const artifact = { passed: true, messages: recording.messages.map(message => ({ author: message.fromUid, text: nativeText(message.payload) })),
     runs: bindings, inheritedEvidencePreserved: true,
     checks: ['formatted-mention', 'public-causal-chain', 'explicit-return', 'silent-stop', 'shared-human', 'replay', 'no-hidden-children', 'inherited-attachment-evidence'] }
-  await mkdir('artifacts/group-mentions', { recursive: true })
-  await writeFile('artifacts/group-mentions/conversation.json', JSON.stringify(artifact, null, 2))
+  await mkdir(`${acceptanceOutput}/group-mentions`, { recursive: true })
+  await writeFile(`${acceptanceOutput}/group-mentions/conversation.json`, JSON.stringify(artifact, null, 2), { flag: 'wx' })
 })
 
 test('message admission freezes canonical mentions across renames and preserves citation coordinates', async () => {
@@ -199,8 +200,8 @@ test('a leader introduction wakes all five inline-code mentioned specialists onc
   const runs = (await pool.query('SELECT agent_id,principal_id,internal FROM agent_run_bindings')).rows
   assert.equal(runs.length, 6)
   assert.ok(runs.every(run => run.principal_id === 'test-owner' && !run.internal))
-  await mkdir('artifacts/group-mentions', { recursive: true })
-  await writeFile('artifacts/group-mentions/introduction.json', JSON.stringify({ passed: true,
+  await mkdir(`${acceptanceOutput}/group-mentions`, { recursive: true })
+  await writeFile(`${acceptanceOutput}/group-mentions/introduction.json`, JSON.stringify({ passed: true,
     authors: replies().map(message => message.fromUid), runs,
-    checks: ['five-specialists', 'commit-before-dispatch', 'one-reply-each', 'examples-inert', 'shared-human'] }, null, 2))
+    checks: ['five-specialists', 'commit-before-dispatch', 'one-reply-each', 'examples-inert', 'shared-human'] }, null, 2), { flag: 'wx' })
 })

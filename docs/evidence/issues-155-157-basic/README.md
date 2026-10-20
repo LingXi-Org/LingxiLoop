@@ -14,12 +14,12 @@ merge, deploy, close issues, change credentials/quotas or operate the fixed 3.5.
   Registry gitHead is `a02e7aab414364f716ff91d6fd0821b42dddabdd`.
   [Provenance](provenance.json) compares nine compiled runtime files used by these
   tests byte for byte with that source build; [registry receipt](registry.json).
-- [Read-only production check](production-readonly.json) completed at
-  2026-10-20T00:15:01Z: two consistent observations of healthy A/B Web and both
-  Workers; the immutable image tag above; runtime 3.5.5/schema12; public metadata,
-  dependencies and `/readyz` passed. No action was in progress.
-- Komodo reported image/config digest `sha256:ba4187069467d76f0792aa50824509a029e063d1b81811fabdf45bddd594fa33`.
-  This is the API's image evidence, not an independently resolved registry index.
+- [Read-only production summary](production-readonly.json) completed at
+  2026-10-20T00:15:01Z: two consistent observations of four healthy application
+  services, expected source/runtime 3.5.5/schema12, and passing public metadata,
+  dependency and readiness checks. No administrative action was in progress.
+  The public summary excludes administrative inventory and actual container
+  identifiers. It does not independently resolve a registry image-index digest.
   Local fresh product migration 1–46 passed. **Production migration46 was not
   independently re-read through SQL in this subtask**; live installed schema12
   was read through product metadata. Sole integrator owns final SQL/rollout receipt.
@@ -88,10 +88,10 @@ outbox identity. Pending children remain capped at8; product mention limits rema
 ## Harness changes and honest failures
 
 The old matrix overwrote checked-in historical receipts on every integration run
-and leaked its temporary database. Capture is now opt-in at the test hook; the
-launcher creates a new exclusive directory, accepts loopback-only alternate service
-ports, inherits no model credentials, and drops only its generated database after
-normal completion or handled failure. Generated database names use UUID suffixes.
+and leaked its temporary database. Matrix/basic capture is now opt-in at the test
+hook. The launcher creates a new exclusive directory, accepts loopback-only
+alternate service ports, inherits no model credentials, and drops only its generated
+database after normal completion or handled failure. Generated names use UUID suffixes.
 All four runs, including failed fixture attempts, confirm `databaseDropped=true`.
 A final query found zero remaining databases from this task.
 
@@ -102,6 +102,23 @@ contract. Correcting only those fixture definitions produced `basic-qualified/`
 **4/4**, zero skips, in4.37s. These are harness failures, not fixed product bugs.
 `typecheck-first.log` preserves the field-name error; final typecheck and server lint
 passed. Original checked-in October19 evidence was restored without alteration.
+
+The independent review found that auxiliary receipt writers still bypassed the new
+directory. Group mentions, reliability and provider-timeout receipts now honor
+`RUNTIME_ACCEPTANCE_OUTPUT_DIR`; without it they use ignored
+`.e2e/runtime-acceptance/<timestamp>-<pid>/` directories. Each write uses exclusive
+creation. The launcher forwards the shared output directory. Its seven-file audit
+also identified the separately owned deadline writer; **the complete default
+selection requires the integrator's deadline fix `fbd7b02b`**. This follow-up does
+not edit that test or claim the uncombined selection preserves every receipt.
+
+[Output-isolation checks](receipt-output-green.json) exercise the actual source
+filesystem calls, replacing only synthetic payloads: explicit/default locations
+and duplicate-file rejection pass **6/6**, after [0/6 before correction](receipt-output-red.json).
+They do not execute business logic or use a database. Typecheck, server lint and
+script syntax passed; the full matrix was not repeated. The reproducible check is
+`node docs/evidence/issues-155-157-basic/receipt-output-isolation.mjs`.
+`validation.json` separates initial capture hashes from this follow-up's validation.
 
 ## Reproduction
 
@@ -116,7 +133,7 @@ PROVIDER_MATRIX_REDIS_PORT=56389 \
 node scripts/runtime-acceptance/provider-fault-matrix.mjs
 ```
 
-The default selection now includes the four new tests. A fresh timestamp/UUID output
+After combining the deadline fix, the default selection includes the four new tests. A fresh timestamp/UUID output
 is under `.e2e/provider-matrix/`; set `PROVIDER_MATRIX_OUTPUT_DIR` to a **new** directory
 for explicit capture. Server typecheck/lint use the normal package scripts.
 
