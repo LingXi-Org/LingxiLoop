@@ -1,0 +1,33 @@
+{
+  "expectedDraft": "# 旧卡片\n\n需要一起保留的内容。",
+  "result": {
+    "document": {
+      "id": "fixture-frame",
+      "canvasId": "fixture-canvas",
+      "type": "markdown",
+      "title": "共同笔记",
+      "content": "远端已保存的新版本",
+      "x": 80,
+      "y": 80,
+      "width": 560,
+      "height": 440,
+      "data": {},
+      "revision": 2,
+      "createdBy": "teacher",
+      "updatedBy": "teacher",
+      "createdAt": "2026-10-20T01:13:59.988Z",
+      "updatedAt": "2026-10-20T01:14:01.356Z"
+    },
+    "patches": [
+      {
+        "content": "# 旧卡片\n\n需要一起保留的内容。",
+        "baseRevision": 1
+      }
+    ],
+    "feedback": [],
+    "comments": [],
+    "finishedPatches": 0,
+    "finishedSteers": 0,
+    "failedReads": 0
+  }
+}

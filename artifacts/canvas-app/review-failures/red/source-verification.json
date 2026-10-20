@@ -1,0 +1,8 @@
+{
+  "combined": "0ec4d73161f367c8443494b15e1fc1b8aabcfad1",
+  "priorFix": "0767aaaf70053798807319e0f7c89d4c909c6c4d",
+  "file": "src/features/canvas/mcp-app/editor.js",
+  "priorHash": "9456716086055e6667055e1fdc430d792a5c3b03dc52f2ff96b5105a6af8c491",
+  "reviewHash": "9456716086055e6667055e1fdc430d792a5c3b03dc52f2ff96b5105a6af8c491",
+  "identical": true
+}
