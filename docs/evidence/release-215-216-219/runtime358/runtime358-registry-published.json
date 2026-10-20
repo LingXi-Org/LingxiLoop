@@ -1,0 +1,9 @@
+{
+  "version": "3.5.8",
+  "dist": {
+    "integrity": "sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==",
+    "shasum": "8e2f7b670f326466c0c9e1e8755d4c947c2065d8",
+    "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8"
+  },
+  "gitHead": "35ac1208fcf2bd6cb1852f474175e9eb7e2083ec"
+}
