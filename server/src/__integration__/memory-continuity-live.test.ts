@@ -132,6 +132,6 @@ test('live native memory saves, recalls semantically and extracts long-source ta
     await mkdir('artifacts/memory/continuity-live',{recursive:true})
     await writeFile('artifacts/memory/continuity-live/model-results.json',JSON.stringify({passed:true,model:env.OPENAI_MODEL,embeddingModel:env.OPENAI_EMBEDDING_MODEL,
       observed,initialCount,indexed,jobs,pages,usage,diagnostics:snapshot.diagnostics,checks:['explicit-middle-tail','immediate-new-room-input','hybrid-current-index','proactive-reference-injection','background-middle-tail','effective-revision','durable-cursor','forget-index'],
-      reproduce:'EVAL_CANDIDATE_MODEL=zai-org/GLM-5.2 EVAL_CANDIDATE_INPUT_CNY_PER_MILLION=8 EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION=28 lingxi-prod model-run node e2e/server/memory-regression.mjs --live-continuity'},null,2))
+      reproduce:`OPENAI_EMBEDDING_MODEL=${env.OPENAI_EMBEDDING_MODEL} EVAL_CANDIDATE_MODEL=zai-org/GLM-5.2 EVAL_CANDIDATE_INPUT_CNY_PER_MILLION=8 EVAL_CANDIDATE_OUTPUT_CNY_PER_MILLION=28 lingxi-prod model-run node e2e/server/memory-regression.mjs --live-continuity`},null,2))
   } finally {globalThis.fetch=originalFetch;await worker?.stop();await recording.close();await teardownAll()}
 })

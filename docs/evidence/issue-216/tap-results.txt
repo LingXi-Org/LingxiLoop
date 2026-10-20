@@ -1,0 +1,278 @@
+Filtered TAP case names and final counters only; full logs remain local.
+native combined
+ok 1 - backs off empty/error scans, resets on work, and recovers through a periodic sweep
+ok 2 - coalesces notifications during a scan without losing the follow-up and stops idempotently
+ok 3 - keeps free outbox lanes polling while one call is stalled, with bounded overlap
+ok 4 - caps background connections across jobs, holds transaction permits, and releases once
+ok 5 - cancels queued and late background acquisitions without leaking permits or clients
+ok 6 - releases permits after acquisition/query exceptions and aborts active clients once
+ok 7 - default app listens for notifications and delivers durable rows
+ok 8 - outbox reports empty, busy and failed scans without holding DB permits during delivery
+ok 9 - active fallback polling finds rows without notifications and stop cancels an in-flight transport
+ok 10 - passive public apps create no listener or background SQL and keep explicit APIs usable
+ok 11 - validates background limits before accessing the database
+ok 12 - committed agent mentions create public turns without waiting or resuming their sender
+ok 13 - agent mention limits, unsigned messages and revoked recipients never enqueue extra work
+ok 14 - bounds an all-member mention by the chain budget even in a large supported room
+ok 15 - delivers and replays the same frozen citation excerpts after the source changes
+ok 16 - binds IM ownership, audiences, targeted reply slots, causal identities and execution sessions
+ok 17 - keeps public IM result reads bound to the frozen audience and exact thread
+ok 18 - merges independent state fields, preserves tombstone versions and audits deduplicated conflicts
+ok 19 - runs a durable diamond DAG through state actions, fan-in, verified result and deduplicated IM delivery
+ok 20 - rejects cycles, blocks failed dependencies, resumes the parent and fences cancelled branches
+ok 21 - partitions IM memory by principal and revokes restored sessions
+ok 22 - discovers effective memory scopes through the public app and reauthorizes their use
+ok 23 - migrates schema 9 without resetting business data and matches the fresh schema
+ok 24 - resumes an exact wait set after early completion and rejects stale fences and widened delegate capabilities
+ok 25 - isolates tenants and direct audiences, rejects malformed state and rechecks speak and execute revocation
+ok 26 - reauthorizes IM approvals and prevents cancelled workers from writing shared state
+ok 27 - inherits opted-in personal memory across authorized rooms and Agents but excludes shared audiences
+ok 28 - moves only proven private legacy records with stable identity and preserves forgetting across reruns
+ok 29 - bounds embedding requests, aligns response indices and rejects corrupt vectors and leaked errors
+ok 30 - classifies embedding quota 402 and shares only credential-scoped provider circuits
+ok 31 - classifies embedding quota 429 and shares only credential-scoped provider circuits
+ok 32 - durably captures only filtered committed sources, runs hooks without locks, and fences forgetting and cancellation
+ok 33 - bounds core concurrency, defers optional recall and rejects revoked scopes or required recall failures
+ok 34 - pages long Chinese source material completely and durably fences page replay and forgetting
+ok 35 - reserves context space for relevant details and records traceable oversized core fragments
+ok 36 - freezes a cold tenant benchmark and proposes inactive candidates in the same synthesis action transaction
+ok 37 - rejects a frozen definition conflict and rolls back memory, evidence, evaluation and the successful receipt
+ok 38 - rejects mismatched trusted IDs before any database access
+ok 39 - captures the trusted benchmark and ID before the caller can mutate nested options
+ok 40 - preserves benchmarkId-only registration requirements and explicit administrative freezing
+ok 41 - does not touch the benchmark registry for empty synthesis
+ok 42 - does not touch the benchmark registry for rejected synthesis
+ok 43 - does not touch the benchmark registry for processed synthesis
+ok 44 - does not touch the benchmark registry for forgotten synthesis
+ok 45 - does not touch the benchmark registry for revoked synthesis
+ok 46 - ordinary cold and warm memory reads and context do not access the registry
+ok 47 - discards the shared action connection when cancel interrupts freezing and permits a later action
+ok 48 - discards the shared action connection when deadline interrupts freezing and permits a later action
+ok 49 - requires a private reviewer, protects explicit memory, binds reviews to versions and supports native read pagination
+ok 50 - applies privacy policy before searchable history capture without rejecting the committed user result
+ok 51 - runs native memory writes through the budgeted independent reviewer and preserves explicit rejection
+ok 52 - isolates searchable history by principal, rechecks original session permissions and prevents forgotten evidence from returning
+ok 53 - resets only schema-8 memory, retains product records and frozen benchmarks, and rejects live workers and reapplication
+ok 54 - MemoryWorkStore lease state machine
+ok 55 - MemorySessionStore optimistic concurrency
+ok 56 - MemoryEventStore
+ok 57 - MemoryActionLedger
+ok 58 - repairs one invalid or protected proposal before verification without relaxing writes
+ok 59 - retires permanently revoked sources but preserves transient failures for a later retry
+ok 60 - batches five committed interactions, keeps per-scope progress and learns with two independent model calls
+ok 61 - uses persisted idle timestamps, bounds batches and retries, and never schedules uncommitted sources
+ok 62 - protects explicit memory, records conflicts, rejects unknown evidence and stale leases, and fences forgetting
+ok 63 - rechecks source permissions and request revisions between proposal and apply
+ok 64 - does not renew expired knowledge from an old request committed after expiry
+ok 65 - stores structured documents, searches Chinese/English and browses paths across sessions without a worker lease
+ok 66 - atomically updates, moves, merges and restores versions, and diagnoses broken links and conflicts
+ok 67 - validates paths, byte limits, versioned changes and content policy on body and metadata
+ok 68 - keeps complete core records ahead of reference context and reports all budget omissions deterministically
+ok 69 - keeps memory out of diagnostic events (default)
+ok 70 - keeps memory out of diagnostic events (off-sample)
+ok 71 - keeps memory out of diagnostic events (legacy-trace)
+ok 72 - keeps memory out of diagnostic events (identity-redactor)
+ok 73 - keeps memory out of diagnostic events (throwing-redactor)
+ok 74 - grounds a follow-up content review in the conversation supplied to generation
+ok 75 - prioritizes replies and saves ready summaries (budget=110000, window=128000)
+ok 76 - prioritizes replies and saves ready summaries (budget=1000000, window=128000)
+ok 77 - prioritizes replies and saves ready summaries (budget=1000000, window=1000000)
+ok 78 - rechecks the hard budget after installing a background summary with new output
+ok 79 - restores an oversized session with atomic compaction (tail=1, failure=false)
+ok 80 - restores an oversized session with atomic compaction (tail=1, failure=true)
+ok 81 - restores an oversized session with atomic compaction (tail=20, failure=false)
+ok 82 - restores an oversized session with atomic compaction (tail=20, failure=true)
+ok 83 - reports every processor model call to the product ledger with durable work scope
+ok 84 - blocks a forged ipython call at the runtime boundary when code execution is disabled
+ok 85 - cannot turn an action-mode request into success without a durable successful business receipt
+ok 86 - preserves object content and observed artifacts when assessment correction is exhausted
+ok 87 - preserves plain text content and observed artifacts when assessment correction is exhausted
+ok 88 - continues an actionable partial candidate before committing its result
+ok 89 - commits one public contribution without claiming the unfinished goal (partial)
+ok 90 - commits one public contribution without claiming the unfinished goal (satisfied)
+ok 91 - drops optional recalled memory before allowing it to crowd out the original request
+ok 92 - reviews complex candidates against original requirements, bounds corrections and discards reviews invalidated by steering
+ok 93 - preserves history across prompt upgrades and exposes assigned action receipts with progress text
+ok 94 - does not spend model-correction budget on provider failures
+ok 95 - records approval and input waiting without claiming goal completion or invented delegation
+ok 96 - discards an unexecuted model candidate when steering arrives during generation
+ok 97 - fails without a fabricated answer on root budget exhaustion and honors late signals
+ok 98 - preserves canonical direct tool receipts and result boundaries (short, recovery=none)
+ok 99 - preserves canonical direct tool receipts and result boundaries (long, recovery=none)
+ok 100 - preserves canonical direct tool receipts and result boundaries (denied, recovery=none)
+ok 101 - preserves canonical direct tool receipts and result boundaries (unknown, recovery=none)
+ok 102 - preserves canonical direct tool receipts and result boundaries (short, recovery=step)
+ok 103 - preserves canonical direct tool receipts and result boundaries (long, recovery=step)
+ok 104 - preserves canonical direct tool receipts and result boundaries (denied, recovery=step)
+ok 105 - preserves canonical direct tool receipts and result boundaries (unknown, recovery=step)
+ok 106 - preserves canonical direct tool receipts and result boundaries (short, recovery=cell)
+ok 107 - preserves canonical direct tool receipts and result boundaries (long, recovery=cell)
+ok 108 - preserves canonical direct tool receipts and result boundaries (denied, recovery=cell)
+ok 109 - preserves canonical direct tool receipts and result boundaries (unknown, recovery=cell)
+ok 110 - preserves unknown action outcomes in public events and model receipts
+ok 111 - keeps approval decisions separate from execution evidence when restoring a session
+ok 112 - fails before model or side effects when the original request cannot be captured
+ok 113 - parks only valid recovered native input before later calls (ipython, step, uncertain, user)
+ok 114 - parks only valid recovered native input before later calls (chat__ask, step, uncertain, user)
+ok 115 - parks only valid recovered native input before later calls (ipython, cell, uncertain, user)
+ok 116 - parks only valid recovered native input before later calls (chat__ask, cell, uncertain, user)
+ok 117 - parks only valid recovered native input before later calls (ipython, step, idempotent, user)
+ok 118 - parks only valid recovered native input before later calls (chat__ask, step, idempotent, user)
+ok 119 - parks only valid recovered native input before later calls (ipython, cell, idempotent, user)
+ok 120 - parks only valid recovered native input before later calls (chat__ask, cell, idempotent, user)
+ok 121 - parks only valid recovered native input before later calls (ipython, step, read, user)
+ok 122 - parks only valid recovered native input before later calls (ipython, step, read, child)
+ok 123 - parks only valid recovered native input before later calls (chat__ask, step, read, user)
+ok 124 - parks only valid recovered native input before later calls (chat__ask, step, read, child)
+ok 125 - parks only valid recovered native input before later calls (ipython, cell, read, user)
+ok 126 - parks only valid recovered native input before later calls (ipython, cell, read, child)
+ok 127 - parks only valid recovered native input before later calls (chat__ask, cell, read, user)
+ok 128 - parks only valid recovered native input before later calls (chat__ask, cell, read, child)
+ok 129 - parks only valid recovered native input before later calls (ipython, step, unknown, user)
+ok 130 - parks only valid recovered native input before later calls (ipython, step, unknown, child)
+ok 131 - parks only valid recovered native input before later calls (chat__ask, step, unknown, user)
+ok 132 - parks only valid recovered native input before later calls (chat__ask, step, unknown, child)
+ok 133 - parks only valid recovered native input before later calls (ipython, cell, unknown, user)
+ok 134 - parks only valid recovered native input before later calls (ipython, cell, unknown, child)
+ok 135 - parks only valid recovered native input before later calls (chat__ask, cell, unknown, user)
+ok 136 - parks only valid recovered native input before later calls (chat__ask, cell, unknown, child)
+ok 137 - enforces terminal wait contracts without contradictory parallel outputs (direct, read, user)
+ok 138 - enforces terminal wait contracts without contradictory parallel outputs (direct, read, child)
+ok 139 - enforces terminal wait contracts without contradictory parallel outputs (direct, uncertain, user)
+ok 140 - enforces terminal wait contracts without contradictory parallel outputs (direct, uncertain, child)
+ok 141 - enforces terminal wait contracts without contradictory parallel outputs (direct, idempotent, user)
+ok 142 - enforces terminal wait contracts without contradictory parallel outputs (direct, idempotent, child)
+ok 143 - enforces terminal wait contracts without contradictory parallel outputs (direct, unknown, user)
+ok 144 - enforces terminal wait contracts without contradictory parallel outputs (direct, unknown, child)
+ok 145 - enforces terminal wait contracts without contradictory parallel outputs (ipython, read, user)
+ok 146 - enforces terminal wait contracts without contradictory parallel outputs (ipython, read, child)
+ok 147 - enforces terminal wait contracts without contradictory parallel outputs (ipython, uncertain, user)
+ok 148 - enforces terminal wait contracts without contradictory parallel outputs (ipython, uncertain, child)
+ok 149 - enforces terminal wait contracts without contradictory parallel outputs (ipython, idempotent, user)
+ok 150 - enforces terminal wait contracts without contradictory parallel outputs (ipython, idempotent, child)
+ok 151 - enforces terminal wait contracts without contradictory parallel outputs (ipython, unknown, user)
+ok 152 - enforces terminal wait contracts without contradictory parallel outputs (ipython, unknown, child)
+ok 153 - indexes scoped memories durably and ranks old semantic matches without trusting stale vectors
+# tests 163
+# suites 4
+# pass 163
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 199347.490345
+
+native capture/sink
+ok 1 - durably captures only filtered committed sources, runs hooks without locks, and fences forgetting and cancellation
+ok 2 - background capture retries without leaking policy exception text to the actual logger sink
+ok 3 - finishes an assistant-only continuation without promoting assistant claims to human facts
+ok 4 - advances a no-change evidence page without asking a model to approve nonexistent mutations
+ok 5 - repairs one invalid or protected proposal before verification without relaxing writes
+ok 6 - retires permanently revoked sources but preserves transient failures for a later retry
+ok 7 - batches five committed interactions, keeps per-scope progress and learns with two independent model calls
+ok 8 - uses persisted idle timestamps, bounds batches and retries, and never schedules uncommitted sources
+ok 9 - protects explicit memory, records conflicts, rejects unknown evidence and stale leases, and fences forgetting
+ok 10 - rechecks source permissions and request revisions between proposal and apply
+ok 11 - does not renew expired knowledge from an old request committed after expiry
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 36982.774394
+
+native bounded pages
+ok 1 - pages long Chinese source material completely and durably fences page replay and forgetting
+ok 2 - reserves context space for relevant details and records traceable oversized core fragments
+ok 3 - finishes an assistant-only continuation without promoting assistant claims to human facts
+ok 4 - advances a no-change evidence page without asking a model to approve nonexistent mutations
+ok 5 - repairs one invalid or protected proposal before verification without relaxing writes
+ok 6 - retires permanently revoked sources but preserves transient failures for a later retry
+ok 7 - batches five committed interactions, keeps per-scope progress and learns with two independent model calls
+ok 8 - uses persisted idle timestamps, bounds batches and retries, and never schedules uncommitted sources
+ok 9 - protects explicit memory, records conflicts, rejects unknown evidence and stale leases, and fences forgetting
+ok 10 - rechecks source permissions and request revisions between proposal and apply
+ok 11 - does not renew expired knowledge from an old request committed after expiry
+# tests 11
+# suites 0
+# pass 11
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 63059.105599
+
+product migration
+ok 1 - product stable memory crosses authorized rooms and Agents while current recipients fence private facts
+ok 2 - memory chips and explicit forgetting preserve native authorization and versions
+ok 3 - 0045 preserves existing sources and adds explicit organization-only case scope exactly once
+ok 4 - 0044 preserves product and runtime rows, starts empty and retains accepted answers on replay
+ok 5 - 0044 failure from 42 rolls back only its transaction and retains committed 0043
+ok 6 - 0044 failure from 43 rolls back only its transaction and retains committed 0043
+ok 7 - 0044 failure during fresh cutover rolls back all product and runtime installation
+ok 8 - 0043 preserves schema-11 work without backfilling notices and applies the published upgrade exactly once
+ok 9 - 0043 refuses an active worker and rolls back all upgrade metadata
+ok 10 - a failed fresh cutover rolls back packaged schema installation and product history together
+ok 11 - an empty database reaches the latest schema once and repeated migration is a no-op
+ok 12 - group mention upgrade preserves customized preset profiles and retires only handoff grants
+ok 13 - interactive UI upgrade preserves product rows and adds empty scoped state once
+ok 14 - collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams
+ok 15 - earlier 3.2 versions upgrade only runtime registration and preserve existing data
+ok 16 - read receipt upgrade preserves human receipts and accepts only same-tenant participants
+ok 17 - 3.2.13 upgrades the workspace schema transactionally and repeats without changing product data
+ok 18 - 3.3.0 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 19 - 3.3.1 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 20 - 3.3.2 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 21 - 3.3.4 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 22 - 3.3.5 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 23 - a recorded runtime patch repairs a stale LingxiOS schema before serving
+ok 24 - the affinity migration backfills the most recent worker without changing the Home epoch
+ok 25 - native installation rejects old run data before historical reset migrations can change it
+ok 26 - a non-empty database without migration history is rejected without mutation
+ok 27 - editing an applied migration is rejected by checksum
+ok 28 - a failed migration rolls back its DDL and history row
+ok 29 - concurrent migrators serialize and apply each migration once
+ok 30 - runtime readiness rejects pending migrations
+ok 31 - runtime readiness rejects a missing native collaboration table
+ok 32 - capability backfill preserves teacher grants, custom prompts and later revocations
+ok 33 - forum convergence preserves complete submission history and rolls back ambiguous assignments
+ok 34 - 0046 retains legacy OpenUI data and migration history while adding empty Visualize tables exactly once
+ok 35 - 0047 preserves legacy memory and epochs, drains Web capture, and supports safe pre-activation rollback
+ok 36 - native memory steps reach Run Activity and preserve reviewed versioned writes
+# tests 36
+# suites 0
+# pass 36
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 169873.387716
+
+product current main
+ok 1 - product stable memory crosses authorized rooms and Agents while current recipients fence private facts
+ok 2 - durable core survives repeated native compaction and a restarted control in a new room
+ok 3 - HTTP historical cards reauthorize stable memory across rooms after forgetting and revocation
+ok 4 - memory chips and explicit forgetting preserve native authorization and versions
+ok 5 - native memory steps reach Run Activity and preserve reviewed versioned writes
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 49170.307617
+
+actual configured provider
+ok 1 - live native memory saves, recalls semantically and extracts long-source tails across rooms
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 68495.031139
+

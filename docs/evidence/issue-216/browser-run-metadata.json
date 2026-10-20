@@ -6,13 +6,13 @@
     "--",
     "e2e/web/memory-privacy.e2e.ts",
     "--output",
-    "artifacts/issue216/browser-qualified"
+    "artifacts/issue216/browser-current-main"
   ],
   "buildMode": "existing production preview via E2E_BASE_URL",
   "browser": "managed official @e2e-dev/web browser",
   "build": {
     "file": "artifacts/memory/site/e2e/memory-privacy.html",
-    "modifiedAt": "2026-10-20T03:27:02.245Z",
-    "sha256": "1493b729ac79228e4d2bd9dd3148d08234f931e215bcd46359ce03198d957c55"
+    "modifiedAt": "2026-10-20T03:47:18.211Z",
+    "sha256": "f0a95209e538df7433788759bb08c05997ebecc4cf3c55c9fe8e279041d1bdb4"
   }
 }

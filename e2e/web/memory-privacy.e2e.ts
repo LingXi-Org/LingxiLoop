@@ -13,7 +13,7 @@ test.describe('Official memory activity', {
       await browser.locator('[data-slot="tool-group-trigger"]').nth(index).tap()
     }
     await expect(screen.getByText('偏好中文回答',{exact:true})).toHaveCount(2)
-    await browser.locator('button[aria-label=\'Forget "偏好中文回答"\']').first().tap()
+    await browser.locator('button[aria-label="忘记“偏好中文回答”"]').first().press('Enter')
     await expect(screen.getByText('偏好中文回答',{exact:true})).toHaveCount(0)
     await expect(screen.getByText('更新后的学习目标',{exact:true})).toHaveCount(2)
     await app.screenshot('memory-two-run-forget')
