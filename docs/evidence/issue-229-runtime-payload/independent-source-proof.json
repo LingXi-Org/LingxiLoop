@@ -1,0 +1,180 @@
+{
+  "head": "3b27f1e34fbaad886dfe0e6d4fad3b5c1b3ceb11",
+  "parentReviewedHead": "ef2aa158288feb41906f76dcd0dfae059b75372a",
+  "base": "535873b941815b41961a44f56e479257cbb71626",
+  "sources": [
+    {
+      "path": "server/docker/lingxiloop-server.Dockerfile",
+      "sha256": "f5ae0cec51b33caa9ad1db06db11817f34acb6b7634927be5706eefb542cd70b",
+      "matches": true
+    },
+    {
+      "path": "server/package.json",
+      "sha256": "79941740d88044b00f5e2864ab223357a8f0d891b3e111afbea9ba44d2e1adb8",
+      "matches": true
+    },
+    {
+      "path": "server/package-lock.json",
+      "sha256": "c305ca888a446fccf845f4a2a05ced779de19cb855dd2918e6dc6a975ba66b89",
+      "matches": true
+    },
+    {
+      "path": "scripts/production-rag-contract.test.mjs",
+      "sha256": "fbecea0a03a84de24bb08102fc3806e308367780bcc62ef423d44b9e76034ccf",
+      "matches": true
+    }
+  ],
+  "evidence": [
+    {
+      "path": "DEPENDENCY-AUDIT.md",
+      "sha256": "7b2d91782d970bdb8930d2e146e60772a90f1de814cd253b19f56825a1c022b7",
+      "matches": true
+    },
+    {
+      "path": "FAILURE-MODEL.md",
+      "sha256": "42044133668e48a086a7b653e3c3b52ef30eb817de1bf565e8a97bee1fed2463",
+      "matches": true
+    },
+    {
+      "path": "README.md",
+      "sha256": "9f3b900a2e117181a7f950a6d6f1507c53d574feac1a2dde307e941ed1645160",
+      "matches": true
+    },
+    {
+      "path": "after-buildkit.log",
+      "sha256": "b44d36fe660b2ded00fce43a743101fcaf45b3134fd97fbffa2ed7ea8a1e3b73",
+      "matches": true
+    },
+    {
+      "path": "after-payload.json",
+      "sha256": "5f796761d2a2927c2aaf9481f598b1d75b96b15f5d537070e4d6912c89694999",
+      "matches": true
+    },
+    {
+      "path": "before-buildkit.log",
+      "sha256": "07aa54eca76866d7354db0fe38414a03cdbea178dc90850c94db2ae9d2018601",
+      "matches": true
+    },
+    {
+      "path": "before-payload.json",
+      "sha256": "614d04b355217d520a983180dbe2ec4d94219b4bdd99b663c757f32718e436e3",
+      "matches": true
+    },
+    {
+      "path": "build-visualize-after.log",
+      "sha256": "f6c943e5be558f0d61e877ed84c570539c2e1c725c205c34e7914c358cef9bd8",
+      "matches": true
+    },
+    {
+      "path": "build-visualize-before.log",
+      "sha256": "f6c943e5be558f0d61e877ed84c570539c2e1c725c205c34e7914c358cef9bd8",
+      "matches": true
+    },
+    {
+      "path": "contract-before.log",
+      "sha256": "8f2a0f6ae48f3e0b5150426c6ec3256e01234b7302b6a66cc6fffdc49e70e51e",
+      "matches": true
+    },
+    {
+      "path": "contract-final-baseline.log",
+      "sha256": "b60f5738950c1e343f632f91d70f9c7f06daf9ea502943e4acd96fdad5e1910d",
+      "matches": true
+    },
+    {
+      "path": "contracts-after.log",
+      "sha256": "2bd3f73115f1b2e52091343be2dbab11216454cfc4eae22f5c7789f269c7af57",
+      "matches": true
+    },
+    {
+      "path": "dependency-imports.json",
+      "sha256": "edf9f68558ebb54625f5402537109e377209b4de2328fa5ad0392b6352e679b5",
+      "matches": true
+    },
+    {
+      "path": "dependency-virtual-trees.json",
+      "sha256": "4b27c3315679b9bd29c70869f9a427b845c1241953431bd31f0fb67b1beb4cf2",
+      "matches": true
+    },
+    {
+      "path": "import-audit.cjs",
+      "sha256": "971f97f487ff3ba0533be91f34e9c0449e2a991dce45cae5f64d3a5221cf2221",
+      "matches": true
+    },
+    {
+      "path": "lock-audit.cjs",
+      "sha256": "e0c6e5f12f216484f356bc6dd7df3c7d323a11c108cdbc64fd5151e79f67b183",
+      "matches": true
+    },
+    {
+      "path": "measure-payload.py",
+      "sha256": "cec3447f7bcc6f35b5810dc07153e83217208365c73ecf0adaff3c166926b902",
+      "matches": true
+    },
+    {
+      "path": "packaged-skill.log",
+      "sha256": "3bdadc741440c81bb2d66b0e3f42bab5fb0191fb0aafdcb17d0040e5544a74ac",
+      "matches": true
+    },
+    {
+      "path": "packaged-startup.log",
+      "sha256": "520f8c10967ea0c156e1d333283d498b41eeb9962a80a5ea3492c16fb93e3350",
+      "matches": true
+    },
+    {
+      "path": "payload-comparison.json",
+      "sha256": "ab16148b23d7ce68cb3d7f1d123b45d7e0b0075eb2a99bcbdaffa9ba023d26fd",
+      "matches": true
+    },
+    {
+      "path": "prod-install.log",
+      "sha256": "63f108133fd438307e49d071600584662efafb7b5db3a90086aee05a2d0e369e",
+      "matches": true
+    },
+    {
+      "path": "receipt.json",
+      "sha256": "7e38163cc5823bc5185f6f1f057c0f3cd9041f9a1b2cceb7b766c486106b88d6",
+      "matches": true
+    },
+    {
+      "path": "render-initial-harness-error.log",
+      "sha256": "1536205781a24e831712d2b56ad8adb610ee15f0dc5a552cd5b6664b0bc1bbb3",
+      "matches": true
+    },
+    {
+      "path": "vendor-after.json",
+      "sha256": "687dc85c682fb1f5b0b9e83aa562ea87ace6dfb04e630865d8e7106afe4d87d0",
+      "matches": true
+    },
+    {
+      "path": "vendor-before.json",
+      "sha256": "687dc85c682fb1f5b0b9e83aa562ea87ace6dfb04e630865d8e7106afe4d87d0",
+      "matches": true
+    }
+  ],
+  "onlyCodeDiff": [
+    "server/package-lock.json"
+  ],
+  "onlyChangedPayloadFile": [
+    "server/package-lock.json"
+  ],
+  "unicodeRestoredOnly": true,
+  "exactMinimalLockBytes": 177447,
+  "lockReductionBytes": 5726,
+  "remainingLockFieldsDeepEqual": true,
+  "finalExportInventoryAll513HashesMatch": true,
+  "measurements": {
+    "files": 513,
+    "bytes": 4423049,
+    "zcodeFiles": 29,
+    "zcodeBytes": 1182142,
+    "deterministicTarBytes": 4823040,
+    "deterministicGzipBytes": 1037325
+  },
+  "sourceBytesReduction": 2061649,
+  "gzipReduction": 534540,
+  "priorIndependent24ContractsAndLinkPythonApply": "Same Docker/source/dependencies/tests; only equivalent Unicode JSON representation changed",
+  "newDownloads": 0,
+  "productionRequests": 0,
+  "providerRequests": 0,
+  "databaseRequests": 0
+}
