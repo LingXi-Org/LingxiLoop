@@ -1,0 +1,73 @@
+TAP version 13
+# [env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET
+# Subtest: cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+ok 1 - cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+  ---
+  duration_ms: 19.002199
+  type: 'test'
+  ...
+# Subtest: normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+ok 2 - normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+  ---
+  duration_ms: 2.996029
+  type: 'test'
+  ...
+# Subtest: multiple planning directives are held cumulatively before a later cluster can reject them
+ok 3 - multiple planning directives are held cumulatively before a later cluster can reject them
+  ---
+  duration_ms: 5.086101
+  type: 'test'
+  ...
+# Subtest: fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+ok 4 - fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+  ---
+  duration_ms: 15.8934
+  type: 'test'
+  ...
+# Subtest: leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+ok 5 - leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+  ---
+  duration_ms: 0.425252
+  type: 'test'
+  ...
+# Subtest: approval holds a trailing high surrogate until the pair arrives
+ok 6 - approval holds a trailing high surrogate until the pair arrives
+  ---
+  duration_ms: 0.194072
+  type: 'test'
+  ...
+# Subtest: long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+not ok 7 - long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+  ---
+  duration_ms: 1.979676
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:2:2847'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    26000 !== 4096
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 4096
+  actual: 26000
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:88:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 6
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3858.092113

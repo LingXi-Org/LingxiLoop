@@ -1,5 +1,6 @@
 import { nativeText } from '../im/message-types.js'
 import { assistantTextViolation } from './assistant-text.js'
+import { publicTextSafety } from './public-text-safety.js'
 import { productConversationId, bindProductRun, assertFrozenAudience } from './identity.js'
 import { NoEffectError, DefaultRuntimePolicy, classifyToolFailure, modelFailure, type CapabilityGrant, type ContextMessage, type ContextProvider,
   type ToolDefinition, type TurnContext, type WorkItem } from '@lyyzka/lingxios'
@@ -213,6 +214,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
+  publicTextSafety(input: Parameters<typeof publicTextSafety>[0]) { return publicTextSafety(input) }
   override validateAssistantText(text: string, context: TurnContext) {
     return assistantTextViolation(text) ?? super.validateAssistantText(text, context) ?? citationTextViolation(text, context.evidence ?? [])
   }

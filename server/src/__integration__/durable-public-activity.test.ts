@@ -6,6 +6,7 @@ import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTrac
 import { mkdir, writeFile } from 'node:fs/promises'
 import { pool } from '../db/pool.js'
 import { lingxiOSControl } from '../agent-runtime/runtime.js'
+import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { assistantRunResponse, readRunProjection } from '../agent-runtime/assistant-transport.js'
@@ -18,7 +19,7 @@ import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAge
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); installFakeWukong() })
 after(async () => { await teardownAll() })
 
-for (const outcome of ['complete','cancelled','revoked'] as const) test(`durable prefix crosses real Worker/SSE and state-first reload (${outcome})`, { timeout: 20000 }, async () => {
+for (const outcome of ['complete','cancelled','revoked','unsafe'] as const) test(`durable prefix crosses real Worker/SSE and state-first reload (${outcome})`, { timeout: 20000 }, async () => {
   const { companyId,projectId,agentId } = await seedCompanyWithAgent()
   const principalId = `issue215-public-human-${outcome}`, conversationId = `issue215-public-room-${outcome}`
   await seedUserMembership(principalId,companyId)
@@ -35,12 +36,16 @@ for (const outcome of ['complete','cancelled','revoked'] as const) test(`durable
   const gate = new Promise<void>(resolve => { release = resolve }), firstDelta = new Promise<void>(resolve => { emitted = resolve })
   const usage = { available: true,inputTokens: 20,outputTokens: 10 }
   let calls = 0
-  const worker = createWorker({ controlPlane: api,worker: { id: 'issue215-public-worker',concurrency: 1,shutdownGraceMs: 1000 },
+  const worker = createWorker({ controlPlane: api,policy: new ProductRuntimePolicy(),worker: { id: 'issue215-public-worker',concurrency: 1,shutdownGraceMs: 1000 },
     model: { modelId: 'issue215-public-fixture',previewFormat: 'user-text',contextWindowTokens: 200000,
       async run(request) {
         calls++
         if (calls === 1) {
           await request.onTextDelta?.('I will inspect the available files.'); emitted(); await gate
+          if (outcome === 'unsafe') {
+            for (const chunk of ['\n<','th','ink>','PRIVATE_STREAM_SENTINEL','</think>']) await request.onTextDelta?.(chunk)
+            return { text: 'I will inspect the available files.\n<think>PRIVATE_STREAM_SENTINEL</think>',output: [],usage }
+          }
           if (outcome !== 'complete') await request.onTextDelta?.('PRIVATE_AFTER_REVOKE_OR_CANCEL')
           return { text: '',output: [{ type: 'function_call',callId: 'issue215-files',name: 'files__list',arguments: '{}' }],usage }
         }
@@ -85,12 +90,16 @@ for (const outcome of ['complete','cancelled','revoked'] as const) test(`durable
       [conversationId,JSON.stringify([...members,'new-recipient'])])
     release(); await running
     const replay = (await readRunProjection(api,identity,true)).snapshot.message
-    assert.equal(nativeText(replay),outcome === 'complete' ? 'The inspection is complete.' : '')
+    if (outcome !== 'unsafe') assert.equal(nativeText(replay),outcome === 'complete' ? 'The inspection is complete.' : '')
     const retained = replay.content.filter(part => activityAnnotation(part)?.kind === 'commentary')
-    assert.equal(retained.length,1); assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
+    if (outcome !== 'unsafe') assert.equal(retained.length,1)
+    assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
     assert.equal(replay.content.some(part => part.type === 'tool-call' && part.toolName === 'files.list'),outcome === 'complete')
-    if (outcome !== 'complete') assert.deepEqual(replay.status,{ type: 'incomplete',reason: outcome === 'cancelled' ? 'cancelled' : 'error' })
-    assert.doesNotMatch(JSON.stringify(replay),/candidate-json|PRIVATE_REASONING|PRIVATE_ARGUMENTS|PRIVATE_AFTER_REVOKE_OR_CANCEL/)
+    if (outcome === 'cancelled' || outcome === 'revoked') assert.deepEqual(replay.status,{ type: 'incomplete',reason: outcome === 'cancelled' ? 'cancelled' : 'error' })
+    const allEvents = await api.readEvents(identity)
+    const joinedPublic = allEvents.events.filter(event => event.kind === 'public.text.delta').map(event => String(event.data.text)).join('')
+    assert.doesNotMatch(joinedPublic,/PRIVATE_STREAM_SENTINEL|PRIVATE_AFTER_REVOKE_OR_CANCEL/)
+    assert.doesNotMatch(JSON.stringify(replay),/candidate-json|PRIVATE_REASONING|PRIVATE_ARGUMENTS|PRIVATE_AFTER_REVOKE_OR_CANCEL|PRIVATE_STREAM_SENTINEL/)
     await mkdir('artifacts/issue215-public',{ recursive: true })
     await writeFile(`artifacts/issue215-public/worker-stream-${outcome}.json`,JSON.stringify({ passed: true,runtime: releaseVersions.runtime,outcome,
       realLocalPostgres: true,realWorker: true,syntheticDriver: true,publicBeforeTool: true,officialAssistantTransport: true,

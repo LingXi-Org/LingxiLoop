@@ -1,0 +1,149 @@
+TAP version 13
+# [env] WUKONG_USER_TOKEN_SECRET not provided; deriving it from WUKONG_WEBHOOK_SECRET
+# Subtest: cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+not ok 1 - cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+  ---
+  duration_ms: 1.630759
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:1:1339'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input was expected to not match the regular expression /PRIVATE_STREAM_SENTINEL|<think|<analysis|<\|/. Input:
+    
+    'I will inspect the files.\n<think>PRIVATE_STREAM_SENTINEL'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: |-
+    I will inspect the files.
+    <think>PRIVATE_STREAM_SENTINEL
+  operator: 'doesNotMatch'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:37:14)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+not ok 2 - normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+  ---
+  duration_ms: 0.532473
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:2:356'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'I will inspect the available files. 😀<'
+    - 'I will inspect the available files. 😀'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'I will inspect the available files. 😀'
+  actual: 'I will inspect the available files. 😀<'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:48:46)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: multiple planning directives are held cumulatively before a later cluster can reject them
+not ok 3 - multiple planning directives are held cumulatively before a later cluster can reject them
+  ---
+  duration_ms: 0.347744
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:2:768'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:55:48)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+ok 4 - fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+  ---
+  duration_ms: 0.291058
+  type: 'test'
+  ...
+# Subtest: leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+not ok 5 - leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+  ---
+  duration_ms: 0.170207
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:2:2175'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:75:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: approval holds a trailing high surrogate until the pair arrives
+not ok 6 - approval holds a trailing high surrogate until the pair arrives
+  ---
+  duration_ms: 0.152971
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:2:2536'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    6 !== 5
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 5
+  actual: 6
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-public-activity/server/src/__tests__/public-text-safety.test.ts:81:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 1
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2471.17115
