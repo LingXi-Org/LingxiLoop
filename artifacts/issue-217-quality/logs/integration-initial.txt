@@ -1,0 +1,80 @@
+
+> lingxiloop@0.1.0-beta test:integration
+> node server/run-integration-tests.mjs --file visualize-runtime.test.ts --file visualize.test.ts
+
+[integration] selected 2/93 file(s): visualize-runtime.test.ts, visualize.test.ts
+TAP version 13
+# Subtest: the native skill and reference tool preserve the pinned upstream authoring contract
+ok 1 - the native skill and reference tool preserve the pinned upstream authoring contract
+  ---
+  duration_ms: 31.346607
+  type: 'test'
+  ...
+# Subtest: references remain literal final text and cannot mount during preview or inside code examples
+ok 2 - references remain literal final text and cannot mount during preview or inside code examples
+  ---
+  duration_ms: 5.181992
+  type: 'test'
+  ...
+# Subtest: actual pinned render.py produces an isolated standalone HTML with embedded bundled D3
+ok 3 - actual pinned render.py produces an isolated standalone HTML with embedded bundled D3
+  ---
+  duration_ms: 368.02758
+  type: 'test'
+  ...
+# Subtest: widget model context is sorted, bounded by complete entries and cannot close its untrusted wrapper
+ok 4 - widget model context is sorted, bounded by complete entries and cannot close its untrusted wrapper
+  ---
+  duration_ms: 13.656869
+  type: 'test'
+  ...
+# Subtest: authorized output is real, bounded and delivered references are required
+ok 5 - authorized output is real, bounded and delivered references are required
+  ---
+  duration_ms: 12373.237164
+  type: 'test'
+  ...
+# Subtest: state is personal and bounded, fixed resources require a live page, and closed tokens fail
+ok 6 - state is personal and bounded, fixed resources require a live page, and closed tokens fail
+  ---
+  duration_ms: 579.606428
+  type: 'test'
+  ...
+# Subtest: replacement documents and revoked membership invalidate every old page capability
+ok 7 - replacement documents and revoked membership invalidate every old page capability
+  ---
+  duration_ms: 337.713636
+  type: 'test'
+  ...
+# Subtest: one-use gestures gate links and follow-ups and forged generic ingress is rejected
+ok 8 - one-use gestures gate links and follow-ups and forged generic ingress is rejected
+  ---
+  duration_ms: 288.319263
+  type: 'test'
+  ...
+# Subtest: durable follow-up JSONB retries reconcile a lost ACK without duplicate messages
+ok 9 - durable follow-up JSONB retries reconcile a lost ACK without duplicate messages
+  ---
+  duration_ms: 366.395522
+  type: 'test'
+  ...
+# Subtest: document replacement waits for an admitted state transaction and capacity is bounded
+ok 10 - document replacement waits for an admitted state transaction and capacity is bounded
+  ---
+  duration_ms: 1309.502584
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 20071.075484
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

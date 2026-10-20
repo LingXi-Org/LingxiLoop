@@ -1,9 +1,11 @@
 import { z } from 'zod'
 import { createHash } from 'node:crypto'
+import { fromMarkdown } from 'mdast-util-from-markdown'
 import type { ActionContext, RunVerificationContext, ToolDefinition, VerificationRecord } from '@lyyzka/lingxios'
 import { nativeTool, authorizeAudienceRead, compareResource } from '../agents/tools.js'
 import { productConversationId } from './identity.js'
-import { readAuthorizedVisualizeDocument, saveVisualizeDocument } from '../im/visualize.js'
+import { readAuthorizedVisualizeDocument, saveVisualizeDocument, validateVisualizeFragment } from '../im/visualize.js'
+import { HttpError } from '../http/errors.js'
 import { readVisualizeReference } from './visualize-skill.js'
 import { renderVisualizeStandalone } from './visualize-export.js'
 import { visualizeReferences } from './visualize-projection.js'
@@ -24,9 +26,17 @@ export const visualizeTools: ToolDefinition[] = [
     async execute(_context, input) { return { ok: true, value: { path: input.path, text: await readVisualizeReference(input.path), complete: true } } },
   }),
   nativeTool('visualize.save', z.object({ name, html: z.string().min(1).max(5_000_000) }).strict(), {
-    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Load the visualize skill first. name is lowercase-hyphenated without .html. Returns the actual authorized absolute path for a final ::visualize JSON reference; read back with visualize.read. Never send a full HTML document or unfinished script.',
+    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Load the visualize skill first. Derive numeric labels and decisions from the same computed data as the plot; check branches, units and same-series differences against the original inputs. name is lowercase-hyphenated without .html. Returns the actual authorized absolute path for a final ::visualize JSON reference; read back with visualize.read and reconcile calculations, labels and final prose before delivery. Saving verifies storage, not numeric correctness. Never send a full HTML document or unfinished script.',
     effect: 'transaction', approval: false, authorize,
     async execute(context, input) {
+      try { validateVisualizeFragment(input.name, input.html) }
+      catch (error) {
+        if (!(error instanceof HttpError) || error.status !== 400) throw error
+        // Only this pure admission check is converted. Authorization/storage
+        // failures retain their original native failure and reconciliation path.
+        return { ok: false, code: 'invalid_arguments', executionState: 'no_effect',
+          error: 'Expected a literal HTML fragment under 5 MB, not a full document. Remove <!doctype>, html, head and body wrappers; keep the complete style/script with the fragment. Use a lowercase-hyphenated name.' }
+      }
       const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
         name: input.name, html: input.html, database: context.database as Queryable })
       return { ok: true, value: { path: document.path, bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex') } }
@@ -60,8 +70,28 @@ export const visualizeTools: ToolDefinition[] = [
 /** Product verifier uses the native repair budget and cannot authorize a new file. */
 export async function verifyVisualizeCandidate(context: RunVerificationContext): Promise<VerificationRecord[]> {
   const parts = projectGenUiReferences(context.candidate.body, true)
-  if (!parts.some(part => part.kind !== 'text')) return []
   const checker = 'product:visualize'
+  if (!parts.some(part => part.kind !== 'text')) {
+    // Code examples must stay inert. Ask native repair only when the entire
+    // answer is one code-wrapped reference to this run's saved document. Saves
+    // followed by exports, ordinary prose or an honest fallback remain valid.
+    if (!context.candidate.body.includes('visualize')) return []
+    const tree = fromMarkdown(context.candidate.body)
+    const node = tree.children.length === 1 ? tree.children[0] : undefined
+    const code = node?.type === 'code' ? node.value
+      : node?.type === 'paragraph' && node.children.length === 1 && node.children[0].type === 'inlineCode' ? node.children[0].value : undefined
+    if (!code) return []
+    const inner = projectGenUiReferences(code, true).filter(part => part.kind !== 'text' || part.text.trim())
+    if (inner.length !== 1 || inner[0].kind !== 'ui') return []
+    const saved = await context.database.query(`SELECT 1 FROM im_visualize_documents
+      WHERE company_id=$1 AND run_id=$2 AND agent_id=$3 AND created_by=$4 AND path=$5 LIMIT 1`,
+    [context.work.tenantId, context.work.id, context.work.agentId, context.work.principalId, inner[0].reference.path])
+    if (!saved.rows.length) return []
+    await authorize(context)
+    return [{ checker, status: 'failed', evidence: {
+      hint: 'The final answer contains only a code-wrapped reference to the visualization saved by this run, so no chart will be displayed. Read back the saved fragment and put its literal ::visualize JSON reference on its own line outside any code fence or inline code.',
+    } }]
+  }
   if (parts.some(part => part.kind === 'invalid' || part.kind === 'pending')) return [{ checker, status: 'failed',
     evidence: { hint: 'Use a complete ::visualize JSON reference with the absolute path returned by visualize.save.' } }]
   await authorize(context)

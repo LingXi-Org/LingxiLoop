@@ -1,0 +1,52 @@
+(node:902688) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:902697) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:902709) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> lingxiloop@0.1.0-beta test:integration
+> node server/run-integration-tests.mjs --file visualize-quality-live.test.ts
+
+(node:902722) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[integration] selected 1/93 file(s): visualize-quality-live.test.ts
+(node:902749) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:902758) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:902758) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# {"ts":"2026-10-20T15:44:11.493Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-x65rj","healthPort":5190,"maxConcurrentRuns":1}
+# {"ts":"2026-10-20T15:50:10.120Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-x65rj","timedOut":false}
+# {"ts":"2026-10-20T15:50:10.123Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-217-quality/node_modules/@lyyzka/lingxios/src/app/index.ts:905:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-217-quality/server/src/agent-runtime/runtime.ts:187:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-217-quality/server/src/agent-runtime/runtime.ts:263:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-217-quality/server/src/__integration__/visualize-quality-live.test.ts:88:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-20T15:50:10.166Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-217-quality/node_modules/@lyyzka/lingxios/src/app/index.ts:905:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-217-quality/server/src/agent-runtime/runtime.ts:187:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-217-quality/server/src/agent-runtime/runtime.ts:263:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-217-quality/server/src/__integration__/visualize-quality-live.test.ts:88:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: bounded real-provider numerical visualization regression
+not ok 1 - bounded real-provider numerical visualization regression
+  ---
+  duration_ms: 359339.640758
+  type: 'test'
+  location: '/workspace/LingxiLoop-217-quality/server/src/__integration__/visualize-quality-live.test.ts:1:1415'
+  failureType: 'testCodeFailure'
+  error: 'Retain partial/failed cases; completion does not establish numerical correctness'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-217-quality/server/src/__integration__/visualize-quality-live.test.ts:86:12)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 363635.313972
+node failed (exit 1); verify authentication and prerequisites.

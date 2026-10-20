@@ -70,10 +70,15 @@ async function mirror(path: string, html: string) {
   try { await handle.writeFile(html, 'utf8'); await handle.sync() } finally { await handle.close() }
   try { await rename(temporary, path) } finally { await unlink(temporary).catch(() => {}) }
 }
+/** Shared, side-effect-free input check for HTTP and native tool admission. */
+export function validateVisualizeFragment(fileName: string, html: string): string {
+  const name = fileName.replace(/\.html$/, '')
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) || name.length > 150 || typeof html !== 'string'
+    || Buffer.byteLength(html) > 5_000_000 || /<(?:!doctype\b|\/?(?:html|head|body)(?:\s|>))/iu.test(html)) throw new HttpError(400, 'Expected a bounded HTML fragment and lowercase-hyphenated name.')
+  return name
+}
 export async function saveVisualizeDocument(input: VisualizeActor & { runId: string; agentId: string; name: string; html: string; database?: Queryable }) {
-  const name = input.name.replace(/\.html$/, '')
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) || name.length > 150 || typeof input.html !== 'string'
-    || Buffer.byteLength(input.html) > 5_000_000 || /<(?:!doctype\b|\/?(?:html|head|body)(?:\s|>))/iu.test(input.html)) throw new HttpError(400, 'Expected a bounded HTML fragment and lowercase-hyphenated name.')
+  const name = validateVisualizeFragment(input.name, input.html)
   const path = join(visualizeOutputDirectory(input), `${name}.html`)
   const save = async (db: Queryable) => {
     await assertVisualizeActor(db, input, 'conversation:write'); await lock(db, input)
