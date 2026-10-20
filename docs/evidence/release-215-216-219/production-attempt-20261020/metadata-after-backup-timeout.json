@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-20T12:57:35.738Z",
+  "id": "6ad76383e06d5e1f79836a3a",
+  "status": "InProgress",
+  "success": true,
+  "operation": "RunStackService",
+  "startTs": 1792500611584,
+  "endTs": null,
+  "stages": [],
+  "action": {
+    "pulling": false,
+    "deploying": true,
+    "starting": false,
+    "restarting": false,
+    "pausing": false,
+    "unpausing": false,
+    "stopping": false,
+    "destroying": false
+  }
+}

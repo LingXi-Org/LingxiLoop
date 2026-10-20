@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-20T13:15:55.189Z",
+  "id": "6aa8a3e8b35d27bdd4e12ae0",
+  "config": {
+    "repo": "LingXi-Org/LingxiLoop",
+    "branch": "main",
+    "commit": "",
+    "reclone": false,
+    "run_directory": "deploy/komodo/lingxiloop-core-state",
+    "clone_path": "",
+    "files_on_host": false,
+    "linked_repo": "",
+    "file_paths": [
+      "compose.yml"
+    ]
+  },
+  "action": {
+    "pulling": false,
+    "deploying": false,
+    "starting": false,
+    "restarting": false,
+    "pausing": false,
+    "unpausing": false,
+    "stopping": false,
+    "destroying": false
+  }
+}

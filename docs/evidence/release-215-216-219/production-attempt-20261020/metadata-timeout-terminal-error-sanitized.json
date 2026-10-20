@@ -1,0 +1,6 @@
+{
+  "at": "2026-10-20T13:10:02.999Z",
+  "updateId": "6ad76383e06d5e1f79836a3a",
+  "stage": "Task Error",
+  "stderr": "<span style=\"color: var(--mantine-color-red-6)\">ERROR</span>: Decoded error message over Core-Periphery communication channel\n\n<span style=\"color: var(--mantine-color-dimmed)\">TRACE</span>:\n\t<span style=\"color: var(--mantine-color-dimmed)\">1</span>: Failed to validate run directory on host after stack write (canonicalize error), path=/etc/komodo/stacks/lingxiloop-app-a\n\t<span style=\"color: var(--mantine-color-dimmed)\">2</span>: No such file or directory (os error 2)"
+}

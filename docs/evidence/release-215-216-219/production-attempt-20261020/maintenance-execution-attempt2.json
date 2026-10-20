@@ -1,0 +1,64 @@
+{
+  "planHash": "e0f058e1bf970c85b3d50b47d125e2819b3364cbae467795c18f439e1eb20cc8",
+  "events": [
+    {
+      "phase": "preflight",
+      "planHash": "e0f058e1bf970c85b3d50b47d125e2819b3364cbae467795c18f439e1eb20cc8",
+      "status": "pending",
+      "observedAt": "2026-10-20T12:19:56.748Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T12:20:06.880Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad75c77e06d5e1f798368c1",
+      "observedAt": "2026-10-20T12:20:07.524Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad75c77e06d5e1f798368c1",
+      "observedAt": "2026-10-20T12:20:14.368Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "PullStack",
+      "stack": "lingxiloop-app-a",
+      "observedAt": "2026-10-20T12:20:15.009Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "PullStack",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad75c7fe06d5e1f798368c2",
+      "observedAt": "2026-10-20T12:20:15.289Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "failed",
+      "operation": "PullStack",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad75c7fe06d5e1f798368c2",
+      "observedAt": "2026-10-20T12:20:20.236Z"
+    },
+    {
+      "phase": "preflight",
+      "planHash": "e0f058e1bf970c85b3d50b47d125e2819b3364cbae467795c18f439e1eb20cc8",
+      "status": "failed",
+      "recovery": "source-unchanged",
+      "observedAt": "2026-10-20T12:20:20.238Z"
+    }
+  ]
+}

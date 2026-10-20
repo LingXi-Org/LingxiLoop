@@ -1,0 +1,41 @@
+{
+  "startedAt": "2026-10-20T12:28:45.124Z",
+  "planHash": "e0f058e1bf970c85b3d50b47d125e2819b3364cbae467795c18f439e1eb20cc8",
+  "targetReclone": true,
+  "events": [
+    {
+      "action": "UpdateStack",
+      "stack": "lingxiloop-app-a",
+      "status": "submitting",
+      "onlyField": "config.reclone",
+      "at": "2026-10-20T12:29:02.161Z"
+    },
+    {
+      "stack": "lingxiloop-app-a",
+      "status": "verified",
+      "onlyRecloneChanged": true,
+      "reclone": true,
+      "at": "2026-10-20T12:29:09.945Z"
+    },
+    {
+      "action": "UpdateStack",
+      "stack": "lingxiloop-app-b",
+      "status": "submitting",
+      "onlyField": "config.reclone",
+      "at": "2026-10-20T12:29:13.548Z"
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "status": "verified",
+      "onlyRecloneChanged": true,
+      "reclone": true,
+      "at": "2026-10-20T12:29:14.828Z"
+    },
+    {
+      "status": "complete",
+      "servicesUnchanged": true,
+      "at": "2026-10-20T12:29:23.338Z"
+    }
+  ],
+  "complete": true
+}

@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-20T12:46:15.062Z",
+  "id": "6ad76093e06d5e1f79836999",
+  "status": "InProgress",
+  "success": true,
+  "operation": "PullStackService",
+  "startTs": 1792499859648,
+  "endTs": null,
+  "stages": [],
+  "action": {
+    "pulling": true,
+    "deploying": false,
+    "starting": false,
+    "restarting": false,
+    "pausing": false,
+    "unpausing": false,
+    "stopping": false,
+    "destroying": false
+  }
+}

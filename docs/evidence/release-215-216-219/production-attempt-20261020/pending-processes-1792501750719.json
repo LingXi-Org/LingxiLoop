@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-20T13:09:05.978Z",
+  "readOnly": true,
+  "servers": [
+    {
+      "server": "shanghai-a",
+      "statsTs": null,
+      "processes": []
+    },
+    {
+      "server": "shanghai-b",
+      "statsTs": null,
+      "processes": []
+    }
+  ],
+  "update": {
+    "id": "6ad76383e06d5e1f79836a3a",
+    "status": "Complete",
+    "success": false,
+    "startTs": 1792500611584,
+    "endTs": 1792501730755
+  }
+}
