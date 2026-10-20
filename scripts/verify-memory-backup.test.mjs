@@ -159,9 +159,9 @@ test('native13 backup exact Stack/operation and fresh terminal required; unknown
 
 test('native13 backup refuses undocumented nonterminal status without a poll or retry',async()=>{
  const plan=await buildMemoryBackupPlan({sourceSha:'cf4a299bcfb44d7e7ed74a250ea1404588a4e901',profile:'native13-product49',attempt:'synthetic-status',nonce:'0123456789abcdef'})
- const calls=[],original=globalThis.fetch,abort=new AbortController()
- globalThis.fetch=async url=>{const op=String(url).split('/').at(-1);calls.push(op);return Response.json(op==='GetStack'?{_id:{$oid:'b'.repeat(24)}}:{...completed(plan),operation:'RunStackService',target:{type:'Stack',id:'b'.repeat(24)},status:'Unknown'})}
- const timer=setTimeout(()=>abort.abort(),100)
+ const calls=[],original=globalThis.fetch,abort=new AbortController();let timer
+ // The deadline protects a mistaken native poll, not offline Git validation.
+ globalThis.fetch=async url=>{const op=String(url).split('/').at(-1);calls.push(op);if(op==='RunStackService')timer=setTimeout(()=>abort.abort(),1000);return Response.json(op==='GetStack'?{_id:{$oid:'b'.repeat(24)}}:{...completed(plan),operation:'RunStackService',target:{type:'Stack',id:'b'.repeat(24)},status:'Unknown'})}
  try{await assert.rejects(executeMemoryBackup({plan,apiKey:'fixture',apiSecret:'fixture',signal:abort.signal}),e=>e.uncertain===true);assert.equal(abort.signal.aborted,false);assert.deepEqual(calls,['GetStack','RunStackService'])}
  finally{clearTimeout(timer);globalThis.fetch=original}
 })

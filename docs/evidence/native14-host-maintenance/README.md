@@ -50,3 +50,15 @@ branch.
 The deployment job now runs the backup contracts as well as its existing
 suites. Only that job checks out complete Git history for the existing fixed
 historical fixture commits. No additional CI matrix/job was added.
+
+## Exact-head CI follow-up
+
+Initial PR257 run39472663324 on5619332c finished98/99; the only failure was the
+unknown-status test starting its100ms cancellation timer before offline Git
+plan validation. CI validation took295ms, so the test aborted before any
+native request. The timer now starts at the synthetic RunStackService reply
+with a1s safety ceiling; the same assertions still require no cancellation,
+no poll and no retry. Production scripts are byte-identical to independently
+reviewed5619332c. `backup-timer-green.log` records the affected12/12 suite after
+this test-only correction. The earlier75/75 remains attributed to its original
+run; do not label the failed remote run green.
