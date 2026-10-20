@@ -315,7 +315,7 @@ jobs:
         working-directory: third_party/open-notebook
         run: uv run --frozen --python 3.12 pytest -q
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs
+        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs
       - if: matrix.component == 'release'
         run: npm run version:check
 

@@ -4,7 +4,7 @@ import {sealPlan, assertOrdinarySchema, assertBarrier, recoveryBoundary, runMain
 const sha='a'.repeat(40),targetSha='b'.repeat(40),hash='c'.repeat(64)
 const source={sha,productVersion:46,runtime:{runtime:'3.5.6',schema:12,protocol:11,schemaHash:hash},migrations:[]}
 const target={sha:targetSha,runtime:'3.6.0',schema:13,protocol:11,schemaHash:hash,productVersion:48,imageDigest:`sha256:${hash}`,migrations:[{version:47,name:'memory_continuity',checksum:hash},{version:48,name:'synthetic',checksum:hash}]}
-const plan=sealPlan({format:1,source,target,backup:{source,attempt:'fixture',commandHash:hash},createdAt:'2026-10-20T00:00:00.000Z'})
+const plan=sealPlan({format:2,hostSource:{mode:'host'},source,target,backup:{source,attempt:'fixture',commandHash:hash},createdAt:'2026-10-20T00:00:00.000Z'})
 const snapshot=(active=true)=>['a','b'].flatMap(side=>['lingxiloop','worker'].map(service=>({stack:`lingxiloop-app-${side}`,server:`shanghai-${side}`,service,id:`${side}-${service}`,name:`${side}-${service}`,source:sha,imageId:`sha256:${hash}`,running:active,pid:active?123:0,restarting:false,restartCount:0})))
 const state=(schema=12,product=46)=>({schema,product,count:product,installedSchema:schema,runtime:schema===12?'3.5.6':'3.6.0',protocol:11,schemaHash:hash,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,otherClients:0,prepared:0,queued:2,pendingCapture:1,migrations:schema===13?target.migrations:[]})
 function fixture(fault={}) {
@@ -14,7 +14,7 @@ function fixture(fault={}) {
   async inspect(){trace.push('inspect');return structuredClone(rows)},
   async pull(stack){trace.push(`pull:${stack}`);if(fault.pull)throw Error('fixture')},
   async verifyImages(){trace.push('images');if(fault.image)throw Error('fixture')},
-  async metadata(){trace.push('metadata');return {...target,...fault.metadata}},
+  async metadata(stack){trace.push(`metadata:${stack}`);return {...target,...fault.metadata,...(fault.metadataB&&stack.endsWith('-b')?{schemaHash:'d'.repeat(64)}:{})}},
   async state(){trace.push('state');reads++;return {...current,...(fault.busy?{liveSession:1}:{})}},
   async stop(stack,service){trace.push(`stop:${stack}:${service}`);if(fault.stopUnknown)throw Object.assign(Error('fixture'),{uncertain:true});if(!fault.stillRunning)rows=rows.map(x=>x.stack===stack&&x.service===service?{...x,running:false,pid:0}:x)},
   async migrate(){trace.push('migrate');if(fault.migrateUnknown)throw Object.assign(Error('fixture'),{uncertain:true});current=state(13,fault.partial47?47:48);if(fault.partial47)throw Error('failed48')},
@@ -46,7 +46,7 @@ test('happy path pulls before stopping, Workers before Web, backup after barrier
  assert.equal(t.some(x=>x.startsWith('start:')),false)
 })
 test('pull or image mismatch never stops service',async()=>{
- for(const fault of [{pull:true},{image:true},{metadata:{schemaHash:'d'.repeat(64)}}]){const f=fixture(fault);await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('stop:')),false)}
+ for(const fault of [{pull:true},{image:true},{metadata:{schemaHash:'d'.repeat(64)}},{metadataB:true}]){const f=fixture(fault);await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('stop:')),false)}
 })
 test('accepted stop, uncertain stop, live leases, failed backup all prohibit migration',async()=>{
  for(const fault of [{stillRunning:true},{stopUnknown:true},{busy:true},{backup:true}]){const f=fixture(fault);await assert.rejects(f.run());assert.equal(f.trace.includes('migrate'),false);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false)}
@@ -96,12 +96,12 @@ test('real operations fail closed on a running procedure or retrying migration c
    if(op==='ListServers')return ['a','b'].map(x=>({id:x.repeat(24),name:'shanghai-'+x,info:{state:'Ok'}}))
    if(op==='GetProcedureActionState')return {running:hazard==='procedure'}
    if(op==='GetStackActionState')return Object.fromEntries(['pulling','deploying','starting','restarting','pausing','unpausing','stopping','destroying'].map(k=>[k,false]))
-   if(op==='GetStack')return {config:{server_id:p.stack.endsWith('-a')?'a'.repeat(24):'b'.repeat(24),repo:'LingXi-Org/LingxiLoop',branch:'main',run_directory:`deploy/komodo/${p.stack}`,auto_update:false,auto_update_all_services:false,commit:sha}}
+   if(op==='GetStack')return {config:{server_id:p.stack.endsWith('-a')?'a'.repeat(24):'b'.repeat(24),repo:'LingXi-Org/LingxiLoop',branch:'main',run_directory:`deploy/komodo/${p.stack}`,auto_update:false,auto_update_all_services:false,commit:''}}
    if(op==='ListStackServices')return [{service:'db-migrate',container:{id:'a'.repeat(64)}}]
    if(op==='InspectContainer')return {State:{Running:hazard==='migration',Restarting:false}}
    throw Error('unexpected read')
   },async execute(){mutations++}}
-  await assert.rejects(createOperations({plan:{pinCommit:sha},transport}).assertIdle());assert.equal(mutations,0);if(hazard==='migration')assert.ok(reads.includes('InspectContainer'))
+  await assert.rejects(createOperations({transport}).assertIdle());assert.equal(mutations,0);if(hazard==='migration')assert.ok(reads.includes('InspectContainer'))
  }
 })
 test('pin and restore payloads contain only the actual stack id and commit',async()=>{
@@ -206,4 +206,10 @@ test('generated metadata inventory escaping accepts SQL names and rejects lookal
  const validate=new Function('names',expression)
  assert.doesNotThrow(()=>validate(['0001_baseline.sql','0002_next.sql']))
  for(const names of [['0001_baselinesql'],['0001_baselineXsql'],['0002_baseline.sql'],['0001_baseline.sql.tmp'],['0001_path/evil.sql']])assert.throws(()=>validate(names),/inventory/)
+})
+
+test('legacy plans fail before any operations and both nodes qualify before drain',async()=>{
+ const f=fixture();await assert.rejects(runMaintenance({plan:sealPlan({...plan,format:1}),ops:f.ops,backup:f.backup}));assert.equal(f.trace.length,0)
+ const good=fixture();await good.run();const firstStop=good.trace.findIndex(x=>x.startsWith('stop:'));for(const stack of ['lingxiloop-app-a','lingxiloop-app-b'])assert.ok(good.trace.indexOf('metadata:'+stack)<firstStop)
+ assert.equal(good.trace.filter(x=>x==='metadata:lingxiloop-app-a').length,2);assert.equal(good.trace.filter(x=>x==='metadata:lingxiloop-app-b').length,2)
 })

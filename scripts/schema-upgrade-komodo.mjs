@@ -2,6 +2,7 @@
 import {setTimeout as delay} from 'node:timers/promises'
 import {readFile} from 'node:fs/promises'
 import {assertEffectiveComposePin} from './schema-upgrade-compose.mjs'
+import {verifyHostSource} from './schema-upgrade-host-source.mjs'
 const ORIGIN='https://ops.christmas1314.xyz'
 const APPS=['lingxiloop-app-a','lingxiloop-app-b'],CORE='lingxiloop-core-state'
 const SERVERS=['shanghai-a','shanghai-b'],SERVICES=['lingxiloop','worker']
@@ -76,7 +77,12 @@ export function createTransport({apiKey,apiSecret,signal,fetcher=fetch,wait=dela
    throw Object.assign(Error(uncertain?'Komodo operation outcome uncertain':'Komodo operation failed'),{uncertain})
   }
  }
- return {read,execute}
+ async function refreshStackCache(stack){
+  check([...APPS,CORE].includes(stack),'Stack not allowed')
+  // Native cache refresh does not edit configuration or execute a service.
+  await request('write','RefreshStackCache',{stack})
+ }
+ return {read,execute,refreshStackCache}
 }
 export function validateStateReceipt(value) {
  const numbers=['schema','installedSchema','protocol','count','product','liveWork','liveSession','liveAttempts','liveCapture','liveOutbox','otherClients','prepared','queued','pendingCapture']
@@ -126,6 +132,7 @@ const oneOff=(stack,service,extra)=>({stack,service,no_tty:true,no_deps:true,det
 export function createOperations({plan,apiKey,apiSecret,signal,onProgress=async()=>{},transport}) {
  const t=transport??createTransport({apiKey,apiSecret,signal,onProgress}),imageIds=new Map()
  const target=plan?.target
+ const guard=stacks=>plan?verifyHostSource({plan,transport:t,stacks,onProgress}):Promise.resolve()
  async function inspect(){
   const result=[]
   for(const [i,stack] of APPS.entries()){
@@ -142,15 +149,17 @@ export function createOperations({plan,apiKey,apiSecret,signal,onProgress=async(
   return result
  }
  async function assertIdle(){
+  if(plan)await guard([...APPS,CORE])
   check((await t.read('GetProcedureActionState',{procedure:'lingxiloop-production-rollout'})).running===false,'Concurrent rollout procedure')
   const servers=await t.read('ListServers',{});check(Array.isArray(servers),'Server inventory missing')
   for(const stack of APPS){
    const expected=servers.filter(x=>x.name===SERVERS[APPS.indexOf(stack)]);check(expected.length===1&&expected[0].info?.state==='Ok'&&ID.test(expected[0].id??''),'Expected host not available')
    const action=await t.read('GetStackActionState',{stack});check(ACTIONS.every(k=>action[k]===false),'Concurrent stack action')
    const details=await t.read('GetStack',{stack}),c=details.config
-   check(c&&c.server_id===expected[0].id&&c.repo==='LingXi-Org/LingxiLoop'&&c.branch==='main'&&c.run_directory===`deploy/komodo/${stack}`&&c.auto_update===false&&c.auto_update_all_services===false&&!c.linked_repo&&!c.files_on_host&&!c.file_contents,'Unexpected stack source or automatic deployment configuration')
-   if(plan)check(c.commit===plan.pinCommit,'Maintenance requires exact temporary release commit pin')
-   else check(!c.commit,'Ordinary rollout cannot clear an active maintenance release pin')
+   if(!plan){
+    check(c&&c.server_id===expected[0].id&&c.repo==='LingXi-Org/LingxiLoop'&&c.branch==='main'&&c.run_directory===`deploy/komodo/${stack}`&&c.auto_update===false&&c.auto_update_all_services===false&&!c.linked_repo&&!c.files_on_host&&!c.file_contents,'Unexpected stack source or automatic deployment configuration')
+    check(!c.commit,'Ordinary rollout cannot clear an active maintenance release pin')
+   }
    const services=await t.read('ListStackServices',{stack});check(Array.isArray(services),'Service inventory missing')
    const jobs=services.filter(x=>x.service==='db-migrate');check(jobs.length<=1,'Ambiguous migration container')
    if(jobs[0]?.container){
@@ -167,20 +176,21 @@ export function createOperations({plan,apiKey,apiSecret,signal,onProgress=async(
    imageIds.set(SERVERS[i],image.Id)
   }
  }
- async function metadata(){return parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{command:['timeout','-k','5','30','node','--input-type=module','-e',METADATA_CODE+`console.log('SCHEMA_UPGRADE_METADATA='+JSON.stringify(metadata));`]})),'METADATA')}
- async function state(){const result=parseMarker(await t.execute('RunStackService',oneOff(CORE,'postgres',{entrypoint:'sh',user:'postgres',command:['-ec',stateCommand]})),'STATE');
+ async function metadata(stack=APPS[0]){check(APPS.includes(stack),'Metadata stack not allowed');await guard([stack]);return parseMarker(await t.execute('RunStackService',oneOff(stack,'db-migrate',{command:['timeout','-k','5','30','node','--input-type=module','-e',METADATA_CODE+`console.log('SCHEMA_UPGRADE_METADATA='+JSON.stringify(metadata));`]})),'METADATA')}
+ async function state(){await guard([CORE]);const result=parseMarker(await t.execute('RunStackService',oneOff(CORE,'postgres',{entrypoint:'sh',user:'postgres',command:['-ec',stateCommand]})),'STATE');
   return validateStateReceipt(result)}
  return {assertIdle,inspect,verifyImages,metadata,state,
-  pull:stack=>t.execute('PullStack',{stack,services:['db-migrate','lingxiloop','worker']}),
-  stop:(stack,service)=>t.execute('StopStack',{stack,services:[service],stop_time:150}),
+  pull:async stack=>{await guard([stack]);return t.execute('PullStack',{stack,services:['db-migrate','lingxiloop','worker']})},
+  stop:async(stack,service)=>{await guard([stack]);return t.execute('StopStack',{stack,services:[service],stop_time:150})},
   async migrate(){
+   await guard([APPS[0]])
    const expected=Object.fromEntries(['sha','runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations'].map(k=>[k,target[k]]))
    // Check the executing image before importing any application/DB code.
    const code=METADATA_CODE+`import{isDeepStrictEqual}from'node:util';if(!isDeepStrictEqual(metadata,${JSON.stringify(expected)}))throw Error('target drift');await import('./server/src/migrate-bin.ts');if(process.exitCode)throw Error('migration failed');console.log('SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:metadata.sha,schema:metadata.schema}));`
    const receipt=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{env:{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'},command:['timeout','-k','30','300','node','--import','tsx','--input-type=module','-e',code]})),'MIGRATED')
    check(receipt.sha===target.sha&&receipt.schema===target.schema,'Migration marker mismatch')
   },
-  deploy:(stack,service)=>t.execute('DeployStack',{stack,services:[service]}),
+  deploy:async(stack,service)=>{await guard([stack]);return t.execute('DeployStack',{stack,services:[service]})},
   async verifyHealthy(stack,service){
    const deadline=Date.now()+180000
    while(Date.now()<deadline){const row=(await inspect()).find(x=>x.stack===stack&&x.service===service)

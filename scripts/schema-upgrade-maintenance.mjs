@@ -9,6 +9,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url'
 import {validateMemoryBackupPlan,executeMemoryBackup} from './verify-memory-backup.mjs'
 import {createOperations} from './schema-upgrade-komodo.mjs'
 import {assertEffectiveComposePin} from './schema-upgrade-compose.mjs'
+import {deriveHostSource} from './schema-upgrade-host-source.mjs'
 export {createTransport,parseMarker} from './schema-upgrade-komodo.mjs'
 const root=fileURLToPath(new URL('../',import.meta.url)),run=promisify(execFile)
 export const STACKS=['lingxiloop-app-a','lingxiloop-app-b']
@@ -51,6 +52,7 @@ function assertContainers(rows,source,original,stopped=new Set()) {
  }
 }
 export async function runMaintenance({plan,ops,backup,onProgress=async()=>{}}) {
+ requireThat(plan?.format===2&&plan.hostSource?.mode==='host','Online prepared host-source plan required before maintenance')
  requireThat(plan.planHash===sealPlan(plan).planHash,'Plan hash mismatch')
  let phase='preflight',submitted=false,lastState=null
  const record=async detail=>onProgress({phase,planHash:plan.planHash,...detail})
@@ -59,7 +61,7 @@ export async function runMaintenance({plan,ops,backup,onProgress=async()=>{}}) {
   const original=await ops.inspect();assertContainers(original,plan.source)
   lastState=await ops.state();assertState(lastState,plan.source)
   for(const stack of STACKS)await ops.pull(stack)
-  await ops.verifyImages();assertMetadata(await ops.metadata(),plan.target)
+  await ops.verifyImages();for(const stack of STACKS)assertMetadata(await ops.metadata(stack),plan.target)
   // Commit all online/pre-pull evidence before the first downtime action.
   await record({status:'prepared',writers:original})
   const stopped=new Set();phase='drain'
@@ -70,12 +72,12 @@ export async function runMaintenance({plan,ops,backup,onProgress=async()=>{}}) {
   }
   const barrier=async()=>{assertContainers(await ops.inspect(),plan.source,original,stopped);lastState=await ops.state();assertState(lastState,plan.source);assertBarrier(lastState);await record({status:'barrier',state:lastState})}
   await barrier();await ops.wait(2000);await barrier()
-  phase='backup';const receipt=await backup()
+  await ops.assertIdle();phase='backup';const receipt=await backup()
   requireThat(receipt?.status==='Complete'&&receipt.success===true&&equal(receipt.source,plan.source)
    &&receipt.commandHash===plan.backup.commandHash&&receipt.isolatedDatabaseRemoved===true
    &&receipt.restoreCountsEqual===true&&receipt.restoreProvenanceEqual===true&&hash.test(receipt.dumpSha256??''),'Final source backup receipt invalid')
   await record({status:'verified',backup:receipt})
-  await barrier();await ops.assertIdle();await ops.verifyImages();assertMetadata(await ops.metadata(),plan.target)
+  await barrier();await ops.assertIdle();await ops.verifyImages();for(const stack of STACKS)assertMetadata(await ops.metadata(stack),plan.target)
   // Metadata is DB-free, but do not let its one-off hide another writer/lease.
   await barrier();phase='migration';submitted=true;await record({status:'submitting'})
   await ops.migrate();lastState=await ops.state();assertState(lastState,plan.target)
@@ -121,9 +123,9 @@ export async function assertInstalledTarget(target) {
  requireThat(installed.version===target.runtime,'Installed formal package version mismatch')
 }
 export async function validatePlan(plan) {
- requireThat(plan&&equal(Object.keys(plan).sort(),['format','source','sourceImageDigest','target','backup','createdAt','pinCommit','qualification','planHash'].sort()),'Unexpected plan fields')
+ requireThat(plan&&equal(Object.keys(plan).sort(),['format','source','sourceImageDigest','target','backup','createdAt','pinCommit','hostSource','qualification','planHash'].sort()),'Unexpected plan fields')
  requireThat(equal(Object.keys(plan.qualification??{}).sort(),['commit','ciUrl','conclusion'].sort())&&plan.qualification.conclusion==='success'&&Number.isFinite(Date.parse(plan.createdAt)),'Successful exact-head qualification and plan timestamp required')
- requireThat(plan?.format===1&&equal(plan,sealPlan(plan)),'Plan integrity mismatch')
+ requireThat(plan?.format===2&&equal(plan,sealPlan(plan)),'Plan integrity mismatch')
  await validateMemoryBackupPlan(plan.backup)
  requireThat(equal(plan.source,plan.backup.source),'Final backup must bind exact source')
  requireThat(plan.source.runtime.schema===12&&plan.source.productVersion===46&&plan.target.schema===13&&[47,48].includes(plan.target.productVersion),'Only reviewed12/46 to13/47-or48 transition supported')
@@ -138,6 +140,7 @@ export async function validatePlan(plan) {
   requireThat(!compose.includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED'),'Drain acknowledgement must not persist in Compose')
  }
  requireThat((await git(['show','-s','--format=%B',plan.pinCommit])).includes('[skip deploy]'),'Pin commit must suppress automatic rollout')
+ requireThat(equal(plan.hostSource,await deriveHostSource({pinCommit:plan.pinCommit,branch:plan.hostSource?.branch})),'Host source must bind exact committed Compose files')
 }
 async function main() {
  const args=process.argv.slice(2),flags=new Set(['--execute','--input','--output','--help'])

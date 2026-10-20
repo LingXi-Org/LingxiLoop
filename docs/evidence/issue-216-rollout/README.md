@@ -41,11 +41,12 @@ node scripts/schema-upgrade-maintenance.mjs \
 
 Description fields (no other keys accepted):
 
-- `format:1`, `createdAt`: ISO timestamp.
+- `format:2`, `createdAt`: ISO timestamp. Format1 plans are historical and cannot execute.
 - `source`: exact `backup.source`; `backup`: the full newly reviewed backup plan, unchanged.
 - `sourceImageDigest`: verified source image digest for all four actual source containers.
 - `target`: `releaseDescriptor(T, exactFormalRelease)` plus `imageDigest`. The public helper derives all migrations/checksums and verifies both root/server manifests and locks; metadata includes runtime/schema/protocol/schemaHash/integrity/tarball. Target product must be47 or48.
 - `pinCommit:D`.
+- `hostSource`: `await deriveHostSource({pinCommit:D, branch:<fixed release branch>})` from `scripts/schema-upgrade-host-source.mjs`. All three host Compose files must be prepared online, frozen with native `files_on_host`, and verified before executing. See [current host-source contract](../maintenance-host-source/README.md).
 - `qualification:{commit:T,ciUrl:<exact successful GitHub Actions run URL>,conclusion:"success"}`. The operator must verify that run and image; the offline validator checks the binding/shape, and does not contact GitHub or claim to independently authenticate CI success.
 
 `sealPlan` adds the canonical `planHash`. Supplying a pre-sealed input also works; execution requires the hash to match, revalidates the source backup command and source history, all target locks/inventory and installed public package metadata. An unqualified/unpublished target does not get a runnable production plan.
