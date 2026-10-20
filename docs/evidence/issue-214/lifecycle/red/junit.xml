@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="4" failures="3" errors="0" skipped="0" time="16.697">
+  <testsuite name="e2e/web/streaming-lifecycle.e2e.ts" tests="4" failures="3" errors="0" skipped="0" time="16.697">
+    <testcase name="Streaming Text lifecycle &gt; non-last Text immediately settles on cancelled [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="6.720">
+      <failure message="expected false to be true" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected false to be true</failure>
+    </testcase>
+    <testcase name="Streaming Text lifecycle &gt; non-last Text immediately settles on error [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="2.898">
+      <failure message="expected false to be true" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected false to be true</failure>
+    </testcase>
+    <testcase name="Streaming Text lifecycle &gt; reduced motion settles this part without retraction and a new part can stream [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="4.359">
+      <failure message="expected false to be true" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected false to be true</failure>
+    </testcase>
+    <testcase name="Streaming Text lifecycle &gt; normal completion drains pending text and replaced history stays static [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="2.720"/>
+  </testsuite>
+</testsuites>

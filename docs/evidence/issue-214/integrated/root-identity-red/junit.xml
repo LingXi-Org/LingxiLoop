@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="1" errors="0" skipped="0" time="5.874">
+  <testsuite name="e2e/web/streaming-visualize-identity.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="5.874">
+    <testcase name="new original activity part starts a fresh Visualize slice motion lifetime [web]" classname="e2e/web/streaming-visualize-identity.e2e.ts" time="5.874">
+      <failure message="expected false to be true" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected false to be true</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
