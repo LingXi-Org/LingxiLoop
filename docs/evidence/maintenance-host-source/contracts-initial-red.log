@@ -1,0 +1,72 @@
+node:internal/modules/esm/resolve:271
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/workspace/LingxiLoop-maintenance-host-source/scripts/schema-upgrade-host-source.mjs' imported from /workspace/LingxiLoop-maintenance-host-source/scripts/schema-upgrade-host-source.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+    at moduleResolve (node:internal/modules/esm/resolve:865:10)
+    at defaultResolve (node:internal/modules/esm/resolve:992:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:701:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:721:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:56)
+    at #resolve (node:internal/modules/esm/loader:683:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:603:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:253:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///workspace/LingxiLoop-maintenance-host-source/scripts/schema-upgrade-host-source.mjs'
+}
+
+Node.js v24.19.0
+✖ scripts/schema-upgrade-host-source.test.mjs (47.565781ms)
+✔ ordinary release blocks12→13 and unknown/inconsistent state, leaves13→13 alone (1.917131ms)
+✔ barrier requires actual read-only/full visibility and every lease/client class zero (0.439663ms)
+✔ happy path pulls before stopping, Workers before Web, backup after barrier, one migration then staged recovery (6.054915ms)
+✔ pull or image mismatch never stops service (2.395693ms)
+✔ accepted stop, uncertain stop, live leases, failed backup all prohibit migration (3.596754ms)
+✔ unknown migration outcome is not retried and never starts/deploys old or new services (1.561294ms)
+✔ 47 committed then48 failure reports fix-forward, not rollback (1.636558ms)
+✔ markers require one exact receipt and successful complete update; raw secret-like logs never enter errors (1.006919ms)
+✔ transport does not retry unknown execute and polls only its returned update id (49.118652ms)
+✔ transport rejects receipt identity drift and refuses unlisted mutations (1.193369ms)
+✔ ordinary trigger performs schema guard before config writes, historical drain and webhook (10.303547ms)
+✔ maintenance scripts have an owning deployment contract in CI (1.162152ms)
+✔ offline package check rejects a candidate relabelled3.5.6/schema13 (1.007779ms)
+✔ real operations fail closed on a running procedure or retrying migration container (1.138637ms)
+✔ pin and restore payloads contain only the actual stack id and commit (0.41771ms)
+✔ SQL state receipts accept only fixed metadata fields and numeric aggregates (0.621337ms)
+✔ real App manifests with repeated equal pins reach metadata and preserve same-schema ordinary rollout (453.757175ms)
+✔ effective Compose parser accepts actual inherited pins and rejects stale overrides before planning (1209.415179ms)
+✔ ordinary gate and manifest-commit plan use the same effective-service pin validation (1.826283ms)
+✔ service requests accept only the exact Komodo2.3.3 service operation at acceptance and completion (3.604916ms)
+✔ service receipt mapping keeps stack target and polled operation identity strict; one-off enum unchanged (4.423616ms)
+✔ generated metadata inventory escaping accepts SQL names and rejects lookalikes and gaps (0.608237ms)
+✖ legacy plans fail before any operations and both nodes qualify before drain (2.319869ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 22
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1842.169686
+
+✖ failing tests:
+
+test at scripts/schema-upgrade-host-source.test.mjs:1:1
+✖ scripts/schema-upgrade-host-source.test.mjs (47.565781ms)
+  'test failed'
+
+test at scripts/schema-upgrade-maintenance.test.mjs:211:1
+✖ legacy plans fail before any operations and both nodes qualify before drain (2.319869ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///workspace/LingxiLoop-maintenance-host-source/scripts/schema-upgrade-maintenance.test.mjs:212:20)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
