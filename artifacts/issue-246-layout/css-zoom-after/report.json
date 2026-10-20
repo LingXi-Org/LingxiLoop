@@ -1,0 +1,853 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15a3c-20d5-7d7a-b93a-44fae1c8d3a7",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-20T16:54:13.077Z",
+    "finishedAt": "2026-10-20T16:54:28.007Z",
+    "project": {
+      "id": "lingxiloop-246-corners",
+      "configDigest": "f72fda4210fd43d7764ec2634eaa045e7b242085586717c8665dfd47d532120b"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "dea622d645876031b398b00ba3c7f53358cdfe94",
+      "branch": "fix/246-visualize-content-inset",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "5744e499e214341309f1d8708654dec11a9c46eaf4940c62764033204d3b21f9",
+        "testId": "e2e/visualize/corners.e2e.ts::all%20authored%20corners%20survive%20rounded%20clipping%20%281440%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "all authored corners survive rounded clipping (1440)"
+        ],
+        "file": "e2e/visualize/corners.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/corners.e2e.ts",
+          "line": 7,
+          "column": 34
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T16:54:15.884Z",
+            "durationMs": 12018,
+            "artifacts": [
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:5"
+                },
+                "path": "web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/screenshots/001-inline-corners-1440.png",
+                "size": 12622,
+                "sha256": "41659dfa6121ad9cc181202018a28b73747d53489a18e3f76af94255b3cdc076"
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:10"
+                },
+                "path": "web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/screenshots/002-preview-corners-1440.png",
+                "size": 15804,
+                "sha256": "192d485494466dfc61e94332ae59a36dffbd78c3f5b80290a9ef00d0326e89cf"
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:16"
+                },
+                "path": "web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/screenshots/003-collapsed-corners-1440.png",
+                "size": 13441,
+                "sha256": "5f680112947109aa3f94c03f1c9a957dae749b0127685152601f637c480b2e14"
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:3",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:22"
+                },
+                "path": "web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/screenshots/004-resized-corners-1440.png",
+                "size": 9926,
+                "sha256": "39410b7876dc8a9a2246762f69dde522cb0159aebc0911ec8403a96214bb887a"
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:4",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:27"
+                },
+                "path": "web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/screenshots/005-css-zoom-inline-1440.png",
+                "size": 15913,
+                "sha256": "1397c73e323a34a25e25172e25137bae32346684277ef6d6e6a58c6c4f0fbb64"
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:5",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:33"
+                },
+                "path": "web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/screenshots/006-css-zoom-preview-1440.png",
+                "size": 15119,
+                "sha256": "e497bb6dde09bdc5d82b41df6bbf58961bcba5ba8e384ad0c180377fe2ebfd71"
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:6",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/trace/trace.zip",
+                "size": 525468,
+                "sha256": "45830b4f5f4cf9b5ef41040643fd99b502bab4cba5d4d805c40c1737099ab231"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:16.160Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 8,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/index.html?implementation=product&theme=light&corners=1",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:16.162Z",
+                "durationMs": 1144,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 9,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:17.307Z",
+                "durationMs": 809,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 10,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#corner-counter\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:18.117Z",
+                "durationMs": 599,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 12,
+                  "column": 50
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:19.224Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "inline-corners-1440",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:19.284Z",
+                "durationMs": 236,
+                "events": [],
+                "artifacts": [
+                  "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 40,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#corner-counter\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:19.524Z",
+                "durationMs": 2069,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 47,
+                  "column": 42
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"放大\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:21.594Z",
+                "durationMs": 164,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 48,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:21.759Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 49,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#corner-counter\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:21.787Z",
+                "durationMs": 376,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 50,
+                  "column": 50
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:10",
+                "index": 10,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "preview-corners-1440",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:22.163Z",
+                "durationMs": 102,
+                "events": [],
+                "artifacts": [
+                  "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 51,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:11",
+                "index": 11,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"收起\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:22.265Z",
+                "durationMs": 89,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 52,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:22.354Z",
+                "durationMs": 170,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 53,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#corner-counter\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:22.526Z",
+                "durationMs": 751,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 54,
+                  "column": 50
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:23.875Z",
+                "durationMs": 42,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:24.350Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:16",
+                "index": 16,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "collapsed-corners-1440",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:24.360Z",
+                "durationMs": 87,
+                "events": [],
+                "artifacts": [
+                  "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 59,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:24.447Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 61,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:24.939Z",
+                "durationMs": 62,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:25.394Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:25.732Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#corner-counter\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:25.739Z",
+                "durationMs": 327,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 66,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:22",
+                "index": 22,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "resized-corners-1440",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:26.066Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [
+                  "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:3"
+                ],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 68,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:26.098Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 960,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 72,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:26.110Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 73,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:26.495Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:26.876Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:27",
+                "index": 27,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "css-zoom-inline-1440",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:26.895Z",
+                "durationMs": 53,
+                "events": [],
+                "artifacts": [
+                  "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:4"
+                ],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 77,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:28",
+                "index": 28,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"放大\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:26.949Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 82,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:29",
+                "index": 29,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"dialog\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:27.018Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 83,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#corner-counter\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:27.029Z",
+                "durationMs": 321,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 84,
+                  "column": 50
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:27.351Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 85,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:27.684Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 18,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a15a3c-2e4c-75e8-a66e-5983fe59995c:33",
+                "index": 33,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "css-zoom-preview-1440",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:54:27.692Z",
+                "durationMs": 57,
+                "events": [],
+                "artifacts": [
+                  "01a15a3c-2e4c-75e8-a66e-5983fe59995c:artifact:5"
+                ],
+                "source": {
+                  "file": "e2e/visualize/corners.e2e.ts",
+                  "line": 88,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "ae44d97ad23ba91856d4a885116af987074bbd17a8d62ecea5723bd86c49d9e9",
+        "testId": "e2e/visualize/corners.e2e.ts::all%20authored%20corners%20survive%20rounded%20clipping%20%28390%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "all authored corners survive rounded clipping (390)"
+        ],
+        "file": "e2e/visualize/corners.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/corners.e2e.ts",
+          "line": 7,
+          "column": 34
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 608293,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

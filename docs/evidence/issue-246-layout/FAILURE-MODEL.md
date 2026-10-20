@@ -43,3 +43,10 @@ not the public card. This fix does not claim to repair them.
 Execution results and screenshots must be recorded after running the unchanged
 component (red) and then the fixed component (green). This document alone is not
 passing evidence.
+
+Follow-up coverage uses `document.body.style.zoom = '1.25'`. This is CSS zoom,
+not native browser zoom or physical-device pinch zoom. Guest-local coordinates
+must be scaled to host viewport coordinates before corner hit tests. The
+preview iframe must also match its anchor's measured bounds: a fixed top-layer
+surface can otherwise apply the inherited zoom a second time to viewport
+coordinates. A mismatch is reported before changing the shared page plane.
