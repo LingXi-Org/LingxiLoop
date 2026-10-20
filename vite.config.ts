@@ -39,6 +39,8 @@ export default defineConfig({
     // resolve.dedupe above — both are needed: dedupe fixes source-level
     // resolution, include fixes the dep-optimizer's chunk graph).
     include: [
+      '@blocknote/core', '@blocknote/core/extensions', '@blocknote/react', '@blocknote/mantine',
+      '@blocknote/code-block', '@blocknote/math-block', '@blocknote/diagram-block', 'react-dom/server',
       '@assistant-ui/react', '@assistant-ui/react-markdown',
       'yjs',
       '@tiptap/pm/model', '@tiptap/pm/state', '@tiptap/pm/view',

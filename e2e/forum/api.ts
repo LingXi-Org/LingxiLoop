@@ -50,6 +50,24 @@ await pool.query(`INSERT INTO homework_submissions(id,company_id,project_id,home
   VALUES('fixture-homework-submission','e2e-school','e2e-classroom','issue146-homework','forum-student',1,'fixture-key','fixture',$1::jsonb,$2::jsonb,1,0,false,$3::jsonb)`,[JSON.stringify(fixtureAnswer),JSON.stringify(fixtureReport),JSON.stringify(fixtureReferences)])
 // Synthetic auth and in-memory objects are confined to this loopback-only test server.
 const app = express()
+
+// #219 only: deterministic authoring/review fixtures; no live model claim.
+if (process.env.FORUM_ISSUE219 === '1') {
+  const { HomeworkApplication } = await import('../../server/src/modules/learning/homework-application')
+  const { withTransaction } = await import('../../server/src/db/transaction')
+  const homework = new HomeworkApplication(pool, work => withTransaction(pool, work))
+  app.post('/api/fixture-native-homework', async (_req,res) => {
+    const detail=await homework.draft({companyId:'e2e-school',userId:'forum-teacher'},'e2e-course',{
+      title:'Issue219 原生作业草稿',instructions:'先观察，再说明。',criteria:['说明观察依据'],links:[],attachments:[],dueAt:null,
+    })
+    res.json(detail)
+  })
+  app.post('/api/fixture-native-homework/:id/ready',async(req,res)=>{
+    await pool.query("UPDATE homeworks SET validation_status='READY',validated_revision=revision WHERE company_id='e2e-school' AND id=$1 AND status='DRAFT'",[req.params.id])
+    res.sendStatus(200)
+  })
+}
+
 // Mirror the public avatar prefix only; private attachment reads still use the
 // ordinary authorized file API. The object bytes live in integration storage.
 const originalPublicUrl = storage.publicUrl.bind(storage)

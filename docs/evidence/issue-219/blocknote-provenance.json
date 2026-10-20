@@ -1,0 +1,253 @@
+{
+  "upstream": "https://github.com/TypeCellOS/BlockNote",
+  "tag": "v0.56.0",
+  "commit": "8e0485caef54abe9cad6b84fa66505e0398acb79",
+  "packages": {
+    "@blocknote/core": {
+      "version": "0.56.0",
+      "resolved": "https://registry.npmjs.org/@blocknote/core/-/core-0.56.0.tgz",
+      "integrity": "sha512-6h8CNv1RSgQM5q/fU2zvidrd3BdvNO+KzlAXazLGM69m5Ii1Ix8iUI2pMKFt+sNKz87s8a8iWyxHZozaIOTHnw==",
+      "license": "MPL-2.0",
+      "dependencies": {
+        "@emoji-mart/data": "^1.2.1",
+        "@handlewithcare/prosemirror-inputrules": "^0.1.4",
+        "@shikijs/types": "^4.4.3",
+        "@tiptap/core": "^3.31.3",
+        "@tiptap/extension-bold": "^3.31.3",
+        "@tiptap/extension-code": "^3.31.3",
+        "@tiptap/extension-italic": "^3.31.3",
+        "@tiptap/extension-strike": "^3.31.3",
+        "@tiptap/extension-text": "^3.31.3",
+        "@tiptap/extension-underline": "^3.31.3",
+        "@tiptap/extensions": "^3.31.3",
+        "@tiptap/pm": "^3.31.3",
+        "emoji-mart": "^5.6.0",
+        "fast-deep-equal": "^3.1.3",
+        "lib0": "1.0.0-rc.36",
+        "prosemirror-highlight": "^0.15.3",
+        "prosemirror-model": "^1.25.11",
+        "prosemirror-state": "^1.4.4",
+        "prosemirror-tables": "^1.8.5",
+        "prosemirror-transform": "^1.12.1",
+        "prosemirror-view": "^1.42.5"
+      },
+      "peerDependencies": {
+        "@y/prosemirror": "^2.0.0-15",
+        "@y/protocols": "^1.0.6-rc.1",
+        "@y/y": "^14.0.0-rc.26",
+        "y-prosemirror": "^1.3.7",
+        "y-protocols": "^1.0.6",
+        "yjs": "^13.6.33"
+      },
+      "peerDependenciesMeta": {
+        "@y/prosemirror": {
+          "optional": true
+        },
+        "@y/protocols": {
+          "optional": true
+        },
+        "@y/y": {
+          "optional": true
+        },
+        "y-prosemirror": {
+          "optional": true
+        },
+        "y-protocols": {
+          "optional": true
+        },
+        "yjs": {
+          "optional": true
+        }
+      }
+    },
+    "@blocknote/react": {
+      "version": "0.56.0",
+      "resolved": "https://registry.npmjs.org/@blocknote/react/-/react-0.56.0.tgz",
+      "integrity": "sha512-Y2C1h5yAAXjQS3layapu+tZjYVZj57l/sMWGEnOCa8P1O3J2mprT6C6xHkDs9VmfZNQBOpnaCsvEQZ4bNxfl/Q==",
+      "license": "MPL-2.0",
+      "dependencies": {
+        "@blocknote/core": "^0.56.0",
+        "@emoji-mart/data": "^1.2.1",
+        "@floating-ui/react": "^0.27.18",
+        "@tiptap/core": "^3.31.3",
+        "@tiptap/pm": "^3.31.3",
+        "@tiptap/react": "^3.31.3",
+        "emoji-mart": "^5.6.0",
+        "fast-deep-equal": "^3.1.3",
+        "use-sync-external-store": "1.6.0"
+      },
+      "optionalDependencies": {
+        "@types/use-sync-external-store": "1.5.0"
+      },
+      "peerDependencies": {
+        "react": "^18.0 || ^19.0 || >= 19.0.0-rc",
+        "react-dom": "^18.0 || ^19.0 || >= 19.0.0-rc"
+      }
+    },
+    "@blocknote/mantine": {
+      "version": "0.56.0",
+      "resolved": "https://registry.npmjs.org/@blocknote/mantine/-/mantine-0.56.0.tgz",
+      "integrity": "sha512-tiYdFIDaitJmp2OvQgg57IS0cc4jmNGBfKm8u7gIF5iM2DC8AOw6FPOClVi6L+6pJzyD+e0v4RjFIY1AwSANaw==",
+      "license": "MPL-2.0",
+      "dependencies": {
+        "@blocknote/core": "^0.56.0",
+        "@blocknote/react": "^0.56.0"
+      },
+      "peerDependencies": {
+        "@mantine/core": "^8.3.11 || ^9.0.2",
+        "@mantine/hooks": "^8.3.11 || ^9.0.2",
+        "react": "^18.0 || ^19.0 || >= 19.0.0-rc",
+        "react-dom": "^18.0 || ^19.0 || >= 19.0.0-rc"
+      }
+    },
+    "@blocknote/code-block": {
+      "version": "0.56.0",
+      "resolved": "https://registry.npmjs.org/@blocknote/code-block/-/code-block-0.56.0.tgz",
+      "integrity": "sha512-CUnvy+ZWzy/P8SIcZ+JXnxzd98Dx/SCyQektjq1YIXOlg9EDzZZLAHn0vVcvOK6U7Zp9yF2LnZz4Vytl1kr4UA==",
+      "license": "MPL-2.0",
+      "dependencies": {
+        "@shikijs/core": "^4.4.3",
+        "@shikijs/engine-javascript": "^4.4.3",
+        "@shikijs/langs-precompiled": "^4.4.3",
+        "@shikijs/themes": "^4.4.3"
+      },
+      "optionalDependencies": {
+        "@shikijs/types": "^4.4.3"
+      },
+      "peerDependencies": {
+        "@blocknote/core": "^0.56.0"
+      }
+    },
+    "@blocknote/math-block": {
+      "version": "0.56.0",
+      "resolved": "https://registry.npmjs.org/@blocknote/math-block/-/math-block-0.56.0.tgz",
+      "integrity": "sha512-hC8ZeWK4v5zr1J4opug91FSuO5wx3nwt1Cj78mczGj/bWfNX8yclNAGG192JJq2Z16TW0c/BZd7y1jQ1Sm6Ovg==",
+      "license": "MPL-2.0",
+      "dependencies": {
+        "@blocknote/core": "^0.56.0",
+        "@blocknote/react": "^0.56.0",
+        "@handlewithcare/prosemirror-inputrules": "^0.1.4",
+        "katex": "^0.18.9",
+        "prosemirror-model": "^1.25.11",
+        "prosemirror-state": "^1.4.4"
+      },
+      "peerDependencies": {
+        "@blocknote/xl-docx-exporter": "^0.56.0",
+        "@blocknote/xl-email-exporter": "^0.56.0",
+        "@blocknote/xl-odt-exporter": "^0.56.0",
+        "@blocknote/xl-typst-exporter": "^0.56.0",
+        "@react-email/components": "^1.0.12",
+        "docx": "^9.8.0",
+        "mathjax-full": "^3.2.2",
+        "mathml2omml": "^0.5.0",
+        "react": "^18.0 || ^19.0 || >= 19.0.0-rc",
+        "react-dom": "^18.0 || ^19.0 || >= 19.0.0-rc",
+        "tex2typst": "^0.6.2"
+      },
+      "peerDependenciesMeta": {
+        "@blocknote/xl-docx-exporter": {
+          "optional": true
+        },
+        "@blocknote/xl-email-exporter": {
+          "optional": true
+        },
+        "@blocknote/xl-odt-exporter": {
+          "optional": true
+        },
+        "@blocknote/xl-typst-exporter": {
+          "optional": true
+        },
+        "@react-email/components": {
+          "optional": true
+        },
+        "docx": {
+          "optional": true
+        },
+        "mathjax-full": {
+          "optional": true
+        },
+        "mathml2omml": {
+          "optional": true
+        },
+        "tex2typst": {
+          "optional": true
+        }
+      }
+    },
+    "@blocknote/diagram-block": {
+      "version": "0.56.0",
+      "resolved": "https://registry.npmjs.org/@blocknote/diagram-block/-/diagram-block-0.56.0.tgz",
+      "integrity": "sha512-L9lpL9I6opMwuMPwno/Bw4FqIAeVOVFUbqFum48ZX64IwnrrUlCp3w/Y5b18v0BeCj/zC9TpbZ9wzi8dA51C4Q==",
+      "license": "MPL-2.0",
+      "dependencies": {
+        "@blocknote/core": "^0.56.0",
+        "@blocknote/react": "^0.56.0",
+        "mermaid": "^11.0.0"
+      },
+      "peerDependencies": {
+        "@blocknote/xl-docx-exporter": "^0.56.0",
+        "@blocknote/xl-email-exporter": "^0.56.0",
+        "@blocknote/xl-odt-exporter": "^0.56.0",
+        "@blocknote/xl-typst-exporter": "^0.56.0",
+        "@react-email/components": "^1.0.12",
+        "docx": "^9.8.0",
+        "react": "^18.0 || ^19.0 || >= 19.0.0-rc",
+        "react-dom": "^18.0 || ^19.0 || >= 19.0.0-rc"
+      },
+      "peerDependenciesMeta": {
+        "@blocknote/xl-docx-exporter": {
+          "optional": true
+        },
+        "@blocknote/xl-email-exporter": {
+          "optional": true
+        },
+        "@blocknote/xl-odt-exporter": {
+          "optional": true
+        },
+        "@blocknote/xl-typst-exporter": {
+          "optional": true
+        },
+        "@react-email/components": {
+          "optional": true
+        },
+        "docx": {
+          "optional": true
+        }
+      }
+    }
+  },
+  "sourceFiles": [
+    {
+      "path": "packages/core/src/editor/BlockNoteEditor.ts",
+      "sha256": "7e2d84879021d27b059568ec286d1e73065d238ed9cb46acb923e51be8f3c401"
+    },
+    {
+      "path": "packages/core/src/blocks/defaultBlocks.ts",
+      "sha256": "aac80ae84712d8738266c45009b37627f80846c80b89aabfc635838e45ed8fca"
+    },
+    {
+      "path": "packages/react/src/editor/BlockNoteDefaultUI.tsx",
+      "sha256": "5150046295b09b22cff796fea0b98416a94afc8cdf7fa4040133baa1d979a8b7"
+    },
+    {
+      "path": "packages/mantine/src/BlockNoteView.tsx",
+      "sha256": "fc0e75cb13a820a7c6bc494ca1c8f7bb4d92dce3577157963468f8035ad22e27"
+    },
+    {
+      "path": "packages/core/LICENSE",
+      "sha256": "4b89d4518bd135ab4ee154a7bce722246b57a98c3d7efc1a09409898160c2bd1"
+    },
+    {
+      "path": "examples/06-custom-schema/09-math-block/src/App.tsx",
+      "sha256": "af07ac7e21d72c43624dedb7dc18eee81e9fe12cc19adfe6a4fbea529e235a4f"
+    },
+    {
+      "path": "examples/06-custom-schema/10-diagram-block/src/App.tsx",
+      "sha256": "ac4a4b9ea122d657cf30d3d41ee5458eda01becd11d97b310cb2b9135270152c"
+    },
+    {
+      "path": "examples/04-theming/06-code-block/src/App.tsx",
+      "sha256": "c30a4c944e688b061d02d930c24dda6bb9f9f10b5b96f38d0ec2ed048c3bfd5f"
+    }
+  ]
+}

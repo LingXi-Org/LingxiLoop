@@ -3,16 +3,23 @@ import { expect, type Screen } from 'e2e'
 
 /** Drive the official UI; never mutate editor internals or insert a synthetic document. */
 export async function nativeBlock(browser: Browser, screen: Screen, label: string, query: string, title: string) {
-  await screen.getByLabel(label, { exact: true }).focus()
-  await browser.keyboard.press('Control+End')
-  await browser.keyboard.press('Enter')
-  await browser.keyboard.type(`/${query}`)
+  const trailing = browser.locator(`[aria-label="${label}"] .bn-trailing-block`)
+  if (await trailing.count()) await trailing.last().tap()
+  else {
+    await screen.getByLabel(label, { exact: true }).focus()
+    await browser.keyboard.press('Control+End')
+    await browser.keyboard.press('Enter')
+  }
+  await browser.keyboard.press('/')
+  await browser.keyboard.type(query)
   await expect(screen.getByRole('option', new RegExp(title))).toBeVisible()
   await browser.keyboard.press('Enter')
 }
 export async function nativeHeading(browser: Browser, screen: Screen, label: string, heading: string, paragraph: string) {
   await screen.getByLabel(label, { exact: true }).fill('')
-  await browser.keyboard.type('/h2')
+  await browser.keyboard.press('Control+Alt+0')
+  await browser.keyboard.press('/')
+  await browser.keyboard.type('h2')
   await expect(screen.getByRole('option', /二级标题/).first()).toBeVisible()
   await browser.keyboard.press('Enter')
   await browser.keyboard.type(heading)

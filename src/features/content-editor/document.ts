@@ -2,13 +2,15 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import { gfmFromMarkdown } from 'mdast-util-gfm'
 import { gfm } from 'micromark-extension-gfm'
 import { visit } from 'unist-util-visit'
-import type { Block } from '@blocknote/core'
+import type { ContentBlock as Block } from './schema'
 
 /** Markdown remains the search/export/legacy-reader projection; blocks are canonical. */
 export interface ContentDocument {
   format: 'blocknote'
   version: 1
   blocks: Block[]
+  projection: string
+  sections: string[]
   /** Original pre-BlockNote source, retained once, never replaced by a lossy export. */
   legacyMarkdown?: string
 }
@@ -22,7 +24,7 @@ export function withTaskState(document: ContentDocument | null | undefined, mark
     ...(block.type === 'checkListItem' ? { props: { ...block.props, checked: checked[index++] ?? block.props.checked } } : {}),
     children: updateBlocks(block.children),
   } as Block))
-  return { ...document, blocks: updateBlocks(document.blocks) }
+  return { ...document, projection: markdown, blocks: updateBlocks(document.blocks) }
 }
 
 /** JSONB property order and missing optional fields must not mark a saved draft dirty. */
@@ -33,4 +35,12 @@ export function equalContent(left: unknown, right: unknown): boolean {
     return value
   }
   return JSON.stringify(canonical(left)) === JSON.stringify(canonical(right))
+}
+
+export function usableDocument(document: ContentDocument | null | undefined, text: string): document is ContentDocument {
+  return Boolean(document && document.projection?.trim() === text.trim())
+}
+
+export function criteriaSource(criteria: string[], document: ContentDocument | null | undefined): string {
+  return document && JSON.stringify(document.sections) === JSON.stringify(criteria) ? document.projection : criteria.join('\n')
 }

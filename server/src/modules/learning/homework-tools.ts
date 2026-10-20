@@ -12,7 +12,7 @@ import { learnerHomeworkRead, teacherHomeworkDraftReceipt, teacherHomeworkOvervi
 import { resolveTeacherScope } from './teacher-agent-application.js'
 
 const id=z.string().trim().min(1).max(200)
-const teacherHomeworkDraftSchema=homeworkDraftSchema.omit({editorDocument:true,criteriaDocument:true}).extend({homeworkId:id.optional(),expectedRevision:z.number().int().min(1).optional()})
+const teacherHomeworkDraftSchema=z.strictObject(homeworkDraftSchema.shape).omit({editorDocument:true,criteriaDocument:true}).extend({homeworkId:id.optional(),expectedRevision:z.number().int().min(1).optional()})
   .refine(input=>(input.homeworkId===undefined)===(input.expectedRevision===undefined),'homeworkId and expectedRevision are required together')
 const application=(db:Queryable)=>new HomeworkApplication(db,work=>work(db))
 

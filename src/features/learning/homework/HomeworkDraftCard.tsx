@@ -1,3 +1,4 @@
+import { criteriaSource } from '@/features/content-editor/document'
 import type { ContentDocument } from '@/features/content-editor'
 import { type ToolCallMessagePartProps, useAuiState } from '@assistant-ui/react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
@@ -40,7 +41,7 @@ function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing }: { cour
   const epoch = useRef(0), dirtyRef = useRef(false)
   const install = useCallback((next: Homework) => {
     epoch.current++; dirtyRef.current = false
-    setHomework(next); setTitle(next.title); setInstructions(next.instructions); setEditorDocument(next.editorDocument ?? null); setCriteria(next.criteria.join('\n')); setCriteriaItems(next.criteria); setCriteriaDocument(next.criteriaDocument ?? null); setDueAt(localDeadline(next.dueAt))
+    setHomework(next); setTitle(next.title); setInstructions(next.instructions); setEditorDocument(next.editorDocument ?? null); setCriteria(criteriaSource(next.criteria,next.criteriaDocument)); setCriteriaItems(next.criteria); setCriteriaDocument(next.criteriaDocument ?? null); setDueAt(localDeadline(next.dueAt))
     setLinks(next.links.join('\n')); setAttachments(next.attachments); setDirty(false)
   }, [])
   const load = useCallback(async (replaceEdits = false) => {
@@ -66,7 +67,7 @@ function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing }: { cour
       {error && <p role="alert" className="text-sm text-destructive">{error}<Button variant="link" disabled={busy || uploading} onClick={() => void load(true)}>重新加载草稿</Button></p>}
       {homework && homework.status !== 'DRAFT' ? <>
         <Badge variant="secondary">{homework.status === 'CLOSED' ? '已关闭' : '已发布'}</Badge><h3 className="font-medium">{homework.title}</h3>
-        <ForumBody content={homework.instructions} document={homework.editorDocument} />{homework.criteriaDocument ? <ForumBody content={homework.criteria.join("\n")} document={homework.criteriaDocument}/> : <ul className="list-disc space-y-1 ps-5 text-sm">{homework.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}
+        <ForumBody content={homework.instructions} document={homework.editorDocument} />{homework.criteriaDocument ? <ForumBody content={criteriaSource(homework.criteria,homework.criteriaDocument)} document={homework.criteriaDocument}/> : <ul className="list-disc space-y-1 ps-5 text-sm">{homework.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}
         <ForumFiles links={homework.links} attachments={homework.attachments} /><Button variant="outline" onClick={() => useApp.getState().setView('forum')}>在论坛查看作业</Button>
       </> : homework && <form className="space-y-4" onSubmit={async event => {
         event.preventDefault()

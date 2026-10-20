@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { ArrowLeft, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { usableDocument } from '@/features/content-editor/document'
 import { ContentEditor, ContentDocumentView } from '@/features/content-editor'
 import { useAuth } from '@/stores/auth'
 import { userFacingError } from '@/lib/userFacingError'
@@ -172,15 +173,15 @@ export function CasesPage() {
         <details className="border-y py-3" open={Boolean(input.cover)}><summary className="cursor-pointer text-sm focus-visible:outline-2">封面图片</summary><div className="space-y-2 pt-3"><label className="block space-y-1.5 text-sm">上传封面<Input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || !input.title.trim()} onChange={event => { void uploadCover(event.target.files?.[0]); event.target.value = '' }} /></label>{input.cover && <><img src={input.cover} alt="案例封面预览" className="max-h-48 rounded-md object-contain"/><Button variant="ghost" size="sm" type="button" onClick={() => setInput({ ...input, cover: null })}>移除封面</Button></>}<p className="text-xs text-muted-foreground">先填写标题。图片上限 8 MB。</p></div></details>
         <div className="space-y-1.5"><p className="text-sm font-medium">正文</p><ContentEditor label="正文" value={input.body} document={input.editorDocument} maxLength={200000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(body, editorDocument) => setInput(value => ({ ...value, body, editorDocument }))}/></div>
         <Button type="button" size="sm" variant="ghost" aria-expanded={preview} onClick={() => setPreview(!preview)}>{preview ? '收起预览' : '预览正文'}</Button>
-        {preview && <section aria-label="正文预览" className="border-t py-4">{input.editorDocument ? <ContentDocumentView document={input.editorDocument}/> : <Markdown body={input.body}/>}</section>}
+        {preview && <section aria-label="正文预览" className="border-t py-4">{usableDocument(input.editorDocument, input.body) ? <ContentDocumentView document={input.editorDocument}/> : <Markdown body={input.body}/>}</section>}
         <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-background py-3"><Button type="submit" variant="outline" disabled={busy || input.body.length > 200000 || input.summary.length > 2000}>保存草稿</Button><Button type="button" disabled={busy || !input.title.trim() || !input.body.trim() || input.body.length > 200000 || input.summary.length > 2000} onClick={() => void save(true)}>保存并发布</Button><Button type="button" variant="ghost" disabled={busy} onClick={() => setEditing(false)}>取消编辑</Button></div>
       </fieldset></form> : loading ? <p role="status" className="py-8 text-sm text-muted-foreground">正在加载案例…</p> : article ? <article className="mx-auto max-w-3xl">
         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span>{article.category || '未分类'}</span>{article.canManage && <><span>· {statusLabels[article.status]}</span>{article.hasUnpublishedChanges && <span>· 有未发布修改</span>}</>}</div>
         <h2 className="break-words text-2xl font-semibold leading-tight sm:text-3xl">{article.title}</h2>
-        <div className="my-4 text-sm leading-7 text-muted-foreground">{article.summaryDocument ? <ContentDocumentView document={article.summaryDocument}/> : article.summary}</div>
+        <div className="my-4 text-sm leading-7 text-muted-foreground">{usableDocument(article.summaryDocument, article.summary) ? <ContentDocumentView document={article.summaryDocument}/> : article.summary}</div>
         {article.canManage && <div className="mb-5 space-y-2 border-y py-3"><div className="flex flex-wrap gap-2"><Button size="sm" onClick={beginEdit}>编辑案例</Button>{article.status === 'published' && <Button size="sm" variant="outline" disabled={busy} onClick={() => void action('unpublish')}>下架案例</Button>}{article.indexStatus === 'failed' && <Button size="sm" variant="outline" disabled={busy} onClick={() => void action('retry-index')}>重试索引</Button>}</div>{article.hasUnpublishedChanges && <p className="text-xs text-muted-foreground">读者仍看到上次发布版本。</p>}{article.indexStatus && <p className="text-xs text-muted-foreground">知识索引：{article.indexStatus === 'failed' ? '同步失败，请重试' : article.indexStatus === 'ready' ? '已同步' : '正在同步'}</p>}</div>}
         {article.cover && <img src={article.cover} alt="" className="mb-6 max-h-96 w-full rounded-md object-contain"/>}
-        {article.editorDocument ? <ContentDocumentView document={article.editorDocument}/> : <Markdown body={article.body}/>}
+        {usableDocument(article.editorDocument, article.body) ? <ContentDocumentView document={article.editorDocument}/> : <Markdown body={article.body}/>}
         <div className="mt-6 flex flex-wrap gap-3 border-t pt-3 text-xs text-muted-foreground">{article.tags.map(tag => <span key={tag}>#{tag}</span>)}</div>
       </article> : !id ? <div className="divide-y">{list.items.map(item => <article key={item.id} className="min-w-0">
         <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="group flex items-start gap-4 rounded-sm py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
