@@ -1,0 +1,51 @@
+{
+  "observedAt": "2026-10-20T18:09:12.032029+00:00",
+  "origin": "https://loop.lingxilearn.cn",
+  "client": "curl, default TLS verification; no override",
+  "earlierAttempt": {
+    "client": "Python urllib",
+    "result": "HTTP 403; no acceptance file written",
+    "cause": "unattributed"
+  },
+  "public": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/readyz",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/health/dependencies",
+      "status": 200,
+      "ok": true,
+      "dependencies": {
+        "database": true,
+        "redis": true,
+        "openNotebook": true
+      }
+    },
+    {
+      "path": "/api/meta",
+      "status": 200,
+      "ok": true,
+      "meta": {
+        "product": "LingxiLoop",
+        "version": "0.1.0-beta",
+        "commitSha": "cf4a299bcfb44d7e7ed74a250ea1404588a4e901",
+        "reasoningRuntime": {
+          "name": "@lyyzka/lingxios",
+          "runtime": "3.5.8",
+          "controlPlane": 11,
+          "kernel": 2,
+          "schema": 13,
+          "assistantMessage": 2
+        }
+      }
+    }
+  ],
+  "passed": true
+}
