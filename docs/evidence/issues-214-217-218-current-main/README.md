@@ -4,6 +4,8 @@
 `ac9069460e99a20fac7f2c3de87c60f2bec66924`，以及集成人提供的产品候选
 `3e49d9d48d9ea5df4bd8d07a2c758f5e8716cb50`。它是独立、只读的源码与既有证据复核；
 本次没有取得新的成功浏览器运行，不应据此关闭 issue 或通过发布验收。
+集成人后续推送的[精确复跑清单](https://github.com/LingXi-Org/LingxiLoop/blob/d1b42220d88026242c293482e8adf598af6f604e/docs/evidence/release-215-216-219/CHECKPOINT.md)
+已核对；其 #229 与 #215/#216/#219 验收由其他路径负责。
 
 ## 提交差异和源码边界
 
@@ -43,12 +45,26 @@
 
 先在当前 `main` 以仓库官方 `e2e/web/run.mjs` 与 `@e2e-dev/web` 选取
 流式、活动和记忆用例。测试应用的 Vite 构建在启动前因缺失
-`@modelcontextprotocol/ext-apps/app-bridge` 失败，**0 个浏览器用例执行**。
+`@modelcontextprotocol/ext-apps/app-bridge` 失败，**0 个产品浏览器用例执行**。
 随后尝试严格按锁文件 `npm ci --ignore-scripts` 恢复依赖。原缓存出现大量
 tarball 校验重试；换用全新 `/tmp` 缓存后，GitHub Packages 对锁定的
 `@lyyzka/lingxios@3.5.6` 返回 `E401 Unauthorized`。未关闭 TLS、完整性、
 权限或浏览器沙箱检查；未使用私有包替代品。因此本次无法生成新的实际浏览器
-截图、计时或成功测试报告。需要对锁定私有包具有正常读取权限的执行环境，
+产品截图、计时或成功测试报告。需要对锁定私有包具有正常读取权限的执行环境，
 并在正式 3.5.8 包和最终组合提交确定后，重新运行三个 issue 的针对性官方浏览器用例。
+
+另外，用公开 `e2e@0.17.0` / `@e2e-dev/web@0.12.0` 在独立 `/tmp` 工程运行了
+仓库**逐字相同**的 `e2e/web/streaming-text-official.e2e.ts`（两份 SHA-256 均为
+`fa90927221f17005e79abebc6f1bb6100fd5cd8abfb5e5141be783794b26558a`）。
+它不依赖私有产品包，浏览器能启动，但正常 TLS 下访问官网时在第一步失败：
+`net::ERR_CERT_AUTHORITY_INVALID`，0/1 通过。
+[本次原始报告、截图、视频和 trace](official-live-blocked/README.md)保留该失败；
+[独立测试配置](official-live-blocked/e2e.config.ts)保留 1440×960 视口、原站 URL
+与官方引擎。未忽略 HTTPS 错误，不能把浏览器错误页当成官网效果截图。
+
+当前源码还独立通过 `node scripts/verify-zcode-visualize.mjs`：223 个固定文件、
+24 个 skill 文件、4 个 runtime 文件和 4 组 vendor/library 对；
+`sha256sum -c third_party/assistant-ui/streaming-text/SHA256SUMS` 三项均通过。
+这些仅证明固定源码完整，不能替代产品浏览器或真实 provider 结果。
 
 此分支未修改产品、测试、部署配置、依赖锁文件或任何 issue 状态。
