@@ -35,7 +35,7 @@ async function assertRetiredRuntimeEmpty(client: PoolClient): Promise<void> {
 
 async function runtimeSchema(version: number = releaseVersions.schema) {
   const resources = packageResources()
-  const sql = await readFile(version === LEGACY_RUNTIME_SCHEMA ? resources.schema011 : resources.schema, 'utf8')
+  const sql = await readFile(version === LEGACY_RUNTIME_SCHEMA ? resources.schema011 : version===12 ? resources.schema012 : resources.schema, 'utf8')
   return { sql, hash: createHash('sha256').update(sql).digest('hex') }
 }
 
@@ -51,16 +51,24 @@ async function applyRuntimeUpgrade(client: PoolClient, runtimeVersion = RUNTIME_
   )
   let current = rows[0]?.version
   if (current !== targetSchema && targetSchema >= 12) {
+    if (targetSchema>=13 && process.env.NODE_ENV==='production' && process.env.LINGXIOS_SCHEMA_UPGRADE_DRAINED!=='true') {
+      throw new Error('schema 13 requires verified drain of old Web background capture/schedulers and Workers; set LINGXIOS_SCHEMA_UPGRADE_DRAINED only after that drain')
+    }
     await client.query("SET LOCAL lock_timeout='5s'")
     await client.query('LOCK TABLE lingxios.agent_work_items IN SHARE ROW EXCLUSIVE MODE')
     const active = await client.query("SELECT 1 FROM lingxios.agent_work_items WHERE status='leased' AND lease_expires_at>NOW() LIMIT 1")
-    if (active.rows.length) throw new Error('LingxiOS 3.5.0 requires drained workers before migration')
+    if (targetSchema>=13) {
+      await client.query('LOCK TABLE lingxios.agent_memory_capture IN SHARE ROW EXCLUSIVE MODE')
+      const captures=await client.query('SELECT 1 FROM lingxios.agent_memory_capture WHERE completed_at IS NULL AND claim_until>NOW() LIMIT 1')
+      if(captures.rows.length) throw new Error('LingxiOS memory capture is still active; drain old Web background work')
+    }
+    if (active.rows.length) throw new Error('LingxiOS schema migration requires drained Web background work and Workers')
   }
   while (current !== targetSchema) {
     const resources = packageResources()
     const migrations = current === 9 ? [resources.migration010]
       : current === 10 ? [resources.migration011, resources.migration012, resources.migration013]
-      : current === 11 ? [resources.migration014] : []
+      : current === 11 ? [resources.migration014] : current === 12 ? [resources.migration015] : []
     if (!migrations.length || current! > targetSchema) {
       throw new Error(`unsupported LingxiOS schema upgrade from ${current} to ${targetSchema}`)
     }
@@ -207,8 +215,9 @@ export async function migrateDatabase(
     validateApplied(migrations, applied)
     const installsRuntime = migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
-    const targetSchema = hasReliabilityUpgrade ? releaseVersions.schema : LEGACY_RUNTIME_SCHEMA
-    const targetRuntime = hasReliabilityUpgrade ? releaseVersions.runtime : LEGACY_RUNTIME_RELEASE
+    const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
+    const targetSchema = hasContinuityUpgrade ? releaseVersions.schema : hasReliabilityUpgrade ? 12 : LEGACY_RUNTIME_SCHEMA
+    const targetRuntime = hasContinuityUpgrade ? releaseVersions.runtime : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
     const cutover = installsRuntime && applied.length < NATIVE_INSTALL_VERSION
     if (cutover) {
       await client.query('BEGIN')
@@ -232,6 +241,9 @@ export async function migrateDatabase(
           await applyRuntimeUpgrade(client)
         }
         if (migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0') {
+          await applyRuntimeUpgrade(client,'3.5.6',12)
+        }
+        if (migration.version === 47 && migration.name === 'memory_continuity') {
           await applyRuntimeUpgrade(client,releaseVersions.runtime,releaseVersions.schema)
         }
         await client.query('SET search_path TO public')

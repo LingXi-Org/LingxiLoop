@@ -46,7 +46,7 @@ test('memory chips and explicit forgetting preserve native authorization and ver
     const run=accepted.runs[0];assert.ok(run);await bindProductRun(pool,run,room)
     return {...run,workId:run.runId}
   }
-  const identity=await seedRun(),scope=(await memory.scopes(identity))[0]
+  const identity=await seedRun(),scope=(await memory.scopes(identity)).find(item=>item.scopeType==='session')!
   const input={scope,documents:[{path:'notes/fact.md',title:'Preference',description:'Use Chinese',body:'PRIVATE BODY',layer:'core' as const}],
     idempotencyKey:'private-seed',sourceRef:'memory-1'}
   const created=await memory.initialize(identity,input)
@@ -54,7 +54,7 @@ test('memory chips and explicit forgetting preserve native authorization and ver
   assert.equal((await memory.list(identity,scope)).items.length,1)
   for(const other of [await seedRun('memory-other'),await seedRun('test-owner','memory-peer'),
     await seedRun('test-owner',agentId,'memory-other-room'),await seedRun('test-owner',agentId,'memory-room','thread')]) {
-    const otherScope=(await memory.scopes(other))[0]
+    const otherScope=(await memory.scopes(other)).find(item=>item.scopeType==='session')!
     assert.notEqual(otherScope.scopeId,scope.scopeId)
     assert.deepEqual((await memory.list(other,otherScope)).items,[])
     await assert.rejects(memory.list(other,scope),/revoked/)

@@ -8,6 +8,8 @@ import { createProductTools } from './tools.js'
 import { createProductContext, ProductRuntimePolicy } from './context.js'
 import { createProductDelivery } from './delivery.js'
 import { createCanvasRuntime, completeCanvasWork } from '../modules/canvas/index.js'
+import { memoryEmbeddings } from '../modules/memory/configuration.js'
+import { memoryWritePolicy } from '../modules/memory/policy.js'
 import { resolveMemoryScopes } from '../modules/memory/public.js'
 import { nativeEvolutionBenchmark, createNativeEvolutionEvaluator } from '../modules/memory/evolution.js'
 import { scheduleRoutines } from '../modules/routines/public.js'
@@ -111,10 +113,11 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
         return true
       } },
       // Memory stays inside trusted Agent execution, including summaries and maintenance.
-      memory: { contextBudget: { ratio: 0.08, maxTokens: 8000, concurrency: 2, timeoutMs: 10000, optionalRecall: true },
+      memory: { contextBudget: { ratio: 0.08, maxTokens: 8000, concurrency: 2, timeoutMs: 10000, optionalRecall: false, recallTimeoutMs: 3000,
+        allocation: {core:0.5,directory:0.1,recalled:0.35,strategies:0.05} },
         reflection: { afterInteractions: 5, idleMs: 600000 },
         evolution: { benchmarkId: nativeEvolutionBenchmark.id, benchmark: nativeEvolutionBenchmark },
-        resolveScopes: resolveMemoryScopes,
+        resolveScopes: resolveMemoryScopes, embeddings: memoryEmbeddings(), writePolicy: memoryWritePolicy,
       }, verifyRun: async context => [...await createCanvasRuntime(lingxiOSControl).verify(context), ...await verifyVisualizeCandidate(context)],
       homesRoot: process.env.AGENT_OS_HOMES_ROOT?.trim() || '.agent-os/homes' }).catch(error => {
         previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined; control = undefined
