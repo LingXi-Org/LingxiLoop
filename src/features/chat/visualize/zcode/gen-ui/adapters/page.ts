@@ -129,8 +129,11 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
     };
     active.onsizechange = ({ height }) => {
       // 预览使用独立视口；保持正文占位高度，避免遮罩下的时间线跳动。
+      // Web 停放层 display:none 时文档不参与布局；该通知只测到截图 gutter，
+      // 不能覆盖保留的正文高度。恢复可见后的正常尺寸仍由官方 SDK 通知更新。
       if (
         context.displayMode !== "fullscreen" &&
+        plane.isRendered() &&
         typeof height === "number" &&
         Number.isFinite(height)
       )

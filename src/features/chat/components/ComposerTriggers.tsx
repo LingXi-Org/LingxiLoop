@@ -16,6 +16,7 @@ import { participantRoleZh } from '@/lib/participantRole'
 import { scanMentions, type MentionTarget } from '@/lib/mentions'
 import { MentionBadge } from '@/components/MentionBadge'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
+import { participantDisplayName } from '@/lib/participantDisplayName'
 
 function mentionFormatter(targets: readonly MentionTarget[]): Unstable_DirectiveFormatter { return {
   serialize: (item) => `@${item.id}`,
@@ -24,7 +25,8 @@ function mentionFormatter(targets: readonly MentionTarget[]): Unstable_Directive
     let cursor = 0
     for (const { id, start, end } of scanMentions(text, targets)) {
       if (start > cursor) segments.push({ kind: 'text', text: text.slice(cursor, start) })
-      segments.push({ kind: 'mention', type: id === 'all' ? 'broadcast' : 'participant', label: targets.find(target => target.id === id)?.name ?? '所有人', id })
+      const target = targets.find(target => target.id === id)
+      segments.push({ kind: 'mention', type: id === 'all' ? 'broadcast' : 'participant', label: target ? participantDisplayName(target) : '所有人', id })
       cursor = end
     }
     if (cursor < text.length) segments.push({ kind: 'text', text: text.slice(cursor) })
@@ -35,7 +37,7 @@ function mentionFormatter(targets: readonly MentionTarget[]): Unstable_Directive
 function TriggerIcon({ item }: { item: Unstable_TriggerItem }) {
   const participant = useParticipants((state) => state.byId[item.id])
   if (item.type === 'participant' && participant) {
-    return <Avatar p={participant} size={28} ringColor="transparent" animated={false} mode="chat" />
+    return <span aria-hidden="true"><Avatar p={participant} size={28} ringColor="transparent" animated={false} mode="chat" /></span>
   }
   const Icon = item.type === 'broadcast' ? UsersRoundIcon : BarChart3Icon
   return (
@@ -100,7 +102,7 @@ export function ComposerTriggers({
       .map((participant) => ({
         id: participant.id,
         type: 'participant',
-        label: participant.name,
+        label: participantDisplayName(participant),
         description: participantRoleZh(participant) ?? '会话成员',
       }))
     return members.length > 0

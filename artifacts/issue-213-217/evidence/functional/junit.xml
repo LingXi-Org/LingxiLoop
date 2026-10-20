@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="6" failures="0" errors="0" skipped="0" time="35.730">
+  <testsuite name="e2e/visualize/bridge.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="14.488">
+    <testcase name="bridge rejects synthetic gestures and unsupported methods, accepts real user actions [web]" classname="e2e/visualize/bridge.e2e.ts" time="7.037"/>
+    <testcase name="stale page operations fail, explicit retry replaces the guest and scope close releases pages [web]" classname="e2e/visualize/bridge.e2e.ts" time="7.451"/>
+  </testsuite>
+  <testsuite name="e2e/visualize/lifecycle.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="21.242">
+    <testcase name="variants retain local state, tabs load D3/calendar and mobile stays bounded [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="10.746"/>
+    <testcase name="session switching retains each state and host theme synchronizes in place [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="5.989"/>
+    <testcase name="failed acquisition retries explicitly [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="2.737"/>
+    <testcase name="offline host exposes recovery and reconnects when online [web]" classname="e2e/visualize/lifecycle.e2e.ts" time="1.770"/>
+  </testsuite>
+</testsuites>
