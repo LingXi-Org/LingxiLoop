@@ -1,0 +1,20 @@
+[integration] selected 1/83 file(s): basic-deadline-diagnostic.test.ts
+TAP version 13
+# BASIC_DEADLINE_DIAGNOSTIC {"requests":1,"disconnected":1,"elapsedMs":510.3811539999997}
+# {"ts":"2026-10-20T00:21:37.440Z","level":"info","msg":"worker stopped","workerId":"deadline-100","timedOut":false}
+# {"ts":"2026-10-20T00:21:38.186Z","level":"info","msg":"worker stopped","workerId":"deadline-5000","timedOut":false}
+# Subtest: total provider deadline persists classified feedback and the next turn succeeds
+ok 1 - total provider deadline persists classified feedback and the next turn succeeds
+  ---
+  duration_ms: 2626.13673
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4861.220471

@@ -1,0 +1,106 @@
+(node:1979) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+TAP version 13
+# (node:1986) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: reserves child startup and root closing capacity, consumes only the matching hold, and releases cancelled holds
+ok 1 - reserves child startup and root closing capacity, consumes only the matching hold, and releases cancelled holds
+  ---
+  duration_ms: 2732.700018
+  type: 'test'
+  ...
+# Subtest: reports missing profiles, cost, calls and deadline admission without creating work or resetting the root
+ok 2 - reports missing profiles, cost, calls and deadline admission without creating work or resetting the root
+  ---
+  duration_ms: 8683.124077
+  type: 'test'
+  ...
+# Subtest: rolls back graph creation on admission failure and separately persists one authorized root notice
+ok 3 - rolls back graph creation on admission failure and separately persists one authorized root notice
+  ---
+  duration_ms: 2225.368821
+  type: 'test'
+  ...
+# Subtest: admits a five-specialist team with sufficient budget while bounding pending fanout at eight
+ok 4 - admits a five-specialist team with sufficient budget while bounding pending fanout at eight
+  ---
+  duration_ms: 1941.013319
+  type: 'test'
+  ...
+# Subtest: uses settled near-limit cost exactly once before child startup plus closing admission
+ok 5 - uses settled near-limit cost exactly once before child startup plus closing admission
+  ---
+  duration_ms: 1562.476327
+  type: 'test'
+  ...
+# (node:2156) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: bounds embedding requests, aligns response indices and rejects corrupt vectors and leaked errors
+ok 6 - bounds embedding requests, aligns response indices and rejects corrupt vectors and leaked errors
+  ---
+  duration_ms: 136.062128
+  type: 'test'
+  ...
+# Subtest: classifies embedding quota 402 and shares only credential-scoped provider circuits
+ok 7 - classifies embedding quota 402 and shares only credential-scoped provider circuits
+  ---
+  duration_ms: 10.723282
+  type: 'test'
+  ...
+# Subtest: classifies embedding quota 429 and shares only credential-scoped provider circuits
+ok 8 - classifies embedding quota 429 and shares only credential-scoped provider circuits
+  ---
+  duration_ms: 6.146205
+  type: 'test'
+  ...
+# (node:2164) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: switches only after current authorization and accounts both providers inside one logical attempt budget
+ok 9 - switches only after current authorization and accounts both providers inside one logical attempt budget
+  ---
+  duration_ms: 5.16996
+  type: 'test'
+  ...
+# Subtest: does not reset attempts, bypass authorization, mix prices, or switch after cancellation/protocol failures
+ok 10 - does not reset attempts, bypass authorization, mix prices, or switch after cancellation/protocol failures
+  ---
+  duration_ms: 3.999985
+  type: 'test'
+  ...
+# (node:2172) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: preserves only allowlisted provider codes from bounded error bodies
+ok 11 - preserves only allowlisted provider codes from bounded error bodies
+  ---
+  duration_ms: 6.889401
+  type: 'test'
+  ...
+# Subtest: classifies SDK metadata without retaining error bodies, secrets or arbitrary fields
+ok 12 - classifies SDK metadata without retaining error bodies, secrets or arbitrary fields
+  ---
+  duration_ms: 0.409853
+  type: 'test'
+  ...
+# Subtest: an older in-flight completion cannot release another caller half-open probe
+ok 13 - an older in-flight completion cannot release another caller half-open probe
+  ---
+  duration_ms: 0.570727
+  type: 'test'
+  ...
+# (node:2180) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: indexes scoped memories durably and ranks old semantic matches without trusting stale vectors
+ok 14 - indexes scoped memories durably and ranks old semantic matches without trusting stale vectors
+  ---
+  duration_ms: 5005.586653
+  type: 'test'
+  ...
+1..14
+# tests 14
+# suites 0
+# pass 14
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22941.123164

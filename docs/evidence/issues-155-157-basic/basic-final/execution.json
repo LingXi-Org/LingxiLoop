@@ -1,0 +1,42 @@
+{
+  "database": "lingxiloop_provider_matrix_test_1792455410883_0bce1edd",
+  "databaseDropped": true,
+  "redisDatabase": 12,
+  "pgPort": 55442,
+  "redisPort": 56389,
+  "productionOperations": 0,
+  "paidCalls": 0,
+  "files": [
+    "runtime-basic-acceptance.test.ts"
+  ],
+  "results": [
+    {
+      "args": [
+        "--import",
+        "tsx",
+        "server/src/migrate-bin.ts"
+      ],
+      "startedAt": "2026-10-20T00:16:51.022Z",
+      "endedAt": "2026-10-20T00:16:52.711Z",
+      "exitCode": 0
+    },
+    {
+      "args": [
+        "server/run-integration-tests.mjs",
+        "--file",
+        "runtime-basic-acceptance.test.ts"
+      ],
+      "startedAt": "2026-10-20T00:16:52.711Z",
+      "endedAt": "2026-10-20T00:16:56.353Z",
+      "exitCode": 1
+    }
+  ],
+  "counts": {
+    "tests": 4,
+    "pass": 2,
+    "fail": 2,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "passed": false
+}

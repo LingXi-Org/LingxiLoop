@@ -1,0 +1,82 @@
+{
+  "passed": true,
+  "runtime": {
+    "runtime": "3.5.5",
+    "controlPlane": 11,
+    "kernel": 2,
+    "schema": 12,
+    "assistantMessage": 2
+  },
+  "node": "v22.23.3",
+  "actualWorkerProcesses": 3,
+  "originalTermination": "SIGKILL",
+  "nativeWriteCount": 1,
+  "sameCommittedResult": true,
+  "originalAgentTurnCalls": 2,
+  "originalBudgetLedgerCalls": 3,
+  "replacementAgentTurnCalls": 1,
+  "terminalNotices": 1,
+  "workStates": [
+    {
+      "status": "cancelled",
+      "count": 1
+    },
+    {
+      "status": "succeeded",
+      "count": 3
+    }
+  ],
+  "timeline": [
+    {
+      "phase": "native write and result committed; acknowledgement lost",
+      "at": "2026-10-20T00:22:15.127Z",
+      "counts": {
+        "writes": 1,
+        "model_calls": 3,
+        "acceptances": 2
+      },
+      "agentTurnCalls": 2
+    },
+    {
+      "phase": "original Worker SIGKILL confirmed",
+      "at": "2026-10-20T00:22:15.133Z"
+    },
+    {
+      "phase": "replacement has no control contact; request stays queued",
+      "at": "2026-10-20T00:22:15.634Z",
+      "rejectedRequests": 4
+    },
+    {
+      "phase": "control restored; same original result, new message succeeded",
+      "at": "2026-10-20T00:22:17.330Z",
+      "replacementCalls": 1
+    },
+    {
+      "phase": "control service recreated; durable cancelled feedback identity preserved",
+      "at": "2026-10-20T00:22:17.550Z"
+    },
+    {
+      "phase": "terminal delivered once; following message succeeded; no pending work",
+      "at": "2026-10-20T00:22:24.539Z",
+      "states": [
+        {
+          "status": "cancelled",
+          "count": 1
+        },
+        {
+          "status": "succeeded",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "scope": "Product control/authorization/chat action/ledger/delivery; real PostgreSQL and public Worker HTTP; scripted model and recording IM.",
+  "unverified": [
+    "live provider",
+    "real WuKong",
+    "full SPA",
+    "production sandbox",
+    "long soak",
+    "crash before atomic result commit"
+  ]
+}

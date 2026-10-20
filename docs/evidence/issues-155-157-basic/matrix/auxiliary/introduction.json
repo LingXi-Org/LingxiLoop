@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "authors": [
+    "a-fc1d425c",
+    "forge",
+    "milo",
+    "sage",
+    "scout",
+    "trace"
+  ],
+  "runs": [
+    {
+      "agent_id": "a-fc1d425c",
+      "principal_id": "test-owner",
+      "internal": false
+    },
+    {
+      "agent_id": "forge",
+      "principal_id": "test-owner",
+      "internal": false
+    },
+    {
+      "agent_id": "milo",
+      "principal_id": "test-owner",
+      "internal": false
+    },
+    {
+      "agent_id": "sage",
+      "principal_id": "test-owner",
+      "internal": false
+    },
+    {
+      "agent_id": "scout",
+      "principal_id": "test-owner",
+      "internal": false
+    },
+    {
+      "agent_id": "trace",
+      "principal_id": "test-owner",
+      "internal": false
+    }
+  ],
+  "checks": [
+    "five-specialists",
+    "commit-before-dispatch",
+    "one-reply-each",
+    "examples-inert",
+    "shared-human"
+  ]
+}

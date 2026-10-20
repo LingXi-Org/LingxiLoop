@@ -1,0 +1,130 @@
+[integration] selected 8/82 file(s): basic-process-recovery.test.ts, worker-startup.test.ts, worker-startup-failure.test.ts, runtime-reliability.test.ts, runtime-deadline-recovery.test.ts, runtime-tool-recovery.test.ts, im-conversation-style.test.ts, platform-lifecycle.test.ts
+TAP version 13
+# {"ts":"2026-10-20T00:19:26.265Z","level":"warn","msg":"terminal feedback failed","error":"outbox scan or delivery failed; durable intent retained"}
+# {"ts":"2026-10-20T00:19:33.446Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-153-161/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-153-161/server/src/agent-runtime/runtime.ts:173:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async teardownAll (/workspace/LingxiLoop-153-161/server/src/__integration__/_helpers.ts:382:3)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-153-161/server/src/__integration__/basic-process-recovery.test.ts:181:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-20T00:19:33.453Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-153-161/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-153-161/server/src/agent-runtime/runtime.ts:173:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async teardownAll (/workspace/LingxiLoop-153-161/server/src/__integration__/_helpers.ts:382:3)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-153-161/server/src/__integration__/basic-process-recovery.test.ts:181:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: process crash after native write preserves receipts; disconnected replacement and restarted terminal delivery recover
+ok 1 - process crash after native write preserves receipts; disconnected replacement and restarted terminal delivery recover
+  ---
+  duration_ms: 12166.874237
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T00:19:39.838Z","level":"info","msg":"worker stopped","workerId":"style-sage","timedOut":false}
+# {"ts":"2026-10-20T00:19:42.400Z","level":"info","msg":"worker stopped","workerId":"style-custom","timedOut":false}
+# Subtest: preset and custom Agents receive IM rules and deliver distinct messages to both IM and subsequent native context
+ok 2 - preset and custom Agents receive IM rules and deliver distinct messages to both IM and subsequent native context
+  ---
+  duration_ms: 6864.817102
+  type: 'test'
+  ...
+# Subtest: platform operators manage company lifecycle without tenant membership and preserve audit reasons
+ok 3 - platform operators manage company lifecycle without tenant membership and preserve audit reasons
+  ---
+  duration_ms: 1392.157696
+  type: 'test'
+  ...
+# Subtest: platform project commands retain lifecycle rules and learning projections
+ok 4 - platform project commands retain lifecycle rules and learning projections
+  ---
+  duration_ms: 1331.388704
+  type: 'test'
+  ...
+# Subtest: platform lifecycle requires gateway admin authority, a bounded reason and an existing record
+ok 5 - platform lifecycle requires gateway admin authority, a bounded reason and an existing record
+  ---
+  duration_ms: 1247.673334
+  type: 'test'
+  ...
+# Subtest: platform routine pause is authorized, durable and audited before future dispatch
+ok 6 - platform routine pause is authorized, durable and audited before future dispatch
+  ---
+  duration_ms: 1541.042908
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T00:19:57.793Z","level":"info","msg":"worker stopped","workerId":"deadline-100","timedOut":false}
+# Subtest: total provider deadline persists classified feedback and the next turn succeeds
+not ok 7 - total provider deadline persists classified feedback and the next turn succeeds
+  ---
+  duration_ms: 3843.984191
+  type: 'test'
+  location: '/workspace/LingxiLoop-153-161/server/src/__integration__/runtime-deadline-recovery.test.ts:1:754'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    0 !== 1
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-153-161/server/src/__integration__/runtime-deadline-recovery.test.ts:60:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: optional scope outages omit memory while mandatory authorization and implementation errors stay strict
+ok 8 - optional scope outages omit memory while mandatory authorization and implementation errors stay strict
+  ---
+  duration_ms: 2312.400425
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T00:20:05.254Z","level":"warn","msg":"terminal feedback failed","error":"outbox scan or delivery failed; durable intent retained"}
+# Subtest: revoking the project before terminal delivery prevents a protected notification and stops retries
+ok 9 - revoking the project before terminal delivery prevents a protected notification and stops retries
+  ---
+  duration_ms: 1259.999566
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T00:20:07.996Z","level":"info","msg":"worker stopped","workerId":"terminal-product","timedOut":false}
+# Subtest: failed and cancelled turns persist one system feedback, preserve work state and allow the next message
+ok 10 - failed and cancelled turns persist one system feedback, preserve work state and allow the next message
+  ---
+  duration_ms: 1613.788696
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T00:20:16.821Z","level":"info","msg":"worker stopped","workerId":"tool-recovery-fixture","timedOut":false}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_terminal_outbox"}
+# {"ts":"2026-10-20T00:20:16.826Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# Subtest: invalid tool arguments can be corrected and repeated failures stop within the native bound
+ok 11 - invalid tool arguments can be corrected and repeated failures stop within the native bound
+  ---
+  duration_ms: 5317.930548
+  type: 'test'
+  ...
+# [worker] reconciled 1/1 IM channels
+# [lifecycle] stopping (startup-failure)
+# Subtest: failed Worker runner startup closes reconciled realtime context before database teardown
+ok 12 - failed Worker runner startup closes reconciled realtime context before database teardown
+  ---
+  duration_ms: 1139.417341
+  type: 'test'
+  ...
+# [worker] reconciled 1/1 IM channels
+# [worker] ready · tasks=0
+# [lifecycle] stopping (test)
+# Subtest: production Worker reconciliation uses passive local context before runner startup
+ok 13 - production Worker reconciliation uses passive local context before runner startup
+  ---
+  duration_ms: 1384.782769
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 12
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 65902.597589

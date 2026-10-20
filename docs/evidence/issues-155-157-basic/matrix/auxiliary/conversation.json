@@ -1,0 +1,58 @@
+{
+  "passed": true,
+  "messages": [
+    {
+      "author": "test-owner",
+      "text": "@a-e50a72f8 Split and verify this task."
+    },
+    {
+      "author": "a-e50a72f8",
+      "text": "- Specialist `@mention-second` DELEGATE_B: investigate the assigned part."
+    },
+    {
+      "author": "mention-second",
+      "text": "@mention-third CHECK_SECOND: independently verify this finding."
+    },
+    {
+      "author": "mention-third",
+      "text": "@a-e50a72f8 FOLLOW_UP: clarify this point."
+    },
+    {
+      "author": "a-e50a72f8",
+      "text": "Clarification recorded. The task is complete."
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "im:c672ca77b6b483c78a7548da1cdfb56c15c2b2412568eee5662ee209458daf93",
+      "principal_id": "test-owner",
+      "internal": false
+    },
+    {
+      "run_id": "im:cea9af047523f291b00b6bb5abe5a81108a272504262b215c879ec89b96ab485",
+      "principal_id": "test-owner",
+      "internal": false
+    },
+    {
+      "run_id": "im:67999783ab74809175402abd6ab3e272a34ec33230d5e5adafd558b57292bb27",
+      "principal_id": "test-owner",
+      "internal": false
+    },
+    {
+      "run_id": "im:bd2b811b351801585e8eb63e495897cee1959fd7ae6bb901499e7340e4bff62d",
+      "principal_id": "test-owner",
+      "internal": false
+    }
+  ],
+  "inheritedEvidencePreserved": true,
+  "checks": [
+    "formatted-mention",
+    "public-causal-chain",
+    "explicit-return",
+    "silent-stop",
+    "shared-human",
+    "replay",
+    "no-hidden-children",
+    "inherited-attachment-evidence"
+  ]
+}

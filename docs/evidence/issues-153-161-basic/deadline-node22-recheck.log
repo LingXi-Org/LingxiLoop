@@ -1,0 +1,35 @@
+[integration] selected 1/82 file(s): runtime-deadline-recovery.test.ts
+TAP version 13
+# {"ts":"2026-10-20T00:21:04.708Z","level":"info","msg":"worker stopped","workerId":"deadline-100","timedOut":false}
+# Subtest: total provider deadline persists classified feedback and the next turn succeeds
+not ok 1 - total provider deadline persists classified feedback and the next turn succeeds
+  ---
+  duration_ms: 5360.870568
+  type: 'test'
+  location: '/workspace/LingxiLoop-153-161/server/src/__integration__/runtime-deadline-recovery.test.ts:1:754'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+
+      assert.ok(elapsedMs < 3000)
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-153-161/server/src/__integration__/runtime-deadline-recovery.test.ts:60:70)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7717.452836

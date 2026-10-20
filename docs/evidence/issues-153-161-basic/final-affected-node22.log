@@ -1,0 +1,27 @@
+[integration] selected 2/82 file(s): basic-process-recovery.test.ts, runtime-deadline-recovery.test.ts
+TAP version 13
+# {"ts":"2026-10-20T00:22:17.455Z","level":"warn","msg":"terminal feedback failed","error":"outbox scan or delivery failed; durable intent retained"}
+# {"ts":"2026-10-20T00:22:24.543Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/LingxiLoop-153-161/node_modules/@lyyzka/lingxios/src/app/index.ts:870:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-153-161/server/src/agent-runtime/runtime.ts:173:44)\\n    at async teardownAll (/workspace/LingxiLoop-153-161/server/src/__integration__/_helpers.ts:382:3)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-153-161/server/src/__integration__/basic-process-recovery.test.ts:181:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: process crash after native write preserves receipts; disconnected replacement and restarted terminal delivery recover
+ok 1 - process crash after native write preserves receipts; disconnected replacement and restarted terminal delivery recover
+  ---
+  duration_ms: 13068.331374
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T00:22:28.792Z","level":"info","msg":"worker stopped","workerId":"deadline-100","timedOut":false}
+# {"ts":"2026-10-20T00:22:29.613Z","level":"info","msg":"worker stopped","workerId":"deadline-5000","timedOut":false}
+# Subtest: total provider deadline persists classified feedback and the next turn succeeds
+ok 2 - total provider deadline persists classified feedback and the next turn succeeds
+  ---
+  duration_ms: 2933.657176
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 20329.100843

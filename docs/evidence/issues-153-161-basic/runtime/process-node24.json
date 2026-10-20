@@ -1,0 +1,81 @@
+{
+  "passed": true,
+  "runtime": {
+    "runtime": "3.5.5",
+    "controlPlane": 11,
+    "kernel": 2,
+    "schema": 12,
+    "assistantMessage": 2
+  },
+  "node": "v24.19.0",
+  "actualWorkerProcesses": 3,
+  "originalTermination": "SIGKILL",
+  "nativeWriteCount": 1,
+  "sameCommittedResult": true,
+  "originalModelCalls": 2,
+  "replacementModelCalls": 1,
+  "terminalNotices": 1,
+  "workStates": [
+    {
+      "status": "cancelled",
+      "count": 1
+    },
+    {
+      "status": "succeeded",
+      "count": 3
+    }
+  ],
+  "timeline": [
+    {
+      "phase": "native write and result committed; acknowledgement lost",
+      "at": "2026-10-20T00:18:43.768Z",
+      "counts": {
+        "writes": 1,
+        "model_calls": 3,
+        "acceptances": 2
+      },
+      "modelCalls": 2
+    },
+    {
+      "phase": "original Worker SIGKILL confirmed",
+      "at": "2026-10-20T00:18:43.775Z"
+    },
+    {
+      "phase": "replacement has no control contact; request stays queued",
+      "at": "2026-10-20T00:18:44.359Z",
+      "rejectedRequests": 4
+    },
+    {
+      "phase": "control restored; same original result, new message succeeded",
+      "at": "2026-10-20T00:18:45.872Z",
+      "replacementCalls": 1
+    },
+    {
+      "phase": "control service recreated; durable cancelled feedback identity preserved",
+      "at": "2026-10-20T00:18:46.129Z"
+    },
+    {
+      "phase": "terminal delivered once; following message succeeded; no pending work",
+      "at": "2026-10-20T00:18:53.940Z",
+      "states": [
+        {
+          "status": "cancelled",
+          "count": 1
+        },
+        {
+          "status": "succeeded",
+          "count": 3
+        }
+      ]
+    }
+  ],
+  "scope": "Product control/authorization/chat action/ledger/delivery; real PostgreSQL and public Worker HTTP; scripted model and recording IM.",
+  "unverified": [
+    "live provider",
+    "real WuKong",
+    "full SPA",
+    "production sandbox",
+    "long soak",
+    "crash before atomic result commit"
+  ]
+}
