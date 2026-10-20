@@ -1,0 +1,52 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-217-quality
+      run 01a15a30-ae18-75e1-9b9e-e993377ade80 · targets: web
+
+ ✓ target "web" command ready 1.66s
+ ❯ |web| e2e/visualize/corners.e2e.ts (2 tests | 2 failed) 6.49s
+   × all authored corners survive rounded clipping (1440) 3.65s
+     → expected 0 to be greater than or equal to 3.5147186257614305
+   × all authored corners survive rounded clipping (390) 2.84s
+     → expected 0 to be greater than or equal to 3.5147186257614305
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| e2e/visualize/corners.e2e.ts > all authored corners survive rounded clipping (1440)
+ASSERTION_FAILED: expected 0 to be greater than or equal to 3.5147186257614305
+ ❯ e2e/visualize/corners.e2e.ts:41:53
+     39|   await writeFile(`${output}/corners-${width}-initial.json`, JSON.str…
+     40|   expect(initial.radius).toBeGreaterThan(0)
+     41|   for (const inset of initial.insets) expect(inset).toBeGreaterThanOr…
+       |                                                     ^
+     42|   expect(initial.cornerHits).toEqual([true, true, true, true])
+     43|   expect(initial.documentWidth).toBeLessThanOrEqual(initial.viewport)
+ ❯ at http://127.0.0.1:5193/e2e/visualize/index.html?implementation=product&theme=light&corners=1
+ ❯ screen .e2e/246-before/artifacts/web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |web| e2e/visualize/corners.e2e.ts > all authored corners survive rounded clipping (390)
+ASSERTION_FAILED: expected 0 to be greater than or equal to 3.5147186257614305
+ ❯ e2e/visualize/corners.e2e.ts:41:53
+     39|   await writeFile(`${output}/corners-${width}-initial.json`, JSON.str…
+     40|   expect(initial.radius).toBeGreaterThan(0)
+     41|   for (const inset of initial.insets) expect(inset).toBeGreaterThanOr…
+       |                                                     ^
+     42|   expect(initial.cornerHits).toEqual([true, true, true, true])
+     43|   expect(initial.documentWidth).toBeLessThanOrEqual(initial.viewport)
+ ❯ at http://127.0.0.1:5193/e2e/visualize/index.html?implementation=product&theme=light&corners=1
+ ❯ screen .e2e/246-before/artifacts/web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_28390_29-be6c4dbc/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 0 passed (1)
+      Tests  2 failed | 0 passed (2)
+   Start at  16:41:43
+   Duration  9.14s (startup 1.66s)
+     Report  .e2e/246-before/report.json
+
+      JUnit  .e2e/246-before/junit.xml
+   Markdown  .e2e/246-before/summary.md
+   Failures  .e2e/246-before/failures/ (2 pages)
+

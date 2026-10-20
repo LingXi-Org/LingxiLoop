@@ -1,0 +1,18 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-217-quality
+      run 01a15a31-2ee2-770f-be7d-fde1fbaa2ba5 · targets: web
+
+ ✓ target "web" command ready 1.72s
+ ✓ |web| e2e/visualize/corners.e2e.ts (2 tests) 11.75s
+   ✓ all authored corners survive rounded clipping (1440) 7.06s
+   ✓ all authored corners survive rounded clipping (390) 4.70s
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  16:42:15
+   Duration  14.46s (startup 1.72s)
+     Report  .e2e/246-after/report.json
+
+      JUnit  .e2e/246-after/junit.xml
+   Markdown  .e2e/246-after/summary.md
+

@@ -1,0 +1,28 @@
+{
+  "content": {
+    "x": 5,
+    "y": 5,
+    "width": 960,
+    "height": 220
+  },
+  "radius": 12,
+  "minimumInset": 3.5147186257614305,
+  "insets": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "cornerHits": [
+    false,
+    false,
+    false,
+    false
+  ],
+  "frameWidth": 970,
+  "frameHeight": 230,
+  "cardWidth": 960,
+  "cardHeight": 220,
+  "documentWidth": 1440,
+  "viewport": 1440
+}

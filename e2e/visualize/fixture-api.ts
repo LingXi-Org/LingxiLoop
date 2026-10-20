@@ -29,7 +29,7 @@ export function visualizeFixtureApi(): Plugin {
         if(!id&&req.method==='POST'){
           if(failOnce){failOnce=false;reply({error:'Deterministic first acquisition failure'},503);return}
           const pageId=randomUUID(),initId=randomUUID(),page:Page={channel,path:input.path,initId,active:true,stale:false,gestures:new Set()};pages.set(pageId,page)
-          const fixture=input.path==='/fixture/bridge.html'?'bridge':'acceptance'
+          const fixture=input.path==='/fixture/corners.html'?'corners':input.path==='/fixture/bridge.html'?'bridge':'acceptance'
           reply({pageId,initId,path:input.path,html:await readFile(`e2e/visualize/fixtures/${fixture}.html`,'utf8'),state:states.get(stateKey(page))??null,stateRevision:revisions.get(stateKey(page))??0});return
         }
         const page=pages.get(id)
