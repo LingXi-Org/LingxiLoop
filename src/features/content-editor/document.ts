@@ -55,5 +55,5 @@ export function usableDocument(document: ContentDocument | null | undefined, tex
 }
 
 export function criteriaSource(criteria: string[], document: ContentDocument | null | undefined): string {
-  return document && JSON.stringify(document.sections) === JSON.stringify(criteria) ? document.projection : criteria.join('\n')
+  return document && JSON.stringify(document.sections) === JSON.stringify(criteria) ? document.projection : criteria.join('\n\n')
 }

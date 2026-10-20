@@ -1,0 +1,48 @@
+(node:1265243) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1265243) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-issue219-boundaries
+      run 01a157a4-a8b1-72ab-ac06-d91fad2d238d · targets: native
+
+(node:1265300) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ |native| e2e/content-boundaries/browser.e2e.ts (3 tests) 23.37s
+ ❯ |native| e2e/content-editor/browser.e2e.ts (4 tests | 1 failed) 50.69s
+   ✓ case GFM imports retain literal HTML text, currency and setext headings 3.09s
+   ✓ upstream native schema, slash menus, tables, blocks, undo and lossless reopen 6.05s
+   ✓ all 14 default blocks and official free math and diagram blocks remain insertable 16.76s
+   × native formatting, links, emoji, block menu and table operations remain complete 24.79s
+     → expect.toBeVisible failed
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |native| e2e/content-editor/browser.e2e.ts > native formatting, links, emoji, block menu and table operations remain complete
+ASSERTION_FAILED: expect.toBeVisible failed
+locator: getByRole("button", name: "颜色")
+expected: visible
+observed: no node (match count 0)
+ ❯ e2e/content-editor/browser.e2e.ts:138:3
+    136|   await browser.keyboard.press('Control+Home')
+    137|   await browser.keyboard.press('Shift+End')
+    138|   await expect(screen.getByRole('button','颜色',{exact:true})).toBeVisi…
+       |   ^
+    139|   const toolbar=await browser.evaluate(()=>{
+    140|     const node=document.querySelector<HTMLElement>('.bn-formatting-to…
+ ❯ at http://127.0.0.1:5391/e2e/content-editor.html
+ ❯ screen .codex-tmp/content-boundary-native-green/artifacts/native/e2e_content-editor_browser.e2e.ts__native_20formatting_2C_20links_2C_20emoji_2C_20block_20menu_20and_20table_20-9a108065/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 6 passed (7)
+   Start at  04:49:32
+   Duration  75.25s (1m 15s)
+     Report  .codex-tmp/content-boundary-native-green/report.json
+
+      JUnit  .codex-tmp/content-boundary-native-green/junit.xml
+   Markdown  .codex-tmp/content-boundary-native-green/summary.md
+   Failures  .codex-tmp/content-boundary-native-green/failures/ (1 page)
+

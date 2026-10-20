@@ -1,4 +1,5 @@
 import { captureConversationEvidence } from './forum-evidence.js'
+import { sharedHomeworkAnswer } from './homework-answer.js'
 import { randomUUID } from 'node:crypto'
 import type { z } from 'zod'
 import type { Queryable } from '../../db/queryable.js'
@@ -268,7 +269,7 @@ export class HomeworkApplication {
       await db.query(`INSERT INTO homework_submissions(id,company_id,project_id,homework_id,learner_id,version,idempotency_key,content_hash,answer,report,answer_revision,return_epoch,late,submitted_at,conversation_references)
         SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,($13::timestamptz<submission_clock.submitted_at) IS TRUE,submission_clock.submitted_at,$14::jsonb
         FROM (SELECT clock_timestamp() AS submitted_at) submission_clock`,
-      [submission,scope.companyId,hw.project_id,id,scope.userId,version,data.idempotencyKey,contentHash,JSON.stringify(state.answer),JSON.stringify(report),state.answer_revision,state.return_epoch,hw.due_at,JSON.stringify(references)])
+      [submission,scope.companyId,hw.project_id,id,scope.userId,version,data.idempotencyKey,contentHash,JSON.stringify(sharedHomeworkAnswer(state.answer)),JSON.stringify(report),state.answer_revision,state.return_epoch,hw.due_at,JSON.stringify(references)])
       await db.query(`UPDATE homework_learner_state SET latest_submission_id=$4,updated_at=NOW() WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId,submission])
       return submission
     })

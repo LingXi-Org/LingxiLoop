@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="7" failures="1" errors="0" skipped="0" time="74.063">
+  <testsuite name="e2e/content-boundaries/browser.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="23.372">
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: plain [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="13.633"/>
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: multiline-literal [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="6.841"/>
+    <testcase name="private legacy recovery remains available after editing current content [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="2.898"/>
+  </testsuite>
+  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="4" failures="1" errors="0" skipped="0" time="50.691">
+    <testcase name="case GFM imports retain literal HTML text, currency and setext headings [native]" classname="e2e/content-editor/browser.e2e.ts" time="3.091"/>
+    <testcase name="upstream native schema, slash menus, tables, blocks, undo and lossless reopen [native]" classname="e2e/content-editor/browser.e2e.ts" time="6.054"/>
+    <testcase name="all 14 default blocks and official free math and diagram blocks remain insertable [native]" classname="e2e/content-editor/browser.e2e.ts" time="16.760"/>
+    <testcase name="native formatting, links, emoji, block menu and table operations remain complete [native]" classname="e2e/content-editor/browser.e2e.ts" time="24.786">
+      <failure message="expect.toBeVisible failed&#10;locator: getByRole(&quot;button&quot;, name: &quot;颜色&quot;)&#10;expected: visible&#10;observed: no node (match count 0)" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expect.toBeVisible failed
+locator: getByRole(&quot;button&quot;, name: &quot;颜色&quot;)
+expected: visible
+observed: no node (match count 0)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

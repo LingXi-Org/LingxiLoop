@@ -1,0 +1,163 @@
+{
+  "initial": {
+    "paragraphs": 2,
+    "text": "Explain **literal** criterionand its second lineVerify the result"
+  },
+  "base": {
+    "id": "boundary-homework",
+    "courseId": "boundary-course",
+    "title": "Synthetic criteria",
+    "instructions": "Synthetic current instructions",
+    "criteria": [
+      "Explain the first inference",
+      "Verify the second result"
+    ],
+    "links": [],
+    "attachments": [],
+    "dueAt": null,
+    "status": "DRAFT",
+    "revision": 1,
+    "visibleHash": "synthetic",
+    "createdBy": "boundary-teacher",
+    "validation": {
+      "status": "READY",
+      "revision": 1,
+      "feedback": ""
+    },
+    "canEditDraft": true,
+    "canPublish": true
+  },
+  "homework": {
+    "id": "boundary-homework",
+    "courseId": "boundary-course",
+    "title": "Synthetic criteria",
+    "instructions": "Synthetic current instructions",
+    "criteria": [
+      "Explain **literal** criterion\\\nand its second line",
+      "Verify the resultreviewed"
+    ],
+    "links": [],
+    "attachments": [],
+    "dueAt": null,
+    "status": "DRAFT",
+    "revision": 2,
+    "visibleHash": "synthetic",
+    "createdBy": "boundary-teacher",
+    "validation": {
+      "status": "READY",
+      "revision": 1,
+      "feedback": ""
+    },
+    "canEditDraft": true,
+    "canPublish": true,
+    "expectedRevision": 1,
+    "editorDocument": null,
+    "criteriaDocument": {
+      "format": "blocknote",
+      "version": 1,
+      "blocks": [
+        {
+          "id": "7c6d4757-205e-4640-bb94-34046edc158b",
+          "type": "paragraph",
+          "props": {
+            "backgroundColor": "default",
+            "textColor": "default",
+            "textAlignment": "left"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Explain **literal** criterion\nand its second line",
+              "styles": {}
+            }
+          ],
+          "children": []
+        },
+        {
+          "id": "5ad1778d-fa41-40a8-b48f-c273f3ec86cd",
+          "type": "paragraph",
+          "props": {
+            "backgroundColor": "default",
+            "textColor": "default",
+            "textAlignment": "left"
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "Verify the resultreviewed",
+              "styles": {}
+            }
+          ],
+          "children": []
+        }
+      ],
+      "projection": "Explain **literal** criterion\\\nand its second line\n\nVerify the resultreviewed\n",
+      "sections": [
+        "Explain **literal** criterion\\\nand its second line",
+        "Verify the resultreviewed"
+      ],
+      "legacyMarkdown": "Explain **literal** criterion\nand its second line\n\nVerify the result"
+    }
+  },
+  "patches": [
+    {
+      "expectedRevision": 1,
+      "title": "Synthetic criteria",
+      "instructions": "Synthetic current instructions",
+      "editorDocument": null,
+      "criteriaDocument": {
+        "format": "blocknote",
+        "version": 1,
+        "blocks": [
+          {
+            "id": "7c6d4757-205e-4640-bb94-34046edc158b",
+            "type": "paragraph",
+            "props": {
+              "backgroundColor": "default",
+              "textColor": "default",
+              "textAlignment": "left"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Explain **literal** criterion\nand its second line",
+                "styles": {}
+              }
+            ],
+            "children": []
+          },
+          {
+            "id": "5ad1778d-fa41-40a8-b48f-c273f3ec86cd",
+            "type": "paragraph",
+            "props": {
+              "backgroundColor": "default",
+              "textColor": "default",
+              "textAlignment": "left"
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Verify the resultreviewed",
+                "styles": {}
+              }
+            ],
+            "children": []
+          }
+        ],
+        "projection": "Explain **literal** criterion\\\nand its second line\n\nVerify the resultreviewed\n",
+        "sections": [
+          "Explain **literal** criterion\\\nand its second line",
+          "Verify the resultreviewed"
+        ],
+        "legacyMarkdown": "Explain **literal** criterion\nand its second line\n\nVerify the result"
+      },
+      "criteria": [
+        "Explain **literal** criterion\\\nand its second line",
+        "Verify the resultreviewed"
+      ],
+      "links": [],
+      "attachments": [],
+      "dueAt": null
+    }
+  ]
+}

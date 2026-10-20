@@ -19,15 +19,18 @@ export interface ContentEditorHandle {
 /** Business adapter only: all blocks, menus, toolbars and interactions are upstream defaults. */
 export const ContentEditor = forwardRef<ContentEditorHandle, {
   value: string; document?: ContentDocument | null; label: string
+  /** Legacy structured plain-text items must not merge through Markdown parsing. */
+  legacyParagraphs?: string[]
   onChange(value: string, document: ContentDocument, sections: string[]): void
   uploadFile?(file: File): Promise<string>
   disabled?: boolean; compact?: boolean; maxLength?: number; legacyFormat?: 'forum' | 'markdown'; onFocus?(): void
-}>(({ value, document, label, onChange, uploadFile, disabled = false, compact = false, maxLength = 20000, legacyFormat = 'forum', onFocus }, ref) => {
+}>(({ value, document, legacyParagraphs, label, onChange, uploadFile, disabled = false, compact = false, maxLength = 20000, legacyFormat = 'forum', onFocus }, ref) => {
   const { resolvedTheme } = useTheme()
   const current = useRef({ onChange, uploadFile })
   current.current = { onChange, uploadFile }
   const syncing = useRef(false)
-  const last = useRef<{ value: string; document?: ContentDocument | null } | null>(null)
+  const legacyParagraphKey = usableDocument(document, value) ? undefined : legacyParagraphs && JSON.stringify(legacyParagraphs)
+  const last = useRef<{ value: string; document?: ContentDocument | null; legacyParagraphKey?: string } | null>(null)
   const original = useRef(document?.legacyMarkdown ?? value)
   const editor = useCreateBlockNote({
     schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter],
@@ -38,17 +41,19 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
     },
   })
   useLayoutEffect(() => {
-    if (last.current?.value === value && last.current.document === document) return
+    if (last.current?.value === value && last.current.document === document && last.current.legacyParagraphKey === legacyParagraphKey) return
     syncing.current = true
-    const blocks = usableDocument(document, value) ? document.blocks : importLegacy(editor, value, legacyFormat)
+    const blocks = usableDocument(document, value) ? document.blocks
+      : legacyParagraphs ? legacyParagraphs.map(content => ({ type: 'paragraph' as const, content }))
+        : importLegacy(editor, value, legacyFormat)
     editor.transact(transaction => {
       transaction.setMeta('addToHistory', false)
       editor.replaceBlocks(editor.document, blocks.length ? blocks : [{ type: 'paragraph' }])
     })
     original.current = usableDocument(document, value) ? document.legacyMarkdown ?? value : value
-    last.current = { value, document }
+    last.current = { value, document, legacyParagraphKey }
     syncing.current = false
-  }, [editor, value, document, legacyFormat])
+  }, [editor, value, document, legacyFormat, legacyParagraphs, legacyParagraphKey])
   useImperativeHandle(ref, () => ({
     focus: () => editor.focus(),
     insertImage: (url, name) => {

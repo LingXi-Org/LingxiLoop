@@ -15,8 +15,9 @@ import { ContentEditor, type ContentDocument, type ContentEditorHandle } from '@
 import { ForumMaterials } from './ForumMaterials'
 
 
-export function ForumContentFields({ body, editorDocument, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, compact = false, focusCanvas = false, nativeOnly = false, onFocus }: {
+export function ForumContentFields({ body, editorDocument, legacyParagraphs, setBody, links, setLinks, attachments, setAttachments, disabled, onUploading, label = '内容正文', maxLength = 20000, compact = false, focusCanvas = false, nativeOnly = false, onFocus }: {
   body: string; editorDocument?: ContentDocument | null; setBody(value: string, document?: ContentDocument, sections?: string[]): void; links: string; setLinks(value: string): void
+  legacyParagraphs?: string[]
   attachments: ForumAttachment[]; setAttachments(value: ForumAttachment[]): void
   disabled: boolean; onUploading(value: boolean): void; label?: string; maxLength?: number; tags?: string[]; compact?: boolean; focusCanvas?: boolean; nativeOnly?: boolean; onFocus?(): void
 }) {
@@ -63,7 +64,7 @@ export function ForumContentFields({ body, editorDocument, setBody, links, setLi
     setAttachments(next)
   }
   return <div className={compact || focusCanvas ? 'min-w-0' : 'min-w-0 space-y-2'}>
-    <ContentEditor ref={editor} compact={compact} onFocus={onFocus} value={body} document={editorDocument} onChange={setBody} label={label} maxLength={maxLength} disabled={disabled} uploadFile={async file => {
+    <ContentEditor ref={editor} compact={compact} onFocus={onFocus} value={body} document={editorDocument} legacyParagraphs={legacyParagraphs} onChange={setBody} label={label} maxLength={maxLength} disabled={disabled} uploadFile={async file => {
       const [url] = await upload([file])
       if (!url) throw new Error('附件上传失败，请重试。')
       return url

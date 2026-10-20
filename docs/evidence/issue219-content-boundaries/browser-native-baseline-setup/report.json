@@ -1,0 +1,352 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a157a6-97b8-7ba9-8f8f-f73a5549dee7",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "interrupted",
+    "exitCode": 130,
+    "startedAt": "2026-10-20T04:51:38.595Z",
+    "finishedAt": "2026-10-20T04:52:42.417Z",
+    "project": {
+      "id": "lingxiloop-content-boundaries",
+      "configDigest": "dbb29a699e7c4eb51192c5288a1f839815eba73f3e58a7676f02df1eee971847"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "dc4bc88b81f0b9011c7540e4dc7f0889cab23778",
+      "branch": "fix/issue219-content-boundaries",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "native",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5391",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "95217d8c17f1f56ee6db12b6103ee683792dc5d25502f204512d4b307f907abf",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::legacy%20criteria%20keep%20separate%20native%20paragraphs%20on%20edit%20and%20reopen%3A%20plain",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "legacy criteria keep separate native paragraphs on edit and reopen: plain"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 8,
+          "column": 13
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "650cfcd89ff84b60da7db8ee1f47bfd2a68e72eef4944414b95085a8fac0b8d5",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::legacy%20criteria%20keep%20separate%20native%20paragraphs%20on%20edit%20and%20reopen%3A%20multiline-literal",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "legacy criteria keep separate native paragraphs on edit and reopen: multiline-literal"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 8,
+          "column": 13
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "fa44a640673224091b21f620724fff6dad3229fad200ed0509789df063db960c",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::private%20legacy%20recovery%20remains%20available%20after%20editing%20current%20content",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "private legacy recovery remains available after editing current content"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 36,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d10baa3e4728b406503d3df532cc4a7d8e3fd53d3fc5beed420f813b19bdcadb",
+        "testId": "e2e/content-editor/browser.e2e.ts::case%20GFM%20imports%20retain%20literal%20HTML%20text%2C%20currency%20and%20setext%20headings",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "case GFM imports retain literal HTML text, currency and setext headings"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2752ba9cdaa7c24cf0d0853a619ba8bc5bf05962a9bbbf6d6291d4a1a72a1cc8",
+        "testId": "e2e/content-editor/browser.e2e.ts::upstream%20native%20schema%2C%20slash%20menus%2C%20tables%2C%20blocks%2C%20undo%20and%20lossless%20reopen",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "upstream native schema, slash menus, tables, blocks, undo and lossless reopen"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 22,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "dd9dc1160afdbd88ad17c6ae1127cafa10d9eae3feb29e2bd185d17f5632cd01",
+        "testId": "e2e/content-editor/browser.e2e.ts::all%2014%20default%20blocks%20and%20official%20free%20math%20and%20diagram%20blocks%20remain%20insertable",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "all 14 default blocks and official free math and diagram blocks remain insertable"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 60,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "13c1c640225515242ad88e66c617acc88d07668a766e9124e44f1fe64e647ff1",
+        "testId": "e2e/content-editor/browser.e2e.ts::native%20formatting%2C%20links%2C%20emoji%2C%20block%20menu%20and%20table%20operations%20remain%20complete",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "native formatting, links, emoji, block menu and table operations remain complete"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 88,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "interrupted",
+        "attempts": [
+          {
+            "id": "01a157a6-9c77-7b93-a5cf-617197fc1869",
+            "index": 0,
+            "status": "interrupted",
+            "startedAt": "2026-10-20T04:51:39.255Z",
+            "durationMs": 63085,
+            "artifacts": [
+              {
+                "id": "01a157a6-9c77-7b93-a5cf-617197fc1869:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "native/e2e_content-editor_browser.e2e.ts__native_20formatting_2C_20links_2C_20emoji_2C_20block_20menu_20and_20table_20-9a108065/default/attempt-0/trace/trace.zip",
+                "size": 331855,
+                "sha256": "1c2fb21d5c366bdb77fede5b991b3f4859da313fadd491d50d56eb9d0add7b72"
+              }
+            ],
+            "error": {
+              "category": "interrupted",
+              "code": "INTERRUPTED",
+              "message": "run interrupted in phase body",
+              "retryable": false,
+              "phase": "body"
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a157a6-9c77-7b93-a5cf-617197fc1869:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-editor.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:51:39.368Z",
+                "durationMs": 2107,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 89,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a6-9c77-7b93-a5cf-617197fc1869:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "cancelled",
+                "startedAt": "2026-10-20T04:51:41.477Z",
+                "durationMs": 60669,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 91,
+                  "column": 26
+                },
+                "error": {
+                  "category": "infrastructure",
+                  "code": "CANCELLED",
+                  "message": "operation cancelled",
+                  "retryable": false
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 7,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 0,
+      "interrupted": 1,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 7,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 331855,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

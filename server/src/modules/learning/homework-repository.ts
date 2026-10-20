@@ -8,6 +8,7 @@ import type { HomeworkAnswer, HomeworkJudgment, HomeworkMaterial, HomeworkReport
 import type { LearningAttachment } from './forum-contracts.js'
 import { requireLearningCourseProjectScope } from './project-scope-repository.js'
 import { hasHomeworkLearningRecord } from './homework-evidence.js'
+import { sharedHomeworkAnswer } from './homework-answer.js'
 
 export const homeworkHash = (value: unknown) => createHash('sha256').update(JSON.stringify(value)).digest('hex')
 export type HomeworkTransaction = <T>(work: (db: Queryable) => Promise<T>) => Promise<T>
@@ -72,7 +73,7 @@ export async function homeworkSubmissions(db: Queryable,hw: HomeworkRow,learnerI
         AND learner_id=s.learner_id AND submission_id=s.id ORDER BY created_at DESC,id DESC LIMIT 1
     ) d ON TRUE WHERE s.company_id=$1 AND s.homework_id=$2 AND ($3::text IS NULL OR s.learner_id=$3) AND ($5::text IS NULL OR s.id=$5)
     ORDER BY s.submitted_at DESC,s.version DESC LIMIT 51 OFFSET $4`,[hw.company_id,hw.id,learnerId,offset,submissionId??null])
-  return rows
+  return rows.map(row => ({ ...row, answer: sharedHomeworkAnswer(row.answer) }))
 }
 export async function studentHomeworkView(db:Queryable,hw:HomeworkRow,state:HomeworkStateRow,options:{readLearningRecord?:boolean}={}) {
   const assessment=await homeworkAssessment(db,state)

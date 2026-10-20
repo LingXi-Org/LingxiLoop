@@ -1,0 +1,71 @@
+{
+  "base": "dc4bc88b81f0b9011c7540e4dc7f0889cab23778",
+  "checks": {
+    "targetBrowserRed": {
+      "passed": 1,
+      "failed": 2,
+      "setupErrors": 0
+    },
+    "targetBrowserGreen": {
+      "passed": 3,
+      "failed": 0
+    },
+    "payloadRed": {
+      "passed": 1,
+      "failed": 5
+    },
+    "payloadGreen": {
+      "passed": 6,
+      "failed": 0
+    },
+    "firstCombinedBrowser": {
+      "passed": 6,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "wallSeconds": 75
+    },
+    "finalCombinedBrowser": {
+      "passed": 6,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "wallSeconds": 50.94
+    },
+    "frozenBaseFormatting": {
+      "passed": 1,
+      "failed": 0,
+      "wallSeconds": 17.9
+    },
+    "frozenBaseBlocks": {
+      "passed": 1,
+      "failed": 0,
+      "wallSeconds": 19.17
+    },
+    "webBuild": {
+      "exitCode": 0
+    },
+    "serverTypes": {
+      "exitCode": 0
+    },
+    "e2eTypes": {
+      "exitCode": 0
+    },
+    "affectedLint": {
+      "exitCode": 0
+    },
+    "httpPg": {
+      "status": "blocked-before-connect",
+      "reason": "normal migrations require actual 47 before candidate48",
+      "connections": 0
+    }
+  },
+  "notVerified": [
+    "Clean seven-case original+new browser gate: two retained attempts each have one different original-case failure",
+    "New real HTTP/PG integration scenario pending genuine migration47 integration",
+    "No real provider, production, live attachment/revocation race or deployment acceptance performed"
+  ],
+  "noMigrationOrDependencyChange": true,
+  "author": "leecyang",
+  "cacheRetained": true
+}

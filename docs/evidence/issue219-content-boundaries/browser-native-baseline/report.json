@@ -1,0 +1,1482 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a157a7-c774-75a3-9532-36d6665a4b00",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-20T04:52:56.420Z",
+    "finishedAt": "2026-10-20T04:53:14.311Z",
+    "project": {
+      "id": "lingxiloop-content-boundaries",
+      "configDigest": "dbb29a699e7c4eb51192c5288a1f839815eba73f3e58a7676f02df1eee971847"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "dc4bc88b81f0b9011c7540e4dc7f0889cab23778",
+      "branch": "fix/issue219-content-boundaries",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "native",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5391",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "95217d8c17f1f56ee6db12b6103ee683792dc5d25502f204512d4b307f907abf",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::legacy%20criteria%20keep%20separate%20native%20paragraphs%20on%20edit%20and%20reopen%3A%20plain",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "legacy criteria keep separate native paragraphs on edit and reopen: plain"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 8,
+          "column": 13
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "650cfcd89ff84b60da7db8ee1f47bfd2a68e72eef4944414b95085a8fac0b8d5",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::legacy%20criteria%20keep%20separate%20native%20paragraphs%20on%20edit%20and%20reopen%3A%20multiline-literal",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "legacy criteria keep separate native paragraphs on edit and reopen: multiline-literal"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 8,
+          "column": 13
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "fa44a640673224091b21f620724fff6dad3229fad200ed0509789df063db960c",
+        "testId": "e2e/content-boundaries/browser.e2e.ts::private%20legacy%20recovery%20remains%20available%20after%20editing%20current%20content",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "private legacy recovery remains available after editing current content"
+        ],
+        "file": "e2e/content-boundaries/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-boundaries/browser.e2e.ts",
+          "line": 36,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d10baa3e4728b406503d3df532cc4a7d8e3fd53d3fc5beed420f813b19bdcadb",
+        "testId": "e2e/content-editor/browser.e2e.ts::case%20GFM%20imports%20retain%20literal%20HTML%20text%2C%20currency%20and%20setext%20headings",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "case GFM imports retain literal HTML text, currency and setext headings"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 4,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2752ba9cdaa7c24cf0d0853a619ba8bc5bf05962a9bbbf6d6291d4a1a72a1cc8",
+        "testId": "e2e/content-editor/browser.e2e.ts::upstream%20native%20schema%2C%20slash%20menus%2C%20tables%2C%20blocks%2C%20undo%20and%20lossless%20reopen",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "upstream native schema, slash menus, tables, blocks, undo and lossless reopen"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 22,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "dd9dc1160afdbd88ad17c6ae1127cafa10d9eae3feb29e2bd185d17f5632cd01",
+        "testId": "e2e/content-editor/browser.e2e.ts::all%2014%20default%20blocks%20and%20official%20free%20math%20and%20diagram%20blocks%20remain%20insertable",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "all 14 default blocks and official free math and diagram blocks remain insertable"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 60,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "13c1c640225515242ad88e66c617acc88d07668a766e9124e44f1fe64e647ff1",
+        "testId": "e2e/content-editor/browser.e2e.ts::native%20formatting%2C%20links%2C%20emoji%2C%20block%20menu%20and%20table%20operations%20remain%20complete",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "native formatting, links, emoji, block menu and table operations remain complete"
+        ],
+        "file": "e2e/content-editor/browser.e2e.ts",
+        "source": {
+          "file": "e2e/content-editor/browser.e2e.ts",
+          "line": 88,
+          "column": 1
+        },
+        "targetId": "native",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T04:52:57.306Z",
+            "durationMs": 16937,
+            "artifacts": [
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a157a7-cd5a-7e44-83d6-a5b61515317b:40"
+                },
+                "path": "native/e2e_content-editor_browser.e2e.ts__native_20formatting_2C_20links_2C_20emoji_2C_20block_20menu_20and_20table_20-9a108065/default/attempt-0/screenshots/001-native-block-menu.png",
+                "size": 37756,
+                "sha256": "4d1f677f6a6beca49c4a5333c116985e96dd645982c3ea911cfc81b7d517583c"
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a157a7-cd5a-7e44-83d6-a5b61515317b:54"
+                },
+                "path": "native/e2e_content-editor_browser.e2e.ts__native_20formatting_2C_20links_2C_20emoji_2C_20block_20menu_20and_20table_20-9a108065/default/attempt-0/screenshots/002-native-formatting-link-emoji-table.png",
+                "size": 35090,
+                "sha256": "81d308cc0abab0fd5e7a44d0373e35c18d746a23efa3b71c8221f4449ef8783d"
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a157a7-cd5a-7e44-83d6-a5b61515317b:66"
+                },
+                "path": "native/e2e_content-editor_browser.e2e.ts__native_20formatting_2C_20links_2C_20emoji_2C_20block_20menu_20and_20table_20-9a108065/default/attempt-0/screenshots/003-native-mobile-formatting-controls.png",
+                "size": 52584,
+                "sha256": "c7051634ac11dac18b54a68639e245d0bfd787624a14494cfdae9c8c373fc391"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/content-editor.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:52:57.448Z",
+                "durationMs": 2812,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 89,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:00.262Z",
+                "durationMs": 6585,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 91,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:06.847Z",
+                "durationMs": 271,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 92,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+a",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:07.118Z",
+                "durationMs": 156,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 93,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"加粗\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:07.276Z",
+                "durationMs": 175,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 94,
+                  "column": 99
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"斜体\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:07.453Z",
+                "durationMs": 131,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 94,
+                  "column": 99
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"下划线\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:07.585Z",
+                "durationMs": 102,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 94,
+                  "column": 99
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"删除线\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:07.689Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 94,
+                  "column": 99
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"颜色\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:07.783Z",
+                "durationMs": 135,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 95,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-test=\\\"text-color-red\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:07.918Z",
+                "durationMs": 210,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 96,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"居中\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.129Z",
+                "durationMs": 209,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 97,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:11",
+                "index": 11,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.339Z",
+                "durationMs": 125,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 98,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.464Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 99,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.483Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 104,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+a",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.513Z",
+                "durationMs": 67,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 105,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+e",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.580Z",
+                "durationMs": 88,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 106,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:16",
+                "index": 16,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.668Z",
+                "durationMs": 108,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 107,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.776Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 108,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.784Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 52,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.819Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 53,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.855Z",
+                "durationMs": 84,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 54,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "30 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:08.940Z",
+                "durationMs": 1350,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 55,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Home",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.290Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 56,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Shift+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.300Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 57,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"添加链接\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.314Z",
+                "durationMs": 155,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 58,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:25",
+                "index": 25,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"添加链接\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.470Z",
+                "durationMs": 122,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 59,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"input[placeholder=\\\"编辑链接地址\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.592Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 60,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.630Z",
+                "durationMs": 54,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 61,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] a[href=\\\"https://example.org/native-219\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.685Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 110,
+                  "column": 97
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.716Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.792Z",
+                "durationMs": 94,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:10.886Z",
+                "durationMs": 287,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^表情符号/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.175Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.183Z",
+                "durationMs": 57,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"grid\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.240Z",
+                "durationMs": 221,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 112,
+                  "column": 42
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:35",
+                "index": 35,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"grid\") >> getByRole(\"option\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.462Z",
+                "durationMs": 272,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 113,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.hover",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] [data-content-type=\\\"paragraph\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.735Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 114,
+                  "column": 88
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:37",
+                "index": 37,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"打开菜单\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.851Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 115,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:38",
+                "index": 38,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"menuitem\", name: \"删除\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.902Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 116,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"menuitem\", name: \"颜色\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.928Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 117,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:40",
+                "index": 40,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "native-block-menu",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:11.940Z",
+                "durationMs": 65,
+                "events": [],
+                "artifacts": [
+                  "01a157a7-cd5a-7e44-83d6-a5b61515317b:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 118,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:41",
+                "index": 41,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.006Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 119,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:42",
+                "index": 42,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.025Z",
+                "durationMs": 79,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 7,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.104Z",
+                "durationMs": 100,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 13,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:44",
+                "index": 44,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.206Z",
+                "durationMs": 281,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 14,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:45",
+                "index": 45,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^表格/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.487Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 15,
+                  "column": 77
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:46",
+                "index": 46,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.505Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/native.ts",
+                  "line": 16,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:47",
+                "index": 47,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.565Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 121,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:48",
+                "index": 48,
+                "kind": "locator",
+                "api": "locator.hover",
+                "label": "locator(\"[aria-label=\\\"原生正文\\\"] table tr:first-child :is(th,td)\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.577Z",
+                "durationMs": 149,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 126,
+                  "column": 88
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:49",
+                "index": 49,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-test=\\\"tableHandle\\\"]\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.727Z",
+                "durationMs": 94,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 127,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:50",
+                "index": 50,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"menuitem\", name: /右侧添加列|下方添加行/)",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:12.821Z",
+                "durationMs": 184,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 128,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:51",
+                "index": 51,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.005Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 121,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:52",
+                "index": 52,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存并重新打开\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.019Z",
+                "durationMs": 135,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 131,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:53",
+                "index": 53,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.154Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 132,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:54",
+                "index": 54,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "native-formatting-link-emoji-table",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.159Z",
+                "durationMs": 72,
+                "events": [],
+                "artifacts": [
+                  "01a157a7-cd5a-7e44-83d6-a5b61515317b:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 133,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:55",
+                "index": 55,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.233Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 134,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:56",
+                "index": 56,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByLabel(\"原生正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.276Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 135,
+                  "column": 18
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:57",
+                "index": 57,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+Home",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.310Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 136,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:58",
+                "index": 58,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Shift+End",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.315Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 137,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:59",
+                "index": 59,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"颜色\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.329Z",
+                "durationMs": 160,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 138,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:60",
+                "index": 60,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.489Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 139,
+                  "column": 31
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:61",
+                "index": 61,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"颜色\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.497Z",
+                "durationMs": 124,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 147,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:62",
+                "index": 62,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-test=\\\"text-color-red\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.621Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 148,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:63",
+                "index": 63,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.655Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 149,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:64",
+                "index": 64,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.764Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 149,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:65",
+                "index": 65,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.873Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 149,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a157a7-cd5a-7e44-83d6-a5b61515317b:66",
+                "index": 66,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "native-mobile-formatting-controls",
+                "status": "passed",
+                "startedAt": "2026-10-20T04:53:13.879Z",
+                "durationMs": 47,
+                "events": [],
+                "artifacts": [
+                  "01a157a7-cd5a-7e44-83d6-a5b61515317b:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/content-editor/browser.e2e.ts",
+                  "line": 150,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 7,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 7,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 125430,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "base": "dc4bc88b81f0b9011c7540e4dc7f0889cab23778",
+  "sha256": {
+    "e2e.content-boundaries.config.ts": "9cb1fb5321f4e0169d7c6c0fb44f5526cc16973f25086a6bb0166534166e6361",
+    "e2e/content-boundaries/browser.e2e.ts": "82ae0f234256558a451585a4556799a7652d5bd86204f1fb6fb8121ef882bba1",
+    "e2e/content-boundaries/fixture.html": "957b76c11896489d912493474f32cfd01fb29696cf06a381cae58629a7a19c6f",
+    "e2e/content-boundaries/fixture.tsx": "3725b9c5d25b90a6e2c3aca9fa6e0aef0ccba32bbbcc2b29443a0a35e166663b",
+    "e2e/content-boundaries/serve.mjs": "8340a981939700d6a53fff0d25299cd7d9ab59768ff5c004446592b49ed6fbdd",
+    "e2e/content-editor.tsx": "7fac4bec4f3bf596d98aec1a3ba20f61b6fc6645a1120c251d1b85c39ac9db45",
+    "e2e/content-editor/browser.e2e.ts": "b0a78a0121fcb04aeff0b24daf4d25b8b6e7514b2004a0d8d4dfd1b662defc20",
+    "e2e/content-editor/native.ts": "d81300b4deb3c6ad6fda0a8eb7a4b0d78dab08ef7febf3f113a1e6fd98d2a192",
+    "e2e/tsconfig.json": "bb75f1dc9adfb5402b36221588293e4f6688060deba397134adaf62c0275d9eb",
+    "package-lock.json": "136d0d1208637e315aa4f3a81eb837a0a1cf4208efaecd406ed386afe9cdfce3",
+    "package.json": "644a9fb8af60cf316e9a76d6d61b0c8d129baee5cffc3aaeb38f13e1059c7dd2",
+    "server/src/__integration__/homework.test.ts": "fb5cbef33c1f6580a605089913bd552d886600b0c31d36e4208c2c914cf73243",
+    "server/src/modules/learning/homework-answer.ts": "5e6ef5cbc71d2373cd980b24b9fa693c57602cc59eb75f79fb0f970fece7200f",
+    "server/src/modules/learning/homework-application.ts": "44ef5c08898052095c4aab0e04c9dd29d14ad03a45b6bb2f3e40812cf5f28bca",
+    "server/src/modules/learning/homework-effects.ts": "1eaebabc59cedce0e621aa461080bb3303714f7e4abb701476e2297199a929ef",
+    "server/src/modules/learning/homework-reporting.ts": "9ac39049a19b4f3cb728d22e2b90e60174644fa3e676ba1719506cf7c743f464",
+    "server/src/modules/learning/homework-repository.ts": "fafe5181822a445fcf51ead8486d21614bbf5356013f496ec8aad6d84e22a4c1",
+    "src/features/content-editor/ContentEditor.tsx": "db743b30571d125b750f1bb3d7ee163fd4067cfec95e4b52a6c7c7bdba07e2bb",
+    "src/features/content-editor/document.ts": "254d1294cdbbdbfbb81763ac6ee3f3a3b694c3134bcf14d9b4835c1275a245f4",
+    "src/features/learning/forum/ForumContentFields.tsx": "ee6c4773b0abff89cf6a212ae857c8fa2fab918c90a9de798d50dd0be2c8de89",
+    "src/features/learning/homework/HomeworkDraftCard.tsx": "794895d28b2e01d98a4d765cad67edd9ccc760ab489f9336610480a5fc01a084"
+  },
+  "unchangedFromBase": {
+    "e2e/content-editor/browser.e2e.ts": true,
+    "e2e/content-editor/native.ts": true,
+    "e2e/content-editor.tsx": true,
+    "package.json": true,
+    "package-lock.json": true
+  }
+}

@@ -14,6 +14,7 @@ import type { LearningScope } from './contracts.js'
 import type { LearningEffect } from './effects-repository.js'
 import { homeworkJudgmentSchema, type HomeworkAnswer, type HomeworkJudgment, type HomeworkMaterial, type HomeworkReport } from './homework-contracts.js'
 import { canReadLearningFile } from './submission-attachments.js'
+import { homeworkAnswerText } from './homework-answer.js'
 import { assertHomeworkConversation, isHomeworkLearningRecord, readHomeworkConversation } from './homework-evidence.js'
 import { homeworkHash, homeworkRow, homeworkScope, homeworkState, independentMastery, manualMastery,
   type HomeworkRow, type HomeworkStateRow } from './homework-repository.js'
@@ -235,7 +236,7 @@ export async function runHomeworkEffect(effect:LearningEffect):Promise<void> {
     result=validateJudgment(await modelJson(scope,state,effect.kind,assessmentPrompt,
       {homework:{title:hw.title,instructions:hw.instructions,criteria:hw.criteria,materials:taskMaterials},messages,selectedIds,coverage,
         previousAssessment:previous.rows[0]?.result??null,teacherFeedback:feedback.rows[0]?.reason??null,returnedAt:state.returned_at,returnedAfterSequence:Number(state.returned_after_sequence),
-        ...(isReport?{answer:state.answer,answerMaterials}: {})}),hw,messages)
+        ...(isReport?{answer:homeworkAnswerText(state.answer),answerMaterials}: {})}),hw,messages)
     if(!isReport&&state.returned_at&&independentMastery(result.criteria,hw.criteria)&&!result.evidence.some(quote=>messages.some(message=>message.messageId===quote.messageId&&message.sequence>Number(state.returned_after_sequence)))) {
       throw new Error('退回后的结论缺少新证据')
     }
