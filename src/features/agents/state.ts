@@ -45,6 +45,17 @@ function normalizeStatus(status: Status, updatedAt?: string): Status {
 /** Shared fetch impl — both load() and refresh() call this; the
  *  difference is whether they pre-clear state. */
 let participantsRequestEpoch = 0
+let pendingRoster: { epoch: number; promise: Promise<void> } | undefined
+
+function fetchRoster(set: (partial: Partial<ParticipantsState>) => void): Promise<void> {
+  if (pendingRoster?.epoch === participantsRequestEpoch) return pendingRoster.promise
+  const epoch = ++participantsRequestEpoch
+  const promise = fetchInto(set, epoch).finally(() => {
+    if (pendingRoster?.epoch === epoch) pendingRoster = undefined
+  })
+  pendingRoster = { epoch, promise }
+  return promise
+}
 
 async function fetchInto(
   set: (partial: Partial<ParticipantsState>) => void,
@@ -94,14 +105,14 @@ export const useParticipants = create<ParticipantsState>((set) => ({
     set(state => state.byId[id] ? { byId: { ...state.byId, [id]: { ...state.byId[id], personalAvatar } } } : {})
   },
   async load() {
+    if (pendingRoster?.epoch === participantsRequestEpoch) return pendingRoster.promise
     // Reset before re-loading so a workspace switch never shows the
     // previous tenant's roster during the loading window. Same trigger
     // also drops the local avatar cache — we never want a portrait
     // from the previous workspace to flash on a same-id participant.
     set({ byId: {}, loaded: false, error: null })
     clearAvatarCache()
-    const epoch = ++participantsRequestEpoch
-    await fetchInto(set, epoch)
+    await fetchRoster(set)
   },
   reset() {
     participantsRequestEpoch += 1
@@ -111,8 +122,7 @@ export const useParticipants = create<ParticipantsState>((set) => ({
   async refresh() {
     // No state-clear — just fetch fresh data and swap. Used by the
     // periodic background ticker; we don't want avatars to flicker.
-    const epoch = ++participantsRequestEpoch
-    await fetchInto(set, epoch)
+    await fetchRoster(set)
   },
   applyStatus(id, status, updatedAt) {
     set((s) => {

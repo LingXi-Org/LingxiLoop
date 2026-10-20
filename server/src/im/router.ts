@@ -319,7 +319,10 @@ imRouter.get('/channels', safe(async (req, res) => {
   const projectId = String(req.headers['x-project-id'] ?? '').trim()
   if (!projectId) { res.status(400).json({ error: 'x-project-id required' }); return }
   await permissionService.assertCan({ actorUserId: userId, action: 'project:read', companyId, projectId })
-  res.json(await imChannelsApplication.list({ companyId, userId, projectId }))
+  if (req.query.removed !== undefined && req.query.removed !== 'true' && req.query.removed !== 'false') {
+    res.status(400).json({ error: 'removed must be true or false' }); return
+  }
+  res.json(await imChannelsApplication.list({ companyId, userId, projectId, removed: req.query.removed === 'true' }))
 }))
 
 imRouter.get('/channels/:id/messages', safe(async (req, res) => {

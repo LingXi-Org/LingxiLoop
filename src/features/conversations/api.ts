@@ -10,6 +10,11 @@ export const conversationsApi = {
   search: (query: string, signal?: AbortSignal) =>
     http<ConversationSearchResults>(`/search?q=${encodeURIComponent(query)}`, { signal }),
   getConversations: () => http<ApiConversation[]>('/im/channels'),
+  getRemovedConversations: (signal?: AbortSignal) => http<ApiConversation[]>('/im/channels?removed=true', { signal }),
+  deleteConversation: (conversationId: string) =>
+    http<{ ok: true; removed: true }>(`/conversations/${encodeURIComponent(conversationId)}`, { method: 'DELETE' }),
+  restoreConversation: (conversationId: string) =>
+    http<{ ok: true; removed: false }>(`/conversations/${encodeURIComponent(conversationId)}/restore`, { method: 'POST' }),
   leaveConversation: (conversationId: string) =>
     http<{ ok: boolean; members: string[] }>(`/conversations/${encodeURIComponent(conversationId)}/leave`, {
       method: 'POST',

@@ -1,10 +1,11 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { authApi } from '@/auth/api'
 import { useAuth } from '@/stores/auth'
 import { AuthScreen } from './AuthScreen'
 import { WorkspaceSkeleton } from './WorkspaceSkeleton'
 
 export function AuthGate({ children, unauthFallback }: { children: ReactNode; unauthFallback?: ReactNode }) {
+  const sessionRequest = useRef<ReturnType<typeof authApi.me> | null>(null)
   const authenticated = useAuth((state) => state.authenticated)
   const ready = useAuth((state) => state.ready)
   const setAuthenticated = useAuth((state) => state.setAuthenticated)
@@ -16,7 +17,7 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
     let cancelled = false
     void (async () => {
       try {
-        const me = await authApi.me()
+        const me = await (sessionRequest.current ??= authApi.me())
         if (cancelled) return
         setAuthenticated(me.user, me.activeCompanyId)
         setMe(me.user, me.companies, me.activeCompanyId)

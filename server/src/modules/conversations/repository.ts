@@ -8,6 +8,26 @@ export interface ParticipantRow {
   departed_at: string | null
 }
 
+export async function setListRemoval(
+  db: Queryable,
+  input: { userId: string; companyId: string; projectId: string; conversationId: string; removed: boolean },
+): Promise<void> {
+  const scope = [input.userId, input.conversationId, input.companyId, input.projectId]
+  if (input.removed) {
+    await db.query(
+      `INSERT INTO conversation_list_removals(user_id,conversation_id,company_id,project_id)
+       VALUES($1,$2,$3,$4) ON CONFLICT(user_id,conversation_id) DO NOTHING`,
+      scope,
+    )
+  } else {
+    await db.query(
+      `DELETE FROM conversation_list_removals
+        WHERE user_id=$1 AND conversation_id=$2 AND company_id=$3 AND project_id=$4`,
+      scope,
+    )
+  }
+}
+
 export interface ConversationRow {
   id: string
   kind: string

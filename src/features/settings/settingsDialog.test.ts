@@ -39,6 +39,6 @@ test('invitation landing remains reachable before authentication and clears on c
 test('user-visible errors are mapped before rendering provider details', () => {
   for (const path of [
     '../../components/WorkspaceChrome.tsx',
-    '../../components/prompt-kit/tool.tsx', '../chat/components/ConversationThread.tsx',
+    '../../components/prompt-kit/tool.tsx', '../chat/components/ConversationLoadState.tsx',
   ]) assert.match(read(path), /userFacingError\(/)
 })

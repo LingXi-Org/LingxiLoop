@@ -1,0 +1,2 @@
+{"variant":"before","historyVisibleMs":278.4295689999999,"warmReadMs":0.032120999999960986,"httpReads":1,"fixtureHistoryDelayMs":25,"fixtureRecoveryReleaseMs":275}
+{"variant":"after","historyVisibleMs":28.171420999999896,"warmReadMs":0.0522520000000668,"httpReads":1,"fixtureHistoryDelayMs":25,"fixtureRecoveryReleaseMs":275}

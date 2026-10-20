@@ -6,14 +6,13 @@ import { flushSync } from 'react-dom'
 import { Button } from '@/components/ui/button'
 import { useConversationUi } from '@/stores/conversationUi'
 import { useConversations } from '@/features/conversations/store'
-import { userFacingError } from '@/lib/userFacingError'
 import { messagesApi } from '../api'
 import { chatTransport } from '../runtime/transport'
 import { useConversationThreadSnapshot } from '../runtime/runtime'
 import { ConversationComposer } from './ConversationComposer'
 import { ConversationMessage } from './ConversationMessage'
 import { ConversationStart } from './ConversationStart'
-import { ConversationSkeleton } from './ConversationSkeleton'
+import { ConversationLoadState } from './ConversationLoadState'
 import { messageKey, useChatThreadStore } from '../runtime/store'
 import { ConversationQuestionIndex } from './ConversationQuestionIndex'
 import { chatLatency } from '../runtime/latency'
@@ -209,16 +208,9 @@ export function ConversationThread({
                 )}
               </div>
             )}
-            <ThreadPrimitive.Empty>
-              {snapshot.isLoading && !snapshot.error ? <ConversationSkeleton /> : <div className="ui-enter grid flex-1 place-items-center px-8 py-20 text-center text-sm text-muted-foreground">
-                {snapshot.error ? (
-                  <div role="alert" className="grid gap-3">
-                    <span>{userFacingError(snapshot.error, '消息加载失败，请稍后重试。')}</span>
-                    <Button size="sm" onClick={() => void chatTransport.reloadConversation(conversationId)}>重试</Button>
-                  </div>
-                ) : threadRootId ? '尚无回复' : '开始一段新对话'}
-              </div>}
-            </ThreadPrimitive.Empty>
+            <ConversationLoadState loading={snapshot.isLoading} empty={runtimeMessages.length === 0}
+              running={snapshot.isRunning} recovering={snapshot.isRecovering} error={snapshot.error} thread={Boolean(threadRootId)}
+              onRetry={() => void chatTransport.reloadConversation(conversationId)} />
             <ConversationMessages />
           </div>
         </ThreadPrimitive.Viewport>

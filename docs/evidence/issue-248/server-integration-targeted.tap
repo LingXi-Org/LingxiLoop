@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: [integration] personal conversation deletion is reversible and retains shared history and membership
+ok 1 - [integration] personal conversation deletion is reversible and retains shared history and membership
+  ---
+  duration_ms: 3631.325329
+  type: 'test'
+  ...
+# Subtest: 0044 failure during fresh cutover rolls back all product and runtime installation
+ok 2 - 0044 failure during fresh cutover rolls back all product and runtime installation
+  ---
+  duration_ms: 3248.959396
+  type: 'test'
+  ...
+# Subtest: a failed fresh cutover rolls back packaged schema installation and product history together
+ok 3 - a failed fresh cutover rolls back packaged schema installation and product history together
+  ---
+  duration_ms: 3075.559891
+  type: 'test'
+  ...
+# Subtest: an empty database reaches the latest schema once and repeated migration is a no-op
+ok 4 - an empty database reaches the latest schema once and repeated migration is a no-op
+  ---
+  duration_ms: 1564.753397
+  type: 'test'
+  ...
+# Subtest: 0049 adds reversible per-user removals without rewriting conversations
+ok 5 - 0049 adds reversible per-user removals without rewriting conversations
+  ---
+  duration_ms: 2523.015431
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 16684.821584

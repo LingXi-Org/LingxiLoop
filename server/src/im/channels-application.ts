@@ -23,9 +23,11 @@ export interface ImChannelsInfrastructure {
 export class ImChannelsApplication {
   constructor(private readonly infrastructure: ImChannelsInfrastructure) {}
 
-  async list(input: { companyId: string; userId: string; projectId: string }) {
-    const rows = await workspaceChannels(this.infrastructure.db, input)
-    const conversations = await this.infrastructure.listConversations(input.userId)
+  async list(input: { companyId: string; userId: string; projectId: string; removed?: boolean }) {
+    const [rows, conversations] = await Promise.all([
+      workspaceChannels(this.infrastructure.db, input),
+      this.infrastructure.listConversations(input.userId),
+    ])
     const state = new Map(conversations.map((item) => [`${item.channelId}:${item.channelType}`, item]))
     return rows.map((row) => {
       const channelType = Number(row.profile.channelType ?? 2)

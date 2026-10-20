@@ -14,7 +14,7 @@ export interface WorkspaceChannelRow {
 
 export async function workspaceChannels(
   db: Queryable,
-  input: { companyId: string; userId: string; projectId: string },
+  input: { companyId: string; userId: string; projectId: string; removed?: boolean },
 ): Promise<WorkspaceChannelRow[]> {
   const { rows } = await db.query<WorkspaceChannelRow>(
     `SELECT binding.channel_id,binding.profile,binding.leader_agent_id,binding.preset_key,
@@ -27,6 +27,9 @@ export async function workspaceChannels(
        JOIN conversations conversation ON conversation.id=binding.channel_id
        LEFT JOIN conversation_mutes mute
          ON mute.conversation_id=conversation.id AND mute.user_id=$2
+       LEFT JOIN conversation_list_removals removal
+         ON removal.conversation_id=conversation.id AND removal.user_id=$2
+          AND removal.company_id=$1 AND removal.project_id=$3
        LEFT JOIN LATERAL (
          SELECT participant.name
            FROM jsonb_array_elements_text(conversation.members) WITH ORDINALITY AS member(id,ord)
@@ -36,6 +39,7 @@ export async function workspaceChannels(
        ) other_participant ON conversation.kind='direct'
       WHERE binding.company_id=$1 AND conversation.company_id=$1 AND conversation.project_id=$3
         AND conversation.members @> to_jsonb(ARRAY[$2::text])
+        AND (removal.user_id IS NOT NULL) = $4::boolean
         AND (NOT EXISTS(
           SELECT 1 FROM learning_course_teacher_rooms room WHERE room.conversation_id=binding.channel_id
         ) OR EXISTS(
@@ -50,7 +54,7 @@ export async function workspaceChannels(
             AND room.status='active' AND project.status='ACTIVE'
         ))
       ORDER BY (binding.profile->>'pinned')::boolean DESC,binding.created_at`,
-    [input.companyId, input.userId, input.projectId],
+    [input.companyId, input.userId, input.projectId, input.removed === true],
   )
   return rows
 }

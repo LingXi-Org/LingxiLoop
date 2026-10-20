@@ -92,6 +92,7 @@ export function ensureSchemaOnce(): Promise<void> {
  *  ownership visible; one statement lets PostgreSQL resolve dependencies and
  *  perform a single durability sync instead of one sync per table. */
 const TABLES_TO_WIPE: readonly string[] = [
+  'conversation_list_removals',
   'im_questionnaires',
   'audit_events',
   'lingxios.agent_work_items',

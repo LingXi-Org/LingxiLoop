@@ -137,6 +137,7 @@ export class ChatTransport {
   private workspaceIdentity: string | null = null
   private workspaceChannels: Set<string> | null = null
   private readonly historyRequests = new Map<string, RequestContext>()
+  private readonly initialLoads = new Map<string, { request: RequestContext; controller: AbortController; promise: Promise<void>; historyReady: boolean; trailingReload?: Promise<void> }>()
   private outboxRecovery: OutboxRecovery | undefined
   private readonly sends = new Map<string, { request: RequestContext; promise: Promise<boolean> }>()
   private readonly blockedRuns = new Set<string>()
@@ -169,6 +170,7 @@ export class ChatTransport {
     this.workspaceIdentity = null; this.workspaceChannels = null
     chatLatency.clear()
     this.historyRequests.clear()
+    this.initialLoads.clear()
     lingxiIm.disconnect()
     for (const timer of this.typingTimers.values()) window.clearTimeout(timer)
     this.typingTimers.clear()
@@ -182,12 +184,14 @@ export class ChatTransport {
     const changed = this.workspaceIdentity !== identity
     const revoked = this.workspaceChannels && [...this.workspaceChannels].some(id => !channels.has(id))
     const interrupted = !changed && revoked ? Object.entries(useChatThreadStore.getState().conversations)
-      .filter(([id, state]) => channels.has(id) && (state.isLoading || state.isLoadingOlder)) : []
+      .filter(([id, state]) => channels.has(id) && (state.isLoading || state.isLoadingOlder || this.initialLoads.has(id)))
+      .map(([id, state]) => ({ id, state, hadInitialLoad: this.initialLoads.has(id) })) : []
     if (changed || revoked) {
       // A fresh signal is the scope generation: A → B → A cannot revive an A request.
       this.connection.abort(); this.connection = new AbortController()
       this.cancelRecovery()
       this.historyRequests.clear()
+      this.initialLoads.clear()
       for (const stream of this.runStreams.values()) stream.abort()
       this.runStreams.clear()
       for (const timer of this.typingTimers.values()) window.clearTimeout(timer)
@@ -207,9 +211,14 @@ export class ChatTransport {
     }
     if (changed || revoked) for (const id of Object.keys(useChatThreadStore.getState().conversations)) this.syncRunStreams(id)
     // The mounted runtime only loads on conversation changes, so resume work canceled by scope revocation here.
-    for (const [id, state] of interrupted) {
+    for (const { id, state, hadInitialLoad } of interrupted) {
+      // Initial recovery and older pagination can overlap after history paints.
+      // Resume both: restarting only the older page loses deferred initial rows.
+      if (hadInitialLoad || state.isLoading) {
+        if (state.loaded) void this.reloadConversation(id)
+        else void this.loadConversation(id)
+      }
       if (state.isLoadingOlder) void this.loadOlder(id)
-      else void this.loadConversation(id)
     }
   }
 
@@ -232,58 +241,86 @@ export class ChatTransport {
     return { signal, identity: captured, current: () => !signal.aborted && this.requestIdentity() === captured }
   }
 
-  async loadConversation(conversationId: string): Promise<void> {
-    if (!this.includesChannel(conversationId)) return
-    const current = useChatThreadStore.getState().conversations[conversationId]
-    if (current?.loaded || current?.isLoading && this.historyRequests.get(conversationId)?.current()) return
-    const request = this.captureRequest()
-    this.historyRequests.set(conversationId, request)
-    updateConversation(conversationId, (state) => ({ ...state, isLoading: true, error: null }))
-    try {
-      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE)
-      if (!request.current()) return
-      const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
-      if (!request.current()) return
-      const messages = convertEnvelopeBatch(envelopes, conversionContext())
-      updateConversation(conversationId, (state) => restoreStoppedRuns({
-        ...state,
-        messages: mergeCanonicalMessages(state.messages, messages),
-        loaded: true,
-        isLoading: false,
-        hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE,
-      }, recovery))
-      this.syncRunStreams(conversationId)
-      this.subscribeDiscoveredRuns(conversationId, recovery.targets)
-    } catch (error) {
-      if (!request.current()) return
-      console.error('[chat.transport] history conversion/load failed', error)
-      updateConversation(conversationId, (state) => ({
-        ...state,
-        isLoading: false,
-        error: userFacingError(error, '暂时无法加载消息，请稍后重试。'),
-      }))
-    } finally {
-      if (this.historyRequests.get(conversationId) === request) this.historyRequests.delete(conversationId)
-    }
+  cancelConversationLoad(conversationId: string): void {
+    const loading = this.initialLoads.get(conversationId)
+    // Once history is visible, let its bounded recovery finish in the scoped
+    // cache. Cancelling that enrichment would leave a warm revisit incomplete.
+    if (!loading || loading.historyReady) return
+    loading.controller.abort()
+    this.initialLoads.delete(conversationId)
+    if (this.historyRequests.get(conversationId) === loading.request) this.historyRequests.delete(conversationId)
+    updateConversation(conversationId, state => ({ ...state, isLoading: false }))
   }
 
-  async reloadConversation(conversationId: string): Promise<void> {
-    if (!this.includesChannel(conversationId)) return
-    const request = this.captureRequest()
-    try {
-      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE)
-      if (!request.current()) return
-      const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
-      if (!request.current()) return
-      const messages = convertEnvelopeBatch(envelopes, conversionContext())
-      updateConversation(conversationId, state => restoreStoppedRuns({ ...state,
-        messages: mergeCanonicalMessages(state.messages, messages), loaded: true, isLoading: false }, recovery))
-      this.syncRunStreams(conversationId)
-      this.subscribeDiscoveredRuns(conversationId, recovery.targets)
-    } catch (error) {
-      if (!request.current()) return
-      console.error('[chat.transport] reload failed', error)
+  loadConversation(conversationId: string): Promise<void> {
+    if (!this.includesChannel(conversationId)) return Promise.resolve()
+    const pending = this.initialLoads.get(conversationId)
+    if (pending?.request.current()) return pending.promise
+    const current = useChatThreadStore.getState().conversations[conversationId]
+    if (current?.loaded) return Promise.resolve()
+    return this.fetchConversation(conversationId)
+  }
+
+  reloadConversation(conversationId: string): Promise<void> {
+    if (!this.includesChannel(conversationId)) return Promise.resolve()
+    const pending = this.initialLoads.get(conversationId)
+    if (pending?.request.current()) {
+      if (!pending.historyReady) return pending.promise
+      // A reconnect/sidebar invalidation after HTTP completed needs one fresh
+      // page. Coalesce that follow-up without losing it behind slow recovery.
+      pending.trailingReload ??= pending.promise.then(() => {
+        if (pending.request.current()) return this.reloadConversation(conversationId)
+      })
+      return pending.trailingReload
     }
+    return this.fetchConversation(conversationId)
+  }
+
+  private fetchConversation(conversationId: string): Promise<void> {
+    const scope = this.captureRequest(), controller = new AbortController()
+    const signal = AbortSignal.any([scope.signal, controller.signal])
+    const request = { ...scope, signal, current: () => !signal.aborted && scope.current() }
+    this.historyRequests.set(conversationId, request)
+    updateConversation(conversationId, state => ({ ...state, isLoading: !state.loaded || (Boolean(state.error) && state.messages.length === 0), error: null }))
+    const promise = (async () => {
+      try {
+        const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE, undefined, signal)
+        if (!request.current()) return
+        const messages = convertEnvelopeBatch(envelopes, conversionContext())
+        const deferred = messages.filter(message => isRunMessage(messageMetadata(message))
+          && (message.status?.type === 'running' || message.status?.type === 'requires-action'))
+        const deferredIds = new Set(deferred.map(message => message.id))
+        // Durable IM history is readable before optional run recovery completes.
+        // Unconfirmed running rows wait for reconciliation so a stopped run cannot
+        // flash as active. Already-live store messages remain untouched.
+        // Merge against the latest store so live deliveries cannot be overwritten.
+        updateConversation(conversationId, state => ({ ...state,
+          messages: mergeCanonicalMessages(state.messages, messages.filter(message => !deferredIds.has(message.id))),
+          loaded: true, isLoading: false, isRecovering: deferred.length > 0,
+          hasMoreOlder: state.loaded ? state.hasMoreOlder : envelopes.length >= CHAT_HISTORY_PAGE_SIZE,
+        }))
+        const pending = this.initialLoads.get(conversationId)
+        if (pending?.request === request) pending.historyReady = true
+        const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
+        if (!request.current()) return
+        if (deferred.length || recovery.snapshots.length || recovery.error) {
+          updateConversation(conversationId, state => restoreStoppedRuns({ ...state, isRecovering: false,
+            messages: recovery.error ? state.messages : mergeCanonicalMessages(state.messages, deferred),
+          }, recovery))
+        }
+        this.syncRunStreams(conversationId)
+        this.subscribeDiscoveredRuns(conversationId, recovery.targets)
+      } catch (error) {
+        if (!request.current()) return
+        updateConversation(conversationId, state => ({ ...state, isLoading: false, isRecovering: false,
+          error: userFacingError(error, '暂时无法加载消息，请稍后重试。') }))
+      } finally {
+        if (this.historyRequests.get(conversationId) === request) this.historyRequests.delete(conversationId)
+        if (this.initialLoads.get(conversationId)?.request === request) this.initialLoads.delete(conversationId)
+      }
+    })()
+    this.initialLoads.set(conversationId, { request, controller, promise, historyReady: false })
+    return promise
   }
 
   async loadOlder(conversationId: string): Promise<void> {
@@ -299,7 +336,7 @@ export class ChatTransport {
     this.historyRequests.set(conversationId, request)
     updateConversation(conversationId, (state) => ({ ...state, isLoadingOlder: true }))
     try {
-      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE, before)
+      const envelopes = await lingxiIm.history(conversationId, CHAT_HISTORY_PAGE_SIZE, before, request.signal)
       if (!request.current()) return
       const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
       if (!request.current()) return
@@ -334,7 +371,7 @@ export class ChatTransport {
     const envelopes: ImEnvelope[] = []
     let before = 0
     while (true) {
-      const page = await lingxiIm.history(conversationId, 200, before)
+      const page = await lingxiIm.history(conversationId, 200, before, request.signal)
       if (!request.current()) return
       envelopes.push(...page)
       if (page.length < 200) break
@@ -569,8 +606,8 @@ export class ChatTransport {
         anchors && (anchors.sourceClientMsgNos.length || anchors.runIds.length) ? harnessApi.history(conversationId,anchors,signal) : []])
       recovery.targets = [...new Map([...recent,...historical].map(target => [target.runId,target])).values()]
       if (!request.current()) return recovery
-      // Stopped runs may have no committed IM message. Restore their durable
-      // snapshot before publishing history, so an old running bubble never paints.
+      // Stopped runs may have no committed IM message. Hydrate their durable
+      // snapshot without holding already-readable messages behind diagnostics.
       const snapshots = await Promise.all(recovery.targets.map(async target => {
         if (target.status !== 'failed' && target.status !== 'cancelled') return null
         try { return { target, snapshot: await harnessApi.read(target, signal) } }

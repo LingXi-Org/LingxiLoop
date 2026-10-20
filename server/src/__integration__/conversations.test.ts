@@ -303,3 +303,31 @@ test('[integration] committed creation survives an IM sync outage for later reco
   const { profile } = (await pool.query('SELECT profile FROM im_channel_bindings WHERE channel_id=$1', [id])).rows[0]
   await sync(profile)
 })
+
+// Failure model: personal deletion removes shared data; other members lose the
+// room; retry duplicates preferences; restore fails; revoked/nonmember requests
+// mutate preferences; a hidden room bypasses project authorization.
+test('[integration] personal conversation deletion is reversible and retains shared history and membership', async () => {
+  const { companyId, projectId, conversationId } = await seedHumanDirectWithSelfStoredTitle()
+  await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,'{"channelType":2}')`, [conversationId, companyId])
+  const headers = { 'x-company-id': companyId, 'x-project-id': projectId }
+  const url = `${baseUrl}/api/conversations/${conversationId}`
+  const channels = (removed = false) => fetch(`${baseUrl}/api/im/channels${removed ? '?removed=true' : ''}`, { headers })
+    .then(response => response.json() as Promise<Array<{ id: string }>>)
+  for (let i = 0; i < 2; i++) assert.equal((await fetch(url, { method: 'DELETE', headers })).status, 200)
+  const hidden = await pool.query('SELECT user_id FROM conversation_list_removals WHERE conversation_id=$1', [conversationId])
+  assert.deepEqual(hidden.rows, [{ user_id: ME_USER_ID }])
+  assert.equal((await channels()).length, 0)
+  const removed = await channels(true)
+  assert.deepEqual(removed.map((room: { id: string }) => room.id), [conversationId])
+  const { workspaceChannels } = await import('../im/channels-repository.js')
+  assert.equal((await workspaceChannels(pool, { companyId, projectId, userId: OTHER_USER_ID })).length, 1)
+  assert.deepEqual((await pool.query('SELECT members FROM conversations WHERE id=$1', [conversationId])).rows[0].members, [OTHER_USER_ID, ME_USER_ID])
+  assert.equal((await fetch(`${url}/restore`, { method: 'POST', headers })).status, 200)
+  assert.equal((await channels()).length, 1)
+  await pool.query('UPDATE conversations SET members=$2::jsonb WHERE id=$1', [conversationId, JSON.stringify([OTHER_USER_ID])])
+  assert.equal((await fetch(url, { method: 'DELETE', headers })).status, 404)
+  assert.equal((await fetch(`${url}/restore`, { method: 'POST', headers })).status, 404)
+  assert.equal((await channels(true)).length, 0)
+  assert.equal((await pool.query('SELECT 1 FROM conversation_list_removals WHERE conversation_id=$1', [conversationId])).rowCount, 0)
+})
