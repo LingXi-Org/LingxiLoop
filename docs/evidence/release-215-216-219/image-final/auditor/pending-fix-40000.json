@@ -1,0 +1,8 @@
+{
+  "scope": "final parser, 40000 synthetic new metadata entries; no network",
+  "seconds": 0.144308,
+  "entries": 40000,
+  "inventorySha256": "a422f572b633788dd87ec8f7e54195aa7ae7dc37657c169277797ba430c6a435",
+  "sameAsPriorFixed40000Result": true,
+  "oldQuadratic40000Executed": false
+}

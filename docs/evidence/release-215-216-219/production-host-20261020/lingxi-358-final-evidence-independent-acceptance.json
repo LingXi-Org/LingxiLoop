@@ -1,0 +1,79 @@
+{
+  "decision": "PASS_FINAL_DEPLOYMENT_EVIDENCE",
+  "reviewMode": "local-only evidence reconciliation, no production requests or new isolation tests",
+  "candidate": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "runtime": "3.5.8",
+  "nativeSchema": 13,
+  "productMigration": 48,
+  "acceptedAt": "2026-10-20T14:36:35.332Z",
+  "checks": 18,
+  "terminals": {
+    "total": 27,
+    "success": 26,
+    "retainedExpectedFailure": "6ad778a1e06d5e1f79836ea6",
+    "inventoryExactlyMatchesExecutionEvents": true,
+    "strictlySequential": true
+  },
+  "backupTables": 173,
+  "containers": [
+    {
+      "stack": "lingxiloop-app-a",
+      "service": "lingxiloop",
+      "id": "56dd3a69e18befd03751747e50714644d40bf3c2fa460759faa91aefed3259ca",
+      "startedAt": "2026-10-20T14:19:41.711557901Z",
+      "restartCount": 0,
+      "healthy": true,
+      "oomKilled": false
+    },
+    {
+      "stack": "lingxiloop-app-a",
+      "service": "worker",
+      "id": "db00775ed034a287a18b4c0c83acfd2b403986e3ee68cb5325ebb09a369c1fe0",
+      "startedAt": "2026-10-20T14:31:39.727691123Z",
+      "restartCount": 0,
+      "healthy": true,
+      "oomKilled": false
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "service": "lingxiloop",
+      "id": "1bce8732adcde5c77c15043027d2f6402ce521e24acfdb3090217a786cc2574b",
+      "startedAt": "2026-10-20T14:30:34.253159182Z",
+      "restartCount": 0,
+      "healthy": true,
+      "oomKilled": false
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "service": "worker",
+      "id": "88cc0114a43d9e43cccc60df0469f35fc604fd6e3f6cc1006786bcf9e927c98b",
+      "startedAt": "2026-10-20T14:32:44.531424839Z",
+      "restartCount": 0,
+      "healthy": true,
+      "oomKilled": false
+    }
+  ],
+  "webAPreserved": true,
+  "entrypointCorrectedAgainstFrozenSource": true,
+  "publicStatus200": 4,
+  "publicAssetsMatchAuditedInventory": 3,
+  "inputSha256": {
+    "production-host-final-acceptance.json": "a755887e1de6bdb735c0af85219a770d1d377ea082b57f9da0af6d7f4975224a",
+    "production-host-after-v2.json": "1003335717a8f587a39dc129aa148ad67ad3d29a83820e3ee31dbbc23781e31d",
+    "host-target-state-postflight.json": "ce65dd7e4120fd1a9277033714650798183c3b2e940b1c81be36f8a4ee31f505",
+    "public-host-assets-after.json": "bcdd6132666bbc2ef49f642c87e8070aa7ed51021b57754bcc2c00297d21b1fa",
+    "host-continuation-komodo-terminal-receipts.json": "9b814415cbe48a7c4048989ede1efb2e822f0f856e78b4060f5df74084eb4401",
+    "maintenance-host-continuation-v2.json": "9a7656118cb10bb2b9d51bcb61c79530d8a3e98c6e015721e9042bc0afff7e66",
+    "maintenance-host-continuation.json": "8891fdd6c6ce5bf85e650772e74c0a6dc8d490356d3eb16983748b49d4e9a54f",
+    "maintenance-host-execution.json": "1abf04ec0bd4bf9af1f4883a33189d70f65764c787f6e674c0de2c36f6f623fa",
+    "production-host-continuation-acceptance.json": "cb227dcf878ea76b010e6174ecbbcfb58d50d5b5963042dabfd693512ba5a589",
+    "maintenance-host-plan.json": "7ea3bb53b0e23c0382512193932f18be58d472dc01d14dc588b40cab97d0d9eb"
+  },
+  "limits": [
+    "Authenticated business/chat/provider smoke not run",
+    "Startup self-check success inferred from frozen source, command and native readiness; not full isolation/fault-injection coverage",
+    "Point-in-time evidence, no long-soak or continuous zero-outage claim",
+    "Existing 3.5.3 soak untouched by this reviewer",
+    "Historical expected 522 and validation failures retained; recovery does not erase them"
+  ]
+}

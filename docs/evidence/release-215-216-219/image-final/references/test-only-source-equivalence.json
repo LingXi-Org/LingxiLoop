@@ -1,0 +1,43 @@
+{
+  "fromSource": "2a1d3f286485ebe4642ec56664d16f668731d3cc",
+  "toSource": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "reviewedAt": "2026-10-20T11:06:19.336258+00:00",
+  "changedPaths": [
+    "docs/evidence/pr236-worker-health-port/FAILURE-MODEL.md",
+    "docs/evidence/pr236-worker-health-port/README.md",
+    "docs/evidence/pr236-worker-health-port/SHA256SUMS",
+    "docs/evidence/pr236-worker-health-port/ci-original-failure.log",
+    "docs/evidence/pr236-worker-health-port/ci-original-proof.json",
+    "docs/evidence/pr236-worker-health-port/database-cleanup.json",
+    "docs/evidence/pr236-worker-health-port/database-owner.json",
+    "docs/evidence/pr236-worker-health-port/green-receipt.json",
+    "docs/evidence/pr236-worker-health-port/green-scripted.json",
+    "docs/evidence/pr236-worker-health-port/green-summary.json",
+    "docs/evidence/pr236-worker-health-port/green.log",
+    "docs/evidence/pr236-worker-health-port/held-port-after-green.json",
+    "docs/evidence/pr236-worker-health-port/held-port.json",
+    "docs/evidence/pr236-worker-health-port/lint.log",
+    "docs/evidence/pr236-worker-health-port/red-receipt.json",
+    "docs/evidence/pr236-worker-health-port/red-scripted.json",
+    "docs/evidence/pr236-worker-health-port/red.log",
+    "docs/evidence/pr236-worker-health-port/resource-cleanup.json",
+    "docs/evidence/pr236-worker-health-port/source-proof.json",
+    "docs/evidence/pr236-worker-health-port/test-diff-proof.json",
+    "server/src/__integration__/runtime-model-context.test.ts"
+  ],
+  "onlyExecutableChange": "owning test Worker health port52992\u219229092 plus explanatory comment",
+  "productionSourceDependencyMigrationWorkflowDockerfileChanged": false,
+  "committedFixtureEvidenceHashesVerified": 19,
+  "fullFinalCIAndPublicationRequiredAtCreation": true,
+  "supersedingPRCI": {
+    "url": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39412540194",
+    "conclusion": "success",
+    "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d"
+  },
+  "publicationOutcome": {
+    "url": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/39413726289",
+    "conclusion": "success",
+    "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+    "indexDigest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69"
+  }
+}

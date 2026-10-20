@@ -1,0 +1,26 @@
+./tmp/lingxi-225-219-preparation/final-image-source-check/check.py:158: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  hashes = git.hash_blobs([tree[p]['oid'] for p in set(expected.values())] + policy_oids)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./tmp/lingxi-225-219-preparation/final-image-source-check/check.py:158: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  hashes = git.hash_blobs([tree[p]['oid'] for p in set(expected.values())] + policy_oids)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./tmp/lingxi-225-219-preparation/final-image-source-check/check.py:158: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  hashes = git.hash_blobs([tree[p]['oid'] for p in set(expected.values())] + policy_oids)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./tmp/lingxi-225-219-preparation/final-image-source-check/check.py:158: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  hashes = git.hash_blobs([tree[p]['oid'] for p in set(expected.values())] + policy_oids)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+./tmp/lingxi-225-219-preparation/final-image-source-check/check.py:158: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  hashes = git.hash_blobs([tree[p]['oid'] for p in set(expected.values())] + policy_oids)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/tmp/lingxi-225-219-preparation/final-image-source-check/check.py:158: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  hashes = git.hash_blobs([tree[p]['oid'] for p in set(expected.values())] + policy_oids)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+../tmp/lingxi-225-219-preparation/final-image-source-check/check.py:158: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  hashes = git.hash_blobs([tree[p]['oid'] for p in set(expected.values())] + policy_oids)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.
+----------------------------------------------------------------------
+Ran 8 tests in 0.100s
+
+OK

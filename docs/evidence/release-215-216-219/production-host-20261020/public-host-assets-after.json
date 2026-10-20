@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-20T14:33:39.899Z",
+  "mode": "public-read-only",
+  "requests": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "decodedBytes": 1697,
+      "sha256": "b19dfd9101c468e4129a2e4949bc9c8477e6b3066a36de18730c7a48a9e817df",
+      "elapsedMs": 385,
+      "matchesAuditedImage": true
+    },
+    {
+      "path": "/assets/index-C2BGquub.js",
+      "status": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "decodedBytes": 200192,
+      "sha256": "3b4d3b25b68c9618ed1b5c191176cc0633b9c8ebeb8cbbb8dc2e0815e9ad3cd1",
+      "elapsedMs": 1397,
+      "matchesAuditedImage": true
+    },
+    {
+      "path": "/assets/index-D6e91Zk4.css",
+      "status": 200,
+      "contentType": "text/css; charset=utf-8",
+      "decodedBytes": 451080,
+      "sha256": "854075030c6db6d83c3831cc43f89912e31f86ff5f584cc74b055cf1fcd4c47e",
+      "elapsedMs": 1387,
+      "matchesAuditedImage": true
+    }
+  ],
+  "authenticatedBusiness": "not-run",
+  "verified": true,
+  "finishedAt": "2026-10-20T14:33:43.070Z"
+}

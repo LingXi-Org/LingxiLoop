@@ -1,0 +1,513 @@
+{
+  "attestationDescriptorsNotDownloaded": 1,
+  "compressedLayerBytes": 205959232,
+  "configBytes": 13312,
+  "configDigest": "sha256:019d5728f0ef708fe9a642eaf1effd2c12699cdb303e2206e11b55e542fb2c4b",
+  "elapsedSeconds": 21.438,
+  "historicalBaselineComparison": {
+    "baselineIndexDigest": "sha256:6ac0d343039dbcb36607ff07e708134a9f5fbcbe6f1e51c04a8bca16801314ee",
+    "baselineRemeasuredThisRun": false,
+    "baselineSourceCommit": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+    "baselineSourceSha256": "390c68e7b5c3a292e5b4d197bca6293333c5f2fa9dbd2f381a707e80c2a1b0b8",
+    "compressedLayerByteDelta": -879501,
+    "note": "whole-image totals, not attribution to PDF pruning; historical baseline not fetched",
+    "uncompressedTarLayerByteDelta": -4822528
+  },
+  "indexBytes": 856,
+  "indexDigest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+  "inventorySha256": "3d537b85a17d2dd22790264678a83ce64e147f2f0192f4e2bfda40d666f8c96a",
+  "isolation": "not-tested",
+  "layerCount": 22,
+  "layers": [
+    {
+      "compressedBytes": 28249323,
+      "diffId": "sha256:e58989146fcec76699871403b9897b5c014af1ccd85f5a9300a215e7975525d7",
+      "digest": "sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39",
+      "opaqueDirectories": 0,
+      "tarEntries": 4225,
+      "uncompressedTarBytes": 77936640,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 3313,
+      "diffId": "sha256:4990a62cab1587a2ed690c9d4f41675b9216d68120e99033d664b558662e90c8",
+      "digest": "sha256:f0400f4b55b0ad346bf6167a1b64a258e4d73db608c457798ce35e4ffeebfaaf",
+      "opaqueDirectories": 0,
+      "tarEntries": 18,
+      "uncompressedTarBytes": 21504,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 49837030,
+      "diffId": "sha256:3714bbaf32038e259cddcddea09e13fc9aaa1a86a644274a6c6e263b00972240",
+      "digest": "sha256:d22c69a95cf463f4cb74462bd2899597ce505d82bd4c01ceddf7845e12f13856",
+      "opaqueDirectories": 0,
+      "tarEntries": 3074,
+      "uncompressedTarBytes": 147154944,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 1713011,
+      "diffId": "sha256:f6becc1249c39a0f6d687460220dcfcf9f2a46d01770a70fc0a8ed4c98a6fd49",
+      "digest": "sha256:2cfab517365cfc6b4bd1f8c4cb01754884ef75bc38758b3c41e291c696f019f5",
+      "opaqueDirectories": 0,
+      "tarEntries": 48,
+      "uncompressedTarBytes": 7217664,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 448,
+      "diffId": "sha256:cae24708e29a74f04cc1ec51fc52e2d283c35f243ab21912e036095a2b50dbde",
+      "digest": "sha256:a8de9fa052209313d8e45435a8486e29b20eebaa820e2e7f63a7c3c94b4fa567",
+      "opaqueDirectories": 0,
+      "tarEntries": 4,
+      "uncompressedTarBytes": 3584,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 16917861,
+      "diffId": "sha256:0f68dc5d210a834e7c5f5a38f4b274887396fb69b3c51f768bfbbc7f5844033c",
+      "digest": "sha256:201442fa41dd5e5f96f1b547405a74ca02ccb672e2b4a284b260117ecedde54b",
+      "opaqueDirectories": 0,
+      "tarEntries": 2046,
+      "uncompressedTarBytes": 48998912,
+      "whiteouts": 1
+    },
+    {
+      "compressedBytes": 93,
+      "diffId": "sha256:b457851412063cbe80c0c9f2f58ba23a1bebdea1b891b6ce48f4ac12469eb999",
+      "digest": "sha256:b29c9c0e756794228f864f3f8f7781d1f696e4a8440aa9bde4e13d4ed5aed7d7",
+      "opaqueDirectories": 0,
+      "tarEntries": 1,
+      "uncompressedTarBytes": 1536,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 70347423,
+      "diffId": "sha256:54e8c273f49225c3946bc872ac4ee5787602139092c973aceb005556bab0a50f",
+      "digest": "sha256:068c01811392efcf1f13a99f0674eea3669e802f9caa38b7a57187cdcfd358ca",
+      "opaqueDirectories": 0,
+      "tarEntries": 28091,
+      "uncompressedTarBytes": 264827904,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 37300,
+      "diffId": "sha256:2569552555fff4c0b39ef2554f3d190c7dcf02b3900b6133caf6b2e11ab4b46e",
+      "digest": "sha256:022875653e37e17d24a1a5566e8b52bfccf43412dcf8b5f5ed11840e052c6739",
+      "opaqueDirectories": 0,
+      "tarEntries": 3,
+      "uncompressedTarBytes": 181248,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 626410,
+      "diffId": "sha256:2b63af07ad44dbb2032715d461bbb34b053ac19e305784077691fce42b66e469",
+      "digest": "sha256:627b24511ee0ed077c67c434fd1029f381dc626abf95b626317df3ee6b846c57",
+      "opaqueDirectories": 0,
+      "tarEntries": 527,
+      "uncompressedTarBytes": 3064832,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 15257,
+      "diffId": "sha256:d79a89a6cb941258ebfa2c6d42ebade3735a0a02222c091e6fed8002081b44dc",
+      "digest": "sha256:e5f95e08af6b296da5b0372416c34969201f9d59386366b8fe868f0acc8cd20a",
+      "opaqueDirectories": 0,
+      "tarEntries": 15,
+      "uncompressedTarBytes": 57856,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 4127,
+      "diffId": "sha256:fafadd8625b0fe18e6a73e92de9b822732741201ea2f069a565b6188d863674e",
+      "digest": "sha256:82e5047e7fcb6be0040abf9c663b39cf7ef27440a390eb95a1c663b05daf7987",
+      "opaqueDirectories": 0,
+      "tarEntries": 13,
+      "uncompressedTarBytes": 22016,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 2303,
+      "diffId": "sha256:fe3c99ef8541afea414351501dd3ad23ae585174e708d41f2e076296c67b8f07",
+      "digest": "sha256:471d72a575a8b745508b0a2bb6e976ba2b8747ff31e7b88b62424bd2a53d6676",
+      "opaqueDirectories": 0,
+      "tarEntries": 10,
+      "uncompressedTarBytes": 11264,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 4025,
+      "diffId": "sha256:954069a0c8f9d2cd9cbfdbbcf5ae2741e00272f421ef8db6cdb44d4da7723bd2",
+      "digest": "sha256:0a2f9ef22354e2e4a9e10df4069414cfc3f94c71138dbc163dc3b37e049daae3",
+      "opaqueDirectories": 0,
+      "tarEntries": 8,
+      "uncompressedTarBytes": 17920,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 260954,
+      "diffId": "sha256:bccbc1e475cbb2e61b791165fa2d9a7d05d34a8c010bfa3227039d7dbe19451e",
+      "digest": "sha256:c3f08f7b7c76c8fdab0f6d4b3ba55b72e936ae120363091c6098218488df1bf2",
+      "opaqueDirectories": 0,
+      "tarEntries": 35,
+      "uncompressedTarBytes": 1082368,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 4250,
+      "diffId": "sha256:3d3de5e3d86c6fcaf2511357724484a47922321ce167b28ef739a0bdea792f19",
+      "digest": "sha256:fb8cd4ef0eff52496462c809272708cc5511f01294108ffe02addbd3091e2cc3",
+      "opaqueDirectories": 0,
+      "tarEntries": 11,
+      "uncompressedTarBytes": 20992,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 24638,
+      "diffId": "sha256:3ef9ad0ceca7cbbcb2895e188dd2d685a008c87ab6253894144836f4c3e92419",
+      "digest": "sha256:80f360748ef6e0158363965e19bef832d2b631188b029e5978245a51888b2510",
+      "opaqueDirectories": 0,
+      "tarEntries": 6,
+      "uncompressedTarBytes": 105472,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 4132,
+      "diffId": "sha256:702fe708c9a29cf85f9cad7c98323e8fc9084f8fe6dd24d38ce21f8d28462e54",
+      "digest": "sha256:ca11fdea47b8dd4a2d5de1588b61bcb50fe4c4737369a5f8e8b2a478dfe11821",
+      "opaqueDirectories": 0,
+      "tarEntries": 5,
+      "uncompressedTarBytes": 15360,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 119498,
+      "diffId": "sha256:35fabebb6c1d44297e8f95fd286e777aa6bf9119ec010df63447213d4371f9bb",
+      "digest": "sha256:f9d21c3467c8ab73bb25c7084dae6c4cf1124960a980a453e71b34641b440938",
+      "opaqueDirectories": 0,
+      "tarEntries": 6,
+      "uncompressedTarBytes": 529920,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 37786863,
+      "diffId": "sha256:178d212fa6baf427d4311c439ea63ad42f5ac729e7ba40f3b60b5e13d270fbbf",
+      "digest": "sha256:82a62998c6e53758b33efe9dbf9b8a89641d42eb01cef74ffc5f3961822e72f2",
+      "opaqueDirectories": 0,
+      "tarEntries": 1214,
+      "uncompressedTarBytes": 67226112,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 852,
+      "diffId": "sha256:d510c865414d61f6d79a70d4d9712580de33b64adc40dce25c08cff938e962b3",
+      "digest": "sha256:77fb88e53cdf7d7a49ecdd8b8bceef7c23f6a3632ede43850c2e3010652f84d0",
+      "opaqueDirectories": 0,
+      "tarEntries": 4,
+      "uncompressedTarBytes": 4608,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 121,
+      "diffId": "sha256:eb0c51d789b49041960b5096889175fe6ede465fa9e9347e1f2643de39764e4d",
+      "digest": "sha256:fcd99961f7e96a031e3c26f3bcc9c8453bcb8899ec627e72a78a53aa9db0df3b",
+      "opaqueDirectories": 0,
+      "tarEntries": 2,
+      "uncompressedTarBytes": 2048,
+      "whiteouts": 0
+    }
+  ],
+  "linuxAmd64ManifestDigest": "sha256:1c437ff4f2b2f36055fddcf179460963d9f95147406989b48355a0020e4bf862",
+  "manifestBytes": 4475,
+  "packageComparisons": [
+    {
+      "actualFiles": 474,
+      "expectedFiles": 474,
+      "matches": true,
+      "mismatchedPaths": [],
+      "prefix": "app/node_modules/@lyyzka/lingxios/"
+    },
+    {
+      "actualFiles": 379,
+      "expectedFiles": 379,
+      "matches": true,
+      "mismatchedPaths": [],
+      "prefix": "app/node_modules/pdfjs-dist/"
+    }
+  ],
+  "passed": true,
+  "production": "not-accessed",
+  "readiness": "not-tested",
+  "referenceSha256": {
+    "formalRuntimeTar": "ee308270402b220452f8eb4e92e9c1d25a68466525f21827203bd5078a9c1bcb",
+    "pdfInventory": "fc4a8c2a30a73b6d120adc46dd83964cdc443c91282c93ba25475aade11d4298"
+  },
+  "repository": "ghcr.io/lingxi-org/lingxiloop-server",
+  "rootfs": {
+    "deps": {
+      "files": 25234,
+      "regularBytes": 243634898
+    },
+    "dist": {
+      "files": 1207,
+      "regularBytes": 66290700
+    },
+    "entries": 39204,
+    "hardlinkLogicalBytes": 15234762,
+    "kinds": {
+      "directory": 4097,
+      "file": 34243,
+      "hardlink": 3,
+      "symlink": 861
+    },
+    "largestFiles": [
+      {
+        "bytes": 124827920,
+        "path": "usr/local/bin/node"
+      },
+      {
+        "bytes": 33974784,
+        "path": "app/node_modules/@napi-rs/canvas-linux-x64-gnu/skia.linux-x64-gnu.node"
+      },
+      {
+        "bytes": 30315608,
+        "path": "app/node_modules/@napi-rs/canvas-linux-x64-musl/skia.linux-x64-musl.node"
+      },
+      {
+        "bytes": 11427952,
+        "path": "app/node_modules/@esbuild/linux-x64/bin/esbuild"
+      },
+      {
+        "bytes": 6809944,
+        "path": "usr/bin/python3.11"
+      },
+      {
+        "bytes": 5608910,
+        "path": "app/node_modules/js-tiktoken/dist/index.cjs"
+      },
+      {
+        "bytes": 5600042,
+        "path": "app/node_modules/js-tiktoken/dist/index.js"
+      },
+      {
+        "bytes": 5466926,
+        "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs.map"
+      },
+      {
+        "bytes": 5320747,
+        "path": "opt/yarn-v1.22.22/lib/cli.js"
+      },
+      {
+        "bytes": 4742424,
+        "path": "usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+      },
+      {
+        "bytes": 3804464,
+        "path": "usr/bin/perl"
+      },
+      {
+        "bytes": 3790768,
+        "path": "app/dist/assets/mermaid-HWGCJPDP-D8DOLF3i.js"
+      },
+      {
+        "bytes": 2399899,
+        "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.mjs.map"
+      },
+      {
+        "bytes": 2395538,
+        "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"
+      },
+      {
+        "bytes": 2344914,
+        "path": "app/dist/starter-avatars/nova.png"
+      },
+      {
+        "bytes": 2342808,
+        "path": "app/dist/starter-avatars/iris.png"
+      },
+      {
+        "bytes": 2325565,
+        "path": "app/node_modules/js-tiktoken/dist/ranks/o200k_base.cjs"
+      },
+      {
+        "bytes": 2325563,
+        "path": "app/node_modules/js-tiktoken/dist/ranks/o200k_base.js"
+      },
+      {
+        "bytes": 2266988,
+        "path": "app/dist/starter-avatars/bram.png"
+      },
+      {
+        "bytes": 2228489,
+        "path": "app/node_modules/pdfjs-dist/build/pdf.worker.mjs"
+      },
+      {
+        "bytes": 2209528,
+        "path": "usr/lib/x86_64-linux-gnu/libgnutls.so.30.34.3"
+      },
+      {
+        "bytes": 2190440,
+        "path": "usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30"
+      },
+      {
+        "bytes": 2167063,
+        "path": "app/dist/starter-avatars/atlas.png"
+      },
+      {
+        "bytes": 2120167,
+        "path": "app/dist/everyone.png"
+      },
+      {
+        "bytes": 2067760,
+        "path": "usr/lib/x86_64-linux-gnu/libapt-pkg.so.6.0.0"
+      },
+      {
+        "bytes": 1926232,
+        "path": "usr/lib/x86_64-linux-gnu/libc.so.6"
+      },
+      {
+        "bytes": 1843792,
+        "path": "usr/lib/x86_64-linux-gnu/libdb-5.3.so"
+      },
+      {
+        "bytes": 1792040,
+        "path": "usr/lib/x86_64-linux-gnu/libunistring.so.2.2.0"
+      },
+      {
+        "bytes": 1437848,
+        "path": "usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6"
+      },
+      {
+        "bytes": 1332480,
+        "path": "usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.1"
+      }
+    ],
+    "largestPackages": [
+      {
+        "path": "app/node_modules/@napi-rs/canvas-linux-x64-gnu",
+        "regularBytes": 33975707
+      },
+      {
+        "path": "app/node_modules/@napi-rs/canvas-linux-x64-musl",
+        "regularBytes": 30316535
+      },
+      {
+        "path": "app/node_modules/pdfjs-dist",
+        "regularBytes": 24272468
+      },
+      {
+        "path": "app/node_modules/js-tiktoken",
+        "regularBytes": 22432828
+      },
+      {
+        "path": "app/node_modules/openai",
+        "regularBytes": 12468421
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/semantic-conventions",
+        "regularBytes": 12006437
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/exporter-metrics-otlp-http",
+        "regularBytes": 11971470
+      },
+      {
+        "path": "app/node_modules/@esbuild/linux-x64",
+        "regularBytes": 11428465
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/otlp-transformer",
+        "regularBytes": 9638682
+      },
+      {
+        "path": "app/node_modules/@dicebear/styles",
+        "regularBytes": 7745477
+      },
+      {
+        "path": "app/node_modules/zod",
+        "regularBytes": 5797652
+      },
+      {
+        "path": "app/node_modules/openlit",
+        "regularBytes": 3684168
+      },
+      {
+        "path": "app/node_modules/@aws-sdk/client-s3",
+        "regularBytes": 3295245
+      },
+      {
+        "path": "app/node_modules/protobufjs",
+        "regularBytes": 3053104
+      },
+      {
+        "path": "app/node_modules/@lyyzka/lingxios",
+        "regularBytes": 2691778
+      },
+      {
+        "path": "app/node_modules/@types/node",
+        "regularBytes": 2534873
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/sdk-metrics",
+        "regularBytes": 2430671
+      },
+      {
+        "path": "app/node_modules/lib0",
+        "regularBytes": 2405826
+      },
+      {
+        "path": "app/node_modules/yjs",
+        "regularBytes": 2307010
+      },
+      {
+        "path": "app/node_modules/mammoth",
+        "regularBytes": 2171440
+      },
+      {
+        "path": "app/node_modules/@smithy/core",
+        "regularBytes": 1780749
+      },
+      {
+        "path": "app/node_modules/undici",
+        "regularBytes": 1642075
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/sdk-trace",
+        "regularBytes": 1381806
+      },
+      {
+        "path": "app/node_modules/parse5",
+        "regularBytes": 1236424
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/api",
+        "regularBytes": 1218213
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/exporter-trace-otlp-http",
+        "regularBytes": 1195854
+      },
+      {
+        "path": "app/node_modules/assistant-stream",
+        "regularBytes": 1188685
+      },
+      {
+        "path": "app/node_modules/ajv",
+        "regularBytes": 1033496
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/resources",
+        "regularBytes": 1024899
+      },
+      {
+        "path": "app/node_modules/cheerio",
+        "regularBytes": 1011246
+      }
+    ],
+    "regularFileBytes": 583749649
+  },
+  "scope": "full linux/amd64 layers, streaming digest/diff-ID verification and merged rootfs inventory; no layer or file bodies persisted",
+  "sourceCommit": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "uncompressedTarLayerBytes": 618504704
+}

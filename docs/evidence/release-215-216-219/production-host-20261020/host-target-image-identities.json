@@ -1,0 +1,104 @@
+{
+  "at": "2026-10-20T14:26:58.053Z",
+  "candidate": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "images": [
+    {
+      "server": "shanghai-a",
+      "id": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "repoDigests": [
+        "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69"
+      ],
+      "architecture": "amd64",
+      "os": "linux",
+      "size": 205977875,
+      "descriptor": {
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "digest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+        "size": 856,
+        "urls": null,
+        "annotations": null,
+        "data": null,
+        "platform": null,
+        "artifactType": null
+      },
+      "rootFS": {
+        "Type": "layers",
+        "Layers": [
+          "sha256:e58989146fcec76699871403b9897b5c014af1ccd85f5a9300a215e7975525d7",
+          "sha256:4990a62cab1587a2ed690c9d4f41675b9216d68120e99033d664b558662e90c8",
+          "sha256:3714bbaf32038e259cddcddea09e13fc9aaa1a86a644274a6c6e263b00972240",
+          "sha256:f6becc1249c39a0f6d687460220dcfcf9f2a46d01770a70fc0a8ed4c98a6fd49",
+          "sha256:cae24708e29a74f04cc1ec51fc52e2d283c35f243ab21912e036095a2b50dbde",
+          "sha256:0f68dc5d210a834e7c5f5a38f4b274887396fb69b3c51f768bfbbc7f5844033c",
+          "sha256:b457851412063cbe80c0c9f2f58ba23a1bebdea1b891b6ce48f4ac12469eb999",
+          "sha256:54e8c273f49225c3946bc872ac4ee5787602139092c973aceb005556bab0a50f",
+          "sha256:2569552555fff4c0b39ef2554f3d190c7dcf02b3900b6133caf6b2e11ab4b46e",
+          "sha256:2b63af07ad44dbb2032715d461bbb34b053ac19e305784077691fce42b66e469",
+          "sha256:d79a89a6cb941258ebfa2c6d42ebade3735a0a02222c091e6fed8002081b44dc",
+          "sha256:fafadd8625b0fe18e6a73e92de9b822732741201ea2f069a565b6188d863674e",
+          "sha256:fe3c99ef8541afea414351501dd3ad23ae585174e708d41f2e076296c67b8f07",
+          "sha256:954069a0c8f9d2cd9cbfdbbcf5ae2741e00272f421ef8db6cdb44d4da7723bd2",
+          "sha256:bccbc1e475cbb2e61b791165fa2d9a7d05d34a8c010bfa3227039d7dbe19451e",
+          "sha256:3d3de5e3d86c6fcaf2511357724484a47922321ce167b28ef739a0bdea792f19",
+          "sha256:3ef9ad0ceca7cbbcb2895e188dd2d685a008c87ab6253894144836f4c3e92419",
+          "sha256:702fe708c9a29cf85f9cad7c98323e8fc9084f8fe6dd24d38ce21f8d28462e54",
+          "sha256:35fabebb6c1d44297e8f95fd286e777aa6bf9119ec010df63447213d4371f9bb",
+          "sha256:178d212fa6baf427d4311c439ea63ad42f5ac729e7ba40f3b60b5e13d270fbbf",
+          "sha256:d510c865414d61f6d79a70d4d9712580de33b64adc40dce25c08cff938e962b3",
+          "sha256:eb0c51d789b49041960b5096889175fe6ede465fa9e9347e1f2643de39764e4d"
+        ]
+      },
+      "revision": null,
+      "declaredSource": "d1075e35e16721979b484c2d9e33eeb56468ce9d"
+    },
+    {
+      "server": "shanghai-b",
+      "id": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "repoDigests": [
+        "accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69"
+      ],
+      "architecture": "amd64",
+      "os": "linux",
+      "size": 205977875,
+      "descriptor": {
+        "mediaType": "application/vnd.oci.image.index.v1+json",
+        "digest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+        "size": 856,
+        "urls": null,
+        "annotations": null,
+        "data": null,
+        "platform": null,
+        "artifactType": null
+      },
+      "rootFS": {
+        "Type": "layers",
+        "Layers": [
+          "sha256:e58989146fcec76699871403b9897b5c014af1ccd85f5a9300a215e7975525d7",
+          "sha256:4990a62cab1587a2ed690c9d4f41675b9216d68120e99033d664b558662e90c8",
+          "sha256:3714bbaf32038e259cddcddea09e13fc9aaa1a86a644274a6c6e263b00972240",
+          "sha256:f6becc1249c39a0f6d687460220dcfcf9f2a46d01770a70fc0a8ed4c98a6fd49",
+          "sha256:cae24708e29a74f04cc1ec51fc52e2d283c35f243ab21912e036095a2b50dbde",
+          "sha256:0f68dc5d210a834e7c5f5a38f4b274887396fb69b3c51f768bfbbc7f5844033c",
+          "sha256:b457851412063cbe80c0c9f2f58ba23a1bebdea1b891b6ce48f4ac12469eb999",
+          "sha256:54e8c273f49225c3946bc872ac4ee5787602139092c973aceb005556bab0a50f",
+          "sha256:2569552555fff4c0b39ef2554f3d190c7dcf02b3900b6133caf6b2e11ab4b46e",
+          "sha256:2b63af07ad44dbb2032715d461bbb34b053ac19e305784077691fce42b66e469",
+          "sha256:d79a89a6cb941258ebfa2c6d42ebade3735a0a02222c091e6fed8002081b44dc",
+          "sha256:fafadd8625b0fe18e6a73e92de9b822732741201ea2f069a565b6188d863674e",
+          "sha256:fe3c99ef8541afea414351501dd3ad23ae585174e708d41f2e076296c67b8f07",
+          "sha256:954069a0c8f9d2cd9cbfdbbcf5ae2741e00272f421ef8db6cdb44d4da7723bd2",
+          "sha256:bccbc1e475cbb2e61b791165fa2d9a7d05d34a8c010bfa3227039d7dbe19451e",
+          "sha256:3d3de5e3d86c6fcaf2511357724484a47922321ce167b28ef739a0bdea792f19",
+          "sha256:3ef9ad0ceca7cbbcb2895e188dd2d685a008c87ab6253894144836f4c3e92419",
+          "sha256:702fe708c9a29cf85f9cad7c98323e8fc9084f8fe6dd24d38ce21f8d28462e54",
+          "sha256:35fabebb6c1d44297e8f95fd286e777aa6bf9119ec010df63447213d4371f9bb",
+          "sha256:178d212fa6baf427d4311c439ea63ad42f5ac729e7ba40f3b60b5e13d270fbbf",
+          "sha256:d510c865414d61f6d79a70d4d9712580de33b64adc40dce25c08cff938e962b3",
+          "sha256:eb0c51d789b49041960b5096889175fe6ede465fa9e9347e1f2643de39764e4d"
+        ]
+      },
+      "revision": null,
+      "declaredSource": "d1075e35e16721979b484c2d9e33eeb56468ce9d"
+    }
+  ]
+}

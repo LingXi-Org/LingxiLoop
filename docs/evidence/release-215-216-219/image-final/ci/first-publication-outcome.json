@@ -1,0 +1,14 @@
+{
+  "workflowRun": 39410273533,
+  "sourceCommit": "2a1d3f286485ebe4642ec56664d16f668731d3cc",
+  "conclusion": "failure",
+  "tests": 353,
+  "passed": 339,
+  "failed": 1,
+  "skipped": 13,
+  "failure": "runtime-model-context fixture Worker listen EADDRINUSE :::52992 before behavior assertions",
+  "modelOrDatabaseRootCauseEstablished": false,
+  "imagePublished": false,
+  "productionJobs": "all skipped",
+  "nextAction": "controlled fixture reproduction and narrow test-only correction, followed by exact final CI and publication"
+}

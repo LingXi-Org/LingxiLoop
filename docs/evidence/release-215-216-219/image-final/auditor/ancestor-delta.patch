@@ -1,0 +1,28 @@
+--- audit-before-ancestor.py
++++ audit.py
+@@ -141,14 +141,24 @@
+         remove_path(result, path)
+     for path in opaque:
+         remove_path(result, path, False)
++    # Conservative hints include implicit directories. Never remove a hint:
++    # stale ancestors only cause an extra original scan, never a missed subtree.
++    ancestors = set()
++    def remember_ancestors(path):
++        parts = path.split('/')
++        ancestors.update('/'.join(parts[:i]) for i in range(1, len(parts)))
++    for path in result:
++        remember_ancestors(path)
+     pending = []
+     for path, entry in ordered:
++        remember_ancestors(path)
+         parents = path.split('/')[:-1]
+         for i in range(1, len(parents) + 1):
+             parent = '/'.join(parents[:i])
+             require(parent not in result or result[parent]['kind'] == 'directory', 'non_directory_parent')
+         if entry['kind'] != 'directory':
+-            remove_path(result, path)
++            if path in result or path in ancestors:
++                remove_path(result, path)
+         elif path in result and result[path]['kind'] != 'directory':
+             remove_path(result, path)
+         if entry['kind'] == 'hardlink':

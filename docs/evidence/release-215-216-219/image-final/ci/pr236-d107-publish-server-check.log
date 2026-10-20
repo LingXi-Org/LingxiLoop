@@ -1,0 +1,1074 @@
+checks (server)	Set up job	﻿2026-10-20T11:16:21.4186649Z Current runner version: '2.337.0'
+checks (server)	Set up job	2026-10-20T11:16:21.4225503Z ##[group]Runner Image Provisioner
+checks (server)	Set up job	2026-10-20T11:16:21.4227003Z Hosted Compute Agent
+checks (server)	Set up job	2026-10-20T11:16:21.4227958Z Version: 20261015.610
+checks (server)	Set up job	2026-10-20T11:16:21.4229184Z Commit: 267fdb4e8bbec4ab5ea31367f3a00d5c480c7656
+checks (server)	Set up job	2026-10-20T11:16:21.4230468Z Build Date: 2026-10-14T17:06:54Z
+checks (server)	Set up job	2026-10-20T11:16:21.4231703Z Worker ID: {6d97fa20-f3ad-438b-b759-e40d8cd7d097}
+checks (server)	Set up job	2026-10-20T11:16:21.4233294Z Region: eastus
+checks (server)	Set up job	2026-10-20T11:16:21.4234302Z Cloud: Azure
+checks (server)	Set up job	2026-10-20T11:16:21.4235511Z ##[endgroup]
+checks (server)	Set up job	2026-10-20T11:16:21.4237863Z ##[group]Operating System
+checks (server)	Set up job	2026-10-20T11:16:21.4239015Z Ubuntu
+checks (server)	Set up job	2026-10-20T11:16:21.4239930Z 24.04.5
+checks (server)	Set up job	2026-10-20T11:16:21.4240775Z LTS
+checks (server)	Set up job	2026-10-20T11:16:21.4241795Z ##[endgroup]
+checks (server)	Set up job	2026-10-20T11:16:21.4243027Z ##[group]Runner Image
+checks (server)	Set up job	2026-10-20T11:16:21.4244325Z Image: ubuntu-24.04
+checks (server)	Set up job	2026-10-20T11:16:21.4245613Z Version: 20261018.339.1
+checks (server)	Set up job	2026-10-20T11:16:21.4247566Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261018.339/images/ubuntu/Ubuntu2404-Readme.md
+checks (server)	Set up job	2026-10-20T11:16:21.4250706Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261018.339
+checks (server)	Set up job	2026-10-20T11:16:21.4252956Z ##[endgroup]
+checks (server)	Set up job	2026-10-20T11:16:21.4255313Z ##[group]GITHUB_TOKEN Permissions
+checks (server)	Set up job	2026-10-20T11:16:21.4258736Z Contents: read
+checks (server)	Set up job	2026-10-20T11:16:21.4259786Z Metadata: read
+checks (server)	Set up job	2026-10-20T11:16:21.4260932Z Packages: read
+checks (server)	Set up job	2026-10-20T11:16:21.4261942Z PullRequests: read
+checks (server)	Set up job	2026-10-20T11:16:21.4263528Z ##[endgroup]
+checks (server)	Set up job	2026-10-20T11:16:21.4268187Z Secret source: Actions
+checks (server)	Set up job	2026-10-20T11:16:21.4269804Z Cache mode: write
+checks (server)	Set up job	2026-10-20T11:16:21.4271371Z Prepare workflow directory
+checks (server)	Set up job	2026-10-20T11:16:21.5132891Z Prepare all required actions
+checks (server)	Set up job	2026-10-20T11:16:21.5206987Z Getting action download info
+checks (server)	Set up job	2026-10-20T11:16:21.7267897Z Download action repository 'actions/checkout@v5' (SHA:fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09)
+checks (server)	Set up job	2026-10-20T11:16:21.8190711Z Download action repository 'actions/setup-node@v5' (SHA:a0853c24544627f65ddf259abe73b1d18a591444)
+checks (server)	Set up job	2026-10-20T11:16:21.9166838Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+checks (server)	Set up job	2026-10-20T11:16:22.0427921Z Download action repository 'astral-sh/setup-uv@v6' (SHA:d0cc045d04ccac9d8b7881df0226f9e82c39688e)
+checks (server)	Set up job	2026-10-20T11:16:22.3735242Z Complete job name: checks (server)
+checks (server)	Initialize containers	﻿2026-10-20T11:16:22.4342872Z ##[group]Checking docker version
+checks (server)	Initialize containers	2026-10-20T11:16:22.4356190Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+checks (server)	Initialize containers	2026-10-20T11:16:22.5302361Z '1.48'
+checks (server)	Initialize containers	2026-10-20T11:16:22.5329452Z Docker daemon API version: '1.48'
+checks (server)	Initialize containers	2026-10-20T11:16:22.5330747Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+checks (server)	Initialize containers	2026-10-20T11:16:22.5550991Z '1.48'
+checks (server)	Initialize containers	2026-10-20T11:16:22.5573545Z Docker client API version: '1.48'
+checks (server)	Initialize containers	2026-10-20T11:16:22.5579817Z ##[endgroup]
+checks (server)	Initialize containers	2026-10-20T11:16:22.5583212Z ##[group]Clean up resources from previous jobs
+checks (server)	Initialize containers	2026-10-20T11:16:22.5588896Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=e9a833"
+checks (server)	Initialize containers	2026-10-20T11:16:22.5838562Z ##[command]/usr/bin/docker network prune --force --filter "label=e9a833"
+checks (server)	Initialize containers	2026-10-20T11:16:22.6019353Z ##[endgroup]
+checks (server)	Initialize containers	2026-10-20T11:16:22.6019918Z ##[group]Create local container network
+checks (server)	Initialize containers	2026-10-20T11:16:22.6030574Z ##[command]/usr/bin/docker network create --label e9a833 github_network_8b8fbe3e07f14513adcf180bf351f3ec
+checks (server)	Initialize containers	2026-10-20T11:16:22.6720215Z 9e40e2c2a94da7a8798fea5cbb1de2df5431801c2984f95bbc8c476d54170cdc
+checks (server)	Initialize containers	2026-10-20T11:16:22.6745356Z ##[endgroup]
+checks (server)	Initialize containers	2026-10-20T11:16:22.6770381Z ##[group]Starting redis service container
+checks (server)	Initialize containers	2026-10-20T11:16:22.6793132Z ##[command]/usr/bin/docker pull redis:7-alpine
+checks (server)	Initialize containers	2026-10-20T11:16:22.9519769Z 7-alpine: Pulling from library/redis
+checks (server)	Initialize containers	2026-10-20T11:16:23.0274322Z 16333ee0c00f: Pulling fs layer
+checks (server)	Initialize containers	2026-10-20T11:16:23.0276405Z 83234986c742: Pulling fs layer
+checks (server)	Initialize containers	2026-10-20T11:16:23.0277777Z 7eb50503c2b0: Pulling fs layer
+checks (server)	Initialize containers	2026-10-20T11:16:23.0279253Z 1522f9c6f453: Pulling fs layer
+checks (server)	Initialize containers	2026-10-20T11:16:23.0280585Z 9928009b15c8: Pulling fs layer
+checks (server)	Initialize containers	2026-10-20T11:16:23.0281575Z 4f4fb700ef54: Pulling fs layer
+checks (server)	Initialize containers	2026-10-20T11:16:23.0283302Z 4eb14bae0e1d: Pulling fs layer
+checks (server)	Initialize containers	2026-10-20T11:16:23.0284460Z 1522f9c6f453: Waiting
+checks (server)	Initialize containers	2026-10-20T11:16:23.0285255Z 9928009b15c8: Waiting
+checks (server)	Initialize containers	2026-10-20T11:16:23.0286039Z 4f4fb700ef54: Waiting
+checks (server)	Initialize containers	2026-10-20T11:16:23.0286879Z 4eb14bae0e1d: Waiting
+checks (server)	Initialize containers	2026-10-20T11:16:23.0793467Z 83234986c742: Verifying Checksum
+checks (server)	Initialize containers	2026-10-20T11:16:23.0796651Z 83234986c742: Download complete
+checks (server)	Initialize containers	2026-10-20T11:16:23.0868768Z 7eb50503c2b0: Verifying Checksum
+checks (server)	Initialize containers	2026-10-20T11:16:23.0870794Z 7eb50503c2b0: Download complete
+checks (server)	Initialize containers	2026-10-20T11:16:23.0966870Z 16333ee0c00f: Download complete
+checks (server)	Initialize containers	2026-10-20T11:16:23.1139003Z 9928009b15c8: Verifying Checksum
+checks (server)	Initialize containers	2026-10-20T11:16:23.1142016Z 9928009b15c8: Download complete
+checks (server)	Initialize containers	2026-10-20T11:16:23.1257289Z 4f4fb700ef54: Download complete
+checks (server)	Initialize containers	2026-10-20T11:16:23.1433823Z 4eb14bae0e1d: Verifying Checksum
+checks (server)	Initialize containers	2026-10-20T11:16:23.1435692Z 4eb14bae0e1d: Download complete
+checks (server)	Initialize containers	2026-10-20T11:16:23.1526551Z 1522f9c6f453: Verifying Checksum
+checks (server)	Initialize containers	2026-10-20T11:16:23.1528182Z 1522f9c6f453: Download complete
+checks (server)	Initialize containers	2026-10-20T11:16:23.2147426Z 16333ee0c00f: Pull complete
+checks (server)	Initialize containers	2026-10-20T11:16:25.5478565Z 83234986c742: Pull complete
+checks (server)	Initialize containers	2026-10-20T11:16:25.6918536Z 7eb50503c2b0: Pull complete
+checks (server)	Initialize containers	2026-10-20T11:16:25.8817540Z 1522f9c6f453: Pull complete
+checks (server)	Initialize containers	2026-10-20T11:16:25.8910791Z 9928009b15c8: Pull complete
+checks (server)	Initialize containers	2026-10-20T11:16:25.9028464Z 4f4fb700ef54: Pull complete
+checks (server)	Initialize containers	2026-10-20T11:16:25.9157018Z 4eb14bae0e1d: Pull complete
+checks (server)	Initialize containers	2026-10-20T11:16:25.9199778Z Digest: sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+checks (server)	Initialize containers	2026-10-20T11:16:25.9214388Z Status: Downloaded newer image for redis:7-alpine
+checks (server)	Initialize containers	2026-10-20T11:16:25.9228266Z docker.io/library/redis:7-alpine
+checks (server)	Initialize containers	2026-10-20T11:16:25.9281843Z ##[command]/usr/bin/docker create --name fa65d07689434691b734e33675df00a1_redis7alpine_cb2fb4 --label e9a833 --network github_network_8b8fbe3e07f14513adcf180bf351f3ec --network-alias redis -p 6379:6379 --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12 -e GITHUB_ACTIONS=true -e CI=true redis:7-alpine
+checks (server)	Initialize containers	2026-10-20T11:16:25.9576025Z b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Initialize containers	2026-10-20T11:16:25.9604811Z ##[command]/usr/bin/docker start b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Initialize containers	2026-10-20T11:16:26.1867914Z b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Initialize containers	2026-10-20T11:16:26.1894518Z ##[command]/usr/bin/docker ps --all --filter id=b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+checks (server)	Initialize containers	2026-10-20T11:16:26.2052153Z b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e Up Less than a second (health: starting)
+checks (server)	Initialize containers	2026-10-20T11:16:26.2077352Z ##[command]/usr/bin/docker port b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Initialize containers	2026-10-20T11:16:26.2233252Z 6379/tcp -> 0.0.0.0:6379
+checks (server)	Initialize containers	2026-10-20T11:16:26.2233989Z 6379/tcp -> [::]:6379
+checks (server)	Initialize containers	2026-10-20T11:16:26.2281026Z ##[endgroup]
+checks (server)	Initialize containers	2026-10-20T11:16:26.2290558Z ##[group]Waiting for all services to be ready
+checks (server)	Initialize containers	2026-10-20T11:16:26.2305594Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Initialize containers	2026-10-20T11:16:26.2449240Z starting
+checks (server)	Initialize containers	2026-10-20T11:16:26.2473413Z redis service is starting, waiting 2 seconds before checking again.
+checks (server)	Initialize containers	2026-10-20T11:16:28.2478079Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Initialize containers	2026-10-20T11:16:28.2628838Z starting
+checks (server)	Initialize containers	2026-10-20T11:16:28.2648521Z redis service is starting, waiting 3 seconds before checking again.
+checks (server)	Initialize containers	2026-10-20T11:16:32.0588895Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Initialize containers	2026-10-20T11:16:32.0747795Z healthy
+checks (server)	Initialize containers	2026-10-20T11:16:32.0769895Z redis service is healthy.
+checks (server)	Initialize containers	2026-10-20T11:16:32.0770733Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	﻿2026-10-20T11:16:32.1055015Z ##[group]Run actions/checkout@v5
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1055902Z with:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1056148Z   repository: LingXi-Org/LingxiLoop
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1058793Z   token: ***
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1059050Z   ssh-strict: true
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1059306Z   ssh-user: git
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1059534Z   persist-credentials: true
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1059783Z   clean: true
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1060001Z   sparse-checkout-cone-mode: true
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1060263Z   fetch-depth: 1
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1060469Z   fetch-tags: false
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1060700Z   show-progress: true
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1060922Z   lfs: false
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1061118Z   submodules: false
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1061341Z   set-safe-directory: true
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1061601Z   allow-unsafe-pr-checkout: false
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1062064Z env:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1062270Z   NODE_VERSION: 22
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1062722Z   ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.1062992Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2140179Z Syncing repository: LingXi-Org/LingxiLoop
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2142325Z ##[group]Getting Git version info
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2143310Z Working directory is '/home/runner/work/LingxiLoop/LingxiLoop'
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2144283Z [command]/usr/bin/git version
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2183076Z git version 2.55.0
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2218844Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2234600Z Temporarily overriding HOME='/home/runner/work/_temp/e2ee3772-8a07-4e5e-a10b-280647153218' before making global git config changes
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2235973Z Adding repository directory to the temporary git global config as a safe directory
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2236853Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/LingxiLoop/LingxiLoop
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2297091Z Deleting the contents of '/home/runner/work/LingxiLoop/LingxiLoop'
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2303116Z ##[group]Initializing the repository
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2309339Z [command]/usr/bin/git init /home/runner/work/LingxiLoop/LingxiLoop
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2427888Z hint: Using 'master' as the name for the initial branch. This default branch name
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2428894Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2429741Z hint: to use in all of your new repositories, which will suppress this warning,
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2430388Z hint: call:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2430692Z hint:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2431151Z hint: 	git config --global init.defaultBranch <name>
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2431723Z hint:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2432234Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2433333Z hint: 'development'. The just-created branch can be renamed via this command:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2433974Z hint:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2434294Z hint: 	git branch -m <name>
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2434681Z hint:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2435206Z hint: Disable this message with "git config set advice.defaultBranchName false"
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2441654Z Initialized empty Git repository in /home/runner/work/LingxiLoop/LingxiLoop/.git/
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2454407Z [command]/usr/bin/git remote add origin https://github.com/LingXi-Org/LingxiLoop
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2507780Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2508482Z ##[group]Disabling automatic garbage collection
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2511908Z [command]/usr/bin/git config --local gc.auto 0
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2549018Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2549601Z ##[group]Setting up auth
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2557362Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.2596335Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.3027999Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.3084539Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.3366932Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.3412116Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.3667580Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.3718231Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.3718729Z ##[group]Fetching the repository
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:32.3730329Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d1075e35e16721979b484c2d9e33eeb56468ce9d:refs/remotes/origin/integration/215-216-219-final
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5626571Z From https://github.com/LingXi-Org/LingxiLoop
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5628080Z  * [new ref]         d1075e35e16721979b484c2d9e33eeb56468ce9d -> origin/integration/215-216-219-final
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5633378Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5634348Z ##[group]Determining the checkout info
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5637063Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5645190Z [command]/usr/bin/git sparse-checkout disable
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5711089Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5754121Z ##[group]Checking out the ref
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:35.5761784Z [command]/usr/bin/git checkout --progress --force -B integration/215-216-219-final refs/remotes/origin/integration/215-216-219-final
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:36.5726788Z Switched to a new branch 'integration/215-216-219-final'
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:36.5727816Z branch 'integration/215-216-219-final' set up to track 'origin/integration/215-216-219-final'.
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:36.5771155Z ##[endgroup]
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:36.5824922Z [command]/usr/bin/git log -1 --format=%H
+checks (server)	Run actions/checkout@v5	2026-10-20T11:16:36.5862066Z d1075e35e16721979b484c2d9e33eeb56468ce9d
+checks (server)	Run actions/setup-node@v5	﻿2026-10-20T11:16:36.6118193Z ##[group]Run actions/setup-node@v5
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6118507Z with:
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6118724Z   node-version: 22
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6118930Z   cache: npm
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6119158Z   cache-dependency-path: package-lock.json
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6119452Z   always-auth: false
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6119670Z   check-latest: false
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6122113Z   token: ***
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6122338Z   package-manager-cache: true
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6122787Z env:
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6122969Z   NODE_VERSION: 22
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6123188Z   ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.6123442Z ##[endgroup]
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.7664675Z Found in cache @ /opt/hostedtoolcache/node/22.23.3/x64
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.7669921Z (node:2657) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.7670983Z (Use `node --trace-deprecation ...` to show where the warning was created)
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:36.7690472Z ##[group]Environment details
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:37.1810905Z node: v22.23.3
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:37.1811283Z npm: 10.9.9
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:37.1811583Z yarn: 1.22.22
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:37.1812206Z ##[endgroup]
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:37.1839286Z [command]/opt/hostedtoolcache/node/22.23.3/x64/bin/npm config get cache
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:37.3045748Z /home/runner/.npm
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:37.3911892Z Cache hit for: node-cache-Linux-x64-npm-b0b127fb7f9a837c066c1090b3b3bfab90626ccebf90786ad887ca9191112e48
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:37.4030800Z (node:2657) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:38.4555687Z Received 251658240 of 445781857 (56.5%), 237.6 MBs/sec
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:39.2166615Z Received 445781857 of 445781857 (100.0%), 240.1 MBs/sec
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:39.2167684Z Cache Size: ~425 MB (445781857 B)
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:39.2201607Z [command]/usr/bin/tar -xf /home/runner/work/_temp/89009805-a2cf-44db-8a1c-8b6b914583ef/cache.tzst -P -C /home/runner/work/LingxiLoop/LingxiLoop --use-compress-program unzstd
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:40.1977637Z Cache restored successfully
+checks (server)	Run actions/setup-node@v5	2026-10-20T11:16:40.2171903Z Cache restored from key: node-cache-Linux-x64-npm-b0b127fb7f9a837c066c1090b3b3bfab90626ccebf90786ad887ca9191112e48
+checks (server)	Run npm ci --prefer-offline	﻿2026-10-20T11:16:40.2575384Z ##[group]Run npm ci --prefer-offline
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:40.2575803Z [36;1mnpm ci --prefer-offline[0m
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:40.2671510Z shell: /usr/bin/bash -e {0}
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:40.2671858Z env:
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:40.2672079Z   NODE_VERSION: 22
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:40.2672333Z   ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:40.2673300Z   NODE_AUTH_TOKEN: ***
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:40.2673571Z ##[endgroup]
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:51.0619667Z npm warn deprecated @types/bignumber.js@5.0.4: This is a stub types definition. bignumber.js provides its own type definitions, so you do not need this installed.
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:51.5233119Z npm warn deprecated whatwg-encoding@3.1.1: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:16:53.8059422Z npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:22.7776076Z 
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:22.7777180Z added 1494 packages, and audited 1495 packages in 42s
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:22.7778014Z 
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:22.7780774Z 395 packages are looking for funding
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:22.7781901Z   run `npm fund` for details
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0974362Z 
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0975591Z 107 vulnerabilities (11 low, 60 moderate, 30 high, 6 critical)
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0976147Z 
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0976541Z To address issues that do not require attention, run:
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0977151Z   npm audit fix
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0977376Z 
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0977853Z To address all issues possible (including breaking changes), run:
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0978559Z   npm audit fix --force
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0978847Z 
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0979211Z Some issues need review, and may require choosing
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0979822Z a different dependency.
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0980117Z 
+checks (server)	Run npm ci --prefer-offline	2026-10-20T11:17:23.0980329Z Run `npm audit` for details.
+checks (server)	Record installed dependency footprint	﻿2026-10-20T11:17:23.3651722Z ##[group]Run du -sb node_modules
+checks (server)	Record installed dependency footprint	2026-10-20T11:17:23.3652074Z [36;1mdu -sb node_modules[0m
+checks (server)	Record installed dependency footprint	2026-10-20T11:17:23.3708077Z shell: /usr/bin/bash -e {0}
+checks (server)	Record installed dependency footprint	2026-10-20T11:17:23.3708481Z env:
+checks (server)	Record installed dependency footprint	2026-10-20T11:17:23.3708776Z   NODE_VERSION: 22
+checks (server)	Record installed dependency footprint	2026-10-20T11:17:23.3709136Z   ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+checks (server)	Record installed dependency footprint	2026-10-20T11:17:23.3709543Z ##[endgroup]
+checks (server)	Record installed dependency footprint	2026-10-20T11:17:23.8843030Z 1677764615	node_modules
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	﻿2026-10-20T11:17:23.8959790Z ##[group]Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:23.8960727Z [36;1mnpm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs[0m
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:23.9013940Z shell: /usr/bin/bash -e {0}
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:23.9014228Z env:
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:23.9014433Z   NODE_VERSION: 22
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:23.9014669Z   ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:23.9015429Z   CI_TEST_FILES: ["server/src/__tests__/durable-public-projection.test.ts","server/src/__tests__/memory-scopes.test.ts","server/src/__tests__/public-text-safety.test.ts"]
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:23.9016184Z ##[endgroup]
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:24.0067097Z 
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:24.0067629Z > lingxiloop@0.1.0-beta server:lint
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:24.0068325Z > biome lint server
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:24.0068530Z 
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:24.9088142Z Checked 587 files in 856ms. No fixes applied.
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:25.0625479Z 
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:25.0626406Z > lingxiloop@0.1.0-beta server:typecheck
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:25.0627234Z > tsc -p server/tsconfig.json --noEmit
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:25.0627531Z 
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:37.4630454Z 
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:37.4631381Z > lingxiloop@0.1.0-beta server:test
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:37.4631978Z > node scripts/run-tests.mjs server
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:37.4632263Z 
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:37.5557005Z TAP version 13
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0622037Z # Subtest: admin resource lists enforce bounds and return an opaque next cursor
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0628919Z ok 1 - admin resource lists enforce bounds and return an opaque next cursor
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0629877Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0633594Z   duration_ms: 9.526191
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0634235Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0634908Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0635844Z # Subtest: native delivery operations page failures and retry only a validated identity
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0645893Z ok 2 - native delivery operations page failures and retry only a validated identity
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0647044Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0647662Z   duration_ms: 1.679222
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0648304Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0648870Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0649737Z # Subtest: suspending revokes WS tickets while restore creates no ticket
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0650954Z ok 3 - suspending revokes WS tickets while restore creates no ticket
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0651817Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0652384Z   duration_ms: 0.582873
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0653263Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0653871Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0654880Z # Subtest: platform message history uses the company-scoped channel profile
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0656335Z ok 4 - platform message history uses the company-scoped channel profile
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0657281Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0657914Z   duration_ms: 0.408289
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0658418Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0658866Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0660022Z # Subtest: observability dashboard returns validated OpenPlait frames with collapsed run detail data
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0667222Z ok 5 - observability dashboard returns validated OpenPlait frames with collapsed run detail data
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0668238Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0668828Z   duration_ms: 2.33978
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0669589Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0670122Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0670863Z # Subtest: platform Agent operations resolve the authoritative run identity
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0671899Z ok 6 - platform Agent operations resolve the authoritative run identity
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0672814Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0673164Z   duration_ms: 0.892009
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0673559Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0673898Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0674723Z # Subtest: admin association filters are exact, validated and preserve knowledge ownership
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0675979Z ok 7 - admin association filters are exact, validated and preserve knowledge ownership
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0676748Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0677257Z   duration_ms: 9.237735
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0677781Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0678705Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0679439Z # Subtest: admin record names resolve in batches and secret fields remain omitted
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0680503Z ok 8 - admin record names resolve in batches and secret fields remain omitted
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0681169Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0681501Z   duration_ms: 1.526127
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0681925Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0682310Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0931491Z # Subtest: administrator command auditing accepts Chinese reasons in JSON bodies
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0933053Z ok 9 - administrator command auditing accepts Chinese reasons in JSON bodies
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0933782Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0934140Z   duration_ms: 32.619761
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0934533Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:39.0934748Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.2895334Z # Subtest: the LingxiOS registry exposes every product capability exactly once
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.2901336Z ok 10 - the LingxiOS registry exposes every product capability exactly once
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.2902824Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.2903415Z   duration_ms: 5.94325
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.2904074Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.2904665Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.5202828Z # Subtest: HTTP and WebSocket composition keeps authentication and authorization at the boundary
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.5206520Z ok 11 - HTTP and WebSocket composition keeps authentication and authorization at the boundary
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.5207459Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.5207907Z   duration_ms: 4.295496
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.5209050Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.5209645Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8853333Z # Subtest: rejects protocol leakage and repeated paragraphs without clipping normal reasoning vocabulary
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8863884Z ok 12 - rejects protocol leakage and repeated paragraphs without clipping normal reasoning vocabulary
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8864958Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8865444Z   duration_ms: 4.650746
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8865962Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8866421Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8883660Z # Subtest: plain-text fast path and every directive prefix match the pinned reference parser
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8888959Z ok 13 - plain-text fast path and every directive prefix match the pinned reference parser
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8900976Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8901620Z   duration_ms: 25.22039
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8902041Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:41.8902346Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4418264Z # Subtest: native state operations stream text once, retract it, and end with canonical content
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4425260Z ok 14 - native state operations stream text once, retract it, and end with canonical content
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4426382Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4427032Z   duration_ms: 39.237752
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4427758Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4428112Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4428804Z # Subtest: projection owns gaps, cancellation, failures, approvals and filtered tool/memory replay
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4429735Z ok 15 - projection owns gaps, cancellation, failures, approvals and filtered tool/memory replay
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4430356Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4430688Z   duration_ms: 12.888202
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4431052Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4453101Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4464504Z # Subtest: truncated native frames and old browser wire format fail instead of falling back
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4466334Z ok 16 - truncated native frames and old browser wire format fail instead of falling back
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4467494Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4468018Z   duration_ms: 4.855046
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4468741Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.4469235Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7279559Z # Subtest: prefetched upstream failure survives downstream backpressure
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7280837Z ok 17 - prefetched upstream failure survives downstream backpressure
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7281563Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7281961Z   duration_ms: 245.529842
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7282412Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7283085Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7294122Z # Subtest: commit handoff and tool activity preserve the live answer part
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7296171Z ok 18 - commit handoff and tool activity preserve the live answer part
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7297163Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7297816Z   duration_ms: 9.565234
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7298531Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7299180Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7299981Z # Subtest: every changing public snapshot round-trips through the actual stream decoder
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7300838Z ok 19 - every changing public snapshot round-trips through the actual stream decoder
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7301429Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7301775Z   duration_ms: 23.432496
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7302161Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7302830Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7303856Z # Subtest: concurrent protocol responses retain separate prior state and control permissions
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7304857Z ok 20 - concurrent protocol responses retain separate prior state and control permissions
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7305320Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7305542Z   duration_ms: 6.869462
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7305775Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7305978Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7306629Z # Subtest: JSON normalization, structural replacements and append paths keep every wire state exact
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7307949Z ok 21 - JSON normalization, structural replacements and append paths keep every wire state exact
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7308659Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7308969Z   duration_ms: 5.875554
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7309316Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:42.7309937Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6116775Z # Subtest: ordinary Canvas reports reject verifier fields at native parse admission
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6118449Z ok 22 - ordinary Canvas reports reject verifier fields at native parse admission
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6119466Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6120027Z   duration_ms: 4.166937
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6120730Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6121368Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6124702Z # Subtest: independent verification has a strict required role-specific public contract
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6126903Z ok 23 - independent verification has a strict required role-specific public contract
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6128040Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6128795Z   duration_ms: 1.50034
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6129625Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:43.6130237Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:45.8079990Z # Subtest: product policy requires answer wording instead of source labels and preserves Markdown examples
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:45.8082419Z ok 24 - product policy requires answer wording instead of source labels and preserves Markdown examples
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:45.8083947Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:45.8084511Z   duration_ms: 6.988022
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:45.8085279Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:45.8085838Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.0539021Z # Subtest: conversation activity reads scoped public runtime state without tool outputs or prompts
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.0543058Z ok 25 - conversation activity reads scoped public runtime state without tool outputs or prompts
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.0544160Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.0544564Z   duration_ms: 2.56
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.0544943Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.0545286Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.3961249Z # [documents] edit not persisted; retained for retry Error: database offline
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.3963103Z #     at Object.query (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__tests__/document-collaboration.test.ts:184:49)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.3965054Z #     at persistDocumentUpdate (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/documents/collaboration-repository.ts:71:29)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.3967057Z #     at <anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/documents/collaboration-application.ts:168:17)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.3968933Z #     at async <anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/documents/collaboration-application.ts:155:9)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.3972168Z # [documents] fanout failed; durable replay will recover Error: Redis offline
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.3973901Z #     at Object.publish (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__tests__/document-collaboration.test.ts:200:36)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.3976177Z #     at <anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/documents/collaboration-application.ts:181:38)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4483752Z # [documents] recovery will retry Error: compaction failed
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4485534Z #     at Object.query (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__tests__/document-collaboration.test.ts:189:61)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4487886Z #     at compactDocumentUpdates (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/documents/collaboration-repository.ts:99:12)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4490235Z #     at async <anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/documents/collaboration-application.ts:128:7)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4492967Z #     at async DocumentRoomRuntime.maybeCompact (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/documents/collaboration-application.ts:121:5)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4495660Z #     at async DocumentRoomRuntime.recover (/home/runner/work/LingxiLoop/LingxiLoop/server/src/modules/documents/collaboration-application.ts:203:11)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4498133Z #     at async TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__tests__/document-collaboration.test.ts:226:3)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4499938Z #     at async Test.run (node:internal/test_runner/test:1054:7)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4501261Z #     at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4573948Z # Subtest: document collaboration persists and publishes one local Yjs update with its true origin
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4576318Z ok 26 - document collaboration persists and publishes one local Yjs update with its true origin
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4577144Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4577488Z   duration_ms: 11.216707
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4577888Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4578230Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4580872Z # Subtest: a warm document room cannot be reused under another tenant
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4584099Z ok 27 - a warm document room cannot be reused under another tenant
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4584717Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4585059Z   duration_ms: 1.325012
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4585441Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4585774Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4588715Z # Subtest: remote document updates are applied only to the matching tenant room
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4589614Z ok 28 - remote document updates are applied only to the matching tenant room
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4590228Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4590697Z   duration_ms: 2.612887
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4591050Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4591432Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4592584Z # Subtest: project document lookup carries company and project tenant predicates
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4596787Z ok 29 - project document lookup carries company and project tenant predicates
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4597510Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4597857Z   duration_ms: 0.759431
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4598251Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4598602Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4617529Z # Subtest: failed persistence is retained, retries include dependent deltas, and durable replay heals missed fanout
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4620241Z ok 30 - failed persistence is retained, retries include dependent deltas, and durable replay heals missed fanout
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4621446Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4621942Z   duration_ms: 68.820116
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4623158Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.4623735Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6945215Z # Subtest: domain mutation and event append share one caller-owned transaction
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6964535Z ok 31 - domain mutation and event append share one caller-owned transaction
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6965596Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6966389Z   duration_ms: 3.198434
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6967101Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6967720Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6968769Z # Subtest: an exact idempotent retry returns the original event without another insert
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6970313Z ok 32 - an exact idempotent retry returns the original event without another insert
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6971999Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6972889Z   duration_ms: 0.515458
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6973559Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6974171Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6975150Z # Subtest: idempotency key reuse with a changed typed payload is rejected
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6976408Z ok 33 - idempotency key reuse with a changed typed payload is rejected
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6977086Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6977454Z   duration_ms: 0.919318
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6977849Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6978194Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6978798Z # Subtest: payload and cursor bounds fail before persistence
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6979618Z ok 34 - payload and cursor bounds fail before persistence
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6980167Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6980498Z   duration_ms: 0.684111
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6980895Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6981231Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6981985Z # Subtest: event cursor reads are tenant scoped, optional-Project scoped and bounded
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6983427Z ok 35 - event cursor reads are tenant scoped, optional-Project scoped and bounded
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6984122Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6984427Z   duration_ms: 0.366452
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6984679Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:46.6984887Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2733756Z # Subtest: public provider attempts stay distinct and ordered through failure and final answer projection
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2736362Z ok 36 - public provider attempts stay distinct and ordered through failure and final answer projection
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2737357Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2737717Z   duration_ms: 15.144627
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2738128Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2738464Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2739401Z # Subtest: same progress id cannot replace or revive an old report (same fence: false)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2740670Z ok 37 - same progress id cannot replace or revive an old report (same fence: false)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2741370Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2741730Z   duration_ms: 1.971324
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2742122Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2742665Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2745040Z # Subtest: same progress id cannot replace or revive an old report (same fence: true)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2747516Z ok 38 - same progress id cannot replace or revive an old report (same fence: true)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2748090Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2748396Z   duration_ms: 0.720298
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2748853Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2749096Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2751883Z # Subtest: the latest published explanation survives the 40-part snapshot window while all history stays pageable
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2753208Z ok 39 - the latest published explanation survives the 40-part snapshot window while all history stays pageable
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2753909Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2754125Z   duration_ms: 100.788622
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2754370Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2755586Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2756264Z # Subtest: only explicit accepted-result identity archives a public prefix from the foreground, preserving every historical part
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2759113Z ok 40 - only explicit accepted-result identity archives a public prefix from the foreground, preserving every historical part
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2760100Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2760547Z   duration_ms: 0.487616
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2760993Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.2761328Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.4907777Z # Subtest: typed entitlements preserve boolean, number, and string values without coercion
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.4910005Z ok 41 - typed entitlements preserve boolean, number, and string values without coercion
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.4911210Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.4911922Z   duration_ms: 1.550752
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.4912980Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:47.4913670Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0773014Z # Subtest: gateway assertion binds identity, method, path and freshness
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0803757Z ok 42 - gateway assertion binds identity, method, path and freshness
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0805449Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0833304Z   duration_ms: 2.305004
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0863346Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0863892Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0864665Z # Subtest: gateway middleware consumes a signed nonce only once
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0865671Z ok 43 - gateway middleware consumes a signed nonce only once
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0866415Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0866890Z   duration_ms: 0.978729
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0867426Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0867878Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0868801Z # Subtest: registration service binds capability, verified subject and all business input
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0870172Z ok 44 - registration service binds capability, verified subject and all business input
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0871009Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0871551Z   duration_ms: 0.622126
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0871983Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0872342Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0873327Z # Subtest: bootstrap platform identity service binds the verified bootstrap subject
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0874584Z ok 45 - bootstrap platform identity service binds the verified bootstrap subject
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0875342Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0875675Z   duration_ms: 0.22072
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0876109Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.0876480Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.3339737Z # (node:3454) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.3341166Z # (Use `node --trace-warnings ...` to show where the warning was created)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.5548762Z # Subtest: retrieval numbers distinct chunks of one PDF and preserves Markdown after hybrid deduplication
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.5550788Z ok 46 - retrieval numbers distinct chunks of one PDF and preserves Markdown after hybrid deduplication
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.5551795Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.5552313Z   duration_ms: 250.107656
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.5553031Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:48.5553328Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:49.6886569Z # Subtest: LingxiLit instruments a preloaded OpenAI module without exporting message content
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:49.6887804Z ok 47 - LingxiLit instruments a preloaded OpenAI module without exporting message content
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:49.6888436Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:49.6888920Z   duration_ms: 873.04125
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:49.6889416Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:49.6903545Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:50.7217555Z # Subtest: model calls fail open when pricing and OTLP are unavailable
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:50.7218618Z ok 48 - model calls fail open when pricing and OTLP are unavailable
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:50.7219048Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:50.7219448Z   duration_ms: 1042.58386
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:50.7219960Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:50.7220434Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8944762Z # Subtest: host judgments price measured primary-model tokens with the configured runtime rates
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8946737Z ok 49 - host judgments price measured primary-model tokens with the configured runtime rates
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8948199Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8949001Z   duration_ms: 3.832653
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8949717Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8950374Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8951514Z # Subtest: SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8953304Z ok 50 - SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8954385Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8955035Z   duration_ms: 0.40404
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8955748Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8956429Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8957595Z # Subtest: product LLM completions disable thinking and record the authoritative call ledger
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8959272Z ok 51 - product LLM completions disable thinking and record the authoritative call ledger
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8960385Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8961032Z   duration_ms: 0.595557
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8961731Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8962375Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8963594Z # Subtest: failed product LLM calls are recorded and propagate
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8965794Z ok 52 - failed product LLM calls are recorded and propagate
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8966717Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8967359Z   duration_ms: 0.789607
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8968057Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8968692Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8969798Z # Subtest: successful provider results are not returned until the ledger write succeeds
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8971385Z ok 53 - successful provider results are not returned until the ledger write succeeds
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8972734Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8973407Z   duration_ms: 0.655529
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8974108Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8974730Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8975732Z # Subtest: a missing authoritative ledger record fails the product call
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8977071Z ok 54 - a missing authoritative ledger record fails the product call
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8978080Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8978728Z   duration_ms: 0.53294
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8979438Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8980083Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8981224Z # Subtest: caller-supplied call identity makes uncertain ledger retries idempotent
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8983021Z ok 55 - caller-supplied call identity makes uncertain ledger retries idempotent
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8984098Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8984740Z   duration_ms: 0.45716
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8985438Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8986044Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8987133Z # Subtest: GLM Flash host calls use the same cache-aware CN tariff as Agent observations
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8989268Z ok 56 - GLM Flash host calls use the same cache-aware CN tariff as Agent observations
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8990139Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8990679Z   duration_ms: 0.987496
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8991241Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:51.8991808Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3976197Z # Subtest: shared model calls bound retries, sanitize per-attempt ledger metadata and keep SDK retries disabled
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3982856Z ok 57 - shared model calls bound retries, sanitize per-attempt ledger metadata and keep SDK retries disabled
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3984108Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3984589Z   duration_ms: 326.808445
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3985039Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3985305Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3985914Z # Subtest: caller cancellation releases a hung request and embeddings never switch models
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3986825Z ok 58 - caller cancellation releases a hung request and embeddings never switch models
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3987381Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3987652Z   duration_ms: 1.687507
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3987945Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.3988195Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.6290277Z # (node:3563) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.6291865Z # (Use `node --trace-warnings ...` to show where the warning was created)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.9091590Z # Subtest: teacher and ordinary memory have the same authorized scopes and reject revocation
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.9093439Z ok 59 - teacher and ordinary memory have the same authorized scopes and reject revocation
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.9094367Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.9094762Z   duration_ms: 285.09241
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.9095221Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:53.9095615Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.2374160Z # Subtest: native evolution fixture rewards recovery and blocks unsafe strategy actions
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.2379450Z ok 60 - native evolution fixture rewards recovery and blocks unsafe strategy actions
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.2381288Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.2399380Z   duration_ms: 7.867347
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.2399850Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.2400200Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.4863809Z # [access] permission resolution unavailable { action: 'unknown:action' }
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.4979134Z # Subtest: creator policies deny missing ownership facts instead of treating them as public
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5014234Z ok 61 - creator policies deny missing ownership facts instead of treating them as public
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5015464Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5016027Z   duration_ms: 1.36921
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5017447Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5018086Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5019150Z # Subtest: users can edit their own Canvas frames after the workspace finishes
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5020409Z ok 62 - users can edit their own Canvas frames after the workspace finishes
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5021203Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5021672Z   duration_ms: 0.244724
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5022224Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5022922Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5023990Z # Subtest: platform administrators bypass tenant membership but not entitlements or resource state
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5025522Z ok 63 - platform administrators bypass tenant membership but not entitlements or resource state
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5026459Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5026925Z   duration_ms: 0.242911
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5027438Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5027896Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5028813Z # Subtest: runtime failures and unregistered actions fail closed without a context
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5030073Z ok 64 - runtime failures and unregistered actions fail closed without a context
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5030894Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5031341Z   duration_ms: 2.122618
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5031851Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5032309Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5033316Z # Subtest: ResourceAccessMode centralizes Project lifecycle restrictions
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5034487Z ok 65 - ResourceAccessMode centralizes Project lifecycle restrictions
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5035493Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5035942Z   duration_ms: 0.347515
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5036476Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5036931Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5037938Z # Subtest: invalid Company and Project lifecycle contexts fail closed with their owning state denial
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5039578Z ok 66 - invalid Company and Project lifecycle contexts fail closed with their owning state denial
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5040660Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5041187Z   duration_ms: 0.300087
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5041812Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5042376Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5043700Z # Subtest: close-out, transfer, read-only, and retention policies fail closed by action
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5045175Z ok 67 - close-out, transfer, read-only, and retention policies fail closed by action
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5046101Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5046624Z   duration_ms: 0.362092
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5047337Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5047898Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5049155Z # Subtest: retention and archived institutional reads require a Company manager or Project owner
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5050945Z ok 68 - retention and archived institutional reads require a Company manager or Project owner
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5052012Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5052926Z   duration_ms: 0.398308
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5053638Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5054436Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5055283Z # Subtest: ordinary teachers remain managers in MANAGER_ONLY Project contexts
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5056512Z ok 69 - ordinary teachers remain managers in MANAGER_ONLY Project contexts
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5057340Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5057798Z   duration_ms: 0.32834
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5058351Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5058812Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5059394Z # Subtest: teachers cannot submit as students
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5060300Z ok 70 - teachers cannot submit as students
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5060898Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5061341Z   duration_ms: 0.392799
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5062138Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5062854Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5063746Z # Subtest: Company and Project lifecycle restrictions are both enforced
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5064936Z ok 71 - Company and Project lifecycle restrictions are both enforced
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5065631Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5066037Z   duration_ms: 0.213617
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5066756Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5067163Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5068205Z # Subtest: company administrators manage course groups but do not inherit private email or direct-message membership
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5070426Z ok 72 - company administrators manage course groups but do not inherit private email or direct-message membership
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5071320Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5071705Z   duration_ms: 0.197657
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5072146Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:54.5072765Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.0684734Z # Subtest: avatars preserve their seeded style and accept only owned, bounded raster uploads
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.0686277Z ok 73 - avatars preserve their seeded style and accept only owned, bounded raster uploads
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.0687180Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.0687583Z   duration_ms: 16.323265
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.0688044Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.0688429Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4270101Z # Subtest: public tool projection strips private values before transport
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4271601Z ok 74 - public tool projection strips private values before transport
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4272359Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4273010Z   duration_ms: 7.090605
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4273508Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4273905Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4274811Z # Subtest: memory publishes the official chip shape from successful native receipts only
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4276275Z ok 75 - memory publishes the official chip shape from successful native receipts only
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4277094Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4277481Z   duration_ms: 4.365108
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4277938Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:55.4278313Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4729145Z # Subtest: cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4743344Z ok 76 - cumulative gate rejects every chunk split and every-character reasoning/protocol marker without leaking its content
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4744254Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4744480Z   duration_ms: 24.651276
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4744745Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4744972Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4745579Z # Subtest: normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4746559Z ok 77 - normal prose publishes immediately but an unfinished marker never flushes at EOF or interrupted delivery
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4747074Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4747276Z   duration_ms: 3.234851
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4747517Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4747718Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4748231Z # Subtest: multiple planning directives are held cumulatively before a later cluster can reject them
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4749028Z ok 78 - multiple planning directives are held cumulatively before a later cluster can reject them
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4749489Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4749696Z   duration_ms: 8.361113
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4749925Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4750245Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4751323Z # Subtest: fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4752262Z ok 79 - fenced code, inline code, blockquotes and ordinary vocabulary remain exact quoted data for every character
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4753093Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4753303Z   duration_ms: 18.237286
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4753542Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4753746Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4754222Z # Subtest: leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4754942Z ok 80 - leaving quoted data cannot cause later unquoted protocol markers to bypass the gate
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4755394Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4755590Z   duration_ms: 0.49587
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4755819Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4756030Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4756431Z # Subtest: approval holds a trailing high surrogate until the pair arrives
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4757344Z ok 81 - approval holds a trailing high surrogate until the pair arrives
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4757957Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4758245Z   duration_ms: 0.298274
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4758580Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4758865Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4760347Z # Subtest: long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4762072Z ok 82 - long cumulative streams pause optional publication work while a single final safety check accepts the complete answer
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4763176Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4763472Z   duration_ms: 2.443214
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4763801Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.4764101Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.7209169Z # (node:3693) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:57.7210374Z # (Use `node --trace-warnings ...` to show where the warning was created)
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1196271Z # Subtest: natural results use original safe URLs, normalized text and stable deduplication
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1205171Z ok 83 - natural results use original safe URLs, normalized text and stable deduplication
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1210434Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1211147Z   duration_ms: 22.185592
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1212135Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1213100Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1214188Z # Subtest: only explicit no-match pages are empty; challenges and broken markup fail
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1215728Z ok 84 - only explicit no-match pages are empty; challenges and broken markup fail
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1216798Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1217444Z   duration_ms: 2.85098
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1218149Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1218809Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1220663Z # Subtest: result thumbnails preserve lazy image URLs without treating favicons or unsafe URLs as previews
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1222843Z ok 85 - result thumbnails preserve lazy image URLs without treating favicons or unsafe URLs as previews
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1224087Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1224749Z   duration_ms: 7.080868
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1225451Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1226090Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1227325Z # Subtest: search stays within two pages, preserves order, validates inputs and propagates failures
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1228549Z ok 86 - search stays within two pages, preserves order, validates inputs and propagates failures
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1229189Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1229537Z   duration_ms: 4.01567
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1229932Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1230272Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1230878Z # Subtest: result payload stays below the native runtime 8000-character tool output limit
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1231710Z ok 87 - result payload stays below the native runtime 8000-character tool output limit
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1232335Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1233121Z   duration_ms: 17.559579
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1233739Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:17:58.1234104Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0592126Z # Subtest: public activity is explicit and replayable while the answer keeps its native part index
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0594966Z ok 88 - public activity is explicit and replayable while the answer keeps its native part index
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0596022Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0597061Z   duration_ms: 20.703206
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0597541Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0597921Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0599063Z # Subtest: incremental public explanations update one original position; arbitrary results cannot impersonate them
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0608997Z ok 89 - incremental public explanations update one original position; arbitrary results cannot impersonate them
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0609954Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0610321Z   duration_ms: 1.475362
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0610763Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0611072Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0611957Z # Subtest: every user-visible call survives a history longer than 256 calls, with stable outcome and identity
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0613502Z ok 90 - every user-visible call survives a history longer than 256 calls, with stable outcome and identity
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0614260Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0614544Z   duration_ms: 81.327784
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0614789Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0615008Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0615994Z # Subtest: wire pages preserve more than 512 calls, attention and final answer without raising protocol limits
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0616888Z ok 91 - wire pages preserve more than 512 calls, attention and final answer without raising protocol limits
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0617388Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0617608Z   duration_ms: 61383.827746
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0617851Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0618049Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0618512Z # Subtest: server projection removes diagnostics and private outcome gaps before transport
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0619232Z ok 92 - server projection removes diagnostics and private outcome gaps before transport
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0619667Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0619863Z   duration_ms: 1.995579
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0620095Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.0620289Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5647931Z # Subtest: upload boundaries reject unsafe or cross-workspace storage paths
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5649403Z ok 93 - upload boundaries reject unsafe or cross-workspace storage paths
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5650194Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5650470Z   duration_ms: 7.105274
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5650784Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5651050Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5654440Z # Subtest: bounded storage reads stop as soon as a streamed body crosses the cap
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5655859Z ok 94 - bounded storage reads stop as soon as a streamed body crosses the cap
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5663394Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5663842Z   duration_ms: 0.619501
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5664914Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5665241Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5665722Z # Subtest: storage use requires an explicitly installed provider
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5671870Z ok 95 - storage use requires an explicitly installed provider
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5672776Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5673107Z   duration_ms: 0.280171
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5673511Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5673916Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5674548Z # Subtest: readiness requires both PostgreSQL and Redis
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5675485Z ok 96 - readiness requires both PostgreSQL and Redis
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5676086Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5676337Z   duration_ms: 0.785369
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5676631Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.5676881Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9591516Z # Subtest: conversation summaries tolerate unsupported previews without weakening native validation
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9593260Z ok 97 - conversation summaries tolerate unsupported previews without weakening native validation
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9594340Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9594908Z   duration_ms: 29.287988
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9595434Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9595832Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9596678Z # Subtest: WuKong channel reconciliation uses the v3 integer-switch contract
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9597816Z ok 98 - WuKong channel reconciliation uses the v3 integer-switch contract
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9598522Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9598895Z   duration_ms: 1.153152
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9599379Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9599765Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9607123Z # Subtest: WuKong adapter uses v3 message endpoints and preserves client_msg_no
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9608638Z ok 99 - WuKong adapter uses v3 message endpoints and preserves client_msg_no
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9609395Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9609746Z   duration_ms: 1.58215
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9610105Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:00.9610436Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.2571772Z # Subtest: WuKong sends retry only transient missing membership with the same message identity
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.2574780Z ok 100 - WuKong sends retry only transient missing membership with the same message identity
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.2576204Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.2577019Z   duration_ms: 303.14954
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.2577863Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.2578520Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5811908Z # Subtest: WuKong rejects permanent denial, exhausted membership retries and invalid durable receipts
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5813503Z ok 101 - WuKong rejects permanent denial, exhausted membership retries and invalid durable receipts
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5814622Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5815076Z   duration_ms: 306.666285
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5815512Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5815854Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5816411Z # Subtest: WuKong membership retries respect cancellation
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5817147Z ok 102 - WuKong membership retries respect cancellation
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5817583Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5817782Z   duration_ms: 0.94679
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5818127Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5818490Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5819386Z # Subtest: WuKong adapter syncs channel history and decodes Lingxi payloads
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5820823Z ok 103 - WuKong adapter syncs channel history and decodes Lingxi payloads
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5822079Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5823014Z   duration_ms: 1.432362
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5823647Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5824387Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5825456Z # Subtest: WuKong history starts at the latest page and walks older pages without overlap
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5827033Z ok 104 - WuKong history starts at the latest page and walks older pages without overlap
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5828054Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5828634Z   duration_ms: 1.787573
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5829266Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5830013Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5831220Z # Subtest: WuKong history fills native pages across retired records without overlap
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5833409Z ok 105 - WuKong history fills native pages across retired records without overlap
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5835093Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5835668Z   duration_ms: 3.331772
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5836305Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5836814Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5837758Z # Subtest: WuKong history repairs authoritative membership once before retrying
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5839071Z ok 106 - WuKong history repairs authoritative membership once before retrying
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5839948Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5840450Z   duration_ms: 1.235937
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5840997Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5841541Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5888377Z # Subtest: WuKong history applies normal error handling after membership repair
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5913946Z ok 107 - WuKong history applies normal error handling after membership repair
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5929156Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5929771Z   duration_ms: 2.282572
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5930432Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5930949Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5931915Z # Subtest: WuKong history rejects invalid pagination before making a provider request
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5933612Z ok 108 - WuKong history rejects invalid pagination before making a provider request
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5934527Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5935046Z   duration_ms: 0.37674
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5935606Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5936118Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5937004Z # Subtest: WuKong adapter treats missing empty-channel sync state as empty results
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5938302Z ok 109 - WuKong adapter treats missing empty-channel sync state as empty results
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5939242Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5943323Z   duration_ms: 0.67853
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5944079Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5944724Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5945794Z # Subtest: WuKong client sets the exact remaining unread count for partial visibility
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5947020Z ok 110 - WuKong client sets the exact remaining unread count for partial visibility
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5947722Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5948085Z   duration_ms: 0.417787
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5948483Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5948816Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5949492Z # Subtest: WuKong adapter accepts v3 empty-state errors returned as HTTP 400
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5950173Z ok 111 - WuKong adapter accepts v3 empty-state errors returned as HTTP 400
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5950578Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5950784Z   duration_ms: 0.519585
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5951014Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5951217Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5951631Z # Subtest: WuKong adapter treats the empty-channel 500 response as empty results
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5953841Z ok 112 - WuKong adapter treats the empty-channel 500 response as empty results
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5954252Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5954454Z   duration_ms: 0.53833
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5954682Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5954883Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5955438Z # Subtest: WuKong adapter recognizes structured and localized empty-channel 500 responses
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5956326Z ok 113 - WuKong adapter recognizes structured and localized empty-channel 500 responses
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5956991Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5957300Z   duration_ms: 1.077763
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5987603Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5988071Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5988797Z # Subtest: WuKong adapter does not hide unrelated history failures
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5989813Z ok 114 - WuKong adapter does not hide unrelated history failures
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5990451Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5990826Z   duration_ms: 0.347827
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5991262Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5991633Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5992312Z # Subtest: WuKong adapter does not hide unrelated HTTP 400 failures
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5993510Z ok 115 - WuKong adapter does not hide unrelated HTTP 400 failures
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5994166Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5994528Z   duration_ms: 0.570881
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5994939Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5995299Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5995996Z # Subtest: WuKong webhook signatures are constant-time HMAC contracts
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5997366Z ok 116 - WuKong webhook signatures are constant-time HMAC contracts
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5998035Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5998390Z   duration_ms: 0.607028
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5998809Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5999166Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.5999912Z # Subtest: WuKong msg.notify batches normalize to the Agent OS webhook contract
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6000994Z ok 117 - WuKong msg.notify batches normalize to the Agent OS webhook contract
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6001683Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6002052Z   duration_ms: 1.437692
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6002880Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6003266Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6004099Z # Subtest: production enables authenticated WuKong callbacks without inheriting the local proxy
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6005493Z ok 118 - production enables authenticated WuKong callbacks without inheriting the local proxy
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6006311Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6006729Z   duration_ms: 13.055933
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6007194Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6007539Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6099757Z 1..118
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6100118Z # tests 118
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6111062Z # suites 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6111610Z # pass 118
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6111983Z # fail 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6112640Z # cancelled 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6113347Z # skipped 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6113749Z # todo 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6114226Z # duration_ms 84078.643119
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:01.6692167Z TAP version 13
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6897195Z # Subtest: test selectors reject malformed and cross-scope paths before starting tests
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6904018Z ok 1 - test selectors reject malformed and cross-scope paths before starting tests
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6905063Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6905609Z   duration_ms: 318.776639
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6906233Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6906711Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6913424Z # Subtest: integration runner refuses unsafe database targets without exposing credentials
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6915085Z ok 2 - integration runner refuses unsafe database targets without exposing credentials
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6916109Z   ---
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6916657Z   duration_ms: 663.01477
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6917222Z   type: 'test'
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.6917733Z   ...
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7003235Z 1..2
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7004477Z # tests 2
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7005327Z # suites 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7006129Z # pass 2
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7006727Z # fail 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7008154Z # cancelled 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7008692Z # skipped 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7009552Z # todo 0
+checks (server)	Run npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs	2026-10-20T11:19:02.7010026Z # duration_ms 1044.267176
+checks (server)	Post Run actions/setup-node@v5	﻿2026-10-20T11:19:02.7185961Z Post job cleanup.
+checks (server)	Post Run actions/setup-node@v5	2026-10-20T11:19:02.8575261Z (node:4200) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+checks (server)	Post Run actions/setup-node@v5	2026-10-20T11:19:02.8576797Z (Use `node --trace-deprecation ...` to show where the warning was created)
+checks (server)	Post Run actions/setup-node@v5	2026-10-20T11:19:02.8578986Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-b0b127fb7f9a837c066c1090b3b3bfab90626ccebf90786ad887ca9191112e48, not saving cache.
+checks (server)	Post Run actions/checkout@v5	﻿2026-10-20T11:19:02.8730317Z Post job cleanup.
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:02.9650628Z [command]/usr/bin/git version
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:02.9700695Z git version 2.55.0
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:02.9745259Z Temporarily overriding HOME='/home/runner/work/_temp/e9fa4078-c47b-479c-a56d-ca0667f0efd0' before making global git config changes
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:02.9746886Z Adding repository directory to the temporary git global config as a safe directory
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:02.9752260Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/LingxiLoop/LingxiLoop
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:02.9799886Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:02.9849160Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:03.0153013Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:03.0191135Z http.https://github.com/.extraheader
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:03.0215382Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:03.0287874Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:03.0609382Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+checks (server)	Post Run actions/checkout@v5	2026-10-20T11:19:03.0681569Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+checks (server)	Stop containers	﻿2026-10-20T11:19:03.1095420Z Print service container logs: fa65d07689434691b734e33675df00a1_redis7alpine_cb2fb4
+checks (server)	Stop containers	2026-10-20T11:19:03.1099933Z ##[command]/usr/bin/docker logs --details b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Stop containers	2026-10-20T11:19:03.1303789Z  1:C 20 Oct 2026 11:16:26.192 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+checks (server)	Stop containers	2026-10-20T11:19:03.1307119Z  1:C 20 Oct 2026 11:16:26.192 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+checks (server)	Stop containers	2026-10-20T11:19:03.1323830Z  1:C 20 Oct 2026 11:16:26.192 * Redis version=7.4.11, bits=64, commit=00000000, modified=0, pid=1, just started
+checks (server)	Stop containers	2026-10-20T11:19:03.1326146Z  1:C 20 Oct 2026 11:16:26.192 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+checks (server)	Stop containers	2026-10-20T11:19:03.1327637Z  1:M 20 Oct 2026 11:16:26.193 * monotonic clock: POSIX clock_gettime
+checks (server)	Stop containers	2026-10-20T11:19:03.1328387Z  1:M 20 Oct 2026 11:16:26.194 * Running mode=standalone, port=6379.
+checks (server)	Stop containers	2026-10-20T11:19:03.1329017Z  1:M 20 Oct 2026 11:16:26.194 * Server initialized
+checks (server)	Stop containers	2026-10-20T11:19:03.1329612Z  1:M 20 Oct 2026 11:16:26.194 * Ready to accept connections tcp
+checks (server)	Stop containers	2026-10-20T11:19:03.1338714Z Stop and remove container: fa65d07689434691b734e33675df00a1_redis7alpine_cb2fb4
+checks (server)	Stop containers	2026-10-20T11:19:03.1344181Z ##[command]/usr/bin/docker rm --force b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Stop containers	2026-10-20T11:19:03.3026015Z b081d59908f759e7525e82a696b00d645076487dce6db735275b09c02e983b7e
+checks (server)	Stop containers	2026-10-20T11:19:03.3077511Z Remove container network: github_network_8b8fbe3e07f14513adcf180bf351f3ec
+checks (server)	Stop containers	2026-10-20T11:19:03.3082330Z ##[command]/usr/bin/docker network rm github_network_8b8fbe3e07f14513adcf180bf351f3ec
+checks (server)	Stop containers	2026-10-20T11:19:03.4103990Z github_network_8b8fbe3e07f14513adcf180bf351f3ec
+checks (server)	Complete job	﻿2026-10-20T11:19:03.4193904Z Cleaning up orphan processes

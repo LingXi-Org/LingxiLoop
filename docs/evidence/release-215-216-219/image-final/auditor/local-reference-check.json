@@ -1,0 +1,16 @@
+{
+  "scope": "local reference files only; no registry access",
+  "runtimeFiles": 474,
+  "runtimeTarSha256": "ee308270402b220452f8eb4e92e9c1d25a68466525f21827203bd5078a9c1bcb",
+  "pdfFiles": 379,
+  "pdfInventorySha256": "fc4a8c2a30a73b6d120adc46dd83964cdc443c91282c93ba25475aade11d4298",
+  "baselineFileSha256": "390c68e7b5c3a292e5b4d197bca6293333c5f2fa9dbd2f381a707e80c2a1b0b8",
+  "historicalBaseline": {
+    "indexDigest": "sha256:6ac0d343039dbcb36607ff07e708134a9f5fbcbe6f1e51c04a8bca16801314ee",
+    "linuxAmd64ManifestDigest": "sha256:30534bf5570fa6ddd243a56bb6012343ee39cc94aab6c64fd31331c4006dc704",
+    "sourceCommit": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+    "layerCount": 22,
+    "compressedLayerBytes": 206838733,
+    "uncompressedTarLayerBytes": 623327232
+  }
+}

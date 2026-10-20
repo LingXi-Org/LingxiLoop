@@ -1,0 +1,29 @@
+{
+  "startedAt": "2026-10-20T12:13:30.023Z",
+  "planHash": "e0f058e1bf970c85b3d50b47d125e2819b3364cbae467795c18f439e1eb20cc8",
+  "originalPin": "5d00ad7e379d82ea8b5ab35c10af775b155717f2",
+  "targetPin": "f56db73dabbaec1e92a421bbad76c239ed8d1ae2",
+  "events": [
+    {
+      "action": "UpdateStack",
+      "stack": "lingxiloop-app-a",
+      "status": "submitting",
+      "observedAt": "2026-10-20T12:13:46.020Z"
+    },
+    {
+      "action": "UpdateStack",
+      "stack": "lingxiloop-app-a",
+      "status": "uncertain",
+      "observedAt": "2026-10-20T12:14:16.024Z"
+    },
+    {
+      "status": "stopped",
+      "submittedStacks": [
+        "lingxiloop-app-a"
+      ],
+      "noRetry": true,
+      "observedAt": "2026-10-20T12:14:16.025Z"
+    }
+  ],
+  "complete": false
+}

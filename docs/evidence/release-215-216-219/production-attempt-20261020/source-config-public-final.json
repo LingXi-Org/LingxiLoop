@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-20T13:26:05.902Z",
+  "readOnly": true,
+  "stacks": [
+    {
+      "stack": "lingxiloop-app-a",
+      "commit": "5d00ad7e379d82ea8b5ab35c10af775b155717f2",
+      "branch": "main",
+      "reclone": false,
+      "idle": true
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "commit": "5d00ad7e379d82ea8b5ab35c10af775b155717f2",
+      "branch": "main",
+      "reclone": false,
+      "idle": true
+    }
+  ],
+  "public": [
+    {
+      "path": "/readyz",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/meta",
+      "status": 200,
+      "commitSha": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+      "reasoningRuntime": {
+        "name": "@lyyzka/lingxios",
+        "runtime": "3.5.6",
+        "controlPlane": 11,
+        "kernel": 2,
+        "schema": 12,
+        "assistantMessage": 2
+      }
+    }
+  ],
+  "verified": true
+}

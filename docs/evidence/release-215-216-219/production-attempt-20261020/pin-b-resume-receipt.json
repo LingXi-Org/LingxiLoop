@@ -1,0 +1,37 @@
+{
+  "startedAt": "2026-10-20T12:16:05.849Z",
+  "planHash": "e0f058e1bf970c85b3d50b47d125e2819b3364cbae467795c18f439e1eb20cc8",
+  "originalPin": "5d00ad7e379d82ea8b5ab35c10af775b155717f2",
+  "targetPin": "f56db73dabbaec1e92a421bbad76c239ed8d1ae2",
+  "events": [
+    {
+      "action": "UpdateStack",
+      "stack": "lingxiloop-app-b",
+      "status": "submitting",
+      "observedAt": "2026-10-20T12:16:19.551Z"
+    },
+    {
+      "action": "UpdateStack",
+      "stack": "lingxiloop-app-b",
+      "status": "http-success",
+      "httpStatus": 200,
+      "observedAt": "2026-10-20T12:16:24.859Z"
+    },
+    {
+      "action": "UpdateStack",
+      "stack": "lingxiloop-app-b",
+      "status": "verified",
+      "onlyCommitChanged": true,
+      "stackId": "6aa8a414b35d27bdd4e12af1",
+      "pin": "f56db73dabbaec1e92a421bbad76c239ed8d1ae2",
+      "observedAt": "2026-10-20T12:16:25.295Z"
+    },
+    {
+      "status": "complete",
+      "observedAt": "2026-10-20T12:16:31.829Z"
+    }
+  ],
+  "complete": true,
+  "servicesUnchanged": true,
+  "aAlreadyAppliedReadback": "/tmp/lingxi-358-production/pin-outcome-readback.json"
+}

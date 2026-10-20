@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-20T14:22:29.171Z",
+  "finishedAt": "2026-10-20T14:22:29.761Z",
+  "method": "HEAD",
+  "status": 200,
+  "contentType": "application/vnd.oci.image.index.v1+json",
+  "contentLength": "856",
+  "digest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69"
+}

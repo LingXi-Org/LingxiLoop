@@ -1,0 +1,76 @@
+{
+  "at": "2026-10-20T13:06:58.678Z",
+  "readOnly": true,
+  "servers": [
+    {
+      "server": "shanghai-a",
+      "statsTs": null,
+      "processes": [
+        {
+          "pid": 2175890,
+          "name": "git-remote-http",
+          "startTime": 1792500611000,
+          "cpuPercent": 0.2011061,
+          "memoryMb": 11.67578125,
+          "diskReadKb": 0,
+          "diskWriteKb": 0,
+          "isGitClone": false,
+          "isMetadata": false,
+          "isMigration": false,
+          "isComposeRun": false
+        },
+        {
+          "pid": 2175889,
+          "name": "git",
+          "startTime": 1792500611000,
+          "cpuPercent": 0,
+          "memoryMb": 3.49609375,
+          "diskReadKb": 0,
+          "diskWriteKb": 0,
+          "isGitClone": false,
+          "isMetadata": false,
+          "isMigration": false,
+          "isComposeRun": false
+        },
+        {
+          "pid": 2175888,
+          "name": "git",
+          "startTime": 1792500611000,
+          "cpuPercent": 0,
+          "memoryMb": 4.71875,
+          "diskReadKb": 0,
+          "diskWriteKb": 0,
+          "isGitClone": true,
+          "isMetadata": false,
+          "isMigration": false,
+          "isComposeRun": false
+        },
+        {
+          "pid": 2175950,
+          "name": "git",
+          "startTime": 1792500615000,
+          "cpuPercent": 0,
+          "memoryMb": 6.71875,
+          "diskReadKb": 0,
+          "diskWriteKb": 172,
+          "isGitClone": false,
+          "isMetadata": false,
+          "isMigration": false,
+          "isComposeRun": false
+        }
+      ]
+    },
+    {
+      "server": "shanghai-b",
+      "statsTs": null,
+      "processes": []
+    }
+  ],
+  "update": {
+    "id": "6ad76383e06d5e1f79836a3a",
+    "status": "InProgress",
+    "success": true,
+    "startTs": 1792500611584,
+    "endTs": null
+  }
+}

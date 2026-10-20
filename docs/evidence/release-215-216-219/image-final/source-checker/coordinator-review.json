@@ -1,0 +1,9 @@
+{
+  "reviewedAt": "2026-10-20T11:25:57.863134+00:00",
+  "scriptSha256": "4420a376bc0a758302b1a13ad08fdee6033de28a80c103a05ea5635363b63486",
+  "scope": "Full checker source, pinned COPY and dockerignore, fixed-code errors, bounded metadata/Git reads, inherited final receipt identity, direct-copy scopes and generated exceptions",
+  "findingsP1P2": 0,
+  "actualImageRun": "pending",
+  "helperOfflineTests": 9,
+  "reviewedCopyPolicySource": "d1075e35e16721979b484c2d9e33eeb56468ce9d"
+}

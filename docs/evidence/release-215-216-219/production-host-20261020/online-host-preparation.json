@@ -1,0 +1,150 @@
+{
+  "startedAt": "2026-10-20T13:51:23.921Z",
+  "planHash": "67db9eb7800edda238fb8e9a72dbcb28793f50314a92a731c361874842ac0849",
+  "mode": "online-source-preparation",
+  "complete": false,
+  "events": [
+    {
+      "phase": "baseline",
+      "status": "verified",
+      "at": "2026-10-20T13:51:34.797Z"
+    },
+    {
+      "phase": "scope",
+      "stack": "lingxiloop-app-a",
+      "status": "verified",
+      "ownedCheckoutOnly": true,
+      "servicesChecked": 3,
+      "at": "2026-10-20T13:51:36.946Z"
+    },
+    {
+      "phase": "scope",
+      "stack": "lingxiloop-app-b",
+      "status": "verified",
+      "ownedCheckoutOnly": true,
+      "servicesChecked": 4,
+      "at": "2026-10-20T13:51:40.008Z"
+    },
+    {
+      "phase": "scope",
+      "stack": "lingxiloop-core-state",
+      "status": "verified",
+      "ownedCheckoutOnly": true,
+      "servicesChecked": 4,
+      "at": "2026-10-20T13:51:43.380Z"
+    },
+    {
+      "phase": "config",
+      "stack": "lingxiloop-app-a",
+      "status": "submitting",
+      "fields": [
+        "branch",
+        "commit",
+        "reclone"
+      ],
+      "at": "2026-10-20T13:51:50.676Z"
+    },
+    {
+      "phase": "config",
+      "stack": "lingxiloop-app-a",
+      "status": "uncertain-checking-readonly",
+      "at": "2026-10-20T13:52:50.679Z"
+    },
+    {
+      "phase": "config",
+      "stack": "lingxiloop-app-a",
+      "status": "verified",
+      "fields": [
+        "branch",
+        "commit",
+        "reclone"
+      ],
+      "fullConfigReadback": true,
+      "at": "2026-10-20T13:52:52.534Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "at": "2026-10-20T13:53:03.013Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad7723fe06d5e1f79836d40",
+      "at": "2026-10-20T13:53:03.273Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "failed",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad7723fe06d5e1f79836d40",
+      "at": "2026-10-20T13:59:53.723Z"
+    },
+    {
+      "phase": "stopped",
+      "status": "failed-or-uncertain",
+      "noRetry": true,
+      "noStopDeployOrMigrationSubmitted": true,
+      "at": "2026-10-20T13:59:53.724Z"
+    }
+  ],
+  "originals": [
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "service": "lingxiloop",
+      "id": "65a62954f8b8effeeb77dbf449bef520f0c2fe1c4837523c99d39a4940ae71e2",
+      "source": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+      "imageId": "sha256:6ac0d343039dbcb36607ff07e708134a9f5fbcbe6f1e51c04a8bca16801314ee",
+      "running": true,
+      "restarting": false,
+      "restartCount": 0,
+      "pid": 2203114,
+      "healthy": true
+    },
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "service": "worker",
+      "id": "89f16706615ca78708a7802deda08f3551911148c3c0fffd37bd1b886a4d87e2",
+      "source": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+      "imageId": "sha256:6ac0d343039dbcb36607ff07e708134a9f5fbcbe6f1e51c04a8bca16801314ee",
+      "running": true,
+      "restarting": false,
+      "restartCount": 0,
+      "pid": 2211202,
+      "healthy": true
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "service": "lingxiloop",
+      "id": "3251532d3bb52ef233287d25b6926b4c12167df3547be0d2fb24159796bc8d03",
+      "source": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+      "imageId": "sha256:6ac0d343039dbcb36607ff07e708134a9f5fbcbe6f1e51c04a8bca16801314ee",
+      "running": true,
+      "restarting": false,
+      "restartCount": 0,
+      "pid": 3867044,
+      "healthy": true
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "service": "worker",
+      "id": "1716c81b06f89f1498c2d19f01cd0310e0ff740fa68f0685f18bc003e6c7ac11",
+      "source": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+      "imageId": "sha256:6ac0d343039dbcb36607ff07e708134a9f5fbcbe6f1e51c04a8bca16801314ee",
+      "running": true,
+      "restarting": false,
+      "restartCount": 0,
+      "pid": 3869282,
+      "healthy": true
+    }
+  ]
+}

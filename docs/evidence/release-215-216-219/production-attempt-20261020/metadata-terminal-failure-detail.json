@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-20T13:25:43.216Z",
+  "id": "6ad76383e06d5e1f79836a3a",
+  "status": "Complete",
+  "success": false,
+  "operation": "RunStackService",
+  "target": {
+    "type": "Stack",
+    "id": "6aa8a411b35d27bdd4e12aef"
+  },
+  "stages": [
+    {
+      "stage": "Task Error",
+      "success": false,
+      "startTs": 1792501730754,
+      "endTs": 1792501730754,
+      "stdoutBytes": 0,
+      "stderr": "<span style=\"color: var(--mantine-color-red-6)\">ERROR</span>: Decoded error message over Core-Periphery communication channel\n\n<span style=\"color: var(--mantine-color-dimmed)\">TRACE</span>:\n\t<span style=\"color: var(--mantine-color-dimmed)\">1</span>: Failed to validate run directory on host after stack write (canonicalize error), path=/etc/komodo/stacks/lingxiloop-app-a\n\t<span style=\"color: var(--mantine-color-dimmed)\">2</span>: No such file or directory (os error 2)"
+    }
+  ]
+}

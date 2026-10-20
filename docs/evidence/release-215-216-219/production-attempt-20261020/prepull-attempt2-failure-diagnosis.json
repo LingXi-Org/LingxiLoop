@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-20T12:21:28.891Z",
+  "update": {
+    "id": "6ad75c7fe06d5e1f798368c2",
+    "operation": "PullStackService",
+    "status": "Complete",
+    "success": false,
+    "startTs": 1792498815184,
+    "endTs": 1792498819824
+  },
+  "logs": [
+    {
+      "stage": "Task Error",
+      "success": false,
+      "stdoutBytes": 0,
+      "stderrBytes": 285,
+      "knownErrors": []
+    }
+  ],
+  "action": {
+    "pulling": false,
+    "deploying": false,
+    "starting": false,
+    "restarting": false,
+    "pausing": false,
+    "unpausing": false,
+    "stopping": false,
+    "destroying": false
+  },
+  "services": [
+    {
+      "service": "db-migrate",
+      "containerId": "4ef2b31b285ca43e79c7415baead3a89c232ab70521dacbb76500b6d02dfbe41"
+    },
+    {
+      "service": "lingxiloop",
+      "containerId": "65a62954f8b8effeeb77dbf449bef520f0c2fe1c4837523c99d39a4940ae71e2"
+    },
+    {
+      "service": "worker",
+      "containerId": "89f16706615ca78708a7802deda08f3551911148c3c0fffd37bd1b886a4d87e2"
+    }
+  ]
+}

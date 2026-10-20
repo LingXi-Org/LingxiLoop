@@ -1,0 +1,43 @@
+{
+  "startedAt": "2026-10-20T13:22:25.116Z",
+  "oldPin": "5d00ad7e379d82ea8b5ab35c10af775b155717f2",
+  "source": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+  "events": [
+    {
+      "stack": "lingxiloop-app-a",
+      "status": "submitting",
+      "fields": [
+        "commit",
+        "reclone"
+      ],
+      "at": "2026-10-20T13:22:30.515Z"
+    },
+    {
+      "stack": "lingxiloop-app-a",
+      "status": "verified",
+      "onlyOriginalCommitAndRecloneRestored": true,
+      "at": "2026-10-20T13:22:42.274Z"
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "status": "submitting",
+      "fields": [
+        "commit",
+        "reclone"
+      ],
+      "at": "2026-10-20T13:22:43.638Z"
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "status": "verified",
+      "onlyOriginalCommitAndRecloneRestored": true,
+      "at": "2026-10-20T13:22:45.059Z"
+    },
+    {
+      "status": "complete",
+      "servicesUnchanged": true,
+      "at": "2026-10-20T13:22:52.102Z"
+    }
+  ],
+  "complete": true
+}
