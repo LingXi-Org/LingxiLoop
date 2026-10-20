@@ -1,0 +1,184 @@
+TAP version 13
+# Subtest: ordinary release blocks12→13 and unknown/inconsistent state, leaves13→13 alone
+ok 1 - ordinary release blocks12→13 and unknown/inconsistent state, leaves13→13 alone
+  ---
+  duration_ms: 1.67768
+  type: 'test'
+  ...
+# Subtest: barrier requires actual read-only/full visibility and every lease/client class zero
+ok 2 - barrier requires actual read-only/full visibility and every lease/client class zero
+  ---
+  duration_ms: 0.542018
+  type: 'test'
+  ...
+# Subtest: happy path pulls before stopping, Workers before Web, backup after barrier, one migration then staged recovery
+ok 3 - happy path pulls before stopping, Workers before Web, backup after barrier, one migration then staged recovery
+  ---
+  duration_ms: 3.46829
+  type: 'test'
+  ...
+# Subtest: pull or image mismatch never stops service
+ok 4 - pull or image mismatch never stops service
+  ---
+  duration_ms: 1.081732
+  type: 'test'
+  ...
+# Subtest: accepted stop, uncertain stop, live leases, failed backup all prohibit migration
+ok 5 - accepted stop, uncertain stop, live leases, failed backup all prohibit migration
+  ---
+  duration_ms: 2.558789
+  type: 'test'
+  ...
+# Subtest: unknown migration outcome is not retried and never starts/deploys old or new services
+ok 6 - unknown migration outcome is not retried and never starts/deploys old or new services
+  ---
+  duration_ms: 1.111686
+  type: 'test'
+  ...
+# Subtest: 47 committed then48 failure reports fix-forward, not rollback
+ok 7 - 47 committed then48 failure reports fix-forward, not rollback
+  ---
+  duration_ms: 0.911625
+  type: 'test'
+  ...
+# Subtest: markers require one exact receipt and successful complete update; raw secret-like logs never enter errors
+ok 8 - markers require one exact receipt and successful complete update; raw secret-like logs never enter errors
+  ---
+  duration_ms: 0.378391
+  type: 'test'
+  ...
+# Subtest: transport does not retry unknown execute and polls only its returned update id
+ok 9 - transport does not retry unknown execute and polls only its returned update id
+  ---
+  duration_ms: 25.202397
+  type: 'test'
+  ...
+# Subtest: transport rejects receipt identity drift and refuses unlisted mutations
+ok 10 - transport rejects receipt identity drift and refuses unlisted mutations
+  ---
+  duration_ms: 1.746073
+  type: 'test'
+  ...
+# Subtest: ordinary trigger performs schema guard before config writes, historical drain and webhook
+ok 11 - ordinary trigger performs schema guard before config writes, historical drain and webhook
+  ---
+  duration_ms: 9.543021
+  type: 'test'
+  ...
+# Subtest: maintenance scripts have an owning deployment contract in CI
+ok 12 - maintenance scripts have an owning deployment contract in CI
+  ---
+  duration_ms: 1.147881
+  type: 'test'
+  ...
+# Subtest: offline package check rejects a candidate relabelled3.5.6/schema13
+ok 13 - offline package check rejects a candidate relabelled3.5.6/schema13
+  ---
+  duration_ms: 71.895666
+  type: 'test'
+  ...
+# Subtest: real operations fail closed on a running procedure or retrying migration container
+ok 14 - real operations fail closed on a running procedure or retrying migration container
+  ---
+  duration_ms: 0.804003
+  type: 'test'
+  ...
+# Subtest: pin and restore payloads contain only the actual stack id and commit
+ok 15 - pin and restore payloads contain only the actual stack id and commit
+  ---
+  duration_ms: 0.365571
+  type: 'test'
+  ...
+# Subtest: SQL state receipts accept only fixed metadata fields and numeric aggregates
+ok 16 - SQL state receipts accept only fixed metadata fields and numeric aggregates
+  ---
+  duration_ms: 0.511631
+  type: 'test'
+  ...
+# Subtest: real App manifests with repeated equal pins reach metadata and preserve same-schema ordinary rollout
+ok 17 - real App manifests with repeated equal pins reach metadata and preserve same-schema ordinary rollout
+  ---
+  duration_ms: 363.545121
+  type: 'test'
+  ...
+# Subtest: effective Compose parser accepts actual inherited pins and rejects stale overrides before planning
+ok 18 - effective Compose parser accepts actual inherited pins and rejects stale overrides before planning
+  ---
+  duration_ms: 1110.454993
+  type: 'test'
+  ...
+# Subtest: ordinary gate and manifest-commit plan use the same effective-service pin validation
+ok 19 - ordinary gate and manifest-commit plan use the same effective-service pin validation
+  ---
+  duration_ms: 1.528515
+  type: 'test'
+  ...
+# Subtest: service requests accept only the exact Komodo2.3.3 service operation at acceptance and completion
+ok 20 - service requests accept only the exact Komodo2.3.3 service operation at acceptance and completion
+  ---
+  duration_ms: 4.039993
+  type: 'test'
+  ...
+# Subtest: service receipt mapping keeps stack target and polled operation identity strict; one-off enum unchanged
+ok 21 - service receipt mapping keeps stack target and polled operation identity strict; one-off enum unchanged
+  ---
+  duration_ms: 3.005022
+  type: 'test'
+  ...
+# Subtest: generated metadata inventory escaping accepts SQL names and rejects lookalikes and gaps
+ok 22 - generated metadata inventory escaping accepts SQL names and rejects lookalikes and gaps
+  ---
+  duration_ms: 0.443348
+  type: 'test'
+  ...
+# Subtest: planning binds exact source and contains no candidate migration or remote call
+ok 23 - planning binds exact source and contains no candidate migration or remote call
+  ---
+  duration_ms: 225.204941
+  type: 'test'
+  ...
+# Subtest: malformed identities and altered source or command fail before any remote call
+ok 24 - malformed identities and altered source or command fail before any remote call
+  ---
+  duration_ms: 433.663947
+  type: 'test'
+  ...
+# Subtest: receipt parser requires terminal success, consistent counts, and no duplicate markers
+ok 25 - receipt parser requires terminal success, consistent counts, and no duplicate markers
+  ---
+  duration_ms: 81.044934
+  type: 'test'
+  ...
+# Subtest: execution uses only reviewed fixed service operation and persists its update id
+ok 26 - execution uses only reviewed fixed service operation and persists its update id
+  ---
+  duration_ms: 189.489413
+  type: 'test'
+  ...
+# Subtest: lost execute acknowledgement remains uncertain and is never retried
+ok 27 - lost execute acknowledgement remains uncertain and is never retried
+  ---
+  duration_ms: 185.622317
+  type: 'test'
+  ...
+# Subtest: pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+ok 28 - pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+  ---
+  duration_ms: 262.937029
+  type: 'test'
+  ...
+# Subtest: overall timeout reaches the generated inner timeout group before killing cleanup
+ok 29 - overall timeout reaches the generated inner timeout group before killing cleanup
+  ---
+  duration_ms: 1388.390543
+  type: 'test'
+  ...
+1..29
+# tests 29
+# suites 0
+# pass 29
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2832.891996

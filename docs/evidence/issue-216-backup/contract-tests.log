@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: planning binds exact source and contains no candidate migration or remote call
+ok 1 - planning binds exact source and contains no candidate migration or remote call
+  ---
+  duration_ms: 216.444951
+  type: 'test'
+  ...
+# Subtest: malformed identities and altered source or command fail before any remote call
+ok 2 - malformed identities and altered source or command fail before any remote call
+  ---
+  duration_ms: 426.274227
+  type: 'test'
+  ...
+# Subtest: receipt parser requires terminal success, consistent counts, and no duplicate markers
+ok 3 - receipt parser requires terminal success, consistent counts, and no duplicate markers
+  ---
+  duration_ms: 74.868589
+  type: 'test'
+  ...
+# Subtest: execution uses only reviewed fixed service operation and persists its update id
+ok 4 - execution uses only reviewed fixed service operation and persists its update id
+  ---
+  duration_ms: 203.765498
+  type: 'test'
+  ...
+# Subtest: lost execute acknowledgement remains uncertain and is never retried
+ok 5 - lost execute acknowledgement remains uncertain and is never retried
+  ---
+  duration_ms: 157.103637
+  type: 'test'
+  ...
+# Subtest: pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+ok 6 - pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+  ---
+  duration_ms: 281.167569
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1428.573798

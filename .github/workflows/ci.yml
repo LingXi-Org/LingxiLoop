@@ -195,12 +195,16 @@ jobs:
               - 'scripts/update-deployment-images.mjs'
               - 'scripts/trigger-komodo-rollout.mjs'
               - 'scripts/prepare-forum-rollout.mjs'
+              - 'scripts/schema-upgrade-*.mjs'
+              - 'scripts/verify-memory-backup*.mjs'
               - 'scripts/sync-komodo-config.mjs'
               - 'scripts/test-distributed-realtime.mjs'
               - 'scripts/test-native-agent-*.mjs'
             deployment:
               - 'scripts/trigger-komodo-rollout.mjs'
               - 'scripts/prepare-forum-rollout.mjs'
+              - 'scripts/schema-upgrade-*.mjs'
+              - 'scripts/verify-memory-backup*.mjs'
               - 'scripts/sync-komodo-config.mjs'
               - 'deploy/**'
               - '!deploy/**/*.md'
@@ -311,7 +315,7 @@ jobs:
         working-directory: third_party/open-notebook
         run: uv run --frozen --python 3.12 pytest -q
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs
+        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs
       - if: matrix.component == 'release'
         run: npm run version:check
 

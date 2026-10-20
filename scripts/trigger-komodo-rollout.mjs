@@ -1,5 +1,6 @@
 import { prepareForumRollout } from './prepare-forum-rollout.mjs'
 import { syncKomodoConfig } from './sync-komodo-config.mjs'
+import { preflightOrdinaryRollout } from './schema-upgrade-komodo.mjs'
 import { createHmac } from 'node:crypto'
 
 const value = process.env.KOMODO_WEBHOOK_URL
@@ -13,6 +14,8 @@ if (url.protocol !== 'https:' || url.hostname !== 'ops.christmas1314.xyz'
   || !/^\/listener\/github\/procedure\/[\w-]+\/main$/.test(url.pathname)) throw new Error('invalid Komodo webhook URL')
 
 const headers = { 'content-type': 'application/json', 'x-api-key': apiKey, 'x-api-secret': apiSecret }
+const schema = await preflightOrdinaryRollout({apiKey,apiSecret})
+console.log(`[schema-preflight] source=${schema.sourceSchema}; target=${schema.targetSchema}; image=${schema.targetSha}`)
 await syncKomodoConfig({url,headers})
 await prepareForumRollout({url,headers})
 
