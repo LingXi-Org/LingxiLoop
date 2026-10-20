@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="1" errors="0" skipped="0" time="18.759">
+  <testsuite name="e2e/visualize/timeout.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="18.759">
+    <testcase name="initialization deadline covers resources and retry survives stalled cleanup [web]" classname="e2e/visualize/timeout.e2e.ts" time="18.759">
+      <failure message="expected &quot;loading&quot; to be &quot;error&quot;" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected &quot;loading&quot; to be &quot;error&quot;</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

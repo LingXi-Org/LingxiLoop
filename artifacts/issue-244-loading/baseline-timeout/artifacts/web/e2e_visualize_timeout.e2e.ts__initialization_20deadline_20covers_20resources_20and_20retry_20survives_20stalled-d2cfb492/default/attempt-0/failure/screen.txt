@@ -1,0 +1,18 @@
+# Screen at failure
+url: http://127.0.0.1:5193/e2e/visualize/loading.html?count=1
+revision: b1
+viewport: 1440x960
+nodes: 12
+
+#root document
+ #n4 main
+  #n5 navigation
+   #n6 button "进入 A"
+   #n7 button "进入 B"
+   #n8 button "退出"
+   #n9 textbox "对话输入" value="等待时仍可输入" [focused]
+  #n10 text="对话正文始终可读，以下为已保存的完整交互内容。"
+  #n11 testid="gen-ui-card"
+   #n12 status "正在加载…"
+    #n13 text="正在加载…"
+   #n14 testid="gen-ui-anchor"

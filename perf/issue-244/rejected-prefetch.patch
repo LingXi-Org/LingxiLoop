@@ -1,0 +1,30 @@
+diff --git a/src/features/chat/visualize/web/document.ts b/src/features/chat/visualize/web/document.ts
+index e01a269c..651dc570 100644
+--- a/src/features/chat/visualize/web/document.ts
++++ b/src/features/chat/visualize/web/document.ts
+@@ -12,15 +12,23 @@ const vendors = [
+ ]
+ /** Same ordering as ZCode service/protocol; all resources are fetched by the authorized host. */
+ export async function buildWebDocument(fragment: string, state: GenUiWidgetState | null, resource: (name: string) => Promise<string>) {
+-  const [css, kit, runtime, calendar] = await Promise.all([
++  // The first three dependencies are in the pinned upstream visualize.html.
++  // Start their authorized downloads with the kit, without a second RTT wave.
++  // This is per document; no resource or capability is shared between pages.
++  const eager = vendors.filter(([url], index) => index < 3 || fragment.includes(url))
++  const [css, kit, runtime, calendar, ...downloaded] = await Promise.all([
+     resource('visualize.css'),resource('visualize.html'),resource('gen-ui.js'),
+     /\bviz-calendar\b/i.test(fragment) ? resource('calendar.js') : Promise.resolve(''),
++    ...eager.map(([, name]) => resource(name)),
+   ])
+   let content = fragment + kit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
+   // Download independent authorized resources concurrently. Replace in the
+   // original order so Floating UI Core still executes before DOM and author JS.
+   const sources = await Promise.all(vendors.filter(([url]) => content.includes(url))
+-    .map(async ([url, name]) => [url, await resource(name)] as const))
++    .map(async ([url, name]) => {
++      const index = eager.findIndex(([candidate]) => candidate === url)
++      return [url, index < 0 ? await resource(name) : downloaded[index]] as const
++    }))
+   for (const [url,source] of sources) {
+     const escaped = url.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
+     content = content.replace(new RegExp(`<script\\b[^>]*\\bsrc=["']${escaped}["'][^>]*>\\s*</script>`, 'gi'), () => script(source))

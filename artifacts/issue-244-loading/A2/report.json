@@ -1,0 +1,1523 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15a29-08cd-7f11-8c9a-90f0ac1ab634",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-20T16:33:21.785Z",
+    "finishedAt": "2026-10-20T16:33:51.542Z",
+    "project": {
+      "id": "lingxiloop-213-217",
+      "configDigest": "0143e6a33b73df508848377e1c113c701faa544108efffdd75d5acf7f991d11a"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "a29060a7681b0d80001292bf83b63fbaa7d04566",
+      "dirty": false
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "1739e36a3ca79b38e1661ecca587955f27164055fa94da8589031fff9b13350a",
+        "testId": "e2e/visualize/loading.e2e.ts::historical%20loading%3A%201%20cards%2C%20sample%201",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "historical loading: 1 cards, sample 1"
+        ],
+        "file": "e2e/visualize/loading.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/loading.e2e.ts",
+          "line": 9,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "261b97bf2fee18b88a548b3c971a34921af631f4d102a6cabe3111ed238143d2",
+        "testId": "e2e/visualize/loading.e2e.ts::historical%20loading%3A%201%20cards%2C%20sample%202",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "historical loading: 1 cards, sample 2"
+        ],
+        "file": "e2e/visualize/loading.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/loading.e2e.ts",
+          "line": 9,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T16:33:24.470Z",
+            "durationMs": 11734,
+            "artifacts": [
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_loading.e2e.ts__historical_20loading_3A_201_20cards_2C_20sample_202-932ade08/default/attempt-0/trace/trace.zip",
+                "size": 1720588,
+                "sha256": "b59cd9ca8c5c43567d94aad14dc9bbb4af44e7606784d4a6988da9ee32972541"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:24.663Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 13,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1&sample=2",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:24.670Z",
+                "durationMs": 870,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 44,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 A\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:25.542Z",
+                "durationMs": 216,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 51,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:25.761Z",
+                "durationMs": 1562,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:27.324Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 55,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:27.332Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 56,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:27.343Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 57,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:27.353Z",
+                "durationMs": 1122,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 64,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:28.476Z",
+                "durationMs": 373,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 65,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:28.849Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 66,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 B\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:28.865Z",
+                "durationMs": 86,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 51,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:28.955Z",
+                "durationMs": 1355,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:30.311Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 55,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:30.324Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 56,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:30.336Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 57,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:15",
+                "index": 15,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:30.345Z",
+                "durationMs": 1238,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 64,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:31.583Z",
+                "durationMs": 402,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 65,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:31.986Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 66,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 A\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:31.997Z",
+                "durationMs": 62,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 51,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:32.059Z",
+                "durationMs": 387,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:32.446Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 55,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:32.455Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 56,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:32.468Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 57,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:32.478Z",
+                "durationMs": 1092,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 64,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:33.570Z",
+                "durationMs": 336,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 65,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:33.906Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 66,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"退出\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:33.915Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 48,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:33.958Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 49,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:28",
+                "index": 28,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 A\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:33.970Z",
+                "durationMs": 65,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 51,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:29",
+                "index": 29,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:34.036Z",
+                "durationMs": 362,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:34.399Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 55,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:34.408Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 56,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:34.419Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 57,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:33",
+                "index": 33,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:34.428Z",
+                "durationMs": 1100,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 64,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:35.529Z",
+                "durationMs": 368,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 65,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15a29-15f5-7375-97fd-4cbe90d03bc2:35",
+                "index": 35,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:35.898Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 66,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "dae1abfcbbf8947d8ed927cbdcec5346d0817dc799765d7b11e6799fef7b8cdb",
+        "testId": "e2e/visualize/loading.e2e.ts::historical%20loading%3A%201%20cards%2C%20sample%203",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "historical loading: 1 cards, sample 3"
+        ],
+        "file": "e2e/visualize/loading.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/loading.e2e.ts",
+          "line": 9,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "0db52ecdbc86597fbfd355beae35c54e3c21a203fed546fc6493a4f4bd5c5611",
+        "testId": "e2e/visualize/loading.e2e.ts::historical%20loading%3A%203%20cards%2C%20sample%201",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "historical loading: 3 cards, sample 1"
+        ],
+        "file": "e2e/visualize/loading.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/loading.e2e.ts",
+          "line": 9,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "81912ae8ff8d33825d189de3f3c632a1af2200a453fb40d6c82dcaeb6863e360",
+        "testId": "e2e/visualize/loading.e2e.ts::historical%20loading%3A%203%20cards%2C%20sample%202",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "historical loading: 3 cards, sample 2"
+        ],
+        "file": "e2e/visualize/loading.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/loading.e2e.ts",
+          "line": 9,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15a29-43cd-7c84-8edc-0af4422668d5",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T16:33:36.205Z",
+            "durationMs": 15238,
+            "artifacts": [
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_loading.e2e.ts__historical_20loading_3A_203_20cards_2C_20sample_202-2f9e678b/default/attempt-0/trace/trace.zip",
+                "size": 3543730,
+                "sha256": "30581ce3b1ee32f3f88138dc9acf93cbf335fc5da29bb5b832296a1b3ab6dd5d"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:36.223Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 13,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=3&sample=2",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:36.225Z",
+                "durationMs": 688,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 44,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 A\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:36.914Z",
+                "durationMs": 212,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 51,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:37.127Z",
+                "durationMs": 2889,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:40.016Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 55,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:40.039Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 56,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:40.053Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 57,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:40.064Z",
+                "durationMs": 1309,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 64,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:41.374Z",
+                "durationMs": 409,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 65,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:41.783Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 66,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 B\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:41.812Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 51,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:41.927Z",
+                "durationMs": 2545,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:44.472Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 55,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:44.494Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 56,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:44.518Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 57,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:15",
+                "index": 15,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:44.541Z",
+                "durationMs": 1301,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 64,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:45.842Z",
+                "durationMs": 421,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 65,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:46.263Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 66,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 A\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:46.291Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 51,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:46.389Z",
+                "durationMs": 383,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:46.772Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 55,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:46.816Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 56,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:46.836Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 57,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:46.851Z",
+                "durationMs": 1136,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 64,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:47.988Z",
+                "durationMs": 399,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 65,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:48.387Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 66,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"退出\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:48.402Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 48,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:48.483Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 49,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:28",
+                "index": 28,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 A\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:48.501Z",
+                "durationMs": 99,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 51,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:29",
+                "index": 29,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:48.601Z",
+                "durationMs": 409,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:49.010Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 55,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:49.042Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 56,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:49.059Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 57,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:33",
+                "index": 33,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:49.078Z",
+                "durationMs": 1436,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 64,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"[data-testid=\\\"gen-ui-card\\\"]:first-child iframe[data-visualize-guest]\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:50.514Z",
+                "durationMs": 435,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 65,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15a29-43cd-7c84-8edc-0af4422668d5:35",
+                "index": 35,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T16:33:50.950Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/loading.e2e.ts",
+                  "line": 66,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2997f1c62e9bd019b99a38ff4b568306c3f7c64131510156795a6446b4a47bd0",
+        "testId": "e2e/visualize/loading.e2e.ts::historical%20loading%3A%203%20cards%2C%20sample%203",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "historical loading: 3 cards, sample 3"
+        ],
+        "file": "e2e/visualize/loading.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/loading.e2e.ts",
+          "line": 9,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 6,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 6,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 5264318,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

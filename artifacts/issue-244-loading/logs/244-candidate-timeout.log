@@ -1,0 +1,20 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-217-quality
+      run 01a15a2d-4863-7f79-a87c-8ac896fca82b · targets: web
+
+ ✓ target "web" command ready 1.58s
+ ✓ |web| e2e/visualize/timeout.e2e.ts (4 tests) 83.20s
+   ✓ initialization deadline covers create and retry survives stalled cleanup 22.03s
+   ✓ initialization deadline covers resources and retry survives stalled cleanup 20.54s
+   ✓ initialization deadline covers state and retry survives stalled cleanup 20.19s
+   ✓ initialization deadline covers handshake and retry survives stalled cleanup 20.43s
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  16:38:00
+   Duration  86.03s (1m 26s, startup 1.58s)
+     Report  .e2e/244-candidate-timeout/report.json
+
+      JUnit  .e2e/244-candidate-timeout/junit.xml
+   Markdown  .e2e/244-candidate-timeout/summary.md
+

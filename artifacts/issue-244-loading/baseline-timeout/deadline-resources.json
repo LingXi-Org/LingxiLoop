@@ -1,0 +1,27 @@
+{
+  "phase": "loading",
+  "elapsed": 16520.5,
+  "phases": [
+    {
+      "phase": "loading",
+      "at": 1393.8999999985099
+    }
+  ],
+  "input": "等待时仍可输入",
+  "transport": {
+    "follows": [],
+    "external": [],
+    "denied": [],
+    "externalHits": 0,
+    "acceptedSaves": 0,
+    "activePages": 1,
+    "closedPages": 0,
+    "blocked": [
+      "resources",
+      "resources",
+      "resources",
+      "resources"
+    ],
+    "aborted": []
+  }
+}

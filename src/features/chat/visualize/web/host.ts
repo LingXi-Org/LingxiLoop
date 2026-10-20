@@ -21,6 +21,16 @@ const pagePath = (page: Page) => `${path(page.target)}/pages/${encodeURIComponen
 const headers = (page: Page) => ({'x-visualize-page-token': page.initId,'x-company-id':page.target.workspaceIdentity ?? '', 'x-project-id':page.target.workspacePath})
 type StateResponse = {state: GenUiWidgetState | null; revision: number}
 const pendingRevocations = new Map<string,Page>()
+const revoking = new Set<string>()
+async function revoke(page: Page) {
+  if (revoking.has(page.sandboxId)) return
+  revoking.add(page.sandboxId)
+  try {
+    await http(pagePath(page), {method:'DELETE',headers:headers(page),signal:AbortSignal.timeout(2000)})
+    pendingRevocations.delete(page.sandboxId)
+  } catch { /* Retain the capability for the existing scoped background retry. */ }
+  finally { revoking.delete(page.sandboxId) }
+}
 const removed = new Map<string,Set<()=>void>>()
 const invalidations = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('lingxiloop-visualize-state')
 const stateScope = (page:Page) => JSON.stringify([page.userId,page.target.workspaceIdentity,page.target.workspacePath,page.target.sessionId])
@@ -40,9 +50,9 @@ function projectState(page:Page,response:StateResponse) {
   for(const peer of peers) if(response.revision>peer.revision) {peer.state=state;peer.revision=response.revision;changed=true}
   if(changed) for(const listener of stateListeners) listener({target:page.target,state})
 }
-async function refreshState(page:Page,active=true) {
+async function refreshState(page:Page,active=true,signal?:AbortSignal) {
   current(page,active)
-  const response=await http<StateResponse>(`${pagePath(page)}/state`,{headers:headers(page)})
+  const response=await http<StateResponse>(`${pagePath(page)}/state`,{headers:headers(page),signal})
   current(page,active);projectState(page,response)
 }
 const refreshing=new Set<string>()
@@ -57,7 +67,7 @@ async function refreshVisible() {
   }
   for(const page of pendingRevocations.values()) {
     if(page.userId!==(useAuth.getState().user?.id ?? null)||page.target.workspaceIdentity!==getActiveCompanyId()) {pendingRevocations.delete(page.sandboxId);continue}
-    void http(pagePath(page),{method:'DELETE',headers:headers(page)}).then(()=>pendingRevocations.delete(page.sandboxId),()=>undefined)
+    void revoke(page)
   }
 }
 invalidations?.addEventListener('message',event=>{
@@ -175,8 +185,10 @@ export const webPlatform: PluginSandboxPlatformPort = {
     page.frame?.removeAttribute('srcdoc')
     page.frame = undefined; page.privatePort = undefined; page.rpcPort = undefined
     page.html = ''; page.state = null
-    try { await http(`${pagePath(page)}`, {method:'DELETE',headers:headers(page)}) }
-    catch { pendingRevocations.set(page.sandboxId,page) }
+    pendingRevocations.set(page.sandboxId,page)
+    // Local release/retry never waits for remote cleanup. Failed or uncertain
+    // revocation stays queued; each network attempt is bounded and deduplicated.
+    void revoke(page)
   },
   copyImage(input) {
     const page = pages.get(input.sandboxId)
@@ -200,27 +212,39 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
   const requirePage = () => { if (!active) throw new Error('Interactive view is not ready'); current(active,false); return active }
   const service: IGenUiService = {
     async readDocument() { return {path:target.path,html:''} },
-    async prepareSandbox() {
+    async prepareSandbox(_input, signal) {
       assertScope()
-      const result = await http<{pageId:string;initId:string;html:string;state:GenUiWidgetState|null;stateRevision:number;path:string}>(`${path(target)}/pages`, {method:'POST',body:JSON.stringify({path:target.path,sourceMessageId:target.sourceMessageId,instanceKey:target.instanceKey})})
-      active = {...result,sandboxId:result.pageId,shellUrl:'about:srcdoc',partition:'opaque',target,html:'',state:result.state === null ? null : genUiWidgetStateSchema.parse(result.state),active:false,disposed:false,gestureAt:-Infinity,captures:new Map(),loadCount:0,revision:result.stateRevision ?? 0,userId:ownerUserId}
-      pages.set(active.sandboxId,active)
+      signal?.throwIfAborted()
+      // Retention uses target.instanceKey; acquisition uses an attempt identity.
+      // An aborted POST can still commit remotely after a successful retry.
+      // Its late transaction must not revoke that newer page as a replacement.
+      const instanceKey = crypto.randomUUID()
+      const result = await http<{pageId:string;initId:string;html:string;state:GenUiWidgetState|null;stateRevision:number;path:string}>(`${path(target)}/pages`, {method:'POST',signal,body:JSON.stringify({path:target.path,sourceMessageId:target.sourceMessageId,instanceKey})})
+      const page: Page = {...result,sandboxId:result.pageId,shellUrl:'about:srcdoc',partition:'opaque',target,html:'',state:result.state === null ? null : genUiWidgetStateSchema.parse(result.state),active:false,disposed:false,gestureAt:-Infinity,captures:new Map(),loadCount:0,revision:result.stateRevision ?? 0,userId:ownerUserId}
+      pages.set(page.sandboxId,page)
+      const resources = new AbortController()
+      const resourceSignal = signal ? AbortSignal.any([signal, resources.signal]) : resources.signal
       try {
         assertScope()
-        active.html = await buildWebDocument(result.html,result.state,async name => {
+        signal?.throwIfAborted()
+        active = page
+        page.html = await buildWebDocument(result.html,result.state,async name => {
           assertScope()
-          const response = await lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',headers:headers(active!)})
+          const response = await lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',headers:headers(page),signal:resourceSignal})
           if (!response.ok) throw new Error(`Visualize resource unavailable (${response.status})`)
           return response.text()
         })
         assertScope()
+        signal?.throwIfAborted()
       } catch(error) {
-        await webPlatform.disposeSandbox(active.sandboxId,active.initId)
+        resources.abort()
+        if (active === page) active = undefined
+        await webPlatform.disposeSandbox(page.sandboxId,page.initId)
         throw error
       }
-      return active
+      return page
     },
-    async getState() { const page = requirePage(); await refreshState(page,false); return page.state },
+    async getState(_target, signal) { const page = requirePage(); await refreshState(page,false,signal); return page.state },
     async setState({target: stateTarget,state}) {
       const page = requirePage(); current(page)
       const response = await http<StateResponse>(`${pagePath(page)}/state`, {method:'PUT',headers:headers(page),body:JSON.stringify({state})})

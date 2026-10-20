@@ -1,0 +1,18 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-244-baseline
+      run 01a15a29-08cd-7f11-8c9a-90f0ac1ab634 · targets: web
+
+ ✓ target "web" command ready 1.65s
+ ✓ |web| e2e/visualize/loading.e2e.ts (2 tests) 26.97s
+   ✓ historical loading: 1 cards, sample 2 11.73s
+   ✓ historical loading: 3 cards, sample 2 15.24s
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  16:33:21
+   Duration  29.76s (startup 1.65s)
+     Report  .e2e/244-A2/report.json
+
+      JUnit  .e2e/244-A2/junit.xml
+   Markdown  .e2e/244-A2/summary.md
+
