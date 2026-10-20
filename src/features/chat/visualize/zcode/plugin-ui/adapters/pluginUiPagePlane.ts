@@ -180,6 +180,9 @@ export function createPluginUiPagePlane(events: {
     handleId = null;
   };
   return {
+    // DOM layout visibility, including offscreen flow anchors. Intersection
+    // visibility alone would discard legitimate offscreen content resizes.
+    isRendered: () => root.checkVisibility({ visibilityProperty: true }),
     setExecutionActive(active: boolean) {
       if (executionActive === active) return;
       executionActive = active;

@@ -1,0 +1,314 @@
+{
+  "count": 1,
+  "sample": 2,
+  "resourceDelayMs": 80,
+  "evidence": [
+    {
+      "scenario": "cold",
+      "visibleMs": 1467.7999999998137,
+      "interactiveMs": 3163.7999999998137,
+      "paint": {
+        "firstContentPaintMs": 1251.3999999999069,
+        "allCardsReadyMs": 1251.3999999999069
+      },
+      "resources": [
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages",
+          "resource": null,
+          "start": 50.799999999813735,
+          "duration": 6.7000000001862645,
+          "bytes": 7704
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/resources",
+          "resource": "visualize.css",
+          "start": 59.799999999813735,
+          "duration": 88.10000000009313,
+          "bytes": 30909
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/resources",
+          "resource": "visualize.html",
+          "start": 59.89999999990687,
+          "duration": 87.6999999997206,
+          "bytes": 17807
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/resources",
+          "resource": "gen-ui.js",
+          "start": 60,
+          "duration": 88.59999999962747,
+          "bytes": 506505
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/resources",
+          "resource": "calendar.js",
+          "start": 60.1999999997206,
+          "duration": 87.89999999990687,
+          "bytes": 13797
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/resources",
+          "resource": "vendor/floating-ui-core-1.7.3.min.js",
+          "start": 158,
+          "duration": 83.79999999981374,
+          "bytes": 12829
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/resources",
+          "resource": "vendor/floating-ui-dom-1.7.4.min.js",
+          "start": 243.89999999990687,
+          "duration": 87.60000000009313,
+          "bytes": 10551
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/resources",
+          "resource": "vendor/lucide-1.17.0.js",
+          "start": 334.1999999997206,
+          "duration": 85.20000000018626,
+          "bytes": 601980
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/resources",
+          "resource": "vendor/d3-7.9.0.min.js",
+          "start": 426.29999999981374,
+          "duration": 83.39999999990687,
+          "bytes": 280006
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/state",
+          "resource": null,
+          "start": 515.1999999997206,
+          "duration": 3.8000000002793968,
+          "bytes": 327
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 1236.8999999999069,
+          "duration": 2.6999999997206032,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 1238.6999999997206,
+          "duration": 2.6000000000931323,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 1376.3999999999069,
+          "duration": 1.8999999999068677,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 1408.6999999997206,
+          "duration": 1.8000000002793968,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 1417.6999999997206,
+          "duration": 1.3000000002793968,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 2723.0999999996275,
+          "duration": 2.1000000000931323,
+          "bytes": 302
+        }
+      ],
+      "frames": 1
+    },
+    {
+      "scenario": "switch",
+      "visibleMs": 1417.7999999998137,
+      "interactiveMs": 3380.100000000093,
+      "paint": {
+        "firstContentPaintMs": 974,
+        "allCardsReadyMs": 974
+      },
+      "resources": [
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/state",
+          "resource": null,
+          "start": -0.8999999999068677,
+          "duration": 2.7999999998137355,
+          "bytes": 327
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages",
+          "resource": null,
+          "start": 14.200000000186265,
+          "duration": 4.2999999998137355,
+          "bytes": 7704
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/resources",
+          "resource": "visualize.css",
+          "start": 24.899999999906868,
+          "duration": 86.8000000002794,
+          "bytes": 30909
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/resources",
+          "resource": "visualize.html",
+          "start": 25.299999999813735,
+          "duration": 86.70000000018626,
+          "bytes": 17807
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/resources",
+          "resource": "gen-ui.js",
+          "start": 25.399999999906868,
+          "duration": 87.89999999990687,
+          "bytes": 506505
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/resources",
+          "resource": "calendar.js",
+          "start": 25.5,
+          "duration": 86.70000000018626,
+          "bytes": 13797
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/resources",
+          "resource": "vendor/floating-ui-core-1.7.3.min.js",
+          "start": 116.10000000009313,
+          "duration": 86.89999999990687,
+          "bytes": 12829
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/resources",
+          "resource": "vendor/floating-ui-dom-1.7.4.min.js",
+          "start": 204.29999999981374,
+          "duration": 84.40000000037253,
+          "bytes": 10551
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/resources",
+          "resource": "vendor/lucide-1.17.0.js",
+          "start": 290.60000000009313,
+          "duration": 88,
+          "bytes": 601980
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/resources",
+          "resource": "vendor/d3-7.9.0.min.js",
+          "start": 381.39999999990687,
+          "duration": 86.20000000018626,
+          "bytes": 280006
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/state",
+          "resource": null,
+          "start": 473.29999999981374,
+          "duration": 11.700000000186265,
+          "bytes": 327
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 962.8999999999069,
+          "duration": 5.2000000001862645,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 963.5,
+          "duration": 7.100000000093132,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 1101.6000000000931,
+          "duration": 7.699999999720603,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 1153.8999999999069,
+          "duration": 2.7000000001862645,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 1166.1000000000931,
+          "duration": 10.199999999720603,
+          "bytes": 302
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 2902.2999999998137,
+          "duration": 3.7000000001862645,
+          "bytes": 302
+        }
+      ],
+      "frames": 2
+    },
+    {
+      "scenario": "return",
+      "visibleMs": 642.5,
+      "interactiveMs": 2653.100000000093,
+      "paint": {
+        "firstContentPaintMs": 28.300000000279397,
+        "allCardsReadyMs": 28.300000000279397
+      },
+      "resources": [
+        {
+          "path": "/api/im/channels/fixture-channel-B/visualize/pages/:page/state",
+          "resource": null,
+          "start": -0.7999999998137355,
+          "duration": 7.2999999998137355,
+          "bytes": 327
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 2098.399999999907,
+          "duration": 17,
+          "bytes": 302
+        }
+      ],
+      "frames": 2
+    },
+    {
+      "scenario": "reenter",
+      "visibleMs": 494.6999999997206,
+      "interactiveMs": 3174.1999999997206,
+      "paint": {
+        "firstContentPaintMs": 32.10000000009313,
+        "allCardsReadyMs": 32.10000000009313
+      },
+      "resources": [
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/state",
+          "resource": null,
+          "start": 285.1999999997206,
+          "duration": 2.3000000002793968,
+          "bytes": 327
+        },
+        {
+          "path": "/api/im/channels/fixture-channel-A/visualize/pages/:page/validate",
+          "resource": null,
+          "start": 2709.399999999907,
+          "duration": 4,
+          "bytes": 302
+        }
+      ],
+      "frames": 2
+    }
+  ]
+}
