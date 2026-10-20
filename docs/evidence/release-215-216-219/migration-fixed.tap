@@ -1,0 +1,215 @@
+[integration] selected 1/92 file(s): migration.test.ts
+TAP version 13
+# Subtest: 0045 preserves existing sources and adds explicit organization-only case scope exactly once
+ok 1 - 0045 preserves existing sources and adds explicit organization-only case scope exactly once
+  ---
+  duration_ms: 1250.251397
+  type: 'test'
+  ...
+# Subtest: 0044 preserves product and runtime rows, starts empty and retains accepted answers on replay
+ok 2 - 0044 preserves product and runtime rows, starts empty and retains accepted answers on replay
+  ---
+  duration_ms: 1184.264577
+  type: 'test'
+  ...
+# Subtest: 0044 failure from 42 rolls back only its transaction and retains committed 0043
+ok 3 - 0044 failure from 42 rolls back only its transaction and retains committed 0043
+  ---
+  duration_ms: 1241.041878
+  type: 'test'
+  ...
+# Subtest: 0044 failure from 43 rolls back only its transaction and retains committed 0043
+ok 4 - 0044 failure from 43 rolls back only its transaction and retains committed 0043
+  ---
+  duration_ms: 1621.850718
+  type: 'test'
+  ...
+# Subtest: 0044 failure during fresh cutover rolls back all product and runtime installation
+ok 5 - 0044 failure during fresh cutover rolls back all product and runtime installation
+  ---
+  duration_ms: 3109.431369
+  type: 'test'
+  ...
+# Subtest: 0043 preserves schema-11 work without backfilling notices and applies the published upgrade exactly once
+ok 6 - 0043 preserves schema-11 work without backfilling notices and applies the published upgrade exactly once
+  ---
+  duration_ms: 1443.745685
+  type: 'test'
+  ...
+# Subtest: 0043 refuses an active worker and rolls back all upgrade metadata
+ok 7 - 0043 refuses an active worker and rolls back all upgrade metadata
+  ---
+  duration_ms: 1628.287578
+  type: 'test'
+  ...
+# Subtest: a failed fresh cutover rolls back packaged schema installation and product history together
+ok 8 - a failed fresh cutover rolls back packaged schema installation and product history together
+  ---
+  duration_ms: 3268.274225
+  type: 'test'
+  ...
+# Subtest: an empty database reaches the latest schema once and repeated migration is a no-op
+ok 9 - an empty database reaches the latest schema once and repeated migration is a no-op
+  ---
+  duration_ms: 1480.502617
+  type: 'test'
+  ...
+# Subtest: group mention upgrade preserves customized preset profiles and retires only handoff grants
+ok 10 - group mention upgrade preserves customized preset profiles and retires only handoff grants
+  ---
+  duration_ms: 1505.592044
+  type: 'test'
+  ...
+# Subtest: interactive UI upgrade preserves product rows and adds empty scoped state once
+ok 11 - interactive UI upgrade preserves product rows and adds empty scoped state once
+  ---
+  duration_ms: 1406.067488
+  type: 'test'
+  ...
+# Subtest: collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams
+ok 12 - collaboration upgrade preserves managed IDs, custom rooms and leaders while expanding default teams
+  ---
+  duration_ms: 1419.620263
+  type: 'test'
+  ...
+# Subtest: earlier 3.2 versions upgrade only runtime registration and preserve existing data
+ok 13 - earlier 3.2 versions upgrade only runtime registration and preserve existing data
+  ---
+  duration_ms: 15739.871181
+  type: 'test'
+  ...
+# Subtest: read receipt upgrade preserves human receipts and accepts only same-tenant participants
+ok 14 - read receipt upgrade preserves human receipts and accepts only same-tenant participants
+  ---
+  duration_ms: 1779.156432
+  type: 'test'
+  ...
+# Subtest: 3.2.13 upgrades the workspace schema transactionally and repeats without changing product data
+ok 15 - 3.2.13 upgrades the workspace schema transactionally and repeats without changing product data
+  ---
+  duration_ms: 1542.227153
+  type: 'test'
+  ...
+# Subtest: 3.3.0 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 16 - 3.3.0 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 1836.627815
+  type: 'test'
+  ...
+# Subtest: 3.3.1 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 17 - 3.3.1 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 1611.904677
+  type: 'test'
+  ...
+# Subtest: 3.3.2 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 18 - 3.3.2 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 1798.363896
+  type: 'test'
+  ...
+# Subtest: 3.3.4 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 19 - 3.3.4 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 1930.350001
+  type: 'test'
+  ...
+# Subtest: 3.3.5 registers the runtime fixes without altering sessions or accepting an unverified schema
+ok 20 - 3.3.5 registers the runtime fixes without altering sessions or accepting an unverified schema
+  ---
+  duration_ms: 1574.904869
+  type: 'test'
+  ...
+# Subtest: a recorded runtime patch repairs a stale LingxiOS schema before serving
+ok 21 - a recorded runtime patch repairs a stale LingxiOS schema before serving
+  ---
+  duration_ms: 1642.11177
+  type: 'test'
+  ...
+# Subtest: the affinity migration backfills the most recent worker without changing the Home epoch
+ok 22 - the affinity migration backfills the most recent worker without changing the Home epoch
+  ---
+  duration_ms: 778.047693
+  type: 'test'
+  ...
+# Subtest: native installation rejects old run data before historical reset migrations can change it
+ok 23 - native installation rejects old run data before historical reset migrations can change it
+  ---
+  duration_ms: 714.766518
+  type: 'test'
+  ...
+# Subtest: a non-empty database without migration history is rejected without mutation
+ok 24 - a non-empty database without migration history is rejected without mutation
+  ---
+  duration_ms: 55.255636
+  type: 'test'
+  ...
+# Subtest: editing an applied migration is rejected by checksum
+ok 25 - editing an applied migration is rejected by checksum
+  ---
+  duration_ms: 628.902548
+  type: 'test'
+  ...
+# Subtest: a failed migration rolls back its DDL and history row
+ok 26 - a failed migration rolls back its DDL and history row
+  ---
+  duration_ms: 615.950106
+  type: 'test'
+  ...
+# Subtest: concurrent migrators serialize and apply each migration once
+ok 27 - concurrent migrators serialize and apply each migration once
+  ---
+  duration_ms: 1288.287175
+  type: 'test'
+  ...
+# Subtest: runtime readiness rejects pending migrations
+ok 28 - runtime readiness rejects pending migrations
+  ---
+  duration_ms: 695.247104
+  type: 'test'
+  ...
+# Subtest: runtime readiness rejects a missing native collaboration table
+ok 29 - runtime readiness rejects a missing native collaboration table
+  ---
+  duration_ms: 1124.777765
+  type: 'test'
+  ...
+# Subtest: capability backfill preserves teacher grants, custom prompts and later revocations
+ok 30 - capability backfill preserves teacher grants, custom prompts and later revocations
+  ---
+  duration_ms: 1245.602227
+  type: 'test'
+  ...
+# Subtest: forum convergence preserves complete submission history and rolls back ambiguous assignments
+ok 31 - forum convergence preserves complete submission history and rolls back ambiguous assignments
+  ---
+  duration_ms: 1167.323874
+  type: 'test'
+  ...
+# Subtest: 0046 retains legacy OpenUI data and migration history while adding empty Visualize tables exactly once
+ok 32 - 0046 retains legacy OpenUI data and migration history while adding empty Visualize tables exactly once
+  ---
+  duration_ms: 1224.496275
+  type: 'test'
+  ...
+# Subtest: 0047 preserves legacy memory and epochs, drains Web capture, and supports safe pre-activation rollback
+ok 33 - 0047 preserves legacy memory and epochs, drains Web capture, and supports safe pre-activation rollback
+  ---
+  duration_ms: 1111.725138
+  type: 'test'
+  ...
+# Subtest: 0048 preserves old native content on schema13 and rolls back only its failed transaction
+ok 34 - 0048 preserves old native content on schema13 and rolls back only its failed transaction
+  ---
+  duration_ms: 1155.059911
+  type: 'test'
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 34
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 62265.573044

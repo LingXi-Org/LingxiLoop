@@ -81,7 +81,9 @@ async function applyRuntimeUpgrade(client: PoolClient, runtimeVersion = RUNTIME_
   const schema = await runtimeSchema(targetSchema)
   await client.query(`UPDATE public.lingxios_installation
     SET runtime_version=$1,schema_version=$2,protocol_version=$3,schema_sha256=$4,installed_at=NOW()
-    WHERE singleton`, [runtimeVersion,targetSchema,releaseVersions.controlPlane,schema.hash])
+    WHERE singleton AND (runtime_version IS DISTINCT FROM $1 OR schema_version IS DISTINCT FROM $2
+      OR protocol_version IS DISTINCT FROM $3 OR schema_sha256 IS DISTINCT FROM $4)`,
+  [runtimeVersion,targetSchema,releaseVersions.controlPlane,schema.hash])
 }
 
 async function assertRuntimeCurrent(client: PoolClient, targetSchema: number = releaseVersions.schema,
