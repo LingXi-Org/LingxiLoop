@@ -10,6 +10,10 @@ for (const width of [1440, 390]) test(`rounded visualization and top toolbar (${
   await expect(screen.getByText('无法加载交互视图', { exact: true })).toBeVisible()
   await app.screenshot(`error-${width}`)
   await screen.getByRole('button', '重试', { exact: true }).tap()
+  if (Number(process.env.E2E_VISUALIZE_RESOURCE_DELAY) >= 1000) {
+    await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase', 'loading')
+    await app.screenshot(`loading-${width}`)
+  }
   await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase', 'ready')
   const guest = browser.frameLocator('iframe[data-visualize-guest]:visible').frameLocator('iframe[data-visualize-content]')
   await guest.locator('#fixture-play').tap()
@@ -45,4 +49,18 @@ for (const width of [1440, 390]) test(`rounded visualization and top toolbar (${
   const output = process.env.E2E_VISUALIZE_OUTPUT ?? '.e2e/visualize-presentation'
   await mkdir(output, { recursive: true })
   await writeFile(`${output}/presentation-${width}.json`, JSON.stringify(geometry, null, 2))
+})
+
+test('conversation text and input stay usable while the guest initializes', {
+  skip: Number(process.env.E2E_VISUALIZE_RESOURCE_DELAY) < 1000,
+}, async ({ app, browser, screen }) => {
+  await browser.setViewport({ width: 390, height: 960 })
+  await app.open('/e2e/visualize/loading.html?count=1')
+  await screen.getByRole('button', '进入 A', { exact: true }).tap()
+  await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase', 'loading')
+  await browser.locator('input[aria-label="对话输入"]').fill('加载期间继续输入')
+  await expect(screen.getByText('对话正文始终可读，以下为已保存的完整交互内容。', { exact: true })).toBeVisible()
+  await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase', 'loading')
+  await app.screenshot('loading-with-responsive-input-390')
+  await expect(browser.locator('[data-testid="gen-ui-card"]')).toHaveAttribute('data-gen-ui-phase', 'ready')
 })

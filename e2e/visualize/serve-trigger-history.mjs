@@ -15,6 +15,7 @@ import { visualizeReferences } from '../../server/src/agent-runtime/visualize-pr
 const database = new URL(process.env.DATABASE_URL)
 assert.equal(database.hostname, '127.0.0.1')
 assert.equal(database.pathname, '/lingxiloop_issue213217_test')
+assert.ok(process.env.AGENT_OS_HOMES_ROOT, 'Use the same test output root as visualize-trigger-live.test.ts')
 const room = (await pool.query("SELECT id,company_id,project_id FROM conversations WHERE id='visualize-trigger-comparison'")).rows[0]
 assert.ok(room, 'Run visualize-trigger-live.test.ts against the real provider first')
 const rows = (await pool.query("SELECT payload,echo FROM im_send_acceptances WHERE company_id=$1 AND channel_id=$2 AND status='accepted' ORDER BY created_at", [room.company_id, room.id])).rows

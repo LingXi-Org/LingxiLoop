@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="21.674">
+  <testsuite name="e2e/visualize/presentation-213-217.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="21.674">
+    <testcase name="rounded visualization and top toolbar (1440) [web]" classname="e2e/visualize/presentation-213-217.e2e.ts" time="9.531"/>
+    <testcase name="rounded visualization and top toolbar (390) [web]" classname="e2e/visualize/presentation-213-217.e2e.ts" time="7.510"/>
+    <testcase name="conversation text and input stay usable while the guest initializes [web]" classname="e2e/visualize/presentation-213-217.e2e.ts" time="4.633"/>
+  </testsuite>
+</testsuites>

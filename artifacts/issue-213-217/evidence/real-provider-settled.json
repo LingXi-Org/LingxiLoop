@@ -1,0 +1,223 @@
+{
+  "source": "Public readRunState after all seven requests settled; no new provider call",
+  "cases": [
+    {
+      "id": "comparison",
+      "status": "succeeded",
+      "delivery": "delivered",
+      "error": null,
+      "goalOutcome": {
+        "status": "satisfied",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "bodyLength": 609,
+      "bodySHA256": "d296bf8e8424a092b8863c634e4802943a793d9ab8ec723906057e3283774116",
+      "completedReferences": 1,
+      "tools": [
+        {
+          "name": "skills.load",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "visualize.save",
+          "error": false
+        }
+      ],
+      "savedDocuments": 1
+    },
+    {
+      "id": "relationships",
+      "status": "succeeded",
+      "delivery": "delivered",
+      "error": null,
+      "goalOutcome": {
+        "status": "satisfied",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "bodyLength": 882,
+      "bodySHA256": "7d1d702db8836bf56cd8f0a7373898a1d473d4992d3ba0b3de9a678431f5f1d0",
+      "completedReferences": 1,
+      "tools": [
+        {
+          "name": "skills.load",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "visualize.save",
+          "error": false
+        }
+      ],
+      "savedDocuments": 1
+    },
+    {
+      "id": "process",
+      "status": "succeeded",
+      "delivery": "delivered",
+      "error": null,
+      "goalOutcome": {
+        "status": "satisfied",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "bodyLength": 950,
+      "bodySHA256": "f61fd67cf54f6694d23f87a7ca3190e9b386ff642093e034e0e33a893db07ad4",
+      "completedReferences": 1,
+      "tools": [
+        {
+          "name": "skills.load",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "visualize.save",
+          "error": false
+        }
+      ],
+      "savedDocuments": 1
+    },
+    {
+      "id": "trend",
+      "status": "partial",
+      "delivery": "delivered",
+      "error": null,
+      "goalOutcome": {
+        "status": "partial",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "bodyLength": 484,
+      "bodySHA256": "9345834adbfab43013fd2bc04b1975cea84360e24e43903f68114603bc262084",
+      "completedReferences": 1,
+      "tools": [
+        {
+          "name": "skills.load",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "visualize.save",
+          "error": false
+        }
+      ],
+      "savedDocuments": 1,
+      "verificationLimit": "Runtime reported unfulfilled numeric analysis; generated content is not a quality pass."
+    },
+    {
+      "id": "exploration",
+      "status": "succeeded",
+      "delivery": "delivered",
+      "error": null,
+      "goalOutcome": {
+        "status": "satisfied",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "bodyLength": 330,
+      "bodySHA256": "4532493fd77931fd4ac715dbc1b9b0c1980c55b6d8cbe2de5be12215b69842a8",
+      "completedReferences": 1,
+      "tools": [
+        {
+          "name": "skills.load",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "canvas.current",
+          "error": false
+        },
+        {
+          "name": "observations.read",
+          "error": false
+        },
+        {
+          "name": "visualize.save",
+          "error": false
+        },
+        {
+          "name": "visualize.read",
+          "error": false
+        }
+      ],
+      "savedDocuments": 1
+    },
+    {
+      "id": "fact",
+      "status": "succeeded",
+      "delivery": "delivered",
+      "error": null,
+      "goalOutcome": {
+        "status": "satisfied",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "bodyLength": 11,
+      "bodySHA256": "623d51ce29e98f9442d81bb0eb379c2bb100ed0f44e339caa6feace0e467fa02",
+      "completedReferences": 0,
+      "tools": [],
+      "savedDocuments": 0
+    },
+    {
+      "id": "greeting",
+      "status": "succeeded",
+      "delivery": "delivered",
+      "error": null,
+      "goalOutcome": {
+        "status": "satisfied",
+        "verification": "inconclusive",
+        "requestVersion": 1
+      },
+      "bodyLength": 103,
+      "bodySHA256": "f66a8daa5d8269b5407ce9b0a29ffe90a71f99b0e0663012bf00010bdb62c81c",
+      "completedReferences": 0,
+      "tools": [],
+      "savedDocuments": 0
+    }
+  ]
+}
