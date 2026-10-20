@@ -73,7 +73,7 @@ function fixture(fault={}){
    if(fault.containerImage)c.Image='sha256:'+'0'.repeat(64)
   },
  }
- const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,transport:t,onProgress,wait:async()=>{},backupExecutor:async()=>{calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
+ const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
  return {plan,ops,calls,events,configs,actualFiles,files,run:()=>runHostRelease({plan,ops,onProgress})}
 }
 test('real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration',async()=>{

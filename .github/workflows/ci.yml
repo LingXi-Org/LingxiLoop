@@ -260,6 +260,9 @@ jobs:
         options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 12
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Backup plans qualify immutable historical source manifests/locks.
+          fetch-depth: ${{ matrix.component == 'deploy-contract' && '0' || '1' }}
       - uses: actions/setup-node@v5
         if: matrix.component != 'open-notebook'
         with:
@@ -317,7 +320,7 @@ jobs:
         working-directory: third_party/open-notebook
         run: uv run --frozen --python 3.12 pytest -q
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs
+        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test --test-name-pattern 'effective candidate' scripts/host-release.local.test.mjs
       - if: matrix.component == 'release'

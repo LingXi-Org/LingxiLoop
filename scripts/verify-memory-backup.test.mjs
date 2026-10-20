@@ -140,14 +140,14 @@ test('native13/product49 backup profile derives exact formal source and preserve
 })
 test('native13 backup exact Stack/operation and fresh terminal required; unknown read stops without retry',async()=>{
  const plan=await buildMemoryBackupPlan({sourceSha:'cf4a299bcfb44d7e7ed74a250ea1404588a4e901',profile:'native13-product49',attempt:'synthetic-native14',nonce:'0123456789abcdef'})
- for(const fault of [undefined,'wrong-target','wrong-operation','lost-reread']){
+ for(const fault of [undefined,'wrong-target','wrong-operation','lost-reread','reread-time','reread-success']){
   const calls=[],original=globalThis.fetch
   globalThis.fetch=async(url)=>{
    const op=String(url).split('/').at(-1);calls.push(op)
    if(op==='GetStack')return Response.json({_id:{$oid:'b'.repeat(24)}})
    if(op==='GetUpdate'&&fault==='lost-reread')throw Error('SECRET')
    const u=completed(plan);u.logs[0].stdout=u.logs[0].stdout.replaceAll('["public","schema_migrations",46]','["public","schema_migrations",49]')
-   return Response.json({...u,operation:fault==='wrong-operation'?'DeployStack':'RunStackService',target:{type:'Stack',id:(fault==='wrong-target'?'c':'b').repeat(24)}})
+   return Response.json({...u,success:!(op==='GetUpdate'&&fault==='reread-success'),start_ts:100,end_ts:op==='GetUpdate'&&fault==='reread-time'?201:200,operation:fault==='wrong-operation'?'DeployStack':'RunStackService',target:{type:'Stack',id:(fault==='wrong-target'?'c':'b').repeat(24)}})
   }
   try{
    if(fault)await assert.rejects(executeMemoryBackup({plan,apiKey:'fixture',apiSecret:'fixture'}),e=>e.uncertain===true&&!e.message.includes('SECRET'))
@@ -155,4 +155,27 @@ test('native13 backup exact Stack/operation and fresh terminal required; unknown
    assert.equal(calls.filter(x=>x==='RunStackService').length,1)
   }finally{globalThis.fetch=original}
  }
+})
+
+test('native13 backup refuses undocumented nonterminal status without a poll or retry',async()=>{
+ const plan=await buildMemoryBackupPlan({sourceSha:'cf4a299bcfb44d7e7ed74a250ea1404588a4e901',profile:'native13-product49',attempt:'synthetic-status',nonce:'0123456789abcdef'})
+ const calls=[],original=globalThis.fetch,abort=new AbortController()
+ globalThis.fetch=async url=>{const op=String(url).split('/').at(-1);calls.push(op);return Response.json(op==='GetStack'?{_id:{$oid:'b'.repeat(24)}}:{...completed(plan),operation:'RunStackService',target:{type:'Stack',id:'b'.repeat(24)},status:'Unknown'})}
+ const timer=setTimeout(()=>abort.abort(),100)
+ try{await assert.rejects(executeMemoryBackup({plan,apiKey:'fixture',apiSecret:'fixture',signal:abort.signal}),e=>e.uncertain===true);assert.equal(abort.signal.aborted,false);assert.deepEqual(calls,['GetStack','RunStackService'])}
+ finally{clearTimeout(timer);globalThis.fetch=original}
+})
+
+test('source-bound backup contracts run in the existing deployment CI job with historical fixtures available',async()=>{
+ const ci=await readFile(new URL('../.github/workflows/ci.yml',import.meta.url),'utf8')
+ assert.match(ci,/run: node --test [^\n]*scripts\/verify-memory-backup\.test\.mjs/)
+ assert.match(ci,/fetch-depth: \$\{\{ matrix\.component == 'deploy-contract' && '0' \|\| '1' \}\}/)
+})
+
+test('native13 backup binds guarded Core identity before submission',async()=>{
+ const plan=await buildMemoryBackupPlan({sourceSha:'cf4a299bcfb44d7e7ed74a250ea1404588a4e901',profile:'native13-product49',attempt:'synthetic-core',nonce:'0123456789abcdef'})
+ const calls=[],original=globalThis.fetch
+ globalThis.fetch=async url=>{const op=String(url).split('/').at(-1);calls.push(op);return Response.json(op==='GetStack'?{_id:{$oid:'b'.repeat(24)}}:{...completed(plan),operation:'RunStackService',target:{type:'Stack',id:'b'.repeat(24)}})}
+ try{await assert.rejects(executeMemoryBackup({plan,apiKey:'fixture',apiSecret:'fixture',expectedStackId:'c'.repeat(24)}),e=>e.uncertain===false);assert.deepEqual(calls,['GetStack'])}
+ finally{globalThis.fetch=original}
 })

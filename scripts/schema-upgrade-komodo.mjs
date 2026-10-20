@@ -24,7 +24,7 @@ export function parseMarker(update,name) {
  check(lines.length===1&&lines[0].length<=100000,'Missing or ambiguous receipt marker')
  try{return JSON.parse(lines[0].slice(prefix.length))}catch{throw Error('Invalid receipt JSON')}
 }
-export function createTransport({apiKey,apiSecret,signal,fetcher=fetch,wait=delay,onProgress=async()=>{}}) {
+export function createTransport({apiKey,apiSecret,signal,fetcher=fetch,wait=delay,onProgress=async()=>{},confirmTerminal=false}) {
  check(apiKey&&apiSecret,'Existing authorization required')
  async function request(kind,operation,params) {
   signal?.throwIfAborted()
@@ -67,7 +67,9 @@ export function createTransport({apiKey,apiSecret,signal,fetcher=fetch,wait=dela
    const deadline=Date.now()+(operation==='PullStack'||operation==='DeployStack'?15:7)*60000
    while(true){
     check(update?._id?.$oid===id&&update.operation===expectedOperation&&update.target?.type==='Stack'&&update.target.id===stackId,'Receipt identity mismatch')
-    if(update.status==='Complete'){check(typeof update.success==='boolean','Incomplete terminal receipt');complete=true;check(update.success===true,'Komodo operation failed');await onProgress({phase:'komodo',status:'complete',operation,stack:params.stack,updateId:id});return update}
+    if(update.status==='Complete'){
+     if(confirmTerminal){const terminal=update;update=await read('GetUpdate',{id});check(update?._id?.$oid===id&&update.operation===expectedOperation&&update.target?.type==='Stack'&&update.target.id===stackId&&update.status==='Complete'&&update.success===terminal.success&&update.start_ts===terminal.start_ts&&update.end_ts===terminal.end_ts,'Fresh terminal receipt unresolved or contradictory')}
+     check(typeof update.success==='boolean','Incomplete terminal receipt');complete=true;check(update.success===true,'Komodo operation failed');await onProgress({phase:'komodo',status:'complete',operation,stack:params.stack,updateId:id});return update}
     check(['InProgress','Queued'].includes(update.status)&&Date.now()<deadline,'Komodo operation did not reach terminal state')
     await wait(2000,undefined,{signal});update=await read('GetUpdate',{id})
    }
@@ -94,8 +96,8 @@ export function createTransport({apiKey,apiSecret,signal,fetcher=fetch,wait=dela
    await onProgress({phase:'komodo',status:'pending',operation:'WriteStackFileContents',stack,updateId:id})
    const verify=u=>check(u?._id?.$oid===id&&u.operation==='WriteStackContents'&&u.target?.type==='Stack'&&u.target.id===stackId&&u.status==='Complete'&&typeof u.success==='boolean','File-write receipt identity mismatch')
    // This native write is synchronous in v2.3.3; no speculative resubmission.
-   verify(accepted);terminal=true;check(accepted.success===true,'File write failed')
-   const confirmed=await read('GetUpdate',{id});verify(confirmed);check(confirmed.success===true,'File-write confirmation failed')
+   verify(accepted);if(accepted.success===false)terminal=true;check(accepted.success===true,'File write failed')
+   const confirmed=await read('GetUpdate',{id});verify(confirmed);check(confirmed.success===true&&confirmed.start_ts===accepted.start_ts&&confirmed.end_ts===accepted.end_ts,'File-write confirmation failed or changed');terminal=true
    await onProgress({phase:'komodo',status:'complete',operation:'WriteStackFileContents',stack,updateId:id});return confirmed
   }catch{
    const uncertain=submitted&&!terminal

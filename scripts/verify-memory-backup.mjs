@@ -21,13 +21,18 @@ const baseline = { runtime:'3.5.6',schema:12,protocol:11,productVersion:46,
   schemaHash:'e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a',
   integrity:'sha512-fg3EvMwwgZLd9QZ5aTT8IcJrj/9vfy7OK/1BGUiEvwt6FS7WlhgyoycZmxFj+Q1yT8XXppGCmmK7F+JIjCJLpg==',
   tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.6/8678395c3eb40eeb99860a05b3f532704fcb1bcb' }
+// Separately reviewed source profile; never inferred from an installed target.
+const native13 = {runtime:'3.5.8',schema:13,protocol:11,productVersion:49,
+  schemaHash:'2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41',
+  integrity:'sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==',
+  tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8'}
 const maxResponse = 512 * 1024
 const exactKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
   && Object.keys(value).sort().join() === [...keys].sort().join()
 const same = (a,b) => JSON.stringify(a) === JSON.stringify(b)
 const git = async args => (await run('git',args,{cwd:root,encoding:'utf8',maxBuffer:4*1024*1024})).stdout
 
-async function sourceDescriptor(sourceSha) {
+async function sourceDescriptor(sourceSha,baseline) {
   const pkg = name => git(['show',`${sourceSha}:${name}`]).then(JSON.parse)
   const [manifest, server, lock, serverLock, tree] = await Promise.all([
     pkg('package.json'),pkg('server/package.json'),pkg('package-lock.json'),pkg('server/package-lock.json'),
@@ -39,7 +44,7 @@ async function sourceDescriptor(sourceSha) {
     || installed?.version!==baseline.runtime || other?.version!==baseline.runtime
     || !/^sha512-[A-Za-z0-9+/]+={0,2}$/.test(installed?.integrity ?? '')
     || installed.integrity!==other.integrity || installed.resolved!==other.resolved
-    || installed.integrity!==baseline.integrity || installed.resolved!==baseline.tarball) throw new Error('Source must match formal 3.5.6/schema12/product46')
+    || installed.integrity!==baseline.integrity || installed.resolved!==baseline.tarball) throw new Error('Source does not match the reviewed formal backup profile')
   const names=tree.trim().split('\n').sort()
   if(names.length!==baseline.productVersion || names.some((name,index)=>!new RegExp(`^${String(index+1).padStart(4,'0')}_[a-z0-9_]+\\.sql$`).test(name)))
     throw new Error('Source migration inventory mismatch')
@@ -49,20 +54,21 @@ async function sourceDescriptor(sourceSha) {
     protocol:baseline.protocol,schemaHash:baseline.schemaHash,integrity:installed.integrity,tarball:installed.resolved},migrations}
 }
 
-export async function buildMemoryBackupPlan({sourceSha,attempt,nonce=randomBytes(8).toString('hex')}) {
+export async function buildMemoryBackupPlan({sourceSha,attempt,nonce=randomBytes(8).toString('hex'),profile='native12-product46'}) {
+  if(!['native12-product46','native13-product49'].includes(profile))throw new Error('Unsupported source backup profile')
   if(!/^[a-f0-9]{40}$/.test(sourceSha ?? '') || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(attempt ?? '') || !/^[a-f0-9]{16}$/.test(nonce))
     throw new Error('Concrete source SHA, safe attempt and nonce required')
-  const source=await sourceDescriptor(sourceSha)
-  const plan={format:1,source,attempt,nonce,isolatedDatabase:`memory_verify_${sourceSha.slice(0,12)}_${nonce}`,
+  const source=await sourceDescriptor(sourceSha,profile==='native13-product49'?native13:baseline)
+  const plan={format:profile==='native13-product49'?2:1,...(profile==='native13-product49'?{profile}:{}),source,attempt,nonce,isolatedDatabase:`memory_verify_${sourceSha.slice(0,12)}_${nonce}`,
     backupDir:`/var/lib/postgresql/data/memory-upgrade-backups/${sourceSha}/${attempt}`,migrationRehearsal:'not-performed'}
   const command=renderCommand(plan)
   return {...plan,command,commandHash:sha256(command)}
 }
 
 export async function validateMemoryBackupPlan(plan) {
-  if(!exactKeys(plan,['format','source','attempt','nonce','isolatedDatabase','backupDir','migrationRehearsal','command','commandHash']))
+  if(![1,2].includes(plan?.format)||plan.format===2&&plan.profile!=='native13-product49'||!exactKeys(plan,['format','source','attempt','nonce','isolatedDatabase','backupDir','migrationRehearsal','command','commandHash',...(plan.format===2?['profile']:[])]))
     throw new Error('Invalid reviewed plan')
-  const expected=await buildMemoryBackupPlan({sourceSha:plan.source?.sha,attempt:plan.attempt,nonce:plan.nonce})
+  const expected=await buildMemoryBackupPlan({sourceSha:plan.source?.sha,attempt:plan.attempt,nonce:plan.nonce,...(plan.format===2?{profile:plan.profile}:{})})
   if(!same(plan,expected)) throw new Error('Reviewed plan differs from exact source or command')
 }
 
@@ -271,30 +277,34 @@ async function responseJson(response) {
   } finally {reader.releaseLock()}
 }
 
-export async function executeMemoryBackup({plan,apiKey,apiSecret,signal,onProgress=async()=>{}}) {
+export async function executeMemoryBackup({plan,apiKey,apiSecret,signal,onProgress=async()=>{},expectedStackId}) {
   await validateMemoryBackupPlan(plan)
   signal?.throwIfAborted()
   if(!apiKey||!apiSecret) throw new Error('Existing injected Komodo authorization required')
-  let updateId,submitted=false
+  let updateId,submitted=false,stackId
+  const strict=plan.format===2
+  const verifyIdentity=u=>{if(strict&&!(u?._id?.$oid===updateId&&u.operation==='RunStackService'&&u.target?.type==='Stack'&&u.target.id===stackId&&['Queued','InProgress','Complete'].includes(u.status)&& (u.status!=='Complete'||typeof u.success==='boolean')))throw Error('Backup native identity or status changed')}
   const progress=()=>({status:'pending',sourceSha:plan.source.sha,attempt:plan.attempt,
     isolatedDatabase:plan.isolatedDatabase,commandHash:plan.commandHash,...(updateId?{updateId}:{})})
   const request=async(path,body)=>responseJson(await fetch(origin+path,{method:'POST',redirect:'error',
     headers:{'content-type':'application/json','x-api-key':apiKey,'x-api-secret':apiSecret},body:JSON.stringify(body),
     signal:signal?AbortSignal.any([signal,AbortSignal.timeout(60000)]):AbortSignal.timeout(60000)}))
   try {
+    if(strict){const stack=await request('/read/GetStack',{stack:'lingxiloop-core-state'});stackId=stack?._id?.$oid;if(!/^[a-f0-9]{24}$/.test(stackId??'')||(expectedStackId!==undefined&&stackId!==expectedStackId))throw Error('Backup stack identity unavailable or changed')}
     await onProgress(progress()); signal?.throwIfAborted(); submitted=true
     let update=await request('/execute/RunStackService',{stack:'lingxiloop-core-state',service:'postgres',entrypoint:'sh',
       command:['-ec',plan.command,'memory-backup',plan.commandHash],user:'postgres',
       no_tty:true,no_deps:true,detach:false,service_ports:false,pull:false})
     updateId=update?._id?.$oid
     if(!/^[a-f0-9]{24}$/.test(updateId ?? '')) {updateId=undefined;throw new Error('Missing update id')}
-    await onProgress(progress())
+    await onProgress(progress());verifyIdentity(update)
     const deadline=Date.now()+70*60000
     while(update.status!=='Complete'&&Date.now()<deadline) {
       await delay(2000,undefined,{signal}); signal?.throwIfAborted()
       update=await request('/read/GetUpdate',{id:updateId})
-      if(update?._id?.$oid!==updateId)throw new Error('Update identity changed')
+      if(update?._id?.$oid!==updateId)throw new Error('Update identity changed');verifyIdentity(update)
     }
+    if(strict){if(update.status!=='Complete')throw Error('Backup terminal deadline exceeded');const terminal=update;update=await request('/read/GetUpdate',{id:updateId});verifyIdentity(update);if(update.status!=='Complete'||update.success!==terminal.success||update.start_ts!==terminal.start_ts||update.end_ts!==terminal.end_ts)throw Error('Backup terminal readback unresolved or contradictory')}
     signal?.throwIfAborted()
     if(update.status==='Complete'&&update.success===false) {
       const logs=(update.logs ?? []).map(l=>typeof l.stdout==='string'?l.stdout:'').join('\n')
@@ -306,17 +316,17 @@ export async function executeMemoryBackup({plan,apiKey,apiSecret,signal,onProgre
   } catch {
     const evidence={...progress(),status:submitted?'uncertain':'not-submitted'}
     await onProgress(evidence).catch(()=>{})
-    throw new Error(`Backup operation ${submitted?'outcome uncertain':'not submitted'}; updateId=${updateId ?? 'unknown'}; attempt=${plan.attempt}; isolatedDatabase=${plan.isolatedDatabase}`)
+    throw Object.assign(new Error(`Backup operation ${submitted?'outcome uncertain':'not submitted'}; updateId=${updateId ?? 'unknown'}; attempt=${plan.attempt}; isolatedDatabase=${plan.isolatedDatabase}`),{uncertain:submitted})
   }
 }
 
 async function main() {
   const args=process.argv.slice(2), value=flag=>{const index=args.indexOf(flag);return index<0?undefined:args[index+1]}
   if(args.includes('--help')) {
-    console.log('Default/local: --source-sha <40-hex> --attempt <unique-id> --output <new-absolute-plan.json>\nExplicit execution: --execute --plan-file <reviewed-plan.json> --output <new-absolute-receipt.json>. Existing injected Komodo credentials only. Source backup/restore only; target migration is NOT performed.')
+    console.log('Default/local: --source-sha <40-hex> [--profile native13-product49] --attempt <unique-id> --output <new-absolute-plan.json>\nExplicit execution: --execute --plan-file <reviewed-plan.json> --output <new-absolute-receipt.json>. Existing injected Komodo credentials only. Source backup/restore only; target migration is NOT performed.')
     return
   }
-  const allowed=new Set(['--execute','--plan','--source-sha','--attempt','--output','--plan-file'])
+  const allowed=new Set(['--execute','--plan','--source-sha','--attempt','--output','--plan-file','--profile'])
   for(let i=0;i<args.length;i++) {
     if(!allowed.has(args[i])||args.indexOf(args[i])!==i)throw new Error('Unknown or duplicate argument')
     if(!['--execute','--plan'].includes(args[i])) {if(!args[i+1]||args[i+1].startsWith('--'))throw new Error('Missing argument value');i++}
@@ -325,11 +335,11 @@ async function main() {
   if(!output||!isAbsolute(output))throw new Error('An exclusive absolute output path is required')
   if(!args.includes('--execute')) {
     if(value('--plan-file'))throw new Error('Plan file requires explicit execute')
-    const plan=await buildMemoryBackupPlan({sourceSha:value('--source-sha'),attempt:value('--attempt')})
+    const plan=await buildMemoryBackupPlan({sourceSha:value('--source-sha'),attempt:value('--attempt'),profile:value('--profile')})
     await writeFile(output,JSON.stringify(plan,null,2)+'\n',{flag:'wx',mode:0o600})
     console.log(JSON.stringify({mode:'plan-only',sourceSha:plan.source.sha,attempt:plan.attempt,commandHash:plan.commandHash,migrationRehearsal:'not-performed'}));return
   }
-  if(args.includes('--plan')||value('--source-sha')||value('--attempt')||!isAbsolute(value('--plan-file') ?? ''))throw new Error('Execute requires only a reviewed absolute plan file and new receipt path')
+  if(args.includes('--plan')||value('--profile')||value('--source-sha')||value('--attempt')||!isAbsolute(value('--plan-file') ?? ''))throw new Error('Execute requires only a reviewed absolute plan file and new receipt path')
   const plan=JSON.parse(await readFile(value('--plan-file'),'utf8'))
   await validateMemoryBackupPlan(plan)
   if(!process.env.KOMODO_API_KEY||!process.env.KOMODO_API_SECRET)throw new Error('Existing authorization required')

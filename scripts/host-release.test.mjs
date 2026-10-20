@@ -21,7 +21,7 @@ const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
  const releasePlan=sealHostPlan({...plan,...(fault.native14?{format:'native-schema-host-release/v1',backup:nativeBackup()} : fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
-  source:{...source,...(fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.upgrade||fault.product49||fault.native14?formal49:formal)}})
+  source:{...source,...(fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.native14?formal50:fault.upgrade||fault.product49?formal49:formal)}})
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
  let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0,migrated=false
  const ops={
@@ -30,7 +30,7 @@ function fixture(fault={}){
   async state(){trace.push('state');if(++stateReads>fault.stateUnknownAfter||migrated&&fault.migrationStateUnknown)throw Object.assign(Error('unknown state'),{uncertain:true});const s=state(migrated?releasePlan.target:releasePlan.source);s.installedSchema=s.schema;if(fault.native14)s.otherClients=stops===4?0:4;if(fault.otherClients&&stops===4)s.otherClients=1;if(fault.busy&&stops===2)s.liveWork=1;if(fault.schema&&deployed)s.schemaHash='e'.repeat(64);return s},
   async verifyImages(which='target'){trace.push('images:'+which);if(fault.image&&which==='target')throw Error('missing image')},
   async stage(stack){trace.push('stage:'+stack);staged++;if(fault.stage&&staged===2)throw Object.assign(Error('unknown'),{uncertain:true})},
-  async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...(fault.metadata&&stack===apps[1]?{schema:14}:{})}},
+  async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
   async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
   async migrate(){trace.push('migrate');if(fault.migrationUnknown)throw Object.assign(Error('unknown migration'),{uncertain:true});if(fault.migrationFailed)throw Error('migration failed');migrated=true;if(fault.migrationCommittedFailure)throw Error('migration committed before failure')},
   async stop(stack,service){trace.push('stop:'+stack+':'+service);stops++;if(fault.stopUnknown)throw Object.assign(Error('unknown'),{uncertain:true});const row=rows.find(x=>x.stack===stack&&x.service===service);if(!fault.stillRunning){row.running=false;row.pid=0}},
