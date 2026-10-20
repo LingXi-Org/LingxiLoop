@@ -58,3 +58,8 @@ Additional mirror constraint (2026-10-20 13:46 user steering): retain the existi
 Komodo Git/registry account selections so these operations cannot attach a
 configured credential to the accelerator. Revalidate already cached image
 identities online; do not claim Compose `pull:false` disables `pull_policy:always`.
+
+Cached-image maintenance gate: both hosts already contain the exact audited image.
+Maintenance must verify that cache and fail before drain if absent/mismatched;
+it must not repeat an explicit PullStack. Any required fetch belongs to a
+separate online preparation step using the same approved accelerator.

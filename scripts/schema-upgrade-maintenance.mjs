@@ -60,9 +60,10 @@ export async function runMaintenance({plan,ops,backup,onProgress=async()=>{}}) {
   await record({status:'pending'});await ops.assertIdle()
   const original=await ops.inspect();assertContainers(original,plan.source)
   lastState=await ops.state();assertState(lastState,plan.source)
-  for(const stack of STACKS)await ops.pull(stack)
+  // Exact images must already be qualified on both hosts during online
+  // preparation. Missing/drifted cache stops here; no explicit PullStack here.
   await ops.verifyImages();for(const stack of STACKS)assertMetadata(await ops.metadata(stack),plan.target)
-  // Commit all online/pre-pull evidence before the first downtime action.
+  // Commit all online/cache evidence before the first downtime action.
   await record({status:'prepared',writers:original})
   const stopped=new Set();phase='drain'
   for(const service of ['worker','lingxiloop'])for(const stack of STACKS){

@@ -37,7 +37,7 @@ test('barrier requires actual read-only/full visibility and every lease/client c
  for(const key of ['readOnly','fullVisibility'])assert.throws(()=>assertBarrier({...state(),[key]:false}),key)
  assert.throws(()=>assertBarrier({...state(),otherClients:undefined}))
 })
-test('happy path pulls before stopping, Workers before Web, backup after barrier, one migration then staged recovery',async()=>{
+test('happy path verifies cached images before stopping, Workers before Web, backup after barrier, one migration then staged recovery',async()=>{
  const f=fixture(),result=await f.run();assert.equal(result.status,'complete')
  const t=f.trace;assert.ok(t.indexOf('images')<t.findIndex(x=>x.startsWith('stop:')))
  assert.deepEqual(t.filter(x=>x.startsWith('stop:')),['stop:lingxiloop-app-a:worker','stop:lingxiloop-app-b:worker','stop:lingxiloop-app-a:lingxiloop','stop:lingxiloop-app-b:lingxiloop'])
@@ -45,8 +45,8 @@ test('happy path pulls before stopping, Workers before Web, backup after barrier
  assert.deepEqual(t.filter(x=>x.startsWith('deploy:')),['deploy:lingxiloop-app-a:lingxiloop','deploy:lingxiloop-app-b:lingxiloop','deploy:lingxiloop-app-a:worker','deploy:lingxiloop-app-b:worker'])
  assert.equal(t.some(x=>x.startsWith('start:')),false)
 })
-test('pull or image mismatch never stops service',async()=>{
- for(const fault of [{pull:true},{image:true},{metadata:{schemaHash:'d'.repeat(64)}},{metadataB:true}]){const f=fixture(fault);await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('stop:')),false)}
+test('cached image or metadata mismatch never stops service',async()=>{
+ for(const fault of [{image:true},{metadata:{schemaHash:'d'.repeat(64)}},{metadataB:true}]){const f=fixture(fault);await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('stop:')),false)}
 })
 test('accepted stop, uncertain stop, live leases, failed backup all prohibit migration',async()=>{
  for(const fault of [{stillRunning:true},{stopUnknown:true},{busy:true},{backup:true}]){const f=fixture(fault);await assert.rejects(f.run());assert.equal(f.trace.includes('migrate'),false);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false)}
@@ -212,4 +212,8 @@ test('legacy plans fail before any operations and both nodes qualify before drai
  const f=fixture();await assert.rejects(runMaintenance({plan:sealPlan({...plan,format:1}),ops:f.ops,backup:f.backup}));assert.equal(f.trace.length,0)
  const good=fixture();await good.run();const firstStop=good.trace.findIndex(x=>x.startsWith('stop:'));for(const stack of ['lingxiloop-app-a','lingxiloop-app-b'])assert.ok(good.trace.indexOf('metadata:'+stack)<firstStop)
  assert.equal(good.trace.filter(x=>x==='metadata:lingxiloop-app-a').length,2);assert.equal(good.trace.filter(x=>x==='metadata:lingxiloop-app-b').length,2)
+})
+
+test('maintenance reuses audited cached images without explicit registry pull',async()=>{
+ const f=fixture({pull:true});await f.run();assert.equal(f.trace.some(x=>x.startsWith('pull:')),false)
 })

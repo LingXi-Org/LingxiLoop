@@ -10,12 +10,16 @@ The previously qualified application image remains d1075e35e16721979b484c2d9e33e
 no runtime package, database migration, security setting or application image is
 changed by these tools. Source preparation is separate from maintenance.
 
-1. Prepare the exact manifest commit on a fixed `release/...` branch while all
-   existing services remain healthy. Check the actual server identity, same
-   owned directory, empty clone path, no bind mounts or extra source dependencies,
-   no automatic deployment, hooks or command wrappers. Use one controlled
-   clean clone if needed, then restore `reclone=false`. Require terminal cold
-   and repeated warm metadata/state checks beyond Komodo's five-second cache.
+1. Select the exact manifest commit on a fixed `release/...` provenance branch
+   while all existing services remain healthy. The current structural repair
+   stages only its three exact public templates with native
+   `WriteStackFileContents` in host mode, at the same owned paths. No production
+   Git checkout is needed. The independently reviewed native writer creates
+   missing parent directories; writes are non-atomic, so exact terminal receipts
+   and actual host hashes are mandatory before any one-off. Validate expected
+   server identity, no live bind mounts, extra source dependencies, hooks or
+   command wrappers, and disabled automatic deployment. Retain the previous
+   failed clone receipt; never overlap or retry an unknown source operation.
 2. Keep all environment values and paths unchanged, and select native
    `files_on_host=true` on the two app stacks and core-state. Explicitly refresh
    host cache and compare actual raw Compose bytes with the exact manifest
@@ -27,11 +31,15 @@ changed by these tools. Source preparation is separate from maintenance.
    derives the three hashes; `validatePlan()` binds them to `pinCommit` and the
    existing exact runtime/image/schema qualification. Do not reuse the prior
    drained backup after production has resumed writing.
-5. Only after independent review and successful online proof, run the existing
+5. Both hosts must already contain the exact audited image. Maintenance checks
+   the existing cache and never submits an explicit `PullStack`; missing or
+   drifted cache stops before drain. Required fetches belong to a separate online
+   preparation step using the same approved mirror.
+6. Only after independent review and successful online proof, run the existing
    maintenance CLI. It revalidates actual host files before service operations,
    checks both app nodes before drain and after backup, and preserves the original
    writer barriers, verified restore, uncertain-outcome and fix-forward rules.
-6. Restore Git-based operations deliberately after target acceptance using a
+7. Restore Git-based operations deliberately after target acceptance using a
    compatible source and fresh online checks. Merely changing the mode back does
    not prove an old checkout is clean.
 
@@ -55,6 +63,11 @@ Compose `pull_policy: always`; registry availability remains a dependency.
   repetitions. Missing-directory failures have no proven underlying Git cause.
 - [Independent online-preparation review](online-preparation-review.md), binding
   the actual [operator script](reviewed-online-preparation.mjs) by SHA-256.
+- [Direct host writer contract](native-file-write-contract.md),
+  [failure model](direct-host-failure-model.md), and
+  [independent concrete driver review](direct-host-driver-review.md).
+- [Cached-image delta review](cached-image-review.md),
+  [new red case](cached-image-red.log), and [55/55 green contracts](cached-image-green.log).
 - [Initial red](contracts-initial-red.log), [mirror guard red](mirror-guard-red.log),
   and [54/54 green deployment contracts](contracts-green.log).
 
