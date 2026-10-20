@@ -1,0 +1,68 @@
+{
+  "at": "2026-10-20T15:56:57.378Z",
+  "verified": true,
+  "mode": "read-and-refresh-cache-only",
+  "executions": 0,
+  "mutations": 0,
+  "fullPolicyAndContainersUnchanged": true,
+  "events": [
+    {
+      "phase": "accepted-target-guard",
+      "status": "verified",
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "acceptanceSha256": "c67b628c068bcdee245e086947ee876b982957d12290b6da52e10853e819d85d",
+      "stacks": [
+        {
+          "stack": "lingxiloop-app-a",
+          "id": "6aa8a411b35d27bdd4e12aef",
+          "server": "shanghai-a",
+          "serverId": "6aa8a1bcb35d27bdd4e12a26",
+          "composeSha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+          "configSha256": "26f433d46a898a4f405dd8f07478b419a4b5244a950c9b4037d7c7caddd8f700"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "id": "6aa8a414b35d27bdd4e12af1",
+          "server": "shanghai-b",
+          "serverId": "6aa8a1b9b35d27bdd4e12a24",
+          "composeSha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+          "configSha256": "0559be019a71c71b4ab2d47a09ed695b4104b6641ef759bd873f5062a24ca985"
+        },
+        {
+          "stack": "lingxiloop-core-state",
+          "id": "6aa8a3e8b35d27bdd4e12ae0",
+          "server": "shanghai-a",
+          "serverId": "6aa8a1bcb35d27bdd4e12a26",
+          "composeSha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+          "configSha256": "2a0e34c058089eb11aa0a29498fa4e13bac28f1189542861bb20a592e6232763"
+        }
+      ],
+      "containers": [
+        {
+          "stack": "lingxiloop-app-a",
+          "service": "lingxiloop",
+          "id": "e70de555750c34f786d91bd26f9e74bee3c4816c00bbf9d29ca5a27725844bfb",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-a",
+          "service": "worker",
+          "id": "a27c736d258293d0ade0595e78fd1668f13df59aaa44f1b447253b46c8d40b2a",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "service": "lingxiloop",
+          "id": "52b8a51e126ebf900b763cbe22711b85bb931e35a08c8c8a8ea81cd11b91061c",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "service": "worker",
+          "id": "7aaa9cf9ef24976ccfde3d75e14135c811266b474a005cb1029da0096f07c98c",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08"
+        }
+      ]
+    }
+  ]
+}
