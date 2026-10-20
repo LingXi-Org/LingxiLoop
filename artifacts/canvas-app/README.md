@@ -50,3 +50,7 @@ node --expose-gc --import tsx perf/streaming-20261019/sample.ts . long
 浏览器探索阶段修复了官方 engine 在缩放 iframe 内 locator tap 的坐标问题（保存用 native pointer 坐标，其余控件验证键盘）和测试异步等待；socket reset 会触发 Chromium 的透明重传，故未知 ACK fixture 改成提交后 503，明确只声称应用层不自动重写。HTTP fixture 起初误把项目 header 当权限边界、把合成认证当真实 session 撤销，并漏设成员退出所需 SUSPENDED 状态；均已按实际 owner/权限/schema 校正，未放宽产品防护。
 
 未验：真实 provider 回合、真实登录后的完整多人页面旅程（既有 `e2e/web/canvas.e2e.ts` 已更新显式保存选择器）、Electron/移动端、长 soak、所有路由的未保存草稿恢复，以及通道故障/异常导航的全分支故障注入。独立审查、CI 精确最终 commit、生产部署与 Komodo 回执由父任务/唯一集成人完成。本配置不是完整官方 UI Plugin 等价验收。
+
+## 独立审查增量
+
+上面的 6 项和 `source-sha256.json` 是原候选 `ebe818fe` 的历史证据。后续只读审查复现两条未覆盖的草稿丢失竞态；修复、新旧证据和新增四项浏览器用例见 [review-races/README.md](review-races/README.md)。原始记录没有被新版测试覆盖。

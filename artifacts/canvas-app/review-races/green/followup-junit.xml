@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="19.643">
+  <testsuite name="e2e/canvas-app/draft-races.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="19.643">
+    <testcase name="typing after reload confirmation retains the original CAS baseline: undo-to-old-baseline [web]" classname="e2e/canvas-app/draft-races.e2e.ts" time="19.643"/>
+  </testsuite>
+</testsuites>

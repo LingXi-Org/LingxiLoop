@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="10" failures="1" errors="0" skipped="0" time="97.285">
+  <testsuite name=".codex-tmp/pr212-race/legacy.e2e.ts" tests="6" failures="0" errors="0" skipped="0" time="29.965">
+    <testcase name="official SDK edits a legacy document, retains one live page and stages explicit feedback [web]" classname=".codex-tmp/pr212-race/legacy.e2e.ts" time="7.692"/>
+    <testcase name="remote revision conflicts preserve the draft, reload is explicit, preview remains live [web]" classname=".codex-tmp/pr212-race/legacy.e2e.ts" time="4.715"/>
+    <testcase name="lost save response is reconciled by readback and survives reload without replaying the write [web]" classname=".codex-tmp/pr212-race/legacy.e2e.ts" time="4.648"/>
+    <testcase name="forged parent messages cannot call tools and scope invalidation closes the App [web]" classname=".codex-tmp/pr212-race/legacy.e2e.ts" time="2.841"/>
+    <testcase name="late save ACK retains newer remote revision and typing during the pending save [web]" classname=".codex-tmp/pr212-race/legacy.e2e.ts" time="4.270"/>
+    <testcase name="same-source SDK requests reject undeclared capabilities and honor request cancellation [web]" classname=".codex-tmp/pr212-race/legacy.e2e.ts" time="5.799"/>
+  </testsuite>
+  <testsuite name="e2e/canvas-app/draft-races.e2e.ts" tests="4" failures="1" errors="0" skipped="0" time="67.320">
+    <testcase name="save notifications retain an undo to the former baseline and the next save uses the acknowledged revision [web]" classname="e2e/canvas-app/draft-races.e2e.ts" time="18.021"/>
+    <testcase name="multiple edits during a pending save preserve the latest draft [web]" classname="e2e/canvas-app/draft-races.e2e.ts" time="13.348"/>
+    <testcase name="typing after reload confirmation retains the original CAS baseline: new-text [web]" classname="e2e/canvas-app/draft-races.e2e.ts" time="19.306"/>
+    <testcase name="typing after reload confirmation retains the original CAS baseline: undo-to-old-baseline [web]" classname="e2e/canvas-app/draft-races.e2e.ts" time="16.645">
+      <failure message="expect.toBeEnabled failed&#10;locator: frameLocator(&quot;iframe[data-canvas-document-app]&quot;) &gt;&gt; getByLabel(&quot;编辑文档&quot;)&#10;expected: enabled&#10;observed: states: disabled (match count 1)" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expect.toBeEnabled failed
+locator: frameLocator(&quot;iframe[data-canvas-document-app]&quot;) &gt;&gt; getByLabel(&quot;编辑文档&quot;)
+expected: enabled
+observed: states: disabled (match count 1)</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

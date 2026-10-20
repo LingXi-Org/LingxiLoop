@@ -1,0 +1,28 @@
+{
+  "head": "ebe818fe9f702199382aa998995da24b55e4b356",
+  "expectedDraft": "确认以后新写的草稿",
+  "status": "已保存 · 第 2 版",
+  "evidence": {
+    "document": {
+      "id": "fixture-frame",
+      "canvasId": "fixture-canvas",
+      "type": "markdown",
+      "title": "共同笔记",
+      "content": "远端已保存的新版本",
+      "x": 80,
+      "y": 80,
+      "width": 560,
+      "height": 440,
+      "data": {},
+      "revision": 2,
+      "createdBy": "teacher",
+      "updatedBy": "teacher",
+      "createdAt": "2026-10-20T00:55:59.617Z",
+      "updatedAt": "2026-10-20T00:56:01.049Z"
+    },
+    "patches": [],
+    "feedback": [],
+    "comments": [],
+    "finishedPatches": 0
+  }
+}

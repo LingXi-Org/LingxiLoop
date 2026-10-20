@@ -41,3 +41,7 @@ SDK 为仓库既有精确依赖 `@modelcontextprotocol/ext-apps@2.0.0` / `@model
 失败模型先于实现写在 [canvas-ui-plugin-failures.md](canvas-ui-plugin-failures.md)。浏览器用官方 tester-army/e2e + @e2e-dev/web，配置 `e2e.canvas-app.config.ts`；启动 `E2E_TELEMETRY_DISABLED=1 node_modules/.bin/e2e run --config e2e.canvas-app.config.ts`，有现成 Chromium CDP 时设置 `E2E_CANVAS_CDP_URL`。
 
 测试加载真实 CanvasView、AppBridge、App、opaque iframe 与原反馈对话框。API fixture 只模拟确定性并发/错误，不是实际服务端授权证据；`probe.js` 仅由测试服务器追加到 App 以验证同 source 的非法 SDK 请求，不进入生产构建。实际 PG/Redis 授权及旧协议由独立服务端集成测试核验。最终检查命令、结果和截图见 [验收记录](../artifacts/canvas-app/README.md)。生产 rollout、实际 provider 回合及独立审查由父任务/唯一集成人按最终集成 commit 验证；本分支仅提交 draft PR。
+
+## PR212 独立审查后的草稿竞态修正
+
+原候选 `ebe818fe` 的六项浏览器用例和 CI 未覆盖“保存中撤销回原文”与“确认重载后继续输入”。两项均已由官方引擎复现草稿丢失，见[红测与修复记录](../artifacts/canvas-app/review-races/README.md)。固定 App 现在按输入 generation 保留请求开始后的输入；保存 ACK 只推进已确认 baseline，重载期间新增输入继续持有原 CAS baseline，明确再次确认后才替换。即使这些输入恰好等于旧正文，也保留未保存标志。没有改变授权、模型 HTML 权限或持久协议。
