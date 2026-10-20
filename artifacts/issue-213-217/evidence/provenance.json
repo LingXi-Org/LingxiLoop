@@ -43,16 +43,16 @@
   "evidenceSHA256": {
     "chat/junit.xml": "4504b48592cd1fe12e166c3859d5764b03e67f15dbfd78592f370b2121b56a65",
     "chat/summary.md": "c5c036d660be58fdbde417fa8be4a6a03e6179039a1eaebd01581f9f7a36e57c",
-    "checks/build.log": "399db3d474c4d4e22934828e8387ee6794e1200e99e75b90a496962df836b6b9",
-    "checks/e2e-typecheck.log": "e03524656e4aa6246382206f53f8be1cc925b90b8cb9ad15ed1bc974aa2f293e",
-    "checks/integration.log": "c131f1c77c6747bf7013a2d8460e08bb0c47d4777c937ecb0eb976a5c6a6c70e",
-    "checks/lint.log": "ecee1f6999bc77070bfbb4034c904b8702508d6267c554b772a265d608f60c37",
-    "checks/server-lint.log": "9ca4bc0621ad4dbfe5519f1247ba8050cccc74b06bfbed5bf3f8738c53564552",
-    "checks/server-test.log": "4cf418ca91c18d8414408d6106d3edd4121fe9779f532a69b94e7e9466d41425",
-    "checks/server-typecheck.log": "d382ba02d16c628179d5020db89b3cc2ca8655e1ecf4e8c3af7f241aa53a73ab",
-    "checks/typecheck.log": "8bcb3236e6a9fac50f2bbb3dd808e70f3e3a0cd8d367bf337ce45b83ece1b29e",
-    "checks/verify.log": "216b87f0481222a3d445794688889c9bfa24a9af58edeaacee65816d17295e74",
-    "checks/web-test.log": "9e3966d7a47babf7bdb17ed5e540b48c89cf47a2e72c2ff7119859cad7da22bf",
+    "checks/build.txt": "399db3d474c4d4e22934828e8387ee6794e1200e99e75b90a496962df836b6b9",
+    "checks/e2e-typecheck.txt": "e03524656e4aa6246382206f53f8be1cc925b90b8cb9ad15ed1bc974aa2f293e",
+    "checks/integration.txt": "c131f1c77c6747bf7013a2d8460e08bb0c47d4777c937ecb0eb976a5c6a6c70e",
+    "checks/lint.txt": "ecee1f6999bc77070bfbb4034c904b8702508d6267c554b772a265d608f60c37",
+    "checks/server-lint.txt": "9ca4bc0621ad4dbfe5519f1247ba8050cccc74b06bfbed5bf3f8738c53564552",
+    "checks/server-test.txt": "4cf418ca91c18d8414408d6106d3edd4121fe9779f532a69b94e7e9466d41425",
+    "checks/server-typecheck.txt": "d382ba02d16c628179d5020db89b3cc2ca8655e1ecf4e8c3af7f241aa53a73ab",
+    "checks/typecheck.txt": "8bcb3236e6a9fac50f2bbb3dd808e70f3e3a0cd8d367bf337ce45b83ece1b29e",
+    "checks/verify.txt": "216b87f0481222a3d445794688889c9bfa24a9af58edeaacee65816d17295e74",
+    "checks/web-test.txt": "9e3966d7a47babf7bdb17ed5e540b48c89cf47a2e72c2ff7119859cad7da22bf",
     "functional/junit.xml": "fd6dc114908260428abe4ac5be224b58906c843eee19f43ff34f79af26f0c803",
     "functional/summary.md": "a8b2cf751524240ec51e1f8d9410c1fc2bb3de9c714854c9c610389426a63ee5",
     "performance/after/junit.xml": "6a627d78db11966a868bf1f8ca672c0196ca8fbc2c88f1509fbdc453f021fa6f",
@@ -76,7 +76,7 @@
     "presentation/summary.md": "9f660a61657f102f8bf7e306b64720af961bf9832517ec622dbef7d9eeb2a1df",
     "presentation-with-clipboard-denied/clipboard-write-interaction.json": "6dfd976fe0149dcf0d59e176095bdf7dd00b65b7ea6232d6669f9d800ece826d",
     "presentation-with-clipboard-denied/junit.xml": "710f86b2110998b8f9827965ddc1149bd7a493fa925adff2df0353d36796c338",
-    "presentation-with-clipboard-denied/summary.md": "d261c4dccb5702f76c8ab621c17a78a492a6d7b4e3e537e417d43c0820528803",
+    "presentation-with-clipboard-denied/summary.md": "b983fedd63fc1895a6724cd68af85dc188858d4f8042706c5a54565dc5002577",
     "real-history/junit.xml": "f7db8706b4809acfc87c42c7f6660531ce0c9694798f269de01b84e269d4cc2a",
     "real-history/summary.md": "c2d8b49adcd088647245d1e2581d2b8791142a3cc410bbb74b7402956c5d84c0",
     "real-provider-exploratory.json": "051aafcd1f67636d457784dd187e3ed3c44b06b840c05a51c5932db838962092",
@@ -110,5 +110,6 @@
     "screenshots/visualize-before-toolbar-focus-1440.png": "f7aeb3208debff9b429a33794d8e411eb0150f034a556a83ba2017d3953abb9d",
     "screenshots/visualize-before-toolbar-focus-390.png": "73e742ccb177f86b957ad4a829a30621653ffee9d40ada7bc88b984eb334ecf3"
   },
-  "rawRuns": "Unabridged local outputs are retained in .e2e/issue-213-217-runs and the detached baseline worktree; curated files here preserve raw measurements, JUnit and unedited screenshots."
+  "rawRuns": "Unabridged local outputs are retained in .e2e/issue-213-217-runs and the detached baseline worktree; curated files here preserve raw measurements, JUnit and unedited screenshots.",
+  "reportFormatting": "Trailing whitespace in copied Markdown summaries normalized; numeric measurements, assertions and screenshots unchanged."
 }

@@ -1,6 +1,6 @@
 ### 🔴 e2e: 1 failed, 4 passed
 
-**🔴 copy-image native write fulfills and supplies a real PNG**  
+**🔴 copy-image native write fulfills and supplies a real PNG**
 `e2e/visualize/clipboard-write.e2e.ts:42`
 
 **ASSERTION_FAILED**
