@@ -22,7 +22,7 @@
     "e2e/visualize/loading.e2e.ts": "afd02d2694b380281526c32382b3ef8290d1e0a34ab4fa05aa366ca32cb2bbb6",
     "e2e/visualize/loading.html": "a8772817a75d4c830d569a95901a99b0b5af3591a4475c3fe4636aa7e85e5512",
     "e2e/visualize/loading.tsx": "01d890633396e1a1e06d0a7f9f3a4587dc58fa38ef0948abdeba8f3139e20e9d",
-    "e2e/visualize/presentation-213-217.e2e.ts": "23705178a75cd8a88650e50308f2e8abd78bb340c641a9cad542832469b80a8b",
+    "e2e/visualize/presentation-213-217.e2e.ts": "d3bb56a3e64a9992375ae03c23d77ed45884f0985f3f0c911c37efb65f90f5ec",
     "e2e/visualize/retention-213-217.e2e.ts": "67e403c0d6bba6a442797456c5866622bf4460c51bead16fc4ddf6e57cc3ea53",
     "e2e/visualize/serve-trigger-history.mjs": "533553f05b2da2b83e1c707e8eea4015dc59234c9fb7bd8a493e6eb3605a40d6",
     "e2e/visualize/trigger-history.e2e.ts": "c8c59edbd47d47c72cd2df3f7599362cbdab22e955b36a878d247cd6fc9f5a5f",
@@ -43,10 +43,10 @@
   "evidenceSHA256": {
     "chat/junit.xml": "4504b48592cd1fe12e166c3859d5764b03e67f15dbfd78592f370b2121b56a65",
     "chat/summary.md": "c5c036d660be58fdbde417fa8be4a6a03e6179039a1eaebd01581f9f7a36e57c",
-    "checks/build.txt": "399db3d474c4d4e22934828e8387ee6794e1200e99e75b90a496962df836b6b9",
+    "checks/build.txt": "56dc19e7c78bab083d6d0a952c7ae0f39d84326504be77e44a01bc54ac20959d",
     "checks/e2e-typecheck.txt": "e03524656e4aa6246382206f53f8be1cc925b90b8cb9ad15ed1bc974aa2f293e",
     "checks/integration.txt": "c131f1c77c6747bf7013a2d8460e08bb0c47d4777c937ecb0eb976a5c6a6c70e",
-    "checks/lint.txt": "ecee1f6999bc77070bfbb4034c904b8702508d6267c554b772a265d608f60c37",
+    "checks/lint.txt": "0af6709dc54a9b6bd3320d653a5f1316c73a30d690f6223a2629ee95ff4d7a67",
     "checks/server-lint.txt": "9ca4bc0621ad4dbfe5519f1247ba8050cccc74b06bfbed5bf3f8738c53564552",
     "checks/server-test.txt": "4cf418ca91c18d8414408d6106d3edd4121fe9779f532a69b94e7e9466d41425",
     "checks/server-typecheck.txt": "d382ba02d16c628179d5020db89b3cc2ca8655e1ecf4e8c3af7f241aa53a73ab",
@@ -111,5 +111,5 @@
     "screenshots/visualize-before-toolbar-focus-390.png": "73e742ccb177f86b957ad4a829a30621653ffee9d40ada7bc88b984eb334ecf3"
   },
   "rawRuns": "Unabridged local outputs are retained in .e2e/issue-213-217-runs and the detached baseline worktree; curated files here preserve raw measurements, JUnit and unedited screenshots.",
-  "reportFormatting": "Trailing whitespace in copied Markdown summaries normalized; numeric measurements, assertions and screenshots unchanged."
+  "reportFormatting": "Trailing whitespace in copied human-readable Markdown summaries and command logs normalized; numeric measurements, assertions and screenshots unchanged."
 }

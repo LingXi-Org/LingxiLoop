@@ -57,10 +57,10 @@ Issue #2:
 
 ✓ 15146 modules transformed.
 rendering chunks...
-[plugin:vite:reporter] [plugin vite:reporter] 
+[plugin:vite:reporter] [plugin vite:reporter]
 (!) /workspace/LingxiLoop-213-217/src/features/knowledge/state.ts is dynamically imported by /workspace/LingxiLoop-213-217/src/features/chat/runtime/transport.ts but also statically imported by /workspace/LingxiLoop-213-217/src/components/WorkspaceChrome.tsx, /workspace/LingxiLoop-213-217/src/desktop/DesktopApp.tsx, /workspace/LingxiLoop-213-217/src/features/knowledge/workspace.ts, dynamic import will not move module into another chunk.
 
-[plugin:vite:reporter] [plugin vite:reporter] 
+[plugin:vite:reporter] [plugin vite:reporter]
 (!) /workspace/LingxiLoop-213-217/node_modules/mermaid/dist/mermaid.core.mjs is dynamically imported by /workspace/LingxiLoop-213-217/src/features/learning/forum/memos/MermaidBlock.tsx but also statically imported by /workspace/LingxiLoop-213-217/node_modules/@streamdown/mermaid/dist/index.js, dynamic import will not move module into another chunk.
 
 computing gzip size...

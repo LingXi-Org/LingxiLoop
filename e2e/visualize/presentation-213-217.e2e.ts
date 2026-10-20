@@ -52,7 +52,7 @@ for (const width of [1440, 390]) test(`rounded visualization and top toolbar (${
 })
 
 test('conversation text and input stay usable while the guest initializes', {
-  skip: Number(process.env.E2E_VISUALIZE_RESOURCE_DELAY) < 1000,
+  skip: Number(process.env.E2E_VISUALIZE_RESOURCE_DELAY ?? 0) < 1000,
 }, async ({ app, browser, screen }) => {
   await browser.setViewport({ width: 390, height: 960 })
   await app.open('/e2e/visualize/loading.html?count=1')
