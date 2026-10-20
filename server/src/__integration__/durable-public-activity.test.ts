@@ -19,7 +19,8 @@ import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAge
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); installFakeWukong() })
 after(async () => { await teardownAll() })
 
-for (const outcome of ['complete','cancelled','revoked','unsafe'] as const) test(`durable prefix crosses real Worker/SSE and state-first reload (${outcome})`, { timeout: 20000 }, async () => {
+for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream'] as const) test(`durable prefix crosses real Worker/SSE and state-first reload (${outcome})`, { timeout: 20000 }, async () => {
+  const completes = outcome === 'complete' || outcome === 'final-stream'
   const { companyId,projectId,agentId } = await seedCompanyWithAgent()
   const principalId = `issue215-public-human-${outcome}`, conversationId = `issue215-public-room-${outcome}`
   await seedUserMembership(principalId,companyId)
@@ -46,9 +47,10 @@ for (const outcome of ['complete','cancelled','revoked','unsafe'] as const) test
             for (const chunk of ['\n<','th','ink>','PRIVATE_STREAM_SENTINEL','</think>']) await request.onTextDelta?.(chunk)
             return { text: 'I will inspect the available files.\n<think>PRIVATE_STREAM_SENTINEL</think>',output: [],usage }
           }
-          if (outcome !== 'complete') await request.onTextDelta?.('PRIVATE_AFTER_REVOKE_OR_CANCEL')
+          if (!completes) await request.onTextDelta?.('PRIVATE_AFTER_REVOKE_OR_CANCEL')
           return { text: '',output: [{ type: 'function_call',callId: 'issue215-files',name: 'files__list',arguments: '{}' }],usage }
         }
+        if (outcome === 'final-stream') await request.onTextDelta?.('The inspection is complete.')
         return { text: 'The inspection is complete.',output: [{ role: 'assistant',content: 'The inspection is complete.' }],usage }
       },
       async structured() { return { model: 'issue215-public-fixture',value: { missing: [] },usage } },
@@ -90,11 +92,20 @@ for (const outcome of ['complete','cancelled','revoked','unsafe'] as const) test
       [conversationId,JSON.stringify([...members,'new-recipient'])])
     release(); await running
     const replay = (await readRunProjection(api,identity,true)).snapshot.message
-    if (outcome !== 'unsafe') assert.equal(nativeText(replay),outcome === 'complete' ? 'The inspection is complete.' : '')
+    if (outcome !== 'unsafe') assert.equal(nativeText(replay),completes ? 'The inspection is complete.' : '')
     const retained = replay.content.filter(part => activityAnnotation(part)?.kind === 'commentary')
+    if (outcome === 'final-stream') {
+      const copies = replay.content.filter(part => part.type === 'text' && part.text === 'The inspection is complete.')
+      const latestCommentary = retained.at(-1)
+      await mkdir('artifacts/issue215-public',{ recursive: true })
+      await writeFile('artifacts/issue215-public/final-stream-foreground.json',JSON.stringify({ runtime: releaseVersions.runtime,
+        finalAnswerCopiesInSnapshot: copies.length,latestCommentaryIsFinalAnswer: latestCommentary?.type === 'text' && latestCommentary.text === nativeText(replay),
+        realLocalPostgres: true,realWorker: true,syntheticDriver: true,productionRequests: 0 },null,2))
+      assert.equal(copies.length,1,'the accepted streamed final answer must not be duplicated as the latest foreground explanation')
+    }
     if (outcome !== 'unsafe') assert.equal(retained.length,1)
     assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
-    assert.equal(replay.content.some(part => part.type === 'tool-call' && part.toolName === 'files.list'),outcome === 'complete')
+    assert.equal(replay.content.some(part => part.type === 'tool-call' && part.toolName === 'files.list'),completes)
     if (outcome === 'cancelled' || outcome === 'revoked') assert.deepEqual(replay.status,{ type: 'incomplete',reason: outcome === 'cancelled' ? 'cancelled' : 'error' })
     const allEvents = await api.readEvents(identity)
     const joinedPublic = allEvents.events.filter(event => event.kind === 'public.text.delta').map(event => String(event.data.text)).join('')

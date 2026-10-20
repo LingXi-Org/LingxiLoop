@@ -1,6 +1,4 @@
-/** Syntax-only publication gate. It neither edits text nor validates citations. */
-type Input = Readonly<{ text: string; isFinal: boolean; approvedThrough: number }>
-type Decision = { safeThrough: number; reject?: 'unsafe_content' | 'unsupported_content' }
+import type { PublicTextSafetyInput, PublicTextSafetyDecision } from '@lyyzka/lingxios'
 
 const english = [
   ...['think','structure','craft','write'].map(verb => `let me ${verb}`),
@@ -63,7 +61,8 @@ function proseOf(text: string) {
   return { prose,pending }
 }
 
-export function publicTextSafety({ text,isFinal,approvedThrough }: Input): Decision {
+/** Syntax-only publication gate. It neither edits text nor validates citations. */
+export function publicTextSafety({ text,isFinal,approvedThrough }: Readonly<PublicTextSafetyInput>): PublicTextSafetyDecision {
   // Bound repeated cumulative scans even for one-character provider chunks.
   // The runtime pauses this optional public segment after its suffix budget;
   // it still checks the complete final text once and can deliver a safe answer.

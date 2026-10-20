@@ -214,7 +214,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
-  publicTextSafety(input: Parameters<typeof publicTextSafety>[0]) { return publicTextSafety(input) }
+  override publicTextSafety(input: Parameters<typeof publicTextSafety>[0]) { return publicTextSafety(input) }
   override validateAssistantText(text: string, context: TurnContext) {
     return assistantTextViolation(text) ?? super.validateAssistantText(text, context) ?? citationTextViolation(text, context.evidence ?? [])
   }
