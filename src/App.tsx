@@ -1,13 +1,16 @@
-import { lazy, Suspense, useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { AuthGate } from '@/components/AuthGate'
 import { WorkspaceSkeleton } from '@/components/WorkspaceSkeleton'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useAuth } from '@/stores/auth'
 import { consumeInviteFromUrl, InviteAcceptScreen } from '@/features/companies/components/InviteAcceptScreen'
 
-const AuthedApp = lazy(() => import('./AuthedApp').then((module) => ({ default: module.AuthedApp })))
+const loadAuthedApp = () => import('./AuthedApp').then((module) => ({ default: module.AuthedApp }))
+const AuthedApp = lazy(loadAuthedApp)
 
 export function App() {
+  // Download code while the session is checked; do not mount or fetch scoped data.
+  useEffect(() => { void loadAuthedApp().catch(() => {}) }, [])
   const [invitation, setInvitation] = useState(consumeInviteFromUrl)
   const finishInvitation = useCallback(() => {
     invitation?.clear()

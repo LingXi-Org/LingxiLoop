@@ -4,6 +4,7 @@ import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
 import type { Conversation } from '@/types'
 import { useApp } from '@/stores/app'
+import { useSurface } from '@/stores/surface'
 import { useAuth } from '@/stores/auth'
 import { chatTransport } from '@/features/chat/runtime/transport'
 import { chatLatency } from '@/features/chat/runtime/latency'
@@ -22,12 +23,30 @@ interface ConversationsState {
   load: () => Promise<void>
   reload: () => Promise<void>
   reset: () => void
+  remove: (id: string) => Promise<boolean>
+  restore: (id: string) => Promise<boolean>
   setLeader: (id: string, leaderId: string) => Promise<void>
   setTitle: (id: string, title: string) => Promise<void>
   setTopic: (id: string, topic: string | null) => Promise<void>
 }
 
 let requestEpoch = 0
+let scopeEpoch = 0
+
+/** Confirmation and mutations must remain in the same user/workspace generation. */
+export function captureConversationScope(): () => boolean {
+  const epoch = scopeEpoch
+  const userId = useAuth.getState().user?.id
+  const companyId = useAuth.getState().activeCompanyId
+  const workspace = getWorkspaceSession()
+  return () => {
+    const active = getWorkspaceSession()
+    return Boolean(userId && workspace && workspace.companyId === companyId && epoch === scopeEpoch
+      && useAuth.getState().user?.id === userId
+      && useAuth.getState().activeCompanyId === companyId
+      && active?.companyId === workspace.companyId && active?.projectId === workspace.projectId)
+  }
+}
 
 function reconcileConversationSelection(conversations: Conversation[]): void {
   const state = useApp.getState()
@@ -272,9 +291,40 @@ export const useConversations = create<ConversationsState>((set) => ({
     }
   },
   reset() {
+    scopeEpoch += 1
     requestEpoch += 1
     chatTransport.setWorkspaceChannels([])
     set({ list: [], projectId: null, loaded: false, loading: false, error: null })
+  },
+  async remove(id) {
+    const current = captureConversationScope()
+    if (!current()) return false
+    await conversationsApi.deleteConversation(id)
+    if (!current()) return false
+    // Invalidate list reads started before the accepted deletion, otherwise a
+    // late response can resurrect the removed row and its message cache.
+    requestEpoch += 1
+    const list = useConversations.getState().list.filter(item => item.id !== id)
+    set({ list, loading: false, error: null })
+    chatTransport.setWorkspaceChannels(list.map(item => item.id))
+    const app = useApp.getState()
+    if (app.selectedConversationId === id) {
+      useSurface.getState().closeForConversationChange()
+      chatLatency.opened(null)
+      useApp.setState({ selectedConversationId: null, mobileConversationOpen: false,
+        navigationError: null, autoSelectConversation: false })
+      if (app.navigationReady) writeWebDestination({ projectId: getWorkspaceSession()?.projectId ?? null,
+        view: app.view, conversationId: null }, 'replace')
+    }
+    return true
+  },
+  async restore(id) {
+    const current = captureConversationScope()
+    if (!current()) return false
+    await conversationsApi.restoreConversation(id)
+    if (!current()) return false
+    await useConversations.getState().reload()
+    return current()
   },
   async setLeader(id, leaderId) {
     let previous: string | null = null

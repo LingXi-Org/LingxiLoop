@@ -25,6 +25,7 @@ import {
   markConversationReadNow,
   searchWorkspaceDirectory,
   setMute,
+  setListRemoval,
   updateConversation,
   upsertBinding,
   type ConversationRow,
@@ -294,6 +295,20 @@ export class ConversationsApplication {
     if (!conversation.members.includes(scope.userId)) throw new ConversationApplicationError('not_member', 'not a member')
     await setMute(this.db, { ...scope, conversationId, mute, until })
     return { ok: true as const, muted: mute, mutedUntil: mute && until ? until.toISOString() : null }
+  }
+
+  async setRemoved(scope: ConversationScope, conversationId: string, removed: boolean) {
+    await this.infrastructure.transaction(async (db) => {
+      const conversation = await findConversationForUpdate(db, scope.companyId, conversationId)
+      if (!conversation || conversation.project_id !== scope.projectId) {
+        throw new ConversationApplicationError('not_found', 'not found')
+      }
+      if (!conversation.members.includes(scope.userId)) {
+        throw new ConversationApplicationError('not_member', 'not a member')
+      }
+      await setListRemoval(db, { ...scope, conversationId, removed })
+    })
+    return { ok: true as const, removed }
   }
 
   async listAgentMutes(agentId: string) {

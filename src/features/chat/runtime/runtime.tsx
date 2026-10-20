@@ -15,6 +15,8 @@ import { chatTransport, filterThreadMessages } from './transport'
 import { uploadedAttachment } from './attachment-messages'
 import { projectReplyBranches } from './reply-branches'
 import { useConversationUi } from '@/stores/conversationUi'
+import { useParticipants } from '@/features/agents/state'
+import type { LingxiMessageMetadata } from './model'
 
 type UploadedAttachment = PendingAttachment & {
   apiAttachment: Awaited<ReturnType<typeof uploadsApi.uploadFile>>
@@ -49,10 +51,20 @@ export function useConversationThreadSnapshot(
     store.conversations[conversationId] ?? EMPTY_CONVERSATION_CHAT_STATE
   ))
   const selectedReplyBranches = useConversationUi(state => state.selectedReplyBranches)
-  const messages = useMemo(
-    () => filterThreadMessages(projectReplyBranches(state.messages, selectedReplyBranches), threadRootId),
-    [state.messages, selectedReplyBranches, threadRootId],
-  )
+  const participants = useParticipants(state => state.byId)
+  const messages = useMemo(() => {
+    const enriched = state.messages.map(message => {
+      const metadata = message.metadata.custom as LingxiMessageMetadata
+      if (message.role === 'system' || metadata.senderKind === 'system') return message
+      const participant = participants[metadata.senderId]
+      if (!participant || (participant.name === metadata.senderName && participant.kind === metadata.senderKind
+        && (participant.avatarUrl ?? null) === metadata.senderAvatarUrl)) return message
+      return { ...message, metadata: { ...message.metadata, custom: { ...metadata,
+        senderName: participant.name, senderKind: participant.kind, senderAvatarUrl: participant.avatarUrl ?? null,
+      } } } as ThreadMessage
+    })
+    return filterThreadMessages(projectReplyBranches(enriched, selectedReplyBranches), threadRootId)
+  }, [state.messages, participants, selectedReplyBranches, threadRootId])
   const activeRuns = useMemo(
     () => Object.values(state.activeRuns).filter((run) => run.state === 'queued' || run.state === 'running'),
     [state.activeRuns],
@@ -61,14 +73,15 @@ export function useConversationThreadSnapshot(
     conversationId,
     threadRootId,
     messages,
-    isLoading: state.isLoading,
+    isLoading: state.isLoading || (!state.loaded && !state.error),
+    isRecovering: state.isRecovering,
     isLoadingOlder: state.isLoadingOlder,
     hasMoreOlder: state.hasMoreOlder,
     isRunning: activeRuns.length > 0,
     activeAgentIds: [...new Set(activeRuns.map((run) => run.agentId))],
     typingAgentIds: state.typingAgentIds,
     error: state.error,
-  }), [activeRuns, conversationId, messages, state.error, state.hasMoreOlder, state.isLoading, state.isLoadingOlder, state.typingAgentIds, threadRootId])
+  }), [activeRuns, conversationId, messages, state.error, state.hasMoreOlder, state.loaded, state.isLoading, state.isRecovering, state.isLoadingOlder, state.typingAgentIds, threadRootId])
 }
 
 export function useConversationPresence(conversationId: string) {

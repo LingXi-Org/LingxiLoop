@@ -39,6 +39,7 @@ export function AuthedApp() {
   useEffect(() => {
     if (!convoId || !selectedConvoExists) return
     void chatTransport.loadConversation(convoId)
+    return () => chatTransport.cancelConversationLoad(convoId)
   }, [convoId, selectedConvoExists])
 
   return (

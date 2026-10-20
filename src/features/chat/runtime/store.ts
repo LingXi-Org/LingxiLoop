@@ -22,6 +22,7 @@ export interface ConversationChatState {
   activeRuns: Record<string, ActiveAgentRun>
   loaded: boolean
   isLoading: boolean
+  isRecovering?: boolean
   isLoadingOlder: boolean
   hasMoreOlder: boolean
   error: string | null

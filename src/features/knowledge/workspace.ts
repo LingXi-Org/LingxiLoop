@@ -93,10 +93,10 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     useCanvas.getState().reset()
     useKnowledgeSources.getState().reset()
     useDocuments.getState().reset()
-    await Promise.all([
-      useParticipants.getState().load(),
-      useConversations.getState().load(),
-    ])
+    // The directory enriches names/avatars; it is not an authorization gate.
+    // Its reset/epoch guards keep a late result inside this workspace.
+    void useParticipants.getState().load()
+    await useConversations.getState().load()
     if (epoch !== workspaceRequestEpoch || !isCurrentWebNavigation(navigationEpoch) || getActiveCompanyId() !== companyId || useAuth.getState().user?.id !== userId) return
     const conversations = useConversations.getState()
     if (conversations.projectId !== projectId || !conversations.loaded || conversations.error) throw new Error(conversations.error ?? '暂时无法加载对话，请稍后重试。')

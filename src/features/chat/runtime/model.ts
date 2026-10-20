@@ -92,6 +92,7 @@ export interface ConversationThreadSnapshot {
   threadRootId: string | null
   messages: readonly ThreadMessage[]
   isLoading: boolean
+  isRecovering?: boolean
   isLoadingOlder: boolean
   hasMoreOlder: boolean
   isRunning: boolean

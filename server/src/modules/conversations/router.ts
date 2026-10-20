@@ -142,6 +142,26 @@ conversationsRouter.post('/conversations/:id/leave', safe(async (req, res) => {
   }
 }))
 
+conversationsRouter.delete('/conversations/:id', safe(async (req, res) => {
+  const conversationId = String(req.params.id)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:write')
+  try {
+    res.json(await conversationsApplication.setRemoved(scope, conversationId, true))
+  } catch (error) {
+    mapApplicationError(error)
+  }
+}))
+
+conversationsRouter.post('/conversations/:id/restore', safe(async (req, res) => {
+  const conversationId = String(req.params.id)
+  const scope = await requireConversationScope(req, conversationId, 'conversation:write')
+  try {
+    res.json(await conversationsApplication.setRemoved(scope, conversationId, false))
+  } catch (error) {
+    mapApplicationError(error)
+  }
+}))
+
 conversationsRouter.post('/conversations/:id/typing', safe(async (req, res) => {
   const conversationId = String(req.params.id)
   const scope = await requireConversationMember(req, conversationId, 'conversation:write')

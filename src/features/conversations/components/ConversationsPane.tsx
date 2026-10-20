@@ -1,4 +1,4 @@
-import { Cancel01Icon, Notification01Icon, NotificationOff01Icon, PinIcon, PinOffIcon, SearchIcon } from '@hugeicons/core-free-icons'
+import { Cancel01Icon, Delete02Icon, Notification01Icon, NotificationOff01Icon, PinIcon, PinOffIcon, SearchIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type React from 'react'
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
@@ -12,11 +12,11 @@ import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/comp
 import { SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
 import { useParticipants } from '@/features/agents/state'
 import { conversationsApi } from '@/features/conversations/api'
-import { isMuted, useConversations } from '@/features/conversations/store'
+import { captureConversationScope, isMuted, useConversations } from '@/features/conversations/store'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { ConversationListItemContent } from '@/im/ConversationList'
-import { toastAction } from '@/lib/actionToast'
+import { notifyAction, toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
@@ -26,6 +26,7 @@ import { useUiCommand } from '@/stores/uiCommands'
 import type { Conversation, Participant } from '@/types'
 import type { ConversationSearchResults } from '../contracts'
 import { NewConversationDialog } from './NewConversationDialog'
+import { RemovedConversationsDialog } from './RemovedConversationsDialog'
 
 interface ConversationMenuItem {
   label: string
@@ -143,6 +144,7 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
 export function ConversationsPane({ onConversationSelected }: { onConversationSelected?: (conversationId: string) => void } = {}) {
   const isMobile = useIsMobile()
   const companyId = useAuth((state) => state.activeCompanyId)
+  const userId = useAuth((state) => state.user?.id)
   const projectId = useWorkspace((state) => state.selectedId)
   const workspaceTitle = useWorkspace((state) => state.list.find((workspace) => workspace.id === state.selectedId)?.name)
   const list = useConversations((s) => s.list)
@@ -224,6 +226,26 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
     }
   }
 
+  const removeConversation = async (conversation: Conversation) => {
+    const current = captureConversationScope(), key = `${conversation.id}:delete`
+    if (pendingPreferences.has(key)) return
+    setPendingPreferences(previous => new Set(previous).add(key))
+    try {
+      if (!await confirmSensitiveAction({
+        title: '删除对话？',
+        description: `将“${conversation.title}”从你的列表移除。消息和成员关系会保留，你可在“已删除的对话”中恢复。`,
+        confirmLabel: '删除对话', tone: 'destructive',
+      }) || !current()) return
+      if (await useConversations.getState().remove(conversation.id) && current()) {
+        notifyAction({ title: '对话已从你的列表删除', description: '可在“已删除的对话”中恢复。' })
+      }
+    } catch (reason) {
+      if (current()) notifyAction({ title: '删除对话失败', description: userFacingError(reason, '操作未完成，请稍后重试。'), type: 'error' })
+    } finally {
+      setPendingPreferences(previous => { const next = new Set(previous); next.delete(key); return next })
+    }
+  }
+
   const conversationMenuItems = (conversation: Conversation): ConversationMenuItem[] => {
     const pinned = Boolean(conversation.pinned)
     const muted = isMuted(conversation)
@@ -261,6 +283,13 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
         },
       })
     }
+    items.push({
+      label: pendingPreferences.has(`${conversation.id}:delete`) ? '正在删除…' : '删除对话',
+      icon: <HugeiconsIcon icon={Delete02Icon} strokeWidth={2} />,
+      destructive: true,
+      disabled: pendingPreferences.has(`${conversation.id}:delete`),
+      onSelect: () => void removeConversation(conversation),
+    })
     return items
   }
 
@@ -287,12 +316,14 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
             {!searching && resultRows.length === 0 && <div className="ui-enter px-3 py-5 text-sm text-muted-foreground"><p>没有找到匹配结果</p><Button variant="outline" size="sm" className="mt-3" onClick={() => setQuery('')}>清除搜索</Button></div>}
             <ItemGroup className="!gap-0">
               {resultRows.map((row) => (
-                <ConversationListRow key={row.id} selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
+                <ContextMenu key={row.id}><ContextMenuTrigger asChild><ConversationListRow selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
                   <ItemContent className="min-w-0">
                     <ItemTitle className={cn('block w-full truncate text-sm font-medium', selected === row.id ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground')}>{row.title}</ItemTitle>
                     <ItemDescription className="line-clamp-1 text-xs text-muted-foreground">{row.preview}</ItemDescription>
                   </ItemContent>
-                </ConversationListRow>
+                </ConversationListRow></ContextMenuTrigger><ContextMenuContent aria-label="会话操作" className="min-w-[200px]">
+                  <ConversationMenuItems items={conversationMenuItems(list.find(item => item.id === row.id)!)} />
+                </ContextMenuContent></ContextMenu>
               ))}
             </ItemGroup>
           </div>
@@ -312,6 +343,7 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
         )}
       </SidebarContent>
 
+      {userId && companyId && projectId && <div className="shrink-0 border-t px-2 py-1"><RemovedConversationsDialog key={`${userId}:${companyId}:${projectId}`} /></div>}
       {addingMembers && <AddMembersDialog conversation={addingMembers} onClose={() => setAddingMembers(null)} />}
     </aside>
   )

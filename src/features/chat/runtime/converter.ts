@@ -58,8 +58,8 @@ function senderMetadata(envelope: ImEnvelope, context: MessageConversionContext)
   const system = envelope.payload.role === 'system'
   return {
     senderId: envelope.fromUid,
-    senderName: participant?.name ?? (system ? '系统' : envelope.fromUid),
-    senderKind: system ? 'system' as const : participant?.kind ?? 'human' as const,
+    senderName: participant?.name ?? (system ? '系统' : envelope.payload.role === 'assistant' ? '智能体' : '成员'),
+    senderKind: system ? 'system' as const : participant?.kind ?? (envelope.payload.role === 'assistant' ? 'agent' as const : 'human' as const),
     senderAvatarUrl: participant?.avatarUrl ?? null,
     isMine: envelope.fromUid === context.meId,
   }

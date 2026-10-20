@@ -143,10 +143,10 @@ export class LingxiImClient {
     return () => this.sdk.connectManager.removeConnectStatusListener(receive)
   }
 
-  async history(channelId: string, limit = 80, beforeMessageSeq = 0): Promise<ImEnvelope[]> {
+  async history(channelId: string, limit = 80, beforeMessageSeq = 0, signal?: AbortSignal): Promise<ImEnvelope[]> {
     const query = new URLSearchParams({ limit: String(limit) })
     if (beforeMessageSeq > 0) query.set('beforeSeq', String(beforeMessageSeq))
-    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?${query}`, { headers: authHeaders() })
+    const response = await lingxiApiFetch(`${getServerOrigin()}/api/im/channels/${encodeURIComponent(channelId)}/messages?${query}`, { headers: authHeaders(), signal })
     if (!response.ok) throw new Error(`IM history failed: ${response.status}`)
     return response.json() as Promise<ImEnvelope[]>
   }

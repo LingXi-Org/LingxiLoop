@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "real-http-client",
+    "channels-200",
+    "channel-and-unread-preserved",
+    "retired-preview-null",
+    "mixed-history-200",
+    "native-pages-filled",
+    "older-history-without-overlap",
+    "tenant-isolation"
+  ]
+}
