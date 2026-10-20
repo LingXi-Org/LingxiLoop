@@ -40,11 +40,12 @@ export function knowledgeProgress(id: string, calls: readonly ToolCallMessagePar
   return parseSerializableProgressTracker({ id: `knowledge:${id}`, steps: selected.map(call => {
     const result = call.result && typeof call.result === 'object' ? call.result as Data : undefined
     const interrupted = !result && ['failed','cancelled'].includes(lifecycle ?? '')
-    const failed = call.isError || result?.status === 'failed' || result?.sourceStatus === 'unavailable'
-    const statusText = interrupted ? lifecycle === 'cancelled' ? '已取消' : '执行中断'
+    const unconfirmed = result?.status === 'unknown', cancelled = result?.status === 'cancelled' || lifecycle === 'cancelled'
+    const failed = !unconfirmed && !cancelled && (call.isError || result?.status === 'failed' || result?.sourceStatus === 'unavailable')
+    const statusText = unconfirmed ? '结果待核对' : cancelled ? '已取消' : interrupted ? '执行中断'
       : sourceStates[text(result?.sourceStatus)] ?? (failed ? '检索未完成' : result ? '已完成' : '检索中')
     return { id: call.toolCallId, label: `${owner} · ${call.toolName === 'knowledge.search' ? '检索课程资料' : call.toolName === 'knowledge.read_source' ? '阅读资料原文' : '查看课程资料'} · ${statusText}`,
-      status: failed || interrupted ? 'failed' : result ? 'completed' : 'in-progress',
+      status: unconfirmed || cancelled ? 'pending' : failed || interrupted ? 'failed' : result ? 'completed' : 'in-progress',
     }
   }) })
 }

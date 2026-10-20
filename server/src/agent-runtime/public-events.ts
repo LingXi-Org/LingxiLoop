@@ -1,12 +1,13 @@
 import type { RunEvent, RunStreamEvent } from '@lyyzka/lingxios/ui'
 import { researchSources } from '../../../src/lib/researchSources.js'
-import { publicActivitySchema } from '../../../src/lib/runActivity.js'
+import { publicActivitySchema, canonicalToolName } from '../../../src/lib/runActivity.js'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { memoryActivity } from '../../../src/lib/memoryActivity.js'
 
 /** User transport allowlist; full results remain private to the native runtime. */
 export function publicToolValue(action: string, value: unknown): unknown {
+  action = canonicalToolName(action)
   if (action === 'teacher.draft_homework') return toolCardResult(action, value)
   if (action.startsWith('memory.')) return memoryActivity(action, value)
   if (action === 'chat.report_progress') {
@@ -22,6 +23,7 @@ export function publicToolValue(action: string, value: unknown): unknown {
 }
 
 export function publicRunEvent(event: RunEvent, action = ''): RunEvent {
+  action = canonicalToolName(action)
   if (event.visibility !== 'user') return { ...event, data: {} }
   if (event.kind === 'run.failed' || event.kind === 'run.cancelled') return { ...event, data: {
     ...(event.kind === 'run.failed' ? { error: userFacingError(event.data.error, '这次任务未能完成，请稍后重试。') } : {}),

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="35.592">
+  <testsuite name="e2e/chat-213/appearance.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="35.592">
+    <testcase name="chat controls and Chinese mentions (1440) [web]" classname="e2e/chat-213/appearance.e2e.ts" time="14.885"/>
+    <testcase name="chat controls and Chinese mentions (390) [web]" classname="e2e/chat-213/appearance.e2e.ts" time="9.095"/>
+    <testcase name="composer candidates, selected mentions and refreshed history preserve Chinese names and stable IDs [web]" classname="e2e/chat-213/appearance.e2e.ts" time="11.612"/>
+  </testsuite>
+</testsuites>
