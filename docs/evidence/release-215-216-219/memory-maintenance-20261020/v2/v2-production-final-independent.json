@@ -1,0 +1,89 @@
+{
+  "at": "2026-10-20T16:08:39.409110+00:00",
+  "mode": "local-evidence-final-acceptance",
+  "passed": true,
+  "issue216OperationalGapResolvedForAuthorizedScope": true,
+  "globalCoverageClaimed": false,
+  "checksPassed": 45,
+  "checksTotal": 45,
+  "inputs": {
+    "memory-maintenance-v2-inspect.json": "a7368a2b37f861b5474989c2cf7b7528770b50a9a9ccc398719826e11c54ba80",
+    "memory-maintenance-v2-execute.json": "e89a0c34779525619c3e2188fcdd99738cdec95eb6196ea2d3f33dfcf1e0f24c",
+    "memory-maintenance-v2-status.json": "72f8b119e683873210976712c57fe4d5a6dc918c2771bb72789c0426c95e8c30"
+  },
+  "reviewParts": {
+    "v2-production-inspect-independent.json": "0d2254ae9bf87c6b6ccc4073de49c5de69ba2927725fe371935fa95cbd5ce379",
+    "v2-production-execute-independent.json": "d6334b0a939202448130bb666e07e52d1584e3313b478b1920e01e9bca94f543",
+    "v2-production-status-independent.json": "638c6b926f5eb4a0888a97d297359442bd1d80d78e6594d60bc5d01bea986a1c"
+  },
+  "nativeUpdates": [
+    {
+      "mode": "inspect",
+      "id": "6ad7908be06d5e1f798373a2",
+      "target": {
+        "type": "Stack",
+        "id": "6aa8a411b35d27bdd4e12aef"
+      },
+      "operation": "RunStackService",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792512139173,
+      "endTs": 1792512166924,
+      "durationMs": 27751,
+      "apiCalls": 147
+    },
+    {
+      "mode": "execute",
+      "id": "6ad790f0e06d5e1f798373b5",
+      "target": {
+        "type": "Stack",
+        "id": "6aa8a411b35d27bdd4e12aef"
+      },
+      "operation": "RunStackService",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792512240076,
+      "endTs": 1792512286368,
+      "durationMs": 46292,
+      "apiCalls": 225
+    },
+    {
+      "mode": "status",
+      "id": "6ad79172e06d5e1f798373d1",
+      "target": {
+        "type": "Stack",
+        "id": "6aa8a411b35d27bdd4e12aef"
+      },
+      "operation": "RunStackService",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792512370722,
+      "endTs": 1792512381806,
+      "durationMs": 11084,
+      "apiCalls": 106
+    }
+  ],
+  "outcome": {
+    "originalContinuity": 25,
+    "migratedUnique": 5,
+    "migratedLearner": 3,
+    "migratedCourse": 2,
+    "remainingLegacyContinuityIsolated": 20,
+    "remainingAgentRoleNotContinuityMigrated": 15,
+    "originalContinuityDeleted": 0,
+    "queued": 20,
+    "authorizedEligible": 20,
+    "authorizedIndexed": 20,
+    "authorizedMissing": 0,
+    "authorizedScopes": 31,
+    "unchangedAcceptedContainers": 4,
+    "unchangedStackConfigAndComposeHashes": 3
+  },
+  "remainingLimits": [
+    "No global coverage claim; current authorization retained",
+    "Agent-role non-migration does not prohibit independently authorized indexing",
+    "Not a memory-recall latency benchmark or proof of original conversation-latency root cause",
+    "No new credential, provider override or isolation-fault test performed by reviewer"
+  ],
+  "productionApiRequestsByReviewer": 0
+}

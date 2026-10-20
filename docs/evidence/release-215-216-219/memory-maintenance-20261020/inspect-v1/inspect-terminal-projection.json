@@ -1,0 +1,54 @@
+{
+  "at": "2026-10-20T15:55:36.753Z",
+  "readOnly": true,
+  "id": "6ad78db1e06d5e1f7983730e",
+  "status": "Complete",
+  "success": false,
+  "startTs": 1792511409892,
+  "endTs": 1792511590631,
+  "durationMs": 180739,
+  "logs": [
+    {
+      "success": true,
+      "startTs": 1792511409918,
+      "endTs": 1792511409918,
+      "exitCode": null,
+      "bytes": 1181,
+      "markers": {
+        "exit124": false,
+        "timeout": false,
+        "killed": false,
+        "cleanupFailure": false,
+        "finalComplete": false
+      }
+    },
+    {
+      "success": true,
+      "startTs": 1792511409918,
+      "endTs": 1792511409918,
+      "exitCode": null,
+      "bytes": 1037,
+      "markers": {
+        "exit124": false,
+        "timeout": false,
+        "killed": false,
+        "cleanupFailure": false,
+        "finalComplete": false
+      }
+    },
+    {
+      "success": false,
+      "startTs": 1792511409976,
+      "endTs": 1792511590596,
+      "exitCode": null,
+      "bytes": 7733,
+      "markers": {
+        "exit124": false,
+        "timeout": false,
+        "killed": false,
+        "cleanupFailure": false,
+        "finalComplete": true
+      }
+    }
+  ]
+}

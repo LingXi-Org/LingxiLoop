@@ -1,0 +1,953 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "discovered": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "documentsWithoutUsableSource": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "nativeUnavailable": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "bindingMissing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cancelled": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "revoked": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "authorized": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "scanComplete": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "scanRevoked": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "discovered",
+        "documentsWithoutUsableSource",
+        "nativeUnavailable",
+        "bindingMissing",
+        "cancelled",
+        "revoked",
+        "authorized",
+        "scanComplete",
+        "scanRevoked"
+      ],
+      "additionalProperties": false
+    },
+    "perType": {
+      "type": "object",
+      "properties": {
+        "distinctDocuments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "eligibleDistinct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "migratedDistinct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "isolatedDistinct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "distinctDocuments",
+        "eligibleDistinct",
+        "migratedDistinct",
+        "isolatedDistinct"
+      ],
+      "additionalProperties": false
+    },
+    "index": {
+      "type": "object",
+      "properties": {
+        "scopes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "configuredScopes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "eligible": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "indexed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "missing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "scopes",
+        "configuredScopes",
+        "eligible",
+        "indexed",
+        "missing"
+      ],
+      "additionalProperties": false
+    },
+    "queue": {
+      "type": "object",
+      "properties": {
+        "scopesAttempted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "queued": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "configuredFalse": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "zeroQueuedWithMissing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "scopesAttempted",
+        "queued",
+        "configuredFalse",
+        "zeroQueuedWithMissing"
+      ],
+      "additionalProperties": false
+    },
+    "after": {
+      "type": "object",
+      "properties": {
+        "baseline_total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "no_longer_present": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "still_legacy": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "now_stable": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "other_scope": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "baseline_total",
+        "no_longer_present",
+        "still_legacy",
+        "now_stable",
+        "other_scope"
+      ],
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "properties": {
+        "distinctDocuments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "eligibleDistinct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "migratedDistinct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "isolatedDistinct": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "isolationReasonDistinctDocuments": {
+          "type": "object",
+          "properties": {
+            "inactive": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "unproven_owner_or_source": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "source_unavailable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "source_revised": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "source_authorization_revoked": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "ownership_or_audience_not_proven": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "source_predates_forgetting": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "path_requires_explicit_merge": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "destination_unavailable": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "inactive",
+            "unproven_owner_or_source",
+            "source_unavailable",
+            "source_revised",
+            "source_authorization_revoked",
+            "ownership_or_audience_not_proven",
+            "source_predates_forgetting",
+            "path_requires_explicit_merge",
+            "destination_unavailable"
+          ],
+          "additionalProperties": false
+        },
+        "byScopeType": {
+          "type": "object",
+          "properties": {
+            "learner": {
+              "$ref": "#/$defs/perType"
+            },
+            "course": {
+              "$ref": "#/$defs/perType"
+            },
+            "session": {
+              "$ref": "#/$defs/perType"
+            },
+            "agent_role": {
+              "$ref": "#/$defs/perType"
+            },
+            "other": {
+              "$ref": "#/$defs/perType"
+            }
+          },
+          "required": [
+            "learner",
+            "course",
+            "session",
+            "agent_role",
+            "other"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "distinctDocuments",
+        "eligibleDistinct",
+        "migratedDistinct",
+        "isolatedDistinct",
+        "isolationReasonDistinctDocuments",
+        "byScopeType"
+      ],
+      "additionalProperties": false
+    },
+    "continuity": {
+      "type": "object",
+      "properties": {
+        "originalCandidates": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "observedUnique": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "unobservedUnique": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "eligibleAtLeastOnce": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "migratedUnique": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "after": {
+          "$ref": "#/$defs/after"
+        }
+      },
+      "required": [
+        "originalCandidates",
+        "observedUnique",
+        "unobservedUnique",
+        "eligibleAtLeastOnce",
+        "migratedUnique",
+        "after"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "identity-discovery"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "coverage": {
+          "$ref": "#/$defs/coverage"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "coverage"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "inspect-before"
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "coverage": {
+          "$ref": "#/$defs/coverage"
+        },
+        "result": {
+          "$ref": "#/$defs/summary"
+        },
+        "originalContinuity": {
+          "$ref": "#/$defs/summary"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "coverage",
+        "result",
+        "originalContinuity"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "migration-progress"
+          ]
+        },
+        "complete": {
+          "enum": [
+            false
+          ]
+        },
+        "confirmedPages": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "result": {
+          "$ref": "#/$defs/summary"
+        },
+        "originalContinuity": {
+          "$ref": "#/$defs/summary"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "confirmedPages",
+        "result",
+        "originalContinuity"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "migration"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "result": {
+          "$ref": "#/$defs/summary"
+        },
+        "originalContinuity": {
+          "$ref": "#/$defs/summary"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "result",
+        "originalContinuity"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "inspect-after"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "result": {
+          "$ref": "#/$defs/summary"
+        },
+        "originalContinuity": {
+          "$ref": "#/$defs/summary"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "result",
+        "originalContinuity"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "original-continuity-accounting"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "counts": {
+          "$ref": "#/$defs/continuity"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "authorized-index-status"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "counts": {
+          "$ref": "#/$defs/index"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "authorized-index-before"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "counts": {
+          "$ref": "#/$defs/index"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "authorized-index-after"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "counts": {
+          "$ref": "#/$defs/index"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "reindex-queue"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "counts": {
+          "$ref": "#/$defs/queue"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "final"
+          ]
+        },
+        "status": {
+          "enum": [
+            "complete"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "inspect",
+            "execute",
+            "status"
+          ]
+        },
+        "operationsComplete": {
+          "enum": [
+            true
+          ]
+        },
+        "legacyInspectionPerformed": {
+          "type": "boolean"
+        },
+        "migrationPerformed": {
+          "type": "boolean"
+        },
+        "apiCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 512
+        },
+        "coverage": {
+          "$ref": "#/$defs/coverage"
+        },
+        "continuity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/continuity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inspect": {
+          "$ref": "#/$defs/summary"
+        },
+        "migration": {
+          "$ref": "#/$defs/summary"
+        },
+        "authorizedIndex": {
+          "$ref": "#/$defs/index"
+        },
+        "queue": {
+          "$ref": "#/$defs/queue"
+        },
+        "globalCoverageClaimed": {
+          "enum": [
+            false
+          ]
+        },
+        "indexingCompleteForAuthorizedScopes": {
+          "type": "boolean"
+        },
+        "workCompletion": {
+          "enum": [
+            "existing-workers-only"
+          ]
+        },
+        "remainingPolicy": {
+          "enum": [
+            "do-not-index-inaccessible-legacy-scopes"
+          ]
+        },
+        "cleanupComplete": {
+          "enum": [
+            true
+          ]
+        }
+      },
+      "required": [
+        "phase",
+        "status",
+        "mode",
+        "operationsComplete",
+        "legacyInspectionPerformed",
+        "migrationPerformed",
+        "apiCalls",
+        "coverage",
+        "continuity",
+        "inspect",
+        "migration",
+        "authorizedIndex",
+        "queue",
+        "globalCoverageClaimed",
+        "indexingCompleteForAuthorizedScopes",
+        "workCompletion",
+        "remainingPolicy",
+        "cleanupComplete"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "stopped"
+          ]
+        },
+        "status": {
+          "enum": [
+            "blocked",
+            "uncertain",
+            "failed"
+          ]
+        },
+        "lastPhase": {
+          "enum": [
+            "startup",
+            "identity-discovery",
+            "inspect-before",
+            "migration-progress",
+            "migration",
+            "inspect-after",
+            "original-continuity-accounting",
+            "authorized-index-status",
+            "authorized-index-before",
+            "reindex-queue",
+            "authorized-index-after",
+            "final",
+            "stopped",
+            "cleanup",
+            "reindex-progress",
+            "execution-budget",
+            "cleanup-progress"
+          ]
+        },
+        "code": {
+          "enum": [
+            "EXISTING_PRODUCT_ENVIRONMENT_UNAVAILABLE",
+            "CURRENT_AUTHORIZATION_REVOKED",
+            "ISSUE216_MAINTENANCE_STOPPED"
+          ]
+        },
+        "noAutomaticRetry": {
+          "enum": [
+            true
+          ]
+        }
+      },
+      "required": [
+        "phase",
+        "status",
+        "lastPhase",
+        "code",
+        "noAutomaticRetry"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "cleanup"
+          ]
+        },
+        "status": {
+          "enum": [
+            "failed"
+          ]
+        },
+        "code": {
+          "enum": [
+            "ISSUE216_CLEANUP_FAILED"
+          ]
+        }
+      },
+      "required": [
+        "phase",
+        "status",
+        "code"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "reindex-progress"
+          ]
+        },
+        "complete": {
+          "enum": [
+            false
+          ]
+        },
+        "counts": {
+          "$ref": "#/$defs/queue"
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "execution-budget"
+          ]
+        },
+        "complete": {
+          "enum": [
+            true
+          ]
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "callsUsed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "eligibleIdentities": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "authorizedScopes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "requiredRemainingCalls": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "remainingCalls": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "budgetSufficient": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "callsUsed",
+            "eligibleIdentities",
+            "authorizedScopes",
+            "requiredRemainingCalls",
+            "remainingCalls",
+            "budgetSufficient"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "phase",
+        "complete",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "cleanup-progress"
+          ]
+        },
+        "resource": {
+          "enum": [
+            "control",
+            "business-redis",
+            "database"
+          ]
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "complete",
+            "failed"
+          ]
+        },
+        "elapsedMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "phase",
+        "resource",
+        "status",
+        "elapsedMs"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}
