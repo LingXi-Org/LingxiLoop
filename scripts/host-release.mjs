@@ -85,10 +85,10 @@ function assertInventory(rows,plan,original,stopped=new Set(),deployed=new Map()
  }
 }
 async function failed({error,ops,plan,record}){
- let recovery='unknown'
- if(!error?.uncertain)try{assertCompatibleState(await ops.state(),plan.source);recovery='same-schema-recovery-requires-review'}catch{}
- await record({phase:'stopped',status:error?.uncertain?'uncertain':'failed',recovery,noAutomaticRetry:true}).catch(()=>{})
- throw Object.assign(Error('Host release stopped; resolve the private receipt before any further action'),{uncertain:error?.uncertain===true})
+ let recovery='unknown',uncertain=error?.uncertain===true
+ if(!uncertain)try{assertCompatibleState(await ops.state(),plan.source);recovery='same-schema-recovery-requires-review'}catch(classificationError){uncertain=classificationError?.uncertain===true}
+ await record({phase:'stopped',status:uncertain?'uncertain':'failed',recovery,noAutomaticRetry:true}).catch(()=>{})
+ throw Object.assign(Error('Host release stopped; resolve the private receipt before any further action'),{uncertain})
 }
 export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
  validateHostPlanShape(plan)

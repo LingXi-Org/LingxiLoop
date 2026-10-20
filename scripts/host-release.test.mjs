@@ -14,11 +14,11 @@ const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10
 function state(){return {...formal,installedSchema:13,product:48,count:48,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
- let staged=0,deployed=0,stops=0,targetInspections=0
+ let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0
  const ops={
   async assertIdle(){trace.push('idle');if(fault.idle)throw Error('idle')},
   async inspect(){trace.push('inspect');if(fault.replacedTarget&&deployed===1&&++targetInspections===2)rows[0].id='e'+rows[0].id.slice(1);return structuredClone(rows)},
-  async state(){trace.push('state');const s=state();if(fault.busy&&stops===2)s.liveWork=1;if(fault.schema&&deployed)s.schemaHash='e'.repeat(64);return s},
+  async state(){trace.push('state');if(++stateReads>fault.stateUnknownAfter)throw Object.assign(Error('unknown state'),{uncertain:true});const s=state();if(fault.busy&&stops===2)s.liveWork=1;if(fault.schema&&deployed)s.schemaHash='e'.repeat(64);return s},
   async verifyImages(which='target'){trace.push('images:'+which);if(fault.image&&which==='target')throw Error('missing image')},
   async stage(stack){trace.push('stage:'+stack);staged++;if(fault.stage&&staged===2)throw Object.assign(Error('unknown'),{uncertain:true})},
   async metadata(stack){trace.push('metadata:'+stack);return {...target,...(fault.metadata&&stack===apps[1]?{schema:14}:{})}},
@@ -70,6 +70,13 @@ test('missing image never stages; partial unknown stage never stops or makes fur
 })
 test('metadata mismatch leaves all services running',async()=>{
  const f=fixture({metadata:true});await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('stop:')),false)
+})
+test('known failure followed by uncertain classification oneoff remains finally uncertain',async()=>{
+ const f=fixture({metadata:true,stateUnknownAfter:1})
+ await assert.rejects(f.run(),e=>e.uncertain===true)
+ assert.equal(f.events.at(-1).status,'uncertain');assert.equal(f.events.at(-1).recovery,'unknown')
+ assert.equal(f.trace.at(-1),'state');assert.equal(f.trace.filter(x=>x==='state').length,2)
+ assert.equal(f.trace.some(x=>x.startsWith('stop:')||x.startsWith('deploy:')),false)
 })
 test('live leases, ineffective stop and unknown stop prevent new Web',async()=>{
  for(const fault of [{busy:true},{stillRunning:true},{stopUnknown:true}]){const f=fixture(fault);await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false)}
