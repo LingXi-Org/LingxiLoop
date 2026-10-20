@@ -56,28 +56,28 @@ function createOwner(
     snapshot = { ...snapshot, phase: "error", error: String(error) };
     notify();
   };
+  const hasVisibleAnchor = () =>
+    [...anchors.values()].some((anchor) => anchor.visible && anchor.node.isConnected);
   // 回收的是 guest；锚点观察属于窗口 owner，离屏回收后重新滚入视口仍能唤醒。
   const intersection = new IntersectionObserver((entries) => {
     for (const entry of entries)
       for (const anchor of anchors.values())
         if (anchor.node === entry.target) anchor.visible = entry.isIntersecting;
     if (!core && !disposed) {
-      const visible = [...anchors.values()].some(
-        (anchor) => anchor.visible && anchor.node.isConnected,
-      );
+      const visible = hasVisibleAnchor();
       sandboxPages.visibility(owner, visible);
       if (visible) void ensure();
     }
   });
   async function ensure() {
-    if (disposed || starting || core || snapshot.phase === "error") return;
+    if (disposed || starting || core || snapshot.phase === "error" || !hasVisibleAnchor()) return;
     starting = true;
     const generation = ++epoch;
     try {
       await releasing;
-      if (disposed || generation !== epoch) return;
+      if (disposed || generation !== epoch || !hasVisibleAnchor()) return;
       await sandboxPages.reserve(owner);
-      if (disposed || generation !== epoch || !anchors.size) {
+      if (disposed || generation !== epoch || !hasVisibleAnchor()) {
         sandboxPages.released(owner);
         return;
       }
@@ -144,11 +144,12 @@ function createOwner(
     },
     bind(node) {
       const id = Symbol(),
-        anchor = { node, visible: true, off: core?.bind(node) };
+        anchor = { node, visible: false, off: core?.bind(node) };
       anchors.set(id, anchor);
+      // The native observer supplies the initial viewport/scroll-clip result.
+      // Eagerly treating every history anchor as visible starts up to 64 guests
+      // before its first callback. Already retained cores still bind immediately.
       intersection.observe(node);
-      sandboxPages.visibility(owner, true);
-      void ensure();
       return () => {
         // layout cleanup 在 React 移除祖先前把活页面停放；passive cleanup 会先断开 guest。
         anchor.off?.();

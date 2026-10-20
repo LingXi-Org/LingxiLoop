@@ -1,0 +1,17 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-217-quality
+      run 01a15a47-0bcf-787c-acbc-f93dc2c323ab · targets: web
+
+ ✓ target "web" command ready 1.62s
+ ✓ |web| e2e/visualize/timeout.e2e.ts (1 test) 21.01s
+   ✓ initialization deadline covers resources and retry survives stalled cleanup 21.01s
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  17:06:08
+   Duration  23.45s (startup 1.62s)
+     Report  .e2e/244-offscreen-retry/report.json
+
+      JUnit  .e2e/244-offscreen-retry/junit.xml
+   Markdown  .e2e/244-offscreen-retry/summary.md
+
