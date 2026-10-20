@@ -5,7 +5,7 @@
 #1 DONE 0.0s
 
 #2 [internal] load build context
-#2 transferring context: 222.05kB 0.0s done
+#2 transferring context: 743.39kB 0.0s done
 #2 DONE 0.0s
 
 #3 [ 1/11] WORKDIR /app
@@ -36,7 +36,7 @@
 #11 DONE 0.0s
 
 #12 [10/11] COPY third_party/zcode/upstream/LICENSE ./third_party/zcode/upstream/LICENSE
-#12 DONE 0.0s
+#12 DONE 0.1s
 
 #13 [11/11] COPY third_party/assistant-ui/streaming-text/LICENSE ./dist/licenses/assistant-ui-streaming-text.txt
 #13 DONE 0.0s

@@ -18,11 +18,11 @@ The actual local BuildKit `FROM scratch` probe uses all non-cross-stage final CO
 | Metric | Before | After | Reduction |
 | --- | ---: | ---: | ---: |
 | Final source COPY files | 712 | 513 | 199 |
-| Final source COPY content bytes | 6,484,698 | 4,423,058 | 2,061,640 |
+| Final source COPY content bytes | 6,484,698 | 4,423,049 | 2,061,649 |
 | ZCode files | 228 | 29 | 199 |
 | ZCode content bytes | 3,238,703 | 1,182,142 | 2,056,561 |
 | Deterministic source tar bytes | 7,045,120 | 4,823,040 | 2,222,080 |
-| Deterministic source tar gzip bytes | 1,571,865 | 1,037,322 | 534,543 |
+| Deterministic source tar gzip bytes | 1,571,865 | 1,037,325 | 534,540 |
 | Server lock text bytes | 183,173 | 177,447 | 5,726 |
 | Virtual lock nodes | 348 | 346 | 2 metadata/link nodes |
 | Generated gen-ui.js bytes | 506,205 | 506,205 | 0 |
@@ -30,7 +30,7 @@ The actual local BuildKit `FROM scratch` probe uses all non-cross-stage final CO
 
 The gen-ui.js SHA256 is `78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494` in both builds. The real Python exporter produces SHA256 `5f8dc7484e867a8ca7c8a050478e73a46918bf83e53c1114866bc79700f5c91c` in both exported trees. The complete 24-file skill is preserved.
 
-Probe elapsed times (export + inventory/hash/tar work) were 1.015 and 0.861 seconds. These single cached samples are **not** full image build speed measurements. Full SPA bundle, installed-dependency before/after disk, complete OCI compressed/uncompressed size, full build duration and peak disk were not measured; no savings are claimed for them. The isolated candidate prod-only install used about 324 MiB on this filesystem. Source code remains in Git; repository deletion savings are not claimed.
+Probe elapsed times (export + inventory/hash/tar work) were 1.015 and 0.911 seconds. These single cached samples are **not** full image build speed measurements. Full SPA bundle, installed-dependency before/after disk, complete OCI compressed/uncompressed size, full build duration and peak disk were not measured; no savings are claimed for them. The isolated candidate prod-only install used about 324 MiB on this filesystem. Source code remains in Git; repository deletion savings are not claimed.
 
 ## Checks and limitations
 
@@ -63,4 +63,4 @@ For each exported `/tmp/payload-repeat/{before,after}/export/app`, invoke `pytho
 
 For packaged entry checking, install the candidate server manifest/lock into a new isolated directory with `npm ci --omit=dev --no-audit --no-fund` (existing offline cache used in this run). Place that node_modules and server manifest/lock at the exported app root, matching the Docker deps-stage layout. Run `node server/scripts/check-packaged-startup.mjs` from the exported app; invoke the migration script with the same tsx launcher and an environment containing only NODE_ENV=production, DOTENV_CONFIG_PATH=/dev/null, TSX_DISABLE_CACHE=1. Expect the missing-DATABASE_URL guard. Do not supply production configuration for this probe.
 
-`receipt.json` binds the changed source files. `SHA256SUMS` binds submitted evidence; screenshots, generated binaries, credentials, memory bodies and private operations data are not included. Independent exact-commit review and CI are recorded in the PR separately.
+`receipt.json` binds the changed source files. `SHA256SUMS` binds submitted evidence; screenshots, generated binaries, credentials, memory bodies and private operations data are not included. Independent review identified three unrelated JSON Unicode escapes; the final lock restores the original characters. Only the exact audited self-link deletion remains, and the final source export, contracts, three entry links and Python export were repeated. Independent exact-commit review and CI are recorded in the PR separately.

@@ -1,6 +1,5 @@
 {
   "case": "after",
-  "base": "535873b941815b41961a44f56e479257cbb71626",
   "dockerfileSha256": "f5ae0cec51b33caa9ad1db06db11817f34acb6b7634927be5706eefb542cd70b",
   "ignoreSha256": "f8b30c9205502a1524a88048606d70ac6786de6221bedde761d742af5111389d",
   "copyInstructions": [
@@ -17,11 +16,12 @@
   ],
   "scope": "actual BuildKit final-stage non-cross-stage source COPY payload only; excludes base image, node_modules, built SPA and OCI metadata",
   "files": 513,
-  "bytes": 4423058,
+  "bytes": 4423049,
   "zcodeFiles": 29,
   "zcodeBytes": 1182142,
   "deterministicTarBytes": 4823040,
-  "deterministicGzipBytes": 1037322,
+  "deterministicGzipBytes": 1037325,
+  "probeElapsedSeconds": 0.911,
   "imagePulls": 0,
   "productionRequests": 0,
   "inventory": [
@@ -62,8 +62,8 @@
     },
     {
       "path": "server/package-lock.json",
-      "bytes": 177456,
-      "sha256": "28ca9640e0b5465f952fa43e82f4807c278b43b1c87216d1d2fedeb50360f67e"
+      "bytes": 177447,
+      "sha256": "c305ca888a446fccf845f4a2a05ced779de19cb855dd2918e6dc6a975ba66b89"
     },
     {
       "path": "server/package.json",
@@ -2591,5 +2591,5 @@
       "sha256": "669e78ea50dc7482bc3572b3d9db5070634d52b9c574ce9cdbef4a2a5a50a3e3"
     }
   ],
-  "probeElapsedSeconds": 0.861
+  "checkoutHead": "ef2aa158288feb41906f76dcd0dfae059b75372a"
 }

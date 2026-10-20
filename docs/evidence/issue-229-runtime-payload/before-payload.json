@@ -1,6 +1,5 @@
 {
   "case": "before",
-  "base": "535873b941815b41961a44f56e479257cbb71626",
   "dockerfileSha256": "f3a263f3676f0cda66f8d9470686a622b0100a30cb3cf116e5064b084757244b",
   "ignoreSha256": "f8b30c9205502a1524a88048606d70ac6786de6221bedde761d742af5111389d",
   "copyInstructions": [
@@ -3583,5 +3582,6 @@
       "sha256": "2ae1a2e32120583ebbc8e95d2bce417a2351e2c9a2489aa1cebcd88bd6f54068"
     }
   ],
-  "probeElapsedSeconds": 1.015
+  "probeElapsedSeconds": 1.015,
+  "checkoutHead": "535873b941815b41961a44f56e479257cbb71626"
 }
