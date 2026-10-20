@@ -42,7 +42,7 @@ test('native memory steps reach Run Activity and preserve reviewed versioned wri
   const run=await enqueue('create-memory','Explicitly remember the checked lease-fencing fact.')
   const identity={ tenantId: companyId,principalId: 'test-owner',agentId,sessionId: run.sessionId,workId: run.runId }
   const scopes=await memory.scopes(identity),scope=scopes.find(item=>item.scopeType==='learner')
-  assert.ok(scope);assert.ok(scope.scopeId.startsWith('im-memory:'))
+  assert.ok(scope);assert.ok(scope.scopeId.startsWith('stable-memory:'))
   assert.equal((await fetch(`${baseUrl}/channels/${conversationId}/memories`,{ headers: { 'x-company-id': companyId } })).status,404)
   const response=await fetch(`${baseUrl}/channels/${conversationId}/agents/${agentId}/runs/${run.runId}/memory/scopes`,{ headers: { 'x-company-id': companyId } })
   assert.equal(response.status,404)
@@ -92,7 +92,7 @@ test('native memory steps reach Run Activity and preserve reviewed versioned wri
     const result=completion.data.result as {status:string;value?:unknown}
     const projection=await readRunProjection(app,actionRun,true)
     assert.ok(projection.snapshot.message.content.some(part=>part.type==='tool-call' && part.toolName===`memory.${name}`))
-    assert.doesNotMatch(JSON.stringify(projection.snapshot),/im-memory:|Fencing rejects stale workers|Explicitly checked and updated fencing/)
+    assert.doesNotMatch(JSON.stringify(projection.snapshot),/(?:im|stable)-memory:|Fencing rejects stale workers|Explicitly checked and updated fencing/)
     const response=await fetch(`${baseUrl}/channels/${conversationId}/agents/${agentId}/runs/${actionRun.runId}`,{headers:{'x-company-id':companyId}})
     assert.equal(response.status,200)
     assert.match(await response.text(),new RegExp(`memory\\.${name}`))
@@ -133,5 +133,5 @@ test('native memory steps reach Run Activity and preserve reviewed versioned wri
   }
   const delivered=JSON.stringify(recording.messages.map(message=>message.payload))
   for(const name of methods) assert.ok(delivered.includes(`memory.${name}`),`${name} reaches durable history`)
-  assert.doesNotMatch(delivered,/im-memory:|Fencing rejects stale workers|Explicitly checked and updated fencing/)
+  assert.doesNotMatch(delivered,/(?:im|stable)-memory:|Fencing rejects stale workers|Explicitly checked and updated fencing/)
 })

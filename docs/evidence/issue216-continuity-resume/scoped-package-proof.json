@@ -1,0 +1,14 @@
+{
+  "nativeImplementation": "2738508c90386d94c512d08519855bfc51c15674",
+  "nativeSrcTree": "3e10da8821cf46e1e66f705545ff0c7439fa6b3d",
+  "loopFixture": "0bf981dc5d5df6958b786d3252ebe22e8dbbc882",
+  "packageName": "@lyyzka/lingxios",
+  "candidateVersion": "3.5.8",
+  "published": false,
+  "npmShasum": "5a8dd3f77c4c44ebc6f6db74d91afbc3eaf3420d",
+  "integrity": "sha512-E2Dc9GGxj2s9igv1rASKxleHQTQ/5dN3InRJByNtw84nHfNAIIoJ3kQO2b50EdAOa4OK21txO+I4eAYmfgz5ug==",
+  "tarSha256": "1e5f96f2946df4b13909470ab56c1491029f84de65f55a3a99d3c6a3f0d3bd73",
+  "distFilesCompared": 459,
+  "compiledFilesMatchPackage": true,
+  "sourceUnchangedSinceBuild": true
+}

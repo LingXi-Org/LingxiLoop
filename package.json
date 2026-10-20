@@ -68,7 +68,8 @@
     "eval:run": "npm --prefix eval run eval --",
     "verify:visualize": "node scripts/verify-zcode-visualize.mjs",
     "build:visualize-runtime": "node scripts/build-visualize-runtime.mjs",
-    "prebuild": "npm run verify:visualize && npm run build:visualize-runtime"
+    "prebuild": "npm run verify:visualize && npm run build:visualize-runtime",
+    "memory:maintain": "tsx server/src/bin/memory-maintenance.ts"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.15.16",

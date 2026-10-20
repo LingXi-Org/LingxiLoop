@@ -172,5 +172,8 @@ test('measure native memory list separately from model continuation and projecti
         }))
       } finally { blocker.release() }
     }
+    // Each measured cell starts with the declared document count even when the
+    // same principal now retains one stable profile across the fixture rooms.
+    await memory.forget(identity,activeScope)
   }
 })

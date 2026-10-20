@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "provider": "scripted fixture; not live provider evidence",
+  "actualInputInjection": [
+    true,
+    true
+  ],
+  "checks": [
+    "cross-room",
+    "cross-thread",
+    "cross-Agent",
+    "queued-revision",
+    "real-course",
+    "cross-course",
+    "shared-audience",
+    "intervention",
+    "tenant",
+    "principal",
+    "proven-legacy-move",
+    "ambiguous-legacy-isolation",
+    "expired-legacy-isolation",
+    "group-legacy-isolation",
+    "correction-history",
+    "control-restart",
+    "forget-migrated",
+    "forget",
+    "Agent-revocation"
+  ]
+}

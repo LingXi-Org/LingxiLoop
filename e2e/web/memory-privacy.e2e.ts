@@ -6,6 +6,18 @@ import { expect } from 'e2e'
 test.describe('Official memory activity', {
   ...(process.env.E2E_MEMORY_PRIVACY_FIXTURE === '1' ? {} : { skip: 'Requires the isolated memory activity fixture server.' }),
 }, () => {
+  test('forget invalidates cards from two runs without receipt fallback',async({app,browser,screen})=>{
+    await app.open('/e2e/memory-privacy.html?mode=pair&reset=1')
+    for(const index of [0,1]) {
+      await browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > [data-slot="collapsible-trigger"]').nth(index).tap()
+      await browser.locator('[data-slot="tool-group-trigger"]').nth(index).tap()
+    }
+    await expect(screen.getByText('偏好中文回答',{exact:true})).toHaveCount(2)
+    await browser.locator('button[aria-label="忘记“偏好中文回答”"]').first().press('Enter')
+    await expect(screen.getByText('偏好中文回答',{exact:true})).toHaveCount(0)
+    await expect(screen.getByText('更新后的学习目标',{exact:true})).toHaveCount(2)
+    await app.screenshot('memory-two-run-forget')
+  })
   for (const width of [1440, 390]) test(`memory activity, attention and forgetting (${width})`, async ({ app, browser, screen }) => {
     const settle = () => browser.evaluate(async () => {
       await Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {})))
@@ -56,8 +68,9 @@ test.describe('Official memory activity', {
     await app.screenshot(`memory-forgotten-reload-${width}`)
     await app.open('/e2e/memory-privacy.html?mode=readonly')
     await browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > [data-slot="collapsible-trigger"]').tap()
-    await browser.locator('[data-slot="tool-group-trigger"]').press('Enter')
-    await expect(screen.getByText('更新后的学习目标', { exact: true })).toBeVisible()
+    await browser.locator('[data-slot="tool-group-trigger"]').tap()
+    await expect(screen.getByText('更新后的学习目标', { exact: true })).toHaveCount(0)
     await expect(browser.locator('[data-slot="memory-chips"] button')).toHaveCount(0)
+    await expect(screen.getByText('当前没有可显示的记忆。')).toHaveCount(2)
   })
 })

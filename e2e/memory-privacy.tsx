@@ -52,7 +52,9 @@ function Preview() {
     ...(mode === 'mixed' ? [{ type: 'tool-call' as const, toolCallId: 'other', toolName: 'documents.read', args: {}, argsText: '{}', result: { status: 'completed' }, providerMetadata: { lingxiloop: { activity: { version: 1, id: 'other', kind: 'tool', label: '阅读文档' } } } }] : []),
   ] })
   const message = deserializeMessage(JSON.parse(JSON.stringify(payload)))
-  const runtime = useExternalStoreRuntime({ messages: [message], isRunning: mode === 'stream', onNew: async () => {} })
+  const second = deserializeMessage({...payload,id:'memory-fixture-b',metadata:{...payload.metadata,custom:{...payload.metadata.custom,
+    runId:'memory-fixture-b',conversationId:'room-b',harness:{...createRunView('memory-fixture-b'),artifacts:[]}}}})
+  const runtime = useExternalStoreRuntime({ messages: mode==='pair'?[message,second]:[message], isRunning: mode === 'stream', onNew: async () => {} })
   return <main className="mx-auto flex h-dvh max-w-3xl flex-col p-4">
     <h1 className="mb-3 text-lg">记忆活动验收</h1>
     <div className="mb-4 flex gap-2">{['history', 'stream', 'mixed'].map(value => <Button key={value} onClick={() => {

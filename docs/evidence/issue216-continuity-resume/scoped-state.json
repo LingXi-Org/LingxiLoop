@@ -1,0 +1,61 @@
+{
+  "work": [
+    {
+      "kind": "memory_index",
+      "status": "succeeded",
+      "count": 5,
+      "attempts": 1
+    },
+    {
+      "kind": "memory_synthesis",
+      "status": "succeeded",
+      "count": 7,
+      "attempts": 1
+    },
+    {
+      "kind": "turn",
+      "status": "partial",
+      "count": 5,
+      "attempts": 1
+    }
+  ],
+  "validation": [],
+  "sources": [
+    {
+      "scope_type": "agent_role",
+      "status": "superseded",
+      "segment_cursor": 0,
+      "count": 4
+    },
+    {
+      "scope_type": "learner",
+      "status": "superseded",
+      "segment_cursor": 2,
+      "count": 2
+    },
+    {
+      "scope_type": "learner",
+      "status": "superseded",
+      "segment_cursor": 7,
+      "count": 2
+    },
+    {
+      "scope_type": "learner_course",
+      "status": "superseded",
+      "segment_cursor": 0,
+      "count": 4
+    },
+    {
+      "scope_type": "session",
+      "status": "superseded",
+      "segment_cursor": 0,
+      "count": 4
+    }
+  ],
+  "usage": [
+    {
+      "calls": 37,
+      "cost_micros": 400008
+    }
+  ]
+}

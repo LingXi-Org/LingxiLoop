@@ -1,0 +1,3766 @@
+{
+  "completed": true,
+  "phase": "background-new-room",
+  "operations": [
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:37.480Z",
+      "elapsedMs": 71
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:37.552Z",
+      "elapsedMs": 14
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:37.670Z",
+      "elapsedMs": 72
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:37.742Z",
+      "elapsedMs": 12
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:37.856Z",
+      "elapsedMs": 62
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:37.918Z",
+      "elapsedMs": 14
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:38.034Z",
+      "elapsedMs": 75
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:38.109Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:38.221Z",
+      "elapsedMs": 54
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:38.275Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:38.383Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:38.424Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:38.534Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:38.574Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:38.681Z",
+      "elapsedMs": 52
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:38.733Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:38.845Z",
+      "elapsedMs": 48
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:38.894Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:39.006Z",
+      "elapsedMs": 37
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:39.043Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:39.152Z",
+      "elapsedMs": 112
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:39.264Z",
+      "elapsedMs": 13
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:39.389Z",
+      "elapsedMs": 91
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:39.480Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:39.589Z",
+      "elapsedMs": 59
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:39.648Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:39.857Z",
+      "elapsedMs": 116
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:39.973Z",
+      "elapsedMs": 17
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:40.092Z",
+      "elapsedMs": 71
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:40.163Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:40.271Z",
+      "elapsedMs": 50
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:40.321Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:40.432Z",
+      "elapsedMs": 76
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:40.508Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:40.618Z",
+      "elapsedMs": 36
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:40.654Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:40.765Z",
+      "elapsedMs": 39
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:40.803Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:40.912Z",
+      "elapsedMs": 48
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:40.959Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:41.071Z",
+      "elapsedMs": 45
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:41.116Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:41.224Z",
+      "elapsedMs": 51
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:41.274Z",
+      "elapsedMs": 14
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:41.390Z",
+      "elapsedMs": 38
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:41.428Z",
+      "elapsedMs": 14
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:41.543Z",
+      "elapsedMs": 61
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:41.604Z",
+      "elapsedMs": 15
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:41.720Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:41.761Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:41.871Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:41.906Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:42.017Z",
+      "elapsedMs": 47
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:42.063Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:42.172Z",
+      "elapsedMs": 46
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:42.218Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:42.325Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:42.365Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:42.480Z",
+      "elapsedMs": 87
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:42.567Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:42.674Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:42.714Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:42.825Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:42.867Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:42.974Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:43.007Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:43.114Z",
+      "elapsedMs": 53
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:43.168Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:43.279Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:43.319Z",
+      "elapsedMs": 13
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:43.433Z",
+      "elapsedMs": 39
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:43.472Z",
+      "elapsedMs": 38
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:43.613Z",
+      "elapsedMs": 54
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:43.666Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:43.775Z",
+      "elapsedMs": 48
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:43.824Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:43.931Z",
+      "elapsedMs": 27
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:43.958Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:44.069Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:44.102Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:44.211Z",
+      "elapsedMs": 83
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:44.294Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:44.420Z",
+      "elapsedMs": 45
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:44.465Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:44.573Z",
+      "elapsedMs": 56
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:44.629Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:44.739Z",
+      "elapsedMs": 56
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:44.795Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:44.918Z",
+      "elapsedMs": 46
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:44.963Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:45.069Z",
+      "elapsedMs": 39
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:45.108Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:45.215Z",
+      "elapsedMs": 55
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:45.270Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:45.377Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:45.416Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:45.529Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:45.564Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:45.670Z",
+      "elapsedMs": 44
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:45.714Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:45.820Z",
+      "elapsedMs": 55
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:45.876Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:45.985Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:46.026Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:46.135Z",
+      "elapsedMs": 39
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:46.175Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:46.284Z",
+      "elapsedMs": 57
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:46.341Z",
+      "elapsedMs": 16
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:46.458Z",
+      "elapsedMs": 61
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:46.519Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:46.643Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:46.683Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:46.794Z",
+      "elapsedMs": 50
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:46.844Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:46.952Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:46.994Z",
+      "elapsedMs": 11
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:47.106Z",
+      "elapsedMs": 52
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:47.158Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:47.265Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:47.304Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:47.413Z",
+      "elapsedMs": 43
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:47.455Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:47.564Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:47.605Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:47.712Z",
+      "elapsedMs": 50
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:47.762Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:47.869Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:47.909Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:48.018Z",
+      "elapsedMs": 66
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:48.085Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:48.192Z",
+      "elapsedMs": 48
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:48.241Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:48.348Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:48.388Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:48.493Z",
+      "elapsedMs": 60
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:48.554Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:48.661Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:48.702Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:48.811Z",
+      "elapsedMs": 54
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:48.866Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:48.973Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:49.015Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:49.124Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:49.159Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:49.265Z",
+      "elapsedMs": 39
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:49.304Z",
+      "elapsedMs": 17
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:49.424Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:49.466Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:49.575Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:49.616Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:49.727Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:49.769Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:49.877Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:49.916Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:50.023Z",
+      "elapsedMs": 39
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:50.063Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:50.169Z",
+      "elapsedMs": 54
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:50.224Z",
+      "elapsedMs": 12
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:50.337Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:50.377Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:50.484Z",
+      "elapsedMs": 33
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:50.517Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:50.624Z",
+      "elapsedMs": 90
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:50.714Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:50.825Z",
+      "elapsedMs": 33
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:50.858Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:50.967Z",
+      "elapsedMs": 38
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:51.005Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:51.116Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:51.151Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:51.259Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:51.294Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:51.403Z",
+      "elapsedMs": 33
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:51.436Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:51.543Z",
+      "elapsedMs": 46
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:51.588Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:51.693Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:51.736Z",
+      "elapsedMs": 13
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:51.850Z",
+      "elapsedMs": 54
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:51.904Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:52.013Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:52.053Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:52.166Z",
+      "elapsedMs": 29
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:52.195Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:52.302Z",
+      "elapsedMs": 39
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:52.340Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:52.447Z",
+      "elapsedMs": 39
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:52.487Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:52.592Z",
+      "elapsedMs": 48
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:52.640Z",
+      "elapsedMs": 11
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:52.751Z",
+      "elapsedMs": 58
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:52.809Z",
+      "elapsedMs": 18
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:52.940Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:52.982Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:53.091Z",
+      "elapsedMs": 52
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:53.142Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:53.250Z",
+      "elapsedMs": 38
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:53.288Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:53.394Z",
+      "elapsedMs": 38
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:53.432Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:53.538Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:53.573Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:53.679Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:53.701Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:53.812Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:53.852Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:53.956Z",
+      "elapsedMs": 30
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:53.987Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:54.091Z",
+      "elapsedMs": 38
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:54.129Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:54.243Z",
+      "elapsedMs": 93
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:54.336Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:54.446Z",
+      "elapsedMs": 63
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:54.509Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:54.620Z",
+      "elapsedMs": 48
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:54.668Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:54.775Z",
+      "elapsedMs": 47
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:54.822Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:54.932Z",
+      "elapsedMs": 83
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:55.015Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:55.121Z",
+      "elapsedMs": 49
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:55.170Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:55.278Z",
+      "elapsedMs": 91
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:55.369Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:55.482Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:55.523Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:55.630Z",
+      "elapsedMs": 99
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:55.730Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:55.839Z",
+      "elapsedMs": 37
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:55.876Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:55.984Z",
+      "elapsedMs": 43
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:56.026Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:56.137Z",
+      "elapsedMs": 43
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:56.180Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:56.288Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:56.330Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:56.438Z",
+      "elapsedMs": 44
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:56.482Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:56.591Z",
+      "elapsedMs": 58
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:56.650Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:56.762Z",
+      "elapsedMs": 52
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:56.814Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:56.922Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:56.963Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:57.072Z",
+      "elapsedMs": 74
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:57.146Z",
+      "elapsedMs": 14
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:57.262Z",
+      "elapsedMs": 113
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:57.375Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:57.483Z",
+      "elapsedMs": 25
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:57.508Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:57.618Z",
+      "elapsedMs": 101
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:57.719Z",
+      "elapsedMs": 19
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:57.839Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:57.874Z",
+      "elapsedMs": 11
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:57.987Z",
+      "elapsedMs": 73
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:58.059Z",
+      "elapsedMs": 12
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:58.175Z",
+      "elapsedMs": 48
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:58.223Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:58.333Z",
+      "elapsedMs": 73
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:58.405Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:58.515Z",
+      "elapsedMs": 47
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:58.561Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:58.672Z",
+      "elapsedMs": 40
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:58.712Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:58.817Z",
+      "elapsedMs": 25
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:58.842Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:58.947Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:58.970Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:59.076Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:59.101Z",
+      "elapsedMs": 15
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:59.218Z",
+      "elapsedMs": 44
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:59.262Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:59.369Z",
+      "elapsedMs": 61
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:59.430Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:59.541Z",
+      "elapsedMs": 68
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:59.609Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:59.716Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:59.739Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:59.844Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:59.870Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:59.977Z",
+      "elapsedMs": 25
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:00.002Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:00.109Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:00.133Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:00.238Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:00.264Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:00.370Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:00.403Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:00.508Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:00.529Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:00.635Z",
+      "elapsedMs": 22
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:00.657Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:00.763Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:00.784Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:00.888Z",
+      "elapsedMs": 29
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:00.918Z",
+      "elapsedMs": 11
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:01.033Z",
+      "elapsedMs": 70
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:01.103Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:01.213Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:01.256Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:01.366Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:01.390Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:01.495Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:01.519Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:01.624Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:01.650Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:01.756Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:01.778Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:01.882Z",
+      "elapsedMs": 20
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:01.903Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:02.008Z",
+      "elapsedMs": 17
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:02.026Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:02.131Z",
+      "elapsedMs": 30
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:02.160Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:02.267Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:02.290Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:02.397Z",
+      "elapsedMs": 82
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:02.480Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:02.595Z",
+      "elapsedMs": 100
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:02.695Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:02.803Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:02.844Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:02.949Z",
+      "elapsedMs": 22
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:02.972Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:03.077Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:03.101Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:03.207Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:03.231Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:03.336Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:03.357Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:03.469Z",
+      "elapsedMs": 33
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:03.502Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:03.608Z",
+      "elapsedMs": 28
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:03.636Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:03.746Z",
+      "elapsedMs": 37
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:03.783Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:03.890Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:03.924Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:04.030Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:04.052Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:04.157Z",
+      "elapsedMs": 29
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:04.186Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:04.290Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:04.322Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:04.428Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:04.450Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:04.556Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:04.590Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:04.699Z",
+      "elapsedMs": 46
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:04.745Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:04.853Z",
+      "elapsedMs": 43
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:04.896Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:05.004Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:05.025Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:05.130Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:05.151Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:05.257Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:05.289Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:05.394Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:05.415Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:05.521Z",
+      "elapsedMs": 49
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:05.571Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:05.682Z",
+      "elapsedMs": 27
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:05.709Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:05.814Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:05.848Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:05.957Z",
+      "elapsedMs": 31
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:05.988Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:06.097Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:06.121Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:06.227Z",
+      "elapsedMs": 21
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:06.248Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:06.354Z",
+      "elapsedMs": 22
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:06.376Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:06.483Z",
+      "elapsedMs": 51
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:06.534Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:06.677Z",
+      "elapsedMs": 30
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:06.707Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:06.814Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:06.855Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:06.961Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:06.988Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:07.092Z",
+      "elapsedMs": 30
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:07.122Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:07.231Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:07.257Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:07.365Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:07.400Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:07.506Z",
+      "elapsedMs": 31
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:07.537Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:07.643Z",
+      "elapsedMs": 33
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:07.676Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:07.786Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:07.820Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:07.929Z",
+      "elapsedMs": 36
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:07.965Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:08.072Z",
+      "elapsedMs": 27
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:08.098Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:08.203Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:08.227Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:08.342Z",
+      "elapsedMs": 38
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:08.380Z",
+      "elapsedMs": 13
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:08.493Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:08.517Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:08.623Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:08.649Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:08.755Z",
+      "elapsedMs": 43
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:08.798Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:08.904Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:08.928Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:09.034Z",
+      "elapsedMs": 19
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:09.053Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:09.159Z",
+      "elapsedMs": 20
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:09.179Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:09.284Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:09.316Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:09.424Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:09.447Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:09.553Z",
+      "elapsedMs": 27
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:09.580Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:09.685Z",
+      "elapsedMs": 27
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:09.712Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:09.819Z",
+      "elapsedMs": 33
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:09.852Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:09.959Z",
+      "elapsedMs": 31
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:09.990Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:10.097Z",
+      "elapsedMs": 30
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:10.128Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:10.235Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:10.270Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:10.377Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:10.404Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:10.510Z",
+      "elapsedMs": 22
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:10.531Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:10.637Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:10.663Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:10.778Z",
+      "elapsedMs": 25
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:10.803Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:10.909Z",
+      "elapsedMs": 24
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:10.933Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:11.039Z",
+      "elapsedMs": 25
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:11.063Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:11.174Z",
+      "elapsedMs": 29
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:11.203Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:11.312Z",
+      "elapsedMs": 38
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:11.350Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:11.456Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:11.491Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:11.598Z",
+      "elapsedMs": 66
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:11.664Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:11.771Z",
+      "elapsedMs": 28
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:11.799Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:11.906Z",
+      "elapsedMs": 30
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:11.936Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:12.041Z",
+      "elapsedMs": 23
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:12.064Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:12.171Z",
+      "elapsedMs": 46
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:12.217Z",
+      "elapsedMs": 10
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:12.327Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:12.362Z",
+      "elapsedMs": 7
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:12.470Z",
+      "elapsedMs": 33
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:12.503Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:12.608Z",
+      "elapsedMs": 29
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:12.637Z",
+      "elapsedMs": 12
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:12.749Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:12.790Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:12.897Z",
+      "elapsedMs": 30
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:12.927Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:13.034Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:13.067Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:13.176Z",
+      "elapsedMs": 32
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:13.208Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:13.314Z",
+      "elapsedMs": 31
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:13.345Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:13.452Z",
+      "elapsedMs": 33
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:13.485Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:13.593Z",
+      "elapsedMs": 28
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:13.621Z",
+      "elapsedMs": 4
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:13.726Z",
+      "elapsedMs": 41
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:13.767Z",
+      "elapsedMs": 20
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:13.889Z",
+      "elapsedMs": 37
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:13.926Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:14.032Z",
+      "elapsedMs": 19
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:14.052Z",
+      "elapsedMs": 6033
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:20.085Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:20.194Z",
+      "elapsedMs": 306
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:20.501Z",
+      "elapsedMs": 5535
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:26.036Z",
+      "elapsedMs": 13
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:26.149Z",
+      "elapsedMs": 68
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:26.218Z",
+      "elapsedMs": 5365
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:31.583Z",
+      "elapsedMs": 12
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:31.696Z",
+      "elapsedMs": 30
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:31.726Z",
+      "elapsedMs": 4489
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:36.215Z",
+      "elapsedMs": 6
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:29:36.388Z",
+      "elapsedMs": 46
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:36.434Z",
+      "elapsedMs": 5208
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:41.642Z",
+      "elapsedMs": 1059
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:42.701Z",
+      "elapsedMs": 9118
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:51.819Z",
+      "elapsedMs": 894
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:52.714Z",
+      "elapsedMs": 173
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:52.887Z",
+      "elapsedMs": 8
+    },
+    {
+      "phase": "background",
+      "operation": "memory.list",
+      "startedAt": "2026-10-20T08:29:52.896Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T08:29:52.932Z",
+      "elapsedMs": 31
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T08:29:52.931Z",
+      "elapsedMs": 69
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T08:29:52.932Z",
+      "elapsedMs": 86
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T08:29:52.932Z",
+      "elapsedMs": 102
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:53.064Z",
+      "elapsedMs": 9040
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "memory.apply",
+      "startedAt": "2026-10-20T08:30:02.110Z",
+      "elapsedMs": 142
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "memory.reindex",
+      "startedAt": "2026-10-20T08:30:02.251Z",
+      "elapsedMs": 52
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:30:02.303Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T08:30:02.312Z",
+      "elapsedMs": 133
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "memory.search",
+      "startedAt": "2026-10-20T08:30:02.445Z",
+      "elapsedMs": 103
+    }
+  ],
+  "operationStats": {
+    "control.initialize": {
+      "count": 1,
+      "totalMs": 101,
+      "maxMs": 101,
+      "errors": 0
+    },
+    "worker.runNext": {
+      "count": 404,
+      "totalMs": 106474,
+      "maxMs": 28595,
+      "errors": 0
+    },
+    "memory.scopes": {
+      "count": 1,
+      "totalMs": 76,
+      "maxMs": 76,
+      "errors": 0
+    },
+    "memory.list": {
+      "count": 2,
+      "totalMs": 71,
+      "maxMs": 36,
+      "errors": 0
+    },
+    "memory.read": {
+      "count": 7,
+      "totalMs": 632,
+      "maxMs": 156,
+      "errors": 0
+    },
+    "memory.reflect": {
+      "count": 385,
+      "totalMs": 18894,
+      "maxMs": 606,
+      "errors": 0
+    },
+    "memory.apply": {
+      "count": 1,
+      "totalMs": 142,
+      "maxMs": 142,
+      "errors": 0
+    },
+    "memory.reindex": {
+      "count": 1,
+      "totalMs": 52,
+      "maxMs": 52,
+      "errors": 0
+    },
+    "memory.search": {
+      "count": 1,
+      "totalMs": 103,
+      "maxMs": 103,
+      "errors": 0
+    }
+  },
+  "slowOperations": [
+    {
+      "phase": "save",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:27:16.110Z",
+      "elapsedMs": 28595
+    },
+    {
+      "phase": "immediate",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:27:45.102Z",
+      "elapsedMs": 7134
+    },
+    {
+      "phase": "index",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:27:52.252Z",
+      "elapsedMs": 1215
+    },
+    {
+      "phase": "index",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:27:53.467Z",
+      "elapsedMs": 879
+    },
+    {
+      "phase": "semantic",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:27:54.449Z",
+      "elapsedMs": 4675
+    },
+    {
+      "phase": "capture",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:27:59.301Z",
+      "elapsedMs": 6749
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:28:06.824Z",
+      "elapsedMs": 7046
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T08:28:28.891Z",
+      "elapsedMs": 606
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:14.052Z",
+      "elapsedMs": 6033
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:20.501Z",
+      "elapsedMs": 5535
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:26.218Z",
+      "elapsedMs": 5365
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:31.726Z",
+      "elapsedMs": 4489
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:36.434Z",
+      "elapsedMs": 5208
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:41.642Z",
+      "elapsedMs": 1059
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:42.701Z",
+      "elapsedMs": 9118
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:51.819Z",
+      "elapsedMs": 894
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T08:29:53.064Z",
+      "elapsedMs": 9040
+    }
+  ],
+  "waits": [
+    {
+      "phase": "save",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "save",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "Client"
+      ]
+    },
+    {
+      "phase": "save",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "save",
+      "waiting": 1,
+      "blocked": 1,
+      "categories": [
+        "Lock"
+      ]
+    },
+    {
+      "phase": "capture",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "capture",
+      "waiting": 2,
+      "blocked": 0,
+      "categories": [
+        "IO",
+        "LWLock"
+      ]
+    },
+    {
+      "phase": "capture",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "Client"
+      ]
+    },
+    {
+      "phase": "background",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "background",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "background",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "background",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "background",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "background",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "Client"
+      ]
+    },
+    {
+      "phase": "background",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "background-new-room",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "background-new-room",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "background-new-room",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    }
+  ],
+  "observed": [
+    {
+      "phase": "save",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 1457,
+      "core": false,
+      "middle": false,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1934,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1568,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1732,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1360,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1146,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1507,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1104,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1212,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2218,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1639,
+      "core": true,
+      "middle": true,
+      "tail": true
+    },
+    {
+      "phase": "immediate",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 304,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "immediate",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1195,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "immediate",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2726,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "index",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 359,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "index",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 374,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 357,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1081,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1829,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "capture",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 465,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "capture",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1363,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "capture",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1654,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1810,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 4178,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2761,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2734,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1604,
+      "core": true,
+      "middle": true,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 3284,
+      "core": true,
+      "middle": true,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1572,
+      "core": true,
+      "middle": false,
+      "tail": true
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 3225,
+      "core": true,
+      "middle": false,
+      "tail": true
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1344,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2732,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1979,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2807,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 666,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2653,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2169,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 3929,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 531,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 376,
+      "core": false,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1549,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1209,
+      "core": true,
+      "middle": false,
+      "tail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2033,
+      "core": true,
+      "middle": false,
+      "tail": false
+    }
+  ]
+}

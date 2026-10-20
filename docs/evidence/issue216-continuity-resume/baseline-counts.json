@@ -1,0 +1,95 @@
+{
+  "work": [
+    {
+      "kind": "memory_index",
+      "status": "succeeded",
+      "count": 2,
+      "attempts": 1
+    },
+    {
+      "kind": "memory_synthesis",
+      "status": "failed",
+      "count": 1,
+      "attempts": 2
+    },
+    {
+      "kind": "memory_synthesis",
+      "status": "succeeded",
+      "count": 6,
+      "attempts": 1
+    },
+    {
+      "kind": "turn",
+      "status": "partial",
+      "count": 4,
+      "attempts": 1
+    }
+  ],
+  "validation": [
+    {
+      "phase": "proposal",
+      "reason": "duplicate_path",
+      "count": 1
+    },
+    {
+      "phase": "proposal",
+      "reason": "protected_document",
+      "count": 4
+    },
+    {
+      "phase": "repair",
+      "reason": "protected_document",
+      "count": 1
+    }
+  ],
+  "sources": [
+    {
+      "scope_type": "agent_role",
+      "status": "pending",
+      "segment_cursor": 0,
+      "count": 4
+    },
+    {
+      "scope_type": "learner",
+      "status": "pending",
+      "segment_cursor": 5,
+      "count": 1
+    },
+    {
+      "scope_type": "learner",
+      "status": "processed",
+      "segment_cursor": 2,
+      "count": 1
+    },
+    {
+      "scope_type": "learner",
+      "status": "rejected",
+      "segment_cursor": 2,
+      "count": 1
+    },
+    {
+      "scope_type": "learner",
+      "status": "rejected",
+      "segment_cursor": 7,
+      "count": 1
+    },
+    {
+      "scope_type": "learner_course",
+      "status": "pending",
+      "segment_cursor": 0,
+      "count": 4
+    },
+    {
+      "scope_type": "session",
+      "status": "pending",
+      "segment_cursor": 0,
+      "count": 4
+    }
+  ],
+  "usage": [
+    {
+      "calls": 37,
+      "cost_micros": 349264
+    }
+  ]
+}

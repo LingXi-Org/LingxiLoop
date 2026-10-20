@@ -29,29 +29,34 @@ function MemoryToolContents({ memory, readOnly }: { memory: MemoryActivity; read
   const companyId = useAuth(state => state.activeCompanyId)
   const projectId = useSyncExternalStore(subscribeWorkspace, getActiveProjectId, () => null)
   const queryClient = memoryQueryClient
+  const identityKey = ['run-memory', companyId, principalId]
   const queryKey = ['run-memory', companyId, principalId, projectId, runId, senderId, conversationId, threadRootId]
   const versions = memory.chips.map(chip => [chip.id, chip.version])
   const ids = memory.chips.map(chip => chip.id)
   const current = useQuery({ queryKey: [...queryKey, versions], enabled: permitted && ids.length > 0,
-    queryFn: ({ signal }) => harnessApi.memory(target!, ids, signal), retry: false }, queryClient)
+    queryFn: ({ signal }) => harnessApi.memory(target!, ids, signal), retry: false, staleTime: 0,
+    refetchOnMount:'always', refetchOnWindowFocus:'always', refetchInterval:15000 }, queryClient)
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null)
   const inFlight = useRef(false)
-  const chips = permitted && current.data ? current.data.chips.map(chip => {
+  const chips = permitted && current.isSuccess && !current.isFetching && current.data ? current.data.chips.map(chip => {
     const original = memory.chips.find(item => item.id === chip.id)
     return { ...chip, change: original?.version === chip.version ? original.change : chip.change }
-  }) : memory.chips
+  }) : []
   async function forget(id: string) {
     const chip = chips.find(chip => chip.id === id)
     if (!permitted || !target || !chip || inFlight.current || !current.isSuccess) return
     inFlight.current = true; setBusy(true); setError(null)
     try {
       await harnessApi.forgetMemory(target, id, chip.version)
-      queryClient.setQueriesData<MemoryActivity>({ queryKey }, value => value && { chips: value.chips.filter(chip => chip.id !== id) })
-      await queryClient.invalidateQueries({ queryKey })
+      // Cancel old responses before removing this identity's cached copies in
+      // every room/Agent. React Query discards late results after cancellation.
+      await queryClient.cancelQueries({queryKey:identityKey})
+      queryClient.setQueriesData<MemoryActivity>({ queryKey:identityKey }, value => value && { chips: value.chips.filter(chip => chip.id !== id) })
+      await queryClient.invalidateQueries({ queryKey:identityKey })
     } catch (cause) { setError(userFacingError(cause, '忘记失败，请重试。')); void current.refetch() }
     finally { inFlight.current = false; setBusy(false) }
   }
-  const loading = permitted && ids.length > 0 && current.isPending
+  const loading = permitted && ids.length > 0 && (current.isPending || current.isFetching)
   const unavailable = permitted && current.isError
   return <div aria-busy={busy || loading} className="min-w-0 space-y-2">
     <fieldset disabled={busy || permitted && !current.isSuccess} className="min-w-0">
