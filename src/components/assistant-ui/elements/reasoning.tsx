@@ -337,10 +337,10 @@ export {
   reasoningVariants,
 };
 
-export function Reasoning({ streaming, children }: { streaming: boolean; summary?: string; children: React.ReactNode }) {
+export function Reasoning({ streaming, children, defaultOpen }: { streaming: boolean; defaultOpen?: boolean; summary?: string; children: React.ReactNode }) {
   const root = useRef<HTMLDivElement>(null);
   const lockScroll = useScrollLock(root, ANIMATION_DURATION);
-  return <ReasoningRoot ref={root} streaming={streaming} onAnimationStart={lockScroll}>
+  return <ReasoningRoot ref={root} defaultOpen={defaultOpen} streaming={streaming} onAnimationStart={lockScroll}>
     <ReasoningTrigger active={streaming} />
     <ReasoningContent><ReasoningText>{children}</ReasoningText></ReasoningContent>
   </ReasoningRoot>;

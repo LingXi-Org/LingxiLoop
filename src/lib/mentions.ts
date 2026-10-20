@@ -1,8 +1,11 @@
 import { fromMarkdown } from 'mdast-util-from-markdown'
+import { participantMentionNames } from './participantDisplayName'
 
 export interface MentionTarget {
   id: string
   name: string
+  kind?: 'agent' | 'human'
+  presetKey?: string | null
 }
 
 export interface MentionRange {
@@ -77,13 +80,19 @@ function normalized(input: string): { text: string; starts: number[]; ends: numb
 
 function scanProseMentions(input: string, targets: readonly MentionTarget[]): MentionRange[] {
   const { text, starts, ends } = normalized(input)
-  const names = targets.map(target => normalized(target.name).text.trim())
-  const counts = new Map<string, number>()
-  for (const name of names) counts.set(name, (counts.get(name) ?? 0) + 1)
+  const names = targets.map(target => [...new Set([target.name, ...participantMentionNames(target)]
+    .map(name => normalized(name).text.trim()).filter(Boolean))])
+  const owners = new Map<string, Set<string>>()
+  for (const [index, aliases] of names.entries()) for (const name of aliases) {
+    const ids = owners.get(name) ?? new Set<string>()
+    ids.add(targets[index].id)
+    owners.set(name, ids)
+  }
   const candidates = [
     { id: 'all', token: 'all' }, { id: 'all', token: '所有人' },
     ...targets.map(target => ({ id: target.id, token: normalized(target.id).text })),
-    ...targets.flatMap((target, i) => names[i] && counts.get(names[i]!) === 1 ? [{ id: target.id, token: names[i]! }] : []),
+    ...targets.flatMap((target, i) => names[i].filter(name => owners.get(name)?.size === 1)
+      .map(token => ({ id: target.id, token }))),
   ].filter(candidate => candidate.token).sort((a, b) => b.token.length - a.token.length)
   const result: MentionRange[] = []
   let previousEnd = -1

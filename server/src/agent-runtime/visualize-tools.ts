@@ -24,7 +24,7 @@ export const visualizeTools: ToolDefinition[] = [
     async execute(_context, input) { return { ok: true, value: { path: input.path, text: await readVisualizeReference(input.path), complete: true } } },
   }),
   nativeTool('visualize.save', z.object({ name, html: z.string().min(1).max(5_000_000) }).strict(), {
-    description: 'Save literal HTML fragment text to the authorized durable session output directory. name is lowercase-hyphenated without .html. Returns the actual absolute path for a final ::visualize JSON reference; read back with visualize.read. Never send a full HTML document.',
+    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Load the visualize skill first. name is lowercase-hyphenated without .html. Returns the actual authorized absolute path for a final ::visualize JSON reference; read back with visualize.read. Never send a full HTML document or unfinished script.',
     effect: 'transaction', approval: false, authorize,
     async execute(context, input) {
       const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,

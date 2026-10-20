@@ -125,7 +125,7 @@ export function GenUiCard({
       className={
         preview
           ? "flex shrink-0 items-center justify-end gap-1 p-2"
-          : "absolute right-0 bottom-0 z-20 flex gap-1 rounded-lg bg-popover p-1 shadow-sm opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 data-[visible=true]:opacity-100 [@media(hover:none)]:opacity-100"
+          : "absolute right-1 top-1 z-20 flex gap-1 rounded-lg bg-popover p-1 shadow-sm opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 data-[visible=true]:opacity-100 [@media(hover:none)]:opacity-100"
       }
       data-visible={snapshot.hovered || tweaks}
       data-testid="gen-ui-actions"
@@ -191,7 +191,7 @@ export function GenUiCard({
   // 会话父容器已经负责宽度；卡片再次限宽会让 inline UI 无法填满正文。
   return (
     <section className="zcode-visualize my-3 w-full" data-testid="gen-ui-card" data-gen-ui-phase={snapshot.phase}>
-      <div className="group relative flow-root">
+      <div className="group relative flow-root overflow-clip rounded-xl">
         {(snapshot.phase !== "ready" || !page) && (
           <div className="space-y-2 py-3 text-ui-base text-foreground-subtle" role="status">
             <p className="flex items-center gap-2">

@@ -13,8 +13,16 @@ import '../src/styles/globals.css'
 const facts = [ { id: 'preference', text: '偏好中文回答', version: 1, change: 'added' as const },
   { id: 'goal', text: '更新后的学习目标', version: 2, change: 'updated' as const },
   { id: 'existing', text: '已有的学习背景', version: 1, change: 'existing' as const } ]
-if (new URLSearchParams(location.search).has('reset')) localStorage.removeItem('memory-fixture-forgotten')
-harnessApi.memory = async (_target, ids) => ({ chips: facts.filter(chip => ids.includes(chip.id) && chip.id !== localStorage.getItem('memory-fixture-forgotten')) })
+if (new URLSearchParams(location.search).has('reset')) { localStorage.removeItem('memory-fixture-forgotten'); sessionStorage.removeItem('memory-fixture-retry') }
+harnessApi.memory = async (_target, ids) => {
+  const mode = new URLSearchParams(location.search).get('mode')
+  if (mode === 'loading') await new Promise(resolve => setTimeout(resolve, 1500))
+  if (mode === 'load-error' && !sessionStorage.getItem('memory-fixture-retry')) {
+    sessionStorage.setItem('memory-fixture-retry', '1')
+    throw new Error('synthetic read failure')
+  }
+  return { chips: mode === 'empty' ? [] : facts.filter(chip => ids.includes(chip.id) && chip.id !== localStorage.getItem('memory-fixture-forgotten')) }
+}
 harnessApi.readApproval = async id => ({ id, summary: '允许忘记指定范围内的记忆？', status: 'PENDING', action: { action: 'memory.forget' } })
 harnessApi.forgetMemory = async (_target, id) => {
   await new Promise(resolve => setTimeout(resolve, 250))
@@ -59,4 +67,7 @@ function Preview() {
     </ThreadPrimitive.Root></AssistantRuntimeProvider>
   </main>
 }
-createRoot(document.getElementById('root')!).render(<Preview />)
+// Match production: NativeMessageContent must not require a fixture-only query provider.
+createRoot(document.getElementById('root')!, { onCaughtError: error => {
+  document.documentElement.dataset.cardException = error instanceof Error ? error.message : 'unknown'
+} }).render(<Preview />)

@@ -17,9 +17,11 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
     /\bviz-calendar\b/i.test(fragment) ? resource('calendar.js') : Promise.resolve(''),
   ])
   let content = fragment + kit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
-  for (const [url,name] of vendors) {
-    if (!content.includes(url)) continue
-    const source = await resource(name)
+  // Download independent authorized resources concurrently. Replace in the
+  // original order so Floating UI Core still executes before DOM and author JS.
+  const sources = await Promise.all(vendors.filter(([url]) => content.includes(url))
+    .map(async ([url, name]) => [url, await resource(name)] as const))
+  for (const [url,source] of sources) {
     const escaped = url.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
     content = content.replace(new RegExp(`<script\\b[^>]*\\bsrc=["']${escaped}["'][^>]*>\\s*</script>`, 'gi'), () => script(source))
   }

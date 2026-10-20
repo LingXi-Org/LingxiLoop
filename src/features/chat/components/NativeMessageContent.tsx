@@ -7,7 +7,7 @@ import { DocumentReference } from '@/components/assistant-ui/elements/document-r
 import { Reasoning } from '@/components/assistant-ui/elements/reasoning'
 import { AgentPlan, type AgentPlanStep } from '@/components/assistant-ui/elements/agent-plan'
 import { RunActivity, type RunActivityStatus } from '@/components/assistant-ui/elements/run-activity'
-import { activityAnnotation } from '@/lib/runActivity'
+import { activityAnnotation, canonicalToolName, resolveToolDisplay } from '@/lib/runActivity'
 import { ToolGroup } from '@/components/assistant-ui/elements/tool-group'
 import { ToolTimeline } from '@/components/assistant-ui/elements/tool-timeline'
 import { WrenchIcon } from 'lucide-react'
@@ -79,7 +79,7 @@ function PartFrame({ children, footer, mediaFooter }: { children: ReactNode; foo
   </MessageFooterContext.Provider>
 }
 
-function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: { Text?: TextMessagePartComponent; footer?: ReactNode; mediaFooter?: ReactNode }) {
+function NativePart({ Text = DefaultText, footer = null, mediaFooter = null, foreground = false }: { Text?: TextMessagePartComponent; footer?: ReactNode; mediaFooter?: ReactNode; foreground?: boolean }) {
   const aui = useAui()
   const readOnly = useContext(ReadOnlyMessage)
   const part = useAuiState(state => state.part)
@@ -87,7 +87,7 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: {
   let content: ReactNode
   switch (part.type) {
     case 'text': content = <VisualizeText part={part} Text={Text} readOnly={readOnly} />; break
-    case 'reasoning': content = <Reasoning streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning>; break
+    case 'reasoning': content = <Reasoning defaultOpen={foreground} streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning>; break
     case 'source': content = <SourcePart {...part} />; break
     case 'image': content = <AttachmentCard filename={part.filename ?? '图片'} data={part.image} mimeType="image/*" sourceType="url" />; break
     case 'file': content = <AttachmentCard filename={part.filename ?? '附件'} data={part.data} mimeType={part.mimeType} sourceType={part.sourceType} />; break
@@ -118,13 +118,19 @@ function ActivityParts({ Text, footer, mediaFooter, attention }: { Text: TextMes
   const status: RunActivityStatus = nativeStatus.type === 'incomplete'
     ? nativeStatus.reason === 'cancelled' || nativeStatus.reason === 'error' ? nativeStatus.reason : 'incomplete' : nativeStatus.type
   const labels = { running: '正在处理', 'requires-action': '需要你确认', complete: '已完成', cancelled: '已停止', incomplete: '尚未完成', error: '任务未完成' }
+  // Only explicitly classified, durable public reports use this slot. Runtime
+  // answer previews retain their native retraction/commit semantics.
+  const foregroundIndex = nativeStatus.type === 'running' || nativeStatus.type === 'requires-action'
+    ? message.parts.findLastIndex(part => activityAnnotation(part)?.kind === 'commentary') : -1
   const parts = message.parts.map((part, index) => {
     const entry = activityAnnotation(part)
-    const attention = entry?.kind === 'attention' || part.type === 'tool-call' && (part.toolName === 'teacher.draft_homework' || Boolean(part.approval || part.interrupt || part.isError || part.status.type === 'requires-action' || part.status.type === 'incomplete'))
-    return { id: entry?.id ?? `part:${index}`, kind: entry?.kind, label: entry?.label ?? '其他内容', attention, running: part.status.type === 'running',
-      content: <PartByIndexProvider key={entry?.id ?? index} index={index}><NativePart Text={Text} footer={footer} mediaFooter={mediaFooter} /></PartByIndexProvider> }
+    const resultStatus = part.type === 'tool-call' && part.result && typeof part.result === 'object' ? Reflect.get(part.result, 'status') : undefined
+    const attention = entry?.kind === 'attention' || part.type === 'tool-call' && (canonicalToolName(part.toolName) === 'teacher.draft_homework' || ['failed', 'cancelled', 'unknown'].includes(String(resultStatus)) || Boolean(part.approval || part.interrupt || part.isError || part.status.type === 'requires-action' || part.status.type === 'incomplete'))
+    const label = part.type === 'tool-call' ? resolveToolDisplay(part.toolName, undefined, part.result && typeof part.result === 'object' ? Reflect.get(part.result, 'display') : undefined).title : entry?.label ?? '其他内容'
+    return { foreground: index === foregroundIndex, id: entry?.id ?? `part:${index}`, kind: entry?.kind, label, attention, running: part.status.type === 'running',
+      content: <PartByIndexProvider key={entry?.id ?? index} index={index}><NativePart Text={Text} footer={footer} mediaFooter={mediaFooter} foreground={index === foregroundIndex} /></PartByIndexProvider> }
   })
-  const activities = parts.filter(part => !part.attention && (part.kind === 'tool' || part.kind === 'commentary'))
+  const activities = parts.filter(part => !part.attention && !part.foreground && (part.kind === 'tool' || part.kind === 'commentary'))
   const entries: { id: string; kind: 'tool' | 'commentary'; label: string; content: ReactNode }[] = []
   for (let index = 0; index < Math.min(visible, activities.length); index++) {
     const part = activities[index]
@@ -143,7 +149,7 @@ function ActivityParts({ Text, footer, mediaFooter, attention }: { Text: TextMes
     restingLabel={`工具执行记录 · ${tools.length} 项`} activeLabel="工具正在处理" stats={[]} /> })
   return <div ref={root}><RunActivity status={status} statusLabel={message.metadata.custom.runConnection ? '状态待确认' : labels[status]} open={open} onOpenChange={next => { lockScroll(); setOpen(next) }}
     entries={entries}
-    attention={<>{parts.filter(part => part.attention).map(part => <div key={part.id} role="group" aria-label={part.label}>{part.content}</div>)}<RunActivityHistory message={message} />{attention}</>}>
+    attention={<>{parts.filter(part => part.foreground && !part.attention).map(part => <div key={part.id} data-public-activity={part.id}>{part.content}</div>)}{parts.filter(part => part.attention).map(part => <div key={part.id} role="group" aria-label={part.label}>{part.content}</div>)}<RunActivityHistory message={message} />{attention}</>}>
     {parts.filter(part => !part.attention && part.kind !== 'tool' && part.kind !== 'commentary').map(part => part.content)}
   </RunActivity></div>
 }
