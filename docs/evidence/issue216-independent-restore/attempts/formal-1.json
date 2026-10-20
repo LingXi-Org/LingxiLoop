@@ -1,0 +1,160 @@
+{
+  "format": 1,
+  "mode": "restore-upgrade",
+  "sourceCommit": "c6c47bddeabb4488f9fe93391f15c695a528260c",
+  "applicationCommit": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+  "targetCommit": "689e60611f5dc98274514843fe55497567539cd4",
+  "formalTarget": true,
+  "productionRequests": 0,
+  "externalProviderRequests": 0,
+  "sharedDatabaseRequests": 0,
+  "driverHashes": {
+    "main": "dc25b59f611602aa2c0c434f2a7b82716f075cd679ab0b40643563bb5ba2022c",
+    "step": "4632bd9b3efea7ec9b781e047f2df3418a42fa364359f0a7a6ac94a55d133bcd"
+  },
+  "steps": [
+    {
+      "phase": "bootstrap",
+      "passed": true,
+      "providerRequests": 0,
+      "applied": 46,
+      "provenance": {
+        "native": 12,
+        "product": 46,
+        "count": 46,
+        "runtime": "3.5.6",
+        "installed": 12,
+        "protocol": 11,
+        "hash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a"
+      }
+    },
+    {
+      "phase": "seed",
+      "passed": true,
+      "providerRequests": 0,
+      "nativeSourceWrites": 3,
+      "memories": 8,
+      "versions": 2,
+      "forgottenScopes": 1
+    },
+    {
+      "phase": "upgrade",
+      "passed": true,
+      "providerRequests": 0,
+      "provenance": {
+        "native": 13,
+        "product": 48,
+        "count": 48,
+        "runtime": "3.5.8",
+        "installed": 13,
+        "protocol": 11,
+        "hash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41"
+      },
+      "missingDrainRejected": true,
+      "failed48Preserved47": true,
+      "repairedOnly48": true,
+      "nullableColumns": 11,
+      "exactNoop": true
+    },
+    {
+      "phase": "old-refusal",
+      "passed": true,
+      "providerRequests": 0,
+      "oldProductReadinessRejected": true,
+      "oldPublicRuntimeStartupRejected": true,
+      "provenanceUnchanged": true
+    },
+    {
+      "phase": "backfill",
+      "passed": true,
+      "providerRequests": 0,
+      "dryRunCounts": {
+        "unproven_owner_or_source": 2,
+        "eligible": 3,
+        "inactive": 1,
+        "ownership_or_audience_not_proven": 1
+      },
+      "dryRun": true,
+      "pages": 4,
+      "migrated": 3,
+      "isolated": 4,
+      "repeatNoMoves": true,
+      "principalTenantGroupRejected": true,
+      "staleCasRejected": true,
+      "sourceRevokedCurrentDelete": true,
+      "deleteNotResurrectedAfterRestart": true,
+      "currentAgentRevoked": true
+    }
+  ],
+  "cleanup": {
+    "ownedContainerRemoved": true,
+    "ownedToolContainersRemoved": true,
+    "temporaryArchivesRemoved": true,
+    "noOwnedContainersRemain": true
+  },
+  "passed": true,
+  "source": {
+    "runtime": "3.5.6",
+    "schema": 12,
+    "product": 46,
+    "schemaHash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a",
+    "tarIntegrity": "sha512-fg3EvMwwgZLd9QZ5aTT8IcJrj/9vfy7OK/1BGUiEvwt6FS7WlhgyoycZmxFj+Q1yT8XXppGCmmK7F+JIjCJLpg==",
+    "migrationInventoryHash": "5453a293b39cd75a1ebf62b182bc979352962acf0d2bbd3df1b3402f0fd74164"
+  },
+  "targetRegistry": {
+    "version": "3.5.8",
+    "integrity": "sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==",
+    "gitHead": "35ac1208fcf2bd6cb1852f474175e9eb7e2083ec",
+    "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8"
+  },
+  "targetPackage": {
+    "version": "3.5.8",
+    "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+    "packageJsonHash": "60d82b61da3aee13f26724b80ccbb055b871507c1e9e7683093161151abdd36e"
+  },
+  "localImage": "sha256:f1447071e6c8449dcf4056aa0994c81d3566ce5ee232de36b04dc25696a116dd",
+  "sourceObserved": {
+    "native": 12,
+    "product": 46,
+    "count": 46,
+    "runtime": "3.5.6",
+    "installed": 12,
+    "protocol": 11,
+    "hash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a"
+  },
+  "sourceRows": 234,
+  "sourceTables": 174,
+  "sourceContentHash": "9117ba8038293fcccf72f7fa3ab8805f5a49b1a6b6e86802648ebe79527bbbe4",
+  "backupCommand": {
+    "reviewedHash": "b1e2e9b9dfd154f11a5d13a49232d3a32563e22cd3a745d21a9042db08184ba6",
+    "localAdaptedHash": "944005ce00eaad187f04fdc36b83d42f09a6f13b7159468282e49748113bf3fe",
+    "adaptations": [
+      "owned backup bind path",
+      "owned loopback database/network",
+      "synthetic existing local credentials only"
+    ]
+  },
+  "backupProcess": {
+    "exitCode": 0,
+    "snapshotMarker": true,
+    "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "backup": {
+    "dumpHash": "00a65a66b4f22c236c4aa7326372c131e0ce452f85c9015db8cfbbc029fcc050",
+    "restoreCountsEqual": true,
+    "restoreProvenanceEqual": true,
+    "helperRestoreRemoved": true,
+    "sourceSnapshotControl": 1
+  },
+  "restore": {
+    "allTableCountsAndHashesEqual": true,
+    "restoredTables": 174,
+    "restoredContentHash": "9117ba8038293fcccf72f7fa3ab8805f5a49b1a6b6e86802648ebe79527bbbe4",
+    "snapshotExcludedLaterSourceCommit": true
+  },
+  "upgradeOldRows": {
+    "tables": 171,
+    "oldColumnsHashesEqual": true,
+    "hash": "fdc05fcdd273e22bb5ac12b9067ed629492d91f2116980e47c261d05f5169528"
+  }
+}

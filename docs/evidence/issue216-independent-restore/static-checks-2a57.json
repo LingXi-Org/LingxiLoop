@@ -1,0 +1,49 @@
+{
+  "sourceCommit": "2a57d68b895ccb26dc06a65a0adb19324273bb3c",
+  "nodeVersion": "v22.23.3",
+  "checks": [
+    {
+      "command": [
+        "node",
+        "--check",
+        "scripts/independent-memory-restore.mjs"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--check",
+        "scripts/independent-memory-restore-step.mjs"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node_modules/.bin/biome",
+        "lint",
+        "scripts/independent-memory-restore.mjs",
+        "scripts/independent-memory-restore-step.mjs"
+      ],
+      "exitCode": 0,
+      "stdout": "Checked 2 files in 25ms. No fixes applied.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "d1b42220d88026242c293482e8adf598af6f604e",
+        "HEAD"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

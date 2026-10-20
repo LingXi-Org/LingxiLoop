@@ -1,0 +1,193 @@
+{
+  "format": 1,
+  "startedAt": "2026-10-20T09:55:34.371Z",
+  "mode": "restore-upgrade",
+  "sourceCommit": "c6c47bddeabb4488f9fe93391f15c695a528260c",
+  "applicationCommit": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+  "targetCommit": "2a57d68b895ccb26dc06a65a0adb19324273bb3c",
+  "formalTarget": true,
+  "productionRequests": 0,
+  "externalProviderRequests": 0,
+  "sharedDatabaseRequests": 0,
+  "driverHashes": {
+    "main": "514398997eba8efdf52496288d6c5004d6a73b4526b54303f3aa8c3723305ac3",
+    "step": "1efe27ab0c90f7e99a68fc453a4fd8634a7bc9b779f9c5e723c250963ac1917a"
+  },
+  "steps": [
+    {
+      "phase": "bootstrap",
+      "passed": true,
+      "providerRequests": 0,
+      "applied": 46,
+      "provenance": {
+        "native": 12,
+        "product": 46,
+        "count": 46,
+        "runtime": "3.5.6",
+        "installed": 12,
+        "protocol": 11,
+        "hash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a"
+      }
+    },
+    {
+      "phase": "seed",
+      "passed": true,
+      "providerRequests": 0,
+      "nativeSourceWrites": 3,
+      "memories": 8,
+      "versions": 2,
+      "forgottenScopes": 1
+    },
+    {
+      "phase": "upgrade",
+      "passed": true,
+      "providerRequests": 0,
+      "provenance": {
+        "native": 13,
+        "product": 48,
+        "count": 48,
+        "runtime": "3.5.8",
+        "installed": 13,
+        "protocol": 11,
+        "hash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41"
+      },
+      "missingDrainRejected": true,
+      "failed48Preserved47": true,
+      "repairedOnly48": true,
+      "nullableColumns": 11,
+      "exactNoop": true
+    },
+    {
+      "phase": "old-refusal",
+      "passed": true,
+      "providerRequests": 0,
+      "oldProductReadinessRejected": true,
+      "oldPublicRuntimeStartupRejected": true,
+      "provenanceUnchanged": true
+    },
+    {
+      "phase": "backfill",
+      "passed": true,
+      "providerRequests": 0,
+      "dryRunCounts": {
+        "eligible": 3,
+        "unproven_owner_or_source": 2,
+        "ownership_or_audience_not_proven": 1,
+        "inactive": 1
+      },
+      "dryRun": true,
+      "pages": 4,
+      "migrated": 3,
+      "isolated": 4,
+      "repeatNoMoves": true,
+      "principalTenantGroupRejected": true,
+      "staleCasRejected": true,
+      "sourceRevokedCurrentDelete": true,
+      "deleteNotResurrectedAfterRestart": true,
+      "currentAgentRevoked": true
+    }
+  ],
+  "cleanup": {
+    "ownedContainerRemoved": true,
+    "ownedToolContainersRemoved": true,
+    "temporaryArchivesRemoved": true,
+    "noOwnedContainersRemain": true
+  },
+  "passed": true,
+  "source": {
+    "runtime": "3.5.6",
+    "schema": 12,
+    "product": 46,
+    "schemaHash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a",
+    "tarIntegrity": "sha512-fg3EvMwwgZLd9QZ5aTT8IcJrj/9vfy7OK/1BGUiEvwt6FS7WlhgyoycZmxFj+Q1yT8XXppGCmmK7F+JIjCJLpg==",
+    "tarSha256": "5158a6f268d72db9f9d9453776557a7a2ecca6df067770f56b97a5810107c979",
+    "migrationInventoryHash": "5453a293b39cd75a1ebf62b182bc979352962acf0d2bbd3df1b3402f0fd74164"
+  },
+  "targetTarSha256": "ee308270402b220452f8eb4e92e9c1d25a68466525f21827203bd5078a9c1bcb",
+  "targetRegistry": {
+    "version": "3.5.8",
+    "integrity": "sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==",
+    "gitHead": "35ac1208fcf2bd6cb1852f474175e9eb7e2083ec",
+    "tarball": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8"
+  },
+  "targetPackage": {
+    "version": "3.5.8",
+    "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+    "packageJsonHash": "60d82b61da3aee13f26724b80ccbb055b871507c1e9e7683093161151abdd36e"
+  },
+  "localImage": "sha256:f1447071e6c8449dcf4056aa0994c81d3566ce5ee232de36b04dc25696a116dd",
+  "fixtureStorage": {
+    "dataTmpfs": true,
+    "persistentVolumes": 0
+  },
+  "postgresVersion": "16.15 (Debian 16.15-1.pgdg12+2)",
+  "sourceObserved": {
+    "native": 12,
+    "product": 46,
+    "count": 46,
+    "runtime": "3.5.6",
+    "installed": 12,
+    "protocol": 11,
+    "hash": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a"
+  },
+  "sourceRows": 234,
+  "sourceTables": 174,
+  "sourceContentHash": "e6956bb3a178498d8c38a8293f2546d4a2d797f51911d1b07665b2ddae405fc3",
+  "backupCommand": {
+    "reviewedHash": "85fd3fb2fcb5b0c190199060c13c173fcd5ab0ec2f767d0e773edd2f25ebdc43",
+    "localAdaptedHash": "28870aff53fd1a797a187b0bc501e5148383a1c27e9135aa99aac0c1f98c9944",
+    "adaptations": [
+      "owned backup bind path",
+      "owned loopback database/network",
+      "synthetic existing local credentials only"
+    ]
+  },
+  "backupProcess": {
+    "exitCode": 0,
+    "snapshotMarker": true,
+    "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "backup": {
+    "transport": "local-subprocess-not-komodo",
+    "dumpHash": "0550067f5356db7ad3a74d003918412969549bb1e5705e949a0a60beb4bbd8ae",
+    "restoreCountsEqual": true,
+    "restoreProvenanceEqual": true,
+    "helperRestoreRemoved": true,
+    "sourceSnapshotControl": 1
+  },
+  "restore": {
+    "allTableCountsAndHashesEqual": true,
+    "restoredTables": 174,
+    "restoredContentHash": "e6956bb3a178498d8c38a8293f2546d4a2d797f51911d1b07665b2ddae405fc3",
+    "snapshotExcludedLaterSourceCommit": true
+  },
+  "upgradeOldRows": {
+    "tables": 171,
+    "oldColumnsHashesEqual": true,
+    "hash": "e6586cfff38f92fdb73b816de364ee84825d69a12a265ab4bd02a2045aac04e7",
+    "retained": [
+      {
+        "table": "agent_memories",
+        "count": 8,
+        "digest": "6c126196fb0241239fd7748af45928c3"
+      },
+      {
+        "table": "agent_memory_scopes",
+        "count": 4,
+        "digest": "6889ec7d12d157d326a1c9d9ae148035"
+      },
+      {
+        "table": "agent_memory_versions",
+        "count": 2,
+        "digest": "7b622d3e68ece1e36793de47194cd158"
+      },
+      {
+        "table": "agent_os_sessions",
+        "count": 3,
+        "digest": "31656c6a19a74891149eef2cf30878ca"
+      }
+    ]
+  },
+  "finishedAt": "2026-10-20T09:55:58.523Z",
+  "elapsedMs": 24150
+}

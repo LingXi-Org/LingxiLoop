@@ -1,0 +1,19 @@
+{
+  "sourceCommit": "873f9fd311f01de2df294cde11586dc8f012ffde",
+  "networkConnections": 0,
+  "red": {
+    "passed": 0,
+    "failed": 2,
+    "exitCode": 1
+  },
+  "green": {
+    "passed": 3,
+    "failed": 0,
+    "exitCode": 0
+  },
+  "files": {
+    "old-parser-red.mjs": "0e97f02f18f6dd9e6fa18e3e7c9ce537ea71fc4d5deffb62120903dc0432442b",
+    "red.log": "457fd011b2c3a852e84a51b656c74c60e409875194ef27714ea9d23fece52125",
+    "green.log": "960870c076a447c44f801c3d688a45bc24855afe35fd60acc264074c7d4f08e8"
+  }
+}

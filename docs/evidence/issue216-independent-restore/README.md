@@ -80,3 +80,32 @@ Old-process startup refusal does not stop an already-running schema12 writer;
 production still needs verified drain of all writers and a separate real backup.
 After47 commits, recovery is compatible fix-forward; this rehearsal never rolls
 schema13 back to12. Production stop/migration remains pending separate confirmation.
+
+## Frozen results
+
+Implementation: `873f9fd311f01de2df294cde11586dc8f012ffde`. The final official-package
+run (`guarded-formal.json`) exited0 in23.243s: all5 phases passed,174 tables/234 rows
+restored exactly, and171 tables retained their old-column hashes after upgrade.
+The retained set includes8 memory documents,4 scope/epoch rows,2 historical memory
+versions and3 session/history rows. The backfill used4 pages:3 migrated and4
+isolated; both actual source revocation and current deletion succeeded as expected.
+All owning containers/tools/archives were removed; the PostgreSQL data filesystem
+was verified as tmpfs with0 persistent volumes. PostgreSQL was16.15, Node22.23.3.
+
+The final target tar SHA256 is
+`ee308270402b220452f8eb4e92e9c1d25a68466525f21827203bd5078a9c1bcb`;
+its registry source is `35ac1208fcf2bd6cb1852f474175e9eb7e2083ec`.
+The full SRI, source official-package integrity, schema hashes and three implementation script
+hashes are in the receipt. `static-checks.json` records syntax/lint/diff checks.
+`attempts-manifest.json` classifies every earlier result, including expected
+negative controls, harness mistakes and the separate owned-path cleanup recovery.
+None of those earlier failed processes is counted as a passing qualification.
+
+Independent isolation review found that query options in a PostgreSQL URL can
+supersede its authority host/port in the real pg parser. `url-isolation/` retains
+both original pure-parser failures (0/2), followed by3/3 passing controls with no
+network access. The final main and subprocess guards reject query/fragment values
+and non-PostgreSQL/non-loopback identities; each connection is rebuilt from a new
+fixed URL with only the existing synthetic password and the owned port/database.
+The final formal-package run above was repeated after this fix. Earlier successful
+receipts remain under `attempts/`; their actual inputs contained no query options.
