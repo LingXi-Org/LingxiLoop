@@ -21,8 +21,8 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
   value: string; document?: ContentDocument | null; label: string
   onChange(value: string, document: ContentDocument, sections: string[]): void
   uploadFile?(file: File): Promise<string>
-  disabled?: boolean; compact?: boolean; maxLength?: number; onFocus?(): void
-}>(({ value, document, label, onChange, uploadFile, disabled = false, compact = false, maxLength = 20000, onFocus }, ref) => {
+  disabled?: boolean; compact?: boolean; maxLength?: number; legacyFormat?: 'forum' | 'markdown'; onFocus?(): void
+}>(({ value, document, label, onChange, uploadFile, disabled = false, compact = false, maxLength = 20000, legacyFormat = 'forum', onFocus }, ref) => {
   const { resolvedTheme } = useTheme()
   const current = useRef({ onChange, uploadFile })
   current.current = { onChange, uploadFile }
@@ -40,7 +40,7 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
   useLayoutEffect(() => {
     if (last.current?.value === value && last.current.document === document) return
     syncing.current = true
-    const blocks = usableDocument(document, value) ? document.blocks : importLegacy(editor, value)
+    const blocks = usableDocument(document, value) ? document.blocks : importLegacy(editor, value, legacyFormat)
     editor.transact(transaction => {
       transaction.setMeta('addToHistory', false)
       editor.replaceBlocks(editor.document, blocks.length ? blocks : [{ type: 'paragraph' }])
@@ -48,7 +48,7 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
     original.current = usableDocument(document, value) ? document.legacyMarkdown ?? value : value
     last.current = { value, document }
     syncing.current = false
-  }, [editor, value, document])
+  }, [editor, value, document, legacyFormat])
   useImperativeHandle(ref, () => ({
     focus: () => editor.focus(),
     insertImage: (url, name) => {

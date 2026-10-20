@@ -77,6 +77,18 @@ test('native forum menus, table, task state, scoped draft, upload retry, publish
   expect(saved.editorDocument.blocks.map((block:{type:string})=>block.type)).toContain('codeBlock')
   expect(saved.attachments).toHaveLength(2)
   expect(saved.tags).toContain('原生编辑')
+  // Reject mismatched projection, duplicate identities, transient media and
+  // attempts to bypass the existing explicit attachment ownership manifest.
+  const rejected=await browser.evaluate(async saved=>{
+    const payload={kind:'share',title:'Rejected native input',body:saved.body,tags:[],links:[],attachments:saved.attachments,editorDocument:saved.editorDocument}
+    const post=(input:unknown)=>fetch('/api/courses/e2e-course/forum',{method:'POST',headers:{'x-company-id':'e2e-school','content-type':'application/json'},body:JSON.stringify(input)}).then(r=>r.status)
+    const duplicate={...saved.editorDocument,blocks:[saved.editorDocument.blocks[0],saved.editorDocument.blocks[0]]}
+    const transient=structuredClone(saved.editorDocument)
+    transient.blocks.find((block:{type:string})=>block.type==='image').props.url='blob:temporary-upload'
+    return [await post({...payload,body:'different projection'}),await post({...payload,editorDocument:duplicate}),await post({...payload,editorDocument:transient}),await post({...payload,attachments:[]})]
+  },saved)
+  expect(rejected).toEqual([400,400,400,400])
+  expect((await posts(browser,'Issue219 原生编辑'))[0].editorDocument).toEqual(saved.editorDocument)
   await app.screenshot('issue184-published-draft-cleared')
   await screen.getByRole('link','Issue219 原生编辑',{exact:true}).tap()
   await expect(browser.locator('[data-memo-detail] table')).toBeVisible()

@@ -10,6 +10,9 @@ const WS_TARGET = process.env.LINGXILOOP_DEV_WS_TARGET || HTTP_TARGET.replace(/^
 
 export default defineConfig({
   plugins: [react()],
+  // Disposable API fixtures use distinct caches. Concurrent dev servers with
+  // different proxy defines must not replace each other's optimized modules.
+  cacheDir: process.env.LINGXILOOP_VITE_CACHE_DIR,
   // The renderer uses relative URLs through the Vite proxy, but commands
   // copied from the UI run outside that proxy and need the API origin.
   define: {

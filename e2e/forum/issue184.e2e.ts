@@ -150,6 +150,8 @@ test('issue184 materials, body links, upload states, drafts and publish retry us
   await expect(materials(2)).toBeVisible()
   await app.screenshot('issue184-publish-failed-preserves-draft')
   await editor().focus()
+  await browser.keyboard.press('Control+Enter')
+  await expect(composer()).toHaveAttribute('data-forum-composer-expanded', 'true')
   await browser.keyboard.press('Control+Shift+Enter')
   await expect(browser.locator('article[aria-label="Issue184 材料与草稿"]')).toBeVisible()
   const post = await savedPost(browser, 'Issue184 材料与草稿')

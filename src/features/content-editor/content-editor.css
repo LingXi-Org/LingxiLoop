@@ -7,4 +7,6 @@
 .content-document .bn-editor { padding: 0; background: transparent; color: var(--foreground); }
 .content-editor .bn-container, .content-document .bn-container { font-family: inherit; }
 .content-editor .bn-block-content, .content-document .bn-block-content { overflow-wrap: anywhere; }
+/* Keep every upstream button. Its native horizontal scrolling remains intact. */
+.content-editor .bn-toolbar { max-width: calc(100vw - 16px); }
 @media (max-width: 640px) { .content-editor .bn-editor { padding-inline: 28px 12px; font-size: 16px; } }

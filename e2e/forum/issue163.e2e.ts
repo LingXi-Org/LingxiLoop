@@ -9,6 +9,7 @@ test('compact inline editor preserves drafts and binds every avatar to its accou
   const composer = () => screen.getByRole('region', '发布学习论坛内容')
   const editor = () => composer().getByLabel('内容正文')
   const expandEditor=async()=>{
+    await expect(composer()).toBeVisible({timeout:120000})
     if(await composer().getAttribute('data-forum-composer-expanded')==='false') await composer().getByRole('button','展开发布框',{exact:true}).tap()
     await editor().focus()
   }

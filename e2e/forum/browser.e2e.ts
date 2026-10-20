@@ -1,4 +1,4 @@
-import { nativePaste } from '../content-editor/native'
+import { nativeBlock, nativePaste } from '../content-editor/native'
 import { fileURLToPath } from 'node:url'
 import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
@@ -20,7 +20,8 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   const sections=screen.getByRole('navigation','学习论坛版块',{exact:true})
   await expect(sections.getByRole('button','自由讨论',{exact:true})).toBeVisible()
   await expect(sections.getByRole('button','资料',{exact:true})).toHaveCount(0)
-  expect(await browser.evaluate(()=>parseFloat(getComputedStyle(document.querySelector('[aria-label="搜索学习论坛"]')!).paddingInlineStart))).toBeGreaterThanOrEqual(36)
+  // The compact search field no longer has an inset decorative icon.
+  expect(await browser.evaluate(()=>parseFloat(getComputedStyle(document.querySelector('[aria-label="搜索学习论坛"]')!).paddingInlineStart))).toBeGreaterThanOrEqual(8)
   await app.screenshot('student-inline-light')
   await screen.getByRole('button','内容流显示设置',{exact:true}).tap()
   await screen.getByRole('button','双列',{exact:true}).tap()
@@ -45,10 +46,18 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   await expect(composer().getByRole('button','退出专注模式')).toBeVisible()
   await browser.keyboard.press('Escape')
   await nativePaste(browser,screen,'内容正文','Student geometry case\n\n## 用图形理解面积\n\n> 先预测再验证。\n\n- [ ] 测量\n- [x] 复核\n\n| 底 | 高 |\n| --- | --- |\n| 6 | 4 |\n\n```typescript\nconst area = 6 * 4 / 2;\n```\n\n公式 $S = \\frac{bh}{2}$\n\n```mermaid\ngraph LR\n A[测量] --> B[面积]\n```\n\n#geometry')
+  // The official source popups author rich math/diagrams; legacy Markdown import
+  // is covered separately without replacing BlockNote's native paste pipeline.
+  await nativeBlock(browser,screen,'内容正文','公式','块级公式')
+  await browser.keyboard.type('S = \\frac{bh}{2}')
+  await browser.keyboard.press('Enter')
+  await nativeBlock(browser,screen,'内容正文','mermaid','图表')
+  await browser.keyboard.type('graph LR; A[测量] --> B[面积]')
+  await browser.keyboard.press('Escape')
   await composer().getByLabel('附件',{exact:true}).setInputFiles([fileURLToPath(new URL('./diagram.png',import.meta.url))])
   await expect(composer().getByRole('button','移除附件：diagram.png')).toBeVisible()
-  await expect(browser.locator('[aria-label="内容正文"] math')).toBeVisible()
-  await expect(browser.locator('[aria-label="内容正文"] [data-content-type="diagram"] svg')).toBeVisible()
+  await expect(browser.locator('[aria-label="内容正文"] math').first()).toBeVisible()
+  await expect(browser.locator('[aria-label="内容正文"] [data-content-type="diagram"] svg').first()).toBeVisible()
   await app.screenshot('native-editor-preview')
   // A real API 503 must retain the complete draft, including attachments.
   await browser.evaluate(async()=> (await fetch('/api/fixture-fail-next-post',{method:'POST'})).ok)

@@ -68,11 +68,12 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
   const disabled=busy||uploading
   const bodyText=editorDocument?markdownText(body):body
   useEffect(()=>{onWorking(disabled);return()=>onWorking(false)},[disabled,onWorking])
-  return <form className="forum-focus-form" onKeyDown={event=>{
+  return <form className="forum-focus-form" onKeyDownCapture={event=>{
     if (!event.defaultPrevented && (event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'Enter' && !event.nativeEvent.isComposing
       && event.target instanceof Element && event.target.closest('.bn-editor')) {
       event.preventDefault()
-      const submit=event.currentTarget.querySelector<HTMLButtonElement>('button[type="submit"]')
+      event.stopPropagation()
+      const submit=event.currentTarget.querySelector<HTMLButtonElement>('[data-forum-submit]')
       if (!disabled && submit && !submit.disabled) event.currentTarget.requestSubmit(submit)
     }
   }} onSubmit={async event=>{
@@ -106,7 +107,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     {storageError&&<p role="status" className="forum-focus-status text-destructive">本地草稿保存失败，请复制内容后重试。</p>}
     <footer className="forum-focus-foot"><span className="me-auto text-xs text-muted-foreground">{storageError ? '草稿未保存' : '草稿自动保存'}</span>
       {item&&<Button type="button" variant="ghost" onClick={onCancel} disabled={disabled}>收起编辑</Button>}
-      <Button type="submit" title="Ctrl/⌘ + Shift + Enter" aria-keyshortcuts="Control+Shift+Enter Meta+Shift+Enter" disabled={disabled || (kind==='assignment'&&!title.trim()) || (!body.trim()&&!links.trim()&&!attachments.length)}>{uploading?'上传中…':busy?'发布中…':item?'保存修改':kind==='assignment'?'发布作业':'发布'}</Button>
+      <Button data-forum-submit type="submit" title="Ctrl/⌘ + Shift + Enter" aria-keyshortcuts="Control+Shift+Enter Meta+Shift+Enter" disabled={disabled || (kind==='assignment'&&!title.trim()) || (!body.trim()&&!links.trim()&&!attachments.length)}>{uploading?'上传中…':busy?'发布中…':item?'保存修改':kind==='assignment'?'发布作业':'发布'}</Button>
     </footer>
     </div>
     </div>

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="2" failures="0" errors="0" skipped="0" time="34.066">
-  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="34.066">
-    <testcase name="upstream native schema, slash menus, tables, blocks, undo and lossless reopen [native]" classname="e2e/content-editor/browser.e2e.ts" time="7.556"/>
-    <testcase name="all 14 default blocks and official free math and diagram blocks remain insertable [native]" classname="e2e/content-editor/browser.e2e.ts" time="26.510"/>
+<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="118.370">
+  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="118.370">
+    <testcase name="upstream native schema, slash menus, tables, blocks, undo and lossless reopen [native]" classname="e2e/content-editor/browser.e2e.ts" time="27.454"/>
+    <testcase name="all 14 default blocks and official free math and diagram blocks remain insertable [native]" classname="e2e/content-editor/browser.e2e.ts" time="63.566"/>
+    <testcase name="native formatting, links, emoji, block menu and table operations remain complete [native]" classname="e2e/content-editor/browser.e2e.ts" time="27.350"/>
   </testsuite>
 </testsuites>

@@ -10,8 +10,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-20T03:25:39.986Z",
-      "finishedAt": "2026-10-20T03:25:42.829Z",
+      "startedAt": "2026-10-20T03:54:52.376Z",
+      "finishedAt": "2026-10-20T03:54:52.910Z",
       "exitCode": 0
     },
     {
@@ -21,8 +21,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-20T03:25:42.829Z",
-      "finishedAt": "2026-10-20T03:25:43.476Z",
+      "startedAt": "2026-10-20T03:54:52.910Z",
+      "finishedAt": "2026-10-20T03:54:53.657Z",
       "exitCode": 0
     },
     {
@@ -36,8 +36,8 @@
         "--file",
         "homework.test.ts"
       ],
-      "startedAt": "2026-10-20T03:25:43.476Z",
-      "finishedAt": "2026-10-20T03:27:53.490Z",
+      "startedAt": "2026-10-20T03:54:53.657Z",
+      "finishedAt": "2026-10-20T03:56:48.872Z",
       "exitCode": 0
     }
   ],
