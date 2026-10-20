@@ -5,7 +5,7 @@ import { NoEffectError, DefaultRuntimePolicy, classifyToolFailure, modelFailure,
   type ToolDefinition, type TurnContext, type WorkItem } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { nativeContext, audienceHumanIds, authorizeAudienceRead } from '../agents/tools.js'
-import { permissionService } from '../modules/access/public.js'
+import { createPermissionService, permissionService } from '../modules/access/public.js'
 import { getAgentChannelHistory } from '../im/public.js'
 import { advanceAgentReadReceipt } from '../im/read-receipts.js'
 import { retrieveKnowledgeState, OpenNotebookError } from '../modules/knowledge/public.js'
@@ -23,11 +23,13 @@ import { ensureVisualizeOutputDirectory, listVisualizeModelState } from '../im/v
 import { lingxiOSControl } from './runtime.js'
 import { readCaseEvidenceSource } from '../modules/cases/evidence.js'
 
+import type { Queryable } from '../db/queryable.js'
+
 type Work = Omit<WorkItem, 'leaseToken'>
 
-export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principalId' | 'agentId'> & { conversationId: string; createdAt?: string }) {
+export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principalId' | 'agentId'> & { conversationId: string; createdAt?: string }, database: Queryable = pool) {
   if (!work.principalId) throw new NoEffectError('original human is required', 'forbidden')
-  const { rows } = await pool.query<{ name: string; role: string; system_prompt: string; capabilities: string[]; teacher_managed: boolean; channel_type: number }>(
+  const { rows } = await database.query<{ name: string; role: string; system_prompt: string; capabilities: string[]; teacher_managed: boolean; channel_type: number }>(
     `SELECT agent.name,agent.role,agent.system_prompt,agent.capabilities,(binding.profile->>'channelType')::integer AS channel_type,
       EXISTS(SELECT 1 FROM learning_project_teacher_agents teacher WHERE teacher.company_id=agent.company_id AND teacher.agent_id=agent.id) AS teacher_managed
     FROM participants agent JOIN participants human ON human.company_id=agent.company_id
@@ -40,7 +42,7 @@ export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principa
     [work.tenantId,work.agentId,work.principalId,work.conversationId,work.createdAt ?? null])
   const row = rows[0]
   if (!row || ![1,2].includes(row.channel_type)) throw new NoEffectError('agent or original human membership was revoked', 'forbidden')
-  await permissionService.assertCan({ actorUserId: work.principalId, companyId: work.tenantId,
+  await createPermissionService(database).assertCan({ actorUserId: work.principalId, companyId: work.tenantId,
     action: 'conversation:read', resource: { type: 'conversation', id: work.conversationId } })
   return { ...row, system_prompt: row.teacher_managed ? TEACHER_PROMPT : row.system_prompt,
     capabilities: row.capabilities.filter(capability => capability !== 'email' && capability !== 'calendar') }

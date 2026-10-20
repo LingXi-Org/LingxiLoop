@@ -1,0 +1,5 @@
+
+> lingxiloop@0.1.0-beta server:lint
+> biome lint server
+
+Checked 570 files in 582ms. No fixes applied.

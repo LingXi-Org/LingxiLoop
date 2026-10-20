@@ -1,9 +1,11 @@
-import type { ConversationPolicy, createLingxiOS } from '@lyyzka/lingxios'
+import type { ConversationPolicy, createLingxiOS, RuntimeOperationContext } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
-import { withTransaction } from '../db/transaction.js'
+import { withClientTransaction, withTransaction } from '../db/transaction.js'
 import { createPermissionService } from '../modules/access/public.js'
 import { wukongClient } from '../im/wukong.js'
 import type { ImChannelProfile } from '../im/types.js'
+
+import type { Queryable } from '../db/queryable.js'
 
 type Control = Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'conversations'>
 
@@ -16,8 +18,10 @@ export async function syncProductChannel(profile: ImChannelProfile, signal?: Abo
 }
 
 /** Resolve the native policy from current product membership and ACLs, never message text. */
-export async function syncConversationPolicy(control: Control, companyId: string, conversationId: string): Promise<ConversationPolicy> {
-  const policy = await withTransaction(pool, async db => {
+export async function syncConversationPolicy(control: Control, companyId: string, conversationId: string, database?: Queryable, operation?: RuntimeOperationContext): Promise<ConversationPolicy> {
+  const transaction = <T>(work: (db: Queryable) => Promise<T>) => database
+    ? withClientTransaction(database,work) : withTransaction(pool,work)
+  const policy = await transaction(async db => {
     const binding = (await db.query<{ leader_agent_id: string | null; kind: 'direct' | 'group'; runtime_policy_version: number }>(
       `SELECT b.leader_agent_id,c.kind,b.runtime_policy_version FROM im_channel_bindings b
        JOIN conversations c ON c.id=b.channel_id AND c.company_id=b.company_id
@@ -58,6 +62,6 @@ export async function syncConversationPolicy(control: Control, companyId: string
     [companyId,conversationId,JSON.stringify(value)])
     return { ...value, version: updated.rows[0].runtime_policy_version }
   })
-  await control.conversations.sync(policy)
+  await control.conversations.sync(policy,operation)
   return policy
 }

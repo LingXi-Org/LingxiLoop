@@ -1,0 +1,9 @@
+{
+  "failedWorkStatus": "failed",
+  "failedResultId": null,
+  "providerFailureCalls": 1,
+  "terminalReplayExtraMessages": 0,
+  "systemMessages": 2,
+  "nextWorkStatus": "succeeded",
+  "cancelExtraModelCalls": 0
+}
