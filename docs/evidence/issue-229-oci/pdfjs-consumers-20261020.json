@@ -1,0 +1,26 @@
+{
+  "roots": [
+    "/app/server",
+    "/app/src",
+    "/app/node_modules"
+  ],
+  "scannedCodeAndJsonFiles": 17834,
+  "referencers": [
+    {
+      "path": "/app/server/package-lock.json",
+      "hits": 4
+    },
+    {
+      "path": "/app/node_modules/.package-lock.json",
+      "hits": 4
+    },
+    {
+      "path": "/app/node_modules/@lyyzka/lingxios/package.json",
+      "hits": 1
+    },
+    {
+      "path": "/app/node_modules/@lyyzka/lingxios/dist/src/context/document-worker.js",
+      "hits": 2
+    }
+  ]
+}
