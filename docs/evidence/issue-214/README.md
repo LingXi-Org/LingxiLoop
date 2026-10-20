@@ -22,7 +22,7 @@ The source comparison asserts identical computed entry animation/duration (500ms
 - `product/001-streaming-burst-light.png`, `product/001-streaming-burst-dark.png`: Chinese tail highlight and narrow caret.
 - `product/002-streaming-markdown-dark.png`: narrow dark Markdown, quote, table, mention and inline code.
 - `product/8388ac22.webm`: moving Chinese/mixed tail and stable paragraphs.
-- Other PNG/WebM files cover interruption, completion, history and queue bypass; native JSON/JUnit/Markdown reports are retained.
+- Other PNG/WebM files cover interruption, completion, history and queue bypass; native JSON (losslessly gzip-compressed), JUnit and Markdown reports are retained. Build/lint/unit/typecheck logs are in the top-level `.txt` files.
 - `baseline/`: unmodified main screenshots/reports, under the same installed dependencies.
 
 ## Remaining acceptance blockers (not bypassed)
