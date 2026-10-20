@@ -199,7 +199,7 @@ test('0043 refuses an active worker and rolls back all upgrade metadata', async 
       VALUES('active-43','tenant','agent','session','turn','interactive','request','leased',NOW()+INTERVAL '1 minute')`)
     const before = (await database.query('SELECT * FROM lingxios_installation')).rows
     await assert.rejects(migrateDatabase(database), error => error instanceof Error && error.cause instanceof Error
-      && /requires drained Web background work and Workers/.test(error.cause.message))
+      && /requires drained (?:workers|Web background work and Workers)/.test(error.cause.message))
     assert.deepEqual((await database.query('SELECT * FROM lingxios_installation')).rows,before)
     assert.equal((await database.query('SELECT MAX(version) AS version FROM schema_migrations')).rows[0].version,42)
     assert.equal((await database.query("SELECT to_regclass('lingxios.agent_terminal_outbox') AS outbox")).rows[0].outbox,null)
@@ -360,6 +360,7 @@ test('an empty database reaches the latest schema once and repeated migration is
       { version: 44, name: 'questionnaire_wait' },
       { version: 45, name: 'organization_cases' },
       { version: 46, name: 'visualize' },
+      { version: 47, name: 'memory_continuity' },
     ])
     const { rows: evalSchema } = await database.query(`SELECT
       to_regclass('public.eval_jobs') AS jobs,

@@ -1,7 +1,6 @@
 // Synthetic receipts exercise the production renderer/API seam; native persistence and authorization have owning integration coverage.
 import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AssistantRuntimeProvider, MessagePrimitive, ThreadPrimitive, useExternalStoreRuntime } from '@assistant-ui/react'
 import { createRunView } from '@lyyzka/lingxios/ui'
 import { createNativeMessage, deserializeMessage } from '../src/lib/nativeMessage'
@@ -11,7 +10,6 @@ import { harnessApi } from '../src/features/chat/runtime/harness-api'
 import { Button } from '../src/components/ui/button'
 import '../src/styles/globals.css'
 
-const client = new QueryClient()
 const facts = [ { id: 'preference', text: '偏好中文回答', version: 1, change: 'added' as const },
   { id: 'goal', text: '更新后的学习目标', version: 2, change: 'updated' as const },
   { id: 'existing', text: '已有的学习背景', version: 1, change: 'existing' as const } ]
@@ -46,7 +44,9 @@ function Preview() {
     ...(mode === 'mixed' ? [{ type: 'tool-call' as const, toolCallId: 'other', toolName: 'documents.read', args: {}, argsText: '{}', result: { status: 'completed' }, providerMetadata: { lingxiloop: { activity: { version: 1, id: 'other', kind: 'tool', label: '阅读文档' } } } }] : []),
   ] })
   const message = deserializeMessage(JSON.parse(JSON.stringify(payload)))
-  const runtime = useExternalStoreRuntime({ messages: [message], isRunning: mode === 'stream', onNew: async () => {} })
+  const second = deserializeMessage({...payload,id:'memory-fixture-b',metadata:{...payload.metadata,custom:{...payload.metadata.custom,
+    runId:'memory-fixture-b',conversationId:'room-b',harness:{...createRunView('memory-fixture-b'),artifacts:[]}}}})
+  const runtime = useExternalStoreRuntime({ messages: mode==='pair'?[message,second]:[message], isRunning: mode === 'stream', onNew: async () => {} })
   return <main className="mx-auto flex h-dvh max-w-3xl flex-col p-4">
     <h1 className="mb-3 text-lg">记忆活动验收</h1>
     <div className="mb-4 flex gap-2">{['history', 'stream', 'mixed'].map(value => <Button key={value} onClick={() => {
@@ -59,4 +59,4 @@ function Preview() {
     </ThreadPrimitive.Root></AssistantRuntimeProvider>
   </main>
 }
-createRoot(document.getElementById('root')!).render(<QueryClientProvider client={client}><Preview /></QueryClientProvider>)
+createRoot(document.getElementById('root')!).render(<Preview />)

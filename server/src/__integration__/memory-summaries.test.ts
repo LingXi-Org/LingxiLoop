@@ -20,6 +20,33 @@ before(async () => {
 })
 after(async () => { await teardownAll(server) })
 
+test('HTTP historical cards reauthorize stable memory across rooms after forgetting and revocation',async()=>{
+  const {companyId,projectId,agentId}=await seedCompanyWithAgent()
+  await seedUserMembership('test-owner',companyId)
+  const app=await lingxiOSControl(),memory=app.memory!,members=['test-owner',agentId]
+  const actors=[]
+  for(const room of ['stable-card-a','stable-card-b']) {
+    await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Cards',$4::jsonb)`,[room,companyId,projectId,JSON.stringify(members)])
+    await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)`,[room,companyId,JSON.stringify({channelType:2,members})])
+    const policy=await syncConversationPolicy(app,companyId,room)
+    const accepted=await app.conversations.ingest({tenantId:companyId,conversationId:room,policyVersion:policy.version,
+      messageId:room,version:1,author:{id:'test-owner',kind:'human'},text:'Remember a preference',mentions:[agentId]},
+      {mode:'execute',executionClass:'operation'})
+    const run=accepted.runs[0];assert.ok(run);await bindProductRun(pool,run,room)
+    actors.push({identity:{...run,workId:run.runId},url:`${baseUrl}/channels/${room}/agents/${agentId}/runs/${run.runId}/memory`})
+  }
+  const scope=(await memory.scopes(actors[0].identity)).find(item=>item.scopeType==='learner')!
+  const docs=(await memory.initialize(actors[0].identity,{scope,documents:['shared-card','retained-card'].map(path=>({path:`${path}.md`,title:'Preference',description:'Current summary',body:'PRIVATE BODY',layer:'core' as const})),idempotencyKey:'cards',sourceRef:'settings'})).documents
+  const headers={'x-company-id':companyId,'x-project-id':projectId,'Content-Type':'application/json'}
+  const read=async(index:number,id:string)=>(await fetch(`${actors[index].url}?ids=${id}`,{headers})).json()
+  for(const index of [0,1]) assert.equal((await read(index,docs[0].id)).chips.length,1)
+  assert.equal((await fetch(`${actors[0].url}/${docs[0].id}`,{method:'DELETE',headers,body:JSON.stringify({expectedVersion:1})})).status,200)
+  for(const index of [0,1]) assert.deepEqual(await read(index,docs[0].id),{chips:[]},'both historical cards read the current deletion')
+  assert.equal((await read(1,docs[1].id)).chips.length,1)
+  await pool.query(`UPDATE participants SET departed_at=NOW() WHERE company_id=$1 AND id=$2`,[companyId,agentId])
+  for(const actor of actors) assert.equal((await fetch(`${actor.url}?ids=${docs[1].id}`,{headers})).status,403)
+})
+
 // Failure cases: stale or repeated forget removes a newer/other fact, raw bodies leak,
 // or a browser request crosses tenant/project/user/agent/room/thread/audience boundaries.
 test('memory chips and explicit forgetting preserve native authorization and versions', async () => {
@@ -79,7 +106,7 @@ test('memory chips and explicit forgetting preserve native authorization and ver
   assert.equal((await fetch(url.replace(identity.runId,'missing')+`?ids=${doc.id}`,{headers})).status,404)
   const other=await seedRun('memory-other')
   assert.equal((await fetch(url.replace(identity.runId,other.runId)+`?ids=${doc.id}`,{headers})).status,404)
-  const another=await memory.initialize(identity,{...input,documents:[{...input.documents[0],path:'notes/other.md'}],idempotencyKey:'second'})
+  const another=await memory.initialize(identity,{...input,documents:[{...input.documents[0],path:'notes/other.md'},{...input.documents[0],path:'notes/retained.md'}],idempotencyKey:'second'})
   const forget=(version:number)=>fetch(`${url}/${doc.id}`,{method:'DELETE',headers,body:JSON.stringify({expectedVersion:version})})
   assert.equal((await forget(2)).status,409)
   assert.ok(await memory.read(identity,scope,doc.id))
@@ -87,13 +114,16 @@ test('memory chips and explicit forgetting preserve native authorization and ver
   assert.equal((await forget(1)).status,200,'retry is idempotent')
   assert.equal(await memory.read(identity,scope,doc.id),null)
   assert.ok(await memory.read(identity,scope,another.documents[0].id),'forget only affects the selected document')
+  assert.equal((await fetch(`${url}/${another.documents[0].id}`,{method:'DELETE',headers,body:JSON.stringify({expectedVersion:1})})).status,200,
+    'a fresh authenticated forget command can remove another chip from the same historical run')
+  assert.ok(await memory.read(identity,scope,another.documents[1].id),'an unrelated retained document remains readable')
   assert.deepEqual(await (await fetch(`${url}?ids=${doc.id}`,{headers})).json(),{chips:[]},'reload does not restore forgotten chips')
   const reduced=JSON.stringify(['test-owner',agentId])
   await pool.query("UPDATE conversations SET members=$2::jsonb WHERE id=$1",['memory-room',reduced])
   await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1",['memory-room',reduced])
   await syncConversationPolicy(app,companyId,'memory-room')
-  assert.equal((await fetch(`${url}?ids=${another.documents[0].id}`,{headers})).status,403)
-  assert.equal((await fetch(`${url}/${another.documents[0].id}`,{method:'DELETE',headers,body:JSON.stringify({expectedVersion:1})})).status,403)
+  assert.equal((await fetch(`${url}?ids=${another.documents[1].id}`,{headers})).status,403)
+  assert.equal((await fetch(`${url}/${another.documents[1].id}`,{method:'DELETE',headers,body:JSON.stringify({expectedVersion:1})})).status,403)
   await assert.rejects(memory.list(identity,scope),'changed audience invalidates the old scope')
   await pool.query("UPDATE participants SET departed_at=NOW() WHERE company_id=$1 AND id='test-owner'",[companyId])
   await assert.rejects(memory.scopes(identity),/revoked/)

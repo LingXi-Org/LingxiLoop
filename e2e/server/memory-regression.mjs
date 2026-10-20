@@ -6,7 +6,7 @@ import { parse } from 'dotenv'
 import pg from 'pg'
 
 // Fail closed on unknown flags, non-test DBs and missing live-model opt-in/credentials.
-const defaultFiles = ['memory-continuity.test.ts','native-memory.test.ts','memory-summaries.test.ts','teacher-agent.test.ts','migration.test.ts','group-mentions.test.ts',
+const defaultFiles = ['memory-latency.test.ts','memory-continuity.test.ts','native-memory.test.ts','memory-summaries.test.ts','teacher-agent.test.ts','migration.test.ts','group-mentions.test.ts',
   'learning-collaboration.test.ts','runtime-context-latency.test.ts','attachment-answers.test.ts','confidence-citations.test.ts',
   'agent-protocols.test.ts','im-conversation-style.test.ts']
 assert.ok(process.argv.slice(2).every(arg => ['--live-memory','--live-continuity'].includes(arg) || defaultFiles.includes(arg)))
@@ -30,6 +30,7 @@ Object.assign(env, {
   WUKONG_USER_TOKEN_SECRET: 'memory-isolated-user-token',LINGXILOOP_GATEWAY_HMAC_SECRET: 'memory-isolated-gateway',
   LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:52996',AGENT_OS_HOMES_ROOT: resolve(output,'runtime-homes'),
   LINGXIOS_LIVE_MEMORY: live ? '1' : '0',
+  MEMORY_LATENCY_LABEL: process.env.MEMORY_LATENCY_LABEL==='candidate' ? 'candidate' : 'baseline',
 })
 if (live) {
   const credentials = process.env.EVAL_CANDIDATE_API_KEY ? process.env : parse(await readFile(resolve(cwd,'eval/.env.local')))
@@ -43,7 +44,7 @@ if (live) {
     assert.ok(process.env.OPENAI_EMBEDDING_MODEL?.trim(),'existing authorized embedding model is required')
     assert.equal(credentials.EVAL_CANDIDATE_BASE_URL,process.env.OPENAI_BASE_URL,'continuity uses the already authorized shared provider route')
     Object.assign(env,{OPENAI_EMBEDDING_MODEL:process.env.OPENAI_EMBEDDING_MODEL,LINGXILOOP_DISABLE_EMBEDDINGS:'0',
-      LINGXIOS_LIVE_CONTINUITY:'1',AGENT_OS_MAX_MODEL_TOKENS:'300000',AGENT_OS_MAX_MODEL_CALLS:'24'})
+      LINGXIOS_LIVE_CONTINUITY:'1',AGENT_OS_MAX_MODEL_TOKENS:'300000',AGENT_OS_MAX_MODEL_CALLS:'24',AGENT_OS_MAX_MODEL_COST_MICROS:'400000'})
   }
 }
 assert.equal(new URL(env.DATABASE_URL).pathname,`/${databaseName}`)
