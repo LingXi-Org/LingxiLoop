@@ -30,7 +30,7 @@ function PageAnchor({ page, height }: { page: GenUiPage; height: number }) {
   return (
     <div
       ref={ref}
-      style={{ height, width: "calc(100% + 10px)", margin: -5 }}
+      style={{ height, width: "100%" }}
       data-testid="gen-ui-anchor"
     />
   );
