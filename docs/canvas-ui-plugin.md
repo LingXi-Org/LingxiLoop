@@ -45,3 +45,5 @@ SDK 为仓库既有精确依赖 `@modelcontextprotocol/ext-apps@2.0.0` / `@model
 ## PR212 独立审查后的草稿竞态修正
 
 原候选 `ebe818fe` 的六项浏览器用例和 CI 未覆盖“保存中撤销回原文”与“确认重载后继续输入”。两项均已由官方引擎复现草稿丢失，见[红测与修复记录](../artifacts/canvas-app/review-races/README.md)。固定 App 现在按输入 generation 保留请求开始后的输入；保存 ACK 只推进已确认 baseline，重载期间新增输入继续持有原 CAS baseline，明确再次确认后才替换。即使这些输入恰好等于旧正文，也保留未保存标志。没有改变授权、模型 HTML 权限或持久协议。
+
+独立增量审查进一步发现，失败的保存/读回路径也必须保留请求期间的新输入；否则撤销回旧正文仍会失去离开确认。后续修复把 generation 保护延伸到 pending、失败及取消路径，保持原 CAS baseline。见[独立红测及失败/取消回归](../artifacts/canvas-app/review-failures/README.md)。

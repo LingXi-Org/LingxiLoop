@@ -54,3 +54,5 @@ node --expose-gc --import tsx perf/streaming-20261019/sample.ts . long
 ## 独立审查增量
 
 上面的 6 项和 `source-sha256.json` 是原候选 `ebe818fe` 的历史证据。后续只读审查复现两条未覆盖的草稿丢失竞态；修复、新旧证据和新增四项浏览器用例见 [review-races/README.md](review-races/README.md)。原始记录没有被新版测试覆盖。
+
+后续独立增量审查在 combined `0ec4d731` 发现失败读回后的撤销仍会丢失逻辑 dirty。对应第四项 P2 的独立红测、失败/取消保护和原有十项回归记录另存于 [review-failures](review-failures/README.md)，不覆盖此前证据。

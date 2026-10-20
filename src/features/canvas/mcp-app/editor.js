@@ -11,12 +11,13 @@ let latest = null
 let base = null
 let busy = false
 let documentPending = false
+let documentGeneration = 0
 let editGeneration = 0
-let retainedAfterRead = false
+let retainedAfterOperation = false
 let connected = false
 let closed = false
 let changedState = Promise.resolve()
-const dirty = () => Boolean(base && (textarea.value !== base.content || retainedAfterRead))
+const dirty = () => Boolean(base && (textarea.value !== base.content || retainedAfterOperation || (documentPending && editGeneration !== documentGeneration)))
 const report = (text, error = false) => { status.textContent = text; status.className = error ? 'error' : '' }
 function controls() {
   const capabilities = app.getHostCapabilities()
@@ -43,7 +44,7 @@ function receive(doc, replaceDraft = false) {
   // to the old baseline is new input and must survive notifications until ACK.
   if (!base || replaceDraft || (!documentPending && !dirty())) {
     base = doc
-    retainedAfterRead = false
+    retainedAfterOperation = false
     const start = textarea.selectionStart, end = textarea.selectionEnd, scroll = textarea.scrollTop
     if (textarea.value !== doc.content) textarea.value = doc.content
     textarea.setSelectionRange(start, end); textarea.scrollTop = scroll
@@ -63,29 +64,37 @@ async function call(name, args = {}) {
 // Register before connect: retain the initial result even if it arrives during initialization.
 app.ontoolinput = () => {}
 app.ontoolresult = result => { if (!result.isError) receive(result.structuredContent?.document) }
-app.ontoolcancelled = () => { report('操作已取消；已保存内容与当前草稿均保留。'); controls() }
+app.ontoolcancelled = () => {
+  if (documentPending && editGeneration !== documentGeneration) retainedAfterOperation = true
+  report('操作已取消；已保存内容与当前草稿均保留。'); viewChanged()
+}
 app.onteardown = async () => { closed = true; controls(); return {} }
 app.onerror = () => report('编辑器连接失败，草稿已保留。', true)
 textarea.addEventListener('input', () => { editGeneration++; report('尚未保存'); viewChanged() })
 save.addEventListener('click', async () => {
   if (save.disabled || !base) return
-  busy = true; documentPending = true; controls(); report('正在保存…')
+  busy = true; documentPending = true; documentGeneration = editGeneration; controls(); report('正在保存…')
   const content = textarea.value, expectedRevision = base.revision, submittedGeneration = editGeneration
   try {
     const doc = await call('commit_frame', { content, expectedRevision })
     // A notification can precede the write ACK, and typing can continue while saving.
     base = doc
-    retainedAfterRead = false
+    retainedAfterOperation = false
     if (latest && latest.revision > doc.revision) { reload.hidden = false; report('修改已提交，但已有更新版本；当前内容已保留，请核对后重新载入。', true) }
     else if (editGeneration === submittedGeneration) receive(doc, true)
-    else { receive(doc); report(dirty() ? '上次修改已保存；当前修改尚未保存。' : `已保存 · 第 ${doc.revision} 版`) }
-  } catch (error) { report(error.message, true); reload.hidden = false }
+    else { receive(doc); report(textarea.value !== doc.content ? '上次修改已保存；当前修改尚未保存。' : `已保存 · 第 ${doc.revision} 版`) }
+  } catch (error) {
+    // Failed or cancelled requests never acknowledge the newer input, even
+    // when that input has undone back to the original saved text.
+    if (editGeneration !== submittedGeneration) retainedAfterOperation = true
+    report(error.message, true); reload.hidden = false
+  }
   finally { busy = false; documentPending = false; viewChanged() }
 })
 reload.addEventListener('click', async () => {
   if (reload.disabled) return
   // The host owns the editable confirmation; no sandbox modal permission is needed.
-  busy = true; documentPending = true; controls()
+  busy = true; documentPending = true; documentGeneration = editGeneration; controls()
   const requestedGeneration = editGeneration
   try {
     await changedState
@@ -94,13 +103,16 @@ reload.addEventListener('click', async () => {
     else {
       // Confirmation covers the draft at request time, not later input. Keep
       // its original baseline so the next save cannot overwrite an unseen edit.
-      retainedAfterRead = true
+      retainedAfterOperation = true
       receive(doc)
       reload.hidden = false
       report('读取期间有新修改；草稿已保留，请核对后重新载入。', true)
     }
   }
-  catch (error) { report(error.message, true) }
+  catch (error) {
+    if (editGeneration !== requestedGeneration) retainedAfterOperation = true
+    report(error.message, true)
+  }
   finally { busy = false; documentPending = false; viewChanged() }
 })
 reference.addEventListener('click', async () => {

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="5.310">
+  <testsuite name="e2e/canvas-app/draft-failures.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="5.310">
+    <testcase name="reload sdk-cancellation retains input generation and the original CAS baseline [web]" classname="e2e/canvas-app/draft-failures.e2e.ts" time="5.310"/>
+  </testsuite>
+</testsuites>
