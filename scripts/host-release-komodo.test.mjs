@@ -7,7 +7,8 @@ function fixture(fault={}){
  const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:h,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations:Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(i+1),checksum:h}))}
  const image={indexDigest:d,configDigest:'sha256:'+'d'.repeat(64),manifestDigest:'sha256:'+'e'.repeat(64),diffIds:[d],auditSha256:h}
  const source={sha:a,...formal,image},target={sha:b,...formal,image},files=new Map(),configs=new Map(),actualFiles=new Map(),events=[],calls=[]
- const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
+ if(fault.upgrade){target.productVersion=49;target.migrations=[...formal.migrations,{version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}]}
+ const plan=sealHostPlan({format:fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
   const source='public source '+stack,target=i===2?source:'public target '+stack,preparation='public pull '+stack
   files.set(stack,{source,target,preparation});actualFiles.set(stack,source)
   const s={commit:a,branch:'release/source',sha256:hash(source),autoPull:true,extraArgs:[]}
@@ -47,7 +48,14 @@ function fixture(fault={}){
    calls.push({op,...p})
    if(op==='RunStackService'){
     assert.equal(p.no_deps,true);assert.equal(p.pull,false);assert.equal(p.service_ports,false);assert.equal(p.detach,false)
-    assert.equal(JSON.stringify(p).includes('migrate-bin'),false)
+    if(JSON.stringify(p).includes('migrate-bin')){
+     assert.equal(fault.upgrade,true);assert.equal(p.stack,APPS[0]);assert.equal(p.service,'db-migrate')
+     assert.equal(Object.hasOwn(p,'env'),false);assert.equal(JSON.stringify(p).includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED'),false)
+     assert.equal(containers.filter(c=>c.service==='worker').every(c=>!c.State.Running),true)
+     if(fault.migrationUnknown)throw Object.assign(Error('unknown native migration'),{uncertain:true})
+     Object.assign(state,{product:49,count:49,migrations:target.migrations})
+     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:b,schema:13,product:49})}]}
+    }
     const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:target
     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_'+marker+'='+JSON.stringify(value)}]}
    }
@@ -69,6 +77,24 @@ test('real adapter/engine contract stages public host files, preserves core and 
  assert.equal(f.calls.some(c=>c.op==='PullStack'),false)
  assert.equal(JSON.stringify(f.events).includes('private fixture'),false)
  assert.ok(APPS.every(s=>f.configs.get(s).config.environment==='private fixture never persist'))
+})
+test('product migration adapter runs exact isolated A command once, no env override or old-Web stop',async()=>{
+ const f=fixture({upgrade:true});await f.run()
+ const migrations=f.calls.filter(c=>c.op==='RunStackService'&&JSON.stringify(c.command).includes('migrate-bin'))
+ assert.equal(migrations.length,1)
+ assert.match(migrations[0].command.at(-1),/isDeepStrictEqual\(metadata,/)
+ assert.deepEqual(migrations[0].command.slice(0,8),['timeout','-k','30','300','node','--import','tsx','--input-type=module'])
+ assert.equal(JSON.stringify(f.events).includes('private fixture'),false)
+ const before=f.calls.length;await assert.rejects(f.ops.migrate());assert.equal(f.calls.length,before)
+})
+test('ordinary or unstaged adapter cannot migrate, uncertain native migration ends all requests',async()=>{
+ const normal=fixture(),unprepared=fixture({upgrade:true})
+ await assert.rejects(normal.ops.migrate());await assert.rejects(unprepared.ops.migrate())
+ assert.equal(normal.calls.length,0);assert.equal(unprepared.calls.length,0)
+ const unknown=fixture({upgrade:true,migrationUnknown:true});await assert.rejects(unknown.run(),e=>e.uncertain===true)
+ assert.equal(unknown.calls.at(-1).op,'RunStackService')
+ assert.ok(JSON.stringify(unknown.calls.at(-1).command).includes('migrate-bin'))
+ assert.equal(unknown.calls.some(c=>c.op==='DeployStack'),false)
 })
 test('host errors, platform mismatch and unexpected full-config change fail before stops',async()=>{
  for(const fault of [{hostDown:true},{stale:true},{image:true},{configDrift:true},{unknownWrite:true},{sourceImageMismatch:true}]){

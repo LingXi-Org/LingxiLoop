@@ -1,8 +1,9 @@
-// Native Komodo2.3.3 calls. No Git/private API, migration, secret or env writes.
+// Native Komodo2.3.3 calls. Only an explicit reviewed product plan may migrate.
+// No Git/private API, secret or env writes.
 import {isDeepStrictEqual as equal} from 'node:util'
 import {setTimeout as delay} from 'node:timers/promises'
 import {createTransport,parseMarker,validateStateReceipt,stateCommand,METADATA_CODE} from './schema-upgrade-komodo.mjs'
-import {APPS,CORE,IMAGE,RELEASE_ARGS,check,hash,validateHostPlanShape,assertImageIdentity} from './host-release.mjs'
+import {APPS,CORE,IMAGE,RELEASE_ARGS,PRODUCT_SCHEMA_FORMAT,metadataKeys,check,hash,validateHostPlanShape,assertImageIdentity} from './host-release.mjs'
 const actions=['pulling','deploying','starting','restarting','pausing','unpausing','stopping','destroying']
 const id=/^[a-f0-9]{24}$/,hex=/^[a-f0-9]{64}$/
 const oneOff=(stack,service,extra)=>({stack,service,no_tty:true,no_deps:true,detach:false,service_ports:false,pull:false,...extra})
@@ -10,6 +11,8 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
  validateHostPlanShape(plan)
  const t=transport??createTransport({apiKey,apiSecret,signal,onProgress})
  const phases=new Map(plan.stacks.map(r=>[r.stack,'source'])),configs=new Map(),identities=new Map(),images=new Map(),containerPolicies=new Map()
+ const stoppedWorkers=new Set()
+ let migrationSubmitted=false
  const rowFor=stack=>{const r=plan.stacks.find(r=>r.stack===stack);check(r,'Unexpected stack');return r}
  const imageKey=(which,server)=>which+':'+server
  async function hosts(){
@@ -129,7 +132,25 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
   return parseMarker(await t.execute('RunStackService',oneOff(stack,'db-migrate',{command:['timeout','-k','5','30','node','--input-type=module','-e',METADATA_CODE+`console.log('SCHEMA_UPGRADE_METADATA='+JSON.stringify(metadata));`]})),'METADATA')
  }
  return {assertIdle,inspect,verifyImages,stage,state,metadata,
-  async stop(stack,service){check(APPS.includes(stack)&&service==='worker'&&phases.get(stack)==='target','Only old Workers may be drained');await guard([stack]);return t.execute('StopStack',{stack,services:[service],stop_time:150})},
+  async stop(stack,service){
+   check(APPS.includes(stack)&&service==='worker'&&phases.get(stack)==='target','Only old Workers may be drained')
+   await guard([stack]);const result=await t.execute('StopStack',{stack,services:[service],stop_time:150})
+   stoppedWorkers.add(stack);return result
+  },
+  async migrate(){
+   check(plan.format===PRODUCT_SCHEMA_FORMAT&&!migrationSubmitted&&APPS.every(stack=>phases.get(stack)==='target'&&stoppedWorkers.has(stack)),'Only one staged, drained product48→49 migration may submit')
+   await guard()
+   const rows=await inspect()
+   check(rows.every(row=>row.source===plan.source.sha&&row.restartCount===0&&!row.restarting
+    &&(row.service==='worker'?!row.running&&row.pid===0:row.running&&row.healthy&&row.pid>0)),'Old Workers must be stopped and old Web healthy before product migration')
+   const expected=Object.fromEntries(metadataKeys.map(key=>[key,plan.target[key]]))
+   // The executing image proves all public release metadata before opening DB.
+   // Native schema is unchanged: do not inject any environment/drain override.
+   const code=METADATA_CODE+`import{isDeepStrictEqual}from'node:util';if(!isDeepStrictEqual(metadata,${JSON.stringify(expected)}))throw Error('target drift');await import('./server/src/migrate-bin.ts');if(process.exitCode)throw Error('migration failed');console.log('SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:metadata.sha,schema:metadata.schema,product:metadata.productVersion}));`
+   migrationSubmitted=true
+   const receipt=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{command:['timeout','-k','30','300','node','--import','tsx','--input-type=module','-e',code]})),'MIGRATED')
+   check(equal(receipt,{sha:plan.target.sha,schema:13,product:49}),'Product migration marker mismatch')
+  },
   async deploy(stack,service){check(APPS.includes(stack)&&['lingxiloop','worker'].includes(service)&&phases.get(stack)==='target','Only qualified app services may deploy');await guard([stack]);return t.execute('DeployStack',{stack,services:[service]})},
   async verifyHealthy(stack,service){
    const deadline=Date.now()+180000
