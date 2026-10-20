@@ -23,6 +23,7 @@ claim model readback, browser rendering, provider quality, or numerical correctn
 
 | Boundary | Failure | Expected observable result | Owning regression |
 | --- | --- | --- | --- |
+| Activation | Host forwards extra skill-index keys to the exact native activation parser | Pass exactly name/version/hash; never description/actions/delivery | All three authoring hook-contract tests |
 | Activation | Runtime lacks the public host hook | Explicit unavailable error before save; no silent opt-out | Transactional authoring action test |
 | Activation | Invalid arguments, no effect, throw, abort, or denied current authorization | No new activation or document commit; separately committed explicit activation stays pending | Native worker/action transaction test |
 | Inert paths | Code, skill load, reference read, export, authorize, or checker read | No new delivery obligation | Existing generation/export worker test plus checker test |

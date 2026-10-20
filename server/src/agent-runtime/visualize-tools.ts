@@ -24,7 +24,8 @@ async function authorize(context: Pick<ActionContext, 'work' | 'database'>) {
 }
 async function activateAuthoring(context: ActionContext) {
   if (!context.activateSkillDelivery) throw new NoEffectError('skill delivery activation is unavailable')
-  await context.activateSkillDelivery(skillIndex(visualizeSkill))
+  const { name,version,hash } = skillIndex(visualizeSkill)
+  await context.activateSkillDelivery({ name,version,hash })
 }
 export const visualizeTools: ToolDefinition[] = [
   nativeTool('visualize.read_reference', z.object({ path: z.string().max(200) }).strict(), {

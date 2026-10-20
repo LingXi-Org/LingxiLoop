@@ -6,6 +6,10 @@
       "errors": []
     },
     {
+      "path": "server/src/__integration__/visualize-delivery.test.ts",
+      "errors": []
+    },
+    {
       "path": "server/src/__integration__/visualize-generation.test.ts",
       "errors": []
     },
@@ -15,6 +19,10 @@
     },
     {
       "path": "server/src/agent-runtime/runtime.ts",
+      "errors": []
+    },
+    {
+      "path": "server/src/agent-runtime/visualize-delivery.ts",
       "errors": []
     },
     {
@@ -31,14 +39,6 @@
     },
     {
       "path": "server/src/im/visualize.ts",
-      "errors": []
-    },
-    {
-      "path": "server/src/__integration__/visualize-delivery.test.ts",
-      "errors": []
-    },
-    {
-      "path": "server/src/agent-runtime/visualize-delivery.ts",
       "errors": []
     }
   ]

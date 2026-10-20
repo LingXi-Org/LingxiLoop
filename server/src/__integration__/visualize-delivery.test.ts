@@ -62,6 +62,11 @@ test('all authoring actions reject a missing public activation hook before savin
   for (const [method, input] of Object.entries(inputs)) {
     const tool = visualizeTools.find(tool => tool.action === `visualize.${method}`)!
     await assert.rejects(tool.execute(c,tool.parse(input)), /skill delivery activation is unavailable/)
+    const { name,version,hash } = skillIndex(visualizeSkill)
+    await assert.rejects(tool.execute({ ...c,async activateSkillDelivery(selection) {
+      assert.deepEqual(selection,{ name,version,hash }, 'public native activation parser rejects any extra keys')
+      throw new Error('stop-after-exact-activation')
+    } },tool.parse(input)), /stop-after-exact-activation/)
   }
   assert.equal((await pool.query(`SELECT count(*)::int n FROM im_visualize_documents`)).rows[0].n, 0)
   checks.push('host-hook-required')
