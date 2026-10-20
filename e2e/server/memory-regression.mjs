@@ -17,7 +17,8 @@ const selected = process.argv.slice(2).filter(arg => !['--live-memory','--live-c
 assert.ok(!live || !selected.length,'live evaluation uses its own isolated suite')
 const qualification = process.env.MEMORY_CONTINUITY_QUALIFICATION ?? ''
 const continuityDatabases = {'':'lingxiloop_memory_continuity_model_test','1':'lingxiloop_memory_continuity_qualification_test',
-  candidate:'lingxiloop_memory_continuity_candidate_test',final:'lingxiloop_memory_continuity_final_test'}
+  candidate:'lingxiloop_memory_continuity_candidate_test',final:'lingxiloop_memory_continuity_final_test',
+  scoped:'lingxiloop_memory_continuity_scoped_test'}
 assert.ok(Object.hasOwn(continuityDatabases,qualification),'unknown continuity qualification target')
 const databaseName = continuity ? continuityDatabases[qualification] : live ? 'lingxiloop_release_memory_model_test' : 'lingxiloop_release_memory_test'
 const cwd = resolve(import.meta.dirname,'../..'), output = resolve(cwd,'artifacts/memory',continuity ? 'continuity-live' : live ? 'live' : 'integration')

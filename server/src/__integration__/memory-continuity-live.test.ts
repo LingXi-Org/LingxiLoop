@@ -18,7 +18,7 @@ import {installRecordingWukong} from './_recording-wukong.js'
 test('live native memory saves, recalls semantically and extracts long-source tails across rooms',{
   skip:process.env.LINGXIOS_LIVE_CONTINUITY!=='1',timeout:600000,
 },async()=>{
-  assert.ok(['/lingxiloop_memory_continuity_model_test','/lingxiloop_memory_continuity_qualification_test','/lingxiloop_memory_continuity_candidate_test','/lingxiloop_memory_continuity_final_test'].includes(new URL(env.DATABASE_URL).pathname))
+  assert.ok(['/lingxiloop_memory_continuity_model_test','/lingxiloop_memory_continuity_qualification_test','/lingxiloop_memory_continuity_candidate_test','/lingxiloop_memory_continuity_final_test','/lingxiloop_memory_continuity_scoped_test'].includes(new URL(env.DATABASE_URL).pathname))
   await ensureSchemaOnce();await resetAllTables()
   const recording=await installRecordingWukong(),originalFetch=globalThis.fetch
   let worker:ReturnType<typeof createWorker>|undefined,phase='save',completed=false
