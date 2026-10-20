@@ -5,6 +5,10 @@ import argparse
 import hashlib
 import json
 import subprocess
+import sys
+import urllib.parse
+import urllib.request
+import zlib
 
 
 def inspect(reference, *options):
@@ -62,17 +66,78 @@ def measure(reference):
     }
 
 
+def ghcr_token(repository):
+    if not repository.startswith("ghcr.io/"):
+        raise ValueError("streamed layer measurement currently supports ghcr.io only")
+    name = repository.removeprefix("ghcr.io/")
+    query = urllib.parse.urlencode({
+        "scope": f"repository:{name}:pull", "service": "ghcr.io"
+    })
+    with urllib.request.urlopen(f"https://ghcr.io/token?{query}", timeout=30) as response:
+        token = json.load(response).get("token")
+    if not token:
+        raise ValueError("GHCR did not return an anonymous pull token")
+    return token, name
+
+
+def count_uncompressed(repository, layers):
+    token, name = ghcr_token(repository)
+    sizes = {}
+    for layer in layers:
+        digest = layer["digest"]
+        if digest in sizes:
+            continue
+        request = urllib.request.Request(
+            f"https://ghcr.io/v2/{name}/blobs/{digest}",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        checksum = hashlib.sha256()
+        inflater = zlib.decompressobj(wbits=31)
+        compressed = uncompressed = 0
+        with urllib.request.urlopen(request, timeout=120) as response:
+            while chunk := response.read(1024 * 1024):
+                compressed += len(chunk)
+                checksum.update(chunk)
+                uncompressed += len(inflater.decompress(chunk))
+        uncompressed += len(inflater.flush())
+        if "sha256:" + checksum.hexdigest() != digest:
+            raise ValueError(f"compressed blob digest mismatch: {digest}")
+        if compressed != layer["compressedBytes"] or not inflater.eof:
+            raise ValueError(f"blob length or gzip stream mismatch: {digest}")
+        sizes[digest] = uncompressed
+        print(f"Verified {digest[:19]}: {compressed} gzip / {uncompressed} tar bytes",
+              file=sys.stderr)
+    return sizes
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("before", help="immutable OCI index reference")
     parser.add_argument("after", help="immutable OCI index reference")
+    parser.add_argument("--stream-uncompressed", action="store_true",
+                        help="stream and digest-check GHCR gzip layers; never store or extract them")
     args = parser.parse_args()
     before, after = measure(args.before), measure(args.after)
     common = {layer["digest"] for layer in before["layers"]} & {
         layer["digest"] for layer in after["layers"]
     }
+    if args.stream_uncompressed:
+        before_repo = args.before.rpartition("@")[0]
+        after_repo = args.after.rpartition("@")[0]
+        if before_repo != after_repo:
+            raise ValueError("streamed layer comparison requires one GHCR repository")
+        unique = {layer["digest"]: layer for layer in before["layers"] + after["layers"]}
+        sizes = count_uncompressed(before_repo, unique.values())
+        for image in (before, after):
+            for layer in image["layers"]:
+                layer["uncompressedTarBytes"] = sizes[layer["digest"]]
+            image["uncompressedTarLayerBytes"] = sum(layer["uncompressedTarBytes"]
+                                                      for layer in image["layers"])
     report = {
-        "scope": "registry OCI metadata for linux/amd64; no layers downloaded or extracted",
+        "scope": ("registry OCI metadata plus streamed, digest-verified gzip layer expansion "
+                  "for linux/amd64; layers never stored or extracted"
+                  if args.stream_uncompressed else
+                  "registry OCI metadata for linux/amd64; no layers downloaded or extracted"),
         "before": before,
         "after": after,
         "comparison": {
@@ -82,6 +147,10 @@ def main():
                                               if layer["digest"] in common),
         },
     }
+    if args.stream_uncompressed:
+        report["comparison"]["uncompressedTarLayerByteDelta"] = (
+            after["uncompressedTarLayerBytes"] - before["uncompressedTarLayerBytes"]
+        )
     print(json.dumps(report, indent=2) + "\n", end="")
 
 
