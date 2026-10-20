@@ -13,25 +13,27 @@ for (const width of [1440, 390]) test(`all authored corners survive rounded clip
   const output = process.env.E2E_VISUALIZE_OUTPUT ?? '.e2e/visualize-corners'
   await mkdir(output, { recursive: true })
 
-  const geometry = async () => {
+  const geometry = async (preview = false) => {
     const content = JSON.parse((await guest.locator('#corner-surface').getAttribute('data-bounds'))!) as { x: number; y: number; width: number; height: number }
-    return browser.evaluate((content) => {
-      const card = document.querySelector('[data-testid="gen-ui-card"]')!.firstElementChild!
-      const frame = document.querySelector('iframe[data-visualize-guest]')!
+    return browser.evaluate(({ content, preview }) => {
+      const card = preview ? document.querySelector('[data-testid="gen-ui-preview-anchor"]')! : document.querySelector('[data-testid="gen-ui-card"]')!.firstElementChild!
+      const frame = document.querySelector<HTMLElement>('iframe[data-visualize-guest]')!
       const outer = card.getBoundingClientRect(), iframe = frame.getBoundingClientRect()
-      const radius = parseFloat(getComputedStyle(card).borderTopLeftRadius)
-      const left = iframe.left + content.x, top = iframe.top + content.y
-      const right = left + content.width, bottom = top + content.height
+      const scale = (frame as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom || 1
+      const radius = parseFloat(getComputedStyle(card).borderTopLeftRadius) * scale
+      const left = iframe.left + content.x * scale, top = iframe.top + content.y * scale
+      const right = left + content.width * scale, bottom = top + content.height * scale
       const corners = [[left + .5, top + .5], [right - .5, top + .5], [left + .5, bottom - .5], [right - .5, bottom - .5]]
       return {
-        content, radius, minimumInset: radius * (1 - 1 / Math.sqrt(2)),
+        content, radius, scale, minimumInset: radius * (1 - 1 / Math.sqrt(2)),
         insets: [left - outer.left, top - outer.top, outer.right - right, outer.bottom - bottom],
         cornerHits: corners.map(([x, y]) => document.elementFromPoint(x, y) === frame),
+        frameAlignment: [iframe.left - outer.left, iframe.top - outer.top, iframe.right - outer.right, iframe.bottom - outer.bottom],
         frameWidth: iframe.width, frameHeight: iframe.height,
         cardWidth: outer.width, cardHeight: outer.height,
         documentWidth: document.documentElement.scrollWidth, viewport: innerWidth,
       }
-    }, content)
+    }, { content, preview })
   }
 
   const initial = await geometry()
@@ -65,4 +67,25 @@ for (const width of [1440, 390]) test(`all authored corners survive rounded clip
     await writeFile(`${output}/corners-${width}-resized.json`, JSON.stringify(resized, null, 2))
     await app.screenshot(`resized-corners-${width}`)
   }
+
+  // This is CSS zoom coverage, not native browser zoom or device pinch zoom.
+  await browser.setViewport({ width, height: 960 })
+  await browser.evaluate(() => { document.body.style.zoom = '1.25'; return true })
+  await expect.poll(async () => (await geometry()).cornerHits).toEqual([true, true, true, true])
+  const zoomedInline = await geometry()
+  await writeFile(`${output}/corners-${width}-css-zoom-inline.json`, JSON.stringify(zoomedInline, null, 2))
+  await app.screenshot(`css-zoom-inline-${width}`)
+  expect(zoomedInline.scale).toBe(1.25)
+  for (const inset of zoomedInline.insets) expect(inset).toBeGreaterThanOrEqual(zoomedInline.minimumInset)
+  expect(zoomedInline.documentWidth).toBeLessThanOrEqual(zoomedInline.viewport)
+
+  await screen.getByRole('button', '放大', { exact: true }).tap()
+  await expect(screen.getByRole('dialog')).toBeVisible()
+  await expect(guest.locator('#corner-counter')).toHaveText('Local count: 1')
+  await browser.evaluate(() => new Promise<boolean>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)))))
+  const zoomedPreview = await geometry(true)
+  await writeFile(`${output}/corners-${width}-css-zoom-preview.json`, JSON.stringify(zoomedPreview, null, 2))
+  await app.screenshot(`css-zoom-preview-${width}`)
+  expect(zoomedPreview.cornerHits).toEqual([true, true, true, true])
+  for (const offset of zoomedPreview.frameAlignment) expect(Math.abs(offset)).toBeLessThan(1)
 })

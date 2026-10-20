@@ -1,0 +1,36 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-217-quality
+      run 01a15a3a-9511-7e79-a12d-8996eaceb59d · targets: web
+
+ ✓ target "web" command ready 1.69s
+ ❯ |web| e2e/visualize/corners.e2e.ts (1 test | 1 failed) 8.96s
+   × all authored corners survive rounded clipping (1440) 8.96s
+     → expected [true,false,true,false] to equal [true,true,true,true]
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| e2e/visualize/corners.e2e.ts > all authored corners survive rounded clipping (1440)
+ASSERTION_FAILED: expected [true,false,true,false] to equal [true,true,true,true]
+ ❯ e2e/visualize/corners.e2e.ts:89:36
+     87|   await writeFile(`${output}/corners-${width}-css-zoom-preview.json`,…
+     88|   await app.screenshot(`css-zoom-preview-${width}`)
+     89|   expect(zoomedPreview.cornerHits).toEqual([true, true, true, true])
+       |                                    ^
+     90|   for (const offset of zoomedPreview.frameAlignment) expect(Math.abs(…
+     91| })
+ ❯ at http://127.0.0.1:5193/e2e/visualize/index.html?implementation=product&theme=light&corners=1
+ ❯ screen .e2e/246-css-zoom/artifacts/web/e2e_visualize_corners.e2e.ts__all_20authored_20corners_20survive_20rounded_20clipping_20_281440_29-e408812a/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 0 passed (1)
+      Tests  1 failed | 0 passed (1)
+   Start at  16:52:32
+   Duration  11.59s (startup 1.69s)
+     Report  .e2e/246-css-zoom/report.json
+
+      JUnit  .e2e/246-css-zoom/junit.xml
+   Markdown  .e2e/246-css-zoom/summary.md
+   Failures  .e2e/246-css-zoom/failures/ (1 page)
+

@@ -61,15 +61,17 @@ export function createPluginUiPagePlane(events: {
   const position = (node: HTMLElement, container: HTMLElement, fixed: boolean, layer: number) => {
     const rect = node.getBoundingClientRect();
     const parent = container.getBoundingClientRect();
-    const zoom = (container as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom || 1;
+    // Fixed top-layer coordinates still inherit the retained root's CSS zoom.
+    const coordinateSpace = fixed ? root : container;
+    const zoom = (coordinateSpace as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom || 1;
     Object.assign(root.style, {
       position: fixed ? "fixed" : "absolute",
       inset: "auto",
       zIndex: String(layer),
-      top: `${fixed ? rect.top : (rect.top - parent.top) / zoom + container.scrollTop - container.clientTop}px`,
-      left: `${fixed ? rect.left : (rect.left - parent.left) / zoom + container.scrollLeft - container.clientLeft}px`,
-      width: `${rect.width / (fixed ? 1 : zoom)}px`,
-      height: `${rect.height / (fixed ? 1 : zoom)}px`,
+      top: `${fixed ? rect.top / zoom : (rect.top - parent.top) / zoom + container.scrollTop - container.clientTop}px`,
+      left: `${fixed ? rect.left / zoom : (rect.left - parent.left) / zoom + container.scrollLeft - container.clientLeft}px`,
+      width: `${rect.width / zoom}px`,
+      height: `${rect.height / zoom}px`,
       borderRadius: getComputedStyle(node).borderRadius,
     });
   };

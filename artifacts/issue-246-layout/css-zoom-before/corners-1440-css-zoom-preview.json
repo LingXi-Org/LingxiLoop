@@ -1,0 +1,35 @@
+{
+  "content": {
+    "x": 5,
+    "y": 5,
+    "width": 1362.800048828125,
+    "height": 220
+  },
+  "radius": 0,
+  "scale": 1.25,
+  "minimumInset": 0,
+  "insets": [
+    14.625,
+    11.5,
+    -345.12506103515625,
+    681.5
+  ],
+  "cornerHits": [
+    true,
+    false,
+    true,
+    false
+  ],
+  "frameAlignment": [
+    8.375,
+    5.25,
+    351.625,
+    247.25
+  ],
+  "frameWidth": 1716.25,
+  "frameHeight": 1210,
+  "cardWidth": 1373,
+  "cardHeight": 968,
+  "documentWidth": 1440,
+  "viewport": 1440
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="1" errors="0" skipped="0" time="8.964">
+  <testsuite name="e2e/visualize/corners.e2e.ts" tests="1" failures="1" errors="0" skipped="0" time="8.964">
+    <testcase name="all authored corners survive rounded clipping (1440) [web]" classname="e2e/visualize/corners.e2e.ts" time="8.964">
+      <failure message="expected [true,false,true,false] to equal [true,true,true,true]" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expected [true,false,true,false] to equal [true,true,true,true]</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

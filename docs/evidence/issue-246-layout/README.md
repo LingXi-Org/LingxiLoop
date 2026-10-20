@@ -55,9 +55,59 @@ the anchor style changed between these runs. Raw reports retain the runner's
 original `.e2e` artifact paths; the selected screenshots and geometry are copied
 alongside the logs for repository review.
 
-Limitations: source inspection confirms the unchanged `captureBounds(5)` crop
-still matches the guest gutter. Native clipboard access was previously denied
+Limitations: at CSS zoom 1, source inspection confirms the unchanged
+`captureBounds(5)` crop still matches the guest gutter. Capture dimensions and
+cropping under CSS zoom 1.25 have not been verified. Native clipboard access was previously denied
 and was not retried; this is not a native image-copy acceptance result. Arbitrary
 authored shadows or content overflowing its root bounds are not covered. The
 generated 16 by 16 marker and fixed SVG without a `viewBox` documented in the
 failure model remain separate content issues. No new model calls were made.
+
+## CSS zoom follow-up: preview red/green evidence
+
+After the initial passing commit `dea622d645876031b398b00ba3c7f53358cdfe94`,
+the test was extended with `document.body.style.zoom = '1.25'`. Only the
+1440 px case was rerun (`--grep 1440`). This is CSS zoom coverage, not native
+browser zoom or device pinch zoom.
+
+The [follow-up run failed](../../../artifacts/issue-246-layout/css-zoom-before/run.txt).
+[Inline geometry](../../../artifacts/issue-246-layout/css-zoom-before/corners-1440-css-zoom-inline.json)
+has 6.25 px content insets and all four corner hits passing.
+[Preview geometry](../../../artifacts/issue-246-layout/css-zoom-before/corners-1440-css-zoom-preview.json)
+has an anchor of 1373 × 968 px but an iframe of 1716.25 × 1210 px: an additional
+1.25× scale. Its right-side corner hit tests fail.
+The [preview screenshot](../../../artifacts/issue-246-layout/css-zoom-before/css-zoom-preview-1440.png)
+shows the corresponding overflow.
+
+`pluginUiPagePlane.position` uses already scaled viewport bounds directly in its
+fixed positioning branch. The retained root still inherits body CSS zoom, so
+those coordinates and dimensions are scaled again. The container argument is
+`document.documentElement`; its zoom does not represent the retained root's
+inherited body zoom.
+
+The follow-up product fix changes only `pluginUiPagePlane.position`: fixed
+coordinates and dimensions are normalized by the retained root's
+`currentCSSZoom`. The non-fixed container conversion and lifecycle are unchanged.
+The [same 1440 px case passed afterward](../../../artifacts/issue-246-layout/css-zoom-after/run.txt).
+[Final preview geometry](../../../artifacts/issue-246-layout/css-zoom-after/corners-1440-css-zoom-preview.json)
+reports matching 1373 × 968 px frame/anchor bounds, zero displacement on all
+four edges and all four corner hits passing.
+[The final screenshot](../../../artifacts/issue-246-layout/css-zoom-after/css-zoom-preview-1440.png)
+records that result.
+
+The original source hashes/checksums describe the initial unzoomed evidence;
+each CSS zoom subdirectory has its own source hashes and artifact checksums for
+its respective run. The zoom follow-up was run only at 1440 px. It does not
+establish native browser/device zoom support or image capture under CSS zoom.
+The existing dialog itself can extend beyond the viewport under body CSS zoom:
+its `85vh` height is also scaled. This follow-up verifies the iframe against its
+anchor and does not claim that the entire dialog is visible under CSS zoom.
+
+After the browser run, the test callback setting `body.style.zoom` gained
+`return true` to satisfy the official browser-evaluate result type; its DOM
+effect is unchanged and the browser was not rerun for that type-only return.
+`css-zoom-after/source-hashes.json` preserves the browser-run inputs;
+`css-zoom-after/final-source-hashes.json` records the final inputs.
+The final [E2E typecheck](../../../artifacts/issue-246-layout/css-zoom-after/e2e-typecheck.txt)
+and [owning plane lint](../../../artifacts/issue-246-layout/css-zoom-after/biome-lint.txt)
+both exited 0.
