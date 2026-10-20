@@ -46,3 +46,53 @@ an early timeout cannot masquerade as cancellation coverage. Keep callback
 admission shared across all three lanes, with no additional pool or capacity
 increase. Full production fault matrices, live providers and long soak remain
 unverified by these short fixtures.
+
+## Product scope implementation and evidence
+
+The product shares a two-callback gate across the three lanes. Each callback
+owns one existing pool session through authorization and IM acceptance. Its
+runtime calls can borrow one additional existing connection: admission is
+capped by `floor((pool.max - 1) / 2)`, at most two. No capacity is added. With
+the production main-pool maximum of eight this budgets four callback
+connections, separate from runtime's own background/listener occupancy.
+
+All product repository queries use an explicit `Queryable`; concurrent reads
+serialize each statement's timeout setup with its SQL. The absolute callback
+deadline includes admission and defaults to ten seconds for older callers.
+Cancellation destroys the owned client and rejects subsequent work. PostgreSQL
+socket disconnection alone does **not** promptly interrupt a running statement;
+the scope also uses a server statement timeout and a maximum 100 ms
+`client_connection_check_interval`. Stricter existing settings are preserved,
+and successful scopes restore original session values. These are temporary
+settings on the borrowed session, not server configuration changes. This
+requires PostgreSQL 14+ on a platform supporting the connection check (the
+fixture uses PostgreSQL 16.15/Linux).
+
+Connection admission waits outside pg's uncancellable pool queue. If a network
+handshake is already underway, the callback rejects immediately on abort and
+destroys the late client without SQL. Its admission slot remains occupied until
+the handshake settles under the existing five-second connection timeout.
+
+An actual PostgreSQL baseline with unmodified callback behavior (only exporting
+the observer for the test) observed eight blocked statements where the shared
+budget requires two. An initial destroy-only candidate failed two of six tests:
+the Node connections disappeared while the PostgreSQL backends kept waiting.
+With scoped server cancellation, nine scope tests and four product callback
+tests pass. The recorded run in `artifacts/callback-deadlines/scope.json` reports
+eight submitted / two entered callbacks, zero remaining lock waiters and a
+successful next callback while the blocker stays held, approximately 93 ms
+after early abort. A 150 ms deadline-only fixture exits its PostgreSQL backend
+in approximately 153 ms. These are short local measurements, not production
+latency claims.
+
+Product tests additionally exercise deep project authorization, revoked access,
+cancelled acceptance INSERT, and a successful synthetic IM HTTP send followed
+by a blocked receipt UPDATE. Retrying that last case reconciles history under
+the original nonce; it does not send again. No callback-wide transaction wraps
+the durable pre-dispatch marker.
+
+The initial product commit remains on formal runtime 3.5.5. Cancellation of the
+runtime methods listed above requires the separately reviewed public
+`RuntimeOperationContext` release and explicit product wiring before the whole
+delivery callback can be considered covered. No dependency lock is changed by
+this product-only stage.

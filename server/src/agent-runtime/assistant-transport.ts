@@ -10,6 +10,7 @@ import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { readOptionalToolActivity } from './tool-activity.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
+import type { Queryable } from '../db/queryable.js'
 import { readQuestionnaireWait } from './questionnaire-projection.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
@@ -92,9 +93,9 @@ export class RunStreamProjection {
     })
   }
 
-  async syncQuestionnaire(identity: RunIdentity): Promise<void> {
+  async syncQuestionnaire(identity: RunIdentity, database?: Queryable): Promise<void> {
     this.questionnaireWait = this.view.goalOutcome?.status === 'awaiting_input'
-      ? await readQuestionnaireWait(identity, this.view.requestVersion) : null
+      ? await readQuestionnaireWait(identity, this.view.requestVersion, database) : null
   }
 
   async syncTerminal(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readTerminal'>, identity: RunIdentity): Promise<void> {
@@ -170,7 +171,7 @@ export class RunStreamProjection {
   }
 }
 
-export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal) {
+export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal, database?: Queryable) {
   const state = await api.readRunState(identity)
   if (!state) throw new Error('run not found')
   const projection = new RunStreamProjection(identity.runId,canControl,identity)
@@ -190,7 +191,7 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   projection.apply({ type: 'state',state: current })
   await projection.syncApprovals(api,identity)
   await projection.syncTerminal(api,identity)
-  await projection.syncQuestionnaire(identity)
+  await projection.syncQuestionnaire(identity,database)
   await projection.syncPresentation(identity, presentationSignal)
   return projection
 }

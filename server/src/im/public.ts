@@ -1,6 +1,7 @@
 import { nativeMessageSchema, type NativeMessage } from './message-types.js'
 import type { ImMessageEnvelope } from './messages-application.js'
 import { createImMessagesApplication, imMessagesApplication } from './messages-facade.js'
+import type { Queryable } from '../db/queryable.js'
 import { validSendReceipt } from './messages-repository.js'
 export { createMessageTools } from './agent-tools.js'
 
@@ -47,13 +48,13 @@ export async function sendAgentChannelMessage(input: {
   clientNonce: string
   payload: NativeMessage
   signal?: AbortSignal
-}): Promise<
+}, database?: Queryable): Promise<
   | { kind: 'channel_not_found' }
   | { kind: 'nonce_conflict' }
   | { kind: 'verbatim_peer'; peer: ImMessageEnvelope }
   | { kind: 'accepted'; duplicate: boolean; messageId: string; sequence: number; payload: NativeMessage }
 > {
-  const result = await createImMessagesApplication(input.signal).acceptAgentMessage({
+  const result = await createImMessagesApplication(input.signal, database).acceptAgentMessage({
     companyId: input.companyId,
     userId: input.agentId,
     channelId: input.channelId,
@@ -78,12 +79,12 @@ export async function sendSystemChannelMessage(input: {
   clientNonce: string
   payload: NativeMessage
   signal?: AbortSignal
-}): Promise<
+}, database?: Queryable): Promise<
   | { kind: 'channel_not_found' }
   | { kind: 'nonce_conflict' }
   | { kind: 'accepted'; duplicate: boolean; messageId: string; sequence: number }
 > {
-  const result = await createImMessagesApplication(input.signal).acceptSystemMessage(input)
+  const result = await createImMessagesApplication(input.signal, database).acceptSystemMessage(input)
   if (result.kind !== 'accepted') return result
   if (!validSendReceipt(result.echo)) {
     throw new Error('WuKong system send acceptance returned an invalid echo')

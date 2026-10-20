@@ -1,4 +1,4 @@
-import { assembleHarness, createLingxiOS, doctor, type ModelCallObservation } from '@lyyzka/lingxios'
+import { assembleHarness, createLingxiOS, doctor, type ModelCallObservation, type DeliveryContext } from '@lyyzka/lingxios'
 import { createWorker, type WorkerOptions } from '@lyyzka/lingxios/worker'
 import { execFileSync } from 'node:child_process'
 import { pool } from '../db/pool.js'
@@ -20,6 +20,7 @@ import { isSiliconFlowModel, siliconFlowCost, siliconFlowPricingForModel } from 
 import { createRealtimeStore } from './realtime-store.js'
 import { createRuntimeObjectStore } from './object-store.js'
 import { verifyVisualizeCandidate } from './visualize-tools.js'
+import { runProductCallback } from './product-callbacks.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -123,47 +124,49 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
   return control
 }
 
-async function recordModelCall(observation: ModelCallObservation): Promise<void> {
-  if (!observation.cost) throw new Error('model observation is missing its durable price and cost snapshot')
-  const binding = (await pool.query<{ conversation_id: string }>('SELECT conversation_id FROM agent_run_bindings WHERE company_id=$1 AND run_id=$2',
-    [observation.tenantId,observation.workId])).rows[0]
-  const usage = observation.usage?.available ? observation.usage : undefined
-  const pricing=providerPricing(observation.model), billing=usage && pricing ? siliconFlowCost(usage,pricing) : undefined
-  const record = {
-    context: {
-      purpose: `lingxios.${observation.purpose}`,
-      companyId: observation.tenantId,
-      agentId: observation.agentId,
-      runId: observation.workId,
-      ...(binding ? { conversationId: binding.conversation_id } : {}),
-      source: 'agent-os' as const,
-      extras: { callId: observation.callId, pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
-        ...(observation.logicalCallId ? { logicalCallId: observation.logicalCallId } : {}),
-        ...(observation.attempt !== undefined ? { attempt: observation.attempt } : {}),
-        ...(observation.elapsedMs !== undefined ? { elapsedMs: observation.elapsedMs } : {}),
-        ...(observation.failure ? { failure: observation.failure } : {}),
-        ...(observation.firstContentMs !== undefined ? { firstContentMs: observation.firstContentMs } : {}),
-        ...(observation.configurationFingerprint ? { configurationFingerprint: observation.configurationFingerprint } : {}),
-        ...(usage?.reasoningTokens !== undefined ? { reasoningTokens: usage.reasoningTokens } : {}),
-        ...(billing ? { providerPricing: pricing,...billing } : {}),
-        ...(observation.instructionsSha256 ? { instructionsSha256: observation.instructionsSha256 } : {}),
-        ...(observation.threadId ? { threadId: observation.threadId } : {}),
-        ...(observation.principalId ? { principalId: observation.principalId } : {}) },
-    },
-    model: observation.model,
-    ...(usage ? { usage: {
-      prompt_tokens: usage.inputTokens,
-      completion_tokens: usage.outputTokens,
-      ...(usage.cachedInputTokens !== undefined ? { prompt_tokens_details: { cached_tokens: usage.cachedInputTokens } } : {}),
-    } } : {}),
-    costUsd: billing?.costUsd ?? observation.cost.amountMicros / 1_000_000,
-    costEstimated: true,
-    latencyMs: observation.latencyMs,
-    status: observation.status,
-    ...(observation.error ? { error: observation.error } : {}),
-    measured: observation.usage?.available === true,
-  }
-  await recordLlmCall(record, pool, `lingxios-${observation.callId}`)
+export async function recordModelCall(observation: ModelCallObservation, context?: DeliveryContext): Promise<void> {
+  return runProductCallback(context, async ({ database }) => {
+    if (!observation.cost) throw new Error('model observation is missing its durable price and cost snapshot')
+    const binding = (await database.query<{ conversation_id: string }>('SELECT conversation_id FROM agent_run_bindings WHERE company_id=$1 AND run_id=$2',
+      [observation.tenantId,observation.workId])).rows[0]
+    const usage = observation.usage?.available ? observation.usage : undefined
+    const pricing=providerPricing(observation.model), billing=usage && pricing ? siliconFlowCost(usage,pricing) : undefined
+    const record = {
+      context: {
+        purpose: `lingxios.${observation.purpose}`,
+        companyId: observation.tenantId,
+        agentId: observation.agentId,
+        runId: observation.workId,
+        ...(binding ? { conversationId: binding.conversation_id } : {}),
+        source: 'agent-os' as const,
+        extras: { callId: observation.callId, pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+          ...(observation.logicalCallId ? { logicalCallId: observation.logicalCallId } : {}),
+          ...(observation.attempt !== undefined ? { attempt: observation.attempt } : {}),
+          ...(observation.elapsedMs !== undefined ? { elapsedMs: observation.elapsedMs } : {}),
+          ...(observation.failure ? { failure: observation.failure } : {}),
+          ...(observation.firstContentMs !== undefined ? { firstContentMs: observation.firstContentMs } : {}),
+          ...(observation.configurationFingerprint ? { configurationFingerprint: observation.configurationFingerprint } : {}),
+          ...(usage?.reasoningTokens !== undefined ? { reasoningTokens: usage.reasoningTokens } : {}),
+          ...(billing ? { providerPricing: pricing,...billing } : {}),
+          ...(observation.instructionsSha256 ? { instructionsSha256: observation.instructionsSha256 } : {}),
+          ...(observation.threadId ? { threadId: observation.threadId } : {}),
+          ...(observation.principalId ? { principalId: observation.principalId } : {}) },
+      },
+      model: observation.model,
+      ...(usage ? { usage: {
+        prompt_tokens: usage.inputTokens,
+        completion_tokens: usage.outputTokens,
+        ...(usage.cachedInputTokens !== undefined ? { prompt_tokens_details: { cached_tokens: usage.cachedInputTokens } } : {}),
+      } } : {}),
+      costUsd: billing?.costUsd ?? observation.cost.amountMicros / 1_000_000,
+      costEstimated: true,
+      latencyMs: observation.latencyMs,
+      status: observation.status,
+      ...(observation.error ? { error: observation.error } : {}),
+      measured: observation.usage?.available === true,
+    }
+    await recordLlmCall(record, database, `lingxios-${observation.callId}`)
+  })
 }
 
 let worker: ReturnType<typeof createWorker> | undefined
