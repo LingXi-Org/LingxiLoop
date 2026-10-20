@@ -19,6 +19,7 @@ test('planning binds exact source and contains no candidate migration or remote 
     const decoded = [...plan.command.matchAll(/[A-Za-z0-9+/=]{100,}/g)].map(match=>Buffer.from(match[0],'base64').toString()).join('\n')
     assert.match(decoded,/REPEATABLE READ READ ONLY/); assert.match(plan.command,/--snapshot=/)
     assert.match(plan.command,/--no-owner --no-privileges --exit-on-error/)
+    assert.ok(plan.command.includes('pwd -P'), 'backup parent must resolve to its reviewed original-volume path')
     assert.ok(!plan.command.includes('INSERT INTO public.schema_migrations'))
     assert.ok(!plan.command.includes('im_visualize_'))
     await validateMemoryBackupPlan(plan)

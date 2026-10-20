@@ -152,6 +152,7 @@ work=$(mktemp -d /tmp/memory-backup.XXXXXXXXXX)
 ${writes}
 stage=reserve-attempt
 mkdir -p ${quote(backupDir.slice(0,backupDir.lastIndexOf('/')))}
+test "$(cd ${quote(backupDir.slice(0,backupDir.lastIndexOf('/')))} && pwd -P)" = ${quote(backupDir.slice(0,backupDir.lastIndexOf('/')))}
 mkdir "$backup_dir"
 printf '%s\\n' ${quote(JSON.stringify({source,attempt:plan.attempt,isolatedDatabase,migrationRehearsal:'not-performed'}))} > "$backup_dir/attempt.json"
 stage=capacity-initial
