@@ -1,0 +1,10 @@
+PASS published public control readiness contract rejects unready and malformed payloads
+PASS healthy HTTP readiness, legacy health, liveness and optional diagnostics
+PASS each required failure removes readiness, errors are sanitized, legacy control independence
+PASS concurrent and repeated timed-out HTTP probes reuse actual pending IO then recover
+PASS real Redis disconnect and real PG saturation remove traffic while liveness survives
+PASS pg Promise/callback acquire, reused transaction SQL, failed SQL and timed-out acquire metrics
+{"output":"/workspace/LingxiLoop-153-161/scripts/issue-153/evidence/foundation-idle.json","result":{"successes":0,"failures":0,"errors":{},"latencySamples":0,"percentileMethod":"all requests","elapsedSeconds":3.0132927019999998,"p50Ms":null,"p75Ms":null,"p95Ms":null,"p99Ms":null}}
+{"output":"/workspace/LingxiLoop-153-161/scripts/issue-153/evidence/foundation-normal.json","result":{"successes":29,"failures":0,"errors":{},"latencySamples":29,"percentileMethod":"all requests","elapsedSeconds":3.0676136260000004,"p50Ms":3.3221520000001874,"p75Ms":3.707999000000086,"p95Ms":4.5767889999999625,"p99Ms":5.224990000000005}}
+{"output":"/workspace/LingxiLoop-153-161/scripts/issue-153/evidence/foundation-burst.json","result":{"successes":4405,"failures":0,"errors":{},"latencySamples":4405,"percentileMethod":"all requests","elapsedSeconds":3.0190034850000003,"p50Ms":9.91688499999998,"p75Ms":12.70499400000017,"p95Ms":19.088091000000077,"p99Ms":24.4153510000001}}
+PASS repeatable idle / normal SQL HTTP / burst sampler artifacts
