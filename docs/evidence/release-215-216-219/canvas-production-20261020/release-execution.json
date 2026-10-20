@@ -1,0 +1,3355 @@
+{
+  "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+  "mode": "same-schema-release-with-public-native-probes",
+  "startedAt": "2026-10-20T15:36:15.950Z",
+  "complete": true,
+  "probeCodeSha256": "4598e58432b283a54bb916d622c19f8c34d7c317e808d4b03b1f94d482b16e43",
+  "events": [
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "source",
+      "sha256": "4ad4d738a8f41d549412a71c4de8c78e5fb3f2c5365be86d5fa892db8877b050",
+      "observedAt": "2026-10-20T15:36:18.784Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "source",
+      "sha256": "145ded6c585329317b54c2cca24e80870ab151d870a7c749bd2724dd852c5a26",
+      "observedAt": "2026-10-20T15:36:22.849Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:36:24.594Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:36:31.552Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:36:31.850Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78a80e06d5e1f7983724d",
+      "observedAt": "2026-10-20T15:36:32.143Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78a80e06d5e1f7983724d",
+      "observedAt": "2026-10-20T15:36:34.437Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "source",
+      "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+      "imageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "indexDigest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:36:34.978Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "source",
+      "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+      "imageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "indexDigest": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:36:35.343Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:36:36.097Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:36:36.454Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "preflight",
+      "status": "verified",
+      "original": [
+        {
+          "stack": "lingxiloop-app-a",
+          "server": "shanghai-a",
+          "service": "lingxiloop",
+          "id": "56dd3a69e18befd03751747e50714644d40bf3c2fa460759faa91aefed3259ca",
+          "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+          "imageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+          "running": true,
+          "restarting": false,
+          "restartCount": 0,
+          "pid": 2301368,
+          "healthy": true,
+          "policy": {
+            "readOnly": false,
+            "privileged": false,
+            "securityOpt": [],
+            "capAdd": [],
+            "capDrop": [],
+            "pidsLimit": null,
+            "user": "",
+            "productionMode": true
+          }
+        },
+        {
+          "stack": "lingxiloop-app-a",
+          "server": "shanghai-a",
+          "service": "worker",
+          "id": "db00775ed034a287a18b4c0c83acfd2b403986e3ee68cb5325ebb09a369c1fe0",
+          "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+          "imageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+          "running": true,
+          "restarting": false,
+          "restartCount": 0,
+          "pid": 2317567,
+          "healthy": true,
+          "policy": {
+            "readOnly": true,
+            "privileged": false,
+            "securityOpt": [
+              "seccomp=unconfined"
+            ],
+            "capAdd": [],
+            "capDrop": [],
+            "pidsLimit": 128,
+            "user": "",
+            "productionMode": true
+          }
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "server": "shanghai-b",
+          "service": "lingxiloop",
+          "id": "1bce8732adcde5c77c15043027d2f6402ce521e24acfdb3090217a786cc2574b",
+          "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+          "imageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+          "running": true,
+          "restarting": false,
+          "restartCount": 0,
+          "pid": 4007233,
+          "healthy": true,
+          "policy": {
+            "readOnly": false,
+            "privileged": false,
+            "securityOpt": [],
+            "capAdd": [],
+            "capDrop": [],
+            "pidsLimit": null,
+            "user": "",
+            "productionMode": true
+          }
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "server": "shanghai-b",
+          "service": "worker",
+          "id": "88cc0114a43d9e43cccc60df0469f35fc604fd6e3f6cc1006786bcf9e927c98b",
+          "source": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+          "imageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+          "running": true,
+          "restarting": false,
+          "restartCount": 0,
+          "pid": 4011621,
+          "healthy": true,
+          "policy": {
+            "readOnly": true,
+            "privileged": false,
+            "securityOpt": [
+              "seccomp=unconfined"
+            ],
+            "capAdd": [],
+            "capDrop": [],
+            "pidsLimit": 128,
+            "user": "",
+            "productionMode": true
+          }
+        }
+      ],
+      "observedAt": "2026-10-20T15:36:38.353Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "source",
+      "sha256": "4ad4d738a8f41d549412a71c4de8c78e5fb3f2c5365be86d5fa892db8877b050",
+      "observedAt": "2026-10-20T15:36:41.119Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "source",
+      "sha256": "145ded6c585329317b54c2cca24e80870ab151d870a7c749bd2724dd852c5a26",
+      "observedAt": "2026-10-20T15:36:44.088Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:36:46.055Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "source",
+      "sha256": "4ad4d738a8f41d549412a71c4de8c78e5fb3f2c5365be86d5fa892db8877b050",
+      "observedAt": "2026-10-20T15:36:50.016Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "WriteStackFileContents",
+      "stack": "lingxiloop-app-a",
+      "observedAt": "2026-10-20T15:36:50.499Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "WriteStackFileContents",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78a92e06d5e1f79837251",
+      "observedAt": "2026-10-20T15:36:50.891Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "WriteStackFileContents",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78a92e06d5e1f79837251",
+      "observedAt": "2026-10-20T15:36:51.181Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target-file",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:36:53.914Z"
+    },
+    {
+      "phase": "host-config",
+      "status": "submitting",
+      "stack": "lingxiloop-app-a",
+      "fields": [
+        "commit",
+        "branch",
+        "auto_pull",
+        "extra_args"
+      ],
+      "observedAt": "2026-10-20T15:36:54.393Z"
+    },
+    {
+      "phase": "host-config",
+      "status": "acknowledged",
+      "stack": "lingxiloop-app-a",
+      "observedAt": "2026-10-20T15:36:55.246Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:36:58.305Z"
+    },
+    {
+      "phase": "host-config",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "fullConfigReadback": true,
+      "observedAt": "2026-10-20T15:36:58.306Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:37:02.916Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "source",
+      "sha256": "145ded6c585329317b54c2cca24e80870ab151d870a7c749bd2724dd852c5a26",
+      "observedAt": "2026-10-20T15:37:05.418Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:37:07.541Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "source",
+      "sha256": "145ded6c585329317b54c2cca24e80870ab151d870a7c749bd2724dd852c5a26",
+      "observedAt": "2026-10-20T15:37:13.081Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "WriteStackFileContents",
+      "stack": "lingxiloop-app-b",
+      "observedAt": "2026-10-20T15:37:13.562Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "WriteStackFileContents",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78aaae06d5e1f79837256",
+      "observedAt": "2026-10-20T15:37:14.169Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "WriteStackFileContents",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78aaae06d5e1f79837256",
+      "observedAt": "2026-10-20T15:37:14.461Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target-file",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:37:17.616Z"
+    },
+    {
+      "phase": "host-config",
+      "status": "submitting",
+      "stack": "lingxiloop-app-b",
+      "fields": [
+        "commit",
+        "branch",
+        "auto_pull",
+        "extra_args"
+      ],
+      "observedAt": "2026-10-20T15:37:18.898Z"
+    },
+    {
+      "phase": "host-config",
+      "status": "acknowledged",
+      "stack": "lingxiloop-app-b",
+      "observedAt": "2026-10-20T15:37:19.810Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:37:23.436Z"
+    },
+    {
+      "phase": "host-config",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "fullConfigReadback": true,
+      "observedAt": "2026-10-20T15:37:23.436Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:37:26.033Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:37:26.391Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:37:29.567Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "observedAt": "2026-10-20T15:37:30.056Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78abae06d5e1f7983725b",
+      "observedAt": "2026-10-20T15:37:30.933Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78abae06d5e1f7983725b",
+      "observedAt": "2026-10-20T15:37:33.474Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:38:11.617Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:38:15.604Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:38:18.678Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:38:20.627Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "observedAt": "2026-10-20T15:38:23.924Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78af0e06d5e1f79837268",
+      "observedAt": "2026-10-20T15:38:24.395Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78af0e06d5e1f79837268",
+      "observedAt": "2026-10-20T15:38:26.665Z"
+    },
+    {
+      "phase": "candidate-native-probe",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78af0e06d5e1f79837268",
+      "terminalReadback": true,
+      "passed": true,
+      "platform": "linux/x64/glibc",
+      "gnuSelected": true,
+      "muslAbsent": true,
+      "pngBytes": 115,
+      "pngSha256": "37bb849c8331759b4b7b6ec3e959f1e60b4b5bfbf9dcd4a4b711ae0c406ca5c0",
+      "pdfBytes": 201,
+      "pdfSha256": "30ee46cdb0878604ece1e00fab7a9807f3db64ff443a48e6dc2fe4a5646a5e04",
+      "publicFixtureSha256": "33aaa4a900cc81178a5c9c312bc0126b81805423e483e498a9c9b0d423c0a10e",
+      "originalContainersUnchanged": true,
+      "observedAt": "2026-10-20T15:38:29.595Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:38:33.319Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-b",
+      "observedAt": "2026-10-20T15:38:33.769Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78af9e06d5e1f7983726c",
+      "observedAt": "2026-10-20T15:38:34.041Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78af9e06d5e1f7983726c",
+      "observedAt": "2026-10-20T15:38:36.322Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:38:39.315Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:38:41.805Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:38:44.293Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:38:45.922Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-b",
+      "observedAt": "2026-10-20T15:38:48.641Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78b09e06d5e1f79837270",
+      "observedAt": "2026-10-20T15:38:49.143Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78b09e06d5e1f79837270",
+      "observedAt": "2026-10-20T15:38:51.418Z"
+    },
+    {
+      "phase": "candidate-native-probe",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78b09e06d5e1f79837270",
+      "terminalReadback": true,
+      "passed": true,
+      "platform": "linux/x64/glibc",
+      "gnuSelected": true,
+      "muslAbsent": true,
+      "pngBytes": 115,
+      "pngSha256": "37bb849c8331759b4b7b6ec3e959f1e60b4b5bfbf9dcd4a4b711ae0c406ca5c0",
+      "pdfBytes": 201,
+      "pdfSha256": "30ee46cdb0878604ece1e00fab7a9807f3db64ff443a48e6dc2fe4a5646a5e04",
+      "publicFixtureSha256": "33aaa4a900cc81178a5c9c312bc0126b81805423e483e498a9c9b0d423c0a10e",
+      "originalContainersUnchanged": true,
+      "observedAt": "2026-10-20T15:38:53.915Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:38:57.473Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:38:57.747Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b12e06d5e1f79837271",
+      "observedAt": "2026-10-20T15:38:58.566Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b12e06d5e1f79837271",
+      "observedAt": "2026-10-20T15:39:00.839Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "online",
+      "status": "prepared",
+      "observedAt": "2026-10-20T15:39:03.246Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:39:06.412Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:39:08.310Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:39:10.043Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:39:13.619Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "StopStack",
+      "stack": "lingxiloop-app-a",
+      "observedAt": "2026-10-20T15:39:14.063Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "StopStack",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78b22e06d5e1f79837275",
+      "observedAt": "2026-10-20T15:39:14.337Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "StopStack",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78b22e06d5e1f79837275",
+      "observedAt": "2026-10-20T15:39:16.617Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "drain",
+      "status": "stopped",
+      "stack": "lingxiloop-app-a",
+      "service": "worker",
+      "observedAt": "2026-10-20T15:39:18.452Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:39:22.050Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:39:24.357Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:39:26.829Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:39:31.188Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "StopStack",
+      "stack": "lingxiloop-app-b",
+      "observedAt": "2026-10-20T15:39:31.632Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "StopStack",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78b33e06d5e1f7983727d",
+      "observedAt": "2026-10-20T15:39:31.907Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "StopStack",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78b33e06d5e1f7983727d",
+      "observedAt": "2026-10-20T15:39:34.561Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "drain",
+      "status": "stopped",
+      "stack": "lingxiloop-app-b",
+      "service": "worker",
+      "observedAt": "2026-10-20T15:39:36.439Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:39:41.448Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:39:41.716Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b3ee06d5e1f7983727e",
+      "observedAt": "2026-10-20T15:39:42.535Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b3ee06d5e1f7983727e",
+      "observedAt": "2026-10-20T15:39:45.200Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "drain",
+      "status": "zero-leases",
+      "state": {
+        "count": 48,
+        "queued": 0,
+        "schema": 13,
+        "product": 48,
+        "runtime": "3.5.8",
+        "liveWork": 0,
+        "prepared": 0,
+        "protocol": 11,
+        "readOnly": true,
+        "liveOutbox": 0,
+        "migrations": [
+          {
+            "name": "v1_baseline",
+            "version": 1,
+            "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+          },
+          {
+            "name": "remove_legacy_identity",
+            "version": 2,
+            "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+          },
+          {
+            "name": "agent_os_session_affinity",
+            "version": 3,
+            "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+          },
+          {
+            "name": "backfill_personal_owner_participants",
+            "version": 4,
+            "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+          },
+          {
+            "name": "lingxios_v2_reset",
+            "version": 5,
+            "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+          },
+          {
+            "name": "observable_live_eval",
+            "version": 6,
+            "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+          },
+          {
+            "name": "install_lingxios",
+            "version": 7,
+            "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+          },
+          {
+            "name": "agent_os_execution",
+            "version": 8,
+            "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+          },
+          {
+            "name": "native_agent_tools",
+            "version": 9,
+            "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+          },
+          {
+            "name": "lingxios_native_runtime",
+            "version": 10,
+            "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+          },
+          {
+            "name": "closed_education",
+            "version": 11,
+            "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+          },
+          {
+            "name": "lingxios_3_2",
+            "version": 12,
+            "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+          },
+          {
+            "name": "native_collaboration",
+            "version": 13,
+            "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+          },
+          {
+            "name": "profile_avatars",
+            "version": 14,
+            "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+          },
+          {
+            "name": "lingxios_3_2_6",
+            "version": 15,
+            "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+          },
+          {
+            "name": "lingxios_3_2_7",
+            "version": 16,
+            "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+          },
+          {
+            "name": "lingxios_3_2_8",
+            "version": 17,
+            "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+          },
+          {
+            "name": "lingxios_3_2_9",
+            "version": 18,
+            "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+          },
+          {
+            "name": "agent_read_receipts",
+            "version": 19,
+            "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+          },
+          {
+            "name": "lingxios_3_2_10",
+            "version": 20,
+            "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+          },
+          {
+            "name": "lingxios_3_2_11",
+            "version": 21,
+            "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+          },
+          {
+            "name": "lingxios_3_2_12",
+            "version": 22,
+            "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+          },
+          {
+            "name": "lingxios_3_2_13",
+            "version": 23,
+            "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+          },
+          {
+            "name": "lingxios_3_3_0",
+            "version": 24,
+            "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+          },
+          {
+            "name": "lingxios_3_3_1",
+            "version": 25,
+            "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+          },
+          {
+            "name": "lingxios_3_3_2",
+            "version": 26,
+            "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+          },
+          {
+            "name": "learning_collaboration",
+            "version": 27,
+            "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+          },
+          {
+            "name": "lingxios_3_3_4",
+            "version": 28,
+            "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+          },
+          {
+            "name": "lingxios_3_3_5",
+            "version": 29,
+            "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+          },
+          {
+            "name": "lingxios_3_3_6",
+            "version": 30,
+            "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+          },
+          {
+            "name": "agent_capabilities",
+            "version": 31,
+            "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+          },
+          {
+            "name": "native_message_attachments",
+            "version": 32,
+            "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+          },
+          {
+            "name": "interactive_ui",
+            "version": 33,
+            "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+          },
+          {
+            "name": "retire_email_calendar",
+            "version": 34,
+            "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+          },
+          {
+            "name": "course_forum",
+            "version": 35,
+            "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+          },
+          {
+            "name": "public_run_activity",
+            "version": 36,
+            "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+          },
+          {
+            "name": "forum_comment_attachments",
+            "version": 37,
+            "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+          },
+          {
+            "name": "learning_submission_sequence",
+            "version": 38,
+            "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+          },
+          {
+            "name": "native_memory_collaboration",
+            "version": 39,
+            "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+          },
+          {
+            "name": "forum_assignment_convergence",
+            "version": 40,
+            "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+          },
+          {
+            "name": "homework_mastery",
+            "version": 41,
+            "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+          },
+          {
+            "name": "forum_submission_evidence",
+            "version": 42,
+            "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+          },
+          {
+            "name": "lingxios_3_5_0",
+            "version": 43,
+            "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+          },
+          {
+            "name": "questionnaire_wait",
+            "version": 44,
+            "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+          },
+          {
+            "name": "organization_cases",
+            "version": 45,
+            "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+          },
+          {
+            "name": "visualize",
+            "version": 46,
+            "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+          },
+          {
+            "name": "memory_continuity",
+            "version": 47,
+            "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+          },
+          {
+            "name": "native_content_documents",
+            "version": 48,
+            "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+          }
+        ],
+        "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+        "liveCapture": 0,
+        "liveSession": 0,
+        "liveAttempts": 0,
+        "otherClients": 6,
+        "fullVisibility": true,
+        "pendingCapture": 0,
+        "installedSchema": 13
+      },
+      "observedAt": "2026-10-20T15:39:45.201Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:39:51.745Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:39:52.015Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b48e06d5e1f79837282",
+      "observedAt": "2026-10-20T15:39:52.301Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b48e06d5e1f79837282",
+      "observedAt": "2026-10-20T15:39:54.571Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "drain",
+      "status": "zero-leases",
+      "state": {
+        "count": 48,
+        "queued": 0,
+        "schema": 13,
+        "product": 48,
+        "runtime": "3.5.8",
+        "liveWork": 0,
+        "prepared": 0,
+        "protocol": 11,
+        "readOnly": true,
+        "liveOutbox": 0,
+        "migrations": [
+          {
+            "name": "v1_baseline",
+            "version": 1,
+            "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+          },
+          {
+            "name": "remove_legacy_identity",
+            "version": 2,
+            "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+          },
+          {
+            "name": "agent_os_session_affinity",
+            "version": 3,
+            "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+          },
+          {
+            "name": "backfill_personal_owner_participants",
+            "version": 4,
+            "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+          },
+          {
+            "name": "lingxios_v2_reset",
+            "version": 5,
+            "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+          },
+          {
+            "name": "observable_live_eval",
+            "version": 6,
+            "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+          },
+          {
+            "name": "install_lingxios",
+            "version": 7,
+            "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+          },
+          {
+            "name": "agent_os_execution",
+            "version": 8,
+            "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+          },
+          {
+            "name": "native_agent_tools",
+            "version": 9,
+            "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+          },
+          {
+            "name": "lingxios_native_runtime",
+            "version": 10,
+            "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+          },
+          {
+            "name": "closed_education",
+            "version": 11,
+            "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+          },
+          {
+            "name": "lingxios_3_2",
+            "version": 12,
+            "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+          },
+          {
+            "name": "native_collaboration",
+            "version": 13,
+            "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+          },
+          {
+            "name": "profile_avatars",
+            "version": 14,
+            "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+          },
+          {
+            "name": "lingxios_3_2_6",
+            "version": 15,
+            "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+          },
+          {
+            "name": "lingxios_3_2_7",
+            "version": 16,
+            "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+          },
+          {
+            "name": "lingxios_3_2_8",
+            "version": 17,
+            "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+          },
+          {
+            "name": "lingxios_3_2_9",
+            "version": 18,
+            "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+          },
+          {
+            "name": "agent_read_receipts",
+            "version": 19,
+            "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+          },
+          {
+            "name": "lingxios_3_2_10",
+            "version": 20,
+            "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+          },
+          {
+            "name": "lingxios_3_2_11",
+            "version": 21,
+            "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+          },
+          {
+            "name": "lingxios_3_2_12",
+            "version": 22,
+            "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+          },
+          {
+            "name": "lingxios_3_2_13",
+            "version": 23,
+            "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+          },
+          {
+            "name": "lingxios_3_3_0",
+            "version": 24,
+            "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+          },
+          {
+            "name": "lingxios_3_3_1",
+            "version": 25,
+            "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+          },
+          {
+            "name": "lingxios_3_3_2",
+            "version": 26,
+            "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+          },
+          {
+            "name": "learning_collaboration",
+            "version": 27,
+            "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+          },
+          {
+            "name": "lingxios_3_3_4",
+            "version": 28,
+            "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+          },
+          {
+            "name": "lingxios_3_3_5",
+            "version": 29,
+            "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+          },
+          {
+            "name": "lingxios_3_3_6",
+            "version": 30,
+            "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+          },
+          {
+            "name": "agent_capabilities",
+            "version": 31,
+            "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+          },
+          {
+            "name": "native_message_attachments",
+            "version": 32,
+            "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+          },
+          {
+            "name": "interactive_ui",
+            "version": 33,
+            "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+          },
+          {
+            "name": "retire_email_calendar",
+            "version": 34,
+            "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+          },
+          {
+            "name": "course_forum",
+            "version": 35,
+            "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+          },
+          {
+            "name": "public_run_activity",
+            "version": 36,
+            "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+          },
+          {
+            "name": "forum_comment_attachments",
+            "version": 37,
+            "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+          },
+          {
+            "name": "learning_submission_sequence",
+            "version": 38,
+            "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+          },
+          {
+            "name": "native_memory_collaboration",
+            "version": 39,
+            "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+          },
+          {
+            "name": "forum_assignment_convergence",
+            "version": 40,
+            "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+          },
+          {
+            "name": "homework_mastery",
+            "version": 41,
+            "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+          },
+          {
+            "name": "forum_submission_evidence",
+            "version": 42,
+            "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+          },
+          {
+            "name": "lingxios_3_5_0",
+            "version": 43,
+            "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+          },
+          {
+            "name": "questionnaire_wait",
+            "version": 44,
+            "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+          },
+          {
+            "name": "organization_cases",
+            "version": 45,
+            "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+          },
+          {
+            "name": "visualize",
+            "version": 46,
+            "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+          },
+          {
+            "name": "memory_continuity",
+            "version": 47,
+            "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+          },
+          {
+            "name": "native_content_documents",
+            "version": 48,
+            "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+          }
+        ],
+        "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+        "liveCapture": 0,
+        "liveSession": 0,
+        "liveAttempts": 0,
+        "otherClients": 6,
+        "fullVisibility": true,
+        "pendingCapture": 0,
+        "installedSchema": 13
+      },
+      "observedAt": "2026-10-20T15:39:54.573Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:39:56.873Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:39:59.115Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:40:00.872Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:40:02.426Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:40:02.767Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:40:04.718Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:40:04.999Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b55e06d5e1f79837286",
+      "observedAt": "2026-10-20T15:40:05.275Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b55e06d5e1f79837286",
+      "observedAt": "2026-10-20T15:40:07.557Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:40:12.418Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:40:12.688Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b5de06d5e1f79837287",
+      "observedAt": "2026-10-20T15:40:13.179Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b5de06d5e1f79837287",
+      "observedAt": "2026-10-20T15:40:15.451Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "drain",
+      "status": "zero-leases",
+      "state": {
+        "count": 48,
+        "queued": 0,
+        "schema": 13,
+        "product": 48,
+        "runtime": "3.5.8",
+        "liveWork": 0,
+        "prepared": 0,
+        "protocol": 11,
+        "readOnly": true,
+        "liveOutbox": 0,
+        "migrations": [
+          {
+            "name": "v1_baseline",
+            "version": 1,
+            "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+          },
+          {
+            "name": "remove_legacy_identity",
+            "version": 2,
+            "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+          },
+          {
+            "name": "agent_os_session_affinity",
+            "version": 3,
+            "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+          },
+          {
+            "name": "backfill_personal_owner_participants",
+            "version": 4,
+            "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+          },
+          {
+            "name": "lingxios_v2_reset",
+            "version": 5,
+            "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+          },
+          {
+            "name": "observable_live_eval",
+            "version": 6,
+            "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+          },
+          {
+            "name": "install_lingxios",
+            "version": 7,
+            "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+          },
+          {
+            "name": "agent_os_execution",
+            "version": 8,
+            "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+          },
+          {
+            "name": "native_agent_tools",
+            "version": 9,
+            "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+          },
+          {
+            "name": "lingxios_native_runtime",
+            "version": 10,
+            "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+          },
+          {
+            "name": "closed_education",
+            "version": 11,
+            "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+          },
+          {
+            "name": "lingxios_3_2",
+            "version": 12,
+            "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+          },
+          {
+            "name": "native_collaboration",
+            "version": 13,
+            "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+          },
+          {
+            "name": "profile_avatars",
+            "version": 14,
+            "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+          },
+          {
+            "name": "lingxios_3_2_6",
+            "version": 15,
+            "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+          },
+          {
+            "name": "lingxios_3_2_7",
+            "version": 16,
+            "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+          },
+          {
+            "name": "lingxios_3_2_8",
+            "version": 17,
+            "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+          },
+          {
+            "name": "lingxios_3_2_9",
+            "version": 18,
+            "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+          },
+          {
+            "name": "agent_read_receipts",
+            "version": 19,
+            "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+          },
+          {
+            "name": "lingxios_3_2_10",
+            "version": 20,
+            "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+          },
+          {
+            "name": "lingxios_3_2_11",
+            "version": 21,
+            "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+          },
+          {
+            "name": "lingxios_3_2_12",
+            "version": 22,
+            "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+          },
+          {
+            "name": "lingxios_3_2_13",
+            "version": 23,
+            "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+          },
+          {
+            "name": "lingxios_3_3_0",
+            "version": 24,
+            "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+          },
+          {
+            "name": "lingxios_3_3_1",
+            "version": 25,
+            "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+          },
+          {
+            "name": "lingxios_3_3_2",
+            "version": 26,
+            "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+          },
+          {
+            "name": "learning_collaboration",
+            "version": 27,
+            "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+          },
+          {
+            "name": "lingxios_3_3_4",
+            "version": 28,
+            "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+          },
+          {
+            "name": "lingxios_3_3_5",
+            "version": 29,
+            "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+          },
+          {
+            "name": "lingxios_3_3_6",
+            "version": 30,
+            "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+          },
+          {
+            "name": "agent_capabilities",
+            "version": 31,
+            "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+          },
+          {
+            "name": "native_message_attachments",
+            "version": 32,
+            "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+          },
+          {
+            "name": "interactive_ui",
+            "version": 33,
+            "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+          },
+          {
+            "name": "retire_email_calendar",
+            "version": 34,
+            "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+          },
+          {
+            "name": "course_forum",
+            "version": 35,
+            "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+          },
+          {
+            "name": "public_run_activity",
+            "version": 36,
+            "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+          },
+          {
+            "name": "forum_comment_attachments",
+            "version": 37,
+            "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+          },
+          {
+            "name": "learning_submission_sequence",
+            "version": 38,
+            "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+          },
+          {
+            "name": "native_memory_collaboration",
+            "version": 39,
+            "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+          },
+          {
+            "name": "forum_assignment_convergence",
+            "version": 40,
+            "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+          },
+          {
+            "name": "homework_mastery",
+            "version": 41,
+            "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+          },
+          {
+            "name": "forum_submission_evidence",
+            "version": 42,
+            "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+          },
+          {
+            "name": "lingxios_3_5_0",
+            "version": 43,
+            "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+          },
+          {
+            "name": "questionnaire_wait",
+            "version": 44,
+            "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+          },
+          {
+            "name": "organization_cases",
+            "version": 45,
+            "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+          },
+          {
+            "name": "visualize",
+            "version": 46,
+            "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+          },
+          {
+            "name": "memory_continuity",
+            "version": 47,
+            "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+          },
+          {
+            "name": "native_content_documents",
+            "version": 48,
+            "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+          }
+        ],
+        "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+        "liveCapture": 0,
+        "liveSession": 0,
+        "liveAttempts": 0,
+        "otherClients": 6,
+        "fullVisibility": true,
+        "pendingCapture": 0,
+        "installedSchema": 13
+      },
+      "observedAt": "2026-10-20T15:40:15.452Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:40:20.866Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-a",
+      "observedAt": "2026-10-20T15:40:21.144Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78b65e06d5e1f7983728b",
+      "observedAt": "2026-10-20T15:40:21.412Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78b65e06d5e1f7983728b",
+      "observedAt": "2026-10-20T15:40:23.864Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:40:49.551Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:40:49.825Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b82e06d5e1f79837292",
+      "observedAt": "2026-10-20T15:40:50.097Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b82e06d5e1f79837292",
+      "observedAt": "2026-10-20T15:40:52.370Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "rollout",
+      "status": "healthy",
+      "stack": "lingxiloop-app-a",
+      "service": "lingxiloop",
+      "containerId": "e70de555750c34f786d91bd26f9e74bee3c4816c00bbf9d29ca5a27725844bfb",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "observedAt": "2026-10-20T15:40:52.371Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:40:55.040Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:40:57.066Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:40:59.514Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:41:01.038Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:41:01.759Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:41:03.726Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:41:04.376Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b90e06d5e1f79837296",
+      "observedAt": "2026-10-20T15:41:04.817Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b90e06d5e1f79837296",
+      "observedAt": "2026-10-20T15:41:07.092Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:41:14.546Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:41:16.351Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b9ce06d5e1f7983729a",
+      "observedAt": "2026-10-20T15:41:16.627Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78b9ce06d5e1f7983729a",
+      "observedAt": "2026-10-20T15:41:19.457Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "drain",
+      "status": "zero-leases",
+      "state": {
+        "count": 48,
+        "queued": 0,
+        "schema": 13,
+        "product": 48,
+        "runtime": "3.5.8",
+        "liveWork": 0,
+        "prepared": 0,
+        "protocol": 11,
+        "readOnly": true,
+        "liveOutbox": 0,
+        "migrations": [
+          {
+            "name": "v1_baseline",
+            "version": 1,
+            "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+          },
+          {
+            "name": "remove_legacy_identity",
+            "version": 2,
+            "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+          },
+          {
+            "name": "agent_os_session_affinity",
+            "version": 3,
+            "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+          },
+          {
+            "name": "backfill_personal_owner_participants",
+            "version": 4,
+            "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+          },
+          {
+            "name": "lingxios_v2_reset",
+            "version": 5,
+            "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+          },
+          {
+            "name": "observable_live_eval",
+            "version": 6,
+            "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+          },
+          {
+            "name": "install_lingxios",
+            "version": 7,
+            "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+          },
+          {
+            "name": "agent_os_execution",
+            "version": 8,
+            "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+          },
+          {
+            "name": "native_agent_tools",
+            "version": 9,
+            "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+          },
+          {
+            "name": "lingxios_native_runtime",
+            "version": 10,
+            "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+          },
+          {
+            "name": "closed_education",
+            "version": 11,
+            "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+          },
+          {
+            "name": "lingxios_3_2",
+            "version": 12,
+            "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+          },
+          {
+            "name": "native_collaboration",
+            "version": 13,
+            "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+          },
+          {
+            "name": "profile_avatars",
+            "version": 14,
+            "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+          },
+          {
+            "name": "lingxios_3_2_6",
+            "version": 15,
+            "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+          },
+          {
+            "name": "lingxios_3_2_7",
+            "version": 16,
+            "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+          },
+          {
+            "name": "lingxios_3_2_8",
+            "version": 17,
+            "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+          },
+          {
+            "name": "lingxios_3_2_9",
+            "version": 18,
+            "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+          },
+          {
+            "name": "agent_read_receipts",
+            "version": 19,
+            "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+          },
+          {
+            "name": "lingxios_3_2_10",
+            "version": 20,
+            "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+          },
+          {
+            "name": "lingxios_3_2_11",
+            "version": 21,
+            "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+          },
+          {
+            "name": "lingxios_3_2_12",
+            "version": 22,
+            "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+          },
+          {
+            "name": "lingxios_3_2_13",
+            "version": 23,
+            "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+          },
+          {
+            "name": "lingxios_3_3_0",
+            "version": 24,
+            "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+          },
+          {
+            "name": "lingxios_3_3_1",
+            "version": 25,
+            "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+          },
+          {
+            "name": "lingxios_3_3_2",
+            "version": 26,
+            "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+          },
+          {
+            "name": "learning_collaboration",
+            "version": 27,
+            "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+          },
+          {
+            "name": "lingxios_3_3_4",
+            "version": 28,
+            "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+          },
+          {
+            "name": "lingxios_3_3_5",
+            "version": 29,
+            "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+          },
+          {
+            "name": "lingxios_3_3_6",
+            "version": 30,
+            "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+          },
+          {
+            "name": "agent_capabilities",
+            "version": 31,
+            "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+          },
+          {
+            "name": "native_message_attachments",
+            "version": 32,
+            "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+          },
+          {
+            "name": "interactive_ui",
+            "version": 33,
+            "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+          },
+          {
+            "name": "retire_email_calendar",
+            "version": 34,
+            "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+          },
+          {
+            "name": "course_forum",
+            "version": 35,
+            "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+          },
+          {
+            "name": "public_run_activity",
+            "version": 36,
+            "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+          },
+          {
+            "name": "forum_comment_attachments",
+            "version": 37,
+            "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+          },
+          {
+            "name": "learning_submission_sequence",
+            "version": 38,
+            "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+          },
+          {
+            "name": "native_memory_collaboration",
+            "version": 39,
+            "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+          },
+          {
+            "name": "forum_assignment_convergence",
+            "version": 40,
+            "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+          },
+          {
+            "name": "homework_mastery",
+            "version": 41,
+            "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+          },
+          {
+            "name": "forum_submission_evidence",
+            "version": 42,
+            "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+          },
+          {
+            "name": "lingxios_3_5_0",
+            "version": 43,
+            "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+          },
+          {
+            "name": "questionnaire_wait",
+            "version": 44,
+            "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+          },
+          {
+            "name": "organization_cases",
+            "version": 45,
+            "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+          },
+          {
+            "name": "visualize",
+            "version": 46,
+            "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+          },
+          {
+            "name": "memory_continuity",
+            "version": 47,
+            "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+          },
+          {
+            "name": "native_content_documents",
+            "version": 48,
+            "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+          }
+        ],
+        "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+        "liveCapture": 0,
+        "liveSession": 0,
+        "liveAttempts": 0,
+        "otherClients": 8,
+        "fullVisibility": true,
+        "pendingCapture": 0,
+        "installedSchema": 13
+      },
+      "observedAt": "2026-10-20T15:41:19.458Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:41:24.348Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-b",
+      "observedAt": "2026-10-20T15:41:24.795Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78ba4e06d5e1f7983729b",
+      "observedAt": "2026-10-20T15:41:25.068Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78ba4e06d5e1f7983729b",
+      "observedAt": "2026-10-20T15:41:28.278Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:41:48.869Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:41:49.147Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78bbde06d5e1f798372a2",
+      "observedAt": "2026-10-20T15:41:49.828Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78bbde06d5e1f798372a2",
+      "observedAt": "2026-10-20T15:41:52.111Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "rollout",
+      "status": "healthy",
+      "stack": "lingxiloop-app-b",
+      "service": "lingxiloop",
+      "containerId": "52b8a51e126ebf900b763cbe22711b85bb931e35a08c8c8a8ea81cd11b91061c",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "observedAt": "2026-10-20T15:41:52.112Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:41:54.390Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:41:56.103Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:41:58.169Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:42:00.447Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:42:00.869Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:42:02.823Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:42:03.102Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78bcce06d5e1f798372a6",
+      "observedAt": "2026-10-20T15:42:04.284Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78bcce06d5e1f798372a6",
+      "observedAt": "2026-10-20T15:42:06.560Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:42:11.684Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:42:11.958Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78bd4e06d5e1f798372a7",
+      "observedAt": "2026-10-20T15:42:12.236Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78bd4e06d5e1f798372a7",
+      "observedAt": "2026-10-20T15:42:14.512Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "drain",
+      "status": "zero-leases",
+      "state": {
+        "count": 48,
+        "queued": 0,
+        "schema": 13,
+        "product": 48,
+        "runtime": "3.5.8",
+        "liveWork": 0,
+        "prepared": 0,
+        "protocol": 11,
+        "readOnly": true,
+        "liveOutbox": 0,
+        "migrations": [
+          {
+            "name": "v1_baseline",
+            "version": 1,
+            "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+          },
+          {
+            "name": "remove_legacy_identity",
+            "version": 2,
+            "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+          },
+          {
+            "name": "agent_os_session_affinity",
+            "version": 3,
+            "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+          },
+          {
+            "name": "backfill_personal_owner_participants",
+            "version": 4,
+            "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+          },
+          {
+            "name": "lingxios_v2_reset",
+            "version": 5,
+            "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+          },
+          {
+            "name": "observable_live_eval",
+            "version": 6,
+            "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+          },
+          {
+            "name": "install_lingxios",
+            "version": 7,
+            "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+          },
+          {
+            "name": "agent_os_execution",
+            "version": 8,
+            "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+          },
+          {
+            "name": "native_agent_tools",
+            "version": 9,
+            "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+          },
+          {
+            "name": "lingxios_native_runtime",
+            "version": 10,
+            "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+          },
+          {
+            "name": "closed_education",
+            "version": 11,
+            "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+          },
+          {
+            "name": "lingxios_3_2",
+            "version": 12,
+            "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+          },
+          {
+            "name": "native_collaboration",
+            "version": 13,
+            "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+          },
+          {
+            "name": "profile_avatars",
+            "version": 14,
+            "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+          },
+          {
+            "name": "lingxios_3_2_6",
+            "version": 15,
+            "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+          },
+          {
+            "name": "lingxios_3_2_7",
+            "version": 16,
+            "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+          },
+          {
+            "name": "lingxios_3_2_8",
+            "version": 17,
+            "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+          },
+          {
+            "name": "lingxios_3_2_9",
+            "version": 18,
+            "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+          },
+          {
+            "name": "agent_read_receipts",
+            "version": 19,
+            "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+          },
+          {
+            "name": "lingxios_3_2_10",
+            "version": 20,
+            "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+          },
+          {
+            "name": "lingxios_3_2_11",
+            "version": 21,
+            "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+          },
+          {
+            "name": "lingxios_3_2_12",
+            "version": 22,
+            "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+          },
+          {
+            "name": "lingxios_3_2_13",
+            "version": 23,
+            "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+          },
+          {
+            "name": "lingxios_3_3_0",
+            "version": 24,
+            "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+          },
+          {
+            "name": "lingxios_3_3_1",
+            "version": 25,
+            "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+          },
+          {
+            "name": "lingxios_3_3_2",
+            "version": 26,
+            "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+          },
+          {
+            "name": "learning_collaboration",
+            "version": 27,
+            "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+          },
+          {
+            "name": "lingxios_3_3_4",
+            "version": 28,
+            "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+          },
+          {
+            "name": "lingxios_3_3_5",
+            "version": 29,
+            "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+          },
+          {
+            "name": "lingxios_3_3_6",
+            "version": 30,
+            "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+          },
+          {
+            "name": "agent_capabilities",
+            "version": 31,
+            "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+          },
+          {
+            "name": "native_message_attachments",
+            "version": 32,
+            "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+          },
+          {
+            "name": "interactive_ui",
+            "version": 33,
+            "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+          },
+          {
+            "name": "retire_email_calendar",
+            "version": 34,
+            "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+          },
+          {
+            "name": "course_forum",
+            "version": 35,
+            "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+          },
+          {
+            "name": "public_run_activity",
+            "version": 36,
+            "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+          },
+          {
+            "name": "forum_comment_attachments",
+            "version": 37,
+            "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+          },
+          {
+            "name": "learning_submission_sequence",
+            "version": 38,
+            "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+          },
+          {
+            "name": "native_memory_collaboration",
+            "version": 39,
+            "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+          },
+          {
+            "name": "forum_assignment_convergence",
+            "version": 40,
+            "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+          },
+          {
+            "name": "homework_mastery",
+            "version": 41,
+            "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+          },
+          {
+            "name": "forum_submission_evidence",
+            "version": 42,
+            "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+          },
+          {
+            "name": "lingxios_3_5_0",
+            "version": 43,
+            "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+          },
+          {
+            "name": "questionnaire_wait",
+            "version": 44,
+            "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+          },
+          {
+            "name": "organization_cases",
+            "version": 45,
+            "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+          },
+          {
+            "name": "visualize",
+            "version": 46,
+            "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+          },
+          {
+            "name": "memory_continuity",
+            "version": 47,
+            "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+          },
+          {
+            "name": "native_content_documents",
+            "version": 48,
+            "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+          }
+        ],
+        "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+        "liveCapture": 0,
+        "liveSession": 0,
+        "liveAttempts": 0,
+        "otherClients": 6,
+        "fullVisibility": true,
+        "pendingCapture": 0,
+        "installedSchema": 13
+      },
+      "observedAt": "2026-10-20T15:42:14.513Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:42:19.773Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-a",
+      "observedAt": "2026-10-20T15:42:20.056Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78bdce06d5e1f798372ab",
+      "observedAt": "2026-10-20T15:42:20.332Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-a",
+      "updateId": "6ad78bdce06d5e1f798372ab",
+      "observedAt": "2026-10-20T15:42:23.162Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:42:44.272Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:42:44.540Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78bf4e06d5e1f798372af",
+      "observedAt": "2026-10-20T15:42:44.821Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78bf4e06d5e1f798372af",
+      "observedAt": "2026-10-20T15:42:47.098Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "rollout",
+      "status": "healthy",
+      "stack": "lingxiloop-app-a",
+      "service": "worker",
+      "containerId": "a27c736d258293d0ade0595e78fd1668f13df59aaa44f1b447253b46c8d40b2a",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "observedAt": "2026-10-20T15:42:47.100Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:42:50.193Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:42:52.224Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:42:53.902Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:42:55.806Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:42:56.153Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:42:58.880Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:42:59.148Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78c03e06d5e1f798372b3",
+      "observedAt": "2026-10-20T15:42:59.424Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78c03e06d5e1f798372b3",
+      "observedAt": "2026-10-20T15:43:01.695Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:43:07.730Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-b",
+      "observedAt": "2026-10-20T15:43:08.367Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78c0de06d5e1f798372b7",
+      "observedAt": "2026-10-20T15:43:09.405Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "DeployStack",
+      "stack": "lingxiloop-app-b",
+      "updateId": "6ad78c0de06d5e1f798372b7",
+      "observedAt": "2026-10-20T15:43:11.866Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:43:33.369Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:43:33.637Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78c25e06d5e1f798372be",
+      "observedAt": "2026-10-20T15:43:33.910Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78c25e06d5e1f798372be",
+      "observedAt": "2026-10-20T15:43:36.190Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "rollout",
+      "status": "healthy",
+      "stack": "lingxiloop-app-b",
+      "service": "worker",
+      "containerId": "7aaa9cf9ef24976ccfde3d75e14135c811266b474a005cb1029da0096f07c98c",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "observedAt": "2026-10-20T15:43:36.191Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "sourcePhase": "target",
+      "sha256": "0396b9932f663a0ab22ed67a2686d3199d3ae1bbc4e11872f00b6db072d99ec7",
+      "observedAt": "2026-10-20T15:43:40.782Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "sourcePhase": "target",
+      "sha256": "e3eb0cfdc5490a6f09c37421b9f7164c1a03372c795c1dcd5abdc0555ebab109",
+      "observedAt": "2026-10-20T15:43:43.849Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:43:46.305Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-a",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:43:48.211Z"
+    },
+    {
+      "phase": "image",
+      "status": "verified",
+      "stack": "lingxiloop-app-b",
+      "release": "target",
+      "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "platform": "linux/amd64",
+      "layers": 22,
+      "observedAt": "2026-10-20T15:43:48.558Z"
+    },
+    {
+      "phase": "host-source",
+      "status": "verified",
+      "stack": "lingxiloop-core-state",
+      "sourcePhase": "source",
+      "sha256": "dda3dd16ff30968905f2083d271a28d12e1519f713ce46a7fead19a02ce82dab",
+      "observedAt": "2026-10-20T15:43:50.517Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "submitting",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "observedAt": "2026-10-20T15:43:50.786Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "pending",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78c37e06d5e1f798372c2",
+      "observedAt": "2026-10-20T15:43:51.274Z"
+    },
+    {
+      "phase": "komodo",
+      "status": "complete",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "updateId": "6ad78c37e06d5e1f798372c2",
+      "observedAt": "2026-10-20T15:43:53.550Z"
+    },
+    {
+      "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+      "phase": "complete",
+      "status": "complete",
+      "state": {
+        "count": 48,
+        "queued": 0,
+        "schema": 13,
+        "product": 48,
+        "runtime": "3.5.8",
+        "liveWork": 0,
+        "prepared": 0,
+        "protocol": 11,
+        "readOnly": true,
+        "liveOutbox": 0,
+        "migrations": [
+          {
+            "name": "v1_baseline",
+            "version": 1,
+            "checksum": "6daae1c2496c16871574f585169691bb97a2d5fbf6ab1e4d61b035a4cce9fdbd"
+          },
+          {
+            "name": "remove_legacy_identity",
+            "version": 2,
+            "checksum": "f6212117843f47e852004ee8efcae3f29c44dcfb6e141d0d9a35ffe7ac3bce1c"
+          },
+          {
+            "name": "agent_os_session_affinity",
+            "version": 3,
+            "checksum": "138bd19a9b574a8cc09c54c78ad03d1d6579794369b99d1d109e2a714b2329f4"
+          },
+          {
+            "name": "backfill_personal_owner_participants",
+            "version": 4,
+            "checksum": "77dbcbe2907f53e72c60190bc9534ca3cb52f9b8d7ffd5f4662a8d2379442a51"
+          },
+          {
+            "name": "lingxios_v2_reset",
+            "version": 5,
+            "checksum": "bb044adc4020714f485550ef65c10849d56d84ec76dee0d4084c63cc0d08611a"
+          },
+          {
+            "name": "observable_live_eval",
+            "version": 6,
+            "checksum": "0696a475f80df4e44e62d28927a5579eef0e54e11183719d623f664840478d0c"
+          },
+          {
+            "name": "install_lingxios",
+            "version": 7,
+            "checksum": "12667e4d22ee3b8903fd89179a37bd81951324a164088cfc508146a0a24b3b1b"
+          },
+          {
+            "name": "agent_os_execution",
+            "version": 8,
+            "checksum": "a2a6a59fe82e75820ecaea0c0a73e953fd826d56f2c0716634265472f5e85109"
+          },
+          {
+            "name": "native_agent_tools",
+            "version": 9,
+            "checksum": "12277e753236ac2b1f18e8f805511625cdf04e94a8f9edf7e91fc263765be195"
+          },
+          {
+            "name": "lingxios_native_runtime",
+            "version": 10,
+            "checksum": "eb4a47fd7406597e19827c71198fd585f1bd0c1a76e40b0b487c5a2653f4e717"
+          },
+          {
+            "name": "closed_education",
+            "version": 11,
+            "checksum": "25c0d4969af34d9a4f61165a1a6be82bfa503c0dd4a56eb81a7c2fe90a4dc378"
+          },
+          {
+            "name": "lingxios_3_2",
+            "version": 12,
+            "checksum": "13a2a28b5177ef82c25f9659304b7d56ea16522a7522118626d686cca110899a"
+          },
+          {
+            "name": "native_collaboration",
+            "version": 13,
+            "checksum": "7d161d7e6705708bec641b69aa0604141b548872fa27d3d978167546a3c8537b"
+          },
+          {
+            "name": "profile_avatars",
+            "version": 14,
+            "checksum": "f8f23b79d57ca0e329683c5945a81117e8e890bc791d45608ac5cb31b48134c9"
+          },
+          {
+            "name": "lingxios_3_2_6",
+            "version": 15,
+            "checksum": "06c726fec65f73300007a312b1f80b317a222794966eb1b1bab369ba5dad0e97"
+          },
+          {
+            "name": "lingxios_3_2_7",
+            "version": 16,
+            "checksum": "155f83e827bb15c6cd5ff8711079c0875c8cb4a68252483381ec35671c0fbd9f"
+          },
+          {
+            "name": "lingxios_3_2_8",
+            "version": 17,
+            "checksum": "e32ff71218dfc7b8926fa538fd1bc0e2a2f1fce33e932c36069a1608a04e865f"
+          },
+          {
+            "name": "lingxios_3_2_9",
+            "version": 18,
+            "checksum": "2e346c4548bebd673f85087837e82e71a786d1990a5509d5239f52919c98e5f8"
+          },
+          {
+            "name": "agent_read_receipts",
+            "version": 19,
+            "checksum": "79a2761d0d6bd72f57bf2b611733f873acd76be83b7e7aa5ae117a3578afb098"
+          },
+          {
+            "name": "lingxios_3_2_10",
+            "version": 20,
+            "checksum": "5ccdf964574c2b7cb3523d95b08294736a6564b4c8617dd017d8bd0bf3038cfb"
+          },
+          {
+            "name": "lingxios_3_2_11",
+            "version": 21,
+            "checksum": "e9ad2ae075f1b752acc14f8b6dec1d46f887c10187b1678a3a41c55cc4fadb25"
+          },
+          {
+            "name": "lingxios_3_2_12",
+            "version": 22,
+            "checksum": "9a20cdc1722cde9f10dd3b366962a5a97cec8e1e472fa6681eb176d38dd583f0"
+          },
+          {
+            "name": "lingxios_3_2_13",
+            "version": 23,
+            "checksum": "c598bbf9db82a201b8c8257244c20e1793f92bcefa0ad3b323863b04554e47cd"
+          },
+          {
+            "name": "lingxios_3_3_0",
+            "version": 24,
+            "checksum": "ab396dce6b8be37ab972361cd80262a1291f243a124429ab59c0c0af75333427"
+          },
+          {
+            "name": "lingxios_3_3_1",
+            "version": 25,
+            "checksum": "4cd3b854f050060813e4681b7a820bb7eba8ebc89f9c6057dbb4a894df142fbf"
+          },
+          {
+            "name": "lingxios_3_3_2",
+            "version": 26,
+            "checksum": "e519f1979ba516baf955627892252b18f2fe14667b10615ec92034deb2bc5bfa"
+          },
+          {
+            "name": "learning_collaboration",
+            "version": 27,
+            "checksum": "d3ef2497975750e1a9744e81764c402f697316e2f4d000761aeb50de02c4ee5c"
+          },
+          {
+            "name": "lingxios_3_3_4",
+            "version": 28,
+            "checksum": "efc27b8387d96642674d3627d78373cd5262ace75349a86bdc027fd4517f4c2a"
+          },
+          {
+            "name": "lingxios_3_3_5",
+            "version": 29,
+            "checksum": "58a8bfd78c987b22ea31b8aa82d1dd7847e9d0876fe072dec90e9c90c7f2eac8"
+          },
+          {
+            "name": "lingxios_3_3_6",
+            "version": 30,
+            "checksum": "c2594b609479705b83819c1fe52945d54b77e0db8f42eddb5858120879f8e672"
+          },
+          {
+            "name": "agent_capabilities",
+            "version": 31,
+            "checksum": "e77253fe67c14d8916dd7c848a91af9973675ce782442810264f562b9a67b7ee"
+          },
+          {
+            "name": "native_message_attachments",
+            "version": 32,
+            "checksum": "8491c0067db206c95274eed4bde59a47589aadea3a0c04db461ac52d1c691e96"
+          },
+          {
+            "name": "interactive_ui",
+            "version": 33,
+            "checksum": "a4b7707c9b55f72aacce7a23a040eef3b3736838ab451f9d0e6d594aa3d1a9e9"
+          },
+          {
+            "name": "retire_email_calendar",
+            "version": 34,
+            "checksum": "13f412d058e2b3e8ed051bc7212684190a530471e45e2d577aa1beff58537af8"
+          },
+          {
+            "name": "course_forum",
+            "version": 35,
+            "checksum": "45934d36b0d6ec1b20600f7e95e32fa629a27643f7ec80f5cdb8c08a1b572828"
+          },
+          {
+            "name": "public_run_activity",
+            "version": 36,
+            "checksum": "e7883f5fe2dd35e9d9955c1519c7782b74bc21a68eed8307cdcd0df3f869dc1e"
+          },
+          {
+            "name": "forum_comment_attachments",
+            "version": 37,
+            "checksum": "70110a4cf37f7fd50324be3eddd5cd0401b07e04879167a0dd2ec1bf2b44da2c"
+          },
+          {
+            "name": "learning_submission_sequence",
+            "version": 38,
+            "checksum": "d127c7049a5351491b4861cd7d6e7aba750bd4f5162849539ba433f81b1fc5e5"
+          },
+          {
+            "name": "native_memory_collaboration",
+            "version": 39,
+            "checksum": "76580653162b08c9eaeae97ac3433ed0ffd46047b7b8fc3a999fe0d52e578195"
+          },
+          {
+            "name": "forum_assignment_convergence",
+            "version": 40,
+            "checksum": "e1c4aca1724c3c6711140e5bd8480fb34e1131701e9c09286e33da77975b59c4"
+          },
+          {
+            "name": "homework_mastery",
+            "version": 41,
+            "checksum": "5cc94f5618f33cd1ea5f371c5505743adcc1b1e51f5d750b68c8bb36b323f926"
+          },
+          {
+            "name": "forum_submission_evidence",
+            "version": 42,
+            "checksum": "b374cb2cd1d514dadca7079c359029f10b6423329a9dc824ea0f1b33f94097a0"
+          },
+          {
+            "name": "lingxios_3_5_0",
+            "version": 43,
+            "checksum": "b3c96172a6a79361a0cc9d2f0b9e36d4b848160e90c2c2e0cf1648c74d739a2f"
+          },
+          {
+            "name": "questionnaire_wait",
+            "version": 44,
+            "checksum": "2d2630b60f3d13f97d90522d86ce7d7b0b2e42cc58558c14ed488922feebac19"
+          },
+          {
+            "name": "organization_cases",
+            "version": 45,
+            "checksum": "697d68b27732329d6161a25337aa48d503a9a56435a79bec02dc51940c7a7247"
+          },
+          {
+            "name": "visualize",
+            "version": 46,
+            "checksum": "3d486aad6524a899544c953cb5989a8f8afcafe5cb555be9d36aed21520a879b"
+          },
+          {
+            "name": "memory_continuity",
+            "version": 47,
+            "checksum": "3d0c372c6fee6c61b3cea64d02cdfd463468b68fb097efe2cbc47d0e8fe263a5"
+          },
+          {
+            "name": "native_content_documents",
+            "version": 48,
+            "checksum": "f4acba3655aefa97a37cc734f6a18ffd3e26f0ecc3dc8b192e094b385b0a0dbb"
+          }
+        ],
+        "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+        "liveCapture": 0,
+        "liveSession": 0,
+        "liveAttempts": 0,
+        "otherClients": 21,
+        "fullVisibility": true,
+        "pendingCapture": 0,
+        "installedSchema": 13
+      },
+      "containers": [
+        {
+          "stack": "lingxiloop-app-a",
+          "server": "shanghai-a",
+          "service": "lingxiloop",
+          "id": "e70de555750c34f786d91bd26f9e74bee3c4816c00bbf9d29ca5a27725844bfb",
+          "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+          "running": true,
+          "restarting": false,
+          "restartCount": 0,
+          "pid": 2420433,
+          "healthy": true,
+          "policy": {
+            "readOnly": false,
+            "privileged": false,
+            "securityOpt": [],
+            "capAdd": [],
+            "capDrop": [],
+            "pidsLimit": null,
+            "user": "",
+            "productionMode": true
+          }
+        },
+        {
+          "stack": "lingxiloop-app-a",
+          "server": "shanghai-a",
+          "service": "worker",
+          "id": "a27c736d258293d0ade0595e78fd1668f13df59aaa44f1b447253b46c8d40b2a",
+          "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+          "running": true,
+          "restarting": false,
+          "restartCount": 0,
+          "pid": 2423915,
+          "healthy": true,
+          "policy": {
+            "readOnly": true,
+            "privileged": false,
+            "securityOpt": [
+              "seccomp=unconfined"
+            ],
+            "capAdd": [],
+            "capDrop": [],
+            "pidsLimit": 128,
+            "user": "",
+            "productionMode": true
+          }
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "server": "shanghai-b",
+          "service": "lingxiloop",
+          "id": "52b8a51e126ebf900b763cbe22711b85bb931e35a08c8c8a8ea81cd11b91061c",
+          "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+          "running": true,
+          "restarting": false,
+          "restartCount": 0,
+          "pid": 4149662,
+          "healthy": true,
+          "policy": {
+            "readOnly": false,
+            "privileged": false,
+            "securityOpt": [],
+            "capAdd": [],
+            "capDrop": [],
+            "pidsLimit": null,
+            "user": "",
+            "productionMode": true
+          }
+        },
+        {
+          "stack": "lingxiloop-app-b",
+          "server": "shanghai-b",
+          "service": "worker",
+          "id": "7aaa9cf9ef24976ccfde3d75e14135c811266b474a005cb1029da0096f07c98c",
+          "source": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+          "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+          "running": true,
+          "restarting": false,
+          "restartCount": 0,
+          "pid": 4153074,
+          "healthy": true,
+          "policy": {
+            "readOnly": true,
+            "privileged": false,
+            "securityOpt": [
+              "seccomp=unconfined"
+            ],
+            "capAdd": [],
+            "capDrop": [],
+            "pidsLimit": 128,
+            "user": "",
+            "productionMode": true
+          }
+        }
+      ],
+      "observedAt": "2026-10-20T15:43:55.586Z"
+    }
+  ]
+}

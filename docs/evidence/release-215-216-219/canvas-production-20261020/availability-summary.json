@@ -1,0 +1,33 @@
+{
+  "throughAcceptance": "2026-10-20T15:45:47.705Z",
+  "sampledEndpoint": "https://loop.lingxilearn.cn/readyz",
+  "firstSample": "2026-10-20T15:12:38.760Z",
+  "lastSample": "2026-10-20T15:45:47.068Z",
+  "samples": 359,
+  "failedSamples": 0,
+  "preparationStartedAt": "2026-10-20T15:25:38.431Z",
+  "preparationCompletedAt": "2026-10-20T15:35:25.037Z",
+  "releaseStartedAt": "2026-10-20T15:36:15.950Z",
+  "releaseCompletedAt": "2026-10-20T15:43:55.586Z",
+  "workerStops": [
+    {
+      "stack": "lingxiloop-app-a",
+      "at": "2026-10-20T15:39:18.452Z"
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "at": "2026-10-20T15:39:36.439Z"
+    }
+  ],
+  "newWorkerHealthy": [
+    {
+      "stack": "lingxiloop-app-a",
+      "at": "2026-10-20T15:42:47.100Z"
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "at": "2026-10-20T15:43:36.191Z"
+    }
+  ],
+  "scope": "Approximately5second public readiness samples only; not continuous availability, authenticated chat or absence of queueing."
+}

@@ -1,0 +1,504 @@
+{
+  "attestationDescriptorsNotDownloaded": 1,
+  "compressedLayerBytes": 192937300,
+  "configBytes": 13312,
+  "configDigest": "sha256:80c5e5ce9f7c0b20b06ae3ec9c0512bc2f8976572f7cab81a6de4c1f45c5fa6a",
+  "elapsedSeconds": 23.085,
+  "indexBytes": 856,
+  "indexDigest": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+  "inventorySha256": "f6edb98540280cee95f2a453a5b1bb626e692911037630420b70b82a1ebc4e0a",
+  "isolation": "not-tested",
+  "layerCount": 22,
+  "layers": [
+    {
+      "compressedBytes": 28249323,
+      "diffId": "sha256:e58989146fcec76699871403b9897b5c014af1ccd85f5a9300a215e7975525d7",
+      "digest": "sha256:7fd1ebe418b5079d4aa36f416af9b143d127bc75b0155d71cb5fd559b5e04d39",
+      "opaqueDirectories": 0,
+      "tarEntries": 4225,
+      "uncompressedTarBytes": 77936640,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 3313,
+      "diffId": "sha256:4990a62cab1587a2ed690c9d4f41675b9216d68120e99033d664b558662e90c8",
+      "digest": "sha256:f0400f4b55b0ad346bf6167a1b64a258e4d73db608c457798ce35e4ffeebfaaf",
+      "opaqueDirectories": 0,
+      "tarEntries": 18,
+      "uncompressedTarBytes": 21504,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 49837030,
+      "diffId": "sha256:3714bbaf32038e259cddcddea09e13fc9aaa1a86a644274a6c6e263b00972240",
+      "digest": "sha256:d22c69a95cf463f4cb74462bd2899597ce505d82bd4c01ceddf7845e12f13856",
+      "opaqueDirectories": 0,
+      "tarEntries": 3074,
+      "uncompressedTarBytes": 147154944,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 1713011,
+      "diffId": "sha256:f6becc1249c39a0f6d687460220dcfcf9f2a46d01770a70fc0a8ed4c98a6fd49",
+      "digest": "sha256:2cfab517365cfc6b4bd1f8c4cb01754884ef75bc38758b3c41e291c696f019f5",
+      "opaqueDirectories": 0,
+      "tarEntries": 48,
+      "uncompressedTarBytes": 7217664,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 448,
+      "diffId": "sha256:cae24708e29a74f04cc1ec51fc52e2d283c35f243ab21912e036095a2b50dbde",
+      "digest": "sha256:a8de9fa052209313d8e45435a8486e29b20eebaa820e2e7f63a7c3c94b4fa567",
+      "opaqueDirectories": 0,
+      "tarEntries": 4,
+      "uncompressedTarBytes": 3584,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 16917803,
+      "diffId": "sha256:32c096c9460a5cf4f267451188df8a34135661ed7b637bae80eaf0fa3701ab47",
+      "digest": "sha256:1296cb541f029ccb59289d872624b7f4d47dc4a0fc4115cd8383cfbe4e19bcf3",
+      "opaqueDirectories": 0,
+      "tarEntries": 2046,
+      "uncompressedTarBytes": 48998912,
+      "whiteouts": 1
+    },
+    {
+      "compressedBytes": 93,
+      "diffId": "sha256:3527232cde3dc5017a74956bb7fa68b776ecdd867a52d276957c2d6bbd99cb74",
+      "digest": "sha256:1f939fccac0f1d402a25c3c137103a72d95bb93b581897bc4c52c616a10e5d9c",
+      "opaqueDirectories": 0,
+      "tarEntries": 1,
+      "uncompressedTarBytes": 1536,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 57325071,
+      "diffId": "sha256:84117416d022815fcfbcb28a4535be00556c7d294b741686b3297b551f1b088c",
+      "digest": "sha256:6b13c17a08be66f32fe07489bc246c1f930cf6b0d4e0b6d8286c345d2d6fa2cd",
+      "opaqueDirectories": 0,
+      "tarEntries": 28090,
+      "uncompressedTarBytes": 234511360,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 37300,
+      "diffId": "sha256:a455eac3cf0597da696006461e4421b9d97ad6dc2b89ba238c4d48a68df117fb",
+      "digest": "sha256:86984ca4c1059d8629e2d2f56baa32d09e133d9005df49fb1a249815dce7bd62",
+      "opaqueDirectories": 0,
+      "tarEntries": 3,
+      "uncompressedTarBytes": 181248,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 626860,
+      "diffId": "sha256:3c22e6750648d11b457b81e1e127ba574b99e75603fb69cfdcb438f1c743bf9a",
+      "digest": "sha256:556ffb5ad5a23749969ef75a0815d298669e297a24b046fbe69c7ab72a00bed3",
+      "opaqueDirectories": 0,
+      "tarEntries": 527,
+      "uncompressedTarBytes": 3066880,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 15255,
+      "diffId": "sha256:cf70ab9ca39916267ff3974cb1269470588e8d66972b542ac85615b068624065",
+      "digest": "sha256:1ca3d6dc1b42e2b07fba74cbf6597dccd875d59e69f9e73390f6f6ce712bc92a",
+      "opaqueDirectories": 0,
+      "tarEntries": 15,
+      "uncompressedTarBytes": 57856,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 4126,
+      "diffId": "sha256:9c92c78654629b22377821ecb86c51e45019b3906486fcfcf1ca179d6be61f9c",
+      "digest": "sha256:0b8a9d9ac066e3bc80be3f413a9ab9acb2d965cddb33c41cb9aa6a69648c4fbc",
+      "opaqueDirectories": 0,
+      "tarEntries": 13,
+      "uncompressedTarBytes": 22016,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 2302,
+      "diffId": "sha256:bc94fd9b8132229db1c0c839e8f0054926769342a54cb48bf84604ea6d08bf1e",
+      "digest": "sha256:37b10f9bda91c24dc7b228e1db71b1d9446489abe065c721696ab34b7d5451ba",
+      "opaqueDirectories": 0,
+      "tarEntries": 10,
+      "uncompressedTarBytes": 11264,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 4025,
+      "diffId": "sha256:487da55ab8df594439a45260bb401d0b724bb4bf4ca19eb47c6ac6a22bf8451d",
+      "digest": "sha256:18a929c52ba7c89093a73975b7b804e244d59f0e39f2ee1e7e2d790916e42530",
+      "opaqueDirectories": 0,
+      "tarEntries": 8,
+      "uncompressedTarBytes": 17920,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 260954,
+      "diffId": "sha256:194ab667c7cd315cb10047ffe126ea3b9fee6c6187be6a586caa75a171b54869",
+      "digest": "sha256:c68ebad026a929ea505924d841be5e8b396ee29bfdea70a455e6d17628febca4",
+      "opaqueDirectories": 0,
+      "tarEntries": 35,
+      "uncompressedTarBytes": 1082368,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 4250,
+      "diffId": "sha256:3173dd4aca0cacc1014c8129a7e6e4616f6bbac4588762bae8edf60022b0ade2",
+      "digest": "sha256:fb9a56cad8b77d4ed23fc674ede4e50492a16e7e3afb8cc41dde1bbd6f5a0441",
+      "opaqueDirectories": 0,
+      "tarEntries": 11,
+      "uncompressedTarBytes": 20992,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 24638,
+      "diffId": "sha256:098680a60c193b9a073db8f8e314070b76679d86a02675fbf19c69474c7e452e",
+      "digest": "sha256:4054591848e953a929f575874410b8c3710dc7f2c1608c978ea073cc88c6f85c",
+      "opaqueDirectories": 0,
+      "tarEntries": 6,
+      "uncompressedTarBytes": 105472,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 4131,
+      "diffId": "sha256:94d9c19bea767d34d85b2f4b64c049fddb3ab00c07e0ea6faf9f81d414a5e808",
+      "digest": "sha256:b669bb343f022390b7085f98d6b3d8401509e5ed15f25a7fd696a9afdcb85500",
+      "opaqueDirectories": 0,
+      "tarEntries": 5,
+      "uncompressedTarBytes": 15360,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 119500,
+      "diffId": "sha256:53ac6ec080b52e37008d93331c913dd8a3dc0c7db4142409fe1dfd89d26d4243",
+      "digest": "sha256:cc3e481a6672f38dc8d2cf00afc1e10ceed5485db047b2615cf716a2b96d91d6",
+      "opaqueDirectories": 0,
+      "tarEntries": 6,
+      "uncompressedTarBytes": 529920,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 37786899,
+      "diffId": "sha256:f9c8578632b562d0389101f1718950a2b15d4def79223b5ba44e8d01982789fc",
+      "digest": "sha256:c64ae4464ed8dc7b87dc3cd4ae4b1ef59e08a0c1a64d69d5e5f8e4133a5b803a",
+      "opaqueDirectories": 0,
+      "tarEntries": 1214,
+      "uncompressedTarBytes": 67226112,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 851,
+      "diffId": "sha256:0fee09ca09d9fab69588f0c7684f4912eb578b968934fc900540f4be166ae02a",
+      "digest": "sha256:e54d4a95d852eb3eb3941779e145dcb4b7abf06f6ce1b4085e64facea5d9cb6d",
+      "opaqueDirectories": 0,
+      "tarEntries": 4,
+      "uncompressedTarBytes": 4608,
+      "whiteouts": 0
+    },
+    {
+      "compressedBytes": 117,
+      "diffId": "sha256:e84e3caf8fe7a4c8b29e8619a65b12b377152615e03226f85e114455d492b731",
+      "digest": "sha256:a893c691f573f31b56d2077eaf93d3e561aa584f467832aa3725562c68576ab0",
+      "opaqueDirectories": 0,
+      "tarEntries": 2,
+      "uncompressedTarBytes": 2048,
+      "whiteouts": 0
+    }
+  ],
+  "linuxAmd64ManifestDigest": "sha256:ba154cf9ba046cbe977a88067d9d56074f37f09544c99b5a56cf08bcb6aca2cc",
+  "manifestBytes": 4475,
+  "packageComparisons": [
+    {
+      "actualFiles": 474,
+      "expectedFiles": 474,
+      "matches": true,
+      "mismatchedPaths": [],
+      "prefix": "app/node_modules/@lyyzka/lingxios/"
+    },
+    {
+      "actualFiles": 379,
+      "expectedFiles": 379,
+      "matches": true,
+      "mismatchedPaths": [],
+      "prefix": "app/node_modules/pdfjs-dist/"
+    }
+  ],
+  "passed": true,
+  "production": "not-accessed",
+  "readiness": "not-tested",
+  "referenceSha256": {
+    "formalRuntimeTar": "ee308270402b220452f8eb4e92e9c1d25a68466525f21827203bd5078a9c1bcb",
+    "pdfInventory": "fc4a8c2a30a73b6d120adc46dd83964cdc443c91282c93ba25475aade11d4298"
+  },
+  "repository": "ghcr.io/lingxi-org/lingxiloop-server",
+  "rootfs": {
+    "deps": {
+      "files": 25233,
+      "regularBytes": 213319290
+    },
+    "dist": {
+      "files": 1207,
+      "regularBytes": 66290700
+    },
+    "entries": 39203,
+    "hardlinkLogicalBytes": 15234762,
+    "kinds": {
+      "directory": 4097,
+      "file": 34242,
+      "hardlink": 3,
+      "symlink": 861
+    },
+    "largestFiles": [
+      {
+        "bytes": 124827920,
+        "path": "usr/local/bin/node"
+      },
+      {
+        "bytes": 33974784,
+        "path": "app/node_modules/@napi-rs/canvas-linux-x64-gnu/skia.linux-x64-gnu.node"
+      },
+      {
+        "bytes": 11427952,
+        "path": "app/node_modules/@esbuild/linux-x64/bin/esbuild"
+      },
+      {
+        "bytes": 6809944,
+        "path": "usr/bin/python3.11"
+      },
+      {
+        "bytes": 5608910,
+        "path": "app/node_modules/js-tiktoken/dist/index.cjs"
+      },
+      {
+        "bytes": 5600042,
+        "path": "app/node_modules/js-tiktoken/dist/index.js"
+      },
+      {
+        "bytes": 5466926,
+        "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs.map"
+      },
+      {
+        "bytes": 5320747,
+        "path": "opt/yarn-v1.22.22/lib/cli.js"
+      },
+      {
+        "bytes": 4742424,
+        "path": "usr/lib/x86_64-linux-gnu/libcrypto.so.3"
+      },
+      {
+        "bytes": 3804464,
+        "path": "usr/bin/perl"
+      },
+      {
+        "bytes": 3790768,
+        "path": "app/dist/assets/mermaid-HWGCJPDP-D8DOLF3i.js"
+      },
+      {
+        "bytes": 2399899,
+        "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.mjs.map"
+      },
+      {
+        "bytes": 2395538,
+        "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"
+      },
+      {
+        "bytes": 2344914,
+        "path": "app/dist/starter-avatars/nova.png"
+      },
+      {
+        "bytes": 2342808,
+        "path": "app/dist/starter-avatars/iris.png"
+      },
+      {
+        "bytes": 2325565,
+        "path": "app/node_modules/js-tiktoken/dist/ranks/o200k_base.cjs"
+      },
+      {
+        "bytes": 2325563,
+        "path": "app/node_modules/js-tiktoken/dist/ranks/o200k_base.js"
+      },
+      {
+        "bytes": 2266988,
+        "path": "app/dist/starter-avatars/bram.png"
+      },
+      {
+        "bytes": 2228489,
+        "path": "app/node_modules/pdfjs-dist/build/pdf.worker.mjs"
+      },
+      {
+        "bytes": 2209528,
+        "path": "usr/lib/x86_64-linux-gnu/libgnutls.so.30.34.3"
+      },
+      {
+        "bytes": 2190440,
+        "path": "usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.30"
+      },
+      {
+        "bytes": 2167063,
+        "path": "app/dist/starter-avatars/atlas.png"
+      },
+      {
+        "bytes": 2120167,
+        "path": "app/dist/everyone.png"
+      },
+      {
+        "bytes": 2067760,
+        "path": "usr/lib/x86_64-linux-gnu/libapt-pkg.so.6.0.0"
+      },
+      {
+        "bytes": 1926232,
+        "path": "usr/lib/x86_64-linux-gnu/libc.so.6"
+      },
+      {
+        "bytes": 1843792,
+        "path": "usr/lib/x86_64-linux-gnu/libdb-5.3.so"
+      },
+      {
+        "bytes": 1792040,
+        "path": "usr/lib/x86_64-linux-gnu/libunistring.so.2.2.0"
+      },
+      {
+        "bytes": 1437848,
+        "path": "usr/lib/x86_64-linux-gnu/libsqlite3.so.0.8.6"
+      },
+      {
+        "bytes": 1332480,
+        "path": "usr/lib/x86_64-linux-gnu/libgcrypt.so.20.4.1"
+      },
+      {
+        "bytes": 1317034,
+        "path": "app/node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs"
+      }
+    ],
+    "largestPackages": [
+      {
+        "path": "app/node_modules/@napi-rs/canvas-linux-x64-gnu",
+        "regularBytes": 33975707
+      },
+      {
+        "path": "app/node_modules/pdfjs-dist",
+        "regularBytes": 24272468
+      },
+      {
+        "path": "app/node_modules/js-tiktoken",
+        "regularBytes": 22432828
+      },
+      {
+        "path": "app/node_modules/openai",
+        "regularBytes": 12468421
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/semantic-conventions",
+        "regularBytes": 12006437
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/exporter-metrics-otlp-http",
+        "regularBytes": 11971470
+      },
+      {
+        "path": "app/node_modules/@esbuild/linux-x64",
+        "regularBytes": 11428465
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/otlp-transformer",
+        "regularBytes": 9638682
+      },
+      {
+        "path": "app/node_modules/@dicebear/styles",
+        "regularBytes": 7745477
+      },
+      {
+        "path": "app/node_modules/zod",
+        "regularBytes": 5797652
+      },
+      {
+        "path": "app/node_modules/openlit",
+        "regularBytes": 3684168
+      },
+      {
+        "path": "app/node_modules/@aws-sdk/client-s3",
+        "regularBytes": 3295245
+      },
+      {
+        "path": "app/node_modules/protobufjs",
+        "regularBytes": 3053104
+      },
+      {
+        "path": "app/node_modules/@lyyzka/lingxios",
+        "regularBytes": 2691778
+      },
+      {
+        "path": "app/node_modules/@types/node",
+        "regularBytes": 2534873
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/sdk-metrics",
+        "regularBytes": 2430671
+      },
+      {
+        "path": "app/node_modules/lib0",
+        "regularBytes": 2405826
+      },
+      {
+        "path": "app/node_modules/yjs",
+        "regularBytes": 2307010
+      },
+      {
+        "path": "app/node_modules/mammoth",
+        "regularBytes": 2171440
+      },
+      {
+        "path": "app/node_modules/@smithy/core",
+        "regularBytes": 1780749
+      },
+      {
+        "path": "app/node_modules/undici",
+        "regularBytes": 1642075
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/sdk-trace",
+        "regularBytes": 1381806
+      },
+      {
+        "path": "app/node_modules/parse5",
+        "regularBytes": 1236424
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/api",
+        "regularBytes": 1218213
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/exporter-trace-otlp-http",
+        "regularBytes": 1195854
+      },
+      {
+        "path": "app/node_modules/assistant-stream",
+        "regularBytes": 1188685
+      },
+      {
+        "path": "app/node_modules/ajv",
+        "regularBytes": 1033496
+      },
+      {
+        "path": "app/node_modules/@opentelemetry/resources",
+        "regularBytes": 1024899
+      },
+      {
+        "path": "app/node_modules/cheerio",
+        "regularBytes": 1011246
+      },
+      {
+        "path": "app/node_modules/underscore",
+        "regularBytes": 908033
+      }
+    ],
+    "regularFileBytes": 553435423
+  },
+  "scope": "full linux/amd64 layers, streaming digest/diff-ID verification and merged rootfs inventory; no layer or file bodies persisted",
+  "sourceCommit": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+  "uncompressedTarLayerBytes": 588190208
+}

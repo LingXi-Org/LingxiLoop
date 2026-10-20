@@ -1,0 +1,950 @@
+{
+  "reviewedAt": "2026-10-20T15:48:37.675Z",
+  "reviewer": "/root/maintenance_resume_review",
+  "mode": "offline-existing-production-evidence",
+  "networkCalls": 0,
+  "productionMutations": 0,
+  "passed": true,
+  "findings": [],
+  "sourceCommit": "d1075e35e16721979b484c2d9e33eeb56468ce9d",
+  "targetCommit": "9a5cfda82ad105d666bf0452df1d615daf6c6a28",
+  "planHash": "78166e8cb841bd5735c25ea3eac9fef1be4e4846709ec8a55a10c7445f8bbf8a",
+  "acceptedAt": "2026-10-20T15:45:47.705Z",
+  "acceptanceSha256": "c67b628c068bcdee245e086947ee876b982957d12290b6da52e10853e819d85d",
+  "acceptanceChecks": {
+    "sealedSameSchemaPlan": true,
+    "acceptedSource": true,
+    "executionAndPreparation": true,
+    "auditBytes": true,
+    "terminalReceipts": true,
+    "freshPostflight": true,
+    "exactCurrentContainers": true,
+    "exactCurrentSources": true,
+    "actualHostImageIdentity": true,
+    "policyUnchanged": true,
+    "schema": true,
+    "publicHealthAndVersion": true,
+    "workerStartupSelfChecksInferred": true,
+    "publicAssets": true,
+    "sourceCorrespondence": true,
+    "canvasRetention": true
+  },
+  "independentChecks": {
+    "acceptanceRecomputedExactly": true,
+    "exact36TerminalIdentitiesAndCounts": true,
+    "workerDrainAndOrderedHealthyRollout": true,
+    "native13Full48InventorySameSchema": true,
+    "bothHostsPngAndPdfBeforeDrain": true,
+    "actualDaemonIdsBoundWithoutConfigAssumption": true,
+    "fourExactHealthyContainersAndPolicy": true,
+    "exactSampledPublicBytesAndFourPublicEndpoints": true,
+    "canvasRemovalAndRetentionBoundToActualInventory": true,
+    "callerTerminalReadbackPendingDeltaAccepted": true,
+    "inputBytesStableDuringReview": true
+  },
+  "observedAt": {
+    "executionComplete": "2026-10-20T15:43:55.586Z",
+    "postflightStart": "2026-10-20T15:44:22.359Z",
+    "postflightEnd": "2026-10-20T15:44:37.887Z",
+    "assetsStart": "2026-10-20T15:44:22.515Z",
+    "assetsEnd": "2026-10-20T15:44:26.669Z",
+    "terminalCollectionStart": "2026-10-20T15:44:24.244Z",
+    "terminalCollectionEnd": "2026-10-20T15:44:38.372Z"
+  },
+  "images": [
+    {
+      "server": "shanghai-a",
+      "sourceDaemonImageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "targetDaemonImageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "targetDescriptor": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "targetOciIndex": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "targetOciConfig": "sha256:80c5e5ce9f7c0b20b06ae3ec9c0512bc2f8976572f7cab81a6de4c1f45c5fa6a",
+      "targetPlatform": "linux/amd64",
+      "targetLayerCount": 22
+    },
+    {
+      "server": "shanghai-b",
+      "sourceDaemonImageId": "sha256:697d5a3e3d34629e603c120cd068abde3a2add611f583d5444d77a947887bf69",
+      "targetDaemonImageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "targetDescriptor": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "targetOciIndex": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "targetOciConfig": "sha256:80c5e5ce9f7c0b20b06ae3ec9c0512bc2f8976572f7cab81a6de4c1f45c5fa6a",
+      "targetPlatform": "linux/amd64",
+      "targetLayerCount": 22
+    }
+  ],
+  "containers": [
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "serverId": "6aa8a1bcb35d27bdd4e12a26",
+      "service": "lingxiloop",
+      "sourceContainerId": "56dd3a69e18befd03751747e50714644d40bf3c2fa460759faa91aefed3259ca",
+      "targetContainerId": "e70de555750c34f786d91bd26f9e74bee3c4816c00bbf9d29ca5a27725844bfb",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "startedAt": "2026-10-20T15:40:22.004329428Z",
+      "latestHealthAt": "2026-10-20T23:44:24.481581569+08:00",
+      "healthy": true,
+      "restartCount": 0,
+      "oomKilled": false,
+      "policyUnchanged": true
+    },
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "serverId": "6aa8a1bcb35d27bdd4e12a26",
+      "service": "worker",
+      "sourceContainerId": "db00775ed034a287a18b4c0c83acfd2b403986e3ee68cb5325ebb09a369c1fe0",
+      "targetContainerId": "a27c736d258293d0ade0595e78fd1668f13df59aaa44f1b447253b46c8d40b2a",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "startedAt": "2026-10-20T15:42:20.732301941Z",
+      "latestHealthAt": "2026-10-20T23:44:18.192365439+08:00",
+      "healthy": true,
+      "restartCount": 0,
+      "oomKilled": false,
+      "policyUnchanged": true
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "serverId": "6aa8a1b9b35d27bdd4e12a24",
+      "service": "lingxiloop",
+      "sourceContainerId": "1bce8732adcde5c77c15043027d2f6402ce521e24acfdb3090217a786cc2574b",
+      "targetContainerId": "52b8a51e126ebf900b763cbe22711b85bb931e35a08c8c8a8ea81cd11b91061c",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "startedAt": "2026-10-20T15:41:26.041015245Z",
+      "latestHealthAt": "2026-10-20T23:44:18.987627863+08:00",
+      "healthy": true,
+      "restartCount": 0,
+      "oomKilled": false,
+      "policyUnchanged": true
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "serverId": "6aa8a1b9b35d27bdd4e12a24",
+      "service": "worker",
+      "sourceContainerId": "88cc0114a43d9e43cccc60df0469f35fc604fd6e3f6cc1006786bcf9e927c98b",
+      "targetContainerId": "7aaa9cf9ef24976ccfde3d75e14135c811266b474a005cb1029da0096f07c98c",
+      "imageId": "sha256:9c6753001d1561db46c45a00e6cbdfa2fceae304454f7da3c84c4e981ffb1b08",
+      "startedAt": "2026-10-20T15:43:09.803463466Z",
+      "latestHealthAt": "2026-10-20T23:44:26.557735793+08:00",
+      "healthy": true,
+      "restartCount": 0,
+      "oomKilled": false,
+      "policyUnchanged": true
+    }
+  ],
+  "schema": {
+    "runtime": "3.5.8",
+    "nativeSchema": 13,
+    "installedSchema": 13,
+    "protocol": 11,
+    "schemaHash": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41",
+    "product": 48,
+    "inventoryCount": 48,
+    "migrationInventorySha256": "f9ec5c6c9d510965e3f0387352d9a41c857d1828e8d595adb7cb99e1d3dc7e81",
+    "all18StateReceiptsMatch": true,
+    "schemaMigrationSubmitted": false,
+    "finalStateUpdateId": "6ad78c37e06d5e1f798372c2"
+  },
+  "terminals": {
+    "count": 36,
+    "allCompleteSuccess": true,
+    "operationCounts": {
+      "RunStackService": 22,
+      "WriteStackContents": 6,
+      "PullStackService": 2,
+      "StopStackService": 2,
+      "DeployStackService": 4
+    },
+    "byInput": {
+      "image-preparation.json": 8,
+      "release-execution.json": 28
+    },
+    "updates": [
+      {
+        "id": "6ad78803e06d5e1f798371c4",
+        "input": "image-preparation.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792509955996,
+        "endTs": 1792509956653
+      },
+      {
+        "id": "6ad78818e06d5e1f798371cb",
+        "input": "image-preparation.json",
+        "requestOperation": "WriteStackFileContents",
+        "operation": "WriteStackContents",
+        "stack": "lingxiloop-app-a",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792509975950,
+        "endTs": 1792509976053
+      },
+      {
+        "id": "6ad78820e06d5e1f798371cc",
+        "input": "image-preparation.json",
+        "requestOperation": "PullStack",
+        "operation": "PullStackService",
+        "stack": "lingxiloop-app-a",
+        "service": "db-migrate",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792509984974,
+        "endTs": 1792510081282
+      },
+      {
+        "id": "6ad7888ae06d5e1f798371e2",
+        "input": "image-preparation.json",
+        "requestOperation": "WriteStackFileContents",
+        "operation": "WriteStackContents",
+        "stack": "lingxiloop-app-a",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510090005,
+        "endTs": 1792510090103
+      },
+      {
+        "id": "6ad78899e06d5e1f798371e6",
+        "input": "image-preparation.json",
+        "requestOperation": "WriteStackFileContents",
+        "operation": "WriteStackContents",
+        "stack": "lingxiloop-app-b",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510105851,
+        "endTs": 1792510105951
+      },
+      {
+        "id": "6ad788a3e06d5e1f798371ea",
+        "input": "image-preparation.json",
+        "requestOperation": "PullStack",
+        "operation": "PullStackService",
+        "stack": "lingxiloop-app-b",
+        "service": "db-migrate",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510115067,
+        "endTs": 1792510491014
+      },
+      {
+        "id": "6ad78a27e06d5e1f79837239",
+        "input": "image-preparation.json",
+        "requestOperation": "WriteStackFileContents",
+        "operation": "WriteStackContents",
+        "stack": "lingxiloop-app-b",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510503418,
+        "endTs": 1792510503518
+      },
+      {
+        "id": "6ad78a39e06d5e1f7983723d",
+        "input": "image-preparation.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510521926,
+        "endTs": 1792510522635
+      },
+      {
+        "id": "6ad78a80e06d5e1f7983724d",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510592038,
+        "endTs": 1792510592739
+      },
+      {
+        "id": "6ad78a92e06d5e1f79837251",
+        "input": "release-execution.json",
+        "requestOperation": "WriteStackFileContents",
+        "operation": "WriteStackContents",
+        "stack": "lingxiloop-app-a",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510610692,
+        "endTs": 1792510610788
+      },
+      {
+        "id": "6ad78aaae06d5e1f79837256",
+        "input": "release-execution.json",
+        "requestOperation": "WriteStackFileContents",
+        "operation": "WriteStackContents",
+        "stack": "lingxiloop-app-b",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510633966,
+        "endTs": 1792510634066
+      },
+      {
+        "id": "6ad78abae06d5e1f7983725b",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-app-a",
+        "service": "db-migrate",
+        "kind": "metadata",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510650827,
+        "endTs": 1792510651857
+      },
+      {
+        "id": "6ad78af0e06d5e1f79837268",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-app-a",
+        "service": "db-migrate",
+        "kind": "native-probe",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510704292,
+        "endTs": 1792510706176
+      },
+      {
+        "id": "6ad78af9e06d5e1f7983726c",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-app-b",
+        "service": "db-migrate",
+        "kind": "metadata",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510713942,
+        "endTs": 1792510715249
+      },
+      {
+        "id": "6ad78b09e06d5e1f79837270",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-app-b",
+        "service": "db-migrate",
+        "kind": "native-probe",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510729046,
+        "endTs": 1792510731004
+      },
+      {
+        "id": "6ad78b12e06d5e1f79837271",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510738470,
+        "endTs": 1792510739179
+      },
+      {
+        "id": "6ad78b22e06d5e1f79837275",
+        "input": "release-execution.json",
+        "requestOperation": "StopStack",
+        "operation": "StopStackService",
+        "stack": "lingxiloop-app-a",
+        "service": "worker",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510754241,
+        "endTs": 1792510754807
+      },
+      {
+        "id": "6ad78b33e06d5e1f7983727d",
+        "input": "release-execution.json",
+        "requestOperation": "StopStack",
+        "operation": "StopStackService",
+        "stack": "lingxiloop-app-b",
+        "service": "worker",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510771811,
+        "endTs": 1792510772528
+      },
+      {
+        "id": "6ad78b3ee06d5e1f7983727e",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510782439,
+        "endTs": 1792510783108
+      },
+      {
+        "id": "6ad78b48e06d5e1f79837282",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510792205,
+        "endTs": 1792510792940
+      },
+      {
+        "id": "6ad78b55e06d5e1f79837286",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510805179,
+        "endTs": 1792510805866
+      },
+      {
+        "id": "6ad78b5de06d5e1f79837287",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510813084,
+        "endTs": 1792510813759
+      },
+      {
+        "id": "6ad78b65e06d5e1f7983728b",
+        "input": "release-execution.json",
+        "requestOperation": "DeployStack",
+        "operation": "DeployStackService",
+        "stack": "lingxiloop-app-a",
+        "service": "lingxiloop",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510821316,
+        "endTs": 1792510822530
+      },
+      {
+        "id": "6ad78b82e06d5e1f79837292",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510850000,
+        "endTs": 1792510850707
+      },
+      {
+        "id": "6ad78b90e06d5e1f79837296",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510864721,
+        "endTs": 1792510865396
+      },
+      {
+        "id": "6ad78b9ce06d5e1f7983729a",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510876531,
+        "endTs": 1792510877197
+      },
+      {
+        "id": "6ad78ba4e06d5e1f7983729b",
+        "input": "release-execution.json",
+        "requestOperation": "DeployStack",
+        "operation": "DeployStackService",
+        "stack": "lingxiloop-app-b",
+        "service": "lingxiloop",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510884972,
+        "endTs": 1792510886638
+      },
+      {
+        "id": "6ad78bbde06d5e1f798372a2",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510909733,
+        "endTs": 1792510910434
+      },
+      {
+        "id": "6ad78bcce06d5e1f798372a6",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510924188,
+        "endTs": 1792510924860
+      },
+      {
+        "id": "6ad78bd4e06d5e1f798372a7",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510932140,
+        "endTs": 1792510932822
+      },
+      {
+        "id": "6ad78bdce06d5e1f798372ab",
+        "input": "release-execution.json",
+        "requestOperation": "DeployStack",
+        "operation": "DeployStackService",
+        "stack": "lingxiloop-app-a",
+        "service": "worker",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a411b35d27bdd4e12aef"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510940236,
+        "endTs": 1792510941245
+      },
+      {
+        "id": "6ad78bf4e06d5e1f798372af",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510964725,
+        "endTs": 1792510965425
+      },
+      {
+        "id": "6ad78c03e06d5e1f798372b3",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510979327,
+        "endTs": 1792510980069
+      },
+      {
+        "id": "6ad78c0de06d5e1f798372b7",
+        "input": "release-execution.json",
+        "requestOperation": "DeployStack",
+        "operation": "DeployStackService",
+        "stack": "lingxiloop-app-b",
+        "service": "worker",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a414b35d27bdd4e12af1"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792510989307,
+        "endTs": 1792510990341
+      },
+      {
+        "id": "6ad78c25e06d5e1f798372be",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792511013814,
+        "endTs": 1792511014579
+      },
+      {
+        "id": "6ad78c37e06d5e1f798372c2",
+        "input": "release-execution.json",
+        "requestOperation": "RunStackService",
+        "operation": "RunStackService",
+        "stack": "lingxiloop-core-state",
+        "service": "postgres",
+        "kind": "state",
+        "target": {
+          "type": "Stack",
+          "id": "6aa8a3e8b35d27bdd4e12ae0"
+        },
+        "status": "Complete",
+        "success": true,
+        "startTs": 1792511031178,
+        "endTs": 1792511031865
+      }
+    ]
+  },
+  "nativeProbes": [
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "id": "6ad78af0e06d5e1f79837268",
+      "startTs": 1792510704292,
+      "endTs": 1792510706176,
+      "probe": {
+        "passed": true,
+        "platform": "linux/x64/glibc",
+        "gnuSelected": true,
+        "muslAbsent": true,
+        "pngBytes": 115,
+        "pngSha256": "37bb849c8331759b4b7b6ec3e959f1e60b4b5bfbf9dcd4a4b711ae0c406ca5c0",
+        "pdfBytes": 201,
+        "pdfSha256": "30ee46cdb0878604ece1e00fab7a9807f3db64ff443a48e6dc2fe4a5646a5e04",
+        "publicFixtureSha256": "33aaa4a900cc81178a5c9c312bc0126b81805423e483e498a9c9b0d423c0a10e"
+      }
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "id": "6ad78b09e06d5e1f79837270",
+      "startTs": 1792510729046,
+      "endTs": 1792510731004,
+      "probe": {
+        "passed": true,
+        "platform": "linux/x64/glibc",
+        "gnuSelected": true,
+        "muslAbsent": true,
+        "pngBytes": 115,
+        "pngSha256": "37bb849c8331759b4b7b6ec3e959f1e60b4b5bfbf9dcd4a4b711ae0c406ca5c0",
+        "pdfBytes": 201,
+        "pdfSha256": "30ee46cdb0878604ece1e00fab7a9807f3db64ff443a48e6dc2fe4a5646a5e04",
+        "publicFixtureSha256": "33aaa4a900cc81178a5c9c312bc0126b81805423e483e498a9c9b0d423c0a10e"
+      }
+    }
+  ],
+  "publicEndpoints": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/readyz",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/health/dependencies",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/meta",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "publicAssets": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "decodedBytes": 1697,
+      "sha256": "b19dfd9101c468e4129a2e4949bc9c8477e6b3066a36de18730c7a48a9e817df",
+      "elapsedMs": 845,
+      "matchesAuditedImage": true
+    },
+    {
+      "path": "/assets/index-C2BGquub.js",
+      "status": 200,
+      "contentType": "text/javascript; charset=utf-8",
+      "decodedBytes": 200192,
+      "sha256": "3b4d3b25b68c9618ed1b5c191176cc0633b9c8ebeb8cbbb8dc2e0815e9ad3cd1",
+      "elapsedMs": 1921,
+      "matchesAuditedImage": true
+    },
+    {
+      "path": "/assets/index-D6e91Zk4.css",
+      "status": 200,
+      "contentType": "text/css; charset=utf-8",
+      "decodedBytes": 451080,
+      "sha256": "854075030c6db6d83c3831cc43f89912e31f86ff5f584cc74b055cf1fcd4c47e",
+      "elapsedMs": 1379,
+      "matchesAuditedImage": true
+    }
+  ],
+  "canvas": {
+    "removed": [
+      "app/node_modules/@napi-rs/canvas-linux-x64-musl/skia.linux-x64-musl.node"
+    ],
+    "removedRegularBytes": 30315608,
+    "retainedPaths": [
+      "app/node_modules/@napi-rs/canvas",
+      "app/node_modules/@napi-rs/canvas-linux-x64-gnu",
+      "app/node_modules/@napi-rs/canvas-linux-x64-gnu/README.md",
+      "app/node_modules/@napi-rs/canvas-linux-x64-gnu/package.json",
+      "app/node_modules/@napi-rs/canvas-linux-x64-gnu/skia.linux-x64-gnu.node",
+      "app/node_modules/@napi-rs/canvas-linux-x64-musl",
+      "app/node_modules/@napi-rs/canvas-linux-x64-musl/README.md",
+      "app/node_modules/@napi-rs/canvas-linux-x64-musl/package.json",
+      "app/node_modules/@napi-rs/canvas/LICENSE",
+      "app/node_modules/@napi-rs/canvas/README.md",
+      "app/node_modules/@napi-rs/canvas/geometry.js",
+      "app/node_modules/@napi-rs/canvas/index.d.ts",
+      "app/node_modules/@napi-rs/canvas/index.js",
+      "app/node_modules/@napi-rs/canvas/js-binding.js",
+      "app/node_modules/@napi-rs/canvas/load-image.js",
+      "app/node_modules/@napi-rs/canvas/node-canvas.d.ts",
+      "app/node_modules/@napi-rs/canvas/node-canvas.js",
+      "app/node_modules/@napi-rs/canvas/package.json"
+    ]
+  },
+  "callerDelta": {
+    "accepted": true,
+    "sha256": "e846c36d6d52213dbe2a3c9cebb6a4aca55e3c723693c8df8a54c27556bcd592",
+    "change": "Persist terminalReadbackPending before fresh GetUpdate; clear only after exact terminal and aggregate equality; merge pending into catch uncertainty.",
+    "localClassificationCases": 3,
+    "noProductionExecutionByReviewer": true
+  },
+  "frozenModules": {
+    "verify-final-acceptance.mjs": "e80eb3cd33295954b9c9a22053c7312e43e44f2145ffe819506e5ded34897e69",
+    "collect-terminal-receipts.mjs": "0a2f0754f4ef31f410a3d7089753a551cba27934d0345c0628ba88a10376eacc",
+    "native-app-maintenance.mjs": "dec0ec4f489eddd2e6bc4df30e114767972cce1e4b3c502e5dae8d3dfadcef81",
+    "guard-accepted-target.mjs": "260ef007f37b0c8e1a7cb11d78f20e9dbc77e37daea4b1292ecd5c78d5aea804"
+  },
+  "inputs": [
+    {
+      "name": "plan.json",
+      "sha256": "f3c32bb7aa8a59de4365059ef8498d55a6cd4c5d6166f6456a8b7db18b0027e7"
+    },
+    {
+      "name": "release-execution.json",
+      "sha256": "41d5ca8d4aa973fa5bec14ffee7eb0b6ee33fa8871289927923711a015c4671c"
+    },
+    {
+      "name": "image-preparation.json",
+      "sha256": "80bfbc59ee8adfeb41abbcaa8c1ff299050360dbd7f1ef90df92e02232646371"
+    },
+    {
+      "name": "production-after.json",
+      "sha256": "abb274eb410468eb7609637e04f5a3e9e38a6e7f8ea629f29801bbe634b03852"
+    },
+    {
+      "name": "image-audit/receipt.json",
+      "sha256": "dc35f83085e31810184bf7c81985bcb7b015d25fdc0d096ad803683a737ea8dd"
+    },
+    {
+      "name": "image-audit/rootfs-inventory.json",
+      "sha256": "f6edb98540280cee95f2a453a5b1bb626e692911037630420b70b82a1ebc4e0a"
+    },
+    {
+      "name": "public-assets-after.json",
+      "sha256": "63a6522a62daa93a105e242c3f99a06a8f079cf2366eff46ecebf621c4c51f8e"
+    },
+    {
+      "name": "terminal-receipts.json",
+      "sha256": "bad2163d85f8c971ce2cfce3ec77a7f0c5269decde1207838271b06606b148f0"
+    },
+    {
+      "name": "source-check/source-check.json",
+      "sha256": "bc631072342a1f7b68a480d5cbbfb6f1264d6c6c92b2d41d4fd7d58dd25ecc06"
+    },
+    {
+      "name": "canvas-check/canvas-check.json",
+      "sha256": "feb866e8c67d0202e7a1b3537f67fdac5ae04ff0bc894f535f27bcc78ef9e363"
+    },
+    {
+      "name": "final-acceptance.json",
+      "sha256": "c67b628c068bcdee245e086947ee876b982957d12290b6da52e10853e819d85d"
+    },
+    {
+      "name": "/tmp/lingxi-358-production/production-host-final-acceptance.json",
+      "sha256": "a755887e1de6bdb735c0af85219a770d1d377ea082b57f9da0af6d7f4975224a"
+    },
+    {
+      "name": "/tmp/lingxi-358-production/production-host-after-v2.json",
+      "sha256": "1003335717a8f587a39dc129aa148ad67ad3d29a83820e3ee31dbbc23781e31d"
+    }
+  ],
+  "limitations": [
+    "Offline reconciliation of recorded production observations, not a new live liveness check. Freshness was recomputed at the exact original acceptance timestamp; this report does not extend that observation window.",
+    "Public evidence is four health/version endpoint requests and three decoded asset samples: HTML, entry JS, entry CSS. It does not prove every CDN location, every chunk or continuously available traffic.",
+    "Authenticated business smoke was not run; no existing authorized identity was injected and no credential was created or copied.",
+    "Worker isolation is inferred from the exact shipped entrypoint and native readyz/startup checks; no full production fault-injection or isolation matrix was run.",
+    "PNG/PDF checks used the fixed public fixture on both hosts before drain. They do not prove arbitrary document/provider inputs.",
+    "The pending remote maintenance reindex-progress/script/schema/approval delta is outside this release acceptance and caller pending-marker review."
+  ]
+}
