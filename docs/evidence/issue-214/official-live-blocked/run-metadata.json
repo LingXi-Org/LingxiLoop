@@ -1,0 +1,16 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/streaming-text-official.e2e.ts",
+    "--video",
+    "on",
+    "--output",
+    "artifacts/issue214/official-live"
+  ],
+  "buildMode": "external app via E2E_BASE_URL",
+  "browser": "managed official @e2e-dev/web browser",
+  "build": null
+}
