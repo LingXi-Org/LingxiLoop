@@ -1,0 +1,33 @@
+TAP version 13
+# Subtest: dedicated PostgreSQL: read-only barrier rejects real sessions/leases and tracks47/48 actual state
+not ok 1 - dedicated PostgreSQL: read-only barrier rejects real sessions/leases and tracks47/48 actual state
+  ---
+  duration_ms: 3065.753988
+  type: 'test'
+  location: '/workspace/LingxiLoop-integration-215-216-219/scripts/schema-upgrade-maintenance.local.test.mjs:14:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    13 !== 12
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 12
+  actual: 13
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-integration-215-216-219/scripts/schema-upgrade-maintenance.local.test.mjs:39:55)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3244.070256

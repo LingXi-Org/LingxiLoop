@@ -3,8 +3,9 @@ import assert from 'node:assert/strict'
 import {test} from 'node:test'
 import {execFile} from 'node:child_process'
 import {promisify} from 'node:util'
-import {randomBytes} from 'node:crypto'
+import {createHash,randomBytes} from 'node:crypto'
 import {readFile,writeFile,mkdir} from 'node:fs/promises'
+import {dirname,resolve} from 'node:path'
 import {Pool} from 'pg'
 import {packageResources} from '@lyyzka/lingxios'
 import {STATE_SQL,parseMarker,validateStateReceipt} from './schema-upgrade-komodo.mjs'
@@ -13,7 +14,8 @@ const enabled=process.env.SCHEMA_UPGRADE_LOCAL_TEST==='1',run=promisify(execFile
 const docker=async args=>(await run('docker',args,{maxBuffer:2*1024*1024,timeout:30000})).stdout.trim()
 test('dedicated PostgreSQL: read-only barrier rejects real sessions/leases and tracks47/48 actual state',{skip:!enabled,timeout:60000},async()=>{
  const nonce=randomBytes(6).toString('hex'),name=`lingxiloop-schema-barrier-${nonce}`,owner=`schema-barrier-${nonce}`
- const receipt={productionRequests:0,providerRequests:0,sharedDatabaseRequests:0,cases:[],ownedContainerRemoved:false}
+ const output=resolve(process.env.SCHEMA_UPGRADE_LOCAL_OUTPUT??`artifacts/schema-upgrade-local/${nonce}.json`)
+ const receipt={productionRequests:0,providerRequests:0,sharedDatabaseRequests:0,sourceSchema:12,sourceSchemaHash:null,cases:[],ownedContainerRemoved:false}
  let pool,holder,created=false
  try{
   // Only read the existing local fixture image identity. Never query/mutate it.
@@ -27,7 +29,11 @@ test('dedicated PostgreSQL: read-only barrier rejects real sessions/leases and t
   const ports=JSON.parse(await docker(['inspect','--format','{{json .NetworkSettings.Ports}}',name]));assert.equal(ports['5432/tcp'][0].HostIp,'127.0.0.1')
   const url=new URL(source);url.username='postgres';url.password=password;url.port=ports['5432/tcp'][0].HostPort;url.pathname='/schema_barrier_test'
   pool=new Pool({connectionString:url.href,max:2})
-  await pool.query(await readFile(packageResources().schema,'utf8'))
+  const schema=await readFile(packageResources().schema012,'utf8')
+  receipt.sourceSchemaHash=createHash('sha256').update(schema).digest('hex')
+  assert.equal(receipt.sourceSchemaHash,'e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a')
+  await pool.query(schema)
+  assert.equal((await pool.query('SELECT version FROM lingxios.schema_version WHERE singleton')).rows[0].version,12)
   await pool.query(`CREATE TABLE public.schema_migrations(version integer PRIMARY KEY,name text,checksum text);
 CREATE TABLE public.lingxios_installation(singleton boolean PRIMARY KEY DEFAULT true,runtime_version text,schema_version int,protocol_version int,schema_sha256 text);
 INSERT INTO public.schema_migrations SELECT n,'fixture_'||n,repeat('c',64) FROM generate_series(1,46)n;
@@ -55,6 +61,6 @@ INSERT INTO public.lingxios_installation VALUES(true,'3.5.6',12,11,repeat('c',64
  }finally{
   await holder?.end();await pool?.end()
   if(created){assert.equal(await docker(['inspect','--format','{{index .Config.Labels "lingxi.schema-barrier-owner"}}',name]),owner);await docker(['rm','--force',name]);receipt.ownedContainerRemoved=true}
-  await mkdir('docs/evidence/issue-216-rollout/validation',{recursive:true});await writeFile('docs/evidence/issue-216-rollout/validation/local.json',JSON.stringify(receipt,null,2)+'\n')
+  await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify(receipt,null,2)+'\n',{flag:'wx',mode:0o600})
  }
 })

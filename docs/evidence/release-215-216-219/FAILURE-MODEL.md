@@ -31,3 +31,10 @@ no-op defect: `applyRuntimeUpgrade` rewrote `lingxios_installation.installed_at`
 even when all package/schema fields already matched. Preserve that timestamp
 when provenance is unchanged, while retaining real version/schema/hash updates.
 The failed 0048 transaction correctly preserved the prior installation row.
+
+The source12 maintenance fixture then failed against the candidate3.5.8:
+it loaded the current `schema` resource (native13), but correctly expected12.
+Use the immutable public `schema012` resource and verify its exact source hash
+and installed schema12. Keep the actual13/47/48 classification assertions.
+Write each new fixture receipt exclusively to a fresh output, preserving the
+previous committed source12 evidence.
