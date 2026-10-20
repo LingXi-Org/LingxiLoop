@@ -25,3 +25,5 @@ The existing sections and filters share the top area; the date calendar opens on
 | ![Mobile editor before](before/forum/008-issue184-light-390-editor-materials-closed.png) | ![Mobile editor after](after/comparison-forum/008-issue184-light-390-editor-materials-closed.png) |
 
 The body is the complete official native editor. Materials, reference links, tags and publication retain their business controls. More focus/material/dark states are alongside these images; native narrow-screen formatting controls are in [after/native](after/native).
+
+The forum material fixture contains the same 1×1 transparent image as the original before run. Its reserved image area is retained content, not a new decorative spacer. Screenshots use the existing fixture unchanged so the layout comparison remains reproducible. Raw reports preserve the runner artifact paths; committed images are alongside each report under their original screenshot leaf names.

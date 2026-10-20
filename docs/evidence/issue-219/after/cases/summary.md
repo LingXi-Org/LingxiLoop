@@ -5,10 +5,10 @@
 
 |  | Test | Time |
 | --- | --- | --- |
-| 🟢 | **e2e/cases/browser.e2e.ts** · 3 passed | 2m 32s |
-| 🟢 | case loading, retry and empty filters retain reachable controls | 45.9s |
+| 🟢 | **e2e/cases/browser.e2e.ts** · 3 passed | 1m 57s |
+| 🟢 | case loading, retry and empty filters retain reachable controls | 9.2s |
 | 🟢 | organization case publication, cross-course access, isolation and responsive navigation | 1m 21s |
-| 🟢 | teacher authors and publishes cover and body images through the UI | 24.6s |
+| 🟢 | teacher authors and publishes cover and body images through the UI | 26.5s |
 </details>
 
-<sub>e2e 0.17.0 · 2m 37s · cases</sub>
+<sub>e2e 0.17.0 · 1m 58s · cases</sub>

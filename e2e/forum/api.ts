@@ -50,6 +50,21 @@ await pool.query(`INSERT INTO homework_submissions(id,company_id,project_id,home
   VALUES('fixture-homework-submission','e2e-school','e2e-classroom','issue146-homework','forum-student',1,'fixture-key','fixture',$1::jsonb,$2::jsonb,1,0,false,$3::jsonb)`,[JSON.stringify(fixtureAnswer),JSON.stringify(fixtureReport),JSON.stringify(fixtureReferences)])
 // Synthetic auth and in-memory objects are confined to this loopback-only test server.
 const app = express()
+let forumListMode: 'pass'|'hold'|'fail'='pass'
+const pendingLists=new Set<()=>void>()
+app.post('/api/fixture-forum-list/:mode',(req,res)=>{
+  if(!['pass','hold','fail'].includes(req.params.mode)){res.sendStatus(400);return}
+  forumListMode=req.params.mode as typeof forumListMode
+  if(forumListMode==='pass'){for(const release of pendingLists)release();pendingLists.clear()}
+  res.sendStatus(200)
+})
+app.use((req,res,next)=>{
+  if(req.method==='GET'&&req.path==='/api/courses/e2e-course/forum'){
+    if(forumListMode==='hold'){pendingLists.add(next);res.once('close',()=>pendingLists.delete(next));return}
+    if(forumListMode==='fail'){forumListMode='pass';res.status(503).json({error:'Recorded forum list failure'});return}
+  }
+  next()
+})
 
 // #219 only: deterministic authoring/review fixtures; no live model claim.
 if (process.env.FORUM_ISSUE219 === '1') {

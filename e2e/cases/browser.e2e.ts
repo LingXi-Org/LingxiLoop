@@ -195,6 +195,8 @@ test('teacher authors and publishes cover and body images through the UI',async(
   expect(saved.document.blocks.some((block:{type:string})=>block.type==='image')).toBe(true)
   expect(saved.summary.format).toBe('blocknote')
   await browser.reload()
+  await expect(screen.getByRole('heading','从观察到设计',{exact:true})).toBeVisible({timeout:120000})
+  await expect(screen.getByRole('button','编辑案例',{exact:true})).toBeVisible()
   await screen.getByRole('button','编辑案例',{exact:true}).tap()
   await expect(screen.getByLabel('正文',{exact:true})).toContainText('这篇图文案例由教师主动编写。')
   await screen.getByRole('button','保存草稿',{exact:true}).tap()
