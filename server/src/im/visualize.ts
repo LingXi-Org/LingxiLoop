@@ -17,7 +17,7 @@ import { acceptSend, ensureSendAcceptance, getSendAcceptance, SEND_NOT_DISPATCHE
 
 export interface VisualizeActor { companyId: string; channelId: string; userId: string }
 export interface VisualizePageActor extends VisualizeActor { pageId: string; token: string }
-interface DocumentRow { path: string; html: string; version: number; run_id: string; agent_id: string; created_by: string; source_hash: string }
+interface DocumentRow { path: string; html: string; version: number; run_id: string; agent_id: string; created_by: string; source_hash: string; request_version: number | null }
 interface PageRow { id: string; path: string; document_version: number; source_message_id: string; agent_id: string; run_id: string }
 const digest = (value: string) => createHash('sha256').update(value).digest('hex')
 export function visualizeOutputDirectory(input: Pick<VisualizeActor, 'companyId' | 'channelId'>): string {
@@ -77,7 +77,8 @@ export function validateVisualizeFragment(fileName: string, html: string): strin
     || Buffer.byteLength(html) > 5_000_000 || /<(?:!doctype\b|\/?(?:html|head|body)(?:\s|>))/iu.test(html)) throw new HttpError(400, 'Expected a bounded HTML fragment and lowercase-hyphenated name.')
   return name
 }
-export async function saveVisualizeDocument(input: VisualizeActor & { runId: string; agentId: string; name: string; html: string; database?: Queryable }) {
+export async function saveVisualizeDocument(input: VisualizeActor & { runId: string; agentId: string; name: string; html: string; requestVersion?: number; database?: Queryable }) {
+  if (input.requestVersion !== undefined && (!Number.isSafeInteger(input.requestVersion) || input.requestVersion < 1)) throw new HttpError(400, 'Invalid Visualize request version.')
   const name = validateVisualizeFragment(input.name, input.html)
   const path = join(visualizeOutputDirectory(input), `${name}.html`)
   const save = async (db: Queryable) => {
@@ -90,18 +91,22 @@ export async function saveVisualizeDocument(input: VisualizeActor & { runId: str
     const previous = (await db.query<DocumentRow>('SELECT * FROM im_visualize_documents WHERE company_id=$1 AND channel_id=$2 AND path=$3 FOR UPDATE', [input.companyId, input.channelId, path])).rows[0]
     if (previous && (previous.created_by !== input.userId || previous.agent_id !== input.agentId)) throw new HttpError(403, 'Cannot overwrite another author’s visualization.')
     await mirror(path, input.html)
-    await db.query(`INSERT INTO im_visualize_documents(company_id,channel_id,path,run_id,agent_id,created_by,html,source_hash)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(company_id,channel_id,path) DO UPDATE SET html=EXCLUDED.html,
-      source_hash=EXCLUDED.source_hash,run_id=EXCLUDED.run_id,version=im_visualize_documents.version+1,updated_at=clock_timestamp()
-      WHERE im_visualize_documents.source_hash<>EXCLUDED.source_hash OR im_visualize_documents.run_id<>EXCLUDED.run_id`, [input.companyId, input.channelId, path, input.runId, input.agentId, input.userId, input.html, digest(input.html)])
+    await db.query(`INSERT INTO im_visualize_documents(company_id,channel_id,path,run_id,agent_id,created_by,html,source_hash,request_version)
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT(company_id,channel_id,path) DO UPDATE SET html=EXCLUDED.html,
+      source_hash=EXCLUDED.source_hash,run_id=EXCLUDED.run_id,request_version=EXCLUDED.request_version,version=im_visualize_documents.version+1,updated_at=clock_timestamp()
+      WHERE im_visualize_documents.source_hash<>EXCLUDED.source_hash OR im_visualize_documents.run_id<>EXCLUDED.run_id
+        OR im_visualize_documents.request_version IS DISTINCT FROM EXCLUDED.request_version`, [input.companyId, input.channelId, path, input.runId, input.agentId, input.userId, input.html, digest(input.html), input.requestVersion ?? null])
   }
   if (input.database) await save(input.database)
   else await withTransaction(pool, save)
   return { path, html: input.html }
 }
-export async function readAuthorizedVisualizeDocument(input: VisualizeActor & { path: string }) {
-  await assertVisualizeActor(pool, input)
-  const row = await document(pool, input)
+export async function readAuthorizedVisualizeSnapshot(input: VisualizeActor & { path: string }, db: Queryable = pool) {
+  await assertVisualizeActor(db, input)
+  return document(db, input)
+}
+export async function readAuthorizedVisualizeDocument(input: VisualizeActor & { path: string }, db: Queryable = pool) {
+  const row = await readAuthorizedVisualizeSnapshot(input, db)
   return { path: row.path, html: row.html }
 }
 export async function getVisualizeStateSnapshot(input: VisualizeActor & { path: string }, db: Queryable = pool): Promise<{state: GenUiWidgetState | null; revision: number}> {

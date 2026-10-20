@@ -3,10 +3,10 @@ import { assistantTextViolation } from './assistant-text.js'
 import { publicTextSafety } from './public-text-safety.js'
 import { productConversationId, bindProductRun, assertFrozenAudience } from './identity.js'
 import { NoEffectError, DefaultRuntimePolicy, classifyToolFailure, modelFailure, type CapabilityGrant, type ContextMessage, type ContextProvider,
-  type ToolDefinition, type TurnContext, type WorkItem } from '@lyyzka/lingxios'
+  type CapabilityResolutionContext, type ToolDefinition, type TurnContext, type WorkItem } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { nativeContext, audienceHumanIds, authorizeAudienceRead } from '../agents/tools.js'
-import { createPermissionService, permissionService } from '../modules/access/public.js'
+import { createPermissionService } from '../modules/access/public.js'
 import { getAgentChannelHistory } from '../im/public.js'
 import { advanceAgentReadReceipt } from '../im/read-receipts.js'
 import { retrieveKnowledgeState, OpenNotebookError } from '../modules/knowledge/public.js'
@@ -43,7 +43,7 @@ export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principa
     [work.tenantId,work.agentId,work.principalId,work.conversationId,work.createdAt ?? null])
   const row = rows[0]
   if (!row || ![1,2].includes(row.channel_type)) throw new NoEffectError('agent or original human membership was revoked', 'forbidden')
-  await createPermissionService(database).assertCan({ actorUserId: work.principalId, companyId: work.tenantId,
+  await createPermissionService(database, { lockDependencies: database !== pool }).assertCan({ actorUserId: work.principalId, companyId: work.tenantId,
     action: 'conversation:read', resource: { type: 'conversation', id: work.conversationId } })
   return { ...row, system_prompt: row.teacher_managed ? TEACHER_PROMPT : row.system_prompt,
     capabilities: row.capabilities.filter(capability => capability !== 'email' && capability !== 'calendar') }
@@ -54,32 +54,32 @@ const verifierActions = new Set(['canvas.current','canvas.set_status','canvas.su
 
 
 export function createProductContext(tools: readonly ToolDefinition[]) {
-  async function scoped(work: Work) {
+  async function scoped(work: Work, database: Queryable = pool) {
     if (work.kind === 'calendar') throw new NoEffectError('calendar tasks are retired','forbidden')
-    const profile = await loadRuntimeBinding({ ...work, conversationId: productConversationId(work) })
-    await assertFrozenAudience(pool,work)
+    const profile = await loadRuntimeBinding({ ...work, conversationId: productConversationId(work) }, database)
+    await assertFrozenAudience(database,work)
     const attachments = Array.isArray(work.meta?.attachments) ? work.meta.attachments as Array<{ id: string; text?: string }> : []
     if (attachments.some(item => item.text !== undefined)) {
-      const denied = await unavailableAttachmentIds(pool,work.tenantId,productConversationId(work),
-        attachments.filter(item => item.text !== undefined).map(item => parseAttachmentRefId(item.id)), await audienceHumanIds({ work,database: pool }))
+      const denied = await unavailableAttachmentIds(database,work.tenantId,productConversationId(work),
+        attachments.filter(item => item.text !== undefined).map(item => parseAttachmentRefId(item.id)), await audienceHumanIds({ work,database }))
       if (denied.size) throw new NoEffectError('request attachment access or source selection was revoked','forbidden')
     }
     const rootId = work.meta?.rootWorkId
     const source = typeof rootId === 'string' && rootId !== work.id
-      ? (await pool.query<{ source_client_msg_no: string | null }>('SELECT source_client_msg_no FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2 AND principal_id=$3', [rootId,work.tenantId,work.principalId])).rows[0]?.source_client_msg_no
+      ? (await database.query<{ source_client_msg_no: string | null }>('SELECT source_client_msg_no FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2 AND principal_id=$3', [rootId,work.tenantId,work.principalId])).rows[0]?.source_client_msg_no
       : work.conversation?.source.messageId ?? work.triggerRef
-    await bindProductRun(pool, { runId: work.id, tenantId: work.tenantId, agentId: work.agentId, principalId: work.principalId!, sessionId: work.sessionId, ...(work.threadId ? { threadId: work.threadId } : {}) }, productConversationId(work), work.conversation?.internal ?? false, source ?? undefined)
-    if (work.kind === 'routine') await assertRoutineRun(pool, work)
+    await bindProductRun(database, { runId: work.id, tenantId: work.tenantId, agentId: work.agentId, principalId: work.principalId!, sessionId: work.sessionId, ...(work.threadId ? { threadId: work.threadId } : {}) }, productConversationId(work), work.conversation?.internal ?? false, source ?? undefined)
+    if (work.kind === 'routine') await assertRoutineRun(database, work)
     if (['mission_coordinator','teacher_digest'].includes(work.kind)) throw new NoEffectError('retired learning job','forbidden')
-    const canvasRun = await loadCanvasRunContext(pool, work)
-    const teacherContext = profile.teacher_managed ? await loadTeacherTurnContext(nativeContext({ work })) : undefined
-    const homeworkContext = !profile.teacher_managed ? await loadHomeworkTurnContext(nativeContext({ work })) : null
-    if (teacherContext) await authorizeAudienceRead({ work,database: pool },{ projectId: teacherContext.course.projectId,action: 'learning:manage',
+    const canvasRun = await loadCanvasRunContext(database, work)
+    const teacherContext = profile.teacher_managed ? await loadTeacherTurnContext(nativeContext({ work }), database) : undefined
+    const homeworkContext = !profile.teacher_managed ? await loadHomeworkTurnContext(nativeContext({ work }), database) : null
+    if (teacherContext) await authorizeAudienceRead({ work,database },{ projectId: teacherContext.course.projectId,action: 'learning:manage',
       resource: { type: 'project',id: teacherContext.course.projectId } })
     if (canvasRun && (!profile.capabilities.includes('canvas') || profile.teacher_managed)) throw new NoEffectError('Canvas capability was revoked', 'forbidden')
     const learningAudienceSafe = !profile.capabilities.includes('learning') || (await Promise.all(
-      (await audienceHumanIds({ work,database: pool })).filter(id => id !== work.principalId).map(actorUserId =>
-        permissionService.can({ actorUserId,companyId: work.tenantId,action: 'learning:manage',
+      (await audienceHumanIds({ work,database })).filter(id => id !== work.principalId).map(actorUserId =>
+        createPermissionService(database, { lockDependencies: database !== pool }).can({ actorUserId,companyId: work.tenantId,action: 'learning:manage',
           resource: { type: 'conversation',id: productConversationId(work) } })),
     )).every(decision => decision.allowed)
     const available = tools.filter(tool => {
@@ -103,7 +103,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const grants: CapabilityGrant[] = [...new Set(available.map(tool => tool.action.split('.')[0]))]
       .map(name => ({ name, methods: available.filter(tool => tool.action.startsWith(`${name}.`)).map(tool => tool.action.split('.')[1]) }))
     // Explicit context grants replace the runtime defaults, including native memory.
-    grants.push({ name: 'memory' }, { name: 'skills', methods: ['load'] }, { name: 'observations', methods: ['read'] })
+    grants.push({ name: 'memory' }, { name: 'skills', methods: available.some(tool => tool.action === 'visualize.save') ? ['load','activate'] : ['load'] }, { name: 'observations', methods: ['read'] })
     return { profile, grants, canvasRun, teacherContext, homeworkContext, learningAudienceSafe }
   }
   const contextProvider: ContextProvider = { async authorizeRequest(work, request) {
@@ -212,7 +212,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
         knowledgeRetrieval: knowledgeRetrieval ? { status: knowledgeRetrieval.status, matchedChunks: retrieval.length,
           ...('processingSources' in knowledgeRetrieval ? { processingSources: knowledgeRetrieval.processingSources } : {}) } : undefined } }
   } }
-  return { contextProvider, capabilityResolver: { resolve: async (work: Work) => (await scoped(work)).grants } }
+  return { contextProvider, capabilityResolver: { resolve: async (work: Work, context?: CapabilityResolutionContext) => (await scoped(work, context?.database as Queryable | undefined)).grants } }
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {

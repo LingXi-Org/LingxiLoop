@@ -21,6 +21,7 @@ import { loadRuntimeBinding } from './context.js'
 import { isSiliconFlowModel, siliconFlowCost, siliconFlowPricingForModel } from './pricing.js'
 import { createRealtimeStore } from './realtime-store.js'
 import { createRuntimeObjectStore } from './object-store.js'
+import { verifyVisualizeDelivery } from './visualize-delivery.js'
 import { verifyVisualizeCandidate } from './visualize-tools.js'
 import { runProductCallback } from './product-callbacks.js'
 import type { Queryable } from '../db/queryable.js'
@@ -127,6 +128,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
         evolution: { benchmarkId: nativeEvolutionBenchmark.id, benchmark: nativeEvolutionBenchmark },
         resolveScopes: resolveMemoryScopes, embeddings: memoryEmbeddings(), writePolicy: memoryWritePolicy,
       }, verifyRun: async context => [...await createCanvasRuntime(lingxiOSControl).verify(context), ...await verifyVisualizeCandidate(context)],
+      verifySkillDelivery: verifyVisualizeDelivery,
       homesRoot: process.env.AGENT_OS_HOMES_ROOT?.trim() || '.agent-os/homes' }).catch(error => {
         previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined; control = undefined
         throw error
