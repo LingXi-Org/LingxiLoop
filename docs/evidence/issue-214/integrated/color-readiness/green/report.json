@@ -1,0 +1,378 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15763-3c55-750a-b7d1-d0ebbf3e940c",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-20T03:38:04.249Z",
+    "finishedAt": "2026-10-20T03:38:08.255Z",
+    "project": {
+      "id": "lingxiloop-web",
+      "configDigest": "597a4b0fa080280e2ad5ba7588a3b25eb7ea881d9932f0d1d2067a5621690969"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5214",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "c3394142dc2dba16062cbaa33efe66c4d61c502a29d8754d4d08cdb31375fa5d",
+        "testId": "e2e/web/streaming-text.e2e.ts::Streaming%20renderer::bursts%20reveal%20continuously%20and%20the%20tail%20settles%20%28light%29",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Streaming renderer",
+          "bursts reveal continuously and the tail settles (light)"
+        ],
+        "file": "e2e/web/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/web/streaming-text.e2e.ts",
+          "line": 14,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ada7c6f35f971217c3ca10eeddce0845dd0159abd638d74ea4f9d686f6b55768",
+        "testId": "e2e/web/streaming-text.e2e.ts::Streaming%20renderer::bursts%20reveal%20continuously%20and%20the%20tail%20settles%20%28dark%29",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "Streaming renderer",
+          "bursts reveal continuously and the tail settles (dark)"
+        ],
+        "file": "e2e/web/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/web/streaming-text.e2e.ts",
+          "line": 14,
+          "column": 5
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c927082e984a58de4df901305a1f817844b659996cc2ff9cf8d1d93656a5c972",
+        "testId": "e2e/web/streaming-text.e2e.ts::Streaming%20renderer::completion%20drains%20pending%20text%20and%20cancellation%20clears%20decoration",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "Streaming renderer",
+          "completion drains pending text and cancellation clears decoration"
+        ],
+        "file": "e2e/web/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/web/streaming-text.e2e.ts",
+          "line": 67,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c2f07aece559ec5bcf7513dc591ebd5abaf68d4e0eb7aa6e7526439109937583",
+        "testId": "e2e/web/streaming-text.e2e.ts::Streaming%20renderer::reduced%20motion%20preference%20bypasses%20the%20reveal%20queue",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "Streaming renderer",
+          "reduced motion preference bypasses the reveal queue"
+        ],
+        "file": "e2e/web/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/web/streaming-text.e2e.ts",
+          "line": 87,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "64d3b4b17af69450d59950a8741783eff7c3ff7aeaae3ffd5af61c7ca934a775",
+        "testId": "e2e/web/streaming-text.e2e.ts::Official%20element%20integration::same%20input%20retains%20upstream%20entry%2C%20color%20transition%20and%20caret%20styles",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "Official element integration",
+          "same input retains upstream entry, color transition and caret styles"
+        ],
+        "file": "e2e/web/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/web/streaming-text.e2e.ts",
+          "line": 120,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "91cf0f3f88841ff1a66b2d69b450f9550ef62c12f443546d47cb6c70a81d625d",
+        "testId": "e2e/web/streaming-text.e2e.ts::Official%20element%20integration::Chinese%20and%20mixed%20leaves%20settle%20continuously%20without%20replaying%20stable%20blocks",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "Official element integration",
+          "Chinese and mixed leaves settle continuously without replaying stable blocks"
+        ],
+        "file": "e2e/web/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/web/streaming-text.e2e.ts",
+          "line": 160,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15763-40b5-71fb-8c38-aa02c4fa7f05",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-20T03:38:04.854Z",
+            "durationMs": 3370,
+            "artifacts": [
+              {
+                "id": "01a15763-40b5-71fb-8c38-aa02c4fa7f05:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15763-40b5-71fb-8c38-aa02c4fa7f05:3"
+                },
+                "path": "web/e2e_web_streaming-text.e2e.ts__Official_20element_20integration__Chinese_20and_20mixed_20leaves_20settle_20cont-8388ac22/default/attempt-0/screenshots/001-chinese-mixed-tail.png",
+                "size": 12179,
+                "sha256": "5633313ba1bd5d6a9bd9424c009437986c8dc10c95c361987a5d4c3ee9f1d1b7"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15763-40b5-71fb-8c38-aa02c4fa7f05:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/scripts/streaming-browser-check.html",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:38:04.949Z",
+                "durationMs": 1144,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/streaming-text.e2e.ts",
+                  "line": 161,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15763-40b5-71fb-8c38-aa02c4fa7f05:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"#body\")",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:38:06.094Z",
+                "durationMs": 116,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/streaming-text.e2e.ts",
+                  "line": 162,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15763-40b5-71fb-8c38-aa02c4fa7f05:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:38:06.211Z",
+                "durationMs": 1839,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/streaming-text.e2e.ts",
+                  "line": 163,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a15763-40b5-71fb-8c38-aa02c4fa7f05:3",
+                "index": 3,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "chinese-mixed-tail",
+                "status": "passed",
+                "startedAt": "2026-10-20T03:38:08.051Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [
+                  "01a15763-40b5-71fb-8c38-aa02c4fa7f05:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/web/streaming-text.e2e.ts",
+                  "line": 232,
+                  "column": 15
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "eefca2057bd62938ec456ce4c4913e833886ef3b36c68c6b8cd838159792f042",
+        "testId": "e2e/web/streaming-text.e2e.ts::Official%20element%20integration::failure%2C%20replacement%20and%20history%20retain%20text%20without%20decoration",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "Official element integration",
+          "failure, replacement and history retain text without decoration"
+        ],
+        "file": "e2e/web/streaming-text.e2e.ts",
+        "source": {
+          "file": "e2e/web/streaming-text.e2e.ts",
+          "line": 235,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 7,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 7,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 12179,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

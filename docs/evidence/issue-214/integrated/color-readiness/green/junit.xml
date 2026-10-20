@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="3.370">
+  <testsuite name="e2e/web/streaming-text.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="3.370">
+    <testcase name="Official element integration &gt; Chinese and mixed leaves settle continuously without replaying stable blocks [web]" classname="e2e/web/streaming-text.e2e.ts" time="3.370"/>
+  </testsuite>
+</testsuites>
