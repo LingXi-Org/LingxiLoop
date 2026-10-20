@@ -6,7 +6,8 @@ import { GenUiMessageResponse } from './zcode/gen-ui/components/GenUiMessageResp
 import { StreamingPart } from '@/components/assistant-ui/streaming-tail'
 export function VisualizeText({part,Text,readOnly}: {part:TextMessagePartProps;Text:TextMessagePartComponent;readOnly:boolean}) {
   const message = useAuiState(state=>state.message)
-  const partKey = useAuiState(state=>`${state.message.id}:${state.message.parts.indexOf(state.part)}`)
+  const partKey = useAuiState(state=>JSON.stringify([state.message.id,
+    activityAnnotation(state.part)?.id ?? state.message.parts.indexOf(state.part)]))
   const textOffset = useAuiState(state=>state.message.parts.slice(0,state.message.parts.indexOf(state.part)).reduce((offset,item)=>offset+(item.type==='text' && activityAnnotation(item)?.kind!=='commentary' ? item.text.length+1 : 0),0))
   if(message.role!=='assistant' || !/::|/.test(part.text)) return <Text {...part}/>
   const workspace = getWorkspaceSession()

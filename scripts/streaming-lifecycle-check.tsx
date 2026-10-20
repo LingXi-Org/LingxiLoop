@@ -1,7 +1,8 @@
 // Test-only input controller; the renderer, part statuses and queue are real SDK code.
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, MessagePrimitive, useAuiState, type ThreadMessage } from '@assistant-ui/react'
+import { AssistantRuntimeProvider, useExternalStoreRuntime, ThreadPrimitive, MessagePrimitive, useAuiState, type ThreadMessage, type TextMessagePartProps } from '@assistant-ui/react'
+import { VisualizeText } from '../src/features/chat/visualize/VisualizeText'
 import { MarkdownText } from '../src/components/assistant-ui/markdown-text'
 import '../src/styles/globals.css'
 
@@ -12,7 +13,8 @@ function Text() {
   const messageStatus = useAuiState(state => state.message.status?.type)
   return <section data-text-index={index} data-part-status={status} data-message-status={messageStatus}><MarkdownText agent /></section>
 }
-function Message() { return <MessagePrimitive.Parts components={{ Text }} /> }
+function OriginalText(part: TextMessagePartProps) { return <VisualizeText part={part} Text={Text} readOnly /> }
+function Message() { return <MessagePrimitive.Parts components={{ Text: OriginalText }} /> }
 function App() {
   const [input, setInput] = useState<Input>({ text: '准备', status: 'running' })
   useEffect(() => {
@@ -28,7 +30,7 @@ function App() {
       : { type: 'incomplete', reason: input.status },
     metadata: { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], custom: {} } }
   const runtime = useExternalStoreRuntime({ messages: [message], isRunning: input.status === 'running', onNew: async () => {} })
-  return <main style={{ maxWidth: 900, margin: '24px auto' }}><AssistantRuntimeProvider runtime={runtime}>
+  return <main data-original-part-id={input.partId} style={{ maxWidth: 900, margin: '24px auto' }}><AssistantRuntimeProvider runtime={runtime}>
     <ThreadPrimitive.Messages components={{ AssistantMessage: Message }} />
   </AssistantRuntimeProvider></main>
 }
