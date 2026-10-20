@@ -1,14 +1,16 @@
 import {readRunReference} from '@lyyzka/lingxios'
-import {pool} from '../db/pool.js'
+import {pool,closeDatabasePools} from '../db/pool.js'
+import {redis,sub} from '../redis.js'
 import {lingxiOSControl,stopLingxiOSControl,prepareLingxiOSWorkerContext} from '../agent-runtime/runtime.js'
 
 // Uses the native public API and the current authenticated product binding.
 // No raw prompts, credentials or memory bodies are printed.
 const [companyId,principalId,runId,mode='inspect',resumeCursor]=process.argv.slice(2)
-if(!companyId || !principalId || !runId || !['inspect','migrate','reindex'].includes(mode)) {
-  throw new Error('usage: memory-maintenance <companyId> <principalId> <runId> [inspect|migrate|reindex] [cursor]')
-}
+const cleanupFailures: string[] = []
 try {
+  if(!companyId || !principalId || !runId || !['inspect','migrate','reindex'].includes(mode)) {
+    throw new Error('usage: memory-maintenance <companyId> <principalId> <runId> [inspect|migrate|reindex] [cursor]')
+  }
   prepareLingxiOSWorkerContext()
   const run=await readRunReference(pool,companyId,runId)
   if(!run || run.principalId!==principalId) throw new Error('memory maintenance run identity is unavailable')
@@ -25,4 +27,16 @@ try {
       if(page===199) throw new Error('migration page budget reached; resume with the reported cursor')
     }
   }
-} finally {await stopLingxiOSControl();await pool.end()}
+} finally {
+  for(const [name,close] of [
+    ['control',stopLingxiOSControl],
+    ['subscriber',() => sub.disconnect()],
+    ['redis',() => redis.disconnect()],
+    ['database',closeDatabasePools],
+  ] as const) {
+    try {await close()}
+    // Cleanup errors can contain connection details; retain fixed stage names only.
+    catch {cleanupFailures.push(name)}
+  }
+}
+if(cleanupFailures.length) throw new Error(`memory maintenance cleanup failed: ${cleanupFailures.join(', ')}`)
