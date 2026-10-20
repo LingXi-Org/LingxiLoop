@@ -108,4 +108,25 @@ The cloud exec transport disconnected once, then actual commands confirmed
 recovery. Parent instructed checkpoint + draft PR before further development.
 No merge, deployment, issue closure, credentials or production data were changed.
 
-Checkpoint: expanded catalog lifecycle browser regression remains under verification; failed preliminary selector/attention results are retained in `.e2e/215-218-states-*`. No green claim is made for that new suite at this checkpoint.
+Checkpoint `9932774d`: the final expanded catalog/lifecycle and receipt timing
+browser run **3/3 passed**. It covers eight distinct known tools, dotted/legacy
+aliases, old generic metadata, full official source/memory cards, details,
+running/failure/cancellation/unknown, and 390/1440 layouts. The real unknown
+receipt carries `isError=true`; its card stays “结果待核对” without false failure
+or blind retry. Legacy terminal status stays visible even without an attention
+annotation. The final fixture measurement was status **70.8 ms** and public
+receipt-to-paint **24.9 ms** (`timing-checkpoint.json`). This still measures only
+client synthetic receipt rendering.
+
+Preliminary selector/attention failures and a local Vite connection-refused run
+are retained under `.e2e/215-218-*`; none were converted to passing by deleting
+assertions. The separately failing live official-site certificate case remains
+unresolved and is retained in `browser-presentation-including-reference-failure.md`.
+
+
+On the same product candidate `9932774d`, the seven original local RunActivity
+browser cases also passed (73.93 s): light/dark at 390/1440, Markdown/KaTeX/Mermaid,
+approval attention, failure/reload, 300-call expansion, authorized 1100-entry
+activity paging and font loading. This page-within-a-run coverage does not prove
+the pending cross-run recent-20 recovery edge. Candidate Web/E2E typechecks and
+scoped lint passed again. The final evidence-only commit changes no product code.
