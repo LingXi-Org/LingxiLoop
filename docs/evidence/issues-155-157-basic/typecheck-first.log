@@ -1,0 +1,7 @@
+(node:1951) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> lingxiloop@0.1.0-beta server:typecheck
+> tsc -p server/tsconfig.json --noEmit
+
+server/src/__integration__/runtime-basic-acceptance.test.ts(116,36): error TS2339: Property 'notStarted' does not exist on type 'TerminalFeedback'.

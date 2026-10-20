@@ -1,0 +1,80 @@
+[db:migrate] applied 0001_v1_baseline, 0002_remove_legacy_identity, 0003_agent_os_session_affinity, 0004_backfill_personal_owner_participants, 0005_lingxios_v2_reset, 0006_observable_live_eval, 0007_install_lingxios, 0008_agent_os_execution, 0009_native_agent_tools, 0010_lingxios_native_runtime, 0011_closed_education, 0012_lingxios_3_2, 0013_native_collaboration, 0014_profile_avatars, 0015_lingxios_3_2_6, 0016_lingxios_3_2_7, 0017_lingxios_3_2_8, 0018_lingxios_3_2_9, 0019_agent_read_receipts, 0020_lingxios_3_2_10, 0021_lingxios_3_2_11, 0022_lingxios_3_2_12, 0023_lingxios_3_2_13, 0024_lingxios_3_3_0, 0025_lingxios_3_3_1, 0026_lingxios_3_3_2, 0027_learning_collaboration, 0028_lingxios_3_3_4, 0029_lingxios_3_3_5, 0030_lingxios_3_3_6, 0031_agent_capabilities, 0032_native_message_attachments, 0033_interactive_ui, 0034_retire_email_calendar, 0035_course_forum, 0036_public_run_activity, 0037_forum_comment_attachments, 0038_learning_submission_sequence, 0039_native_memory_collaboration, 0040_forum_assignment_convergence, 0041_homework_mastery, 0042_forum_submission_evidence, 0043_lingxios_3_5_0, 0044_questionnaire_wait, 0045_organization_cases, 0046_visualize · 1875ms
+[integration] selected 1/82 file(s): runtime-basic-acceptance.test.ts
+TAP version 13
+# {"ts":"2026-10-20T00:16:41.624Z","level":"info","msg":"worker stopped","workerId":"fallback-available","timedOut":false}
+# Subtest: fallback available: explicit result, shared ledger and bounded primary rejection
+not ok 1 - fallback available: explicit result, shared ledger and bounded primary rejection
+  ---
+  duration_ms: 981.219725
+  type: 'test'
+  location: '/workspace/LingxiLoop-155157/server/src/__integration__/runtime-basic-acceptance.test.ts:2:1690'
+  failureType: 'testCodeFailure'
+  error: 'fallback route requires matching approved pricing and current authorization'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    executionModel (/workspace/LingxiLoop-155157/node_modules/@lyyzka/lingxios/src/model/execution.ts:183:99)
+    AgentRuntime.runWork (/workspace/LingxiLoop-155157/node_modules/@lyyzka/lingxios/src/runtime/runtime.ts:298:19)
+    AgentWorker.runNext (/workspace/LingxiLoop-155157/node_modules/@lyyzka/lingxios/src/worker/worker.ts:72:42)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-155157/server/src/__integration__/runtime-basic-acceptance.test.ts:79:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# {"ts":"2026-10-20T00:16:42.090Z","level":"info","msg":"worker stopped","workerId":"fallback-absent","timedOut":false}
+# Subtest: fallback absent: explicit result, shared ledger and bounded primary rejection
+ok 2 - fallback absent: explicit result, shared ledger and bounded primary rejection
+  ---
+  duration_ms: 464.883876
+  type: 'test'
+  ...
+# {"ts":"2026-10-20T00:16:42.153Z","level":"info","msg":"worker stopped","workerId":"fallback-revoked","timedOut":false}
+# Subtest: fallback revoked: explicit result, shared ledger and bounded primary rejection
+not ok 3 - fallback revoked: explicit result, shared ledger and bounded primary rejection
+  ---
+  duration_ms: 63.58526
+  type: 'test'
+  location: '/workspace/LingxiLoop-155157/server/src/__integration__/runtime-basic-acceptance.test.ts:2:1690'
+  failureType: 'testCodeFailure'
+  error: 'fallback route requires matching approved pricing and current authorization'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    executionModel (/workspace/LingxiLoop-155157/node_modules/@lyyzka/lingxios/src/model/execution.ts:183:99)
+    AgentRuntime.runWork (/workspace/LingxiLoop-155157/node_modules/@lyyzka/lingxios/src/runtime/runtime.ts:298:19)
+    AgentWorker.runNext (/workspace/LingxiLoop-155157/node_modules/@lyyzka/lingxios/src/worker/worker.ts:72:42)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-155157/server/src/__integration__/runtime-basic-acceptance.test.ts:79:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# {"ts":"2026-10-20T00:16:43.005Z","level":"info","msg":"worker stopped","workerId":"basic-fanout","timedOut":false}
+# Subtest: shared root rejects two mentions once, preserves committed result, and gives a new human message its own budget
+not ok 4 - shared root rejects two mentions once, preserves committed result, and gives a new human message its own budget
+  ---
+  duration_ms: 851.326823
+  type: 'test'
+  location: '/workspace/LingxiLoop-155157/server/src/__integration__/runtime-basic-acceptance.test.ts:2:4590'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    undefined !== 2
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-155157/server/src/__integration__/runtime-basic-acceptance.test.ts:116:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 1
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4149.329771
