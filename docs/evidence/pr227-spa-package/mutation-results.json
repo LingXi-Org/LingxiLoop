@@ -1,0 +1,14 @@
+[
+  {
+    "mutation": "missing-copy",
+    "exitCode": 1,
+    "elapsedMs": 3249,
+    "detectedRange": true
+  },
+  {
+    "mutation": "missing-context",
+    "exitCode": 1,
+    "elapsedMs": 1671,
+    "detectedRange": true
+  }
+]

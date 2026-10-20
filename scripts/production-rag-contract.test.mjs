@@ -59,6 +59,59 @@ test('server image includes the complete shared runtime import graph', () => {
   assert.deepEqual([...missing].sort(), [])
 })
 
+// Failure: checkout resolves frontend imports that COPY or the build context omits.
+test('SPA image includes the transitive source graph and pinned vendor license', () => {
+  const root = fileURLToPath(new URL('../', import.meta.url))
+  const stage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m)
+    .find(part => /^.* AS spa-build\r?\n/.test(part))
+  assert.ok(stage, 'SPA build stage exists')
+  const copied = stage.split(/\r?\n/).filter(line => /^COPY /.test(line)).flatMap(line => {
+    const [, ...args] = line.trim().split(/\s+/), destination = args.pop()
+    return args.map(source => ({ source, destination: resolve(root, destination) }))
+  })
+  const patterns = read('server/docker/lingxiloop-server.Dockerfile.dockerignore')
+    .split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'))
+  const inContext = path => {
+    const ancestors = path.split('/').map((_, index, parts) => parts.slice(0, index + 1).join('/'))
+    let included = true
+    for (const rule of patterns) {
+      const pattern = rule.startsWith('!') ? rule.slice(1) : rule
+      if (ancestors.some(parent => matchesGlob(parent, pattern))) included = rule.startsWith('!')
+    }
+    return included
+  }
+  const packaged = path => inContext(path) && copied.some(({ source, destination }) => {
+    if (path !== source && !path.startsWith(`${source}/`)) return false
+    const suffix = ts.sys.directoryExists(resolve(root, source)) ? path.slice(source.length + 1) : source.split('/').at(-1)
+    return resolve(destination, suffix) === resolve(root, path)
+  })
+  const pathOf = file => relative(root, file).replaceAll('\\', '/')
+  const options = { moduleResolution: ts.ModuleResolutionKind.Bundler, baseUrl: root, paths: { '@/*': ['src/*'] } }
+  const pending = ts.sys.readDirectory(resolve(root, 'src'), ['.ts', '.tsx'])
+    .filter(file => inContext(pathOf(file)))
+  const visited = new Set(), missing = new Set()
+  for (const file of pending) {
+    if (visited.has(file)) continue
+    visited.add(file)
+    const path = pathOf(file)
+    if (!packaged(path)) missing.add(path)
+    for (const specifier of ts.preProcessFile(readFileSync(file, 'utf8'), true, true).importedFiles) {
+      if (!specifier.fileName.startsWith('.') && !specifier.fileName.startsWith('@/')) continue
+      const resolved = ts.resolveModuleName(specifier.fileName, file, options, ts.sys).resolvedModule?.resolvedFileName
+      if (resolved && !resolved.includes('/node_modules/')) pending.push(resolved)
+    }
+  }
+  assert.deepEqual([...missing].sort(), [], 'SPA COPY and context must include every transitive source input')
+  for (const name of ['LICENSE', 'SHA256SUMS', 'README.md']) {
+    const path = `third_party/assistant-ui/streaming-text/${name}`
+    assert.ok(packaged(path), `Pinned vendor attribution missing from SPA stage: ${path}`)
+    assert.ok(read(path).length > 0)
+  }
+  const finalStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1)
+  assert.match(finalStage, /^COPY third_party\/assistant-ui\/streaming-text\/LICENSE \.\/dist\/licenses\/assistant-ui-streaming-text\.txt$/m,
+    'The shipped SPA must retain the upstream MIT notice')
+})
+
 test('production Open Notebook receives only the explicit RAG environment', () => {
   const compose = read('deploy/komodo/lingxiloop-knowledge-agent/compose.yml')
   const service = compose.slice(compose.indexOf('  open-notebook:'))
@@ -374,6 +427,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
   const filters = [...workflow.matchAll(/^            (\w+):\r?\n((?:              - '[^']+'\r?\n)+)/gm)]
     .map(([, name, lines]) => [name, [...lines.matchAll(/- '([^']+)'/g)].map(([, pattern]) => pattern)])
   assert.ok(filters.length > 15)
+  assert.match(workflow, /if: matrix\.component == 'web'\r?\n\s+run: node --test --test-name-pattern='SPA image' scripts\/production-rag-contract\.test\.mjs/)
   const select = (file) => {
     const flags = Object.fromEntries(filters.map(([name, patterns]) => [
       name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()),
@@ -395,6 +449,9 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ['src/lib/mentions.ts', 'integration', 'server'],
     ['src/lib/memoryActivity.ts', 'integration', 'server'],
     ['src/features/chat/visualize/zcode/shared/gen-ui/contract.ts', 'integration', 'server'],
+    ['third_party/assistant-ui/streaming-text/upstream/utils/range.ts', 'web', 'server'],
+    ['third_party/assistant-ui/streaming-text/LICENSE', 'web', 'server'],
+    ['third_party/assistant-ui/streaming-text/SHA256SUMS', 'web', 'server'],
     ['package-lock.json', 'integration', 'server'],
     ['.github/workflows/ci.yml', 'deploy_contract', ''],
     ['scripts/release-smoke.mjs', 'deploy_contract', ''],
