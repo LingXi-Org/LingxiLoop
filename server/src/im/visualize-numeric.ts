@@ -5,7 +5,7 @@ const number = z.number().finite().min(-1e12).max(1e12)
 const common = { title: text, decimals: z.number().int().min(0).max(6).default(2) }
 export const numericChartSchema = z.discriminatedUnion('kind', [
   z.object({ ...common, kind: z.literal('linear'), inputLabel: text, inputUnit: text, valueUnit: text,
-    prefer: z.enum(['lower', 'higher']), domain: z.object({ min: number, max: number }).strict(),
+    prefer: z.enum(['lower', 'higher']), preferenceBands: z.boolean().default(false), domain: z.object({ min: number, max: number }).strict(),
     samples: z.array(number).min(1).max(12).optional(),
     series: z.array(z.object({ label: text, intercept: number, slope: number }).strict()).min(2).max(6),
   }).strict(),
@@ -27,7 +27,8 @@ const escapeHtml = (value: string) => value.replace(/[&<>"']/g, char => ({ '&': 
 const colors = ['#2563eb', '#dc2626', '#15803d', '#9333ea', '#b45309', '#0891b2', '#be185d', '#4f46e5', '#525252', '#4d7c0f']
 type Line = { label: string; points: Array<{ x: number; value: number }> }
 type LinearSummary = { kind: 'linear'; samples: Array<{ x: number; values: Array<{ label: string; value: number }>; preferred: string[] }>;
-  intersections: Array<{ left: string; right: string; x: number; value: number }> }
+  intersections: Array<{ left: string; right: string; x: number; value: number }>;
+  bands: Array<{ from: number; to: number; preferred: string[] }> }
 type TrendSummary = { kind: 'trend'; periods: string[]; series: Array<{ label: string; values: number[]; changes: Array<number | null>;
   percentageChanges: Array<number | null>; greatestIncrease: Array<{ period: string; change: number }> }> }
 
@@ -69,11 +70,26 @@ export function renderNumericChart(input: unknown, signal?: AbortSignal): { html
       requireValue(Math.abs(value - other) <= Number.EPSILON * 16 * evaluationScale)
       intersections.push({ left: left.label, right: right.label, x, value })
     }
-    summary = { kind: 'linear', samples: rows, intersections }
+    const boundaries = [...new Set([xMin, ...intersections.map(cross => cross.x), xMax])].sort((a, b) => a - b)
+    const bands = chart.preferenceBands ? boundaries.slice(1).map((to, i) => {
+      const from = boundaries[i]!, middle = from + (to - from) / 2
+      requireValue(middle > from && middle < to)
+      const values = chart.series.map(series => ({ label: series.label, value: evaluate(series, middle) }))
+      // Distinct functions cannot tie throughout an open partition interval.
+      // If evaluation rounds them to equality, do not infer a broad tie.
+      for (let a = 0; a < values.length; a++) for (let b = a + 1; b < values.length; b++) {
+        requireValue(values[a]!.value !== values[b]!.value || (chart.series[a]!.intercept === chart.series[b]!.intercept && chart.series[a]!.slope === chart.series[b]!.slope))
+      }
+      const preferred = (chart.prefer === 'lower' ? Math.min : Math.max)(...values.map(item => item.value))
+      return { from, to, preferred: values.filter(item => item.value === preferred).map(item => item.label) }
+    }) : []
+    summary = { kind: 'linear', samples: rows, intersections, bands }
     xLabel = `${chart.inputLabel} (${chart.inputUnit})`; unit = chart.valueUnit
     table = `<thead><tr><th>${escapeHtml(xLabel)}</th>${chart.series.map(s => `<th>${escapeHtml(s.label)} (${escapeHtml(unit)})</th>`).join('')}<th>Preferred (${chart.prefer})</th></tr></thead><tbody>`
       + rows.map(row => `<tr>${cell(format(row.x))}${row.values.map(v => cell(format(v.value))).join('')}${cell(row.preferred.join(' = '))}</tr>`).join('') + '</tbody>'
     detail = '<ul>' + intersections.map(cross => `<li>${escapeHtml(cross.left)} = ${escapeHtml(cross.right)}: ${label(cross.x)} ${escapeHtml(chart.inputUnit)}, ${label(cross.value)} ${escapeHtml(unit)}</li>`).join('') + '</ul>'
+    if (bands.length) detail += '<p>Shading shows preferred series on interval interiors; thresholds may be ties.</p><ul>'
+      + bands.map(band => `<li>${label(band.from)}–${label(band.to)} ${escapeHtml(chart.inputUnit)}: ${escapeHtml(band.preferred.join(' = '))}</li>`).join('') + '</ul>'
   } else {
     distinct(chart.periods)
     requireValue(chart.series.every(series => series.values.length === chart.periods.length))
@@ -100,11 +116,19 @@ export function renderNumericChart(input: unknown, signal?: AbortSignal): { html
   const values = lines.flatMap(line => line.points.map(point => point.value))
   let yMin = Math.min(...values), yMax = Math.max(...values)
   if (yMin === yMax) { const margin = Math.max(1, Math.abs(yMin) * 0.05); yMin -= margin; yMax += margin }
-  const xAt = (x: number) => 64 + (x - xMin) / (xMax - xMin) * 540
-  const yAt = (y: number) => 248 - (y - yMin) / (yMax - yMin) * 212
+  const frame = { width: 640, height: 300 }
+  const plot = { left: 64, right: frame.width - 36, top: 36, bottom: frame.height - 52 }
+  const xAt = (x: number) => plot.left + (x - xMin) / (xMax - xMin) * (plot.right - plot.left)
+  const yAt = (y: number) => plot.bottom - (y - yMin) / (yMax - yMin) * (plot.bottom - plot.top)
   const coordinate = (value: number) => finite(value).toFixed(3)
-  const svg = `<svg viewBox="0 0 640 300" role="img" aria-label="${escapeHtml(chart.title)}"><title>${escapeHtml(chart.title)} — ${escapeHtml(unit)}</title>`
-    + '<path d="M64 36V248H604" fill="none" stroke="currentColor"/>'
+  const regions = summary.kind === 'linear' ? summary.bands.map(band => {
+    const left = Number(coordinate(xAt(band.from))), right = Number(coordinate(xAt(band.to)))
+    requireValue(right > left)
+    const color = colors[lines.findIndex(line => line.label === band.preferred[0])]!
+    return `<rect class="lx-preference-band" x="${coordinate(left)}" y="${plot.top}" width="${coordinate(right - left)}" height="${plot.bottom - plot.top}" fill="${color}" opacity="0.1"><title>${escapeHtml(band.preferred.join(' = '))}: ${label(band.from)}–${label(band.to)}</title></rect>`
+  }).join('') : ''
+  const svg = `<svg viewBox="0 0 ${frame.width} ${frame.height}" role="img" aria-label="${escapeHtml(chart.title)}"><title>${escapeHtml(chart.title)} — ${escapeHtml(unit)}</title>`
+    + regions + `<path d="M${plot.left} ${plot.top}V${plot.bottom}H${plot.right}" fill="none" stroke="currentColor"/>`
     + `<text x="60" y="32" text-anchor="end">${label(yMax)}</text><text x="60" y="252" text-anchor="end">${label(yMin)}</text>`
     + `<text x="64" y="270">${escapeHtml(chart.kind === 'trend' ? chart.periods[0] : format(xMin))}</text><text x="604" y="270" text-anchor="end">${escapeHtml(chart.kind === 'trend' ? chart.periods.at(-1)! : format(xMax))}</text>`
     + `<text x="334" y="292" text-anchor="middle">${escapeHtml(xLabel)}</text>`

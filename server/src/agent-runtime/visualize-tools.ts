@@ -6,6 +6,7 @@ import { nativeTool, authorizeAudienceRead, compareResource } from '../agents/to
 import { productConversationId } from './identity.js'
 import { readAuthorizedVisualizeDocument, saveVisualizeDocument, validateVisualizeFragment } from '../im/visualize.js'
 import { HttpError } from '../http/errors.js'
+import { DiagramInputError, sequenceDiagramSchema, renderSequenceDiagram } from '../im/visualize-diagram.js'
 import { NumericChartError, numericChartSchema, renderNumericChart } from '../im/visualize-numeric.js'
 import { readVisualizeReference } from './visualize-skill.js'
 import { renderVisualizeStandalone } from './visualize-export.js'
@@ -51,7 +52,7 @@ export const visualizeTools: ToolDefinition[] = [
     },
   }),
   nativeTool('visualize.chart', z.object({ name, chart: numericChartSchema }).strict(), {
-    description: 'Create and save a bounded static numeric chart from supplied data, without authoring HTML or expressions. Use linear for intercept+slope*x comparisons with an explicit lower/higher preference and common units; use trend for ordered observations and optional differences between named base series. Plots, tables, intersections and decisions use the same unrounded calculations. Up to 6 base series, 60 periods or 12 comparison samples; unique labels and finite inputs within +/-1e12, computed magnitudes <=1e15. Percent changes need a positive previous value. Return the actual saved reference, read back with visualize.read, and use the returned calculations in prose. This does not establish that the supplied data or model interpretation is correct. Other visualizations can still use visualize.save.',
+    description: 'Create and save a bounded static numeric chart from supplied data, without authoring HTML or expressions. Use linear for intercept+slope*x comparisons with an explicit lower/higher preference and common units; optional preferenceBands shades interval interiors using computed intersections (intervals must remain distinct at 0.001 SVG units and distinct functions must remain distinguishable at interval midpoints); use trend for ordered observations and optional differences between named base series. Plots, tables, intersections and decisions use the same unrounded calculations. Up to 6 base series, 60 periods or 12 comparison samples; unique labels and finite inputs within +/-1e12, computed magnitudes <=1e15. Percent changes need a positive previous value. Return the actual saved reference, read back with visualize.read, and use the returned calculations in prose. This does not establish that the supplied data or model interpretation is correct. Other visualizations can still use visualize.save.',
     effect: 'transaction', approval: false, authorize,
     async execute(context, input) {
       context.signal.throwIfAborted()
@@ -74,6 +75,34 @@ export const visualizeTools: ToolDefinition[] = [
       const saved = z.object({ path }).passthrough().parse(value)
       const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path })
       const expected = renderNumericChart(input.chart, context.signal).html
+      const hash = (html: string) => createHash('sha256').update(html).digest('hex')
+      return compareResource(`visualize:${saved.path}`, { sha256: hash(expected) }, { sha256: hash(document.html) })
+    },
+  }),
+  nativeTool('visualize.diagram', z.object({ name, diagram: sequenceDiagramSchema }).strict(), {
+    description: 'Create and save a bounded static vertical sequence diagram from 2–12 ordered nodes, without authoring HTML or pixel coordinates. Supply unique lowercase node IDs, labels and optional detail; optional edges must be the complete adjacent forward chain in node order. Node heights follow wrapped text in normal document flow; connectors occupy the gaps. Arbitrary graphs, branches, cycles and spatial layouts are unsupported: use a different suitable visualization or explain the limitation. Returns the actual saved reference. Read back with visualize.read; supplied meaning and order still require checking. Ordinary prose, code and visualize.save remain valid.',
+    effect: 'transaction', approval: false, authorize,
+    async execute(context, input) {
+      context.signal.throwIfAborted()
+      let rendered: ReturnType<typeof renderSequenceDiagram>
+      try { rendered = renderSequenceDiagram(input.diagram, context.signal) }
+      catch (error) {
+        if (!(error instanceof DiagramInputError) && !(error instanceof z.ZodError)) throw error
+        return { ok: false, code: 'invalid_arguments', executionState: 'no_effect',
+          error: 'Sequence diagram requires 2–12 unique nodes and, if supplied, exactly the adjacent forward edges in node order. Do not supply pixel geometry. No document was saved.' }
+      }
+      validateVisualizeFragment(input.name, rendered.html)
+      context.signal.throwIfAborted()
+      const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
+        name: input.name, html: rendered.html, database: context.database as Queryable })
+      return { ok: true, value: { path: document.path, reference: `::visualize${JSON.stringify({ path: document.path })}`,
+        bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex'), summary: rendered.summary } }
+    },
+    async verify(context, input, value) {
+      await authorize(context)
+      const saved = z.object({ path }).passthrough().parse(value)
+      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path })
+      const expected = renderSequenceDiagram(input.diagram, context.signal).html
       const hash = (html: string) => createHash('sha256').update(html).digest('hex')
       return compareResource(`visualize:${saved.path}`, { sha256: hash(expected) }, { sha256: hash(document.html) })
     },
