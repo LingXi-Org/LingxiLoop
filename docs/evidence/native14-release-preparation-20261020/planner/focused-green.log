@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: all unknown target inputs are mandatory; no implicit target or operation
+ok 1 - all unknown target inputs are mandatory; no implicit target or operation
+  ---
+  duration_ms: 1.938929
+  type: 'test'
+  ...
+# Subtest: exact successful CI rejects wrong SHA, missing/duplicate jobs and rollout
+ok 2 - exact successful CI rejects wrong SHA, missing/duplicate jobs and rollout
+  ---
+  duration_ms: 0.46838
+  type: 'test'
+  ...
+# Subtest: full source audit passes; partial/layer/package/formal reference mutations fail
+ok 3 - full source audit passes; partial/layer/package/formal reference mutations fail
+  ---
+  duration_ms: 6.509676
+  type: 'test'
+  ...
+# Subtest: every acceptance input is bound; duplicate/omitted/path-traversal input rejected
+ok 4 - every acceptance input is bound; duplicate/omitted/path-traversal input rejected
+  ---
+  duration_ms: 4.70105
+  type: 'test'
+  ...
+# Subtest: actual accepted source is replayed with four healthy containers and all six hashes
+ok 5 - actual accepted source is replayed with four healthy containers and all six hashes
+  ---
+  duration_ms: 48.939508
+  type: 'test'
+  ...
+# Subtest: actual formal tar and installed public resources match 3.6.0/native14/protocol11
+ok 6 - actual formal tar and installed public resources match 3.6.0/native14/protocol11
+  ---
+  duration_ms: 149.538753
+  type: 'test'
+  ...
+# Subtest: Compose refs require one exact parent, two app-only changes and suppression flags
+ok 7 - Compose refs require one exact parent, two app-only changes and suppression flags
+  ---
+  duration_ms: 0.432858
+  type: 'test'
+  ...
+# Subtest: actual Compose parser permits only runtime tag/pull changes and rejects policy mutation
+ok 8 - actual Compose parser permits only runtime tag/pull changes and rejects policy mutation
+  ---
+  duration_ms: 355.06298
+  type: 'test'
+  ...
+# Subtest: template invocation refuses unknown inputs without making an output directory
+ok 9 - template invocation refuses unknown inputs without making an output directory
+  ---
+  duration_ms: 57.227662
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 704.908894

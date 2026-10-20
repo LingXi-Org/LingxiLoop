@@ -1,0 +1,6 @@
+PASS collect-terminal-receipts.mjs
+PASS collector.local.test.mjs
+PASS inputs.mjs
+PASS read-production-after.mjs
+PASS seed-evidence.mjs
+PASS verify-final-acceptance.mjs

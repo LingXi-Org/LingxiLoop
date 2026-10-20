@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Successful native14 seed receipt; seed-contract.mjs additionally enforces identity, sequence, hash and time relationships",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "verified",
+    "outcome",
+    "planHash",
+    "planSha256",
+    "source",
+    "reviewedTarget",
+    "driverCommit",
+    "canonicalSha256",
+    "sqlSha256",
+    "provenanceSha256",
+    "target",
+    "sourceAcceptanceSha256",
+    "sourceProductionSha256",
+    "startedAt",
+    "finishedAt",
+    "readOnly",
+    "fullVisibility",
+    "counts",
+    "equal",
+    "native",
+    "guards",
+    "events"
+  ],
+  "properties": {
+    "format": {
+      "const": "native14-seed-precheck-receipt/v1"
+    },
+    "verified": {
+      "const": true
+    },
+    "outcome": {
+      "const": "complete"
+    },
+    "planHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "planSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "source": {
+      "const": "7fe5b16e08dbe6634feb701d64e26c28475b917e"
+    },
+    "reviewedTarget": {
+      "const": "f749849e767250979469a21529fa390cf6d66daa"
+    },
+    "driverCommit": {
+      "const": "19422466f8463a3a1099c6fbfdd3b92d0228e1b5"
+    },
+    "canonicalSha256": {
+      "const": "18182ceea150aec2db43a871e6100d6e7793ddcfec326cfd5031266cd84bb2e7"
+    },
+    "sqlSha256": {
+      "const": "728524aa89064515196cc7a76e61b47bbb8f39811ee4fcc619c7cb3933e7cf89"
+    },
+    "provenanceSha256": {
+      "const": "1da9eae320a2dc875dfe5959585b4e2b31f01135e30daaf432b4ffacf6f3e406"
+    },
+    "target": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sourceAcceptanceSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sourceProductionSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "readOnly": {
+      "const": true
+    },
+    "fullVisibility": {
+      "const": true
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "missing",
+        "mismatched",
+        "plans",
+        "entitlements",
+        "planEntitlements"
+      ],
+      "properties": {
+        "missing": {
+          "const": 0
+        },
+        "mismatched": {
+          "const": 0
+        },
+        "plans": {
+          "const": 1
+        },
+        "entitlements": {
+          "const": 8
+        },
+        "planEntitlements": {
+          "const": 8
+        }
+      }
+    },
+    "equal": {
+      "const": true
+    },
+    "native": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "operation",
+        "target",
+        "status",
+        "success",
+        "startTs",
+        "endTs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{24}$"
+        },
+        "operation": {
+          "const": "RunStackService"
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "const": "Stack"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{24}$"
+            }
+          }
+        },
+        "status": {
+          "const": "Complete"
+        },
+        "success": {
+          "const": true
+        },
+        "startTs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endTs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "guards": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before",
+        "after",
+        "unchanged"
+      ],
+      "properties": {
+        "before": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "configHashes",
+            "containersSha256"
+          ],
+          "properties": {
+            "configHashes": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "lingxiloop-app-a",
+                "lingxiloop-app-b",
+                "lingxiloop-core-state"
+              ],
+              "properties": {
+                "lingxiloop-app-a": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "lingxiloop-app-b": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "lingxiloop-core-state": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "containersSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "after": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "configHashes",
+            "containersSha256"
+          ],
+          "properties": {
+            "configHashes": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "lingxiloop-app-a",
+                "lingxiloop-app-b",
+                "lingxiloop-core-state"
+              ],
+              "properties": {
+                "lingxiloop-app-a": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "lingxiloop-app-b": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "lingxiloop-core-state": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            },
+            "containersSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "unchanged": {
+          "const": true
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "phase",
+          "status",
+          "observedAt"
+        ],
+        "properties": {
+          "phase": {
+            "enum": [
+              "guard",
+              "komodo",
+              "seed"
+            ]
+          },
+          "status": {
+            "enum": [
+              "submitting",
+              "pending",
+              "complete",
+              "verified"
+            ]
+          },
+          "operation": {
+            "const": "RunStackService"
+          },
+          "stack": {
+            "const": "lingxiloop-core-state"
+          },
+          "updateId": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{24}$"
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

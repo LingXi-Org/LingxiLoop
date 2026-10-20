@@ -1,0 +1,21 @@
+{
+  "verified": true,
+  "mode": "offline-envelope-and-input-stage-shape",
+  "noProductionRequests": true,
+  "receiptDoesNotExist": true,
+  "preSeedShapeAcceptsExplicitPending": true,
+  "finalShapeRejectsMissingSeed": true,
+  "actualEndToEndCheck": "pending-real-target-plan-audit-CI",
+  "envelope": {
+    "stack": "lingxiloop-core-state",
+    "service": "postgres",
+    "entrypoint": "sh",
+    "user": "postgres",
+    "no_tty": true,
+    "no_deps": true,
+    "detach": false,
+    "service_ports": false,
+    "pull": false
+  },
+  "sqlSha256": "728524aa89064515196cc7a76e61b47bbb8f39811ee4fcc619c7cb3933e7cf89"
+}

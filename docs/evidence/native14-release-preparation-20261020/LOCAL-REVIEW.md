@@ -1,0 +1,17 @@
+# Offline helper review
+
+Reviewed frozen implementation19422466 against the handoff and these helper paths. No production call or real receipt was generated.
+
+- Native count is derived from ordered engine calls: prep8; release35. Source6/target13 state labels are assigned by exact position, then actual parsed marker values are checked against the corresponding full descriptor. Four metadata receipts must match target. No target schema is applied to pre-migration source states.
+- Generic progress requires submitting→pending(ID)→complete for one operation at a time. Backup has its own pending-without-ID→pending-with-ID→verified typed receipt path. Missing IDs, outstanding submissions, failure/uncertainty or duplicate native IDs reject.
+- Four stop/deploy service bindings come from the reviewed ordered recipe plus associated drain/rollout markers; the four final IDs and qualified image IDs must match. Source barriers require the saved marker state, full visibility and all-client zero; postmigration worker barriers use the public rule.
+- Backup identity is freshly read and parsed from real source-bound native logs. Every parsed typed field except new verifiedAt must equal the engine receipt. attempt/commandHash/source/restored counts/capacity/deletion are enforced by the public parser and exact receipt comparison. The unique backup native ID and all native start/end timestamps enforce the source barrier→backup→migration order.
+- The final reader uses a concrete reviewed input+plan hash and records only sanitized host/container/image/version/policy data. Final validation binds actual daemon ID (not config digest), platform/index/diffIDs, four current containers, native14/full50 inventory, source policy equality and four public point samples. It explicitly leaves authenticated smoke unrun.
+- Input nulls fail before any read. Source7fe acceptance and target candidate/audit/CI/Compose are not fabricated. Root's future canonical seed proof remains a separate prerequisite, never absorbed into43.
+
+Minimal local checks:4/4 parser/input contracts PASS; Node syntax PASS. The red log is a missing implementation import, not a production fault reproduction. A prior test-draft syntax typo is retained separately and not claimed as behavior evidence. No full suite, package installation or image work was requested or performed.
+
+
+Root identified the seed loader cycle before any production execution: final loading required the seed result to exist before the seed runner could produce it. This is fixed by explicit loadPreSeedInputs()/assertPreSeedInputs() sharing common validations and requiring a null pending hash at the fixed seed/receipt.json path. Strict postflight loading still requires a real file/hash. The seed owner changed only the runner import and output path for this boundary. The new isolated shape contract failed before implementation and passed afterward; final5/5 is distinct from the earlier4/4. Complete future-plan loading remains unrun because final target/CI/plan are not yet available. No fake target inputs were written.
+
+Final independent delta review by /root/pr237_review: GO, no remaining P1/P2. All seven declared top-level/seed code hashes were checked. Explicit pre-seed loader and fixed receipt path resolve the startup cycle; strict postflight loading remains unchanged in its requirement for actual seed proof. Seed native readback/parser/final binding is separate from43. This is an offline implementation review, not future production acceptance. Bindings are saved in independent-review-status.json.

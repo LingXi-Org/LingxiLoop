@@ -1,0 +1,95 @@
+{
+  "format": "education-plan-canonical/v1",
+  "plans": [
+    {
+      "id": "plan-education",
+      "code": "EDUCATION",
+      "name": "Education",
+      "status": "ACTIVE"
+    }
+  ],
+  "entitlements": [
+    {
+      "id": "entitlement-project-core",
+      "code": "project.core",
+      "description": "Defines project.core in the current access context"
+    },
+    {
+      "id": "entitlement-project-members-manage",
+      "code": "project.members.manage",
+      "description": "Defines project.members.manage in the current access context"
+    },
+    {
+      "id": "entitlement-learning-core",
+      "code": "learning.core",
+      "description": "Defines learning.core in the current access context"
+    },
+    {
+      "id": "entitlement-knowledge-core",
+      "code": "knowledge.core",
+      "description": "Defines knowledge.core in the current access context"
+    },
+    {
+      "id": "entitlement-conversation-core",
+      "code": "conversation.core",
+      "description": "Defines conversation.core in the current access context"
+    },
+    {
+      "id": "entitlement-agent-core",
+      "code": "agent.core",
+      "description": "Defines agent.core in the current access context"
+    },
+    {
+      "id": "entitlement-teacher-expensive_compute",
+      "code": "teacher.expensive_compute",
+      "description": "Defines teacher.expensive_compute in the current access context"
+    },
+    {
+      "id": "entitlement-teacher-compute_tier",
+      "code": "teacher.compute_tier",
+      "description": "Defines teacher.compute_tier in the current access context"
+    }
+  ],
+  "planEntitlements": [
+    {
+      "plan_id": "plan-education",
+      "entitlement_id": "entitlement-project-core",
+      "value": true
+    },
+    {
+      "plan_id": "plan-education",
+      "entitlement_id": "entitlement-project-members-manage",
+      "value": true
+    },
+    {
+      "plan_id": "plan-education",
+      "entitlement_id": "entitlement-learning-core",
+      "value": true
+    },
+    {
+      "plan_id": "plan-education",
+      "entitlement_id": "entitlement-knowledge-core",
+      "value": true
+    },
+    {
+      "plan_id": "plan-education",
+      "entitlement_id": "entitlement-conversation-core",
+      "value": true
+    },
+    {
+      "plan_id": "plan-education",
+      "entitlement_id": "entitlement-agent-core",
+      "value": true
+    },
+    {
+      "plan_id": "plan-education",
+      "entitlement_id": "entitlement-teacher-expensive_compute",
+      "value": true
+    },
+    {
+      "plan_id": "plan-education",
+      "entitlement_id": "entitlement-teacher-compute_tier",
+      "value": "pro"
+    }
+  ]
+}
