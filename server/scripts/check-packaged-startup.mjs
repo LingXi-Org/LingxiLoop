@@ -3,6 +3,25 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createRequire } from 'node:module'
+
+// The final stage is Debian/glibc x64. Confirm the native GNU Canvas path
+// still works after the optional musl-only binary has been removed.
+const canvasRoot = 'node_modules/@napi-rs'
+assert.ok(process.report.getReport().header.glibcVersionRuntime, 'Expected glibc runtime')
+assert.equal(process.arch, 'x64', 'Expected linux/amd64 Canvas runtime')
+assert.equal(existsSync(join(canvasRoot, 'canvas-linux-x64-musl/skia.linux-x64-musl.node')), false,
+  'Unexpected musl Canvas binary in glibc image')
+assert.equal(existsSync(join(canvasRoot, 'canvas-linux-x64-gnu/skia.linux-x64-gnu.node')), true,
+  'Missing GNU Canvas binary')
+assert.equal(existsSync(join(canvasRoot, 'canvas/LICENSE')), true, 'Missing Canvas license')
+const require = createRequire(import.meta.url)
+const { createCanvas } = require('@napi-rs/canvas')
+const canvas = createCanvas(1, 1)
+canvas.getContext('2d').fillRect(0, 0, 1, 1)
+assert.ok(canvas.toBuffer('image/png').length > 0, 'Canvas drawing failed')
+assert.ok(Object.hasOwn(require.cache, join(process.cwd(), canvasRoot,
+  'canvas-linux-x64-gnu/skia.linux-x64-gnu.node')), 'Canvas did not load GNU native binding')
 
 // The server deps stage removes only PDF viewer assets and unused generic maps.
 // Keep future product imports from silently depending on those removed paths.

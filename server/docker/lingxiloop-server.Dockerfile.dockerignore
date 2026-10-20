@@ -24,6 +24,7 @@
 !scripts/verify-zcode-visualize.mjs
 !scripts/build-visualize-runtime.mjs
 !scripts/prune-pdfjs-server-runtime.mjs
+!scripts/prune-glibc-canvas-runtime.mjs
 # Don't bake source maps / built assets / huge logs into the layer.
 server/**/*.log
 server/**/dist
