@@ -8,6 +8,7 @@ import type { Nodes } from 'mdast'
 /** UI labels and hashtag extraction use text, never Markdown serialization syntax. */
 export function markdownText(markdown: string): string {
   const plain = (node: Nodes): string => {
+    if (node.type === 'break') return '\n'
     if ('value' in node) return node.value
     if ('alt' in node) return node.alt ?? ''
     if ('children' in node) return node.children.map(plain).join(['root','list','table','tableRow'].includes(node.type) ? '\n' : '')

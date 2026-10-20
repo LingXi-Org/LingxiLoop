@@ -31,7 +31,7 @@ test('native forum menus, table, task state, scoped draft, upload retry, publish
     await nativeBlock(browser,screen,'内容正文',query,title)
     await browser.keyboard.press('Escape')
   }
-  await nativePaste(browser,screen,'内容正文','**Issue219 原生编辑**\n\n正文保留中文、标点和链接。 #原生编辑')
+  await nativePaste(browser,screen,'内容正文','**Issue219 原生编辑**  \n保留软换行。\n\n正文保留中文、标点和链接。 #原生编辑')
   await expect(editor()).toContainText('正文保留中文')
   await fixture(browser,'/api/fixture-attachment-upload/hold')
   await composer().getByLabel('附件',{exact:true}).setInputFiles([file('./submission.txt')])
@@ -71,6 +71,7 @@ test('native forum menus, table, task state, scoped draft, upload retry, publish
   await composer().getByRole('button','发布',{exact:true}).tap()
   await expect.poll(async()=>(await posts(browser,'Issue219 原生编辑')).length).toBe(1)
   const saved=(await posts(browser,'Issue219 原生编辑'))[0]
+  expect(saved.title).toBe('Issue219 原生编辑')
   expect(saved.editorDocument.format).toBe('blocknote')
   expect(saved.editorDocument.blocks.map((block:{type:string})=>block.type)).toContain('table')
   expect(saved.editorDocument.blocks.map((block:{type:string})=>block.type)).toContain('checkListItem')
