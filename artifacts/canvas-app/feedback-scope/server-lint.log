@@ -1,0 +1,9 @@
+(node:854970) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> lingxiloop@0.1.0-beta server:lint
+> biome lint server
+
+Checked 568 files in 1957ms. No fixes applied.
+(node:855005) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.
+(Use `node --trace-warnings ...` to show where the warning was created)
