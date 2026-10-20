@@ -100,7 +100,13 @@ COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilit
 COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
 COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
 COPY src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts ./src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts
-COPY third_party/zcode ./third_party/zcode
+# Keep the complete skill (including Python exports, vendor assets and licenses).
+# The full upstream source is a SPA build input; only this served script is read
+# by the server at runtime. Retain the pinned source inventory and attribution.
+COPY third_party/zcode/skills/visualize ./third_party/zcode/skills/visualize
+COPY third_party/zcode/upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js ./third_party/zcode/upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js
+COPY third_party/zcode/LICENSE third_party/zcode/README.md third_party/zcode/manifest.json ./third_party/zcode/
+COPY third_party/zcode/upstream/LICENSE ./third_party/zcode/upstream/LICENSE
 COPY --from=spa-build /app/server/assets/visualize-runtime ./server/assets/visualize-runtime
 # Web SPA bundle — read by server/src/web.ts at boot via existsSync().
 # When this is absent (e.g. an older runtime image) the server falls

@@ -22,7 +22,6 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "ioredis": "^5.10.1",
-    "lingxiloop": "file:..",
     "mdast-util-from-markdown": "2.0.3",
     "openai": "^6.37.0",
     "openlit": "1.15.0",

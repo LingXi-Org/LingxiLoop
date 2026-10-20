@@ -1,0 +1,4936 @@
+{
+  "baseline": {
+    "inventorySize": 348,
+    "rootDependencies": [
+      "@aws-sdk/client-s3",
+      "@aws-sdk/s3-request-presigner",
+      "@dicebear/core",
+      "@dicebear/styles",
+      "@lyyzka/lingxios",
+      "@openplait/core",
+      "@opentelemetry/api",
+      "assistant-stream",
+      "cheerio",
+      "compression",
+      "dotenv",
+      "express",
+      "ioredis",
+      "lingxiloop",
+      "mdast-util-from-markdown",
+      "openai",
+      "openlit",
+      "pg",
+      "tsx",
+      "ws",
+      "yjs",
+      "zod"
+    ],
+    "nodes": [
+      {
+        "location": "",
+        "name": "app",
+        "isLink": false,
+        "resolved": null,
+        "version": "0.1.0-beta"
+      },
+      {
+        "location": "..",
+        "name": "baseline",
+        "isLink": false,
+        "resolved": null,
+        "version": "0.1.0-beta"
+      },
+      {
+        "location": "node_modules/@aws-sdk/checksums",
+        "name": "@aws-sdk/checksums",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/checksums/-/checksums-3.1000.29.tgz",
+        "version": "3.1000.29"
+      },
+      {
+        "location": "node_modules/@aws-sdk/client-s3",
+        "name": "@aws-sdk/client-s3",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/client-s3/-/client-s3-3.1124.0.tgz",
+        "version": "3.1124.0"
+      },
+      {
+        "location": "node_modules/@aws-sdk/core",
+        "name": "@aws-sdk/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/core/-/core-3.977.9.tgz",
+        "version": "3.977.9"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-env",
+        "name": "@aws-sdk/credential-provider-env",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-env/-/credential-provider-env-3.972.70.tgz",
+        "version": "3.972.70"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-http",
+        "name": "@aws-sdk/credential-provider-http",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-http/-/credential-provider-http-3.972.72.tgz",
+        "version": "3.972.72"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-ini",
+        "name": "@aws-sdk/credential-provider-ini",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-ini/-/credential-provider-ini-3.973.15.tgz",
+        "version": "3.973.15"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-login",
+        "name": "@aws-sdk/credential-provider-login",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-login/-/credential-provider-login-3.972.77.tgz",
+        "version": "3.972.77"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-node",
+        "name": "@aws-sdk/credential-provider-node",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-node/-/credential-provider-node-3.972.82.tgz",
+        "version": "3.972.82"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-process",
+        "name": "@aws-sdk/credential-provider-process",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-process/-/credential-provider-process-3.972.70.tgz",
+        "version": "3.972.70"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-sso",
+        "name": "@aws-sdk/credential-provider-sso",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-sso/-/credential-provider-sso-3.973.14.tgz",
+        "version": "3.973.14"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-web-identity",
+        "name": "@aws-sdk/credential-provider-web-identity",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-web-identity/-/credential-provider-web-identity-3.972.76.tgz",
+        "version": "3.972.76"
+      },
+      {
+        "location": "node_modules/@aws-sdk/middleware-sdk-s3",
+        "name": "@aws-sdk/middleware-sdk-s3",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/middleware-sdk-s3/-/middleware-sdk-s3-3.972.75.tgz",
+        "version": "3.972.75"
+      },
+      {
+        "location": "node_modules/@aws-sdk/nested-clients",
+        "name": "@aws-sdk/nested-clients",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/nested-clients/-/nested-clients-3.997.44.tgz",
+        "version": "3.997.44"
+      },
+      {
+        "location": "node_modules/@aws-sdk/s3-request-presigner",
+        "name": "@aws-sdk/s3-request-presigner",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/s3-request-presigner/-/s3-request-presigner-3.1124.0.tgz",
+        "version": "3.1124.0"
+      },
+      {
+        "location": "node_modules/@aws-sdk/signature-v4-multi-region",
+        "name": "@aws-sdk/signature-v4-multi-region",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/signature-v4-multi-region/-/signature-v4-multi-region-3.996.46.tgz",
+        "version": "3.996.46"
+      },
+      {
+        "location": "node_modules/@aws-sdk/token-providers",
+        "name": "@aws-sdk/token-providers",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/token-providers/-/token-providers-3.1116.0.tgz",
+        "version": "3.1116.0"
+      },
+      {
+        "location": "node_modules/@aws-sdk/types",
+        "name": "@aws-sdk/types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/types/-/types-3.974.5.tgz",
+        "version": "3.974.5"
+      },
+      {
+        "location": "node_modules/@aws-sdk/xml-builder",
+        "name": "@aws-sdk/xml-builder",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/xml-builder/-/xml-builder-3.972.40.tgz",
+        "version": "3.972.40"
+      },
+      {
+        "location": "node_modules/@aws/lambda-invoke-store",
+        "name": "@aws/lambda-invoke-store",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws/lambda-invoke-store/-/lambda-invoke-store-0.3.0.tgz",
+        "version": "0.3.0"
+      },
+      {
+        "location": "node_modules/@dicebear/core",
+        "name": "@dicebear/core",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@dicebear/core/-/core-10.7.0.tgz",
+        "version": "10.7.0"
+      },
+      {
+        "location": "node_modules/@dicebear/styles",
+        "name": "@dicebear/styles",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@dicebear/styles/-/styles-10.6.0.tgz",
+        "version": "10.6.0"
+      },
+      {
+        "location": "node_modules/@esbuild/aix-ppc64",
+        "name": "@esbuild/aix-ppc64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/aix-ppc64/-/aix-ppc64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/android-arm",
+        "name": "@esbuild/android-arm",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/android-arm/-/android-arm-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/android-arm64",
+        "name": "@esbuild/android-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/android-arm64/-/android-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/android-x64",
+        "name": "@esbuild/android-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/android-x64/-/android-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/darwin-arm64",
+        "name": "@esbuild/darwin-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/darwin-arm64/-/darwin-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/darwin-x64",
+        "name": "@esbuild/darwin-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/darwin-x64/-/darwin-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/freebsd-arm64",
+        "name": "@esbuild/freebsd-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/freebsd-arm64/-/freebsd-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/freebsd-x64",
+        "name": "@esbuild/freebsd-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/freebsd-x64/-/freebsd-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-arm",
+        "name": "@esbuild/linux-arm",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-arm/-/linux-arm-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-arm64",
+        "name": "@esbuild/linux-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-arm64/-/linux-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-ia32",
+        "name": "@esbuild/linux-ia32",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-ia32/-/linux-ia32-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-loong64",
+        "name": "@esbuild/linux-loong64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-loong64/-/linux-loong64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-mips64el",
+        "name": "@esbuild/linux-mips64el",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-mips64el/-/linux-mips64el-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-ppc64",
+        "name": "@esbuild/linux-ppc64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-ppc64/-/linux-ppc64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-riscv64",
+        "name": "@esbuild/linux-riscv64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-riscv64/-/linux-riscv64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-s390x",
+        "name": "@esbuild/linux-s390x",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-s390x/-/linux-s390x-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-x64",
+        "name": "@esbuild/linux-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-x64/-/linux-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/netbsd-arm64",
+        "name": "@esbuild/netbsd-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/netbsd-arm64/-/netbsd-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/netbsd-x64",
+        "name": "@esbuild/netbsd-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/netbsd-x64/-/netbsd-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/openbsd-arm64",
+        "name": "@esbuild/openbsd-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/openbsd-arm64/-/openbsd-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/openbsd-x64",
+        "name": "@esbuild/openbsd-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/openbsd-x64/-/openbsd-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/openharmony-arm64",
+        "name": "@esbuild/openharmony-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/openharmony-arm64/-/openharmony-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/sunos-x64",
+        "name": "@esbuild/sunos-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/sunos-x64/-/sunos-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/win32-arm64",
+        "name": "@esbuild/win32-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/win32-arm64/-/win32-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/win32-ia32",
+        "name": "@esbuild/win32-ia32",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/win32-ia32/-/win32-ia32-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/win32-x64",
+        "name": "@esbuild/win32-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/win32-x64/-/win32-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@ioredis/commands",
+        "name": "@ioredis/commands",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@ioredis/commands/-/commands-1.10.0.tgz",
+        "version": "1.10.0"
+      },
+      {
+        "location": "node_modules/@lyyzka/lingxios",
+        "name": "@lyyzka/lingxios",
+        "isLink": false,
+        "resolved": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.6/8678395c3eb40eeb99860a05b3f532704fcb1bcb",
+        "version": "3.5.6"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas",
+        "name": "@napi-rs/canvas",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas/-/canvas-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-android-arm64",
+        "name": "@napi-rs/canvas-android-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-android-arm64/-/canvas-android-arm64-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-darwin-arm64",
+        "name": "@napi-rs/canvas-darwin-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-darwin-arm64/-/canvas-darwin-arm64-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-darwin-x64",
+        "name": "@napi-rs/canvas-darwin-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-darwin-x64/-/canvas-darwin-x64-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-arm-gnueabihf",
+        "name": "@napi-rs/canvas-linux-arm-gnueabihf",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-arm-gnueabihf/-/canvas-linux-arm-gnueabihf-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-arm64-gnu",
+        "name": "@napi-rs/canvas-linux-arm64-gnu",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-arm64-gnu/-/canvas-linux-arm64-gnu-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-arm64-musl",
+        "name": "@napi-rs/canvas-linux-arm64-musl",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-arm64-musl/-/canvas-linux-arm64-musl-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-riscv64-gnu",
+        "name": "@napi-rs/canvas-linux-riscv64-gnu",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-riscv64-gnu/-/canvas-linux-riscv64-gnu-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-x64-gnu",
+        "name": "@napi-rs/canvas-linux-x64-gnu",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-x64-gnu/-/canvas-linux-x64-gnu-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-x64-musl",
+        "name": "@napi-rs/canvas-linux-x64-musl",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-x64-musl/-/canvas-linux-x64-musl-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-win32-arm64-msvc",
+        "name": "@napi-rs/canvas-win32-arm64-msvc",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-win32-arm64-msvc/-/canvas-win32-arm64-msvc-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-win32-x64-msvc",
+        "name": "@napi-rs/canvas-win32-x64-msvc",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-win32-x64-msvc/-/canvas-win32-x64-msvc-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@openplait/core",
+        "name": "@openplait/core",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@openplait/core/-/core-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/api",
+        "name": "@opentelemetry/api",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/api/-/api-1.9.0.tgz",
+        "version": "1.9.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/api-logs",
+        "name": "@opentelemetry/api-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/api-logs/-/api-logs-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/context-async-hooks",
+        "name": "@opentelemetry/context-async-hooks",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/context-async-hooks/-/context-async-hooks-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-logs-otlp-http",
+        "name": "@opentelemetry/exporter-logs-otlp-http",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/exporter-logs-otlp-http/-/exporter-logs-otlp-http-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http",
+        "name": "@opentelemetry/exporter-metrics-otlp-http",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/exporter-metrics-otlp-http/-/exporter-metrics-otlp-http-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/api-logs",
+        "name": "@opentelemetry/api-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/api-logs/-/api-logs-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/otlp-exporter-base",
+        "name": "@opentelemetry/otlp-exporter-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/otlp-exporter-base/-/otlp-exporter-base-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/otlp-transformer",
+        "name": "@opentelemetry/otlp-transformer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/otlp-transformer/-/otlp-transformer-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/sdk-logs",
+        "name": "@opentelemetry/sdk-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-logs/-/sdk-logs-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/sdk-metrics",
+        "name": "@opentelemetry/sdk-metrics",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-metrics/-/sdk-metrics-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/sdk-trace-base",
+        "name": "@opentelemetry/sdk-trace-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-trace-otlp-http",
+        "name": "@opentelemetry/exporter-trace-otlp-http",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/exporter-trace-otlp-http/-/exporter-trace-otlp-http-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-trace-otlp-http/node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-trace-otlp-http/node_modules/@opentelemetry/sdk-trace-base",
+        "name": "@opentelemetry/sdk-trace-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/instrumentation",
+        "name": "@opentelemetry/instrumentation",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/instrumentation/-/instrumentation-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/instrumentation/node_modules/@opentelemetry/api-logs",
+        "name": "@opentelemetry/api-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/api-logs/-/api-logs-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-exporter-base",
+        "name": "@opentelemetry/otlp-exporter-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/otlp-exporter-base/-/otlp-exporter-base-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-transformer",
+        "name": "@opentelemetry/otlp-transformer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/otlp-transformer/-/otlp-transformer-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-transformer/node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-transformer/node_modules/@opentelemetry/sdk-metrics",
+        "name": "@opentelemetry/sdk-metrics",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-metrics/-/sdk-metrics-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-transformer/node_modules/@opentelemetry/sdk-trace-base",
+        "name": "@opentelemetry/sdk-trace-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/resources/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-logs",
+        "name": "@opentelemetry/sdk-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-logs/-/sdk-logs-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-logs/node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-metrics",
+        "name": "@opentelemetry/sdk-metrics",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-metrics/-/sdk-metrics-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-metrics/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace",
+        "name": "@opentelemetry/sdk-trace",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace/-/sdk-trace-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace-base",
+        "name": "@opentelemetry/sdk-trace-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace-base/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace-node",
+        "name": "@opentelemetry/sdk-trace-node",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-node/-/sdk-trace-node-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace-node/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/semantic-conventions",
+        "name": "@opentelemetry/semantic-conventions",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.43.0.tgz",
+        "version": "1.43.0"
+      },
+      {
+        "location": "node_modules/@protobufjs/aspromise",
+        "name": "@protobufjs/aspromise",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/aspromise/-/aspromise-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/@protobufjs/base64",
+        "name": "@protobufjs/base64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/base64/-/base64-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/@protobufjs/codegen",
+        "name": "@protobufjs/codegen",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/codegen/-/codegen-2.0.5.tgz",
+        "version": "2.0.5"
+      },
+      {
+        "location": "node_modules/@protobufjs/eventemitter",
+        "name": "@protobufjs/eventemitter",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/eventemitter/-/eventemitter-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/@protobufjs/fetch",
+        "name": "@protobufjs/fetch",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/fetch/-/fetch-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/@protobufjs/float",
+        "name": "@protobufjs/float",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/float/-/float-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/@protobufjs/path",
+        "name": "@protobufjs/path",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/path/-/path-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/@protobufjs/pool",
+        "name": "@protobufjs/pool",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/pool/-/pool-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/@protobufjs/utf8",
+        "name": "@protobufjs/utf8",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/utf8/-/utf8-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/@smithy/core",
+        "name": "@smithy/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/core/-/core-3.33.3.tgz",
+        "version": "3.33.3"
+      },
+      {
+        "location": "node_modules/@smithy/credential-provider-imds",
+        "name": "@smithy/credential-provider-imds",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/credential-provider-imds/-/credential-provider-imds-4.5.2.tgz",
+        "version": "4.5.2"
+      },
+      {
+        "location": "node_modules/@smithy/fetch-http-handler",
+        "name": "@smithy/fetch-http-handler",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/fetch-http-handler/-/fetch-http-handler-5.7.2.tgz",
+        "version": "5.7.2"
+      },
+      {
+        "location": "node_modules/@smithy/node-http-handler",
+        "name": "@smithy/node-http-handler",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/node-http-handler/-/node-http-handler-4.12.0.tgz",
+        "version": "4.12.0"
+      },
+      {
+        "location": "node_modules/@smithy/signature-v4",
+        "name": "@smithy/signature-v4",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/signature-v4/-/signature-v4-5.7.3.tgz",
+        "version": "5.7.3"
+      },
+      {
+        "location": "node_modules/@smithy/types",
+        "name": "@smithy/types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/types/-/types-4.17.2.tgz",
+        "version": "4.17.2"
+      },
+      {
+        "location": "node_modules/@standard-schema/spec",
+        "name": "@standard-schema/spec",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/@types/debug",
+        "name": "@types/debug",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@types/debug/-/debug-4.1.13.tgz",
+        "version": "4.1.13"
+      },
+      {
+        "location": "node_modules/@types/mdast",
+        "name": "@types/mdast",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@types/mdast/-/mdast-4.0.4.tgz",
+        "version": "4.0.4"
+      },
+      {
+        "location": "node_modules/@types/ms",
+        "name": "@types/ms",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@types/ms/-/ms-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/@types/node",
+        "name": "@types/node",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@types/node/-/node-26.4.1.tgz",
+        "version": "26.4.1"
+      },
+      {
+        "location": "node_modules/@types/unist",
+        "name": "@types/unist",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@types/unist/-/unist-3.0.3.tgz",
+        "version": "3.0.3"
+      },
+      {
+        "location": "node_modules/@xmldom/xmldom",
+        "name": "@xmldom/xmldom",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@xmldom/xmldom/-/xmldom-0.8.15.tgz",
+        "version": "0.8.15"
+      },
+      {
+        "location": "node_modules/accepts",
+        "name": "accepts",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/accepts/-/accepts-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/accepts/node_modules/content-type",
+        "name": "content-type",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-type/-/content-type-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/accepts/node_modules/negotiator",
+        "name": "negotiator",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/negotiator/-/negotiator-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/acorn",
+        "name": "acorn",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/acorn/-/acorn-8.18.0.tgz",
+        "version": "8.18.0"
+      },
+      {
+        "location": "node_modules/acorn-import-attributes",
+        "name": "acorn-import-attributes",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/acorn-import-attributes/-/acorn-import-attributes-1.9.5.tgz",
+        "version": "1.9.5"
+      },
+      {
+        "location": "node_modules/ajv",
+        "name": "ajv",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/ajv/-/ajv-8.20.0.tgz",
+        "version": "8.20.0"
+      },
+      {
+        "location": "node_modules/ajv-formats",
+        "name": "ajv-formats",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/ajv-formats/-/ajv-formats-3.0.1.tgz",
+        "version": "3.0.1"
+      },
+      {
+        "location": "node_modules/argparse",
+        "name": "argparse",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/argparse/-/argparse-1.0.10.tgz",
+        "version": "1.0.10"
+      },
+      {
+        "location": "node_modules/assistant-stream",
+        "name": "assistant-stream",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/assistant-stream/-/assistant-stream-0.3.39.tgz",
+        "version": "0.3.39"
+      },
+      {
+        "location": "node_modules/base64-js",
+        "name": "base64-js",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/base64-js/-/base64-js-1.5.1.tgz",
+        "version": "1.5.1"
+      },
+      {
+        "location": "node_modules/bluebird",
+        "name": "bluebird",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.7.tgz",
+        "version": "3.4.7"
+      },
+      {
+        "location": "node_modules/body-parser",
+        "name": "body-parser",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/body-parser/-/body-parser-2.3.0.tgz",
+        "version": "2.3.0"
+      },
+      {
+        "location": "node_modules/body-parser/node_modules/content-type",
+        "name": "content-type",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-type/-/content-type-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/body-parser/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/body-parser/node_modules/iconv-lite",
+        "name": "iconv-lite",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/iconv-lite/-/iconv-lite-0.7.3.tgz",
+        "version": "0.7.3"
+      },
+      {
+        "location": "node_modules/body-parser/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/boolbase",
+        "name": "boolbase",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/boolbase/-/boolbase-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/bowser",
+        "name": "bowser",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/bowser/-/bowser-2.14.1.tgz",
+        "version": "2.14.1"
+      },
+      {
+        "location": "node_modules/bytes",
+        "name": "bytes",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/bytes/-/bytes-3.1.2.tgz",
+        "version": "3.1.2"
+      },
+      {
+        "location": "node_modules/call-bind-apply-helpers",
+        "name": "call-bind-apply-helpers",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/call-bound",
+        "name": "call-bound",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/call-bound/-/call-bound-1.0.4.tgz",
+        "version": "1.0.4"
+      },
+      {
+        "location": "node_modules/character-entities",
+        "name": "character-entities",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/character-entities/-/character-entities-2.0.2.tgz",
+        "version": "2.0.2"
+      },
+      {
+        "location": "node_modules/cheerio",
+        "name": "cheerio",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cheerio/-/cheerio-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/cheerio-select",
+        "name": "cheerio-select",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cheerio-select/-/cheerio-select-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/cjs-module-lexer",
+        "name": "cjs-module-lexer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cjs-module-lexer/-/cjs-module-lexer-1.4.3.tgz",
+        "version": "1.4.3"
+      },
+      {
+        "location": "node_modules/cluster-key-slot",
+        "name": "cluster-key-slot",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cluster-key-slot/-/cluster-key-slot-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/compressible",
+        "name": "compressible",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/compressible/-/compressible-2.0.18.tgz",
+        "version": "2.0.18"
+      },
+      {
+        "location": "node_modules/compression",
+        "name": "compression",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/compression/-/compression-1.8.1.tgz",
+        "version": "1.8.1"
+      },
+      {
+        "location": "node_modules/content-disposition",
+        "name": "content-disposition",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-disposition/-/content-disposition-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/content-type",
+        "name": "content-type",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-type/-/content-type-1.0.5.tgz",
+        "version": "1.0.5"
+      },
+      {
+        "location": "node_modules/cookie",
+        "name": "cookie",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cookie/-/cookie-0.7.2.tgz",
+        "version": "0.7.2"
+      },
+      {
+        "location": "node_modules/cookie-signature",
+        "name": "cookie-signature",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cookie-signature/-/cookie-signature-1.2.2.tgz",
+        "version": "1.2.2"
+      },
+      {
+        "location": "node_modules/core-util-is",
+        "name": "core-util-is",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.3.tgz",
+        "version": "1.0.3"
+      },
+      {
+        "location": "node_modules/css-select",
+        "name": "css-select",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/css-select/-/css-select-5.2.2.tgz",
+        "version": "5.2.2"
+      },
+      {
+        "location": "node_modules/css-what",
+        "name": "css-what",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/css-what/-/css-what-6.2.2.tgz",
+        "version": "6.2.2"
+      },
+      {
+        "location": "node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-2.6.9.tgz",
+        "version": "2.6.9"
+      },
+      {
+        "location": "node_modules/decode-named-character-reference",
+        "name": "decode-named-character-reference",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/decode-named-character-reference/-/decode-named-character-reference-1.3.0.tgz",
+        "version": "1.3.0"
+      },
+      {
+        "location": "node_modules/denque",
+        "name": "denque",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/denque/-/denque-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/depd",
+        "name": "depd",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/depd/-/depd-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/dequal",
+        "name": "dequal",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/dequal/-/dequal-2.0.3.tgz",
+        "version": "2.0.3"
+      },
+      {
+        "location": "node_modules/devlop",
+        "name": "devlop",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/devlop/-/devlop-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/dingbat-to-unicode",
+        "name": "dingbat-to-unicode",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/dingbat-to-unicode/-/dingbat-to-unicode-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/dom-serializer",
+        "name": "dom-serializer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/dom-serializer/-/dom-serializer-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/domelementtype",
+        "name": "domelementtype",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/domelementtype/-/domelementtype-2.3.0.tgz",
+        "version": "2.3.0"
+      },
+      {
+        "location": "node_modules/domhandler",
+        "name": "domhandler",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/domhandler/-/domhandler-5.0.3.tgz",
+        "version": "5.0.3"
+      },
+      {
+        "location": "node_modules/domutils",
+        "name": "domutils",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/domutils/-/domutils-3.2.2.tgz",
+        "version": "3.2.2"
+      },
+      {
+        "location": "node_modules/dotenv",
+        "name": "dotenv",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/dotenv/-/dotenv-17.4.2.tgz",
+        "version": "17.4.2"
+      },
+      {
+        "location": "node_modules/duck",
+        "name": "duck",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/duck/-/duck-0.1.12.tgz",
+        "version": "0.1.12"
+      },
+      {
+        "location": "node_modules/dunder-proto",
+        "name": "dunder-proto",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/dunder-proto/-/dunder-proto-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/ee-first",
+        "name": "ee-first",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ee-first/-/ee-first-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/encodeurl",
+        "name": "encodeurl",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/encodeurl/-/encodeurl-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/encoding-sniffer",
+        "name": "encoding-sniffer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/encoding-sniffer/-/encoding-sniffer-0.2.1.tgz",
+        "version": "0.2.1"
+      },
+      {
+        "location": "node_modules/entities",
+        "name": "entities",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/entities/-/entities-4.5.0.tgz",
+        "version": "4.5.0"
+      },
+      {
+        "location": "node_modules/es-define-property",
+        "name": "es-define-property",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/es-define-property/-/es-define-property-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/es-errors",
+        "name": "es-errors",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/es-errors/-/es-errors-1.3.0.tgz",
+        "version": "1.3.0"
+      },
+      {
+        "location": "node_modules/es-object-atoms",
+        "name": "es-object-atoms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/es-object-atoms/-/es-object-atoms-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/esbuild",
+        "name": "esbuild",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/esbuild/-/esbuild-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/escape-html",
+        "name": "escape-html",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/escape-html/-/escape-html-1.0.3.tgz",
+        "version": "1.0.3"
+      },
+      {
+        "location": "node_modules/etag",
+        "name": "etag",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/etag/-/etag-1.8.1.tgz",
+        "version": "1.8.1"
+      },
+      {
+        "location": "node_modules/express",
+        "name": "express",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/express/-/express-5.2.1.tgz",
+        "version": "5.2.1"
+      },
+      {
+        "location": "node_modules/express/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/express/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/fast-deep-equal",
+        "name": "fast-deep-equal",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz",
+        "version": "3.1.3"
+      },
+      {
+        "location": "node_modules/fast-uri",
+        "name": "fast-uri",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.7.tgz",
+        "version": "3.1.7"
+      },
+      {
+        "location": "node_modules/finalhandler",
+        "name": "finalhandler",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/finalhandler/-/finalhandler-2.1.1.tgz",
+        "version": "2.1.1"
+      },
+      {
+        "location": "node_modules/finalhandler/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/finalhandler/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/forwarded",
+        "name": "forwarded",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/forwarded/-/forwarded-0.2.0.tgz",
+        "version": "0.2.0"
+      },
+      {
+        "location": "node_modules/fresh",
+        "name": "fresh",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/fresh/-/fresh-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/fsevents",
+        "name": "fsevents",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/fsevents/-/fsevents-2.3.3.tgz",
+        "version": "2.3.3"
+      },
+      {
+        "location": "node_modules/function-bind",
+        "name": "function-bind",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/function-bind/-/function-bind-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/get-intrinsic",
+        "name": "get-intrinsic",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/get-intrinsic/-/get-intrinsic-1.3.0.tgz",
+        "version": "1.3.0"
+      },
+      {
+        "location": "node_modules/get-proto",
+        "name": "get-proto",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/get-proto/-/get-proto-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/gopd",
+        "name": "gopd",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/gopd/-/gopd-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/has-symbols",
+        "name": "has-symbols",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/has-symbols/-/has-symbols-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/hasown",
+        "name": "hasown",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/hasown/-/hasown-2.0.4.tgz",
+        "version": "2.0.4"
+      },
+      {
+        "location": "node_modules/htmlparser2",
+        "name": "htmlparser2",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/htmlparser2/-/htmlparser2-10.1.0.tgz",
+        "version": "10.1.0"
+      },
+      {
+        "location": "node_modules/htmlparser2/node_modules/entities",
+        "name": "entities",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/entities/-/entities-7.0.1.tgz",
+        "version": "7.0.1"
+      },
+      {
+        "location": "node_modules/http-errors",
+        "name": "http-errors",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/http-errors/-/http-errors-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/iconv-lite",
+        "name": "iconv-lite",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/iconv-lite/-/iconv-lite-0.6.3.tgz",
+        "version": "0.6.3"
+      },
+      {
+        "location": "node_modules/immediate",
+        "name": "immediate",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/immediate/-/immediate-3.0.6.tgz",
+        "version": "3.0.6"
+      },
+      {
+        "location": "node_modules/import-in-the-middle",
+        "name": "import-in-the-middle",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/import-in-the-middle/-/import-in-the-middle-1.15.0.tgz",
+        "version": "1.15.0"
+      },
+      {
+        "location": "node_modules/inherits",
+        "name": "inherits",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/inherits/-/inherits-2.0.4.tgz",
+        "version": "2.0.4"
+      },
+      {
+        "location": "node_modules/ioredis",
+        "name": "ioredis",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ioredis/-/ioredis-5.11.1.tgz",
+        "version": "5.11.1"
+      },
+      {
+        "location": "node_modules/ioredis/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/ioredis/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/ipaddr.js",
+        "name": "ipaddr.js",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ipaddr.js/-/ipaddr.js-1.9.1.tgz",
+        "version": "1.9.1"
+      },
+      {
+        "location": "node_modules/is-core-module",
+        "name": "is-core-module",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/is-core-module/-/is-core-module-2.16.2.tgz",
+        "version": "2.16.2"
+      },
+      {
+        "location": "node_modules/is-promise",
+        "name": "is-promise",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/is-promise/-/is-promise-4.0.0.tgz",
+        "version": "4.0.0"
+      },
+      {
+        "location": "node_modules/isarray",
+        "name": "isarray",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/isomorphic.js",
+        "name": "isomorphic.js",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/isomorphic.js/-/isomorphic.js-0.2.5.tgz",
+        "version": "0.2.5"
+      },
+      {
+        "location": "node_modules/js-tiktoken",
+        "name": "js-tiktoken",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/js-tiktoken/-/js-tiktoken-1.0.21.tgz",
+        "version": "1.0.21"
+      },
+      {
+        "location": "node_modules/json-schema-traverse",
+        "name": "json-schema-traverse",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/jszip",
+        "name": "jszip",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/jszip/-/jszip-3.10.1.tgz",
+        "version": "3.10.1"
+      },
+      {
+        "location": "node_modules/lib0",
+        "name": "lib0",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/lib0/-/lib0-0.2.117.tgz",
+        "version": "0.2.117"
+      },
+      {
+        "location": "node_modules/lie",
+        "name": "lie",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/lie/-/lie-3.3.0.tgz",
+        "version": "3.3.0"
+      },
+      {
+        "location": "node_modules/lingxiloop",
+        "name": "lingxiloop",
+        "isLink": true,
+        "resolved": "file:../..",
+        "version": "0.1.0-beta"
+      },
+      {
+        "location": "node_modules/long",
+        "name": "long",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/long/-/long-5.3.2.tgz",
+        "version": "5.3.2"
+      },
+      {
+        "location": "node_modules/lop",
+        "name": "lop",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/lop/-/lop-0.4.2.tgz",
+        "version": "0.4.2"
+      },
+      {
+        "location": "node_modules/mammoth",
+        "name": "mammoth",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/mammoth/-/mammoth-1.12.2.tgz",
+        "version": "1.12.2"
+      },
+      {
+        "location": "node_modules/math-intrinsics",
+        "name": "math-intrinsics",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/math-intrinsics/-/math-intrinsics-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/mdast-util-from-markdown",
+        "name": "mdast-util-from-markdown",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/mdast-util-from-markdown/-/mdast-util-from-markdown-2.0.3.tgz",
+        "version": "2.0.3"
+      },
+      {
+        "location": "node_modules/mdast-util-to-string",
+        "name": "mdast-util-to-string",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/mdast-util-to-string/-/mdast-util-to-string-4.0.0.tgz",
+        "version": "4.0.0"
+      },
+      {
+        "location": "node_modules/media-typer",
+        "name": "media-typer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/media-typer/-/media-typer-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/merge-descriptors",
+        "name": "merge-descriptors",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/merge-descriptors/-/merge-descriptors-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/micromark",
+        "name": "micromark",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark/-/micromark-4.0.3.tgz",
+        "version": "4.0.3"
+      },
+      {
+        "location": "node_modules/micromark-core-commonmark",
+        "name": "micromark-core-commonmark",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-core-commonmark/-/micromark-core-commonmark-2.0.4.tgz",
+        "version": "2.0.4"
+      },
+      {
+        "location": "node_modules/micromark-factory-destination",
+        "name": "micromark-factory-destination",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-destination/-/micromark-factory-destination-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-factory-label",
+        "name": "micromark-factory-label",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-label/-/micromark-factory-label-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-factory-space",
+        "name": "micromark-factory-space",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-space/-/micromark-factory-space-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/micromark-factory-title",
+        "name": "micromark-factory-title",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-title/-/micromark-factory-title-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-factory-whitespace",
+        "name": "micromark-factory-whitespace",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-whitespace/-/micromark-factory-whitespace-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-character",
+        "name": "micromark-util-character",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-character/-/micromark-util-character-2.1.1.tgz",
+        "version": "2.1.1"
+      },
+      {
+        "location": "node_modules/micromark-util-chunked",
+        "name": "micromark-util-chunked",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-chunked/-/micromark-util-chunked-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-classify-character",
+        "name": "micromark-util-classify-character",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-classify-character/-/micromark-util-classify-character-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-combine-extensions",
+        "name": "micromark-util-combine-extensions",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-combine-extensions/-/micromark-util-combine-extensions-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-decode-numeric-character-reference",
+        "name": "micromark-util-decode-numeric-character-reference",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-decode-numeric-character-reference/-/micromark-util-decode-numeric-character-reference-2.0.2.tgz",
+        "version": "2.0.2"
+      },
+      {
+        "location": "node_modules/micromark-util-decode-string",
+        "name": "micromark-util-decode-string",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-decode-string/-/micromark-util-decode-string-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-edit-map",
+        "name": "micromark-util-edit-map",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-edit-map/-/micromark-util-edit-map-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/micromark-util-encode",
+        "name": "micromark-util-encode",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-encode/-/micromark-util-encode-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-html-tag-name",
+        "name": "micromark-util-html-tag-name",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-html-tag-name/-/micromark-util-html-tag-name-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-normalize-identifier",
+        "name": "micromark-util-normalize-identifier",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-normalize-identifier/-/micromark-util-normalize-identifier-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-resolve-all",
+        "name": "micromark-util-resolve-all",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-resolve-all/-/micromark-util-resolve-all-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-sanitize-uri",
+        "name": "micromark-util-sanitize-uri",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-sanitize-uri/-/micromark-util-sanitize-uri-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-subtokenize",
+        "name": "micromark-util-subtokenize",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-subtokenize/-/micromark-util-subtokenize-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/micromark-util-symbol",
+        "name": "micromark-util-symbol",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-symbol/-/micromark-util-symbol-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-types",
+        "name": "micromark-util-types",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-types/-/micromark-util-types-2.0.3.tgz",
+        "version": "2.0.3"
+      },
+      {
+        "location": "node_modules/micromark/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/micromark/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/mime-db",
+        "name": "mime-db",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/mime-db/-/mime-db-1.54.0.tgz",
+        "version": "1.54.0"
+      },
+      {
+        "location": "node_modules/mime-types",
+        "name": "mime-types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/mime-types/-/mime-types-3.0.2.tgz",
+        "version": "3.0.2"
+      },
+      {
+        "location": "node_modules/module-details-from-path",
+        "name": "module-details-from-path",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/module-details-from-path/-/module-details-from-path-1.0.4.tgz",
+        "version": "1.0.4"
+      },
+      {
+        "location": "node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/nanoid",
+        "name": "nanoid",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-6.0.1.tgz",
+        "version": "6.0.1"
+      },
+      {
+        "location": "node_modules/negotiator",
+        "name": "negotiator",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/negotiator/-/negotiator-0.6.4.tgz",
+        "version": "0.6.4"
+      },
+      {
+        "location": "node_modules/nth-check",
+        "name": "nth-check",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/nth-check/-/nth-check-2.1.1.tgz",
+        "version": "2.1.1"
+      },
+      {
+        "location": "node_modules/object-inspect",
+        "name": "object-inspect",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/object-inspect/-/object-inspect-1.13.4.tgz",
+        "version": "1.13.4"
+      },
+      {
+        "location": "node_modules/on-finished",
+        "name": "on-finished",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/on-finished/-/on-finished-2.4.1.tgz",
+        "version": "2.4.1"
+      },
+      {
+        "location": "node_modules/on-headers",
+        "name": "on-headers",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/on-headers/-/on-headers-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/once",
+        "name": "once",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/once/-/once-1.4.0.tgz",
+        "version": "1.4.0"
+      },
+      {
+        "location": "node_modules/openai",
+        "name": "openai",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/openai/-/openai-6.49.0.tgz",
+        "version": "6.49.0"
+      },
+      {
+        "location": "node_modules/openlit",
+        "name": "openlit",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/openlit/-/openlit-1.15.0.tgz",
+        "version": "1.15.0"
+      },
+      {
+        "location": "node_modules/option",
+        "name": "option",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/option/-/option-0.2.4.tgz",
+        "version": "0.2.4"
+      },
+      {
+        "location": "node_modules/pako",
+        "name": "pako",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/pako/-/pako-1.0.11.tgz",
+        "version": "1.0.11"
+      },
+      {
+        "location": "node_modules/parse5",
+        "name": "parse5",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/parse5/-/parse5-7.3.0.tgz",
+        "version": "7.3.0"
+      },
+      {
+        "location": "node_modules/parse5-htmlparser2-tree-adapter",
+        "name": "parse5-htmlparser2-tree-adapter",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/parse5-htmlparser2-tree-adapter/-/parse5-htmlparser2-tree-adapter-7.1.0.tgz",
+        "version": "7.1.0"
+      },
+      {
+        "location": "node_modules/parse5-parser-stream",
+        "name": "parse5-parser-stream",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/parse5-parser-stream/-/parse5-parser-stream-7.1.2.tgz",
+        "version": "7.1.2"
+      },
+      {
+        "location": "node_modules/parse5/node_modules/entities",
+        "name": "entities",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/entities/-/entities-6.0.1.tgz",
+        "version": "6.0.1"
+      },
+      {
+        "location": "node_modules/parseurl",
+        "name": "parseurl",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/parseurl/-/parseurl-1.3.3.tgz",
+        "version": "1.3.3"
+      },
+      {
+        "location": "node_modules/path-is-absolute",
+        "name": "path-is-absolute",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/path-parse",
+        "name": "path-parse",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/path-parse/-/path-parse-1.0.7.tgz",
+        "version": "1.0.7"
+      },
+      {
+        "location": "node_modules/path-to-regexp",
+        "name": "path-to-regexp",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/path-to-regexp/-/path-to-regexp-8.4.2.tgz",
+        "version": "8.4.2"
+      },
+      {
+        "location": "node_modules/pdfjs-dist",
+        "name": "pdfjs-dist",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.3.289.tgz",
+        "version": "6.3.289"
+      },
+      {
+        "location": "node_modules/pg",
+        "name": "pg",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg/-/pg-8.23.0.tgz",
+        "version": "8.23.0"
+      },
+      {
+        "location": "node_modules/pg-cloudflare",
+        "name": "pg-cloudflare",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-cloudflare/-/pg-cloudflare-1.4.0.tgz",
+        "version": "1.4.0"
+      },
+      {
+        "location": "node_modules/pg-connection-string",
+        "name": "pg-connection-string",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-connection-string/-/pg-connection-string-2.14.0.tgz",
+        "version": "2.14.0"
+      },
+      {
+        "location": "node_modules/pg-int8",
+        "name": "pg-int8",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-int8/-/pg-int8-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/pg-pool",
+        "name": "pg-pool",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-pool/-/pg-pool-3.14.0.tgz",
+        "version": "3.14.0"
+      },
+      {
+        "location": "node_modules/pg-protocol",
+        "name": "pg-protocol",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-protocol/-/pg-protocol-1.16.0.tgz",
+        "version": "1.16.0"
+      },
+      {
+        "location": "node_modules/pg-types",
+        "name": "pg-types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-types/-/pg-types-2.2.0.tgz",
+        "version": "2.2.0"
+      },
+      {
+        "location": "node_modules/pgpass",
+        "name": "pgpass",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pgpass/-/pgpass-1.0.5.tgz",
+        "version": "1.0.5"
+      },
+      {
+        "location": "node_modules/postgres-array",
+        "name": "postgres-array",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/postgres-array/-/postgres-array-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/postgres-bytea",
+        "name": "postgres-bytea",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/postgres-bytea/-/postgres-bytea-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/postgres-date",
+        "name": "postgres-date",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/postgres-date/-/postgres-date-1.0.7.tgz",
+        "version": "1.0.7"
+      },
+      {
+        "location": "node_modules/postgres-interval",
+        "name": "postgres-interval",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/postgres-interval/-/postgres-interval-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/process-nextick-args",
+        "name": "process-nextick-args",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/process-nextick-args/-/process-nextick-args-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/protobufjs",
+        "name": "protobufjs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/protobufjs/-/protobufjs-7.6.6.tgz",
+        "version": "7.6.6"
+      },
+      {
+        "location": "node_modules/proxy-addr",
+        "name": "proxy-addr",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/proxy-addr/-/proxy-addr-2.0.7.tgz",
+        "version": "2.0.7"
+      },
+      {
+        "location": "node_modules/qs",
+        "name": "qs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/qs/-/qs-6.16.0.tgz",
+        "version": "6.16.0"
+      },
+      {
+        "location": "node_modules/range-parser",
+        "name": "range-parser",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/range-parser/-/range-parser-1.3.0.tgz",
+        "version": "1.3.0"
+      },
+      {
+        "location": "node_modules/raw-body",
+        "name": "raw-body",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/raw-body/-/raw-body-3.0.2.tgz",
+        "version": "3.0.2"
+      },
+      {
+        "location": "node_modules/raw-body/node_modules/iconv-lite",
+        "name": "iconv-lite",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/iconv-lite/-/iconv-lite-0.7.3.tgz",
+        "version": "0.7.3"
+      },
+      {
+        "location": "node_modules/readable-stream",
+        "name": "readable-stream",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.8.tgz",
+        "version": "2.3.8"
+      },
+      {
+        "location": "node_modules/readable-stream/node_modules/safe-buffer",
+        "name": "safe-buffer",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
+        "version": "5.1.2"
+      },
+      {
+        "location": "node_modules/redis-errors",
+        "name": "redis-errors",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/redis-errors/-/redis-errors-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/redis-parser",
+        "name": "redis-parser",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/redis-parser/-/redis-parser-3.0.0.tgz",
+        "version": "3.0.0"
+      },
+      {
+        "location": "node_modules/require-from-string",
+        "name": "require-from-string",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz",
+        "version": "2.0.2"
+      },
+      {
+        "location": "node_modules/require-in-the-middle",
+        "name": "require-in-the-middle",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/require-in-the-middle/-/require-in-the-middle-7.5.2.tgz",
+        "version": "7.5.2"
+      },
+      {
+        "location": "node_modules/require-in-the-middle/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/require-in-the-middle/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/resolve",
+        "name": "resolve",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/resolve/-/resolve-1.22.12.tgz",
+        "version": "1.22.12"
+      },
+      {
+        "location": "node_modules/router",
+        "name": "router",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/router/-/router-2.2.0.tgz",
+        "version": "2.2.0"
+      },
+      {
+        "location": "node_modules/router/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/router/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/safe-buffer",
+        "name": "safe-buffer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/safe-buffer/-/safe-buffer-5.2.1.tgz",
+        "version": "5.2.1"
+      },
+      {
+        "location": "node_modules/safer-buffer",
+        "name": "safer-buffer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/safer-buffer/-/safer-buffer-2.1.2.tgz",
+        "version": "2.1.2"
+      },
+      {
+        "location": "node_modules/secure-json-parse",
+        "name": "secure-json-parse",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/secure-json-parse/-/secure-json-parse-4.1.0.tgz",
+        "version": "4.1.0"
+      },
+      {
+        "location": "node_modules/send",
+        "name": "send",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/send/-/send-1.2.1.tgz",
+        "version": "1.2.1"
+      },
+      {
+        "location": "node_modules/send/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/send/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/serve-static",
+        "name": "serve-static",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/serve-static/-/serve-static-2.2.1.tgz",
+        "version": "2.2.1"
+      },
+      {
+        "location": "node_modules/setimmediate",
+        "name": "setimmediate",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz",
+        "version": "1.0.5"
+      },
+      {
+        "location": "node_modules/setprototypeof",
+        "name": "setprototypeof",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/setprototypeof/-/setprototypeof-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/side-channel",
+        "name": "side-channel",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/side-channel/-/side-channel-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/side-channel-list",
+        "name": "side-channel-list",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/side-channel-list/-/side-channel-list-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/side-channel-map",
+        "name": "side-channel-map",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/side-channel-map/-/side-channel-map-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/side-channel-weakmap",
+        "name": "side-channel-weakmap",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/side-channel-weakmap/-/side-channel-weakmap-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/split2",
+        "name": "split2",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/split2/-/split2-4.2.0.tgz",
+        "version": "4.2.0"
+      },
+      {
+        "location": "node_modules/sprintf-js",
+        "name": "sprintf-js",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz",
+        "version": "1.0.3"
+      },
+      {
+        "location": "node_modules/standard-as-callback",
+        "name": "standard-as-callback",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/standard-as-callback/-/standard-as-callback-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/statuses",
+        "name": "statuses",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/statuses/-/statuses-2.0.2.tgz",
+        "version": "2.0.2"
+      },
+      {
+        "location": "node_modules/string_decoder",
+        "name": "string_decoder",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/string_decoder/node_modules/safe-buffer",
+        "name": "safe-buffer",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
+        "version": "5.1.2"
+      },
+      {
+        "location": "node_modules/supports-preserve-symlinks-flag",
+        "name": "supports-preserve-symlinks-flag",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/toidentifier",
+        "name": "toidentifier",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/toidentifier/-/toidentifier-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/tslib",
+        "name": "tslib",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/tslib/-/tslib-2.8.1.tgz",
+        "version": "2.8.1"
+      },
+      {
+        "location": "node_modules/tsx",
+        "name": "tsx",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/tsx/-/tsx-4.23.13.tgz",
+        "version": "4.23.13"
+      },
+      {
+        "location": "node_modules/type-is",
+        "name": "type-is",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/type-is/-/type-is-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/type-is/node_modules/content-type",
+        "name": "content-type",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-type/-/content-type-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/underscore",
+        "name": "underscore",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.13.8.tgz",
+        "version": "1.13.8"
+      },
+      {
+        "location": "node_modules/undici",
+        "name": "undici",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/undici/-/undici-7.29.0.tgz",
+        "version": "7.29.0"
+      },
+      {
+        "location": "node_modules/undici-types",
+        "name": "undici-types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/undici-types/-/undici-types-8.3.0.tgz",
+        "version": "8.3.0"
+      },
+      {
+        "location": "node_modules/unist-util-stringify-position",
+        "name": "unist-util-stringify-position",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/unist-util-stringify-position/-/unist-util-stringify-position-4.0.0.tgz",
+        "version": "4.0.0"
+      },
+      {
+        "location": "node_modules/unpipe",
+        "name": "unpipe",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/unpipe/-/unpipe-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/util-deprecate",
+        "name": "util-deprecate",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/vary",
+        "name": "vary",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/vary/-/vary-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/whatwg-encoding",
+        "name": "whatwg-encoding",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/whatwg-encoding/-/whatwg-encoding-3.1.1.tgz",
+        "version": "3.1.1"
+      },
+      {
+        "location": "node_modules/whatwg-mimetype",
+        "name": "whatwg-mimetype",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/whatwg-mimetype/-/whatwg-mimetype-4.0.0.tgz",
+        "version": "4.0.0"
+      },
+      {
+        "location": "node_modules/wrappy",
+        "name": "wrappy",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/wrappy/-/wrappy-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/ws",
+        "name": "ws",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ws/-/ws-8.21.3.tgz",
+        "version": "8.21.3"
+      },
+      {
+        "location": "node_modules/xmlbuilder",
+        "name": "xmlbuilder",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/xmlbuilder/-/xmlbuilder-10.1.1.tgz",
+        "version": "10.1.1"
+      },
+      {
+        "location": "node_modules/xtend",
+        "name": "xtend",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/xtend/-/xtend-4.0.2.tgz",
+        "version": "4.0.2"
+      },
+      {
+        "location": "node_modules/yaml",
+        "name": "yaml",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz",
+        "version": "2.9.0"
+      },
+      {
+        "location": "node_modules/yjs",
+        "name": "yjs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/yjs/-/yjs-13.6.32.tgz",
+        "version": "13.6.32"
+      },
+      {
+        "location": "node_modules/zod",
+        "name": "zod",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/zod/-/zod-4.5.4.tgz",
+        "version": "4.5.4"
+      }
+    ],
+    "rootEdgeErrors": []
+  },
+  "candidate": {
+    "inventorySize": 346,
+    "rootDependencies": [
+      "@aws-sdk/client-s3",
+      "@aws-sdk/s3-request-presigner",
+      "@dicebear/core",
+      "@dicebear/styles",
+      "@lyyzka/lingxios",
+      "@openplait/core",
+      "@opentelemetry/api",
+      "assistant-stream",
+      "cheerio",
+      "compression",
+      "dotenv",
+      "express",
+      "ioredis",
+      "mdast-util-from-markdown",
+      "openai",
+      "openlit",
+      "pg",
+      "tsx",
+      "ws",
+      "yjs",
+      "zod"
+    ],
+    "nodes": [
+      {
+        "location": "",
+        "name": "app",
+        "isLink": false,
+        "resolved": null,
+        "version": "0.1.0-beta"
+      },
+      {
+        "location": "node_modules/@aws-sdk/checksums",
+        "name": "@aws-sdk/checksums",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/checksums/-/checksums-3.1000.29.tgz",
+        "version": "3.1000.29"
+      },
+      {
+        "location": "node_modules/@aws-sdk/client-s3",
+        "name": "@aws-sdk/client-s3",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/client-s3/-/client-s3-3.1124.0.tgz",
+        "version": "3.1124.0"
+      },
+      {
+        "location": "node_modules/@aws-sdk/core",
+        "name": "@aws-sdk/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/core/-/core-3.977.9.tgz",
+        "version": "3.977.9"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-env",
+        "name": "@aws-sdk/credential-provider-env",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-env/-/credential-provider-env-3.972.70.tgz",
+        "version": "3.972.70"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-http",
+        "name": "@aws-sdk/credential-provider-http",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-http/-/credential-provider-http-3.972.72.tgz",
+        "version": "3.972.72"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-ini",
+        "name": "@aws-sdk/credential-provider-ini",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-ini/-/credential-provider-ini-3.973.15.tgz",
+        "version": "3.973.15"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-login",
+        "name": "@aws-sdk/credential-provider-login",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-login/-/credential-provider-login-3.972.77.tgz",
+        "version": "3.972.77"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-node",
+        "name": "@aws-sdk/credential-provider-node",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-node/-/credential-provider-node-3.972.82.tgz",
+        "version": "3.972.82"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-process",
+        "name": "@aws-sdk/credential-provider-process",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-process/-/credential-provider-process-3.972.70.tgz",
+        "version": "3.972.70"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-sso",
+        "name": "@aws-sdk/credential-provider-sso",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-sso/-/credential-provider-sso-3.973.14.tgz",
+        "version": "3.973.14"
+      },
+      {
+        "location": "node_modules/@aws-sdk/credential-provider-web-identity",
+        "name": "@aws-sdk/credential-provider-web-identity",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/credential-provider-web-identity/-/credential-provider-web-identity-3.972.76.tgz",
+        "version": "3.972.76"
+      },
+      {
+        "location": "node_modules/@aws-sdk/middleware-sdk-s3",
+        "name": "@aws-sdk/middleware-sdk-s3",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/middleware-sdk-s3/-/middleware-sdk-s3-3.972.75.tgz",
+        "version": "3.972.75"
+      },
+      {
+        "location": "node_modules/@aws-sdk/nested-clients",
+        "name": "@aws-sdk/nested-clients",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/nested-clients/-/nested-clients-3.997.44.tgz",
+        "version": "3.997.44"
+      },
+      {
+        "location": "node_modules/@aws-sdk/s3-request-presigner",
+        "name": "@aws-sdk/s3-request-presigner",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/s3-request-presigner/-/s3-request-presigner-3.1124.0.tgz",
+        "version": "3.1124.0"
+      },
+      {
+        "location": "node_modules/@aws-sdk/signature-v4-multi-region",
+        "name": "@aws-sdk/signature-v4-multi-region",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/signature-v4-multi-region/-/signature-v4-multi-region-3.996.46.tgz",
+        "version": "3.996.46"
+      },
+      {
+        "location": "node_modules/@aws-sdk/token-providers",
+        "name": "@aws-sdk/token-providers",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/token-providers/-/token-providers-3.1116.0.tgz",
+        "version": "3.1116.0"
+      },
+      {
+        "location": "node_modules/@aws-sdk/types",
+        "name": "@aws-sdk/types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/types/-/types-3.974.5.tgz",
+        "version": "3.974.5"
+      },
+      {
+        "location": "node_modules/@aws-sdk/xml-builder",
+        "name": "@aws-sdk/xml-builder",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws-sdk/xml-builder/-/xml-builder-3.972.40.tgz",
+        "version": "3.972.40"
+      },
+      {
+        "location": "node_modules/@aws/lambda-invoke-store",
+        "name": "@aws/lambda-invoke-store",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@aws/lambda-invoke-store/-/lambda-invoke-store-0.3.0.tgz",
+        "version": "0.3.0"
+      },
+      {
+        "location": "node_modules/@dicebear/core",
+        "name": "@dicebear/core",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@dicebear/core/-/core-10.7.0.tgz",
+        "version": "10.7.0"
+      },
+      {
+        "location": "node_modules/@dicebear/styles",
+        "name": "@dicebear/styles",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@dicebear/styles/-/styles-10.6.0.tgz",
+        "version": "10.6.0"
+      },
+      {
+        "location": "node_modules/@esbuild/aix-ppc64",
+        "name": "@esbuild/aix-ppc64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/aix-ppc64/-/aix-ppc64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/android-arm",
+        "name": "@esbuild/android-arm",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/android-arm/-/android-arm-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/android-arm64",
+        "name": "@esbuild/android-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/android-arm64/-/android-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/android-x64",
+        "name": "@esbuild/android-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/android-x64/-/android-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/darwin-arm64",
+        "name": "@esbuild/darwin-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/darwin-arm64/-/darwin-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/darwin-x64",
+        "name": "@esbuild/darwin-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/darwin-x64/-/darwin-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/freebsd-arm64",
+        "name": "@esbuild/freebsd-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/freebsd-arm64/-/freebsd-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/freebsd-x64",
+        "name": "@esbuild/freebsd-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/freebsd-x64/-/freebsd-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-arm",
+        "name": "@esbuild/linux-arm",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-arm/-/linux-arm-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-arm64",
+        "name": "@esbuild/linux-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-arm64/-/linux-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-ia32",
+        "name": "@esbuild/linux-ia32",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-ia32/-/linux-ia32-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-loong64",
+        "name": "@esbuild/linux-loong64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-loong64/-/linux-loong64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-mips64el",
+        "name": "@esbuild/linux-mips64el",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-mips64el/-/linux-mips64el-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-ppc64",
+        "name": "@esbuild/linux-ppc64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-ppc64/-/linux-ppc64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-riscv64",
+        "name": "@esbuild/linux-riscv64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-riscv64/-/linux-riscv64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-s390x",
+        "name": "@esbuild/linux-s390x",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-s390x/-/linux-s390x-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/linux-x64",
+        "name": "@esbuild/linux-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/linux-x64/-/linux-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/netbsd-arm64",
+        "name": "@esbuild/netbsd-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/netbsd-arm64/-/netbsd-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/netbsd-x64",
+        "name": "@esbuild/netbsd-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/netbsd-x64/-/netbsd-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/openbsd-arm64",
+        "name": "@esbuild/openbsd-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/openbsd-arm64/-/openbsd-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/openbsd-x64",
+        "name": "@esbuild/openbsd-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/openbsd-x64/-/openbsd-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/openharmony-arm64",
+        "name": "@esbuild/openharmony-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/openharmony-arm64/-/openharmony-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/sunos-x64",
+        "name": "@esbuild/sunos-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/sunos-x64/-/sunos-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/win32-arm64",
+        "name": "@esbuild/win32-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/win32-arm64/-/win32-arm64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/win32-ia32",
+        "name": "@esbuild/win32-ia32",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/win32-ia32/-/win32-ia32-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@esbuild/win32-x64",
+        "name": "@esbuild/win32-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@esbuild/win32-x64/-/win32-x64-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/@ioredis/commands",
+        "name": "@ioredis/commands",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@ioredis/commands/-/commands-1.10.0.tgz",
+        "version": "1.10.0"
+      },
+      {
+        "location": "node_modules/@lyyzka/lingxios",
+        "name": "@lyyzka/lingxios",
+        "isLink": false,
+        "resolved": "https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.6/8678395c3eb40eeb99860a05b3f532704fcb1bcb",
+        "version": "3.5.6"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas",
+        "name": "@napi-rs/canvas",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas/-/canvas-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-android-arm64",
+        "name": "@napi-rs/canvas-android-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-android-arm64/-/canvas-android-arm64-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-darwin-arm64",
+        "name": "@napi-rs/canvas-darwin-arm64",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-darwin-arm64/-/canvas-darwin-arm64-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-darwin-x64",
+        "name": "@napi-rs/canvas-darwin-x64",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-darwin-x64/-/canvas-darwin-x64-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-arm-gnueabihf",
+        "name": "@napi-rs/canvas-linux-arm-gnueabihf",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-arm-gnueabihf/-/canvas-linux-arm-gnueabihf-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-arm64-gnu",
+        "name": "@napi-rs/canvas-linux-arm64-gnu",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-arm64-gnu/-/canvas-linux-arm64-gnu-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-arm64-musl",
+        "name": "@napi-rs/canvas-linux-arm64-musl",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-arm64-musl/-/canvas-linux-arm64-musl-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-riscv64-gnu",
+        "name": "@napi-rs/canvas-linux-riscv64-gnu",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-riscv64-gnu/-/canvas-linux-riscv64-gnu-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-x64-gnu",
+        "name": "@napi-rs/canvas-linux-x64-gnu",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-x64-gnu/-/canvas-linux-x64-gnu-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-linux-x64-musl",
+        "name": "@napi-rs/canvas-linux-x64-musl",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-linux-x64-musl/-/canvas-linux-x64-musl-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-win32-arm64-msvc",
+        "name": "@napi-rs/canvas-win32-arm64-msvc",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-win32-arm64-msvc/-/canvas-win32-arm64-msvc-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@napi-rs/canvas-win32-x64-msvc",
+        "name": "@napi-rs/canvas-win32-x64-msvc",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@napi-rs/canvas-win32-x64-msvc/-/canvas-win32-x64-msvc-1.0.8.tgz",
+        "version": "1.0.8"
+      },
+      {
+        "location": "node_modules/@openplait/core",
+        "name": "@openplait/core",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@openplait/core/-/core-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/api",
+        "name": "@opentelemetry/api",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/api/-/api-1.9.0.tgz",
+        "version": "1.9.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/api-logs",
+        "name": "@opentelemetry/api-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/api-logs/-/api-logs-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/context-async-hooks",
+        "name": "@opentelemetry/context-async-hooks",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/context-async-hooks/-/context-async-hooks-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-logs-otlp-http",
+        "name": "@opentelemetry/exporter-logs-otlp-http",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/exporter-logs-otlp-http/-/exporter-logs-otlp-http-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http",
+        "name": "@opentelemetry/exporter-metrics-otlp-http",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/exporter-metrics-otlp-http/-/exporter-metrics-otlp-http-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/api-logs",
+        "name": "@opentelemetry/api-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/api-logs/-/api-logs-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/otlp-exporter-base",
+        "name": "@opentelemetry/otlp-exporter-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/otlp-exporter-base/-/otlp-exporter-base-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/otlp-transformer",
+        "name": "@opentelemetry/otlp-transformer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/otlp-transformer/-/otlp-transformer-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/sdk-logs",
+        "name": "@opentelemetry/sdk-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-logs/-/sdk-logs-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/sdk-metrics",
+        "name": "@opentelemetry/sdk-metrics",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-metrics/-/sdk-metrics-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-metrics-otlp-http/node_modules/@opentelemetry/sdk-trace-base",
+        "name": "@opentelemetry/sdk-trace-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-trace-otlp-http",
+        "name": "@opentelemetry/exporter-trace-otlp-http",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/exporter-trace-otlp-http/-/exporter-trace-otlp-http-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-trace-otlp-http/node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/exporter-trace-otlp-http/node_modules/@opentelemetry/sdk-trace-base",
+        "name": "@opentelemetry/sdk-trace-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/instrumentation",
+        "name": "@opentelemetry/instrumentation",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/instrumentation/-/instrumentation-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/instrumentation/node_modules/@opentelemetry/api-logs",
+        "name": "@opentelemetry/api-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/api-logs/-/api-logs-0.203.0.tgz",
+        "version": "0.203.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-exporter-base",
+        "name": "@opentelemetry/otlp-exporter-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/otlp-exporter-base/-/otlp-exporter-base-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-transformer",
+        "name": "@opentelemetry/otlp-transformer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/otlp-transformer/-/otlp-transformer-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-transformer/node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-transformer/node_modules/@opentelemetry/sdk-metrics",
+        "name": "@opentelemetry/sdk-metrics",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-metrics/-/sdk-metrics-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/otlp-transformer/node_modules/@opentelemetry/sdk-trace-base",
+        "name": "@opentelemetry/sdk-trace-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/resources/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-logs",
+        "name": "@opentelemetry/sdk-logs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-logs/-/sdk-logs-0.214.0.tgz",
+        "version": "0.214.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-logs/node_modules/@opentelemetry/resources",
+        "name": "@opentelemetry/resources",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/resources/-/resources-2.6.1.tgz",
+        "version": "2.6.1"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-metrics",
+        "name": "@opentelemetry/sdk-metrics",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-metrics/-/sdk-metrics-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-metrics/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace",
+        "name": "@opentelemetry/sdk-trace",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace/-/sdk-trace-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace-base",
+        "name": "@opentelemetry/sdk-trace-base",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace-base/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace-node",
+        "name": "@opentelemetry/sdk-trace-node",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/sdk-trace-node/-/sdk-trace-node-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace-node/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/sdk-trace/node_modules/@opentelemetry/core",
+        "name": "@opentelemetry/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/core/-/core-2.11.0.tgz",
+        "version": "2.11.0"
+      },
+      {
+        "location": "node_modules/@opentelemetry/semantic-conventions",
+        "name": "@opentelemetry/semantic-conventions",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.43.0.tgz",
+        "version": "1.43.0"
+      },
+      {
+        "location": "node_modules/@protobufjs/aspromise",
+        "name": "@protobufjs/aspromise",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/aspromise/-/aspromise-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/@protobufjs/base64",
+        "name": "@protobufjs/base64",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/base64/-/base64-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/@protobufjs/codegen",
+        "name": "@protobufjs/codegen",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/codegen/-/codegen-2.0.5.tgz",
+        "version": "2.0.5"
+      },
+      {
+        "location": "node_modules/@protobufjs/eventemitter",
+        "name": "@protobufjs/eventemitter",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/eventemitter/-/eventemitter-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/@protobufjs/fetch",
+        "name": "@protobufjs/fetch",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/fetch/-/fetch-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/@protobufjs/float",
+        "name": "@protobufjs/float",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/float/-/float-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/@protobufjs/path",
+        "name": "@protobufjs/path",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/path/-/path-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/@protobufjs/pool",
+        "name": "@protobufjs/pool",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/pool/-/pool-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/@protobufjs/utf8",
+        "name": "@protobufjs/utf8",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@protobufjs/utf8/-/utf8-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/@smithy/core",
+        "name": "@smithy/core",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/core/-/core-3.33.3.tgz",
+        "version": "3.33.3"
+      },
+      {
+        "location": "node_modules/@smithy/credential-provider-imds",
+        "name": "@smithy/credential-provider-imds",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/credential-provider-imds/-/credential-provider-imds-4.5.2.tgz",
+        "version": "4.5.2"
+      },
+      {
+        "location": "node_modules/@smithy/fetch-http-handler",
+        "name": "@smithy/fetch-http-handler",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/fetch-http-handler/-/fetch-http-handler-5.7.2.tgz",
+        "version": "5.7.2"
+      },
+      {
+        "location": "node_modules/@smithy/node-http-handler",
+        "name": "@smithy/node-http-handler",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/node-http-handler/-/node-http-handler-4.12.0.tgz",
+        "version": "4.12.0"
+      },
+      {
+        "location": "node_modules/@smithy/signature-v4",
+        "name": "@smithy/signature-v4",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/signature-v4/-/signature-v4-5.7.3.tgz",
+        "version": "5.7.3"
+      },
+      {
+        "location": "node_modules/@smithy/types",
+        "name": "@smithy/types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@smithy/types/-/types-4.17.2.tgz",
+        "version": "4.17.2"
+      },
+      {
+        "location": "node_modules/@standard-schema/spec",
+        "name": "@standard-schema/spec",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/@types/debug",
+        "name": "@types/debug",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@types/debug/-/debug-4.1.13.tgz",
+        "version": "4.1.13"
+      },
+      {
+        "location": "node_modules/@types/mdast",
+        "name": "@types/mdast",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@types/mdast/-/mdast-4.0.4.tgz",
+        "version": "4.0.4"
+      },
+      {
+        "location": "node_modules/@types/ms",
+        "name": "@types/ms",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@types/ms/-/ms-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/@types/node",
+        "name": "@types/node",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/@types/node/-/node-26.4.1.tgz",
+        "version": "26.4.1"
+      },
+      {
+        "location": "node_modules/@types/unist",
+        "name": "@types/unist",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@types/unist/-/unist-3.0.3.tgz",
+        "version": "3.0.3"
+      },
+      {
+        "location": "node_modules/@xmldom/xmldom",
+        "name": "@xmldom/xmldom",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/@xmldom/xmldom/-/xmldom-0.8.15.tgz",
+        "version": "0.8.15"
+      },
+      {
+        "location": "node_modules/accepts",
+        "name": "accepts",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/accepts/-/accepts-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/accepts/node_modules/content-type",
+        "name": "content-type",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-type/-/content-type-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/accepts/node_modules/negotiator",
+        "name": "negotiator",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/negotiator/-/negotiator-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/acorn",
+        "name": "acorn",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/acorn/-/acorn-8.18.0.tgz",
+        "version": "8.18.0"
+      },
+      {
+        "location": "node_modules/acorn-import-attributes",
+        "name": "acorn-import-attributes",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/acorn-import-attributes/-/acorn-import-attributes-1.9.5.tgz",
+        "version": "1.9.5"
+      },
+      {
+        "location": "node_modules/ajv",
+        "name": "ajv",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/ajv/-/ajv-8.20.0.tgz",
+        "version": "8.20.0"
+      },
+      {
+        "location": "node_modules/ajv-formats",
+        "name": "ajv-formats",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/ajv-formats/-/ajv-formats-3.0.1.tgz",
+        "version": "3.0.1"
+      },
+      {
+        "location": "node_modules/argparse",
+        "name": "argparse",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/argparse/-/argparse-1.0.10.tgz",
+        "version": "1.0.10"
+      },
+      {
+        "location": "node_modules/assistant-stream",
+        "name": "assistant-stream",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/assistant-stream/-/assistant-stream-0.3.39.tgz",
+        "version": "0.3.39"
+      },
+      {
+        "location": "node_modules/base64-js",
+        "name": "base64-js",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/base64-js/-/base64-js-1.5.1.tgz",
+        "version": "1.5.1"
+      },
+      {
+        "location": "node_modules/bluebird",
+        "name": "bluebird",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/bluebird/-/bluebird-3.4.7.tgz",
+        "version": "3.4.7"
+      },
+      {
+        "location": "node_modules/body-parser",
+        "name": "body-parser",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/body-parser/-/body-parser-2.3.0.tgz",
+        "version": "2.3.0"
+      },
+      {
+        "location": "node_modules/body-parser/node_modules/content-type",
+        "name": "content-type",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-type/-/content-type-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/body-parser/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/body-parser/node_modules/iconv-lite",
+        "name": "iconv-lite",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/iconv-lite/-/iconv-lite-0.7.3.tgz",
+        "version": "0.7.3"
+      },
+      {
+        "location": "node_modules/body-parser/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/boolbase",
+        "name": "boolbase",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/boolbase/-/boolbase-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/bowser",
+        "name": "bowser",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/bowser/-/bowser-2.14.1.tgz",
+        "version": "2.14.1"
+      },
+      {
+        "location": "node_modules/bytes",
+        "name": "bytes",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/bytes/-/bytes-3.1.2.tgz",
+        "version": "3.1.2"
+      },
+      {
+        "location": "node_modules/call-bind-apply-helpers",
+        "name": "call-bind-apply-helpers",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/call-bind-apply-helpers/-/call-bind-apply-helpers-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/call-bound",
+        "name": "call-bound",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/call-bound/-/call-bound-1.0.4.tgz",
+        "version": "1.0.4"
+      },
+      {
+        "location": "node_modules/character-entities",
+        "name": "character-entities",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/character-entities/-/character-entities-2.0.2.tgz",
+        "version": "2.0.2"
+      },
+      {
+        "location": "node_modules/cheerio",
+        "name": "cheerio",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cheerio/-/cheerio-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/cheerio-select",
+        "name": "cheerio-select",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cheerio-select/-/cheerio-select-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/cjs-module-lexer",
+        "name": "cjs-module-lexer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cjs-module-lexer/-/cjs-module-lexer-1.4.3.tgz",
+        "version": "1.4.3"
+      },
+      {
+        "location": "node_modules/cluster-key-slot",
+        "name": "cluster-key-slot",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cluster-key-slot/-/cluster-key-slot-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/compressible",
+        "name": "compressible",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/compressible/-/compressible-2.0.18.tgz",
+        "version": "2.0.18"
+      },
+      {
+        "location": "node_modules/compression",
+        "name": "compression",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/compression/-/compression-1.8.1.tgz",
+        "version": "1.8.1"
+      },
+      {
+        "location": "node_modules/content-disposition",
+        "name": "content-disposition",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-disposition/-/content-disposition-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/content-type",
+        "name": "content-type",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-type/-/content-type-1.0.5.tgz",
+        "version": "1.0.5"
+      },
+      {
+        "location": "node_modules/cookie",
+        "name": "cookie",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cookie/-/cookie-0.7.2.tgz",
+        "version": "0.7.2"
+      },
+      {
+        "location": "node_modules/cookie-signature",
+        "name": "cookie-signature",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/cookie-signature/-/cookie-signature-1.2.2.tgz",
+        "version": "1.2.2"
+      },
+      {
+        "location": "node_modules/core-util-is",
+        "name": "core-util-is",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.3.tgz",
+        "version": "1.0.3"
+      },
+      {
+        "location": "node_modules/css-select",
+        "name": "css-select",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/css-select/-/css-select-5.2.2.tgz",
+        "version": "5.2.2"
+      },
+      {
+        "location": "node_modules/css-what",
+        "name": "css-what",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/css-what/-/css-what-6.2.2.tgz",
+        "version": "6.2.2"
+      },
+      {
+        "location": "node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-2.6.9.tgz",
+        "version": "2.6.9"
+      },
+      {
+        "location": "node_modules/decode-named-character-reference",
+        "name": "decode-named-character-reference",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/decode-named-character-reference/-/decode-named-character-reference-1.3.0.tgz",
+        "version": "1.3.0"
+      },
+      {
+        "location": "node_modules/denque",
+        "name": "denque",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/denque/-/denque-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/depd",
+        "name": "depd",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/depd/-/depd-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/dequal",
+        "name": "dequal",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/dequal/-/dequal-2.0.3.tgz",
+        "version": "2.0.3"
+      },
+      {
+        "location": "node_modules/devlop",
+        "name": "devlop",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/devlop/-/devlop-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/dingbat-to-unicode",
+        "name": "dingbat-to-unicode",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/dingbat-to-unicode/-/dingbat-to-unicode-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/dom-serializer",
+        "name": "dom-serializer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/dom-serializer/-/dom-serializer-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/domelementtype",
+        "name": "domelementtype",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/domelementtype/-/domelementtype-2.3.0.tgz",
+        "version": "2.3.0"
+      },
+      {
+        "location": "node_modules/domhandler",
+        "name": "domhandler",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/domhandler/-/domhandler-5.0.3.tgz",
+        "version": "5.0.3"
+      },
+      {
+        "location": "node_modules/domutils",
+        "name": "domutils",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/domutils/-/domutils-3.2.2.tgz",
+        "version": "3.2.2"
+      },
+      {
+        "location": "node_modules/dotenv",
+        "name": "dotenv",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/dotenv/-/dotenv-17.4.2.tgz",
+        "version": "17.4.2"
+      },
+      {
+        "location": "node_modules/duck",
+        "name": "duck",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/duck/-/duck-0.1.12.tgz",
+        "version": "0.1.12"
+      },
+      {
+        "location": "node_modules/dunder-proto",
+        "name": "dunder-proto",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/dunder-proto/-/dunder-proto-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/ee-first",
+        "name": "ee-first",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ee-first/-/ee-first-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/encodeurl",
+        "name": "encodeurl",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/encodeurl/-/encodeurl-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/encoding-sniffer",
+        "name": "encoding-sniffer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/encoding-sniffer/-/encoding-sniffer-0.2.1.tgz",
+        "version": "0.2.1"
+      },
+      {
+        "location": "node_modules/entities",
+        "name": "entities",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/entities/-/entities-4.5.0.tgz",
+        "version": "4.5.0"
+      },
+      {
+        "location": "node_modules/es-define-property",
+        "name": "es-define-property",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/es-define-property/-/es-define-property-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/es-errors",
+        "name": "es-errors",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/es-errors/-/es-errors-1.3.0.tgz",
+        "version": "1.3.0"
+      },
+      {
+        "location": "node_modules/es-object-atoms",
+        "name": "es-object-atoms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/es-object-atoms/-/es-object-atoms-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/esbuild",
+        "name": "esbuild",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/esbuild/-/esbuild-0.28.2.tgz",
+        "version": "0.28.2"
+      },
+      {
+        "location": "node_modules/escape-html",
+        "name": "escape-html",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/escape-html/-/escape-html-1.0.3.tgz",
+        "version": "1.0.3"
+      },
+      {
+        "location": "node_modules/etag",
+        "name": "etag",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/etag/-/etag-1.8.1.tgz",
+        "version": "1.8.1"
+      },
+      {
+        "location": "node_modules/express",
+        "name": "express",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/express/-/express-5.2.1.tgz",
+        "version": "5.2.1"
+      },
+      {
+        "location": "node_modules/express/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/express/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/fast-deep-equal",
+        "name": "fast-deep-equal",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz",
+        "version": "3.1.3"
+      },
+      {
+        "location": "node_modules/fast-uri",
+        "name": "fast-uri",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.7.tgz",
+        "version": "3.1.7"
+      },
+      {
+        "location": "node_modules/finalhandler",
+        "name": "finalhandler",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/finalhandler/-/finalhandler-2.1.1.tgz",
+        "version": "2.1.1"
+      },
+      {
+        "location": "node_modules/finalhandler/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/finalhandler/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/forwarded",
+        "name": "forwarded",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/forwarded/-/forwarded-0.2.0.tgz",
+        "version": "0.2.0"
+      },
+      {
+        "location": "node_modules/fresh",
+        "name": "fresh",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/fresh/-/fresh-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/fsevents",
+        "name": "fsevents",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/fsevents/-/fsevents-2.3.3.tgz",
+        "version": "2.3.3"
+      },
+      {
+        "location": "node_modules/function-bind",
+        "name": "function-bind",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/function-bind/-/function-bind-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/get-intrinsic",
+        "name": "get-intrinsic",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/get-intrinsic/-/get-intrinsic-1.3.0.tgz",
+        "version": "1.3.0"
+      },
+      {
+        "location": "node_modules/get-proto",
+        "name": "get-proto",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/get-proto/-/get-proto-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/gopd",
+        "name": "gopd",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/gopd/-/gopd-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/has-symbols",
+        "name": "has-symbols",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/has-symbols/-/has-symbols-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/hasown",
+        "name": "hasown",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/hasown/-/hasown-2.0.4.tgz",
+        "version": "2.0.4"
+      },
+      {
+        "location": "node_modules/htmlparser2",
+        "name": "htmlparser2",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/htmlparser2/-/htmlparser2-10.1.0.tgz",
+        "version": "10.1.0"
+      },
+      {
+        "location": "node_modules/htmlparser2/node_modules/entities",
+        "name": "entities",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/entities/-/entities-7.0.1.tgz",
+        "version": "7.0.1"
+      },
+      {
+        "location": "node_modules/http-errors",
+        "name": "http-errors",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/http-errors/-/http-errors-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/iconv-lite",
+        "name": "iconv-lite",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/iconv-lite/-/iconv-lite-0.6.3.tgz",
+        "version": "0.6.3"
+      },
+      {
+        "location": "node_modules/immediate",
+        "name": "immediate",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/immediate/-/immediate-3.0.6.tgz",
+        "version": "3.0.6"
+      },
+      {
+        "location": "node_modules/import-in-the-middle",
+        "name": "import-in-the-middle",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/import-in-the-middle/-/import-in-the-middle-1.15.0.tgz",
+        "version": "1.15.0"
+      },
+      {
+        "location": "node_modules/inherits",
+        "name": "inherits",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/inherits/-/inherits-2.0.4.tgz",
+        "version": "2.0.4"
+      },
+      {
+        "location": "node_modules/ioredis",
+        "name": "ioredis",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ioredis/-/ioredis-5.11.1.tgz",
+        "version": "5.11.1"
+      },
+      {
+        "location": "node_modules/ioredis/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/ioredis/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/ipaddr.js",
+        "name": "ipaddr.js",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ipaddr.js/-/ipaddr.js-1.9.1.tgz",
+        "version": "1.9.1"
+      },
+      {
+        "location": "node_modules/is-core-module",
+        "name": "is-core-module",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/is-core-module/-/is-core-module-2.16.2.tgz",
+        "version": "2.16.2"
+      },
+      {
+        "location": "node_modules/is-promise",
+        "name": "is-promise",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/is-promise/-/is-promise-4.0.0.tgz",
+        "version": "4.0.0"
+      },
+      {
+        "location": "node_modules/isarray",
+        "name": "isarray",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/isarray/-/isarray-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/isomorphic.js",
+        "name": "isomorphic.js",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/isomorphic.js/-/isomorphic.js-0.2.5.tgz",
+        "version": "0.2.5"
+      },
+      {
+        "location": "node_modules/js-tiktoken",
+        "name": "js-tiktoken",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/js-tiktoken/-/js-tiktoken-1.0.21.tgz",
+        "version": "1.0.21"
+      },
+      {
+        "location": "node_modules/json-schema-traverse",
+        "name": "json-schema-traverse",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/jszip",
+        "name": "jszip",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/jszip/-/jszip-3.10.1.tgz",
+        "version": "3.10.1"
+      },
+      {
+        "location": "node_modules/lib0",
+        "name": "lib0",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/lib0/-/lib0-0.2.117.tgz",
+        "version": "0.2.117"
+      },
+      {
+        "location": "node_modules/lie",
+        "name": "lie",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/lie/-/lie-3.3.0.tgz",
+        "version": "3.3.0"
+      },
+      {
+        "location": "node_modules/long",
+        "name": "long",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/long/-/long-5.3.2.tgz",
+        "version": "5.3.2"
+      },
+      {
+        "location": "node_modules/lop",
+        "name": "lop",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/lop/-/lop-0.4.2.tgz",
+        "version": "0.4.2"
+      },
+      {
+        "location": "node_modules/mammoth",
+        "name": "mammoth",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/mammoth/-/mammoth-1.12.2.tgz",
+        "version": "1.12.2"
+      },
+      {
+        "location": "node_modules/math-intrinsics",
+        "name": "math-intrinsics",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/math-intrinsics/-/math-intrinsics-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/mdast-util-from-markdown",
+        "name": "mdast-util-from-markdown",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/mdast-util-from-markdown/-/mdast-util-from-markdown-2.0.3.tgz",
+        "version": "2.0.3"
+      },
+      {
+        "location": "node_modules/mdast-util-to-string",
+        "name": "mdast-util-to-string",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/mdast-util-to-string/-/mdast-util-to-string-4.0.0.tgz",
+        "version": "4.0.0"
+      },
+      {
+        "location": "node_modules/media-typer",
+        "name": "media-typer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/media-typer/-/media-typer-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/merge-descriptors",
+        "name": "merge-descriptors",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/merge-descriptors/-/merge-descriptors-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/micromark",
+        "name": "micromark",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark/-/micromark-4.0.3.tgz",
+        "version": "4.0.3"
+      },
+      {
+        "location": "node_modules/micromark-core-commonmark",
+        "name": "micromark-core-commonmark",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-core-commonmark/-/micromark-core-commonmark-2.0.4.tgz",
+        "version": "2.0.4"
+      },
+      {
+        "location": "node_modules/micromark-factory-destination",
+        "name": "micromark-factory-destination",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-destination/-/micromark-factory-destination-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-factory-label",
+        "name": "micromark-factory-label",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-label/-/micromark-factory-label-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-factory-space",
+        "name": "micromark-factory-space",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-space/-/micromark-factory-space-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/micromark-factory-title",
+        "name": "micromark-factory-title",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-title/-/micromark-factory-title-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-factory-whitespace",
+        "name": "micromark-factory-whitespace",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-factory-whitespace/-/micromark-factory-whitespace-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-character",
+        "name": "micromark-util-character",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-character/-/micromark-util-character-2.1.1.tgz",
+        "version": "2.1.1"
+      },
+      {
+        "location": "node_modules/micromark-util-chunked",
+        "name": "micromark-util-chunked",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-chunked/-/micromark-util-chunked-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-classify-character",
+        "name": "micromark-util-classify-character",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-classify-character/-/micromark-util-classify-character-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-combine-extensions",
+        "name": "micromark-util-combine-extensions",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-combine-extensions/-/micromark-util-combine-extensions-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-decode-numeric-character-reference",
+        "name": "micromark-util-decode-numeric-character-reference",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-decode-numeric-character-reference/-/micromark-util-decode-numeric-character-reference-2.0.2.tgz",
+        "version": "2.0.2"
+      },
+      {
+        "location": "node_modules/micromark-util-decode-string",
+        "name": "micromark-util-decode-string",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-decode-string/-/micromark-util-decode-string-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-edit-map",
+        "name": "micromark-util-edit-map",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-edit-map/-/micromark-util-edit-map-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/micromark-util-encode",
+        "name": "micromark-util-encode",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-encode/-/micromark-util-encode-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-html-tag-name",
+        "name": "micromark-util-html-tag-name",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-html-tag-name/-/micromark-util-html-tag-name-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-normalize-identifier",
+        "name": "micromark-util-normalize-identifier",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-normalize-identifier/-/micromark-util-normalize-identifier-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-resolve-all",
+        "name": "micromark-util-resolve-all",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-resolve-all/-/micromark-util-resolve-all-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-sanitize-uri",
+        "name": "micromark-util-sanitize-uri",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-sanitize-uri/-/micromark-util-sanitize-uri-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-subtokenize",
+        "name": "micromark-util-subtokenize",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-subtokenize/-/micromark-util-subtokenize-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/micromark-util-symbol",
+        "name": "micromark-util-symbol",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-symbol/-/micromark-util-symbol-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/micromark-util-types",
+        "name": "micromark-util-types",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/micromark-util-types/-/micromark-util-types-2.0.3.tgz",
+        "version": "2.0.3"
+      },
+      {
+        "location": "node_modules/micromark/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/micromark/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/mime-db",
+        "name": "mime-db",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/mime-db/-/mime-db-1.54.0.tgz",
+        "version": "1.54.0"
+      },
+      {
+        "location": "node_modules/mime-types",
+        "name": "mime-types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/mime-types/-/mime-types-3.0.2.tgz",
+        "version": "3.0.2"
+      },
+      {
+        "location": "node_modules/module-details-from-path",
+        "name": "module-details-from-path",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/module-details-from-path/-/module-details-from-path-1.0.4.tgz",
+        "version": "1.0.4"
+      },
+      {
+        "location": "node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/nanoid",
+        "name": "nanoid",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-6.0.1.tgz",
+        "version": "6.0.1"
+      },
+      {
+        "location": "node_modules/negotiator",
+        "name": "negotiator",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/negotiator/-/negotiator-0.6.4.tgz",
+        "version": "0.6.4"
+      },
+      {
+        "location": "node_modules/nth-check",
+        "name": "nth-check",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/nth-check/-/nth-check-2.1.1.tgz",
+        "version": "2.1.1"
+      },
+      {
+        "location": "node_modules/object-inspect",
+        "name": "object-inspect",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/object-inspect/-/object-inspect-1.13.4.tgz",
+        "version": "1.13.4"
+      },
+      {
+        "location": "node_modules/on-finished",
+        "name": "on-finished",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/on-finished/-/on-finished-2.4.1.tgz",
+        "version": "2.4.1"
+      },
+      {
+        "location": "node_modules/on-headers",
+        "name": "on-headers",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/on-headers/-/on-headers-1.1.0.tgz",
+        "version": "1.1.0"
+      },
+      {
+        "location": "node_modules/once",
+        "name": "once",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/once/-/once-1.4.0.tgz",
+        "version": "1.4.0"
+      },
+      {
+        "location": "node_modules/openai",
+        "name": "openai",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/openai/-/openai-6.49.0.tgz",
+        "version": "6.49.0"
+      },
+      {
+        "location": "node_modules/openlit",
+        "name": "openlit",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/openlit/-/openlit-1.15.0.tgz",
+        "version": "1.15.0"
+      },
+      {
+        "location": "node_modules/option",
+        "name": "option",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/option/-/option-0.2.4.tgz",
+        "version": "0.2.4"
+      },
+      {
+        "location": "node_modules/pako",
+        "name": "pako",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/pako/-/pako-1.0.11.tgz",
+        "version": "1.0.11"
+      },
+      {
+        "location": "node_modules/parse5",
+        "name": "parse5",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/parse5/-/parse5-7.3.0.tgz",
+        "version": "7.3.0"
+      },
+      {
+        "location": "node_modules/parse5-htmlparser2-tree-adapter",
+        "name": "parse5-htmlparser2-tree-adapter",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/parse5-htmlparser2-tree-adapter/-/parse5-htmlparser2-tree-adapter-7.1.0.tgz",
+        "version": "7.1.0"
+      },
+      {
+        "location": "node_modules/parse5-parser-stream",
+        "name": "parse5-parser-stream",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/parse5-parser-stream/-/parse5-parser-stream-7.1.2.tgz",
+        "version": "7.1.2"
+      },
+      {
+        "location": "node_modules/parse5/node_modules/entities",
+        "name": "entities",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/entities/-/entities-6.0.1.tgz",
+        "version": "6.0.1"
+      },
+      {
+        "location": "node_modules/parseurl",
+        "name": "parseurl",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/parseurl/-/parseurl-1.3.3.tgz",
+        "version": "1.3.3"
+      },
+      {
+        "location": "node_modules/path-is-absolute",
+        "name": "path-is-absolute",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/path-parse",
+        "name": "path-parse",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/path-parse/-/path-parse-1.0.7.tgz",
+        "version": "1.0.7"
+      },
+      {
+        "location": "node_modules/path-to-regexp",
+        "name": "path-to-regexp",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/path-to-regexp/-/path-to-regexp-8.4.2.tgz",
+        "version": "8.4.2"
+      },
+      {
+        "location": "node_modules/pdfjs-dist",
+        "name": "pdfjs-dist",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-6.3.289.tgz",
+        "version": "6.3.289"
+      },
+      {
+        "location": "node_modules/pg",
+        "name": "pg",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg/-/pg-8.23.0.tgz",
+        "version": "8.23.0"
+      },
+      {
+        "location": "node_modules/pg-cloudflare",
+        "name": "pg-cloudflare",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-cloudflare/-/pg-cloudflare-1.4.0.tgz",
+        "version": "1.4.0"
+      },
+      {
+        "location": "node_modules/pg-connection-string",
+        "name": "pg-connection-string",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-connection-string/-/pg-connection-string-2.14.0.tgz",
+        "version": "2.14.0"
+      },
+      {
+        "location": "node_modules/pg-int8",
+        "name": "pg-int8",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-int8/-/pg-int8-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/pg-pool",
+        "name": "pg-pool",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-pool/-/pg-pool-3.14.0.tgz",
+        "version": "3.14.0"
+      },
+      {
+        "location": "node_modules/pg-protocol",
+        "name": "pg-protocol",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-protocol/-/pg-protocol-1.16.0.tgz",
+        "version": "1.16.0"
+      },
+      {
+        "location": "node_modules/pg-types",
+        "name": "pg-types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pg-types/-/pg-types-2.2.0.tgz",
+        "version": "2.2.0"
+      },
+      {
+        "location": "node_modules/pgpass",
+        "name": "pgpass",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/pgpass/-/pgpass-1.0.5.tgz",
+        "version": "1.0.5"
+      },
+      {
+        "location": "node_modules/postgres-array",
+        "name": "postgres-array",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/postgres-array/-/postgres-array-2.0.0.tgz",
+        "version": "2.0.0"
+      },
+      {
+        "location": "node_modules/postgres-bytea",
+        "name": "postgres-bytea",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/postgres-bytea/-/postgres-bytea-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/postgres-date",
+        "name": "postgres-date",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/postgres-date/-/postgres-date-1.0.7.tgz",
+        "version": "1.0.7"
+      },
+      {
+        "location": "node_modules/postgres-interval",
+        "name": "postgres-interval",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/postgres-interval/-/postgres-interval-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/process-nextick-args",
+        "name": "process-nextick-args",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/process-nextick-args/-/process-nextick-args-2.0.1.tgz",
+        "version": "2.0.1"
+      },
+      {
+        "location": "node_modules/protobufjs",
+        "name": "protobufjs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/protobufjs/-/protobufjs-7.6.6.tgz",
+        "version": "7.6.6"
+      },
+      {
+        "location": "node_modules/proxy-addr",
+        "name": "proxy-addr",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/proxy-addr/-/proxy-addr-2.0.7.tgz",
+        "version": "2.0.7"
+      },
+      {
+        "location": "node_modules/qs",
+        "name": "qs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/qs/-/qs-6.16.0.tgz",
+        "version": "6.16.0"
+      },
+      {
+        "location": "node_modules/range-parser",
+        "name": "range-parser",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/range-parser/-/range-parser-1.3.0.tgz",
+        "version": "1.3.0"
+      },
+      {
+        "location": "node_modules/raw-body",
+        "name": "raw-body",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/raw-body/-/raw-body-3.0.2.tgz",
+        "version": "3.0.2"
+      },
+      {
+        "location": "node_modules/raw-body/node_modules/iconv-lite",
+        "name": "iconv-lite",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/iconv-lite/-/iconv-lite-0.7.3.tgz",
+        "version": "0.7.3"
+      },
+      {
+        "location": "node_modules/readable-stream",
+        "name": "readable-stream",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.8.tgz",
+        "version": "2.3.8"
+      },
+      {
+        "location": "node_modules/readable-stream/node_modules/safe-buffer",
+        "name": "safe-buffer",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
+        "version": "5.1.2"
+      },
+      {
+        "location": "node_modules/redis-errors",
+        "name": "redis-errors",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/redis-errors/-/redis-errors-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/redis-parser",
+        "name": "redis-parser",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/redis-parser/-/redis-parser-3.0.0.tgz",
+        "version": "3.0.0"
+      },
+      {
+        "location": "node_modules/require-from-string",
+        "name": "require-from-string",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/require-from-string/-/require-from-string-2.0.2.tgz",
+        "version": "2.0.2"
+      },
+      {
+        "location": "node_modules/require-in-the-middle",
+        "name": "require-in-the-middle",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/require-in-the-middle/-/require-in-the-middle-7.5.2.tgz",
+        "version": "7.5.2"
+      },
+      {
+        "location": "node_modules/require-in-the-middle/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/require-in-the-middle/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/resolve",
+        "name": "resolve",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/resolve/-/resolve-1.22.12.tgz",
+        "version": "1.22.12"
+      },
+      {
+        "location": "node_modules/router",
+        "name": "router",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/router/-/router-2.2.0.tgz",
+        "version": "2.2.0"
+      },
+      {
+        "location": "node_modules/router/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/router/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/safe-buffer",
+        "name": "safe-buffer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/safe-buffer/-/safe-buffer-5.2.1.tgz",
+        "version": "5.2.1"
+      },
+      {
+        "location": "node_modules/safer-buffer",
+        "name": "safer-buffer",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/safer-buffer/-/safer-buffer-2.1.2.tgz",
+        "version": "2.1.2"
+      },
+      {
+        "location": "node_modules/secure-json-parse",
+        "name": "secure-json-parse",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/secure-json-parse/-/secure-json-parse-4.1.0.tgz",
+        "version": "4.1.0"
+      },
+      {
+        "location": "node_modules/send",
+        "name": "send",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/send/-/send-1.2.1.tgz",
+        "version": "1.2.1"
+      },
+      {
+        "location": "node_modules/send/node_modules/debug",
+        "name": "debug",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/debug/-/debug-4.4.3.tgz",
+        "version": "4.4.3"
+      },
+      {
+        "location": "node_modules/send/node_modules/ms",
+        "name": "ms",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ms/-/ms-2.1.3.tgz",
+        "version": "2.1.3"
+      },
+      {
+        "location": "node_modules/serve-static",
+        "name": "serve-static",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/serve-static/-/serve-static-2.2.1.tgz",
+        "version": "2.2.1"
+      },
+      {
+        "location": "node_modules/setimmediate",
+        "name": "setimmediate",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz",
+        "version": "1.0.5"
+      },
+      {
+        "location": "node_modules/setprototypeof",
+        "name": "setprototypeof",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/setprototypeof/-/setprototypeof-1.2.0.tgz",
+        "version": "1.2.0"
+      },
+      {
+        "location": "node_modules/side-channel",
+        "name": "side-channel",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/side-channel/-/side-channel-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/side-channel-list",
+        "name": "side-channel-list",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/side-channel-list/-/side-channel-list-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/side-channel-map",
+        "name": "side-channel-map",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/side-channel-map/-/side-channel-map-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/side-channel-weakmap",
+        "name": "side-channel-weakmap",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/side-channel-weakmap/-/side-channel-weakmap-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/split2",
+        "name": "split2",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/split2/-/split2-4.2.0.tgz",
+        "version": "4.2.0"
+      },
+      {
+        "location": "node_modules/sprintf-js",
+        "name": "sprintf-js",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz",
+        "version": "1.0.3"
+      },
+      {
+        "location": "node_modules/standard-as-callback",
+        "name": "standard-as-callback",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/standard-as-callback/-/standard-as-callback-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/statuses",
+        "name": "statuses",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/statuses/-/statuses-2.0.2.tgz",
+        "version": "2.0.2"
+      },
+      {
+        "location": "node_modules/string_decoder",
+        "name": "string_decoder",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/string_decoder/-/string_decoder-1.1.1.tgz",
+        "version": "1.1.1"
+      },
+      {
+        "location": "node_modules/string_decoder/node_modules/safe-buffer",
+        "name": "safe-buffer",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
+        "version": "5.1.2"
+      },
+      {
+        "location": "node_modules/supports-preserve-symlinks-flag",
+        "name": "supports-preserve-symlinks-flag",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/toidentifier",
+        "name": "toidentifier",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/toidentifier/-/toidentifier-1.0.1.tgz",
+        "version": "1.0.1"
+      },
+      {
+        "location": "node_modules/tslib",
+        "name": "tslib",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/tslib/-/tslib-2.8.1.tgz",
+        "version": "2.8.1"
+      },
+      {
+        "location": "node_modules/tsx",
+        "name": "tsx",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/tsx/-/tsx-4.23.13.tgz",
+        "version": "4.23.13"
+      },
+      {
+        "location": "node_modules/type-is",
+        "name": "type-is",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/type-is/-/type-is-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/type-is/node_modules/content-type",
+        "name": "content-type",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/content-type/-/content-type-2.1.0.tgz",
+        "version": "2.1.0"
+      },
+      {
+        "location": "node_modules/underscore",
+        "name": "underscore",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/underscore/-/underscore-1.13.8.tgz",
+        "version": "1.13.8"
+      },
+      {
+        "location": "node_modules/undici",
+        "name": "undici",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/undici/-/undici-7.29.0.tgz",
+        "version": "7.29.0"
+      },
+      {
+        "location": "node_modules/undici-types",
+        "name": "undici-types",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/undici-types/-/undici-types-8.3.0.tgz",
+        "version": "8.3.0"
+      },
+      {
+        "location": "node_modules/unist-util-stringify-position",
+        "name": "unist-util-stringify-position",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/unist-util-stringify-position/-/unist-util-stringify-position-4.0.0.tgz",
+        "version": "4.0.0"
+      },
+      {
+        "location": "node_modules/unpipe",
+        "name": "unpipe",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/unpipe/-/unpipe-1.0.0.tgz",
+        "version": "1.0.0"
+      },
+      {
+        "location": "node_modules/util-deprecate",
+        "name": "util-deprecate",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/vary",
+        "name": "vary",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/vary/-/vary-1.1.2.tgz",
+        "version": "1.1.2"
+      },
+      {
+        "location": "node_modules/whatwg-encoding",
+        "name": "whatwg-encoding",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/whatwg-encoding/-/whatwg-encoding-3.1.1.tgz",
+        "version": "3.1.1"
+      },
+      {
+        "location": "node_modules/whatwg-mimetype",
+        "name": "whatwg-mimetype",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/whatwg-mimetype/-/whatwg-mimetype-4.0.0.tgz",
+        "version": "4.0.0"
+      },
+      {
+        "location": "node_modules/wrappy",
+        "name": "wrappy",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/wrappy/-/wrappy-1.0.2.tgz",
+        "version": "1.0.2"
+      },
+      {
+        "location": "node_modules/ws",
+        "name": "ws",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/ws/-/ws-8.21.3.tgz",
+        "version": "8.21.3"
+      },
+      {
+        "location": "node_modules/xmlbuilder",
+        "name": "xmlbuilder",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/xmlbuilder/-/xmlbuilder-10.1.1.tgz",
+        "version": "10.1.1"
+      },
+      {
+        "location": "node_modules/xtend",
+        "name": "xtend",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/xtend/-/xtend-4.0.2.tgz",
+        "version": "4.0.2"
+      },
+      {
+        "location": "node_modules/yaml",
+        "name": "yaml",
+        "isLink": false,
+        "resolved": "https://registry.npmjs.org/yaml/-/yaml-2.9.0.tgz",
+        "version": "2.9.0"
+      },
+      {
+        "location": "node_modules/yjs",
+        "name": "yjs",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/yjs/-/yjs-13.6.32.tgz",
+        "version": "13.6.32"
+      },
+      {
+        "location": "node_modules/zod",
+        "name": "zod",
+        "isLink": false,
+        "resolved": "https://registry.npmmirror.com/zod/-/zod-4.5.4.tgz",
+        "version": "4.5.4"
+      }
+    ],
+    "rootEdgeErrors": []
+  },
+  "removed": [
+    {
+      "location": "..",
+      "name": "baseline",
+      "isLink": false,
+      "resolved": null,
+      "version": "0.1.0-beta"
+    },
+    {
+      "location": "node_modules/lingxiloop",
+      "name": "lingxiloop",
+      "isLink": true,
+      "resolved": "file:../..",
+      "version": "0.1.0-beta"
+    }
+  ],
+  "remainingMetadataChanged": []
+}

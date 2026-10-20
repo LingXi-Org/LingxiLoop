@@ -1,0 +1,21 @@
+{
+  "base": "535873b941815b41961a44f56e479257cbb71626",
+  "sourceHashes": {
+    "server/docker/lingxiloop-server.Dockerfile": "f5ae0cec51b33caa9ad1db06db11817f34acb6b7634927be5706eefb542cd70b",
+    "server/package.json": "79941740d88044b00f5e2864ab223357a8f0d891b3e111afbea9ba44d2e1adb8",
+    "server/package-lock.json": "28ca9640e0b5465f952fa43e82f4807c278b43b1c87216d1d2fedeb50360f67e",
+    "scripts/production-rag-contract.test.mjs": "fbecea0a03a84de24bb08102fc3806e308367780bcc62ef423d44b9e76034ccf"
+  },
+  "lockOnlySelfDependencyRemoved": true,
+  "otherLockMetadataUnchanged": true,
+  "serverLockBytesBefore": 183173,
+  "serverLockBytesAfter": 177456,
+  "installedProductionPackages": 310,
+  "offlineInstallExit": 0,
+  "runtime": "3.5.6",
+  "productionRequests": 0,
+  "imagePulls": 0,
+  "imageBuilds": 0,
+  "imagePublications": 0,
+  "scope": "small draft PR; source-copy export and local prod-dependency import qualification, not OCI runtime startup"
+}
