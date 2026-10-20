@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "concurrentWrites": [
+    409,
+    200
+  ],
+  "staleWrite": 409,
+  "winnerRevision": 2,
+  "wrongProject": 404,
+  "wrongCompany": 404,
+  "revoked": 404,
+  "agentRuns": 0,
+  "scope": "real HTTP router/PG CAS/authorization; synthetic session identity, no provider"
+}

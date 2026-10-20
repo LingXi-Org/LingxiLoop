@@ -1,0 +1,24 @@
+ Container lingxiloop-e2e-postgres-1  Running
+ Container lingxiloop-e2e-redis-1  Running
+ Container lingxiloop-e2e-redis-1  Waiting
+ Container lingxiloop-e2e-postgres-1  Waiting
+ Container lingxiloop-e2e-redis-1  Healthy
+ Container lingxiloop-e2e-postgres-1  Healthy
+[db:migrate] already current · 39ms
+[integration] selected 1/82 file(s): canvas-app-boundary.test.ts
+TAP version 13
+# Subtest: bound Canvas HTTP APIs enforce revision CAS, readback and workspace revocation
+ok 1 - bound Canvas HTTP APIs enforce revision CAS, readback and workspace revocation
+  ---
+  duration_ms: 2926.876141
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3537.036872

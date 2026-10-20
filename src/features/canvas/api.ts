@@ -17,7 +17,7 @@ import type {
 export const canvasApi = {
   getCollaboration: (id: string,afterSeq = 0) => http<CanvasCollaboration>(`/canvases/${encodeURIComponent(id)}/collaboration?afterSeq=${afterSeq}`),
   updateSharedState: (id: string, update: SharedStateUpdate) => http<SharedStateResult>(`/canvases/${encodeURIComponent(id)}/shared-state`,{ method: 'POST',body: JSON.stringify(update) }),
-  getCanvas: (canvasId?: string) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas'),
+  getCanvas: (canvasId?: string, signal?: AbortSignal) => http<CanvasSnapshot>(canvasId ? `/canvases/${encodeURIComponent(canvasId)}` : '/canvas', { signal }),
   getCanvases: (conversationId: string) => http<CanvasWorkspaceSummary[]>(`/canvases?conversationId=${encodeURIComponent(conversationId)}`),
   getConversationCanvas: (conversationId: string) => http<CanvasSnapshot | null>(`/conversations/${encodeURIComponent(conversationId)}/canvas`),
   ensureConversationCanvas: (conversationId: string) => http<CanvasSnapshot>(`/conversations/${encodeURIComponent(conversationId)}/canvas`, { method: 'POST' }),
@@ -27,8 +27,8 @@ export const canvasApi = {
   }) => http<CanvasFrame>('/canvas/frames', { method: 'POST', body: JSON.stringify(input) }),
   updateCanvasFrame: (frameId: string, patch: Partial<Pick<CanvasFrame,
     'type' | 'title' | 'x' | 'y' | 'width' | 'height' | 'content' | 'data'
-  >> & { baseRevision?: number }) => http<CanvasFrame>(`/canvas/frames/${encodeURIComponent(frameId)}`, {
-    method: 'PATCH', body: JSON.stringify(patch),
+  >> & { baseRevision?: number }, signal?: AbortSignal) => http<CanvasFrame>(`/canvas/frames/${encodeURIComponent(frameId)}`, {
+    method: 'PATCH', body: JSON.stringify(patch), signal,
   }),
   appendCanvasContent: (frameId: string, content: string) =>
     http<CanvasFrame>(`/canvas/frames/${encodeURIComponent(frameId)}/append`, {
