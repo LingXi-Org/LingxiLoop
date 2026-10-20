@@ -1,0 +1,58 @@
+TAP version 13
+# Subtest: linear chart shares unrounded values across intersections, choices and rendered labels
+ok 1 - linear chart shares unrounded values across intersections, choices and rendered labels
+  ---
+  duration_ms: 21.739142
+  type: 'test'
+  ...
+# Subtest: general coefficients, higher preference, ties, parallel lines and display rounding
+ok 2 - general coefficients, higher preference, ties, parallel lines and display rounding
+  ---
+  duration_ms: 2.29445
+  type: 'test'
+  ...
+# Subtest: intersection evaluation permits finite cancellation without rounding decisions
+ok 3 - intersection evaluation permits finite cancellation without rounding decisions
+  ---
+  duration_ms: 0.982591
+  type: 'test'
+  ...
+# Subtest: trend differences, absolute changes, percentages and extrema use each actual series
+ok 4 - trend differences, absolute changes, percentages and extrema use each actual series
+  ---
+  duration_ms: 3.465265
+  type: 'test'
+  ...
+# Subtest: nonpositive previous values have no percent rate; tied increases and decreases are retained
+ok 5 - nonpositive previous values have no percent rate; tied increases and decreases are retained
+  ---
+  duration_ms: 1.030393
+  type: 'test'
+  ...
+# Subtest: ambiguous, missing, unbounded and nonfinite inputs fail before rendering
+ok 6 - ambiguous, missing, unbounded and nonfinite inputs fail before rendering
+  ---
+  duration_ms: 2.07575
+  type: 'test'
+  ...
+# Subtest: all untrusted labels and units are escaped and remain inert SVG/HTML text
+ok 7 - all untrusted labels and units are escaped and remain inert SVG/HTML text
+  ---
+  duration_ms: 4.06546
+  type: 'test'
+  ...
+# Subtest: abort before numeric work is preserved rather than converted into a successful chart
+ok 8 - abort before numeric work is preserved rather than converted into a successful chart
+  ---
+  duration_ms: 0.545022
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 400.840804
