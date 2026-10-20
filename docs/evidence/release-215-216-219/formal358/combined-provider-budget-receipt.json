@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-20T09:52:09.028Z",
+  "qualification": "actual formal3.5.8 package; isolated fixture only",
+  "database": "lingxiloop_memory_continuity_combined358_test",
+  "limits": {
+    "maxCallsPerRoot": 24,
+    "maxTokensPerRoot": 300000,
+    "maxCostMicrosPerRoot": 400000
+  },
+  "roots": 18,
+  "maxCallsPerRoot": 6,
+  "maxCostMicrosPerRoot": "146075",
+  "totalCalls": 39,
+  "totalCostMicros": "388820"
+}

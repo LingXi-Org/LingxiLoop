@@ -1,0 +1,20 @@
+{
+  "onlyOwnedUntrackedOutputsMoved": [
+    "combined-358-candidate-browser",
+    "combined-formal358-native",
+    "combined-formal358-ui-cached",
+    "combined-formal358-ui-private",
+    "combined-formal358-ui",
+    "issue216",
+    "memory",
+    "run-activity",
+    "issue215-public/final-stream-foreground.json",
+    "issue215-public/history.json",
+    "issue215-public/worker-stream-cancelled.json",
+    "issue215-public/worker-stream-complete.json",
+    "issue215-public/worker-stream-final-stream.json",
+    "issue215-public/worker-stream-revoked.json",
+    "issue215-public/worker-stream-unsafe.json"
+  ],
+  "reason": "Keep release checkout clean; selected evidence copied into docs before moving originals; all original bytes retained."
+}

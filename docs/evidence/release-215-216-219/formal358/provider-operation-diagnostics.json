@@ -1,0 +1,941 @@
+{
+  "completed": true,
+  "phase": "background-new-room",
+  "operations": [
+    {
+      "phase": "save",
+      "operation": "control.initialize",
+      "startedAt": "2026-10-20T09:49:40.549Z",
+      "elapsedMs": 64
+    },
+    {
+      "phase": "save",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:49:40.689Z",
+      "elapsedMs": 18147
+    },
+    {
+      "phase": "save",
+      "operation": "memory.scopes",
+      "startedAt": "2026-10-20T09:49:58.858Z",
+      "elapsedMs": 35
+    },
+    {
+      "phase": "save",
+      "operation": "memory.list",
+      "startedAt": "2026-10-20T09:49:58.893Z",
+      "elapsedMs": 26
+    },
+    {
+      "phase": "save",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:49:58.920Z",
+      "elapsedMs": 22
+    },
+    {
+      "phase": "save",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:49:58.920Z",
+      "elapsedMs": 55
+    },
+    {
+      "phase": "save",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:49:58.920Z",
+      "elapsedMs": 168
+    },
+    {
+      "phase": "immediate",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:49:59.171Z",
+      "elapsedMs": 6927
+    },
+    {
+      "phase": "index",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:06.101Z",
+      "elapsedMs": 533
+    },
+    {
+      "phase": "index",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:06.634Z",
+      "elapsedMs": 458
+    },
+    {
+      "phase": "index",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:07.092Z",
+      "elapsedMs": 537
+    },
+    {
+      "phase": "index",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:07.629Z",
+      "elapsedMs": 9
+    },
+    {
+      "phase": "semantic",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:07.664Z",
+      "elapsedMs": 4952
+    },
+    {
+      "phase": "capture",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:12.672Z",
+      "elapsedMs": 5155
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T09:50:17.938Z",
+      "elapsedMs": 62
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:18.000Z",
+      "elapsedMs": 7322
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:25.322Z",
+      "elapsedMs": 484
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:25.806Z",
+      "elapsedMs": 3417
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:29.223Z",
+      "elapsedMs": 3
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T09:50:29.327Z",
+      "elapsedMs": 15
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:29.343Z",
+      "elapsedMs": 4653
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:33.996Z",
+      "elapsedMs": 3
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T09:50:34.099Z",
+      "elapsedMs": 42
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:34.141Z",
+      "elapsedMs": 4940
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:39.081Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T09:50:39.186Z",
+      "elapsedMs": 22
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:39.209Z",
+      "elapsedMs": 5097
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:44.306Z",
+      "elapsedMs": 422
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:44.729Z",
+      "elapsedMs": 3598
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:48.326Z",
+      "elapsedMs": 14
+    },
+    {
+      "phase": "background",
+      "operation": "memory.reflect",
+      "startedAt": "2026-10-20T09:50:48.441Z",
+      "elapsedMs": 16
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:48.457Z",
+      "elapsedMs": 4925
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:53.383Z",
+      "elapsedMs": 955
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:54.338Z",
+      "elapsedMs": 3
+    },
+    {
+      "phase": "background",
+      "operation": "memory.list",
+      "startedAt": "2026-10-20T09:50:54.342Z",
+      "elapsedMs": 16
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:50:54.358Z",
+      "elapsedMs": 22
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:50:54.358Z",
+      "elapsedMs": 34
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:50:54.358Z",
+      "elapsedMs": 54
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:50:54.358Z",
+      "elapsedMs": 67
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:50:54.358Z",
+      "elapsedMs": 82
+    },
+    {
+      "phase": "background",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:50:54.358Z",
+      "elapsedMs": 99
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:54.476Z",
+      "elapsedMs": 4479
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "memory.apply",
+      "startedAt": "2026-10-20T09:50:58.957Z",
+      "elapsedMs": 51
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "memory.reindex",
+      "startedAt": "2026-10-20T09:50:59.008Z",
+      "elapsedMs": 17
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:59.025Z",
+      "elapsedMs": 5
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "memory.read",
+      "startedAt": "2026-10-20T09:50:59.030Z",
+      "elapsedMs": 28
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "memory.search",
+      "startedAt": "2026-10-20T09:50:59.058Z",
+      "elapsedMs": 31
+    }
+  ],
+  "operationStats": {
+    "control.initialize": {
+      "count": 1,
+      "totalMs": 64,
+      "maxMs": 64,
+      "errors": 0
+    },
+    "worker.runNext": {
+      "count": 25,
+      "totalMs": 77043,
+      "maxMs": 18147,
+      "errors": 0
+    },
+    "memory.scopes": {
+      "count": 1,
+      "totalMs": 35,
+      "maxMs": 35,
+      "errors": 0
+    },
+    "memory.list": {
+      "count": 2,
+      "totalMs": 42,
+      "maxMs": 26,
+      "errors": 0
+    },
+    "memory.read": {
+      "count": 10,
+      "totalMs": 631,
+      "maxMs": 168,
+      "errors": 0
+    },
+    "memory.reflect": {
+      "count": 5,
+      "totalMs": 157,
+      "maxMs": 62,
+      "errors": 0
+    },
+    "memory.apply": {
+      "count": 1,
+      "totalMs": 51,
+      "maxMs": 51,
+      "errors": 0
+    },
+    "memory.reindex": {
+      "count": 1,
+      "totalMs": 17,
+      "maxMs": 17,
+      "errors": 0
+    },
+    "memory.search": {
+      "count": 1,
+      "totalMs": 31,
+      "maxMs": 31,
+      "errors": 0
+    }
+  },
+  "slowOperations": [
+    {
+      "phase": "save",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:49:40.689Z",
+      "elapsedMs": 18147
+    },
+    {
+      "phase": "immediate",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:49:59.171Z",
+      "elapsedMs": 6927
+    },
+    {
+      "phase": "index",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:06.101Z",
+      "elapsedMs": 533
+    },
+    {
+      "phase": "index",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:07.092Z",
+      "elapsedMs": 537
+    },
+    {
+      "phase": "semantic",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:07.664Z",
+      "elapsedMs": 4952
+    },
+    {
+      "phase": "capture",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:12.672Z",
+      "elapsedMs": 5155
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:18.000Z",
+      "elapsedMs": 7322
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:25.806Z",
+      "elapsedMs": 3417
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:29.343Z",
+      "elapsedMs": 4653
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:34.141Z",
+      "elapsedMs": 4940
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:39.209Z",
+      "elapsedMs": 5097
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:44.729Z",
+      "elapsedMs": 3598
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:48.457Z",
+      "elapsedMs": 4925
+    },
+    {
+      "phase": "background",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:53.383Z",
+      "elapsedMs": 955
+    },
+    {
+      "phase": "background-new-room",
+      "operation": "worker.runNext",
+      "startedAt": "2026-10-20T09:50:54.476Z",
+      "elapsedMs": 4479
+    }
+  ],
+  "waits": [
+    {
+      "phase": "save",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "Client"
+      ]
+    },
+    {
+      "phase": "save",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "Client"
+      ]
+    },
+    {
+      "phase": "save",
+      "waiting": 1,
+      "blocked": 1,
+      "categories": [
+        "Lock"
+      ]
+    },
+    {
+      "phase": "immediate",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "Client"
+      ]
+    },
+    {
+      "phase": "immediate",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "semantic",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "semantic",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    },
+    {
+      "phase": "capture",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "Client"
+      ]
+    },
+    {
+      "phase": "background-new-room",
+      "waiting": 1,
+      "blocked": 0,
+      "categories": [
+        "IO"
+      ]
+    }
+  ],
+  "observed": [
+    {
+      "phase": "save",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 1575,
+      "core": false,
+      "middle": false,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1693,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1518,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1510,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1668,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "save",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2507,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "immediate",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 488,
+      "core": false,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "immediate",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1269,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "immediate",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1325,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "index",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 293,
+      "core": false,
+      "middle": true,
+      "tail": false,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "index",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 271,
+      "core": false,
+      "middle": false,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "index",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 317,
+      "core": true,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 319,
+      "core": false,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 976,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1858,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "semantic",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 930,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "capture",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 329,
+      "core": false,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "capture",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1207,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": true,
+      "automaticTail": true
+    },
+    {
+      "phase": "capture",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1760,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": true,
+      "automaticTail": true
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2371,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 4720,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 320,
+      "core": true,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1034,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2174,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1016,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 3431,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 973,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 3778,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2395,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": true,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2534,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": true,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 286,
+      "core": false,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": true,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1103,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": true,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2311,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": true,
+      "automaticTail": false
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2128,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": true,
+      "automaticTail": true
+    },
+    {
+      "phase": "background",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 2640,
+      "core": true,
+      "middle": true,
+      "tail": true,
+      "automaticMiddle": true,
+      "automaticTail": true
+    },
+    {
+      "phase": "background",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 811,
+      "core": false,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": false,
+      "automaticTail": true
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "embedding",
+      "status": 200,
+      "elapsedMs": 438,
+      "core": false,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": false,
+      "automaticTail": false
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1303,
+      "core": true,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": true,
+      "automaticTail": true
+    },
+    {
+      "phase": "background-new-room",
+      "kind": "chat",
+      "status": 200,
+      "elapsedMs": 1574,
+      "core": true,
+      "middle": false,
+      "tail": false,
+      "automaticMiddle": true,
+      "automaticTail": true
+    }
+  ]
+}

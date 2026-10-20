@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "live": true,
+  "files": [
+    "memory-continuity-live.test.ts"
+  ],
+  "reproduce": "node e2e/server/memory-regression.mjs --live-continuity",
+  "migrations": "applied then no-op",
+  "qualification": "source candidate; exact published dependency remains a release gate"
+}

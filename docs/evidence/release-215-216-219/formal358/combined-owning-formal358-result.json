@@ -1,0 +1,19 @@
+{
+  "label": "combined-owning-formal358",
+  "files": [
+    "native-memory.test.ts",
+    "memory-continuity.test.ts",
+    "memory-latency.test.ts",
+    "durable-public-activity.test.ts",
+    "public-activity-history.test.ts",
+    "public-run-activity.test.ts",
+    "organization-cases.test.ts",
+    "course-forum.test.ts",
+    "homework.test.ts"
+  ],
+  "startedAt": "2026-10-20T09:45:05.788Z",
+  "completedAt": "2026-10-20T09:47:03.284Z",
+  "exitCode": 0,
+  "databaseName": "lingxiloop_combined_215_216_219_20261020_test",
+  "environment": "isolated loopback PostgreSQL and Redis; synthetic providers"
+}

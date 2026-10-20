@@ -1,0 +1,158 @@
+{
+  "head": "b82ebdb09ab269d1dc13fd149932d80bd2ba45b9",
+  "tree": "cf4f0b66190d89151b4017c1556d52b5a0e44f9a",
+  "reviewedAtUtc": "2026-10-20T10:01:36.917443+00:00",
+  "base": "c6c47bddeabb4488f9fe93391f15c695a528260c",
+  "mergeBase": "c6c47bddeabb4488f9fe93391f15c695a528260c",
+  "imageComparison": {
+    "before": {
+      "sourceCommit": "535873b941815b41961a44f56e479257cbb71626",
+      "indexDigest": "sha256:b191c1ae502a24e864eaf52476d53792b68eb4e47840f0655a52fb677fa1081d",
+      "linuxAmd64ManifestDigest": "sha256:f2f84186e5ae62e125bfa061af6d296d9774baee6c67a877430565bbe7c23fea",
+      "layerCount": 19,
+      "compressedLayerBytes": 207402312,
+      "uncompressedTarLayerBytes": 625566208
+    },
+    "after": {
+      "sourceCommit": "ac9069460e99a20fac7f2c3de87c60f2bec66924",
+      "indexDigest": "sha256:6ac0d343039dbcb36607ff07e708134a9f5fbcbe6f1e51c04a8bca16801314ee",
+      "linuxAmd64ManifestDigest": "sha256:30534bf5570fa6ddd243a56bb6012343ee39cc94aab6c64fd31331c4006dc704",
+      "layerCount": 22,
+      "compressedLayerBytes": 206838733,
+      "uncompressedTarLayerBytes": 623327232
+    },
+    "sourceBaselineMeaning": "pre-PR230 baseline, not immediate parent of ac906946",
+    "sourceCommitsAboveBaseline": [
+      "ac9069460e99a20fac7f2c3de87c60f2bec66924 docs: record independent payload review and isolation validation boundary",
+      "3b27f1e34fbaad886dfe0e6d4fad3b5c1b3ceb11 build: preserve unchanged lockfile text and refresh payload evidence",
+      "ef2aa158288feb41906f76dcd0dfae059b75372a docs: include retained payload qualification logs",
+      "22f474f6e4014b0d71d3c0d04ac85e8652887a23 build: trim final ZCode payload and unused server self-link"
+    ],
+    "compressedDelta": -563579,
+    "compressedReductionPercent": 0.2717322649710867,
+    "expandedTarDelta": -2238976,
+    "expandedTarReductionPercent": 0.3579119158559153,
+    "sharedLayers": 5,
+    "sharedCompressedBytes": 79803125,
+    "uniqueCompressedTransferBytes": 334437920,
+    "perLayerSumsVerified": true
+  },
+  "dist": {
+    "totalBefore": {
+      "files": 1134,
+      "rawBytes": 60850325,
+      "gzipBytes": 37282434,
+      "brotliBytes": 35408899
+    },
+    "totalAfter": {
+      "files": 1134,
+      "rawBytes": 60850325,
+      "gzipBytes": 37282434,
+      "brotliBytes": 35408899
+    },
+    "inventorySha256": "28b0f298d5b9280c057aa21deb3f70b085e637b5fcf1a0cfa89522636bd47e1c",
+    "changedPaths": [],
+    "categorySumsVerified": true,
+    "layerDigestAndSizeCrossReferencesVerified": true
+  },
+  "dependencies": {
+    "regularFilesBefore": 25376,
+    "regularFilesAfter": 25376,
+    "regularContentByteDelta": -5693,
+    "entriesBefore": 28238,
+    "entriesAfter": 28237,
+    "changedPaths": [
+      "app/node_modules/.package-lock.json",
+      "app/node_modules/lingxiloop"
+    ],
+    "layerDigestAndSizeCrossReferencesVerified": true
+  },
+  "unprovenCandidateCategories": {
+    "test_dirs": {
+      "files": 709,
+      "bytes": 3855445
+    },
+    "examples_dirs": {
+      "files": 48,
+      "bytes": 255539
+    },
+    "markdown": {
+      "files": 481,
+      "bytes": 3087136
+    },
+    "source_maps": {
+      "files": 6045,
+      "bytes": 52397322
+    }
+  },
+  "changedFiles": [
+    {
+      "path": "docs/evidence/issue-229-oci/README.md",
+      "bytes": 12684,
+      "sha256": "8b8695dd71f88ca2d85214e9a178998240da296a2e977211deb361259cf3f38f"
+    },
+    {
+      "path": "docs/evidence/issue-229-oci/dependency-candidates-20261020.json",
+      "bytes": 1024,
+      "sha256": "95782cd453679a4f4a5013a8098d2588c297f7454748f008532b37d6051e8f06"
+    },
+    {
+      "path": "docs/evidence/issue-229-oci/dependency-layer-20261020.json",
+      "bytes": 1129,
+      "sha256": "8fb6a455cf0b3672a4ab1303b35642e6fb698c20996d3496bd4437fa2d984231"
+    },
+    {
+      "path": "docs/evidence/issue-229-oci/dist-assets-20261020.json",
+      "bytes": 2000,
+      "sha256": "82c69b34d7bc43157dba75b533b4a4a7ddd2f405582ee94fbb36c294497b0dd1"
+    },
+    {
+      "path": "docs/evidence/issue-229-oci/oci-layers-20261020.json",
+      "bytes": 8892,
+      "sha256": "390c68e7b5c3a292e5b4d197bca6293333c5f2fa9dbd2f381a707e80c2a1b0b8"
+    },
+    {
+      "path": "scripts/audit-packaged-dependency-content.py",
+      "bytes": 1443,
+      "sha256": "30c7d2e2018e6d9a4fbb7b620c5546749d83728c2eea6398836f7559057e53bd"
+    },
+    {
+      "path": "scripts/measure-oci-dist.mjs",
+      "bytes": 4900,
+      "sha256": "213a822a441f86f8f897be854bd6464e8739cfb6d052ef35a374683e1d8a5ffa"
+    },
+    {
+      "path": "scripts/measure-oci-layer-files.py",
+      "bytes": 3741,
+      "sha256": "d616380dcdad3f1e97c92fbd0a33a256e63c58b83416fb1aec87e18859fe12fb"
+    },
+    {
+      "path": "scripts/measure-oci-manifest.py",
+      "bytes": 7054,
+      "sha256": "7cd592116c12e02332f460e8834bc4a6d36cce621ddde2304a20fd2f36c80ed6"
+    }
+  ],
+  "credentialPatternCounts": {
+    "githubCredential": 0,
+    "privateKey": 0,
+    "literalBearer": 0,
+    "urlCredential": 0
+  },
+  "reviewOperations": {
+    "readOnlyGitFetch": 1,
+    "githubPrMetadataRead": 1,
+    "dockerCalls": 0,
+    "npmCalls": 0,
+    "registryOrPackageCalls": 0,
+    "providerCalls": 0,
+    "databaseCalls": 0,
+    "productionCalls": 0,
+    "sourceEdits": 0
+  },
+  "limitations": [
+    "No fresh registry/image/layer download: checked committed JSON arithmetic and static producer code, not independent byte-for-byte replay of remote blobs.",
+    "Raw OCI index/manifest/config/history, full per-file inventories and local entrypoint/region/Python/bwrap stdout receipts are not committed in this 9-file change; explicit immutable identities and producer scripts permit later authorized reproduction.",
+    "Service import stopped at missing DATABASE_URL is not readiness.",
+    "Current exact-image results do not qualify a later combined image or prove retained third-party candidates unused."
+  ]
+}

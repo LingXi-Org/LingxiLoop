@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="38" failures="0" errors="0" skipped="0" time="136.472">
+  <testsuite name="e2e/chat-213/appearance.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="16.269">
+    <testcase name="chat controls and Chinese mentions (1440) [web]" classname="e2e/chat-213/appearance.e2e.ts" time="6.289"/>
+    <testcase name="chat controls and Chinese mentions (390) [web]" classname="e2e/chat-213/appearance.e2e.ts" time="4.116"/>
+    <testcase name="composer candidates, selected mentions and refreshed history preserve Chinese names and stable IDs [web]" classname="e2e/chat-213/appearance.e2e.ts" time="5.864"/>
+  </testsuite>
+  <testsuite name="e2e/web/activity-presentation.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="7.345">
+    <testcase name="Public activity presentation &gt; client public-receipt render budget [web]" classname="e2e/web/activity-presentation.e2e.ts" time="1.615"/>
+    <testcase name="Public activity presentation &gt; known aliases, persisted generic titles and distinct official cards 390 [web]" classname="e2e/web/activity-presentation.e2e.ts" time="2.892"/>
+    <testcase name="Public activity presentation &gt; known aliases, persisted generic titles and distinct official cards 1440 [web]" classname="e2e/web/activity-presentation.e2e.ts" time="2.838"/>
+  </testsuite>
+  <testsuite name="e2e/web/activity-regressions.e2e.ts" tests="5" failures="0" errors="0" skipped="0" time="12.257">
+    <testcase name="Activity integration regressions &gt; latest committed public explanation stays visible through the next tool and terminal history [web]" classname="e2e/web/activity-regressions.e2e.ts" time="2.714"/>
+    <testcase name="Activity integration regressions &gt; memory renders with the product context and reloads authorized history [web]" classname="e2e/web/activity-regressions.e2e.ts" time="3.234"/>
+    <testcase name="Activity integration regressions &gt; memory empty is explicit and recoverable [web]" classname="e2e/web/activity-regressions.e2e.ts" time="2.096"/>
+    <testcase name="Activity integration regressions &gt; memory loading is explicit and recoverable [web]" classname="e2e/web/activity-regressions.e2e.ts" time="2.181"/>
+    <testcase name="Activity integration regressions &gt; memory load-error is explicit and recoverable [web]" classname="e2e/web/activity-regressions.e2e.ts" time="2.032"/>
+  </testsuite>
+  <testsuite name="e2e/web/memory-privacy.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="29.873">
+    <testcase name="Official memory activity &gt; forget invalidates cards from two runs without receipt fallback [web]" classname="e2e/web/memory-privacy.e2e.ts" time="2.670"/>
+    <testcase name="Official memory activity &gt; memory activity, attention and forgetting (1440) [web]" classname="e2e/web/memory-privacy.e2e.ts" time="13.992"/>
+    <testcase name="Official memory activity &gt; memory activity, attention and forgetting (390) [web]" classname="e2e/web/memory-privacy.e2e.ts" time="13.211"/>
+  </testsuite>
+  <testsuite name="e2e/web/public-activity-history.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="3.794">
+    <testcase name="Public activity history &gt; a changed attention history resets the old offset without hiding current explanation or answer [web]" classname="e2e/web/public-activity-history.e2e.ts" time="2.169"/>
+    <testcase name="Public activity history &gt; the captured Worker final answer appears once while its durable source remains in history [web]" classname="e2e/web/public-activity-history.e2e.ts" time="1.625"/>
+  </testsuite>
+  <testsuite name="e2e/web/run-activity.e2e.ts" tests="7" failures="0" errors="0" skipped="0" time="26.402">
+    <testcase name="Public run activity &gt; native chronology, Markdown, attention and replay light 390 [web]" classname="e2e/web/run-activity.e2e.ts" time="4.300"/>
+    <testcase name="Public run activity &gt; native chronology, Markdown, attention and replay light 1440 [web]" classname="e2e/web/run-activity.e2e.ts" time="4.458"/>
+    <testcase name="Public run activity &gt; native chronology, Markdown, attention and replay dark 390 [web]" classname="e2e/web/run-activity.e2e.ts" time="4.529"/>
+    <testcase name="Public run activity &gt; native chronology, Markdown, attention and replay dark 1440 [web]" classname="e2e/web/run-activity.e2e.ts" time="4.687"/>
+    <testcase name="Public run activity &gt; long histories keep early calls and reveal all later calls [web]" classname="e2e/web/run-activity.e2e.ts" time="4.173"/>
+    <testcase name="Public run activity &gt; wire history pages replace the page while answer and attention stay visible [web]" classname="e2e/web/run-activity.e2e.ts" time="2.411"/>
+    <testcase name="Public run activity &gt; math fonts load through the production asset pipeline [web]" classname="e2e/web/run-activity.e2e.ts" time="1.844"/>
+  </testsuite>
+  <testsuite name="e2e/web/streaming-lifecycle.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="10.849">
+    <testcase name="Streaming Text lifecycle &gt; non-last Text immediately settles on cancelled [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="2.122"/>
+    <testcase name="Streaming Text lifecycle &gt; non-last Text immediately settles on error [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="2.175"/>
+    <testcase name="Streaming Text lifecycle &gt; reduced motion settles this part without retraction and a new part can stream [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="3.649"/>
+    <testcase name="Streaming Text lifecycle &gt; normal completion drains pending text and replaced history stays static [web]" classname="e2e/web/streaming-lifecycle.e2e.ts" time="2.903"/>
+  </testsuite>
+  <testsuite name="e2e/web/streaming-tail-window.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="6.205">
+    <testcase name="Whole text-part streaming tail &gt; inline boundaries preserve whitespace without counting it as a word [web]" classname="e2e/web/streaming-tail-window.e2e.ts" time="1.630"/>
+    <testcase name="Whole text-part streaming tail &gt; one word in a new block retains the preceding word across structural boundaries [web]" classname="e2e/web/streaming-tail-window.e2e.ts" time="2.466"/>
+    <testcase name="Whole text-part streaming tail &gt; visualize text slices share the original text-part window [web]" classname="e2e/web/streaming-tail-window.e2e.ts" time="2.109"/>
+  </testsuite>
+  <testsuite name="e2e/web/streaming-text.e2e.ts" tests="7" failures="0" errors="0" skipped="0" time="21.101">
+    <testcase name="Streaming renderer &gt; bursts reveal continuously and the tail settles (light) [web]" classname="e2e/web/streaming-text.e2e.ts" time="4.567"/>
+    <testcase name="Streaming renderer &gt; bursts reveal continuously and the tail settles (dark) [web]" classname="e2e/web/streaming-text.e2e.ts" time="4.358"/>
+    <testcase name="Streaming renderer &gt; completion drains pending text and cancellation clears decoration [web]" classname="e2e/web/streaming-text.e2e.ts" time="2.335"/>
+    <testcase name="Streaming renderer &gt; reduced motion preference bypasses the reveal queue [web]" classname="e2e/web/streaming-text.e2e.ts" time="1.451"/>
+    <testcase name="Official element integration &gt; same input retains upstream entry, color transition and caret styles [web]" classname="e2e/web/streaming-text.e2e.ts" time="2.487"/>
+    <testcase name="Official element integration &gt; Chinese and mixed leaves settle continuously without replaying stable blocks [web]" classname="e2e/web/streaming-text.e2e.ts" time="3.065"/>
+    <testcase name="Official element integration &gt; failure, replacement and history retain text without decoration [web]" classname="e2e/web/streaming-text.e2e.ts" time="2.838"/>
+  </testsuite>
+  <testsuite name="e2e/web/streaming-visualize-identity.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="2.377">
+    <testcase name="Visualize streaming identity &gt; new original activity part starts a fresh Visualize slice motion lifetime [web]" classname="e2e/web/streaming-visualize-identity.e2e.ts" time="2.377"/>
+  </testsuite>
+</testsuites>

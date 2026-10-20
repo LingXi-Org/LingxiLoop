@@ -1,0 +1,278 @@
+{
+  "reviewedAtUtc": "2026-10-20T09:44:41.024399+00:00",
+  "head": "6378f0545c00d86e61441b6a7b5929bb5f7d03ca",
+  "tree": "7e4ba5a5915a96f6640156e89bed8bc0c00a3e6a",
+  "base": "c6c47bddeabb4488f9fe93391f15c695a528260c",
+  "mergeBase": "c6c47bddeabb4488f9fe93391f15c695a528260c",
+  "changedFiles": [
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/README.md",
+      "bytes": 7081,
+      "sha256": "0da9d89db349c08271b84263c00f36f4c9d228145b5667cad6020fb350f33854"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/README.md",
+      "bytes": 1231,
+      "sha256": "b493a47e102cca8ec4846ecc94c5502845c1b6af2022a4fcf6850825ddf4c7c2"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/artifacts/official/streaming-text-official.e2e.ts__official_20Streaming_20text_20live_20reference-a0a95438/default/attempt-0/failure/screen.txt",
+      "bytes": 112,
+      "sha256": "d927afc527eb0bd312946bbca3f40e4672cce265a821ef539d1c021d621f391d"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/artifacts/official/streaming-text-official.e2e.ts__official_20Streaming_20text_20live_20reference-a0a95438/default/attempt-0/screenshots/001-failure.png",
+      "bytes": 6234,
+      "sha256": "11c65be8621548249d7515ef8dbba61003a8ca9520bd221f6208ccacd9772aa2"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/artifacts/official/streaming-text-official.e2e.ts__official_20Streaming_20text_20live_20reference-a0a95438/default/attempt-0/trace/trace.zip",
+      "bytes": 78131,
+      "sha256": "6de062b04676b801a445900efe14e2017212c3e2957369ab97fa57430b0642ef"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/artifacts/official/streaming-text-official.e2e.ts__official_20Streaming_20text_20live_20reference-a0a95438/default/attempt-0/video/video.webm",
+      "bytes": 4571,
+      "sha256": "9354e7d71e356a8abd1c0f572bbf883c2d2c7a58177298cb2e2df302fa941449"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/e2e.config.ts",
+      "bytes": 549,
+      "sha256": "0e7d26c3f0d94d67032b0d450fdb90aa9b5fdec6aff0b67413d49d0de4289277"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/junit.xml",
+      "bytes": 982,
+      "sha256": "050ccd0c1b3944f2c81be305f40c6a9ca9df2de03aa4f2df4e50926b6b713f29"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/package.json",
+      "bytes": 89,
+      "sha256": "5ebf1c533820e36ea0affe0f9fcb63ec9dfe8eed338f2490476e973f5e94e640"
+    },
+    {
+      "path": "docs/evidence/issues-214-217-218-current-main/official-live-blocked/report.json",
+      "bytes": 7682,
+      "sha256": "fcca9bd760c15f891ac47193c985dc3dbb01d2a79edb9fbf00d220b852059028"
+    }
+  ],
+  "onlyDocumentationChanged": true,
+  "rawRun": {
+    "id": "01a158aa-b5c8-7c93-b285-972be9835e39",
+    "status": "error",
+    "exitCode": 3,
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "startedAt": "2026-10-20T09:35:45.580Z",
+    "finishedAt": "2026-10-20T09:35:47.702Z",
+    "errorCode": "ENGINE_FAILURE",
+    "certAuthorityInvalid": true,
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "runtime": "node v24.19.0"
+  },
+  "artifacts": [
+    {
+      "kind": "log",
+      "sha256": "d927afc527eb0bd312946bbca3f40e4672cce265a821ef539d1c021d621f391d",
+      "bytes": 112,
+      "verified": true,
+      "originalRedactionStatus": "complete"
+    },
+    {
+      "kind": "screenshot",
+      "sha256": "11c65be8621548249d7515ef8dbba61003a8ca9520bd221f6208ccacd9772aa2",
+      "bytes": 6234,
+      "verified": true,
+      "originalRedactionStatus": "complete"
+    },
+    {
+      "kind": "video",
+      "sha256": "9354e7d71e356a8abd1c0f572bbf883c2d2c7a58177298cb2e2df302fa941449",
+      "bytes": 4571,
+      "verified": true,
+      "originalRedactionStatus": "incomplete"
+    },
+    {
+      "kind": "trace",
+      "sha256": "6de062b04676b801a445900efe14e2017212c3e2957369ab97fa57430b0642ef",
+      "bytes": 78131,
+      "verified": true,
+      "originalRedactionStatus": "not-required"
+    }
+  ],
+  "tracePrivacy": {
+    "networkRequests": 1,
+    "requestOrigin": "https://www.assistant-ui.com",
+    "requestPath": "/elements/streaming-text",
+    "queryParameters": 0,
+    "requestCookies": 0,
+    "responseCookies": 0,
+    "authorizationHeaders": 0,
+    "httpCredentialsPresent": false,
+    "storageStatePresent": false,
+    "ignoreHTTPSErrorsExplicitlyEnabled": false,
+    "credentialPatternMatches": 0,
+    "productionRequestMatches": 0,
+    "screencastFrames": 3,
+    "distinctScreencastImageHashes": 1,
+    "failureScreenshotVisuallyInspected": true,
+    "failureScreenshotBlank": true,
+    "videoDecodedFrames": 36,
+    "videoAllGrayscaleValues255": true
+  },
+  "sourceClaims": {
+    "deployedToMainChangedPaths": [
+      "deploy/komodo/lingxiloop-app-a/compose.yml",
+      "deploy/komodo/lingxiloop-app-b/compose.yml"
+    ],
+    "candidate": "3e49d9d48d9ea5df4bd8d07a2c758f5e8716cb50",
+    "verifiedUnchangedPaths": [
+      "src/components/assistant-ui/elements/streaming-text.tsx",
+      "src/components/assistant-ui/markdown-streaming.tsx",
+      "src/styles/chat.css",
+      "src/features/chat/visualize",
+      "src/lib/runActivity.ts",
+      "src/components/assistant-ui/elements/run-activity.tsx",
+      "src/components/assistant-ui/elements/memory-chips.tsx"
+    ],
+    "candidateRuntimePins": {
+      "package.json": "3.5.6",
+      "package-lock.json": "3.5.6",
+      "server/package.json": "3.5.6",
+      "server/package-lock.json": "3.5.6"
+    },
+    "originalOfficialTestSha256": "fa90927221f17005e79abebc6f1bb6100fd5cd8abfb5e5141be783794b26558a",
+    "executedCopiedTestRehash": "unavailable: temporary execution project no longer present; report/test location and repository digest checked",
+    "streamingHashes": [
+      {
+        "path": "third_party/assistant-ui/streaming-text/upstream/elements/streaming-text.tsx",
+        "sha256": "d7aec7e7ba1977105095ff2554d266e040a707eb60709535ae194a72db30592d"
+      },
+      {
+        "path": "third_party/assistant-ui/streaming-text/upstream/utils/range.ts",
+        "sha256": "3506d5f07865c042a4ef9b96904f687d19372a14e7dfccf946749860a3606182"
+      },
+      {
+        "path": "third_party/assistant-ui/streaming-text/LICENSE",
+        "sha256": "eafb05991a572efa34097474b31fef45b14a8879ed1d1a8fd77de62e6fa7d275"
+      }
+    ],
+    "zcodeManifestHashesMatched": 223,
+    "zcodeSkillFileCount": 24,
+    "knownActionMapRows": 97,
+    "knownActionMapMatches": true,
+    "historicalPerformanceAllMediansVerified": true,
+    "historicalColdScenarios": [
+      {
+        "cards": 1,
+        "scenario": "cold",
+        "before": {
+          "firstContentPaintMs": {
+            "medianMs": 1251.4,
+            "samplesMs": [
+              1348.2,
+              1251.4,
+              1215.6
+            ]
+          },
+          "allCardsReadyMs": {
+            "medianMs": 1251.4,
+            "samplesMs": [
+              1348.2,
+              1251.4,
+              1215.7
+            ]
+          },
+          "confirmedInteractionMedianMs": 3624.4
+        },
+        "after": {
+          "firstContentPaintMs": {
+            "medianMs": 1199.2,
+            "samplesMs": [
+              1199.2,
+              1064.6,
+              2118.5
+            ]
+          },
+          "allCardsReadyMs": {
+            "medianMs": 1199.3,
+            "samplesMs": [
+              1199.3,
+              1064.6,
+              2118.5
+            ]
+          },
+          "confirmedInteractionMedianMs": 3738
+        }
+      },
+      {
+        "cards": 3,
+        "scenario": "cold",
+        "before": {
+          "firstContentPaintMs": {
+            "medianMs": 2184.2,
+            "samplesMs": [
+              2184.2,
+              2090.6,
+              2349.8
+            ]
+          },
+          "allCardsReadyMs": {
+            "medianMs": 2300.4,
+            "samplesMs": [
+              2300.4,
+              2258.9,
+              2475.4
+            ]
+          },
+          "confirmedInteractionMedianMs": 4386.2
+        },
+        "after": {
+          "firstContentPaintMs": {
+            "medianMs": 1910.4,
+            "samplesMs": [
+              1951.2,
+              1578.1,
+              1910.4
+            ]
+          },
+          "allCardsReadyMs": {
+            "medianMs": 1941.7,
+            "samplesMs": [
+              2114.6,
+              1697.7,
+              1941.7
+            ]
+          },
+          "confirmedInteractionMedianMs": 3958.8
+        }
+      }
+    ]
+  },
+  "limitations": [
+    "No raw npm E401/Vite error log included in the 10 added files; retained as author-reported failure, not independently rerun or converted to a passing check.",
+    "No product browser acceptance in this run; public reference run is 0/1 and cannot accept #214/#217/#218.",
+    "No fresh provider, build, CI or production verification."
+  ],
+  "reviewOperations": {
+    "gitFetchExactHead": 1,
+    "newBrowserRuns": 0,
+    "providerRequests": 0,
+    "packageRequests": 0,
+    "npmCommands": 0,
+    "productionRequests": 0,
+    "sourceEdits": 0,
+    "branchChanges": 0
+  }
+}

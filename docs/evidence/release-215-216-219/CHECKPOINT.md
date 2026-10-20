@@ -1,4 +1,28 @@
-# Final combination and parallel acceptance handoff
+# Current integration checkpoint
+
+Updated2026-10-20 after formal3.5.8 qualification. The earlier checkpoint below
+is retained as history and its pending-package/browser/rehearsal statements are
+superseded by `formal358/README.md` and `runtime358/`.
+
+- LingxiOS main35ac1208 passed exact main release gates39400184326 and formal
+  publication39401752197. The four product manifests/locks pin3.5.8 and verified
+  registry integrity; all474 installed package files match the source candidate.
+- Formal package local checks:70/70 owning integration,34/34 migrations,69/69 Web,
+  118/118 server,21/21 natural teardown,53/53 maintenance contracts, types,
+  38/38 product browser and7/7 native editor browser.
+- Live provider:1 scenario/9 behaviors,39 observed200 calls with measured usage,
+  unchanged per-root budgets. Memory scopes/list/read/search and complete flow
+  timings are separately reported; the historical207-second Abort is unresolved.
+- Independently reviewed formal356→backup/restore→358/47→48 rehearsal passed5/5
+  phases, preserves old data and proves compatible fix-forward. PR234 and235
+  bounded evidence is integrated; #229 and unverified acceptance remain open.
+- Initial exact-head PR236 CI found two stale scope-contract tests. Independent
+  correction3aa256da passes4/4 with stricter privacy/revocation assertions; final
+  CI/image remain pending. No production writes have occurred; both Web/API
+  and Workers require the coordinator's outstanding maintenance confirmation.
+
+## Historical09:26 checkpoint
+
 
 Checkpoint: 2026-10-20 09:26 UTC. This is preparation, not a deployment receipt.
 Production maintenance is paused pending the requested downtime/risk confirmation.

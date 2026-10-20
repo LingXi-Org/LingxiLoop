@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="7" failures="0" errors="0" skipped="0" time="36.622">
+  <testsuite name="e2e/content-boundaries/browser.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="11.126">
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: plain [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="5.425"/>
+    <testcase name="legacy criteria keep separate native paragraphs on edit and reopen: multiline-literal [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="3.732"/>
+    <testcase name="private legacy recovery remains available after editing current content [native]" classname="e2e/content-boundaries/browser.e2e.ts" time="1.969"/>
+  </testsuite>
+  <testsuite name="e2e/content-editor/browser.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="25.496">
+    <testcase name="case GFM imports retain literal HTML text, currency and setext headings [native]" classname="e2e/content-editor/browser.e2e.ts" time="1.303"/>
+    <testcase name="upstream native schema, slash menus, tables, blocks, undo and lossless reopen [native]" classname="e2e/content-editor/browser.e2e.ts" time="4.295"/>
+    <testcase name="all 14 default blocks and official free math and diagram blocks remain insertable [native]" classname="e2e/content-editor/browser.e2e.ts" time="12.812"/>
+    <testcase name="native formatting, links, emoji, block menu and table operations remain complete [native]" classname="e2e/content-editor/browser.e2e.ts" time="7.086"/>
+  </testsuite>
+</testsuites>
