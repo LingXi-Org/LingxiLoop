@@ -1,10 +1,12 @@
-# Release coordination: issues 213–218
+# Release coordination: issues 213–219
 
 Baseline checked on 2026-10-20: product main
 `b7b165fd704f8d1f22fe8b70b47bfc8d70e02275`, deployed source
 `2ea8615c17c9ed11b769c83c699719dc01c11ee4`, published LingxiOS `3.5.6`,
 product migration 46. This is a delivery plan, not acceptance evidence.
-Issue 219 is requirements-only and is outside this implementation scope.
+The user's later instruction at 2026-10-20 02:24 UTC authorizes development of
+new issue 219, superseding its earlier requirements-only boundary. The original
+six workstreams continue; a separate author owns 219.
 
 ## Ownership and integration
 
@@ -14,6 +16,7 @@ Issue 219 is requirements-only and is outside this implementation scope.
 | 214 | Official StreamingText source, Chinese segmentation and Markdown integration; streaming-specific chat styles and fixtures | Own markdown-text streaming/rendering sections; preserve 213 mention renderer contract and 215 stable text-part IDs; do not replace the transport |
 | 215, 218 | Public commentary lifecycle and persistence; native projection/transport adapter; runActivity classification; NativeTool, MemoryTool and official component mapping | Own activity sections of ConversationThread; only minimal public runtime additions if existing 3.5.6 APIs cannot preserve published commentary; coordinate memory result shapes with 216 |
 | 216 | LingxiOS memory domains, extraction, indexing and forgetting; Loop memory authorization, actual course identity, embeddings configuration and product entrypoints | Own memory portions of runtime.ts; retain existing public operation cancellation/deadlines and shared ledger; coordinate MemoryTool display contract with 218 |
+| 219 | Case library and forum workflow/visual redesign; full official BlockNote editors for all rich text editing entrypoints | Preserve existing content, authorization and workflows; coordinate root dependency/lock changes and any migration with the integrator; provide same-viewport before/after and full editor save/reopen evidence |
 | Sole integrator | Final shared-file resolution, upstream release versions, exact package locks, product migration numbering, exact-commit review/CI, serialized rollout and acceptance | Authors provide draft PRs; no independent merge, package publish, deployment or issue closure |
 
 The next product migration number, **47**, is reserved for issue 216 if its
@@ -21,6 +24,9 @@ implementation needs a product migration. Issue 215 should first reuse existing
 durable public presentation/message storage. If evidence establishes additional
 DDL is necessary, the integrator assigns numbering against current main before
 either branch lands. Runtime schema migrations belong to the upstream repository.
+Issue 219 must report any actual DDL requirement before selecting a number; do not
+create migration 48 while 47 is absent. If independent UI/editor work requires no
+DDL, it can release before the memory wave without waiting on 216.
 
 The next formal runtime release number is allocated only by the integrator.
 Authors must not concurrently publish or tag competing 3.5.7 packages. Independent
@@ -37,6 +43,8 @@ release. Product locks must point to an actually published immutable package.
 2. Integrate public activity and tool cards, including replay/history and failure,
    cancellation, attention and final-answer visibility. Publish a runtime addition
    first only if the public contract requires it. Preserve exact package locks.
+   Case/forum work may form another independent UI wave when its full official
+   BlockNote integration and content roundtrip checks are complete.
 3. Deliver both phases of issue 216 together: stable ownership and current audience
    authorization, legacy migration, explicit committed facts, complete bounded
    long-message processing, actual configured semantic indexing/backfill, bounded
@@ -71,6 +79,10 @@ An older SQL observation does not satisfy a new migration gate. Existing fixed
 - Issue 216 proves actual model input and answer use committed facts, authorization
   and revocation, real-course boundaries, migration idempotency, long-message tail
   coverage, current semantic index/version, restart/retry and forget non-resurrection.
+- Issue 219 inventories every editor entrypoint and the selected official BlockNote
+  source/version, preserves its native menus/toolbars/block interactions, and proves
+  editing, save/reopen and existing-content compatibility. Audit actual flows before
+  redesign; compare representative content at matching desktop/mobile viewports.
 - Browser evidence uses tester-army/e2e and @e2e-dev/web. Preserve assertions and
   meaningful owning integration; no new skips or timeout increases to fake success.
 - Logs contain timings, counts and safe identifiers only; no memory bodies,
