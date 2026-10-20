@@ -1,0 +1,36 @@
+integration	Run npm run test:integration	2026-10-20T10:54:34.0414516Z # Subtest: production GLM worker preserves conversation continuity across repeated compaction
+integration	Run npm run test:integration	2026-10-20T10:54:34.0416091Z not ok 318 - production GLM worker preserves conversation continuity across repeated compaction
+integration	Run npm run test:integration	2026-10-20T10:54:34.0416750Z   ---
+integration	Run npm run test:integration	2026-10-20T10:54:34.0417020Z   duration_ms: 581.1054
+integration	Run npm run test:integration	2026-10-20T10:54:34.0417330Z   type: 'test'
+integration	Run npm run test:integration	2026-10-20T10:54:34.0418078Z   location: '/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/runtime-model-context.test.ts:1:772'
+integration	Run npm run test:integration	2026-10-20T10:54:34.0418910Z   failureType: 'testCodeFailure'
+integration	Run npm run test:integration	2026-10-20T10:54:34.0419423Z   error: 'listen EADDRINUSE: address already in use :::52992'
+integration	Run npm run test:integration	2026-10-20T10:54:34.0419892Z   code: 'EADDRINUSE'
+integration	Run npm run test:integration	2026-10-20T10:54:34.0420173Z   stack: |-
+integration	Run npm run test:integration	2026-10-20T10:54:34.0420579Z     Server.setupListenHandle [as _listen2] (node:net:1941:16)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0421073Z     listenInCluster (node:net:1998:12)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0421473Z     Server.listen (node:net:2103:7)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0422246Z     healthPort (/home/runner/work/LingxiLoop/LingxiLoop/node_modules/@lyyzka/lingxios/src/worker/worker.ts:104:22)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0423383Z     new Promise (<anonymous>)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0424089Z     AgentWorker.start (/home/runner/work/LingxiLoop/LingxiLoop/node_modules/@lyyzka/lingxios/src/worker/worker.ts:102:26)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0424713Z     process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0425303Z     async startLingxiOSWorker (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:240:9)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0426033Z     async TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/runtime-model-context.test.ts:74:14)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0426583Z     async Test.run (node:internal/test_runner/test:1054:7)
+integration	Run npm run test:integration	2026-10-20T10:54:34.0426837Z   ...
+integration	Run npm run test:integration	2026-10-20T10:54:36.7983295Z # {"ts":"2026-10-20T10:54:36.797Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-wu0mo","healthPort":29093,"maxConcurrentRuns":2}
+integration	Run npm run test:integration	2026-10-20T10:54:37.9941790Z # {"ts":"2026-10-20T10:54:37.993Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-wu0mo","timedOut":false}
+integration	Run npm run test:integration	2026-10-20T10:54:37.9979779Z # {"ts":"2026-10-20T10:54:37.994Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:905:22)\\n    at stopLingxiOSControl (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:187:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:263:5)\\n    at async TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+integration	Run npm run test:integration	2026-10-20T10:54:37.9988801Z # {"ts":"2026-10-20T10:54:37.997Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/node_modules/@lyyzka/lingxios/src/app/index.ts:905:22)\\n    at stopLingxiOSControl (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:187:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/home/runner/work/LingxiLoop/LingxiLoop/server/src/agent-runtime/runtime.ts:263:5)\\n    at async TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/runtime-nonthinking.test.ts:163:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+integration	Run npm run test:integration	2026-10-20T10:54:38.1098714Z # {"ts":"2026-10-20T10:54:38.109Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-wu0mo","healthPort":29093,"maxConcurrentRuns":2}
+integration	Run npm run test:integration	2026-10-20T10:55:32.9098372Z 1..353
+integration	Run npm run test:integration	2026-10-20T10:55:32.9098642Z # tests 353
+integration	Run npm run test:integration	2026-10-20T10:55:32.9098828Z # suites 0
+integration	Run npm run test:integration	2026-10-20T10:55:32.9098997Z # pass 339
+integration	Run npm run test:integration	2026-10-20T10:55:32.9099162Z # fail 1
+integration	Run npm run test:integration	2026-10-20T10:55:32.9099328Z # cancelled 0
+integration	Run npm run test:integration	2026-10-20T10:55:32.9099519Z # skipped 13
+integration	Run npm run test:integration	2026-10-20T10:55:32.9099709Z # todo 0
+integration	Run npm run test:integration	2026-10-20T10:55:32.9099896Z # duration_ms 466069.813194
+integration	Run npm run test:integration	2026-10-20T10:55:32.9266677Z ##[error]Process completed with exit code 1.
