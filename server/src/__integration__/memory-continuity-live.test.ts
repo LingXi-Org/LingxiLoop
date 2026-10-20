@@ -114,7 +114,7 @@ test('live native memory saves, recalls semantically and extracts long-source ta
     assert.ok(/周六|星期六/.test(bodies),'background captures the middle fact');assert.ok(/星河/.test(bodies),'background captures the tail fact')
     assert.ok(docs.some(doc=>doc?.sources.some(ref=>ref.workId===source.run.runId && ref.synthesisWorkId)),'facts came from durable background synthesis')
     phase='background-new-room'
-    const inherited=await turn('live-continuity-e','我正在筹备的数学科普活动叫什么名字，通常哪天做统计实验？请直接根据已保存资料回答，不询问补充信息。')
+    const inherited=await turn('live-continuity-e','我正在筹备的数学科普活动现用名称是什么，通常哪天做统计实验？请直接根据已保存资料只回答现用名称和时间，不补充历史名称，不询问补充信息。')
     assert.ok(/星河/.test(inherited.message.body) && /周六|星期六/.test(inherited.message.body),'new room uses complete background evidence')
     assert.ok(!/海洋/.test(inherited.message.body),'effective revision replaces the obsolete name')
     const forgotten=docs.find(doc=>doc?.body.includes('星河'));assert.ok(forgotten)

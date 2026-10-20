@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "provider": "scripted fixture; native compaction and PostgreSQL are real",
+  "compactions": 3,
+  "installed": 3,
+  "actualInputInjection": [
+    true,
+    true,
+    true,
+    true,
+    true
+  ]
+}

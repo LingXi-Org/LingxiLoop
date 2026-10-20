@@ -34,7 +34,7 @@ export async function forgetMemoryChip(memory: MemoryApi, identity: MemoryIdenti
 }
 
 /** Stable personal grants require a private current audience; session/role grants keep native IM partitioning. */
-export const resolveMemoryScopes: MemoryOptions['resolveScopes'] = async (identity, database, signal) => {
+export const resolveMemoryScopes: MemoryOptions['resolveScopes'] = async (identity, database, signal, operation) => {
   signal?.throwIfAborted()
   const db = database as Queryable
   const room = (await db.query<{ conversation_id: string; project_id:string|null; course_id:string|null; members:string[] }>(`SELECT r.conversation_id,c.project_id,course.id AS course_id,b.profile->'members' AS members
@@ -56,7 +56,9 @@ export const resolveMemoryScopes: MemoryOptions['resolveScopes'] = async (identi
       if (error instanceof ForbiddenError) throw new NoEffectError('memory source authorization was revoked', 'forbidden')
       throw error
     })
-  const writable=(await permissions.can({actorUserId:identity.principalId,companyId:identity.tenantId,
+  // Read calls still reauthorize both sides of retrieval, but need not resolve
+  // permissions for writes they cannot perform. Mutations resolve them anew.
+  const writable=operation==='read' ? false : (await permissions.can({actorUserId:identity.principalId,companyId:identity.tenantId,
     action:'agent_memory:write',resource:{type:'conversation',id:room.conversation_id}})).allowed
   const grants: Awaited<ReturnType<MemoryOptions['resolveScopes']>>=[]
   const privateAudience=Array.isArray(room.members) && room.members.length===2
@@ -74,9 +76,9 @@ export const resolveMemoryScopes: MemoryOptions['resolveScopes'] = async (identi
     // learner facts never enter this scope through automatic evidence capture.
     const humans=(await db.query<{id:string}>(`SELECT id FROM participants WHERE company_id=$1 AND kind='human'
       AND departed_at IS NULL AND id=ANY($2::text[])`,[identity.tenantId,room.members])).rows
-    for(const human of humans) await permissions.assertCan({actorUserId:human.id,companyId:identity.tenantId,
+    for(const human of humans.filter(human=>human.id!==identity.principalId)) await permissions.assertCan({actorUserId:human.id,companyId:identity.tenantId,
       projectId:room.project_id,action:'project:read',resource})
-    const manage=(await permissions.can({actorUserId:identity.principalId,companyId:identity.tenantId,
+    const manage=operation==='read' || operation==='capture' ? false : (await permissions.can({actorUserId:identity.principalId,companyId:identity.tenantId,
       projectId:room.project_id,action:'learning:manage',resource})).allowed
     grants.push({tenantId:identity.tenantId,scopeType:'course_shared',scopeId:courseKey,continuity:'course_shared',readOnly:!manage,explicitOnly:true})
   }

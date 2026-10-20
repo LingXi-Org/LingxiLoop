@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import {test} from 'node:test'
+import {after,test} from 'node:test'
 import {mkdir,writeFile} from 'node:fs/promises'
 import {createWorker} from '@lyyzka/lingxios/worker'
 import {createLingxiOS} from '@lyyzka/lingxios'
@@ -10,6 +10,8 @@ import {syncConversationPolicy} from '../agent-runtime/conversations.js'
 import {resolveMemoryScopes} from '../modules/memory/public.js'
 import {ensureSchemaOnce,resetAllTables,seedCompanyWithAgent,seedUserMembership,teardownAll} from './_helpers.js'
 import {installRecordingWukong} from './_recording-wukong.js'
+
+after(teardownAll)
 
 // Product behavior failures: private cross-room/Agent recall, real course binding,
 // recipient or membership widening, missing actual input injection, correction,
@@ -113,5 +115,54 @@ test('product stable memory crosses authorized rooms and Agents while current re
     await mkdir('artifacts/issue216',{recursive:true})
     await writeFile('artifacts/issue216/product-results.json',JSON.stringify({passed:true,provider:'scripted fixture; not live provider evidence',
       actualInputInjection:injected,checks:['cross-room','cross-thread','cross-Agent','queued-revision','real-course','cross-course','shared-audience','intervention','tenant','principal','proven-legacy-move','ambiguous-legacy-isolation','expired-legacy-isolation','group-legacy-isolation','correction-history','control-restart','forget-migrated','forget','Agent-revocation']},null,2))
-  } finally {await worker?.stop();await recording.close();await teardownAll()}
+  } finally {await worker?.stop();await stopLingxiOSControl();await recording.close()}
+})
+
+test('durable core survives repeated native compaction and a restarted control in a new room',{timeout:120000},async()=>{
+  await ensureSchemaOnce();await resetAllTables()
+  const recording=await installRecordingWukong()
+  let worker:ReturnType<typeof createWorker>|undefined
+  try {
+    const {companyId,projectId,agentId}=await seedCompanyWithAgent()
+    await seedUserMembership('test-owner',companyId)
+    let app=await lingxiOSControl(),serial=0,compactions=0
+    const fact='长期偏好：每次先列待办事项。',runs:string[]=[],injected:boolean[]=[]
+    const enqueue=async(room:string)=>{
+      const members=['test-owner',agentId]
+      await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members)
+        VALUES($1,$2,$3,'group','Compaction continuity',$4::jsonb) ON CONFLICT(id) DO NOTHING`,[room,companyId,projectId,JSON.stringify(members)])
+      await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb) ON CONFLICT(channel_id) DO NOTHING`,[room,companyId,JSON.stringify({channelType:2,members})])
+      const policy=await syncConversationPolicy(app,companyId,room)
+      const accepted=await app.conversations.ingest({tenantId:companyId,conversationId:room,policyVersion:policy.version,
+        messageId:`compact-${++serial}`,version:1,author:{id:'test-owner',kind:'human'},text:'继续说明练习过程。',mentions:[agentId]},
+        {mode:'execute',executionClass:'conversation',codeExecution:'disabled'})
+      const run=accepted.runs[0];assert.ok(run);await bindProductRun(pool,run,room);runs.push(run.runId)
+      return {...run,workId:run.runId,principalId:'test-owner'}
+    }
+    const first=await enqueue('compact-a'),personal=(await app.memory!.scopes(first)).find(scope=>scope.scopeType==='learner')!
+    const saved=(await app.memory!.apply(first,{scope:personal,idempotencyKey:'compact-save',sourceRef:'test-settings',changes:[{action:'create',
+      content:{path:'format.md',title:'Format',description:'Retained explicit preference',body:fact,layer:'core',locked:true}}]})).documents[0]!
+    const usage={available:true as const,inputTokens:100,outputTokens:100},model={modelId:'compaction-fixture',contextWindowTokens:200000,
+      async run(input:unknown){injected.push(JSON.stringify(input).includes(fact));const text='待办事项。普通练习过程。'.repeat(2000)
+        return {output:[{role:'assistant' as const,content:text}],text,model:'compaction-fixture',usage}},
+      async structured(){return {value:{missing:[]},model:'compaction-fixture',usage}},
+      async compact(){compactions++;return {value:JSON.stringify({observedResults:'练习过程已讨论。',decisions:'',remainingWork:'',uncertainties:''}),model:'compaction-fixture',usage}}}
+    worker=createWorker({controlPlane:app,worker:{id:'memory-compaction'},compaction:{softRatio:0.15,keepTailItems:0,maxSummaryChars:1024},model})
+    for(let index=0;index<4;index++){
+      const current=index ? await enqueue('compact-a') : first
+      assert.equal(await worker.runNext(),true)
+      assert.ok(await app.readMessage(current))
+    }
+    const installed=(await pool.query(`SELECT count(*)::int AS count FROM lingxios.agent_run_events WHERE run_id=ANY($1::text[]) AND kind='session.compacted'`,[runs])).rows[0].count
+    assert.ok(compactions>=2 && installed>=2,'at least two real native compactions installed; summary deliberately omits the core fact')
+    assert.equal((await app.memory!.read(first,personal,saved.id))?.body,fact)
+    await worker.stop();worker=undefined;await stopLingxiOSControl();app=await lingxiOSControl()
+    const next=await enqueue('compact-b')
+    worker=createWorker({controlPlane:app,worker:{id:'memory-compaction-restart'},model})
+    assert.equal(await worker.runNext(),true)
+    assert.equal((await app.memory!.read(next,personal,saved.id))?.body,fact)
+    assert.ok(injected.length===5 && injected.every(Boolean),'core is reread independently of the lossy continuity summary')
+    await mkdir('artifacts/issue216',{recursive:true})
+    await writeFile('artifacts/issue216/compaction-results.json',JSON.stringify({passed:true,provider:'scripted fixture; native compaction and PostgreSQL are real',compactions,installed,actualInputInjection:injected},null,2))
+  } finally {await worker?.stop();await stopLingxiOSControl();await recording.close()}
 })
