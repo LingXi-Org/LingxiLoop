@@ -31,6 +31,9 @@ export default defineConfig({
     ],
   },
   optimizeDeps: {
+    // Reference/evidence HTML is not an application entry. Scanning it resolves
+    // third-party aliases against this app and repeatedly invalidates the cache.
+    entries: ['index.html'],
     // Pre-bundle the yjs/prosemirror family as shared entries so every
     // tiptap extension chunk imports the SAME module instance (see
     // resolve.dedupe above — both are needed: dedupe fixes source-level

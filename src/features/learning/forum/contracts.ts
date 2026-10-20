@@ -1,3 +1,4 @@
+import type { ContentDocument } from '@/features/content-editor'
 export interface ForumAttachment { key: string; name: string }
 export type ForumTarget = 'post' | 'homework'
 export type ForumFilter = 'all' | 'assignment' | 'share'
@@ -7,6 +8,7 @@ export interface ForumItem {
   kind: 'share' | 'assignment'
   title: string
   body: string
+  editorDocument?: ContentDocument | null
   authorId: string
   authorName: string; authorAvatarUrl?: string | null
   createdAt: string
@@ -22,12 +24,12 @@ export interface ForumItem {
   commentCount: number
   reactions: { emoji: string; userIds: string[] }[]
 }
-export interface ForumComment { id: string; authorId: string; authorName: string; authorAvatarUrl?: string | null; body: string; links: string[]; attachments: ForumAttachment[]; createdAt: string }
+export interface ForumComment { id: string; authorId: string; authorName: string; authorAvatarUrl?: string | null; body: string; editorDocument?: ContentDocument | null; links: string[]; attachments: ForumAttachment[]; createdAt: string }
 export interface ForumPage<T> { items: T[]; nextOffset: number | null }
 export interface SubmissionVersion {
   conversationReferences:ConversationEvidence[]
   assessment:SubmissionAssessment|null
-  feedback: Array<{id: string; body: string; authorId: string; createdAt: string; kind: string; status: string}>
+  feedback: Array<{id: string; body: string; editorDocument?: ContentDocument | null; attachments?: ForumAttachment[]; links?: string[]; authorId: string; createdAt: string; kind: string; status: string}>
   id: string
   learnerId: string
   learnerName: string; learnerAvatarUrl?: string | null
@@ -38,6 +40,7 @@ export interface SubmissionVersion {
   agentWorkId: string | null
   late: boolean
   answer: string
+  editorDocument?: ContentDocument | null
   links: string[]
   attachments: ForumAttachment[]
 }

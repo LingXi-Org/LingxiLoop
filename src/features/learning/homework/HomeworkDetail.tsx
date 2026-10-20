@@ -1,3 +1,4 @@
+import { ForumBody } from '../forum/ForumBody'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,7 +33,7 @@ export function HomeworkDetail({ space, item, onChanged }: { space: LearningSpac
     {!detail && !error && <p role="status">正在加载作业…</p>}
     {homework && <>
       <section aria-label="作业要求" className="space-y-4">
-        <div className="space-y-2"><h3 className="font-semibold">验收标准</h3><ol className="list-decimal space-y-2 ps-5 text-sm">{homework.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ol></div>
+        <div className="space-y-2"><h3 className="font-semibold">验收标准</h3><>{homework.criteriaDocument ? <ForumBody content={homework.criteria.join("\n")} document={homework.criteriaDocument}/> : <ol className="list-decimal space-y-2 ps-5 text-sm">{homework.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ol>}</></div>
         {homework.dueAt && <p className="text-sm text-muted-foreground">截止：{new Date(homework.dueAt).toLocaleString('zh-CN')}。截止后仍可学习，提交会标记为迟交。</p>}
         {homework.status === 'CLOSED' && <Badge variant="outline">已关闭</Badge>}
       </section>

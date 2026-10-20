@@ -1,10 +1,11 @@
+import { optionalContentDocument } from '../content-editor/contracts.js'
 import { z } from 'zod'
 import { conversationReferencesSchema } from './forum-evidence.js'
 const id = z.string().trim().min(1).max(200)
 export const learningLinkSchema = z.string().trim().url().max(2048)
   .refine(value => ['http:', 'https:'].includes(new URL(value).protocol), 'HTTP or HTTPS link required')
 export const learningAttachmentSchema = z.object({ key: z.string().min(1).max(1024), name: z.string().trim().min(1).max(255) }).strict()
-export const learningContentFields = { links: z.array(learningLinkSchema).max(20).default([]), attachments: z.array(learningAttachmentSchema).max(20).default([]) }
+export const learningContentFields = { editorDocument: optionalContentDocument, links: z.array(learningLinkSchema).max(20).default([]), attachments: z.array(learningAttachmentSchema).max(20).default([]) }
 export const forumTargetSchema = z.enum(['post','homework'])
 export const forumQuerySchema = z.object({
   kind: z.enum(['all', 'assignment', 'share']).default('all'), search: z.string().trim().max(200).default(''),
@@ -28,7 +29,7 @@ export const forumFlagsSchema = z.object({ pinned: z.boolean().optional(), archi
 export const forumSubmissionSchema = z.object({
   answer: z.string().trim().max(20000).default(''), ...learningContentFields, idempotencyKey: id, conversationReferences: conversationReferencesSchema,
 }).strict().refine(value => Boolean(value.answer || value.links.length || value.attachments.length), 'submission content is required')
-export const forumFeedbackSchema = z.object({ body: z.string().trim().min(1).max(10000) }).strict()
+export const forumFeedbackSchema = z.object({ ...learningContentFields, body: z.string().trim().min(1).max(10000) }).strict()
 export type ForumTarget = z.infer<typeof forumTargetSchema>
 export type ForumCommentInput = z.input<typeof forumCommentSchema>
 export type LearningAttachment = z.infer<typeof learningAttachmentSchema>

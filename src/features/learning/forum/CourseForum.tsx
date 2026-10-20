@@ -1,3 +1,4 @@
+import { withTaskState } from '@/features/content-editor/document'
 import { createMemoNavigationState, resolveMemoDetailOrigin } from './memos/navigation'
 import { MemoDisplaySettings, useForumDisplay } from './memos/MemoDisplaySettings'
 import { checkAllTasks, uncheckAllTasks, toggleTaskAtLine } from './memos/markdown-task-actions'
@@ -21,12 +22,11 @@ import { homeworkApi } from '../homework/api'
 import { MemoDetail } from './memos/MemoDetail'
 import { useAuth } from '@/stores/auth'
 import type { LearningSpace } from '../contracts'
-import { DashboardSectionFrame } from '../dashboard/DashboardSectionFrame'
 import { forumApi } from './api'
 import type { ForumFilter, ForumItem } from './contracts'
 import { ForumComposer } from './ForumComposer'
 import { ForumFiles } from './ForumContentFields'
-import { ForumSidebar, forumSections, type ForumSection } from './ForumSidebar'
+import { ForumSidebar, type ForumSection } from './ForumSidebar'
 import { MemoCard } from './memos/MemoCard'
 import { MemoContent } from './memos/MemoContent'
 
@@ -131,27 +131,26 @@ export function CourseForum({ space }: { space: LearningSpace }) {
     if (useConversations.getState().projectId !== space.projectId || !useConversations.getState().list.some(item => item.id === agent.roomId)) throw new Error('404')
     useApp.getState().selectConversation(agent.roomId)
   })
-  const feedContent = <div ref={feed} hidden={Boolean(detailId)} className="min-w-0 space-y-5">
-      {space.canEditContent && <div className="flex justify-end"><Button variant="outline" disabled={busy} onClick={openHomework}>发布作业</Button></div>}
-        {canWrite && <ForumComposer key={`${space.companyId}:${userId}:${courseId}`} space={space} onCreated={() => { setKind('all'); setSearch(''); setTag(''); void load() }} />}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold">{forumSections.find(section => section.kind === kind)?.label}</h2>
-          <div className="relative min-w-0 flex-1 basis-48 @min-[40rem]/learning-grid:max-w-64"><SearchIcon aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground" /><Input type="search" style={{paddingInlineStart: '2.25rem'}} aria-label="搜索学习论坛" placeholder="搜索标题与内容" value={search} onChange={event => setSearch(event.target.value)} maxLength={200} /></div>
-        </div>
-      {tag && <Button variant="outline" size="sm" onClick={() => setTag('')}>#{tag} · 清除标签筛选</Button>}
-      <Button variant="ghost" size="sm" aria-pressed={archived} onClick={() => setArchived(value => !value)}>{archived ? '返回内容流' : '已归档'}</Button>
-      <MemoDisplaySettings value={display} onChange={setDisplay}/>
-      <SelectField ariaLabel="内容筛选" value={property} onValueChange={setProperty} options={[
-        {value:'all',label:'全部内容类型'},{value:'pinned',label:'已置顶'},{value:'attachments',label:'含附件'},
-        {value:'links',label:'含链接'},{value:'tasks',label:'含任务清单'},{value:'code',label:'含代码'}]}/>
+  const feedContent = <div ref={feed} hidden={Boolean(detailId)} className="min-w-0 space-y-3">
+      {!isMobile && <ForumSidebar kind={kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}}/>}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-40 flex-1"><SearchIcon aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" aria-label="搜索学习论坛" placeholder="搜索标题与内容" value={search} onChange={event=>setSearch(event.target.value)} maxLength={200}/></div>
+        <SelectField ariaLabel="内容筛选" value={property} onValueChange={setProperty} options={[
+          {value:'all',label:'全部类型'},{value:'pinned',label:'已置顶'},{value:'attachments',label:'含附件'},
+          {value:'links',label:'含链接'},{value:'tasks',label:'含任务清单'},{value:'code',label:'含代码'}]}/>
+        <MemoDisplaySettings value={display} onChange={setDisplay}/>
+        <Button variant="ghost" size="sm" aria-pressed={archived} onClick={()=>setArchived(value=>!value)}>{archived?'返回内容流':'已归档'}</Button>
+      </div>
+      {tag && <Button variant="outline" size="sm" onClick={()=>setTag('')}>#{tag} · 清除标签筛选</Button>}
+      {canWrite && <ForumComposer key={`${space.companyId}:${userId}:${courseId}`} space={space} onCreated={()=>{setKind('all');setSearch('');setTag('');void load()}}/>}
       {error && <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">{error}<Button variant="outline" size="sm" disabled={loading} onClick={() => void load()}>重试</Button></div>}
-      <div aria-busy={loading} data-forum-layout={display.columns} className={display.columns==='1'?"space-y-3":"grid items-start gap-3 "+(display.columns==='2'?"@min-[40rem]/learning-grid:grid-cols-2":display.columns==='3'?"@min-[40rem]/learning-grid:grid-cols-2 @min-[60rem]/learning-grid:grid-cols-3":"grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]")}>
+      <div aria-busy={loading} data-forum-layout={display.columns} className={display.columns==='1'?"forum-list divide-y":"grid items-start gap-3 "+(display.columns==='2'?"@min-[40rem]/learning-grid:grid-cols-2":display.columns==='3'?"@min-[40rem]/learning-grid:grid-cols-2 @min-[60rem]/learning-grid:grid-cols-3":"grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]")}>
         {loading && items.length === 0 && <div role="status" className="space-y-3"><span className="sr-only">正在加载学习论坛…</span>{[0, 1, 2].map(value => <Skeleton key={value} className="h-36 w-full rounded-lg motion-reduce:animate-none" />)}</div>}
         {!loading && !error && items.length === 0 && <p className="py-6 text-sm text-muted-foreground">没有符合条件的内容。</p>}
         {items.map(item => <MemoCard key={`${item.targetType}:${item.id}`} label={item.title} author={item.authorName} authorId={item.authorId} authorAvatarUrl={item.authorAvatarUrl} createdAt={display.timeBasis==='updated'?item.updatedAt:item.createdAt} pinned={item.pinned} search={search}
           actions={<><Badge variant="secondary">{kindLabels[item.kind]}</Badge><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" disabled={busy} aria-label={`管理：${item.title}`}><MoreHorizontalIcon /></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
             {item.targetType === 'post' && item.authorId === userId && <DropdownMenuItem onSelect={() => setEditing(item)}>编辑内容</DropdownMenuItem>}
-            {item.targetType === 'post' && item.authorId === userId && uncheckAllTasks(item.body) !== checkAllTasks(item.body) && <DropdownMenuItem onSelect={() => void mutate(() => forumApi.update(courseId,item,{...item,body:checkAllTasks(item.body) === item.body ? uncheckAllTasks(item.body) : checkAllTasks(item.body)}))}>{checkAllTasks(item.body) === item.body ? '重置任务清单' : '完成全部任务'}</DropdownMenuItem>}
+            {item.targetType === 'post' && item.authorId === userId && uncheckAllTasks(item.body) !== checkAllTasks(item.body) && <DropdownMenuItem onSelect={() => void mutate(() => forumApi.update(courseId,item,{...item,body:checkAllTasks(item.body) === item.body ? uncheckAllTasks(item.body) : checkAllTasks(item.body),editorDocument:withTaskState(item.editorDocument,checkAllTasks(item.body) === item.body ? uncheckAllTasks(item.body) : checkAllTasks(item.body))}))}>{checkAllTasks(item.body) === item.body ? '重置任务清单' : '完成全部任务'}</DropdownMenuItem>}
             {space.canEditContent && <DropdownMenuItem onSelect={() => void mutate(() => forumApi.flags(courseId,item,{ pinned: !item.pinned }))}>{item.pinned ? '取消置顶' : '置顶'}</DropdownMenuItem>}
             {(space.canEditContent || item.authorId === userId) && <DropdownMenuItem onSelect={() => void mutate(() => forumApi.flags(courseId,item,{ archived: !item.archived }))}>{item.archived ? '取消归档' : '归档'}</DropdownMenuItem>}
             <DropdownMenuItem onSelect={() => openDetail(item)}>打开内容</DropdownMenuItem>
@@ -163,7 +162,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
           {editing?.id === item.id ? <ForumComposer key={`edit:${item.id}`} space={space} item={item} onCreated={() => { setEditing(null); void load() }} onCancel={() => setEditing(null)} /> : <>
           <h3 className="text-base font-semibold leading-6"><a href={`/?${new URLSearchParams({project:space.projectId,view:'forum',post:item.id,type:item.targetType})}`} onClick={event=>{if(!event.metaKey&&!event.ctrlKey&&!event.shiftKey&&event.button===0){event.preventDefault();openDetail(item)}}} className="rounded-sm focus-visible:outline-2 focus-visible:outline-ring">{item.title}</a></h3>
           <div data-slot="memo-body" className={`relative w-full min-w-0 flex flex-col items-start gap-2 ${display.compact || display.columns!=='1' ? 'max-h-72 overflow-hidden [mask-image:linear-gradient(black_80%,transparent)]' : ''}`}>
-            {item.body && <MemoContent content={item.body} onTaskToggle={item.targetType === 'post' && item.authorId === userId && canWrite && !busy && !item.archived ? line=>void mutate(()=>forumApi.update(courseId,item,{...item,body:toggleTaskAtLine(item.body,line)})) : undefined} />}
+            {item.body && <MemoContent content={item.body} onTaskToggle={item.targetType === 'post' && item.authorId === userId && canWrite && !busy && !item.archived ? line=>void mutate(()=>forumApi.update(courseId,item,{...item,body:toggleTaskAtLine(item.body,line),editorDocument:withTaskState(item.editorDocument,toggleTaskAtLine(item.body,line))})) : undefined} />}
             <ForumFiles links={item.links} attachments={item.attachments} />
           </div>
           {(display.compact || display.columns!=='1') && <Button variant="link" size="sm" onClick={()=>openDetail(item)}>展开内容</Button>}
@@ -188,17 +187,12 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   const content=<>{feedContent}{detailId && (detailError ? <div role="alert">{detailError}<Button variant="link" onClick={closeDetail}>返回学习论坛</Button></div> : discussion?.id===detailId
     ? <MemoDetail key={`${discussion.targetType}:${discussion.id}`} space={space} item={discussion} from={resolveMemoDetailOrigin(history.state,`/?${new URLSearchParams({project:space.projectId,view:'forum'})}`)} onBack={closeDetail} onChanged={()=>void load()}/>
     : <p role="status">正在加载内容…</p>)}</>
-  if (isMobile) return <section className="flex h-full min-h-0 flex-col bg-background">
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
-      <ForumSidebar kind={kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}} />
-      <h1 className="min-w-0 flex-1 truncate text-sm font-semibold">{space.title} · 学习论坛</h1>
+  return <section className="@container/learning-grid flex h-full min-h-0 flex-col bg-background">
+    <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-3 border-b px-4 sm:px-6">
+      {isMobile && <ForumSidebar kind={kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}}/>}
+      <h1 className="text-lg font-semibold">论坛</h1><span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{space.title}</span>
+      {space.canEditContent && <Button variant="outline" size="sm" disabled={busy} onClick={openHomework}>发布作业</Button>}
     </header>
-    <div data-forum-scroll className="min-h-0 flex-1 overflow-y-auto px-4 pb-8 pt-3"><div data-ui-page="forum">{content}</div></div>
+    <div data-forum-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain"><div data-ui-page="forum" className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6">{content}</div></div>
   </section>
-  return <DashboardSectionFrame space={space} section="forum">
-    <div data-ui-page="forum" className="mx-auto grid w-full max-w-6xl grid-cols-[16rem_minmax(0,1fr)] gap-6 @min-[56rem]/learning-grid:gap-10">
-      <ForumSidebar kind={kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}} />
-      {content}
-    </div>
-  </DashboardSectionFrame>
 }

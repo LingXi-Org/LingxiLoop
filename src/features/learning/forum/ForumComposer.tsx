@@ -34,7 +34,7 @@ export function ForumComposer({ space, item, onCreated, onCancel }: { space: Lea
     <header className="forum-focus-head">
     <div className="forum-focus-author">
     {user&&<ForumAvatar userId={user.id} name={user.name} url={user.avatarUrl}/>}
-    <div hidden={!expanded} className="min-w-0"><span className="block truncate text-sm font-semibold">{user?.name}</span><span className="text-xs text-muted-foreground">本课程成员可见</span></div>
+    <div hidden={!expanded} className="min-w-0"><span className="block truncate text-sm font-semibold">{user?.name}</span></div>
     </div>
     <div className="forum-focus-head-actions">
       {expanded&&<Button type="button" variant="ghost" size="icon-sm" aria-label={focus?"退出专注模式":"专注模式"} aria-pressed={focus} onClick={()=>setFocus(value=>!value)}>{focus?<Minimize2Icon/>:<Maximize2Icon/>}</Button>}
@@ -53,10 +53,10 @@ export function ForumComposer({ space, item, onCreated, onCancel }: { space: Lea
   </section></div>
 }
 function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onCancel}: {space:LearningSpace;kind:'share'|'assignment';item?:ForumItem;expanded:boolean;onExpand():void;onWorking(value:boolean):void;onCreated():void;onCancel?():void}) {
-  const initial = item ? { body:item.body,links:item.links.join('\n'),attachments:item.attachments,title:item.title,tags:item.tags.join(','),sourceId:item.sourceId ?? 'none',dueAt:item.dueAt ? new Date(new Date(item.dueAt).getTime()-new Date(item.dueAt).getTimezoneOffset()*60000).toISOString().slice(0,16) : '' }
+  const initial = item ? { body:item.body,editorDocument:item.editorDocument,links:item.links.join('\n'),attachments:item.attachments,title:item.title,tags:item.tags.join(','),sourceId:item.sourceId ?? 'none',dueAt:item.dueAt ? new Date(new Date(item.dueAt).getTime()-new Date(item.dueAt).getTimezoneOffset()*60000).toISOString().slice(0,16) : '' }
     : { ...emptyContent,title:'',tags:'',sourceId:'none',dueAt:'' }
   const {draft,setDraft,discard,storageError}=useForumDraft(`${item ? `edit:${item.id}` : 'post'}:${space.courseId}:${kind}`,composerDraftSchema,initial)
-  const {title,body,tags,links,attachments,sourceId,dueAt}=draft
+  const {title,body,tags,links,attachments,sourceId,dueAt,editorDocument}=draft
   const [sources,setSources]=useState<KnowledgeSource[]>([]), [busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[error,setError]=useState('')
   useEffect(()=>{
     let active=true
@@ -71,7 +71,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     if(disabled||!space.courseId) return
     setBusy(true);setError('')
     try {
-      const data={kind,title:title.trim() || body.trim().split('\n')[0].slice(0,200) || '附件讨论',body,
+      const data={kind,title:title.trim() || body.trim().split('\n')[0].slice(0,200) || '附件讨论',body,editorDocument,
         tags:[...new Set([...tags.split(/[,，]/),...Array.from(body.matchAll(/(?:^|\s)#([^\s#]+)/gu),match=>match[1])].map(value=>value.trim()).filter(Boolean))].slice(0,10),
         links:contentLinks(links),attachments,sourceId:sourceId==='none'?null:sourceId,dueAt:kind==='assignment'&&dueAt?new Date(dueAt).toISOString():null}
       if(item) await forumApi.update(space.courseId,item,data)
@@ -81,8 +81,10 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     } catch(reason){setError(userFacingError(reason,'发布失败，输入与附件已保留，请重试。'))}
     finally{setBusy(false)}
   }}>
+    {!expanded&&<button type="button" onClick={onExpand} className="w-full truncate rounded-sm px-2 py-2 text-start text-sm text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring">{body.trim().split('\n')[0] || '发起讨论…'}</button>}
+    <div hidden={!expanded}>
     {kind==='assignment'&&<div hidden={!expanded} className="forum-focus-assignment space-y-2"><Label htmlFor={`forum-title-${item?.id ?? kind}`}>作业标题</Label><Input id={`forum-title-${item?.id ?? kind}`} value={title} onChange={e=>setDraft(previous=>({...previous,title:e.target.value}))} maxLength={200} required disabled={disabled}/></div>}
-    <ForumContentFields focusCanvas compact={!expanded} onFocus={onExpand} body={body} setBody={body=>setDraft(previous=>({...previous,body}))} links={links} setLinks={links=>setDraft(previous=>({...previous,links}))}
+    <ForumContentFields focusCanvas compact={!expanded} onFocus={onExpand} body={body} editorDocument={draft.editorDocument} setBody={(body,editorDocument)=>setDraft(previous=>({...previous,body,editorDocument}))} links={links} setLinks={links=>setDraft(previous=>({...previous,links}))}
       attachments={attachments} setAttachments={attachments=>setDraft(previous=>({...previous,attachments}))} disabled={disabled} onUploading={setUploading} tags={tags.split(/[,，]/).filter(Boolean)}/>
     <div hidden={!expanded}>
     <details className="forum-focus-extras"><summary className="cursor-pointer rounded focus-visible:outline-2">{kind==='assignment'?'截止时间、标签与引用':'标签与作业资料引用'}</summary><div className="forum-focus-extra-fields">
@@ -97,6 +99,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
       {item&&<Button type="button" variant="ghost" onClick={onCancel} disabled={disabled}>收起编辑</Button>}
       <Button type="submit" disabled={disabled || (kind==='assignment'&&!title.trim()) || (!body.trim()&&!links.trim()&&!attachments.length)}>{uploading?'上传中…':busy?'发布中…':item?'保存修改':kind==='assignment'?'发布作业':'发布'}</Button>
     </footer>
+    </div>
     </div>
   </form>
 }

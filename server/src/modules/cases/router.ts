@@ -5,7 +5,7 @@ import { safe } from '../../http/async-handler.js'
 import { requireCompany } from '../../http/request-context.js'
 import { storage } from '../../storage.js'
 import { CasesApplication } from './application.js'
-import { caseContentSchema,caseSaveSchema,caseVersionSchema,caseImageSchema } from './contracts.js'
+import { caseContentSchema,caseSaveSchema,caseVersionSchema,caseImageSchema,caseFileSchema } from './contracts.js'
 export const casesRouter = Router()
 const app = new CasesApplication(pool, { transaction: work => withTransaction(pool,work), putObject: async (key,body,mime) => { await storage.put(key,body,mime) } })
 casesRouter.get('/cases',safe(async (req,res) => { res.json(await app.list(await requireCompany(req),typeof req.query.q==='string'?req.query.q:'',typeof req.query.category==='string'?req.query.category:'')) }))
@@ -15,4 +15,5 @@ casesRouter.put('/cases/:id',safe(async (req,res) => { const {version,...content
 for (const [path,method] of [['publish','publish'],['unpublish','unpublish'],['retry-index','retry']] as const) {
   casesRouter.post(`/cases/:id/${path}`,safe(async (req,res) => { const {version}=caseVersionSchema.parse(req.body); res.json(await app[method](await requireCompany(req),String(req.params.id),version)) }))
 }
+casesRouter.post('/cases/:id/files',safe(async (req,res) => { const {mime,data}=caseFileSchema.parse(req.body); res.status(201).json(await app.uploadFile(await requireCompany(req),String(req.params.id),mime,data)) }))
 casesRouter.post('/cases/:id/images',safe(async (req,res) => { const {mime,data}=caseImageSchema.parse(req.body); res.status(201).json(await app.uploadImage(await requireCompany(req),String(req.params.id),mime,data)) }))

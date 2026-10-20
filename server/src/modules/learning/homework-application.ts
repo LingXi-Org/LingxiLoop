@@ -10,7 +10,7 @@ import { unavailableAttachmentIds } from '../../agent-runtime/attachments.js'
 import type { LearningScope } from './contracts.js'
 import { LearningApplicationError } from './errors.js'
 import { enqueueLearningEffect } from './effects-repository.js'
-import { assertOwnedLearningAttachments } from './submission-attachments.js'
+import { assertDocumentAttachments, assertOwnedLearningAttachments } from './submission-attachments.js'
 import { homeworkEvidenceAvailable, readHomeworkReportEvidence, readHomeworkMaterials } from './homework-effects.js'
 import { homeworkAssessmentSchema, homeworkDeadlineSchema, homeworkDraftSchema, homeworkEditSchema, homeworkPublishSchema,
   homeworkReportSchema, homeworkReviewSchema, homeworkRevisionSchema, homeworkSaveAnswerSchema, homeworkShareSchema,
@@ -26,9 +26,10 @@ export class HomeworkApplication {
     await this.transaction(async db=>{
       const project=await homeworkScope(db,scope,courseId,'manage')
       await assertOwnedLearningAttachments(db,scope,data.attachments)
-      await db.query(`INSERT INTO homeworks(id,company_id,project_id,course_id,created_by,title,instructions,criteria,links,attachments,due_at,visible_hash)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12)`,
-      [id,scope.companyId,project.projectId,courseId,scope.userId,data.title,data.instructions,JSON.stringify(data.criteria),JSON.stringify(data.links),JSON.stringify(data.attachments),data.dueAt,homeworkHash(data)])
+      assertDocumentAttachments(data.attachments, data.editorDocument, data.criteriaDocument)
+      await db.query(`INSERT INTO homeworks(id,company_id,project_id,course_id,created_by,title,instructions,criteria,links,attachments,due_at,visible_hash,editor_document,criteria_document)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12,$13::jsonb,$14::jsonb)`,
+      [id,scope.companyId,project.projectId,courseId,scope.userId,data.title,data.instructions,JSON.stringify(data.criteria),JSON.stringify(data.links),JSON.stringify(data.attachments),data.dueAt,homeworkHash(data),JSON.stringify(data.editorDocument ?? null),JSON.stringify(data.criteriaDocument ?? null)])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.validate',effectKey:id,payload:{homeworkId:id,revision:1,userId:scope.userId}})
     })
     return this.detail(scope,courseId,id)
@@ -51,9 +52,10 @@ export class HomeworkApplication {
       if(hw.status!=='DRAFT') throw new LearningApplicationError('conflict','已发布的要求不可修改，请关闭后创建新版作业')
       assertHomeworkRevision(hw.revision,expectedRevision)
       await assertOwnedLearningAttachments(db,scope,data.attachments)
+      assertDocumentAttachments(data.attachments, data.editorDocument, data.criteriaDocument)
       await db.query(`UPDATE homeworks SET title=$3,instructions=$4,criteria=$5::jsonb,links=$6::jsonb,attachments=$7::jsonb,due_at=$8,
-        visible_hash=$9,revision=revision+1,validation_status='PENDING',validated_revision=NULL,validation_feedback='',materials='[]',updated_at=NOW()
-        WHERE company_id=$1 AND id=$2`,[scope.companyId,id,data.title,data.instructions,JSON.stringify(data.criteria),JSON.stringify(data.links),JSON.stringify(data.attachments),data.dueAt,homeworkHash(data)])
+        visible_hash=$9,editor_document=$10::jsonb,criteria_document=$11::jsonb,revision=revision+1,validation_status='PENDING',validated_revision=NULL,validation_feedback='',materials='[]',updated_at=NOW()
+        WHERE company_id=$1 AND id=$2`,[scope.companyId,id,data.title,data.instructions,JSON.stringify(data.criteria),JSON.stringify(data.links),JSON.stringify(data.attachments),data.dueAt,homeworkHash(data),JSON.stringify(data.editorDocument ?? null),JSON.stringify(data.criteriaDocument ?? null)])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.validate',effectKey:id,payload:{homeworkId:id,revision:hw.revision+1,userId:scope.userId}})
     })
     return this.detail(scope,courseId,id)
@@ -132,6 +134,7 @@ export class HomeworkApplication {
       if(view.status==='PASSED') throw new LearningApplicationError('conflict','作业已通过，需教师退回后才可修改')
       assertHomeworkRevision(state.answer_revision,expectedRevision)
       await assertOwnedLearningAttachments(db,scope,answer.attachments)
+      assertDocumentAttachments(answer.attachments, answer.editorDocument)
       await db.query(`UPDATE homework_learner_state SET answer=$4::jsonb,answer_revision=answer_revision+1,report=NULL,report_status='NONE',report_feedback='',updated_at=NOW()
         WHERE company_id=$1 AND homework_id=$2 AND learner_id=$3`,[scope.companyId,id,scope.userId,JSON.stringify(answer)])
       if(view.hasLearningRecord && view.canSubmit && (answer.text.trim() || answer.links.length || answer.attachments.length)) {
@@ -338,9 +341,11 @@ export class HomeworkApplication {
       if(!state.latest_submission_id||state.latest_submission_id!==data.expectedSubmissionId) throw new LearningApplicationError('conflict','学生已更新提交，请先查看最新版本')
       const view=await studentHomeworkView(db,hw,state,{readLearningRecord:false})
       if(view.status===data.decision) return
+      await assertOwnedLearningAttachments(db,scope,data.attachments)
+      assertDocumentAttachments(data.attachments, data.editorDocument)
       if(data.decision==='PASSED'&&view.status!=='PENDING') throw new LearningApplicationError('conflict','只能验收当前待批阅的提交')
-      await db.query(`INSERT INTO homework_teacher_decisions(id,company_id,homework_id,learner_id,submission_id,teacher_id,decision,reason,evidence_revision,return_epoch,created_at)
-        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,clock_timestamp())`,[randomUUID(),scope.companyId,id,data.learnerId,state.latest_submission_id,scope.userId,data.decision,data.reason,state.evidence_revision,state.return_epoch])
+      await db.query(`INSERT INTO homework_teacher_decisions(id,company_id,homework_id,learner_id,submission_id,teacher_id,decision,reason,evidence_revision,return_epoch,editor_document,attachments,links,created_at)
+        VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13::jsonb,clock_timestamp())`,[randomUUID(),scope.companyId,id,data.learnerId,state.latest_submission_id,scope.userId,data.decision,data.reason,state.evidence_revision,state.return_epoch,JSON.stringify(data.editorDocument ?? null),JSON.stringify(data.attachments),JSON.stringify(data.links)])
       if(data.decision==='RETURNED') {
         const latest=state.agent_id&&state.channel_id?await getAgentChannelHistory({companyId:scope.companyId,agentId:state.agent_id,channelId:state.channel_id,limit:1}):[]
         const sequence=Math.max(0,...(latest??[]).map(message=>message.messageSeq))
