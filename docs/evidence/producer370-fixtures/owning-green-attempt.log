@@ -19,9 +19,9 @@ not ok 1 - published runtime sends available-only context and preserves truthful
   failureType: 'testCodeFailure'
   error: |-
     The expression evaluated to a falsy value:
-    
+
       assert.ok(ledger.calls > 0 && ledger.measured)
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: true

@@ -35,10 +35,10 @@ not ok 2 - slow auxiliary generation preserves measured usage, receipts and the 
   error: |-
     Expected values to be strictly equal:
     + actual - expected
-    
+
     + 'failed'
     - 'succeeded'
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 'succeeded'
@@ -74,10 +74,10 @@ not ok 3 - slow auxiliary generation preserves measured usage, receipts and the 
   error: |-
     Expected values to be strictly equal:
     + actual - expected
-    
+
     + 'failed'
     - 'succeeded'
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 'succeeded'
@@ -119,10 +119,10 @@ not ok 4 - production GLM worker preserves conversation continuity across repeat
   error: |-
     Model returned an invalid response format
     + actual - expected
-    
+
     + 'failed'
     - 'succeeded'
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 'succeeded'

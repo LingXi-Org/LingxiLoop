@@ -33,3 +33,5 @@ node server/run-integration-tests.mjs --file available-capabilities.test.ts --fi
 npm run server:typecheck
 node node_modules/@biomejs/biome/bin/biome lint server/src/__integration__/available-capabilities.test.ts server/src/__integration__/runtime-auxiliary-latency.test.ts server/src/__integration__/runtime-model-context.test.ts server/src/__integration__/runtime-nonthinking.test.ts
 ```
+
+Log lines in `local-red.log` and `owning-green-attempt.log` have trailing spaces removed only, so repository whitespace checks remain clean. Original bytes remain in commit `366888d4c574e1f60551c9d99ea54fc8afc99d1a`; `final-checks.json` records their original SHA256 separately. No outcome, diagnostic or exit code was removed. The earlier source-only diff check did not include then-untracked evidence logs; the final complete candidate check covers both source and evidence.

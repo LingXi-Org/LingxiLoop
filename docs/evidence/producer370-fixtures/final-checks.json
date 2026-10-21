@@ -13,12 +13,12 @@
     "biome-final.log": "b34a3e8f3f7c13ae177b8bf4fd4a0d0a6813f995e601056773b0fb4766b67d86",
     "ci-red.json": "7c2f38e8cb21a08f24e94b095ccb0d46342630ba6f02969737d0f25c2c4825dc",
     "lint.log": "980190ee62bcab643d8ec3089a72154d7a22d6bad5242604f09719758b0f05b5",
-    "local-red.log": "8b797681d6ee141497ee0f72b66a4c3688cd0e59b33e3df5796aa06bb3b137d0",
+    "local-red.log": "321016a4ecd7ea20b37e13b4c352ea2bf24c74bee29dd6534acaf1e4c4ecd225",
     "migration.log": "811d3e18d78bb8fa684a605f738433d007412b3b955a0080ce4a376ac036fdee",
-    "README.md": "e2906535f74f3267c2a160e0fb34e04e0f22e3358bb86be9b4d298bcec86f837",
+    "README.md": "fcccc6b0d18b10a82ce036a8bbd1eff593c52d57aa4b595cb4d95a09b4768a4a",
     "typecheck-final.log": "ff738a6a090d25f8a0c97f5425bada4eff4aea1ea1548c95a91486351a10749b",
     "typecheck.log": "ff738a6a090d25f8a0c97f5425bada4eff4aea1ea1548c95a91486351a10749b",
-    "owning-green-attempt.log": "a3367d910d9012b4cb366e7d771317074fee1279e95825f58f0db373a11d8b19",
+    "owning-green-attempt.log": "70d30d81069ff598bcbe64f00d85006b8254cedd1245e4312cf33df19c149d19",
     "fixture-results.json": "50f5123c8e2b62c63036eaf144a5f0acbb86c5a7e6d2ad3c43e555ce10a1d17f",
     "available-owning.log": "ddc4fa558c1492c9156f79e64a048dcbabe7a0801feaaa61dde0e0cf03b2b07f"
   },
@@ -48,5 +48,9 @@
     "productionChanges": false,
     "liveProvider": false,
     "rejectedResourceRetried": false
+  },
+  "rawLogSha256At366888d4": {
+    "local-red.log": "8b797681d6ee141497ee0f72b66a4c3688cd0e59b33e3df5796aa06bb3b137d0",
+    "owning-green-attempt.log": "a3367d910d9012b4cb366e7d771317074fee1279e95825f58f0db373a11d8b19"
   }
 }
