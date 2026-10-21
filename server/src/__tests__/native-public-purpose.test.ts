@@ -58,3 +58,43 @@ test('explicit failed answer becomes history when the next declared attempt begi
     ['Abandoned answer','commentary'],['Retry status','commentary'],
   ])
 })
+
+
+test('first declared commentary and successive answer chunks stay correctly visible before stream EOF',{timeout:3000},async()=>{
+  let source!:ReadableStreamDefaultController<Uint8Array>
+  const input=new ReadableStream<Uint8Array>({start(controller){source=controller}})
+  const response=assistantRunResponse(input,new RunStreamProjection('run',true))
+  const reader=AssistantStream.fromResponse(response,new AssistantTransportDecoder()).getReader()
+  const tracker=new AssistantTransportDeltaTracker()
+  const send=(frame:object)=>source.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(frame)}\n\n`))
+  const untilText=async(text:string)=>{
+    while(true){
+      const next=await reader.read()
+      assert.equal(next.done,false,'the requested text must arrive before EOF')
+      if(next.value!.type!=='update-state')continue
+      tracker.append(next.value!.operations)
+      const snapshot=structuredClone(tracker.state) as unknown as AgentRunSnapshot
+      if(snapshot.message.content.some(part=>part.type==='text'&&part.text===text))return snapshot.message
+    }
+  }
+  try{
+    send({type:'state',state})
+    send({type:'event',event:delta(1,'commentary','The observed step is pending.')})
+    const first=await untilText('The observed step is pending.')
+    assert.equal(first.status?.type,'running')
+    assert.equal(activityAnnotation(first.content.find(part=>part.type==='text'&&part.text==='The observed step is pending.')!)?.kind,'commentary')
+    assert.equal(first.content.some(part=>activityAnnotation(part)?.kind==='answer'),false)
+    send({type:'event',event:delta(2,'answer','First substantive result.')})
+    const answer=await untilText('First substantive result.')
+    const firstAnswer=answer.content.find(part=>part.type==='text'&&part.text==='First substantive result.')!
+    assert.equal(activityAnnotation(firstAnswer)?.kind,'answer')
+    const continuation=delta(3,'answer',' Additional supporting detail.')
+    send({type:'event',event:{...continuation,data:{...continuation.data,chunkIndex:1}}})
+    const continued=await untilText('First substantive result. Additional supporting detail.')
+    const answerPart=continued.content.find(part=>part.type==='text'&&part.text==='First substantive result. Additional supporting detail.')!
+    assert.equal(continued.status?.type,'running')
+    assert.equal(activityAnnotation(answerPart)?.kind,'answer')
+    assert.equal(activityAnnotation(answerPart)?.id,activityAnnotation(firstAnswer)?.id)
+    assert.equal(continued.content.filter(part=>activityAnnotation(part)?.kind==='answer').length,1)
+  }finally{source.close();await reader.cancel();reader.releaseLock()}
+})
