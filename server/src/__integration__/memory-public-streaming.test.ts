@@ -107,8 +107,9 @@ test('memory public content crosses provider, durable ledger and SSE before tool
     assert.equal(commentary?.type === 'text' && commentary.text, first + second)
     assert.doesNotMatch(JSON.stringify(frames), /PRIVATE_REASONING_SENTINEL/)
     assert.deepEqual(providerErrors, [])
-    assert.ok(instructions.includes('Before calling tools for a user-requested task, emit a brief user-facing text'), 'assembled prompt must request public content before tools')
-    assert.ok(instructions.includes('When the human explicitly asks to inspect memory'), 'explicit memory inspection must allow a public explanation')
+    assert.ok(instructions.includes('publish concise process/status updates and intended checks in the user’s language through chat.report_progress'), 'assembled prompt must route process updates through the progress tool')
+    assert.ok(instructions.includes('Keep substantive explanations and answers streaming in ordinary assistant content as they become available'), 'substantive answers must remain live in ordinary response text')
+    assert.ok(instructions.includes('briefly report the authorized lookup through chat.report_progress when available before calling memory tools, then stream only requested, authorized findings in ordinary answer text'), 'memory inspection must separate process from authorized findings')
     assert.equal(instructions.includes('Keep memory contents and maintenance internal;'), false, 'blanket memory silence must not override explicit inspection')
     await mkdir('artifacts/issue245', { recursive: true })
     await writeFile('artifacts/issue245/memory-public-streaming.json', JSON.stringify({ passed: true, runtime: releaseVersions.runtime,

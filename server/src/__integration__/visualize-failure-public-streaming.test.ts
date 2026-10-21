@@ -105,8 +105,10 @@ test('visualization failure retains real public content through provider, durabl
     assert.equal(commentary?.type === 'text' && commentary.text, first + second)
     assert.doesNotMatch(JSON.stringify(frames), /PRIVATE_REASONING_SENTINEL/)
     assert.deepEqual(providerErrors, [])
-    assert.ok(instructions.includes('Before calling tools for a user-requested task, emit a brief user-facing text'), 'assembled prompt must request public content before tools')
-    assert.ok(instructions.includes('Before generating a long HTML fragment'), 'visualize authoring must request real text before long tool arguments')
+    assert.ok(instructions.includes('publish concise process/status updates and intended checks in the user’s language through chat.report_progress'), 'assembled prompt must route process updates through the progress tool')
+    assert.ok(instructions.includes('Keep substantive explanations and answers streaming in ordinary assistant content as they become available'), 'substantive answers must remain live in ordinary response text')
+    assert.ok(instructions.includes('Publish process updates, intended checks and observed task transitions through chat.report_progress when available'), 'visualize authoring must use explicit process reports')
+    assert.ok(instructions.includes('If a call fails, report only the observed failure and next concrete action through chat.report_progress'), 'visualize failures must not be repeated in ordinary answer text')
     await mkdir('artifacts/feedback261', { recursive: true })
     await writeFile('artifacts/feedback261/visualize-failure-public-streaming.json', JSON.stringify({ passed: true, runtime: releaseVersions.runtime,
       realWorker: true, realPostgres: true, publishedOpenAIDriver: true, localProvider: true, productionRequests: 0,
