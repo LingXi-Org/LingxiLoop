@@ -121,6 +121,6 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
       </div> : <p className="text-muted-foreground">选择步骤查看耗时、用量与公开详情。</p>}
     </div>
     <p className="text-muted-foreground border-t border-border/40 px-3 py-2 text-[10px] leading-relaxed">{trace.timingBasis === 'execution' ? '时间相对运行实际开始时刻；模型区间包含准入与用量结算。' : '时间相对运行创建时刻。'}记录未提供的起止时间、子任务或定价显示未知。{trace.limitations.includes('presentation-unavailable') && '用量记录暂不可用。'}</p>
-    {trace.truncated && <p className="px-3 pb-2 text-[10px] text-muted-foreground">仅显示最近 100 个步骤；合计未知。</p>}
+    {trace.truncated && <p className="px-3 pb-2 text-[10px] text-muted-foreground">仅显示部分步骤；合计未知。</p>}
   </section>
 }

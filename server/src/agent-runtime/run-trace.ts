@@ -16,6 +16,12 @@ function status(lifecycle: RunView['lifecycle']): TraceStatus {
     : lifecycle === 'succeeded' ? 'complete' : lifecycle === 'cancelled' ? 'cancelled' : lifecycle === 'failed' ? 'error' : 'unknown'
 }
 
+export function nativeTraceMatchesState(snapshot: import('@lyyzka/lingxios').RunTraceSnapshot,view: Pick<RunView,'runId'|'fence'|'requestVersion'|'lifecycle'>): boolean {
+  const root = snapshot.spans.find(span=>span.spanId === snapshot.rootSpanId && span.kind === 'agent' && span.runId === view.runId)
+  return snapshot.runId === view.runId && snapshot.fence === view.fence && snapshot.requestVersion === view.requestVersion
+    && (root?.state === 'failed' ? 'error' : root?.state) === status(view.lifecycle)
+}
+
 /** Only existing public tool displays and the scoped product usage ledger enter this DTO.
  * Native events have no timestamp; their seq/arrival time is never a clock. */
 export function buildRunTrace(input: { runId: string; createdAt: string; lifecycle: RunView['lifecycle'];
@@ -64,7 +70,7 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
   const spans = new Map<string,TraceSpan>()
   let truncated = snapshot.truncated
   for (const item of snapshot.spans) {
-    const tool = item.runId === snapshot.runId ? tools.find(tool => tool.toolCallId === item.toolCallId) : undefined
+    const tool = item.runId === snapshot.runId ? tools.find(tool => tool.toolCallId === item.toolCallId && tool.eventSeq === item.seq) : undefined
     const parsed = toolDisplaySchema.safeParse(tool?.display)
     const display = parsed.success ? parsed.data : toolDisplay(item.name ?? '',item.state === 'complete' ? 'completed' : item.state)
     const detail = item.kind === 'llm' ? '模型调用：包含准入、请求与用量结算。' : item.kind === 'agent'

@@ -55,7 +55,14 @@ test('native persisted execution trace crosses product history/SSE with exact re
     assert.ok(native?.origin)
     assert.ok(native.spans.some(span=>span.kind === 'llm' && span.startedAt !== null && span.completedAt !== null && span.usageAvailable))
     assert.ok(native.spans.some(span=>span.kind === 'tool' && span.state === 'complete' && span.completedAt !== null))
-    const history = (await readRunProjection(app,identity,false)).snapshot
+    const readTrace = app.readRunTrace
+    let viewerReads = 0
+    app.readRunTrace = (...args: Parameters<typeof readTrace>) => { viewerReads++; return readTrace(...args) }
+    const deliveryProjection = await readRunProjection(app,identity,false)
+    assert.equal(viewerReads,0,'default/shared delivery projection does not read or persist viewer-only native descendants')
+    assert.equal(runTraceSchema.parse(deliveryProjection.snapshot.message.metadata.custom.runTrace).revision,undefined)
+    const history = (await readRunProjection(app,identity,false,undefined,undefined,undefined,true)).snapshot
+    assert.equal(viewerReads,1)
     const trace = runTraceSchema.parse(history.message.metadata.custom.runTrace)
     assert.equal(trace.startedAt,native.origin); assert.equal(trace.revision,native.revision)
     assert.equal(trace.timingBasis,'execution'); assert.ok(trace.root.children.some(span=>span.kind === 'llm' && span.start !== null && span.end !== null))

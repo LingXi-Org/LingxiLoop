@@ -18,7 +18,7 @@ const state = (version = 1,fence = 1) => ({ type: 'state' as const,state: { run:
   createdAt: new Date(900).toISOString(),availableAt: '',heartbeatAt: null,lastProgressAt: null,goalOutcome: null,error: null },message: null,delivery: null } })
 const trace = (projection: RunStreamProjection) => runTraceSchema.parse(projection.snapshot.message.metadata.custom.runTrace)
 test('public native hierarchy, actual origin and measured usage survive DTO replay without private payloads', () => {
-  const value = buildNativeRunTrace(snapshot(),[{ type: 'tool-call',toolCallId: 'host:tool',toolName: 'documents.read',argsText: 'PRIVATE_ARGS',args: { private: true },
+  const value = buildNativeRunTrace(snapshot(),[{ type: 'tool-call',toolCallId: 'host:tool',toolName: 'documents.read',eventSeq: 1,argsText: 'PRIVATE_ARGS',args: { private: true },
     result: { private: 'PRIVATE_RESULT' },display: { title: '阅读文档',purpose: '读取授权内容。',summary: '已读取。' } }])
   assert.equal(value.startedAt,1000); assert.equal(value.queuedAt,900); assert.equal(value.timingBasis,'execution')
   const child = value.root.children.find(item=>item.kind === 'agent')!
@@ -27,6 +27,11 @@ test('public native hierarchy, actual origin and measured usage survive DTO repl
   assert.equal(value.root.children.find(item=>item.kind === 'tool')!.end,null)
   assert.doesNotMatch(JSON.stringify(value),/PRIVATE|principal|session|opaque-call/)
   assert.deepEqual(runTraceSchema.parse(JSON.parse(JSON.stringify(value))),JSON.parse(JSON.stringify(value)))
+  const replay = snapshot()
+  replay.spans.push({ ...replay.spans.find(item=>item.kind === 'tool')!,spanId: 'later-tool',fence: 2,seq: 8,state: 'complete',completedAt: 1400 })
+  const receipts = buildNativeRunTrace(replay,[{ type: 'tool-call',toolCallId: 'host:tool',toolName: 'documents.read',eventSeq: 8,argsText: '{}',args: {},display: { title: '阅读文档',purpose: '读取授权内容。',summary: '最新回执已完成。' } }])
+  assert.equal(receipts.root.children.find(item=>item.id === 'tool')!.output,undefined)
+  assert.equal(receipts.root.children.find(item=>item.id === 'later-tool')!.output,'最新回执已完成。')
 })
 test('trace frames replace metadata, clear unavailable descendants and totals, and reject a superseded request', () => {
   const projection = new RunStreamProjection('run',false)
@@ -48,6 +53,7 @@ test('trace frames replace metadata, clear unavailable descendants and totals, a
   projection.apply({ type: 'trace',runId: 'run',trace: current })
   const cancelled = state(2)
   projection.apply({ ...cancelled,state: { ...cancelled.state,run: { ...cancelled.state.run,status: 'cancelled' } } })
+  projection.apply({ type: 'trace',runId: 'run',trace: current })
   assert.equal(trace(projection).root.status,'cancelled'); assert.equal(trace(projection).root.children.length,0,'old running clocks stop until a current receipt is available')
 })
 test('new events downgrade coverage until a full current replacement; truncation and unknown fields never become zero', () => {

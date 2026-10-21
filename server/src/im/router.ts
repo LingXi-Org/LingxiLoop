@@ -212,7 +212,7 @@ imRouter.get('/channels/:id/agents/:agentId/runs/:runId', safe(async (req, res) 
   const state = await app.readRunState(runIdentity)
   if (!state) { res.status(404).json({ error: 'run not found' }); return }
   const permission = await permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: sessionId } })
-  const projection = await readRunProjection(app,runIdentity,permission.allowed)
+  const projection = await readRunProjection(app,runIdentity,permission.allowed,undefined,undefined,undefined,true)
   res.json(activityOffset === undefined ? projection.snapshot : projection.activityPage(activityOffset, attentionOnly === '1'))
 }))
 

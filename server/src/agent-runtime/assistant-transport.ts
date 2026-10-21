@@ -8,7 +8,7 @@ import { archivedPublicText, runMessageParts, runMessageStatus, harnessToolParts
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { readOptionalTraceActivity } from './tool-activity.js'
-import { buildRunTrace,buildNativeRunTrace,type PublicLlmTrace } from './run-trace.js'
+import { buildRunTrace,buildNativeRunTrace,nativeTraceMatchesState,type PublicLlmTrace } from './run-trace.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import type { Queryable } from '../db/queryable.js'
@@ -60,9 +60,8 @@ export class RunStreamProjection {
     if (this.nativeTrace && this.view.lastSeq > this.nativeTrace.seq) this.nativeTraceAvailable = false
     if (item.type === 'trace') {
       this.nativeTraceReadRevision++
-      if (item.trace && (item.trace.runId !== this.view.runId || item.trace.fence !== this.view.fence || item.trace.requestVersion !== this.view.requestVersion)) return
-      this.nativeTrace = item.trace
-      this.nativeTraceAvailable = item.trace !== null && item.trace.seq >= this.view.lastSeq
+      this.nativeTrace = item.trace && nativeTraceMatchesState(item.trace,this.view) ? item.trace : null
+      this.nativeTraceAvailable = this.nativeTrace !== null && this.nativeTrace.seq >= this.view.lastSeq
     }
     if (this.view.lifecycle !== 'leased' || this.view.fence !== before.fence
       || this.view.requestVersion !== before.requestVersion || this.view.messageFence === this.view.fence) this.durableDraft = ''
@@ -89,8 +88,8 @@ export class RunStreamProjection {
     const version = ++this.nativeTraceReadRevision, view = this.view
     let trace: RunTraceSnapshot | null = null
     try { trace = await api.readRunTrace(identity,{ signal,deadlineAt: new Date(Date.now()+500).toISOString() }) } catch { /* Optional metadata: unavailable, never cached totals. */ }
-    if (signal?.aborted || version !== this.nativeTraceReadRevision || view.fence !== this.view.fence || view.requestVersion !== this.view.requestVersion) return
-    this.nativeTrace = trace && trace.runId === this.view.runId && trace.fence === this.view.fence && trace.requestVersion === this.view.requestVersion ? trace : null
+    if (signal?.aborted || version !== this.nativeTraceReadRevision || view.fence !== this.view.fence || view.requestVersion !== this.view.requestVersion || view.lifecycle !== this.view.lifecycle) return
+    this.nativeTrace = trace && nativeTraceMatchesState(trace,this.view) ? trace : null
     this.nativeTraceAvailable = this.nativeTrace !== null && this.nativeTrace.seq >= this.view.lastSeq
   }
 
@@ -230,7 +229,8 @@ export class RunStreamProjection {
   }
 }
 
-export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal, database?: Queryable, operation?: RuntimeOperationContext, includeTrace = true) {
+/** Native descendant traces are viewer-only: opt in at an authorized read, never durable IM delivery. */
+export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal, database?: Queryable, operation?: RuntimeOperationContext, includeTrace = false) {
   const state = await api.readRunState(identity,operation)
   if (!state) throw new Error('run not found')
   const projection = new RunStreamProjection(identity.runId,canControl,identity)
