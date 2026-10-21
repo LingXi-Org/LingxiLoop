@@ -1,5 +1,5 @@
 {
-  "implementationCommit": "87bac5844e8cf351383c02a89dc700965238d3e0",
+  "implementationCommit": "18c88ae0",
   "baseCommit": "d601b461fbde5da05bc94b27d8dae565935de21c",
   "files": [
     {
@@ -8,11 +8,11 @@
     },
     {
       "file": "src/components/trace-waterfall/TimelineRowMetrics.tsx",
-      "sha256": "5d6a83bbfbbc559cb380bb7744f2d6daad1bf7b2f0536519c225d113b7a388c5"
+      "sha256": "cb8e470308aa05807131d05108768b6cff83f8aa9f63755973dc96b36bc8565b"
     },
     {
       "file": "src/components/trace-waterfall/trace-waterfall.tsx",
-      "sha256": "a97f63d6264da9a2d8736a916dc87da6677a38f0eb4ab5247ef82b541e239697"
+      "sha256": "1c0c1669629a5d3255df19f4aad221670263011857cb8321e2644f7dd4ab0183"
     },
     {
       "file": "src/components/assistant-ui/elements/run-activity.tsx",
@@ -48,7 +48,8 @@
     },
     {
       "file": "e2e/web/run-trace.e2e.ts",
-      "sha256": "b1d7caf031c36c1f522a238008aa96fdcbfbd21eae3e4ec77e398a8e2e9430f2"
+      "sha256": "1726cabe2693d38026bf48785532d8421a20078e742af92720ad9d848b93c3e5"
     }
-  ]
+  ],
+  "initialImplementationCommit": "87bac5844e8cf351383c02a89dc700965238d3e0"
 }

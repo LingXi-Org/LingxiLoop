@@ -1,0 +1,47 @@
+
+> lingxiloop@0.1.0-beta test:e2e:web
+> cross-env E2E_TELEMETRY_DISABLED=1 E2E_PROJECT=web node e2e/web/run.mjs e2e/web/run-trace.e2e.ts --grep light 1440 --output .e2e/issue283-geometry-red
+
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-trace
+      run 01a15f4a-b3f6-7f1d-adc8-51d350523801 · targets: web
+
+ ❯ |web| e2e/web/run-trace.e2e.ts (1 test | 1 failed) 19.04s
+   × Open-source run trace > trace tree, metrics, safe details and replay light 1440 19.04s
+     → expect.toBeVisible failed
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| e2e/web/run-trace.e2e.ts > Open-source run trace > trace tree, metrics, safe details and replay light 1440
+ASSERTION_FAILED: expect.toBeVisible failed
+locator: locator("[data-trace-slowest]")
+expected: visible
+observed: no node (match count 0)
+ ❯ e2e/web/run-trace.e2e.ts:21:5
+     19|     await browser.locator('[data-slot="run-activity"] button').first(…
+     20|     await expect(screen.getByRole('region','运行瀑布图')).toBeVisible()
+     21|     await expect(browser.locator('[data-trace-slowest]')).toBeVisible…
+       |     ^
+     22|     await screen.getByRole('button','查看 阅读文档 详情').tap()
+     23|     await expect(screen.getByText('公开文档名',{exact:true})).toBeVisible()
+ ❯ at http://127.0.0.1:5180/e2e/native-streaming.html
+ ❯ screen .e2e/issue283-geometry-red/artifacts/web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-3dcd60d9/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 0 passed (1)
+      Tests  1 failed | 0 passed (1)
+   Start at  16:28:14
+   Duration  19.83s
+     Report  .e2e/issue283-geometry-red/report.json
+
+      JUnit  .e2e/issue283-geometry-red/junit.xml
+   Markdown  .e2e/issue283-geometry-red/summary.md
+   Failures  .e2e/issue283-geometry-red/failures/ (1 page)
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "report-1",
   "run": {
-    "id": "01a15f43-2e61-72cf-8683-d49089cc0d6e",
+    "id": "01a15f4e-7337-7a5d-bc6b-65355f0a32d0",
     "specVersion": "0.1",
     "runner": {
       "name": "e2e",
@@ -9,8 +9,8 @@
     },
     "status": "passed",
     "exitCode": 0,
-    "startedAt": "2026-10-21T16:20:01.369Z",
-    "finishedAt": "2026-10-21T16:20:43.312Z",
+    "startedAt": "2026-10-21T16:32:19.806Z",
+    "finishedAt": "2026-10-21T16:32:54.653Z",
     "project": {
       "id": "lingxiloop-web",
       "configDigest": "d99dda1c13e9f9af72a3e35acf37465c8f826f6bf3aa8885e12f0492b9401a4a"
@@ -23,7 +23,7 @@
       "runtime": "node v24.19.0"
     },
     "vcs": {
-      "commit": "d601b461fbde5da05bc94b27d8dae565935de21c",
+      "commit": "b3722138cf7f354be25ec702591e93875a858b37",
       "branch": "feat/issue283-open-run-waterfall",
       "dirty": true
     },
@@ -3208,37 +3208,50 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e",
+            "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-21T16:20:02.080Z",
-            "durationMs": 9802,
+            "startedAt": "2026-10-21T16:32:20.342Z",
+            "durationMs": 7189,
             "artifacts": [
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:artifact:0",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a15f43-33a0-7b18-8091-b44f621b4b8e:24"
+                  "stepId": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:25"
                 },
                 "path": "web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-14f9bf20/default/attempt-0/screenshots/001-run-trace-light-390.png",
-                "size": 46682,
-                "sha256": "1531404743513b84d57b582d5bca1722c5d550da108f7530712c607320de981e"
+                "size": 48769,
+                "sha256": "5c6f28e46c203c9306d88c89fd59379c76d2a445ed4c35e46a06b9767a354035"
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:27"
+                },
+                "path": "web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-14f9bf20/default/attempt-0/screenshots/002-run-trace-collapsed-light-390.png",
+                "size": 45895,
+                "sha256": "6c96616f008721ceb096395fc17ba8dce502bcdeab9c2b743353360fb53a3335"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:0",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:0",
                 "index": 0,
                 "kind": "resource",
                 "api": "browser.setViewport",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:02.199Z",
+                "startedAt": "2026-10-21T16:32:20.448Z",
                 "durationMs": 1,
                 "events": [],
                 "artifacts": [],
@@ -3249,291 +3262,240 @@
                 },
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 8,
+                  "line": 13,
                   "column": 19
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:1",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:1",
                 "index": 1,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/native-streaming.html",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:02.201Z",
-                "durationMs": 3325,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 9,
-                  "column": 15
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:2",
-                "index": 2,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:05.528Z",
-                "durationMs": 9,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 11,
-                  "column": 19
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:3",
-                "index": 3,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:05.538Z",
-                "durationMs": 27,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:4",
-                "index": 4,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最终正文\")",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:05.567Z",
-                "durationMs": 240,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 13,
-                  "column": 57
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:5",
-                "index": 5,
-                "kind": "locator",
-                "api": "locator.press",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:05.807Z",
-                "durationMs": 229,
+                "startedAt": "2026-10-21T16:32:20.449Z",
+                "durationMs": 1947,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 14,
-                  "column": 72
+                  "column": 15
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:6",
-                "index": 6,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:06.037Z",
-                "durationMs": 17,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 15,
-                  "column": 54
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:7",
-                "index": 7,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最慢调用\")",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:06.054Z",
-                "durationMs": 14,
+                "startedAt": "2026-10-21T16:32:22.396Z",
+                "durationMs": 7,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 16,
-                  "column": 57
+                  "column": 19
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:8",
-                "index": 8,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"查看 阅读文档 详情\")",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:06.068Z",
-                "durationMs": 165,
+                "startedAt": "2026-10-21T16:32:22.403Z",
+                "durationMs": 23,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 17,
-                  "column": 51
+                  "line": 15,
+                  "column": 44
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:9",
-                "index": 9,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:4",
+                "index": 4,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
-                "label": "getByText(\"公开文档名\")",
+                "label": "getByText(\"最终正文\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:06.233Z",
-                "durationMs": 30,
+                "startedAt": "2026-10-21T16:32:22.428Z",
+                "durationMs": 131,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 18,
-                  "column": 58
+                  "column": 57
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:10",
-                "index": 10,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:5",
+                "index": 5,
                 "kind": "locator",
                 "api": "locator.press",
-                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:06.264Z",
-                "durationMs": 105,
+                "startedAt": "2026-10-21T16:32:22.559Z",
+                "durationMs": 138,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 19,
-                  "column": 49
+                  "column": 72
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:11",
-                "index": 11,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:6",
+                "index": 6,
                 "kind": "assertion",
-                "api": "expect.not.toBeVisible",
-                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:06.369Z",
-                "durationMs": 1071,
+                "startedAt": "2026-10-21T16:32:22.698Z",
+                "durationMs": 13,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 20,
-                  "column": 64
+                  "column": 54
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:12",
-                "index": 12,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"展开 合成子任务\")",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-trace-slowest]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:07.440Z",
-                "durationMs": 205,
+                "startedAt": "2026-10-21T16:32:22.711Z",
+                "durationMs": 9,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 21,
-                  "column": 49
+                  "column": 59
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:13",
-                "index": 13,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"查看 阅读文档 详情\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:07.646Z",
-                "durationMs": 28,
+                "startedAt": "2026-10-21T16:32:22.720Z",
+                "durationMs": 170,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 22,
-                  "column": 60
+                  "column": 51
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:14",
-                "index": 14,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"公开文档名\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:07.738Z",
-                "durationMs": 375,
+                "startedAt": "2026-10-21T16:32:22.890Z",
+                "durationMs": 61,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 23,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:22.952Z",
+                "durationMs": 54,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 24,
-                  "column": 19
+                  "column": 49
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:15",
-                "index": 15,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.132Z",
-                "durationMs": 17,
+                "startedAt": "2026-10-21T16:32:23.007Z",
+                "durationMs": 1040,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
+                  "line": 25,
+                  "column": 64
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:16",
-                "index": 16,
-                "kind": "assertion",
-                "api": "expect.toHaveAttribute",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"展开 合成子任务\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.150Z",
-                "durationMs": 66,
+                "startedAt": "2026-10-21T16:32:24.047Z",
+                "durationMs": 90,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 26,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:24.137Z",
+                "durationMs": 138,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 27,
-                  "column": 65
+                  "column": 60
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:17",
-                "index": 17,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:14",
+                "index": 14,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.231Z",
-                "durationMs": 371,
+                "startedAt": "2026-10-21T16:32:24.287Z",
+                "durationMs": 359,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -3543,31 +3505,31 @@
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:18",
-                "index": 18,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:15",
+                "index": 15,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.618Z",
-                "durationMs": 20,
+                "startedAt": "2026-10-21T16:32:24.654Z",
+                "durationMs": 15,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
+                  "line": 15,
                   "column": 44
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:19",
-                "index": 19,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:16",
+                "index": 16,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.638Z",
-                "durationMs": 52,
+                "startedAt": "2026-10-21T16:32:24.669Z",
+                "durationMs": 42,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -3577,174 +3539,278 @@
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:20",
-                "index": 20,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:17",
+                "index": 17,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.690Z",
-                "durationMs": 15,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:21",
-                "index": 21,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.705Z",
-                "durationMs": 30,
+                "startedAt": "2026-10-21T16:32:24.721Z",
+                "durationMs": 357,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 34,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:22",
-                "index": 22,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.735Z",
-                "durationMs": 12,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 35,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:23",
-                "index": 23,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.747Z",
-                "durationMs": 6,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 36,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:24",
-                "index": 24,
-                "kind": "app",
-                "api": "app.screenshot",
-                "label": "run-trace-light-390",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.753Z",
-                "durationMs": 130,
-                "events": [],
-                "artifacts": [
-                  "01a15f43-33a0-7b18-8091-b44f621b4b8e:artifact:0"
-                ],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 37,
-                  "column": 15
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:25",
-                "index": 25,
-                "kind": "resource",
-                "api": "browser.reload",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:08.883Z",
-                "durationMs": 2363,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 38,
                   "column": 19
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:26",
-                "index": 26,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:18",
+                "index": 18,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:11.246Z",
-                "durationMs": 24,
+                "startedAt": "2026-10-21T16:32:25.087Z",
+                "durationMs": 18,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
+                  "line": 15,
                   "column": 44
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:27",
-                "index": 27,
-                "kind": "locator",
-                "api": "locator.press",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:11.271Z",
-                "durationMs": 232,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 39,
-                  "column": 72
-                }
-              },
-              {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:28",
-                "index": 28,
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:19",
+                "index": 19,
                 "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:11.503Z",
+                "startedAt": "2026-10-21T16:32:25.105Z",
                 "durationMs": 27,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 40,
-                  "column": 54
+                  "line": 37,
+                  "column": 65
                 }
               },
               {
-                "id": "01a15f43-33a0-7b18-8091-b44f621b4b8e:29",
-                "index": 29,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最终正文\")",
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:11.530Z",
-                "durationMs": 24,
+                "startedAt": "2026-10-21T16:32:25.132Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 15,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:25.142Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 39,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:25.164Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 40,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:25.172Z",
+                "durationMs": 6,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:25.179Z",
+                "durationMs": 221,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 42,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:25",
+                "index": 25,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-light-390",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:25.401Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-7776-7e06-8c2a-09f8c93570d4:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 85,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:25.482Z",
+                "durationMs": 42,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 86,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:27",
+                "index": 27,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-collapsed-light-390",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:25.535Z",
+                "durationMs": 68,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-7776-7e06-8c2a-09f8c93570d4:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 88,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:25.603Z",
+                "durationMs": 1439,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 89,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:27.043Z",
+                "durationMs": 39,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 15,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:30",
+                "index": 30,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:27.083Z",
+                "durationMs": 171,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 90,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:27.254Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 91,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15f4e-7776-7e06-8c2a-09f8c93570d4:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"最终正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:27.279Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 92,
                   "column": 57
                 }
               }
@@ -3776,37 +3842,50 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc",
+            "id": "01a15f4e-938d-7277-adc4-32805db05147",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-21T16:20:11.882Z",
-            "durationMs": 9795,
+            "startedAt": "2026-10-21T16:32:27.533Z",
+            "durationMs": 8362,
             "artifacts": [
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:artifact:0",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:24"
+                  "stepId": "01a15f4e-938d-7277-adc4-32805db05147:25"
                 },
                 "path": "web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-3dcd60d9/default/attempt-0/screenshots/001-run-trace-light-1440.png",
-                "size": 54986,
-                "sha256": "5ba518b3dcf7fd4711929ff0aef1cbe81aa5e754294770e5bfa96c03548252e7"
+                "size": 59593,
+                "sha256": "c635a411a69236e22de266ac190ff90816db4bab7f6ee70118ceb6d6b02dba0b"
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15f4e-938d-7277-adc4-32805db05147:27"
+                },
+                "path": "web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-3dcd60d9/default/attempt-0/screenshots/002-run-trace-collapsed-light-1440.png",
+                "size": 54469,
+                "sha256": "4f7d5e7f084fb386200c2926db221ac17f46ff8c962fb5614bbc3d7a68dc784e"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:0",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:0",
                 "index": 0,
                 "kind": "resource",
                 "api": "browser.setViewport",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:11.943Z",
+                "startedAt": "2026-10-21T16:32:27.566Z",
                 "durationMs": 0,
                 "events": [],
                 "artifacts": [],
@@ -3817,291 +3896,240 @@
                 },
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 8,
+                  "line": 13,
                   "column": 19
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:1",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:1",
                 "index": 1,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/native-streaming.html",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:11.943Z",
-                "durationMs": 2890,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 9,
-                  "column": 15
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:2",
-                "index": 2,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:14.833Z",
-                "durationMs": 8,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 11,
-                  "column": 19
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:3",
-                "index": 3,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:14.841Z",
-                "durationMs": 39,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:4",
-                "index": 4,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最终正文\")",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:14.881Z",
-                "durationMs": 156,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 13,
-                  "column": 57
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:5",
-                "index": 5,
-                "kind": "locator",
-                "api": "locator.press",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:15.039Z",
-                "durationMs": 250,
+                "startedAt": "2026-10-21T16:32:27.566Z",
+                "durationMs": 2087,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 14,
-                  "column": 72
+                  "column": 15
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:6",
-                "index": 6,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:15.290Z",
-                "durationMs": 84,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 15,
-                  "column": 54
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:7",
-                "index": 7,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最慢调用\")",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:15.374Z",
-                "durationMs": 14,
+                "startedAt": "2026-10-21T16:32:29.653Z",
+                "durationMs": 6,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 16,
-                  "column": 57
+                  "column": 19
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:8",
-                "index": 8,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"查看 阅读文档 详情\")",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:15.389Z",
-                "durationMs": 248,
+                "startedAt": "2026-10-21T16:32:29.660Z",
+                "durationMs": 21,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 17,
-                  "column": 51
+                  "line": 15,
+                  "column": 44
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:9",
-                "index": 9,
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:4",
+                "index": 4,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
-                "label": "getByText(\"公开文档名\")",
+                "label": "getByText(\"最终正文\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:15.637Z",
-                "durationMs": 39,
+                "startedAt": "2026-10-21T16:32:29.681Z",
+                "durationMs": 213,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 18,
-                  "column": 58
+                  "column": 57
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:10",
-                "index": 10,
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:5",
+                "index": 5,
                 "kind": "locator",
                 "api": "locator.press",
-                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:15.676Z",
-                "durationMs": 138,
+                "startedAt": "2026-10-21T16:32:29.896Z",
+                "durationMs": 166,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 19,
-                  "column": 49
+                  "column": 72
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:11",
-                "index": 11,
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:6",
+                "index": 6,
                 "kind": "assertion",
-                "api": "expect.not.toBeVisible",
-                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:15.814Z",
-                "durationMs": 1144,
+                "startedAt": "2026-10-21T16:32:30.062Z",
+                "durationMs": 21,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 20,
-                  "column": 64
+                  "column": 54
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:12",
-                "index": 12,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"展开 合成子任务\")",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-trace-slowest]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:16.958Z",
-                "durationMs": 157,
+                "startedAt": "2026-10-21T16:32:30.084Z",
+                "durationMs": 9,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 21,
-                  "column": 49
+                  "column": 59
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:13",
-                "index": 13,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"查看 阅读文档 详情\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:17.115Z",
-                "durationMs": 19,
+                "startedAt": "2026-10-21T16:32:30.094Z",
+                "durationMs": 158,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 22,
-                  "column": 60
+                  "column": 51
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:14",
-                "index": 14,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"公开文档名\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:17.170Z",
-                "durationMs": 397,
+                "startedAt": "2026-10-21T16:32:30.252Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 23,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:30.275Z",
+                "durationMs": 68,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 24,
-                  "column": 19
+                  "column": 49
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:15",
-                "index": 15,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:17.584Z",
-                "durationMs": 47,
+                "startedAt": "2026-10-21T16:32:30.344Z",
+                "durationMs": 1045,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
+                  "line": 25,
+                  "column": 64
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:16",
-                "index": 16,
-                "kind": "assertion",
-                "api": "expect.toHaveAttribute",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"展开 合成子任务\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:17.632Z",
-                "durationMs": 102,
+                "startedAt": "2026-10-21T16:32:31.389Z",
+                "durationMs": 113,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 26,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:31.503Z",
+                "durationMs": 16,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 27,
-                  "column": 65
+                  "column": 60
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:17",
-                "index": 17,
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:14",
+                "index": 14,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:17.769Z",
-                "durationMs": 377,
+                "startedAt": "2026-10-21T16:32:31.559Z",
+                "durationMs": 364,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -4111,31 +4139,31 @@
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:18",
-                "index": 18,
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:15",
+                "index": 15,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:18.158Z",
-                "durationMs": 123,
+                "startedAt": "2026-10-21T16:32:31.965Z",
+                "durationMs": 30,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
+                  "line": 15,
                   "column": 44
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:19",
-                "index": 19,
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:16",
+                "index": 16,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:18.281Z",
-                "durationMs": 59,
+                "startedAt": "2026-10-21T16:32:31.997Z",
+                "durationMs": 63,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -4145,174 +4173,278 @@
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:20",
-                "index": 20,
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:17",
+                "index": 17,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:18.341Z",
-                "durationMs": 15,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:21",
-                "index": 21,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:18.356Z",
-                "durationMs": 32,
+                "startedAt": "2026-10-21T16:32:32.071Z",
+                "durationMs": 387,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 34,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:22",
-                "index": 22,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:18.388Z",
-                "durationMs": 21,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 35,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:23",
-                "index": 23,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:18.411Z",
-                "durationMs": 8,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 36,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:24",
-                "index": 24,
-                "kind": "app",
-                "api": "app.screenshot",
-                "label": "run-trace-light-1440",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:18.420Z",
-                "durationMs": 105,
-                "events": [],
-                "artifacts": [
-                  "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:artifact:0"
-                ],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 37,
-                  "column": 15
-                }
-              },
-              {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:25",
-                "index": 25,
-                "kind": "resource",
-                "api": "browser.reload",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:18.525Z",
-                "durationMs": 2550,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 38,
                   "column": 19
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:26",
-                "index": 26,
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:18",
+                "index": 18,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:21.076Z",
-                "durationMs": 42,
+                "startedAt": "2026-10-21T16:32:32.470Z",
+                "durationMs": 22,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
+                  "line": 15,
                   "column": 44
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:27",
-                "index": 27,
-                "kind": "locator",
-                "api": "locator.press",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:21.118Z",
-                "durationMs": 191,
+                "startedAt": "2026-10-21T16:32:32.493Z",
+                "durationMs": 40,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 37,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:32.533Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 15,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:32.565Z",
+                "durationMs": 27,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 39,
-                  "column": 72
+                  "column": 26
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:28",
-                "index": 28,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:21.309Z",
-                "durationMs": 43,
+                "startedAt": "2026-10-21T16:32:32.593Z",
+                "durationMs": 16,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 40,
-                  "column": 54
+                  "column": 26
                 }
               },
               {
-                "id": "01a15f43-59ea-717e-8ee5-fc8ddafe12bc:29",
-                "index": 29,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最终正文\")",
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:21.352Z",
-                "durationMs": 54,
+                "startedAt": "2026-10-21T16:32:32.610Z",
+                "durationMs": 17,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:32.627Z",
+                "durationMs": 123,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 42,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:25",
+                "index": 25,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-light-1440",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:32.751Z",
+                "durationMs": 118,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-938d-7277-adc4-32805db05147:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 85,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:32.869Z",
+                "durationMs": 64,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 86,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:27",
+                "index": 27,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-collapsed-light-1440",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:32.965Z",
+                "durationMs": 173,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-938d-7277-adc4-32805db05147:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 88,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:33.138Z",
+                "durationMs": 2094,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 89,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:35.233Z",
+                "durationMs": 57,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 15,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:30",
+                "index": 30,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:35.291Z",
+                "durationMs": 232,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 90,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:35.523Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 91,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15f4e-938d-7277-adc4-32805db05147:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"最终正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:35.558Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 92,
                   "column": 57
                 }
               }
@@ -4344,38 +4476,51 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a15f43-802e-75ce-806e-c660f19512bd",
+            "id": "01a15f4e-b438-7b51-bb95-b034949a3edb",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-21T16:20:21.678Z",
-            "durationMs": 9679,
+            "startedAt": "2026-10-21T16:32:35.896Z",
+            "durationMs": 7955,
             "artifacts": [
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:artifact:0",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a15f43-802e-75ce-806e-c660f19512bd:24"
+                  "stepId": "01a15f4e-b438-7b51-bb95-b034949a3edb:25"
                 },
                 "path": "web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-7428aabb/default/attempt-0/screenshots/001-run-trace-dark-390.png",
-                "size": 47527,
-                "sha256": "403b8fdea73a8582b40def25fc251c3068d5b4bb25493aea9f3df900b5149ea4"
+                "size": 49469,
+                "sha256": "4d0f856181a9e7154992b60e324b084d6406485b90ade6f913472d4308752f91"
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15f4e-b438-7b51-bb95-b034949a3edb:27"
+                },
+                "path": "web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-7428aabb/default/attempt-0/screenshots/002-run-trace-collapsed-dark-390.png",
+                "size": 47877,
+                "sha256": "1d593310d13fba16da2f83a7ba73c70901c6e42e95fa389facc55bd06e7b1c24"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:0",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:0",
                 "index": 0,
                 "kind": "resource",
                 "api": "browser.setViewport",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:21.735Z",
-                "durationMs": 0,
+                "startedAt": "2026-10-21T16:32:35.971Z",
+                "durationMs": 1,
                 "events": [],
                 "artifacts": [],
                 "viewport": {
@@ -4385,291 +4530,240 @@
                 },
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 8,
+                  "line": 13,
                   "column": 19
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:1",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:1",
                 "index": 1,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/native-streaming.html",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:21.735Z",
-                "durationMs": 2956,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 9,
-                  "column": 15
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:2",
-                "index": 2,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:24.691Z",
-                "durationMs": 18,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 11,
-                  "column": 19
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:3",
-                "index": 3,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:24.709Z",
-                "durationMs": 31,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:4",
-                "index": 4,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最终正文\")",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:24.740Z",
-                "durationMs": 328,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 13,
-                  "column": 57
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:5",
-                "index": 5,
-                "kind": "locator",
-                "api": "locator.press",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:25.068Z",
-                "durationMs": 230,
+                "startedAt": "2026-10-21T16:32:35.972Z",
+                "durationMs": 2480,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 14,
-                  "column": 72
+                  "column": 15
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:6",
-                "index": 6,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:25.298Z",
-                "durationMs": 38,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 15,
-                  "column": 54
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:7",
-                "index": 7,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最慢调用\")",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:25.336Z",
-                "durationMs": 15,
+                "startedAt": "2026-10-21T16:32:38.452Z",
+                "durationMs": 11,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 16,
-                  "column": 57
+                  "column": 19
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:8",
-                "index": 8,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"查看 阅读文档 详情\")",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:25.351Z",
-                "durationMs": 182,
+                "startedAt": "2026-10-21T16:32:38.463Z",
+                "durationMs": 28,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 17,
-                  "column": 51
+                  "line": 15,
+                  "column": 44
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:9",
-                "index": 9,
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:4",
+                "index": 4,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
-                "label": "getByText(\"公开文档名\")",
+                "label": "getByText(\"最终正文\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:25.534Z",
-                "durationMs": 13,
+                "startedAt": "2026-10-21T16:32:38.492Z",
+                "durationMs": 161,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 18,
-                  "column": 58
+                  "column": 57
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:10",
-                "index": 10,
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:5",
+                "index": 5,
                 "kind": "locator",
                 "api": "locator.press",
-                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:25.548Z",
-                "durationMs": 79,
+                "startedAt": "2026-10-21T16:32:38.653Z",
+                "durationMs": 228,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 19,
-                  "column": 49
+                  "column": 72
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:11",
-                "index": 11,
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:6",
+                "index": 6,
                 "kind": "assertion",
-                "api": "expect.not.toBeVisible",
-                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:25.628Z",
-                "durationMs": 1007,
+                "startedAt": "2026-10-21T16:32:38.881Z",
+                "durationMs": 19,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 20,
-                  "column": 64
+                  "column": 54
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:12",
-                "index": 12,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"展开 合成子任务\")",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-trace-slowest]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:26.635Z",
-                "durationMs": 139,
+                "startedAt": "2026-10-21T16:32:38.900Z",
+                "durationMs": 10,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 21,
-                  "column": 49
+                  "column": 59
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:13",
-                "index": 13,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"查看 阅读文档 详情\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:26.774Z",
-                "durationMs": 13,
+                "startedAt": "2026-10-21T16:32:38.910Z",
+                "durationMs": 149,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 22,
-                  "column": 60
+                  "column": 51
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:14",
-                "index": 14,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"公开文档名\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:26.800Z",
-                "durationMs": 417,
+                "startedAt": "2026-10-21T16:32:39.059Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 23,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:39.072Z",
+                "durationMs": 123,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 24,
-                  "column": 19
+                  "column": 49
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:15",
-                "index": 15,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.237Z",
-                "durationMs": 33,
+                "startedAt": "2026-10-21T16:32:39.195Z",
+                "durationMs": 1102,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
+                  "line": 25,
+                  "column": 64
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:16",
-                "index": 16,
-                "kind": "assertion",
-                "api": "expect.toHaveAttribute",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"展开 合成子任务\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.271Z",
-                "durationMs": 155,
+                "startedAt": "2026-10-21T16:32:40.297Z",
+                "durationMs": 108,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 26,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:40.405Z",
+                "durationMs": 25,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 27,
-                  "column": 65
+                  "column": 60
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:17",
-                "index": 17,
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:14",
+                "index": 14,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.463Z",
-                "durationMs": 368,
+                "startedAt": "2026-10-21T16:32:40.467Z",
+                "durationMs": 377,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -4679,31 +4773,31 @@
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:18",
-                "index": 18,
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:15",
+                "index": 15,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.842Z",
-                "durationMs": 37,
+                "startedAt": "2026-10-21T16:32:40.859Z",
+                "durationMs": 17,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
+                  "line": 15,
                   "column": 44
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:19",
-                "index": 19,
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:16",
+                "index": 16,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.879Z",
-                "durationMs": 19,
+                "startedAt": "2026-10-21T16:32:40.876Z",
+                "durationMs": 41,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -4713,174 +4807,278 @@
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:20",
-                "index": 20,
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:17",
+                "index": 17,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.899Z",
-                "durationMs": 61,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:21",
-                "index": 21,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.960Z",
-                "durationMs": 6,
+                "startedAt": "2026-10-21T16:32:40.930Z",
+                "durationMs": 359,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 34,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:22",
-                "index": 22,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.966Z",
-                "durationMs": 6,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 35,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:23",
-                "index": 23,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.972Z",
-                "durationMs": 7,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 36,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:24",
-                "index": 24,
-                "kind": "app",
-                "api": "app.screenshot",
-                "label": "run-trace-dark-390",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:27.980Z",
-                "durationMs": 120,
-                "events": [],
-                "artifacts": [
-                  "01a15f43-802e-75ce-806e-c660f19512bd:artifact:0"
-                ],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 37,
-                  "column": 15
-                }
-              },
-              {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:25",
-                "index": 25,
-                "kind": "resource",
-                "api": "browser.reload",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:28.100Z",
-                "durationMs": 2255,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 38,
                   "column": 19
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:26",
-                "index": 26,
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:18",
+                "index": 18,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:30.357Z",
-                "durationMs": 34,
+                "startedAt": "2026-10-21T16:32:41.301Z",
+                "durationMs": 16,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
+                  "line": 15,
                   "column": 44
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:27",
-                "index": 27,
-                "kind": "locator",
-                "api": "locator.press",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:30.391Z",
-                "durationMs": 354,
+                "startedAt": "2026-10-21T16:32:41.318Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 37,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:41.349Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 15,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:41.368Z",
+                "durationMs": 21,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 39,
-                  "column": 72
+                  "column": 26
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:28",
-                "index": 28,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:30.746Z",
-                "durationMs": 80,
+                "startedAt": "2026-10-21T16:32:41.389Z",
+                "durationMs": 11,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 40,
-                  "column": 54
+                  "column": 26
                 }
               },
               {
-                "id": "01a15f43-802e-75ce-806e-c660f19512bd:29",
-                "index": 29,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最终正文\")",
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:30.826Z",
-                "durationMs": 89,
+                "startedAt": "2026-10-21T16:32:41.401Z",
+                "durationMs": 6,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:41.408Z",
+                "durationMs": 208,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 42,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:25",
+                "index": 25,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-dark-390",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:41.617Z",
+                "durationMs": 66,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-b438-7b51-bb95-b034949a3edb:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 85,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:41.683Z",
+                "durationMs": 36,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 86,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:27",
+                "index": 27,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-collapsed-dark-390",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:41.731Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-b438-7b51-bb95-b034949a3edb:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 88,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:41.791Z",
+                "durationMs": 1609,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 89,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:43.401Z",
+                "durationMs": 78,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 15,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:30",
+                "index": 30,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:43.479Z",
+                "durationMs": 158,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 90,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:43.637Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 91,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15f4e-b438-7b51-bb95-b034949a3edb:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"最终正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:43.656Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 92,
                   "column": 57
                 }
               }
@@ -4912,37 +5110,50 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9",
+            "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-21T16:20:31.358Z",
-            "durationMs": 11825,
+            "startedAt": "2026-10-21T16:32:43.852Z",
+            "durationMs": 7738,
             "artifacts": [
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:artifact:0",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:24"
+                  "stepId": "01a15f4e-d34c-7d8a-bad9-92bff0547158:25"
                 },
                 "path": "web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-e7636748/default/attempt-0/screenshots/001-run-trace-dark-1440.png",
-                "size": 55773,
-                "sha256": "59a0db5cec7f751d1af9acc7717c7f381cd25a6250aeba8f0caf6122d463f487"
+                "size": 60871,
+                "sha256": "5feac8e292e7793c737513771e658c7a9ac0c16007e2a48e3d40f0d6e6cc944d"
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15f4e-d34c-7d8a-bad9-92bff0547158:27"
+                },
+                "path": "web/e2e_web_run-trace.e2e.ts__Open-source_20run_20trace__trace_20tree_2C_20metrics_2C_20safe_20details_20and_20repl-e7636748/default/attempt-0/screenshots/002-run-trace-collapsed-dark-1440.png",
+                "size": 55389,
+                "sha256": "0b5532feb097eba0adfaa9bd2dba9ef0d331fcdae3b5995cbcdd0bfae530244b"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:0",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:0",
                 "index": 0,
                 "kind": "resource",
                 "api": "browser.setViewport",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:31.407Z",
+                "startedAt": "2026-10-21T16:32:43.892Z",
                 "durationMs": 0,
                 "events": [],
                 "artifacts": [],
@@ -4953,291 +5164,240 @@
                 },
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 8,
+                  "line": 13,
                   "column": 19
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:1",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:1",
                 "index": 1,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/native-streaming.html",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:31.407Z",
-                "durationMs": 4161,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 9,
-                  "column": 15
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:2",
-                "index": 2,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:35.569Z",
-                "durationMs": 55,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 11,
-                  "column": 19
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:3",
-                "index": 3,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:35.624Z",
-                "durationMs": 34,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:4",
-                "index": 4,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最终正文\")",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:35.658Z",
-                "durationMs": 183,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 13,
-                  "column": 57
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:5",
-                "index": 5,
-                "kind": "locator",
-                "api": "locator.press",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:35.842Z",
-                "durationMs": 237,
+                "startedAt": "2026-10-21T16:32:43.892Z",
+                "durationMs": 2092,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 14,
-                  "column": 72
+                  "column": 15
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:6",
-                "index": 6,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:36.080Z",
-                "durationMs": 75,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 15,
-                  "column": 54
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:7",
-                "index": 7,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最慢调用\")",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:36.156Z",
-                "durationMs": 45,
+                "startedAt": "2026-10-21T16:32:45.984Z",
+                "durationMs": 12,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 16,
-                  "column": 57
+                  "column": 19
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:8",
-                "index": 8,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"查看 阅读文档 详情\")",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:36.202Z",
-                "durationMs": 248,
+                "startedAt": "2026-10-21T16:32:45.996Z",
+                "durationMs": 28,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 17,
-                  "column": 51
+                  "line": 15,
+                  "column": 44
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:9",
-                "index": 9,
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:4",
+                "index": 4,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
-                "label": "getByText(\"公开文档名\")",
+                "label": "getByText(\"最终正文\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:36.450Z",
-                "durationMs": 35,
+                "startedAt": "2026-10-21T16:32:46.025Z",
+                "durationMs": 267,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 18,
-                  "column": 58
+                  "column": 57
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:10",
-                "index": 10,
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:5",
+                "index": 5,
                 "kind": "locator",
                 "api": "locator.press",
-                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:36.485Z",
-                "durationMs": 131,
+                "startedAt": "2026-10-21T16:32:46.293Z",
+                "durationMs": 174,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 19,
-                  "column": 49
+                  "column": 72
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:11",
-                "index": 11,
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:6",
+                "index": 6,
                 "kind": "assertion",
-                "api": "expect.not.toBeVisible",
-                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:36.616Z",
-                "durationMs": 1093,
+                "startedAt": "2026-10-21T16:32:46.467Z",
+                "durationMs": 20,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 20,
-                  "column": 64
+                  "column": 54
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:12",
-                "index": 12,
-                "kind": "locator",
-                "api": "locator.tap",
-                "label": "getByRole(\"button\", name: \"展开 合成子任务\")",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-trace-slowest]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:37.710Z",
-                "durationMs": 261,
+                "startedAt": "2026-10-21T16:32:46.489Z",
+                "durationMs": 18,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 21,
-                  "column": 49
+                  "column": 59
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:13",
-                "index": 13,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"查看 阅读文档 详情\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:37.972Z",
-                "durationMs": 81,
+                "startedAt": "2026-10-21T16:32:46.508Z",
+                "durationMs": 142,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 22,
-                  "column": 60
+                  "column": 51
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:14",
-                "index": 14,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"公开文档名\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:38.069Z",
-                "durationMs": 396,
+                "startedAt": "2026-10-21T16:32:46.650Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 23,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:46.683Z",
+                "durationMs": 90,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 24,
-                  "column": 19
+                  "column": 49
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:15",
-                "index": 15,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:38.537Z",
-                "durationMs": 76,
+                "startedAt": "2026-10-21T16:32:46.773Z",
+                "durationMs": 1041,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
+                  "line": 25,
+                  "column": 64
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:16",
-                "index": 16,
-                "kind": "assertion",
-                "api": "expect.toHaveAttribute",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"展开 合成子任务\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:38.617Z",
-                "durationMs": 88,
+                "startedAt": "2026-10-21T16:32:47.815Z",
+                "durationMs": 115,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 26,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"查看 子任务工具 详情\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:47.930Z",
+                "durationMs": 53,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 27,
-                  "column": 65
+                  "column": 60
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:17",
-                "index": 17,
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:14",
+                "index": 14,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:38.742Z",
-                "durationMs": 379,
+                "startedAt": "2026-10-21T16:32:48.008Z",
+                "durationMs": 373,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -5247,31 +5407,31 @@
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:18",
-                "index": 18,
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:15",
+                "index": 15,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:39.153Z",
-                "durationMs": 26,
+                "startedAt": "2026-10-21T16:32:48.399Z",
+                "durationMs": 25,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
+                  "line": 15,
                   "column": 44
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:19",
-                "index": 19,
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:16",
+                "index": 16,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:39.179Z",
-                "durationMs": 66,
+                "startedAt": "2026-10-21T16:32:48.424Z",
+                "durationMs": 69,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -5281,175 +5441,455 @@
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:20",
-                "index": 20,
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:17",
+                "index": 17,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:39.245Z",
-                "durationMs": 56,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
-                  "column": 44
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:21",
-                "index": 21,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:39.306Z",
-                "durationMs": 35,
+                "startedAt": "2026-10-21T16:32:48.515Z",
+                "durationMs": 363,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 34,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:22",
-                "index": 22,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:39.341Z",
-                "durationMs": 33,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 35,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:23",
-                "index": 23,
-                "kind": "resource",
-                "api": "browser.evaluate",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:39.374Z",
-                "durationMs": 83,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 36,
-                  "column": 26
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:24",
-                "index": 24,
-                "kind": "app",
-                "api": "app.screenshot",
-                "label": "run-trace-dark-1440",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:39.457Z",
-                "durationMs": 162,
-                "events": [],
-                "artifacts": [
-                  "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:artifact:0"
-                ],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 37,
-                  "column": 15
-                }
-              },
-              {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:25",
-                "index": 25,
-                "kind": "resource",
-                "api": "browser.reload",
-                "label": "",
-                "status": "passed",
-                "startedAt": "2026-10-21T16:20:39.619Z",
-                "durationMs": 2716,
-                "events": [],
-                "artifacts": [],
-                "source": {
-                  "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 38,
                   "column": 19
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:26",
-                "index": 26,
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:18",
+                "index": 18,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:42.335Z",
-                "durationMs": 56,
+                "startedAt": "2026-10-21T16:32:48.892Z",
+                "durationMs": 21,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
-                  "line": 10,
+                  "line": 15,
                   "column": 44
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:27",
-                "index": 27,
-                "kind": "locator",
-                "api": "locator.press",
-                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:42.391Z",
-                "durationMs": 247,
+                "startedAt": "2026-10-21T16:32:48.914Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 37,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:48.944Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 15,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:48.958Z",
+                "durationMs": 38,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 39,
-                  "column": 72
+                  "column": 26
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:28",
-                "index": 28,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:42.639Z",
-                "durationMs": 40,
+                "startedAt": "2026-10-21T16:32:48.997Z",
+                "durationMs": 5,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 40,
-                  "column": 54
+                  "column": 26
                 }
               },
               {
-                "id": "01a15f43-a5fd-7875-a7f8-cb0acb8712a9:29",
-                "index": 29,
-                "kind": "assertion",
-                "api": "expect.toBeVisible",
-                "label": "getByText(\"最终正文\")",
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-21T16:20:42.679Z",
-                "durationMs": 55,
+                "startedAt": "2026-10-21T16:32:49.004Z",
+                "durationMs": 13,
                 "events": [],
                 "artifacts": [],
                 "source": {
                   "file": "e2e/web/run-trace.e2e.ts",
                   "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:49.017Z",
+                "durationMs": 130,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 42,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:25",
+                "index": 25,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-dark-1440",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:49.148Z",
+                "durationMs": 104,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-d34c-7d8a-bad9-92bff0547158:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 85,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"收起 合成子任务\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:49.252Z",
+                "durationMs": 58,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 86,
+                  "column": 49
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:27",
+                "index": 27,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-collapsed-dark-1440",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:49.324Z",
+                "durationMs": 139,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-d34c-7d8a-bad9-92bff0547158:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 88,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:49.464Z",
+                "durationMs": 1588,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 89,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:51.052Z",
+                "durationMs": 58,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 15,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:30",
+                "index": 30,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:51.110Z",
+                "durationMs": 185,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 90,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:51.295Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 91,
+                  "column": 54
+                }
+              },
+              {
+                "id": "01a15f4e-d34c-7d8a-bad9-92bff0547158:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"最终正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:51.322Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 92,
                   "column": 57
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "257973f450c4d3a51710daf3a0f4df89434458c2ea882e8f4ed37a7b7f4e4b45",
+        "testId": "e2e/web/run-trace.e2e.ts::trace%20axis%20stays%20aligned%20while%20a%20long%20tree%20scrolls",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "trace axis stays aligned while a long tree scrolls"
+        ],
+        "file": "e2e/web/run-trace.e2e.ts",
+        "source": {
+          "file": "e2e/web/run-trace.e2e.ts",
+          "line": 97,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15f4e-f186-737d-8b45-7ecec488db05",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T16:32:51.591Z",
+            "durationMs": 3000,
+            "artifacts": [
+              {
+                "id": "01a15f4e-f186-737d-8b45-7ecec488db05:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15f4e-f186-737d-8b45-7ecec488db05:6"
+                },
+                "path": "web/e2e_web_run-trace.e2e.ts__trace_20axis_20stays_20aligned_20while_20a_20long_20tree_20scrolls-6d69b33a/default/attempt-0/screenshots/001-run-trace-scrolled-narrow.png",
+                "size": 43347,
+                "sha256": "e1978bfd31b95910f0b70110c78d62b7cd34b1ae9076aa464ea7f503eb238a86"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15f4e-f186-737d-8b45-7ecec488db05:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:51.639Z",
+                "durationMs": 0,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 104,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15f4e-f186-737d-8b45-7ecec488db05:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/native-streaming.html",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:51.639Z",
+                "durationMs": 2289,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 105,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a15f4e-f186-737d-8b45-7ecec488db05:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:53.928Z",
+                "durationMs": 40,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 106,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15f4e-f186-737d-8b45-7ecec488db05:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] button\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:53.968Z",
+                "durationMs": 407,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 107,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a15f4e-f186-737d-8b45-7ecec488db05:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"运行瀑布图\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:54.375Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 108,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a15f4e-f186-737d-8b45-7ecec488db05:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:54.414Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 109,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a15f4e-f186-737d-8b45-7ecec488db05:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "run-trace-scrolled-narrow",
+                "status": "passed",
+                "startedAt": "2026-10-21T16:32:54.430Z",
+                "durationMs": 112,
+                "events": [],
+                "artifacts": [
+                  "01a15f4e-f186-737d-8b45-7ecec488db05:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/web/run-trace.e2e.ts",
+                  "line": 122,
+                  "column": 13
                 }
               }
             ]
@@ -6495,10 +6935,10 @@
     ],
     "errors": [],
     "summary": {
-      "discovered": 143,
-      "selected": 4,
-      "executed": 4,
-      "passed": 4,
+      "discovered": 144,
+      "selected": 5,
+      "executed": 5,
+      "passed": 5,
       "failed": 0,
       "interrupted": 0,
       "flaky": 0,
@@ -6512,11 +6952,11 @@
       "maxModelTokensPerCall": 64000
     },
     "usage": {
-      "discoveredResults": 143,
+      "discoveredResults": 144,
       "maxAgentContextBytes": 0,
       "maxLedgerBytes": 0,
       "maxObservationBytes": 0,
-      "artifactBytes": 204968,
+      "artifactBytes": 465679,
       "downloads": 0,
       "events": 0,
       "modelTokens": 0,

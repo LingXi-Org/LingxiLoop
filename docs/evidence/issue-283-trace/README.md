@@ -28,15 +28,66 @@ The UI uses Langfuse's MIT non-ee row metrics/bar presentation, independently co
 
 - Web smoke plus existing ConversationMessage regressions: **81/81** passed.
 - Server smoke plus new projection/scoped-ledger regressions: **119/119** passed.
-- Official `@e2e-dev/web` renderer cases: **4/4** passed at 390/1440 px, light/dark; keyboard branch fold, selected I/O, advancing/stopped clock, cancellation/failure, replay, one external answer and no horizontal overflow/private fixture strings.
+- Official `@e2e-dev/web` renderer cases: **5/5** passed (four 390/1440 px light/dark cases plus a long-tree scrollbar geometry case); the four theme/width cases cover, light/dark; keyboard branch fold, selected I/O, advancing/stopped clock, cancellation/failure, replay, one external answer and no horizontal overflow/private fixture strings.
 - Web, server and E2E TypeScript checks passed; web/server lint exited successfully (existing web warnings/info only); `npm run build` passed with existing CSS highlight/chunk warnings. `git diff --check` passed.
 - Browser evidence is from the isolated local Vite fixture and owning synthetic projection snapshots, not a real model/database/worker. Production bundle build is checked separately.
 - Before-code regression source and failure model were written first. The initial red command could not load `tsx` until dependencies were installed; do not count that as a behavioral red test. A later animated-collapse regression was caught by E2E (descendants still considered visible despite clipped height), fixed with visibility/inert/aria-hidden, then all four cases passed.
 
-Plain-text check logs (`*.txt`, ANSI/trailing whitespace normalized), source-manifest.json and hashed screenshots are alongside this file. Implementation commit: `87bac5844e8cf351383c02a89dc700965238d3e0`; follow-up evidence-only commits do not change source. The browser report's recorded VCS base predates the uncommitted implementation; screenshot hashes and the subsequent commit provide source traceability. A parent independent review and exact-head CI remain release gates.
+Plain-text check logs (`*.txt`, ANSI/trailing whitespace normalized), source-manifest.json and hashed screenshots are alongside this file. Initial implementation: `87bac5844e8cf351383c02a89dc700965238d3e0`; screenshot-review geometry/legibility fix: `18c88ae0`. Subsequent merge from main adds only deployment evidence, and follow-up evidence commits do not change source. The browser report's recorded VCS parent predates the uncommitted visual fix; source-manifest.json and the geometry-fix commit provide source traceability. A parent independent review and exact-head CI remain release gates.
 
 ## Remaining blocker; issue stays open and PR stays draft
 
 The **current published runtime 3.6.0** does not expose trustworthy LLM offsets, settled run end time or authorized child-span discovery. The product's usage callback has actual latency but no actual start/end timestamps. This branch therefore cannot claim complete real-time per-LLM/subagent parity for new runs. The precise required public contract is in [native-contract.md](native-contract.md) and the #283 coordination comment. It must be added/integrated for new runs and verified with real native stream/replay; legacy records remain honestly unknown. Renderer-only synthetic child spans prove UI folding, not production lineage. Model in-flight clocks and fully measured root terminal duration depend on that contract.
 
 No production conversations, restricted production HTML, deployment, purchase, Pro install/access-key transfer, runtime publication or merge was performed. Parent-thread messaging through the environment agent tool failed with `tunnel_client_not_seen`; the public issue comment and contract document completed the coordination handoff without retrying or bypassing that service failure.
+
+## Screenshot review corrections (failure model before the visual fix)
+
+Parent review found nested list margins narrowing descendant lanes while geometry
+still used the root width, so the final purple bar could extend past its actual
+row. The root domain already visits all descendants, but it also needs to include
+known starts and retain right-side headroom. Text was placed on 8px bars, producing
+poor dark-theme legibility; move duration to a dedicated aligned column. Keep the
+slowest marker inside its row. A shared axis/row viewport must account for the
+vertical scrollbar, and tree guides must not change track width or origin.
+
+Before editing the renderer, extend official browser regressions to assert real
+DOM geometry: shared lane origins/widths at every depth, matching start/end scale,
+all descendant endpoints inside the axis with a right gutter, unclipped duration
+text outside the bars, and an inline slowest badge. Add a synthetic descendant
+ending after its recorded parent to prove the domain visits the entire tree.
+This renderer stress fixture does not claim native production span availability.
+
+
+### Correction results
+
+`18c88ae0` fixes all four parent screenshot-review findings. Every descendant uses
+the same absolute lane origin/width as the axis; tree guides stay inside the name
+cell, and axis/rows share a scrollbar viewport. The domain covers every recorded
+start/end even while collapsed, with 8% display headroom. Durations/costs now use
+a separate 72px column with theme foreground text. The slowest call is a small
+inline badge, without an extra row. Unknown historical data stays unknown.
+
+Five official browser cases passed. Numeric geometry is retained in
+`geometry-browser-tests.txt`: mobile lanes share x=158.59375 and width=116.40625;
+desktop lanes share x=632.59375 and width=422.40625. A synthetic descendant ends at
+2200 ms after its parent ends at 1000 ms; the axis ends at 2376 ms, leaving about
+9px (narrow) / 32px (desktop) after the last bar. Start/end positions agree with
+the axis scale within 1px, all duration glyph boxes fit within their cells, and
+folding the parent preserves the global domain. A 30-row scroll case confirms
+axis/row alignment when the vertical scrollbar is present.
+
+All four expanded screenshots were opened and visually inspected. Corrected
+expanded/collapsed screenshots and the long-scroll screenshot replace the earlier
+product evidence. Web tests remain 81/81; web/E2E typecheck, lint and production
+build passed after the visual fix. Server behavior is unchanged; its prior
+119/119 receipt remains applicable. New native timing/lineage remains pending in
+[LingxiOS #40](https://github.com/LingXi-Org/LingxiOS/issues/40).
+
+Library replacement was attempted once, for the existing four product image IDs
+with expected version 0. The current Library skill's required batch helper
+returned `hosted apps tools/call HTTP 401` before reporting any successful write.
+No new version is confirmed; earlier product Library IDs must not be presented as
+corrected images. No direct-upload fallback/retry was attempted. The corrected
+PNG files are published in this PR's `product/` evidence directory; the parent
+can use its functioning Library connection to save those exact reviewed files.

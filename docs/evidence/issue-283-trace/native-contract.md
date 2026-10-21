@@ -1,6 +1,6 @@
 # Minimal native trace contract requested for LingxiOS PR39 / Loop PR282 coordination
 
-Product task #283. Do not modify purpose parsing, provider framing or response acceptance here.
+Product task #283; native dependency tracked explicitly in https://github.com/LingXi-Org/LingxiOS/issues/40 . PR39 is already merged for purpose; this trace contract is a separate coordinated follow-up. Do not modify purpose parsing, provider framing or response acceptance here.
 
 ## New native public event projection (proposed)
 

@@ -147,7 +147,7 @@ src/features/chat/visualize/zcode/plugin-ui/app/pluginUiPageManager.ts:8:39 lint
      10  10 │   }
 
 
-Checked 577 files in 859ms. No fixes applied.
+Checked 577 files in 469ms. No fixes applied.
 Found 5 warnings.
 Found 3 infos.
 npm notice
