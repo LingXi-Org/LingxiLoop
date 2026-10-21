@@ -3,7 +3,7 @@
 export const publicTextDeployment: Readonly<{
   reader:2
   producer:'disabled'|'purpose-json-v1'
-}> = Object.freeze({reader:2,producer:'disabled'})
+}> = Object.freeze({reader:2,producer:'purpose-json-v1'})
 
 export function publicTextModelOptions() {
   return publicTextDeployment.producer==='disabled' ? {} : {publicTextProtocol:publicTextDeployment.producer}
