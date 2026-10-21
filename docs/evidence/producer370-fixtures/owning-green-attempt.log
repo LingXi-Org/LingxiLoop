@@ -1,0 +1,94 @@
+[integration] selected 4/104 file(s): available-capabilities.test.ts, runtime-auxiliary-latency.test.ts, runtime-model-context.test.ts, runtime-nonthinking.test.ts
+TAP version 13
+# {"ts":"2026-10-21T17:43:52.798Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-qabu2","healthPort":29094,"maxConcurrentRuns":1}
+# {"ts":"2026-10-21T17:43:54.777Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-qabu2","timedOut":false}
+# {"ts":"2026-10-21T17:43:54.779Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at node:internal/deps/undici/undici:15270:13\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async WukongClient.request (/workspace/LingxiLoop-producer370-fixtures/server/src/im/wukong.ts:44:22)\\n    at async WukongClient.sendMessage (/workspace/LingxiLoop-producer370-fixtures/server/src/im/wukong.ts:103:21)\\n    at async ImMessagesApplication.acceptMessage (/workspace/LingxiLoop-producer370-fixtures/server/src/im/messages-application.ts:431:22)\\n    at async sendAgentChannelMessage (/workspace/LingxiLoop-producer370-fixtures/server/src/im/public.ts:57:18)\\n    at async <anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/delivery.ts:107:24)\\n    at async run (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/callback-scope.ts:136:22)\\n    at async flushOutbox.signal (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:365:23)"}}
+# {"ts":"2026-10-21T17:43:54.785Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at node:internal/deps/undici/undici:15270:13\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async WukongClient.request (/workspace/LingxiLoop-producer370-fixtures/server/src/im/wukong.ts:44:22)\\n    at async WukongClient.sendMessage (/workspace/LingxiLoop-producer370-fixtures/server/src/im/wukong.ts:103:21)\\n    at async ImMessagesApplication.acceptMessage (/workspace/LingxiLoop-producer370-fixtures/server/src/im/messages-application.ts:431:22)\\n    at async sendAgentChannelMessage (/workspace/LingxiLoop-producer370-fixtures/server/src/im/public.ts:57:18)\\n    at async <anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/delivery.ts:107:24)\\n    at async run (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/callback-scope.ts:136:22)\\n    at async flushOutbox.signal (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:365:23)"}}
+# {"ts":"2026-10-21T17:43:54.785Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-21T17:43:54.785Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-21T17:43:54.785Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-21T17:43:54.785Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-21T17:43:54.785Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_model_budget_calls"}
+# {"ts":"2026-10-21T17:43:54.785Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# Subtest: published runtime sends available-only context and preserves truthful product boundaries
+not ok 1 - published runtime sends available-only context and preserves truthful product boundaries
+  ---
+  duration_ms: 2289.587924
+  type: 'test'
+  location: '/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/available-capabilities.test.ts:1:894'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(ledger.calls > 0 && ledger.measured)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/available-capabilities.test.ts:131:14)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# {"ts":"2026-10-21T17:44:05.132Z","level":"info","msg":"worker stopped","workerId":"auxiliary-latency-false","timedOut":false}
+# Subtest: slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=false)
+ok 2 - slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=false)
+  ---
+  duration_ms: 3913.938578
+  type: 'test'
+  ...
+# {"ts":"2026-10-21T17:44:08.617Z","level":"info","msg":"worker stopped","workerId":"auxiliary-latency-true","timedOut":false}
+# Subtest: slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=true)
+ok 3 - slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=true)
+  ---
+  duration_ms: 3481.439919
+  type: 'test'
+  ...
+# {"ts":"2026-10-21T17:44:11.546Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-4z0qm","healthPort":29092,"maxConcurrentRuns":2}
+# {"ts":"2026-10-21T17:44:31.845Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-4z0qm","timedOut":false}
+# {"ts":"2026-10-21T17:44:31.846Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:952:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:194:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:270:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/runtime-model-context.test.ts:106:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-21T17:44:31.849Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:952:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:194:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:270:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/runtime-model-context.test.ts:106:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: production GLM worker preserves conversation continuity across repeated compaction
+ok 4 - production GLM worker preserves conversation continuity across repeated compaction
+  ---
+  duration_ms: 20792.43416
+  type: 'test'
+  ...
+# {"ts":"2026-10-21T17:44:34.829Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-emcyj","healthPort":29093,"maxConcurrentRuns":2}
+# {"ts":"2026-10-21T17:44:36.347Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-emcyj","timedOut":false}
+# {"ts":"2026-10-21T17:44:36.348Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:952:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:194:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:270:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/runtime-nonthinking.test.ts:167:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-21T17:44:36.351Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:952:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:194:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:270:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/runtime-nonthinking.test.ts:167:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-21T17:44:36.475Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-emcyj","healthPort":29093,"maxConcurrentRuns":2}
+# {"ts":"2026-10-21T17:44:37.506Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-emcyj","timedOut":false}
+# {"ts":"2026-10-21T17:44:37.507Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:952:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:194:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:270:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/runtime-nonthinking.test.ts:167:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# {"ts":"2026-10-21T17:44:37.507Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:952:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:194:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:270:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/runtime-nonthinking.test.ts:167:7)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)"}}
+# Subtest: production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion
+ok 5 - production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion
+  ---
+  duration_ms: 3987.854275
+  type: 'test'
+  ...
+# {"ts":"2026-10-21T17:44:37.685Z","level":"info","msg":"worker started","workerId":"lingxiloop-app-emcyj","healthPort":29094,"maxConcurrentRuns":2}
+# {"ts":"2026-10-21T17:44:38.455Z","level":"info","msg":"worker stopped","workerId":"lingxiloop-app-emcyj","timedOut":false}
+# {"ts":"2026-10-21T17:44:38.455Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:952:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:194:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:270:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/runtime-nonthinking.test.ts:238:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)"}}
+# {"ts":"2026-10-21T17:44:38.456Z","level":"error","msg":"control-plane request failed","path":"/v5/work/wait","error":{"name":"Error","message":"control plane stopped","stack":"Error: control plane stopped\\n    at Object.stop (/workspace/public-purpose-contract/formal370/node_modules/@lyyzka/lingxios/src/app/index.ts:952:22)\\n    at stopLingxiOSControl (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:194:44)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\\n    at async Object.stop (/workspace/LingxiLoop-producer370-fixtures/server/src/agent-runtime/runtime.ts:270:5)\\n    at async TestContext.<anonymous> (/workspace/LingxiLoop-producer370-fixtures/server/src/__integration__/runtime-nonthinking.test.ts:238:5)\\n    at async Test.run (node:internal/test_runner/test:1054:7)\\n    at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)"}}
+# Subtest: unavailable visualization references are repaired before durable delivery
+ok 6 - unavailable visualization references are repaired before durable delivery
+  ---
+  duration_ms: 948.264461
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 5
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 47646.631002
+
+EXIT_CODE=1

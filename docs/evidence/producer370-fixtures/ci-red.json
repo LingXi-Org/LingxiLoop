@@ -1,0 +1,12 @@
+{
+  "source": "existing authorized local server-ci-failure.log; rejected resource not retried",
+  "sha256": "36f91bebed1259df3e6f08060f09c8a87ab9b4ad2bc9e30da3775de74626a63e",
+  "failures": [
+    "not ok 11 - published runtime sends available-only context and preserves truthful product boundaries",
+    "not ok 316 - slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=false)",
+    "not ok 317 - slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=true)",
+    "not ok 325 - production GLM worker preserves conversation continuity across repeated compaction",
+    "not ok 326 - production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion",
+    "not ok 327 - unavailable visualization references are repaired before durable delivery"
+  ]
+}
