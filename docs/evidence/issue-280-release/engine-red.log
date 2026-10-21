@@ -173,9 +173,9 @@ not ok 26 - reader producer leak/seed drift aborts before stop; unknown migratio
   failureType: 'testCodeFailure'
   error: |-
     The validation function is expected to return "true". Received undefined
-    
+
     Caught error:
-    
+
     Error: Invalid sealed host-release plan
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
@@ -193,9 +193,9 @@ not ok 27 - reader transaction failed before or after commit is classified witho
   failureType: 'testCodeFailure'
   error: |-
     Expected values to be strictly equal:
-    
+
     0 !== 1
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 1

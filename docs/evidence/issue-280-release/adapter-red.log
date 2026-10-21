@@ -86,9 +86,9 @@ not ok 11 - seed mismatch and unknown provenance migration stop without deployme
   failureType: 'testCodeFailure'
   error: |-
     The validation function is expected to return "true". Received false
-    
+
     Caught error:
-    
+
     Error: Host release stopped; resolve the private receipt before any further action
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
