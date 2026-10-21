@@ -1,0 +1,110 @@
+Checked 573 files in 647ms. No fixes applied.
+Found 5 warnings.
+Found 3 infos.
+# Subtest: a failure retains streamed text and a safe error across snapshot replay
+not ok 41 - a failure retains streamed text and a safe error across snapshot replay
+  ---
+  duration_ms: 8.776618
+  type: 'test'
+  location: '/home/runner/work/LingxiLoop/LingxiLoop/src/features/chat/runtime/run-updates.test.ts:1:9911'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+
+    + [
+    +   {
+    +     providerMetadata: {
+    +       lingxiloop: {
+    +         activity: {
+    +           id: 'observed-progress:2:2',
+    +           kind: 'commentary',
+    +           label: '任务状态',
+    +           version: 1
+    +         }
+    +       }
+    +     },
+    +     text: '任务已开始，尚未收到模型可显示的正文。',
+    +     type: 'text'
+    +   }
+    + ]
+    - []
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0:
+      type: 'text'
+      text: '任务已开始，尚未收到模型可显示的正文。'
+      providerMetadata:
+        lingxiloop:
+          activity:
+            version: 1
+            id: 'observed-progress:2:2'
+            kind: 'commentary'
+            label: '任务状态'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/src/features/chat/runtime/run-updates.test.ts:179:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: citation projections agree across snapshots and IM replay and disappear before the next draft
+not ok 48 - citation projections agree across snapshots and IM replay and disappear before the next draft
+  ---
+  duration_ms: 11.007711
+  type: 'test'
+  location: '/home/runner/work/LingxiLoop/LingxiLoop/src/features/chat/runtime/run-updates.test.ts:1:19708'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+
+    + [
+    +   {
+    +     providerMetadata: {
+    +       lingxiloop: {
+    +         activity: {
+    +           id: 'observed-progress:2:2',
+    +           kind: 'commentary',
+    +           label: '任务状态',
+    +           version: 1
+    +         }
+    +       }
+    +     },
+    +     text: '请求已接收，正在等待处理。',
+    +     type: 'text'
+    +   }
+    + ]
+    - []
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+    0:
+      type: 'text'
+      text: '请求已接收，正在等待处理。'
+      providerMetadata:
+        lingxiloop:
+          activity:
+            version: 1
+            id: 'observed-progress:2:2'
+            kind: 'commentary'
+            label: '任务状态'
+  operator: 'deepStrictEqual'
+  stack: |-
+    TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/src/features/chat/runtime/run-updates.test.ts:327:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# tests 65
+# pass 63
+# fail 2
+# cancelled 0
+# skipped 0
+# duration_ms 7745.919843
+##[error]Process completed with exit code 1.

@@ -1,0 +1,100 @@
+(node:22603) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22603) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ message updates require a recorded run timestamp and preserve it during previews (22.109898ms)
+✔ snapshot presentation follows rich content and clears stale card styling when content becomes text (3.840127ms)
+✔ same-result snapshots preserve canonical IM fallback content while updating run controls (4.013734ms)
+✔ sent messages, native final citations and interleaved users survive replay and reload in IM order (9.48099ms)
+✔ a run discovered after a sent message owns a separate preview and cannot erase sent text on cancellation or failure (4.003961ms)
+✖ a failure retains streamed text and a safe error across snapshot replay (8.238032ms)
+✔ live replies follow the triggering user despite clock skew, late receipts and late source events (5.668274ms)
+✔ a live reply keeps its anchor until canonical delivery establishes IM order (5.678218ms)
+✔ snapshots preserve IM order after reload and older history does not move the reply (1.198551ms)
+✔ memory activity survives run replies, HTTP replay and IM merging (15.876896ms)
+✔ reload keeps interleaved user clusters when run start times disagree with committed message order (3.788851ms)
+✔ committed replies ignore duplicate snapshots and stale deltas without regressing content (3.265042ms)
+✖ citation projections agree across snapshots and IM replay and disappear before the next draft (13.262309ms)
+✔ paragraph deltas display immediately, deduplicate, and cancellation clears uncommitted drafts (4.602039ms)
+✔ a reply at the page boundary leaves room for subsequently loaded older history (0.987197ms)
+✔ initial history is ready before slow run snapshots, which merge without duplicate replies (272.60967ms)
+✔ separate agents and child threads cannot overwrite each other (1.086865ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 15
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1148.704221
+
+✖ failing tests:
+
+test at src/features/chat/runtime/run-updates.test.ts:1:9911
+✖ a failure retains streamed text and a safe error across snapshot replay (8.238032ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + [
+  +   {
+  +     providerMetadata: {
+  +       lingxiloop: {
+  +         activity: {
+  +           id: 'observed-progress:2:2',
+  +           kind: 'commentary',
+  +           label: '任务状态',
+  +           version: 1
+  +         }
+  +       }
+  +     },
+  +     text: '任务已开始，尚未收到模型可显示的正文。',
+  +     type: 'text'
+  +   }
+  + ]
+  - []
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop-web-ci-dcd/src/features/chat/runtime/run-updates.test.ts:179:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { type: 'text', text: '任务已开始，尚未收到模型可显示的正文。', providerMetadata: [Object] } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at src/features/chat/runtime/run-updates.test.ts:1:19708
+✖ citation projections agree across snapshots and IM replay and disappear before the next draft (13.262309ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + [
+  +   {
+  +     providerMetadata: {
+  +       lingxiloop: {
+  +         activity: {
+  +           id: 'observed-progress:2:2',
+  +           kind: 'commentary',
+  +           label: '任务状态',
+  +           version: 1
+  +         }
+  +       }
+  +     },
+  +     text: '请求已接收，正在等待处理。',
+  +     type: 'text'
+  +   }
+  + ]
+  - []
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop-web-ci-dcd/src/features/chat/runtime/run-updates.test.ts:327:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { type: 'text', text: '请求已接收，正在等待处理。', providerMetadata: [Object] } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

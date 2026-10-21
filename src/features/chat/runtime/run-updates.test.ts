@@ -176,7 +176,9 @@ test('a failure retains streamed text and a safe error across snapshot replay', 
   state = applyRunUpdate(state,target,{ type: 'state',state: { ...snapshot('run','leased'), run: {
     ...snapshot('run','leased').run, fence: 2, requestVersion: 2,
   } } },participants.agent)
-  assert.deepEqual(state.messages[0].content,[])
+  assert.deepEqual(state.messages[0].content,[{ type: 'text', text: '任务已开始，尚未收到模型可显示的正文。',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'observed-progress:2:2', kind: 'commentary', label: '任务状态' } } } }])
+  assert.equal(metadata(state.messages[0]).harnessError,undefined)
 })
 
 test('live replies follow the triggering user despite clock skew, late receipts and late source events', () => {
@@ -324,7 +326,8 @@ test('citation projections agree across snapshots and IM replay and disappear be
   assert.deepEqual(state.messages[0].content, replay.content)
   const next: RunState = { ...completed, run: { ...completed.run, status: 'queued', requestVersion: 2, fence: 2 } }
   state = applyRunUpdate(state, target, { type: 'state', state: next }, participants.agent)
-  assert.deepEqual(state.messages[0].content, [])
+  assert.deepEqual(state.messages[0].content, [{ type: 'text', text: '请求已接收，正在等待处理。',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'observed-progress:2:2', kind: 'commentary', label: '任务状态' } } } }])
   state = applyRunUpdate(state, target, { type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 2,
     requestVersion: 2, attemptId: 'next', seq: 1, draft: '新的草稿' } }, participants.agent)
   assert.deepEqual(state.messages[0].content, [])

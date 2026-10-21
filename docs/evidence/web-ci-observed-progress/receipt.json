@@ -1,0 +1,48 @@
+{
+  "base": "dcd71bd269bcc9281e95bc85fa9263766456ad8f",
+  "workflowRun": 39537559334,
+  "job": 119017669848,
+  "ci": {
+    "lint": "passed with existing warnings/info",
+    "tests": 65,
+    "passed": 63,
+    "failed": 2,
+    "rawLogSha256": "ab640f10461cedfc85625f6e6227e525bba121842eff9e4d43c947f578f06ba1",
+    "rawLogBytes": 99762,
+    "logRead": "single successful read of this new job; prior denied PR271 log not retried"
+  },
+  "local": {
+    "node": "v24.19.0",
+    "runtime": "3.6.0",
+    "dependencySource": "existing read-only /workspace/LingxiLoop-issue247-skill-delivery/node_modules",
+    "red": {
+      "exitCode": 1,
+      "tests": 17,
+      "passed": 15,
+      "failed": 2
+    },
+    "green": {
+      "exitCode": 0,
+      "tests": 17,
+      "passed": 17,
+      "failed": 0
+    },
+    "lint": {
+      "exitCode": 0,
+      "files": 1
+    },
+    "forceExit": false,
+    "testTimeoutMs": 30000
+  },
+  "sourceSha256": {
+    "src/features/chat/runtime/run-updates.test.ts": "4e7ba84d07c400375f57b0625534305711d58bb158cf44d4cb7978283322f8db"
+  },
+  "evidenceSha256": {
+    "FAILURE-MODEL.md": "aa14ad63930ede99516b3f10e1928565189d4a7cb7ee5a7ecb7642b8a9084a23",
+    "ci-failure-excerpt.txt": "ff4bc77cfff6a58e8cb8a8d03a18116e75fa4acd9f70a45eb253f6e4c5b3f8f8",
+    "lint.txt": "22a0ea0a9fb3afb3d811a289610cef5bc8e8e7bb173b72229f4f64d618b8142c",
+    "owning-green.txt": "d7340dff3cba33bf5432d12e6636651046be7286dec1b6dcab8855d75454dab2",
+    "owning-red.txt": "82345e92cd58c26b69e9d071de569948fa04d8aa6890d57224bda32ab29e9a5b"
+  },
+  "textNormalization": "Trailing whitespace removed from copied logs; unmodified raw logs retained privately."
+}
