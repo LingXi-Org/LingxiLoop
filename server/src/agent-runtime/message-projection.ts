@@ -69,7 +69,11 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
     const id = stableId('public-text',[part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
-    put(id,part.firstSeq,annotated({ type: 'text',text: part.text,status },{ id,kind: 'commentary',label: part.acceptedResultId ? '答复片段' : '公开说明' }))
+    // Public text is an unverified archive, including candidates superseded by
+    // repair. Only the delivered answer may activate a renderer reference.
+    for (const text of projectVisualizeText(part.text, true)) {
+      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind: 'commentary',label: part.acceptedResultId ? '答复片段' : '公开说明' }))
+    }
   }
   for (const { eventSeq, startedSeq, activityIdentity, display: recordedDisplay, ...tool } of tools) {
     const seq = startedSeq ?? eventSeq ?? 0
@@ -89,7 +93,9 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
           ? { type: 'incomplete' as const,reason: 'other' as const }
         : view.lifecycle === 'cancelled' || view.lifecycle === 'failed' ? { type: 'incomplete' as const, reason: view.lifecycle === 'cancelled' ? 'cancelled' as const : 'error' as const }
         : view.lifecycle === 'succeeded' ? { type: 'incomplete' as const, reason: 'other' as const } : { type: 'running' as const }
-      put(id,seq, annotated({ type: entry.kind === 'reasoning' ? 'reasoning' : 'text', text: entry.text, status,
+      const text = projectVisualizeText(entry.text, true).flatMap(part => part.type === 'text' ? [part.text] : []).join('')
+      if (!text) continue
+      put(id,seq, annotated({ type: entry.kind === 'reasoning' ? 'reasoning' : 'text', text, status,
         ...(entry.kind === 'reasoning' ? { unstable_summary: entry.label } : {}) }, { id, kind: 'commentary', label: entry.label }))
       continue
     }

@@ -119,6 +119,12 @@ test('state is personal and bounded, fixed resources require a live page, and cl
   const p = await page('personal-state')
   const otherChannel='visualize-other-channel'
   await seedRoom({...actor(),projectId,agentId,channelId:otherChannel})
+  // #260: a repaired, current-conversation reference is readable, while even
+  // the same human's other authorized conversation cannot read that path.
+  assert.equal((await http('/document?path='+encodeURIComponent(p.path))).status,200)
+  const crossDocument=await fetch(base.replace(channelId,otherChannel)+'/document?path='+encodeURIComponent(p.path),{headers:headers()})
+  assert.equal(crossDocument.status,403)
+  assert.match((await crossDocument.json() as { error: string }).error,/outside this conversation/)
   const crossChannel=await fetch(base.replace(channelId,otherChannel)+`/pages/${p.pageId}/state`,{headers:{...headers(),'x-visualize-page-token':p.token}})
   assert.equal(crossChannel.status,410)
   const state = { modelContent: { angle: 30 }, privateContent: { secret: 'private-only' } }
