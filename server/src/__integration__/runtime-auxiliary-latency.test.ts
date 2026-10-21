@@ -28,7 +28,12 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
   let injectedFailure = false
   const provider = createServer(async (request, response) => {
     let raw = ''; for await (const chunk of request) raw += chunk
-    const input = JSON.parse(raw), structured = input.response_format?.type === 'json_object'
+    const input = JSON.parse(raw)
+    assert.equal(input.response_format?.type, 'json_object')
+    // Both agent turns and auxiliary review use JSON mode; only main turns
+    // receive the public-purpose wire contract (review keeps its own schema).
+    const structured = !input.messages.some((message: { role: string; content: string }) =>
+      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v1):'))
     const fail = retryAuxiliary && structured && !injectedFailure
     requests.push({ structured, stream: input.stream === true, effort: input.reasoning_effort, thinking: input.enable_thinking, status: fail ? 503 : 200 })
     if (fail) {
@@ -43,7 +48,7 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'fixture-identity', type: 'function', function: { name: 'directory__self', arguments: '{}' } }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
       return
     }
-    const content = structured ? '{"missing":[]}' : 'Fixture completed.'
+    const content = structured ? '{"missing":[]}' : JSON.stringify({ commentary: '', answer: 'Fixture completed.' })
     if (input.stream) {
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       const heartbeat = setInterval(() => response.write(`data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: 'PRIVATE_SYNTHETIC_REASONING' } }] })}\n\n`), 20)

@@ -11,7 +11,8 @@ import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { readRunProjection } from '../agent-runtime/assistant-transport.js'
 import { nativeText } from '../../../src/lib/nativeMessage.js'
 import { __setEmailProviderOverrideForTesting } from '../modules/email/index.js'
-import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { installRecordingWukong } from './_recording-wukong.js'
 
 // Failures: host/default rules mention absent capabilities; stale grants or
 // schemas leak into actual provider requests; ordinary answers advertise missing
@@ -21,7 +22,10 @@ test('published runtime sends available-only context and preserves truthful prod
   const live = process.env.LINGXIOS_LIVE_AVAILABLE_CAPABILITIES === '1'
   const output = `artifacts/available-capabilities/${live ? 'live' : 'scripted'}`
   await mkdir(output, { recursive: true })
-  await ensureSchemaOnce(); await resetAllTables(); installFakeWukong()
+  await ensureSchemaOnce(); await resetAllTables()
+  // The runtime scopes delivery with AbortSignal; exercise the HTTP client copy
+  // rather than an in-process subclass whose overridden methods are lost.
+  const im = await installRecordingWukong()
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   await pool.query(`UPDATE participants SET capabilities='["documents","email","calendar"]'::jsonb WHERE company_id=$1 AND id=$2`, [companyId, agentId])
@@ -42,13 +46,17 @@ test('published runtime sends available-only context and preserves truthful prod
       let raw = ''
       for await (const chunk of req) raw += chunk
       const request = JSON.parse(raw)
+      assert.equal(request.response_format?.type, 'json_object')
       const system = request.messages.filter((message: { role: string }) => message.role === 'system').map((message: { content: string }) => message.content).join('\n')
       const toolNames = (request.tools ?? []).map((tool: { function: { name: string } }) => tool.function.name)
       // Auxiliary fulfillment review contains general draft/confirmation examples;
       // those are not a product capability list or a feature-specific refusal.
       assert.doesNotMatch(system, /(?:does not support|do not support|unsupported|retired|disabled|不支持|已退役)[^.。\n]{0,70}(?:email|calendar|日历|邮件)|(?:email|calendar|日历|邮件)[^.。\n]{0,70}(?:unsupported|retired|disabled|不支持|已退役)/i,
         'specialized product policy reached the model')
-      if (request.stream) assert.doesNotMatch(system, /email|calendar|日历|邮件/i, 'default assistant policy mentions absent capabilities')
+      if (request.stream) {
+        assert.match(system, /Public output wire contract \(purpose-json-v1\)/)
+        assert.doesNotMatch(system, /email|calendar|日历|邮件/i, 'default assistant policy mentions absent capabilities')
+      }
       assert.ok(!toolNames.some((name: string) => /^(email|calendar)__/.test(name)), 'absent tool schema reached the model')
       if (!current.explicit) assert.doesNotMatch(JSON.stringify(request.messages.filter((message: { role: string }) => request.stream || message.role !== 'system')),
         /\bemail\b|\bcalendar\b|日历|邮件/i, 'default model context mentions absent capabilities')
@@ -66,14 +74,15 @@ test('published runtime sends available-only context and preserves truthful prod
       }
       const usage = { prompt_tokens: 100, completion_tokens: 20 }
       if (!request.stream) {
-        const deferred = raw.includes('"findings"')
+        const review = JSON.parse(request.messages.find((message: { role: string }) => message.role === 'user').content)
+        const deferred = Array.isArray(review.findings)
         const content = JSON.stringify(deferred ? { deferred: [] } : { missing: current.explicit ? [{ quote: current.input, reason: 'No action execution receipt exists.' }] : [] })
         res.writeHead(200, { 'content-type': 'application/json' })
         res.end(JSON.stringify({ choices: [{ message: { role: 'assistant', content }, finish_reason: 'stop' }], usage })); return
       }
       const invented = current.id === 'invented-tool' && attempts++ === 0
       const delta = invented ? { role: 'assistant', tool_calls: [{ index: 0, id: 'invented-send', type: 'function', function: { name: 'email__send', arguments: '{}' } }] }
-        : { role: 'assistant', content: current.answer }
+        : { role: 'assistant', content: JSON.stringify({ commentary: '', answer: current.answer }) }
       res.writeHead(200, { 'content-type': 'text/event-stream' })
       res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason: invented ? 'tool_calls' : 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
     } catch (error) {
@@ -124,7 +133,7 @@ test('published runtime sends available-only context and preserves truthful prod
       } else assert.doesNotMatch(answer, /(?:不支持|无法|不能|没有|不具备|未提供|已退役|不可用)[^。！？\n]{0,70}(?:邮件|日历)|(?:邮件|日历)[^。！？\n]{0,70}(?:不支持|无法|不能|未提供|已退役|不可用)|(?:unsupported|unavailable|retired|cannot|can't|do not support|don't support)[^.!?\n]{0,70}(?:email|calendar)|(?:email|calendar)[^.!?\n]{0,70}(?:unsupported|unavailable|retired)/i,
         'ordinary replies must not volunteer feature-specific absence; writing about a topic is allowed')
       const ledger = (await pool.query(`SELECT count(*)::int AS calls,COALESCE(bool_and(measured),false) AS measured,COALESCE(sum(cost_usd),0)::text AS cost FROM llm_calls WHERE company_id=$1 AND run_id=$2`, [companyId, identity.runId])).rows[0]
-      assert.ok(ledger.calls > 0 && ledger.measured)
+      assert.ok(ledger.calls > 0 && ledger.measured, `measured ledger required for ${scenario.id}: ${JSON.stringify(ledger)}`)
       if (live) assert.ok(Number(ledger.cost) <= 0.25)
       results.push({ case: scenario.id, runStatus: state.run.status, goalStatus: state.run.goalOutcome?.status,
         answerSha256: createHash('sha256').update(answer).digest('hex'), answer, measuredCalls: ledger.calls, costUSD: Number(ledger.cost) })
@@ -138,7 +147,7 @@ test('published runtime sends available-only context and preserves truthful prod
       model: live ? env.OPENAI_MODEL : 'scripted provider; not semantic model evidence', checks, results, violations, providerCalls }, null, 2))
     env.OPENAI_BASE_URL = originalBaseUrl
     __setEmailProviderOverrideForTesting(null)
-    await worker?.stop(); await teardownAll()
+    await worker?.stop(); await teardownAll(); await im.close()
     provider.closeAllConnections(); await new Promise<void>(resolve => provider.close(() => resolve()))
   }
 })

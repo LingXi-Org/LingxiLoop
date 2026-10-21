@@ -33,6 +33,7 @@ test('production workers always expose full tools and disable thinking even with
       let raw = ''
       for await (const chunk of req) raw += chunk
       const request = JSON.parse(raw)
+      assert.equal(request.response_format?.type, 'json_object')
       requests.push(request)
       const usage = { prompt_tokens: 100, completion_tokens: 10 }
       if (!request.stream) {
@@ -41,6 +42,7 @@ test('production workers always expose full tools and disable thinking even with
         return
       }
       res.writeHead(200, { 'content-type': 'text/event-stream' })
+      assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v1\)/)
       const send = (delta: unknown, finish_reason: string | null = null) =>
         res.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason }] })}\n\n`)
       assert.ok(!request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'response__upgrade'))
@@ -50,10 +52,12 @@ test('production workers always expose full tools and disable thinking even with
         res.end(`data: ${JSON.stringify({choices:[],usage})}\n\ndata: [DONE]\n\n`)
         return
       }
+        const framed = JSON.stringify({ commentary: '', answer: body })
+        const split = framed.indexOf('第一段') + '第一段'.length
         send({ role: 'assistant', reasoning_content: privateText })
-        send({ content: '第一段' })
+        send({ content: framed.slice(0, split) })
         await gate
-        send({ reasoning_content: privateText, content: '\n\n第二段 **正文**' }, 'stop')
+        send({ reasoning_content: privateText, content: framed.slice(split) }, 'stop')
       res.end(`data: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
     })
     await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
@@ -115,7 +119,7 @@ test('production workers always expose full tools and disable thinking even with
       for (const request of requests) {
         assert.equal(request.enable_thinking, false)
         assert.equal(request.thinking,undefined)
-        assert.equal((request.response_format as {type:string}|undefined)?.type,request.stream ? undefined : 'json_object')
+        assert.equal((request.response_format as {type:string}|undefined)?.type,'json_object')
         assert.equal(request.reasoning_effort, undefined)
         assert.equal(request.thinking_budget, undefined)
       }
@@ -182,6 +186,7 @@ test('unavailable visualization references are repaired before durable delivery'
     let raw = ''; for await (const chunk of req) raw += chunk
     const request = JSON.parse(raw), usage = { prompt_tokens: 100, completion_tokens: 20 }
     assert.equal(request.enable_thinking, false)
+    assert.equal(request.response_format?.type, 'json_object')
     if (!request.stream) {
       res.writeHead(200, { 'content-type': 'application/json' })
       res.end(JSON.stringify({ choices: [{ message: { role: 'assistant', content: '{"missing":[]}' }, finish_reason: 'stop' }], usage }))
@@ -190,8 +195,9 @@ test('unavailable visualization references are repaired before durable delivery'
     if (calls === 0) {
       assert.match(JSON.stringify(request.messages), /Gen UI is available/)
     }
+    assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v1\)/)
     correction ||= JSON.stringify(request.messages).includes('visualization path is unavailable')
-    const body = ++calls === 1 ? invalid : valid
+    const body = JSON.stringify({ commentary: '', answer: ++calls === 1 ? invalid : valid })
     res.writeHead(200, { 'content-type': 'text/event-stream' })
     res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content: body }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
   })
