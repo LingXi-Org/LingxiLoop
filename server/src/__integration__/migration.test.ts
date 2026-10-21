@@ -397,6 +397,7 @@ test('an empty database reaches the latest schema once and repeated migration is
       { version: 49, name: 'conversation_list_removals' },
       { version: 50, name: 'skill_delivery' },
       { version: 51, name: 'public_text_reader' },
+      { version: 52, name: 'run_trace_provenance' },
     ])
     const { rows: evalSchema } = await database.query(`SELECT
       to_regclass('public.eval_jobs') AS jobs,
