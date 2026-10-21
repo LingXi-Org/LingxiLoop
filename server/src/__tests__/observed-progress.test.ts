@@ -30,6 +30,14 @@ test('closed public tool labels describe actual work without leaking runtime nam
   assert.match(toolDisplay('visualize.save','completed').summary!,/已保存/)
   assert.match(toolDisplay('visualize.read','failed').summary!,/读取.*未完成/)
 })
+test('sliding-window public tool receipt gets its saved state and specific copy without claiming delivery',()=>{
+  const name='visualize.sliding_window'
+  assert.match(text(view,tool(name,'completed')),/已保存.*尚未交付/)
+  assert.equal(toolDisplay(name).title,'生成滑动窗口演示')
+  assert.match(toolDisplay(name,'completed').summary!,/已保存.*交付/)
+  assert.doesNotMatch(text(view,tool(name,'failed')),/已保存/)
+  assert.doesNotMatch(text(view,tool(name,'completed',2)),/已保存/)
+})
 test('current public delivery state distinguishes failed, pending and unconfirmed; only delivered renders',()=>{
   const body='::visualize'+JSON.stringify({path:'/synthetic/current/view.html'})
   const committed=consumeAssistantMessage(view,{version:2,runId:'run',agentId:'agent',sessionId:'session',body,

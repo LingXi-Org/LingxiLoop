@@ -15,7 +15,7 @@ export function observedProgress(view: RunView, tools: readonly HarnessToolPart[
   if (view.lifecycle === 'leased' && last && status(last) === 'failed' && (last.eventSeq ?? 0) > lastTextSeq) {
     return `${toolDisplay(last.toolName).title}未完成。任务仍在进行，尚未收到后续公开说明。`
   }
-  const saved = current.some(tool => ['visualize.save','visualize.chart','visualize.diagram'].includes(tool.toolName) && status(tool) === 'completed')
+  const saved = current.some(tool => ['visualize.save','visualize.chart','visualize.diagram','visualize.sliding_window'].includes(tool.toolName) && status(tool) === 'completed')
   if (saved && !(view.delivery === 'delivered' && view.message?.envelope.requestVersion === view.requestVersion && visualizeReferences(view.message.envelope.body).length)) {
     if (view.message?.envelope.requestVersion === view.requestVersion && visualizeReferences(view.message.envelope.body).length) {
       if (view.delivery === 'failed') return '可视化内容已保存，但答复交付失败，未交付可用的展示引用。'

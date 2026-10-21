@@ -28,3 +28,13 @@ unconfirmed, and only delivered activates the existing reference. Use the real
 public consumeAssistantMessage helper and synthetic receipts; no provider or
 production call is needed. Preserve the original reproduction and failing diff
 in the independent review handoff.
+
+## PR268 integration: sliding-window save receipt
+
+PR268 f98c63680f42d3faae6930a97a24dc3dd068e89b registers the public
+`visualize.sliding_window` tool and saves its rendered document through the same
+authorized save function. Omitting that name from the closed copy and saved
+receipt lists falsely treats its confirmed save as generic work. Before adding
+the name, one synthetic public-receipt regression must require the specific
+tool label, saved-but-not-delivered state and saved completion summary; failed
+or another request's receipts must still prove no save.
