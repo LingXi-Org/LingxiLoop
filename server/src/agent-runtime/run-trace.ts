@@ -16,6 +16,12 @@ function status(lifecycle: RunView['lifecycle']): TraceStatus {
     : lifecycle === 'succeeded' ? 'complete' : lifecycle === 'cancelled' ? 'cancelled' : lifecycle === 'failed' ? 'error' : 'unknown'
 }
 
+export function nativeTraceMatchesState(snapshot: import('@lyyzka/lingxios').RunTraceSnapshot,view: Pick<RunView,'runId'|'fence'|'requestVersion'|'lifecycle'>): boolean {
+  const root = snapshot.spans.find(span=>span.spanId === snapshot.rootSpanId && span.kind === 'agent' && span.runId === view.runId)
+  return snapshot.runId === view.runId && snapshot.fence === view.fence && snapshot.requestVersion === view.requestVersion
+    && (root?.state === 'failed' ? 'error' : root?.state) === status(view.lifecycle)
+}
+
 /** Only existing public tool displays and the scoped product usage ledger enter this DTO.
  * Native events have no timestamp; their seq/arrival time is never a clock. */
 export function buildRunTrace(input: { runId: string; createdAt: string; lifecycle: RunView['lifecycle'];
@@ -54,4 +60,63 @@ export function buildRunTrace(input: { runId: string; createdAt: string; lifecyc
     root: { id: `run-${opaque(input.runId)}`,name: '运行',kind: 'agent',status: rootStatus,start: startedAt === null ? null : 0,end: null,durationMs: null,
       tokensIn: truncated ? null : sum('tokensIn'),tokensOut: truncated ? null : sum('tokensOut'),cost: truncated ? null : sum('cost'),
       costEstimated: calls.some(call => call.costEstimated),children: children.slice(-100) } }
+}
+
+/** Translate only the public runtime trace; no private events/tables or inferred lineage. */
+export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTraceSnapshot,
+  tools: readonly HarnessToolPart[] = []): RunTrace {
+  const origin = snapshot.origin
+  const relative = (time: number|null) => origin !== null && time !== null && time >= origin ? time-origin : null
+  const spans = new Map<string,TraceSpan>()
+  let truncated = snapshot.truncated
+  for (const item of snapshot.spans) {
+    const tool = item.runId === snapshot.runId ? tools.find(tool => tool.toolCallId === item.toolCallId && tool.eventSeq === item.seq) : undefined
+    const parsed = toolDisplaySchema.safeParse(tool?.display)
+    const display = parsed.success ? parsed.data : toolDisplay(item.name ?? '',item.state === 'complete' ? 'completed' : item.state)
+    const detail = item.kind === 'llm' ? '模型调用：包含准入、请求与用量结算。' : item.kind === 'agent'
+      ? '实际执行区间；排队时间单独记录。' : safe(display.purpose)
+    const durationMs = item.startedAt !== null && item.completedAt !== null && item.completedAt >= item.startedAt
+      ? item.completedAt-item.startedAt : null
+    spans.set(item.spanId,{ id: item.spanId,name: item.kind === 'agent' ? item.childRunId ? '子任务' : '运行' : item.kind === 'llm' ? '模型调用' : safe(display.title)?.slice(0,160) ?? '工具调用',
+      kind: item.kind,status: item.state === 'failed' ? 'error' : item.state,start: relative(item.startedAt),end: relative(item.completedAt),durationMs,
+      ...(item.kind === 'llm' ? { model: safe(item.model)?.slice(0,160) ?? '未知模型' } : {}),detail,
+      ...(item.kind === 'tool' && parsed.success ? { input: parsed.data.input,output: safe(parsed.data.summary) } : {}),
+      tokensIn: item.kind === 'llm' && item.usageAvailable ? number(item.inputTokens) : null,
+      tokensOut: item.kind === 'llm' && item.usageAvailable ? number(item.outputTokens) : null,
+      cost: item.kind === 'llm' && item.usageAvailable && item.costMicros != null ? number(item.costMicros/1_000_000) : null,
+      costEstimated: false,children: [] })
+  }
+  const root = spans.get(snapshot.rootSpanId)
+  if (!root) throw new Error('native trace root is missing')
+  const ancestors = (id: string) => {
+    const seen = new Set<string>()
+    for (let cursor: string|null = id; cursor !== null;) {
+      if (seen.has(cursor) || seen.size > 10) return false
+      seen.add(cursor)
+      const item = snapshot.spans.find(span => span.spanId === cursor)
+      if (!item) return false
+      if (item.spanId === snapshot.rootSpanId) return true
+      cursor = item.parentSpanId
+    }
+    return false
+  }
+  for (const item of snapshot.spans) {
+    if (item.spanId === snapshot.rootSpanId) continue
+    const parent = item.parentSpanId ? spans.get(item.parentSpanId) : undefined
+    if (!parent || !ancestors(item.spanId) || parent.children.length >= 100) { truncated = true; continue }
+    parent.children.push(spans.get(item.spanId)!)
+  }
+  const totals = (span: TraceSpan): TraceSpan[] => {
+    span.children.sort((a,b)=>(a.start ?? Infinity)-(b.start ?? Infinity))
+    const calls = span.kind === 'llm' ? [span] : span.children.flatMap(totals)
+    if (span.kind === 'agent') for (const key of ['tokensIn','tokensOut','cost'] as const) {
+      span[key] = !truncated && calls.length && calls.every(call=>call[key] !== null) ? calls.reduce((sum,call)=>sum+call[key]!,0) : null
+    }
+    return calls
+  }
+  totals(root)
+  return { version: 1,startedAt: origin,timingBasis: 'execution',queuedAt: snapshot.queuedAt,revision: snapshot.revision,root,truncated,
+    limitations: [...snapshot.spans.some(span=>span.kind === 'llm' && span.startedAt === null) ? ['llm-offsets' as const] : [],
+      ...snapshot.spans.some(span=>span.startedAt === null || span.completedAt === null && !['running','waiting'].includes(span.state)) ? ['terminal-time' as const] : [],
+      ...truncated ? ['child-discovery' as const] : []] }
 }

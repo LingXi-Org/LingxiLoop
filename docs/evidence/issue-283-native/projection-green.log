@@ -1,0 +1,162 @@
+TAP version 13
+# Subtest: public native hierarchy, actual origin and measured usage survive DTO replay without private payloads
+ok 1 - public native hierarchy, actual origin and measured usage survive DTO replay without private payloads
+  ---
+  duration_ms: 29.545676
+  type: 'test'
+  ...
+# Subtest: trace frames replace metadata, clear unavailable descendants and totals, and reject a superseded request
+ok 2 - trace frames replace metadata, clear unavailable descendants and totals, and reject a superseded request
+  ---
+  duration_ms: 31.306216
+  type: 'test'
+  ...
+# Subtest: new events downgrade coverage until a full current replacement; truncation and unknown fields never become zero
+ok 3 - new events downgrade coverage until a full current replacement; truncation and unknown fields never become zero
+  ---
+  duration_ms: 7.774091
+  type: 'test'
+  ...
+# Subtest: native state operations stream text once, retract it, and end with canonical content
+ok 4 - native state operations stream text once, retract it, and end with canonical content
+  ---
+  duration_ms: 70.961339
+  type: 'test'
+  ...
+# Subtest: projection owns gaps, cancellation, failures, approvals and filtered tool/memory replay
+ok 5 - projection owns gaps, cancellation, failures, approvals and filtered tool/memory replay
+  ---
+  duration_ms: 27.778124
+  type: 'test'
+  ...
+# Subtest: truncated native frames and old browser wire format fail instead of falling back
+ok 6 - truncated native frames and old browser wire format fail instead of falling back
+  ---
+  duration_ms: 4.128565
+  type: 'test'
+  ...
+# Subtest: prefetched upstream failure survives downstream backpressure
+ok 7 - prefetched upstream failure survives downstream backpressure
+  ---
+  duration_ms: 247.603979
+  type: 'test'
+  ...
+# Subtest: commit handoff and tool activity preserve the live answer part
+ok 8 - commit handoff and tool activity preserve the live answer part
+  ---
+  duration_ms: 9.786842
+  type: 'test'
+  ...
+# Subtest: every changing public snapshot round-trips through the actual stream decoder
+ok 9 - every changing public snapshot round-trips through the actual stream decoder
+  ---
+  duration_ms: 18.310336
+  type: 'test'
+  ...
+# Subtest: concurrent protocol responses retain separate prior state and control permissions
+ok 10 - concurrent protocol responses retain separate prior state and control permissions
+  ---
+  duration_ms: 4.780203
+  type: 'test'
+  ...
+# Subtest: JSON normalization, structural replacements and append paths keep every wire state exact
+ok 11 - JSON normalization, structural replacements and append paths keep every wire state exact
+  ---
+  duration_ms: 4.29345
+  type: 'test'
+  ...
+# Subtest: relative timing, measured usage, unknown cost and safe public details survive JSON replay
+ok 12 - relative timing, measured usage, unknown cost and safe public details survive JSON replay
+  ---
+  duration_ms: 3.225182
+  type: 'test'
+  ...
+# Subtest: cancellation/failure stops incomplete tool clocks without manufacturing end times
+ok 13 - cancellation/failure stops incomplete tool clocks without manufacturing end times
+  ---
+  duration_ms: 0.44365
+  type: 'test'
+  ...
+# Subtest: invalid/negative timestamps stay unknown, and duplicate IDs do not duplicate spans
+ok 14 - invalid/negative timestamps stay unknown, and duplicate IDs do not duplicate spans
+  ---
+  duration_ms: 0.159217
+  type: 'test'
+  ...
+# Subtest: native state/event projection carries an honest root trace without body pollution
+ok 15 - native state/event projection carries an honest root trace without body pollution
+  ---
+  duration_ms: 1.677923
+  type: 'test'
+  ...
+# (node:97482) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: current leased failed refresh hides totals, retains spans, and later success restores coverage
+ok 16 - current leased failed refresh hides totals, retains spans, and later success restores coverage
+  ---
+  duration_ms: 19.053991
+  type: 'test'
+  ...
+# Subtest: current succeeded failed refresh hides totals, retains spans, and later success restores coverage
+ok 17 - current succeeded failed refresh hides totals, retains spans, and later success restores coverage
+  ---
+  duration_ms: 3.649492
+  type: 'test'
+  ...
+# Subtest: current failed failed refresh hides totals, retains spans, and later success restores coverage
+ok 18 - current failed failed refresh hides totals, retains spans, and later success restores coverage
+  ---
+  duration_ms: 3.435535
+  type: 'test'
+  ...
+# Subtest: current cancelled failed refresh hides totals, retains spans, and later success restores coverage
+ok 19 - current cancelled failed refresh hides totals, retains spans, and later success restores coverage
+  ---
+  duration_ms: 5.629645
+  type: 'test'
+  ...
+# Subtest: an older concurrent failed refresh cannot invalidate a newer same-revision success
+ok 20 - an older concurrent failed refresh cannot invalidate a newer same-revision success
+  ---
+  duration_ms: 1.319681
+  type: 'test'
+  ...
+# Subtest: an older concurrent success cannot promote coverage after a newer failed refresh
+ok 21 - an older concurrent success cannot promote coverage after a newer failed refresh
+  ---
+  duration_ms: 1.393881
+  type: 'test'
+  ...
+# Subtest: superseded request refresh failure leaves the newer success intact
+ok 22 - superseded request refresh failure leaves the newer success intact
+  ---
+  duration_ms: 2.20134
+  type: 'test'
+  ...
+# Subtest: superseded fence refresh failure leaves the newer success intact
+ok 23 - superseded fence refresh failure leaves the newer success intact
+  ---
+  duration_ms: 2.507525
+  type: 'test'
+  ...
+# Subtest: superseded lifecycle refresh failure leaves the newer success intact
+ok 24 - superseded lifecycle refresh failure leaves the newer success intact
+  ---
+  duration_ms: 3.074799
+  type: 'test'
+  ...
+# Subtest: aborting a refresh leaves confirmed coverage intact, including an already-aborted entry
+ok 25 - aborting a refresh leaves confirmed coverage intact, including an already-aborted entry
+  ---
+  duration_ms: 1.983036
+  type: 'test'
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 25
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 972.59242

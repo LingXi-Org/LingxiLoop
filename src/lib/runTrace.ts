@@ -21,6 +21,7 @@ const span: z.ZodType<TraceSpan> = z.lazy(() => z.object({
   children: z.array(span).max(100),
 }).strict())
 export const runTraceSchema = z.object({ version: z.literal(1),startedAt: metric,root: span,
+  timingBasis: z.enum(['creation','execution']).optional(),queuedAt: metric.optional(),revision: z.string().max(160).optional(),
   truncated: z.boolean(),limitations: z.array(z.enum(['llm-offsets','terminal-time','child-discovery','presentation-unavailable'])).max(4),
 }).strict()
 export type RunTrace = z.infer<typeof runTraceSchema>

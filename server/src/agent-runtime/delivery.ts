@@ -100,7 +100,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         }
         const clientNonce = context.im?.messageKey ?? `agent-${createHash('sha256').update(context.commit.resultId).digest('hex')}`
         const projection = await readRunProjection(api,{ tenantId: work.tenantId, agentId: work.agentId, sessionId: work.sessionId,
-          runId: work.id, principalId: work.principalId!, ...(work.threadId ? { threadId: work.threadId } : {}) },true,scope.signal,database,scope)
+          runId: work.id, principalId: work.principalId!, ...(work.threadId ? { threadId: work.threadId } : {}) },true,scope.signal,database,scope,false)
         const projected = projection.committed(message,context.commit).message
         const payload = nativeMessageSchema.parse({ ...projected, metadata: { ...projected.metadata, custom: {
           ...projected.metadata.custom, conversationId, sourceMessageId: clientNonce } } })
