@@ -5,7 +5,7 @@ import { NoEffectError, skillIndex } from '@lyyzka/lingxios'
 import type { ActionContext, RunVerificationContext, ToolDefinition, VerificationRecord } from '@lyyzka/lingxios'
 import { nativeTool, authorizeAudienceRead, compareResource } from '../agents/tools.js'
 import { productConversationId } from './identity.js'
-import { readAuthorizedVisualizeDocument, saveVisualizeDocument, validateVisualizeFragment } from '../im/visualize.js'
+import { readAuthorizedVisualizeDocument, readAuthorizedVisualizeSnapshot, saveVisualizeDocument, validateVisualizeFragment } from '../im/visualize.js'
 import { HttpError } from '../http/errors.js'
 import { DiagramInputError, sequenceDiagramSchema, renderSequenceDiagram } from '../im/visualize-diagram.js'
 import { NumericChartError, numericChartSchema, renderNumericChart } from '../im/visualize-numeric.js'
@@ -35,7 +35,7 @@ export const visualizeTools: ToolDefinition[] = [
     async execute(_context, input) { return { ok: true, value: { path: input.path, text: await readVisualizeReference(input.path), complete: true } } },
   }),
   nativeTool('visualize.save', z.object({ name, html: z.string().min(1).max(5_000_000) }).strict(), {
-    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Follow the complete visualize skill supplied in host rules after selecting it once with native skills.load. Derive numeric labels and decisions from the same computed data as the plot; check branches, units and same-series differences against the original inputs. name is lowercase-hyphenated without .html. Returns the actual authorized absolute path for a final ::visualize JSON reference; read back with visualize.read and reconcile calculations, labels and final prose before delivery. Saving verifies storage, not numeric correctness. Never send a full HTML document or unfinished script.',
+    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Follow the complete visualize skill supplied in host rules after selecting it once with native skills.load. Derive numeric labels and decisions from the same computed data as the plot; check branches, units and same-series differences against the original inputs. name is lowercase-hyphenated without .html. Returns the actual authorized path, literal reference, stored version and sourceHash. Read back with visualize.read and reconcile calculations, labels and final prose. Correct actual errors before delivery; if this version is already checked, use its reference outside code without saving it again merely to obtain a reference. Saving verifies storage, not numeric correctness. Never send a full HTML document or unfinished script.',
     effect: 'transaction', approval: false, authorize, semanticVersion: '2',
     async execute(context, input) {
       try { validateVisualizeFragment(input.name, input.html) }
@@ -49,7 +49,8 @@ export const visualizeTools: ToolDefinition[] = [
       await activateAuthoring(context)
       const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
         name: input.name, html: input.html, requestVersion: context.requestVersion!, database: context.database as Queryable })
-      return { ok: true, value: { path: document.path, bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex') } }
+      return { ok: true, value: { path: document.path, reference: `::visualize${JSON.stringify({ path: document.path })}`,
+        bytes: Buffer.byteLength(document.html), version: document.version, sourceHash: document.sourceHash } }
     },
     async verify(context, input, value) {
       await authorize(context)
@@ -146,9 +147,13 @@ export const visualizeTools: ToolDefinition[] = [
     },
   }),
   nativeTool('visualize.read', z.object({ path }).strict(), {
-    description: 'Read back a saved visualization fragment in the current authorized conversation. Use its actual returned path for edits and exports.',
+    description: 'Read back a saved visualization fragment and its actual version, sourceHash and literal reference in the current authorized conversation. Reconcile the content and known errors. If this version is correct, deliver its reference outside code; save again only when the content needs correction. A read is storage evidence, not browser execution or semantic verification.',
     effect: 'read', approval: false, authorize,
-    async execute(context, input) { return { ok: true, value: await readAuthorizedVisualizeDocument({ ...scope(context), path: input.path }, context.database as Queryable) } },
+    async execute(context, input) {
+      const document = await readAuthorizedVisualizeSnapshot({ ...scope(context), path: input.path }, context.database as Queryable)
+      return { ok: true, value: { path: document.path, reference: `::visualize${JSON.stringify({ path: document.path })}`,
+        version: document.version, sourceHash: document.source_hash, html: document.html } }
+    },
   }),
   nativeTool('visualize.export', z.object({ path, name }).strict(), {
     description: 'When the user explicitly asks to export an existing visualization, execute the original render.py and create a downloadable standalone HTML artifact. The upstream exporter requires the source fragment under 1 MB (inline hosting supports up to 5 MB); simplify larger sources first. Replace host-only follow-up/openExternal interactions in the editable fragment first; widgetState/setWidgetState remain supported offline.',

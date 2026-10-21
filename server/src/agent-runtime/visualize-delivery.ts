@@ -4,7 +4,7 @@ import { NoEffectError, skillIndex, type RunVerificationContext, type SkillDeliv
 import { authorizeAudienceRead } from '../agents/tools.js'
 import { ForbiddenError } from '../modules/access/public.js'
 import { HttpError } from '../http/errors.js'
-import { readAuthorizedVisualizeSnapshot, validateVisualizeFragment } from '../im/visualize.js'
+import { assertVisualizeActor, readAuthorizedVisualizeSnapshot, validateVisualizeFragment } from '../im/visualize.js'
 import type { Queryable } from '../db/queryable.js'
 import { loadRuntimeBinding } from './context.js'
 import { assertFrozenAudience, productConversationId } from './identity.js'
@@ -16,6 +16,38 @@ import { projectGenUiReferences } from '../../../src/features/chat/visualize/zco
 export const VISUALIZE_UNAVAILABLE_TEXT = '当前可视化交付所需的授权或技能版本已不可用，因此未交付可视化。'
 const checker = 'product:visualize-delivery'
 const pending = (activationId: string, hint: string): SkillDeliveryDecision => ({ activationId,outcome: 'pending',evidence: { hint } })
+const missingReferenceHint = 'Authoring is activated but no complete usable visualization reference was delivered. Use the literal reference from the current checked save/read result outside code. Correct known content errors before delivery; save and read back a new fragment only if none exists or its content needs correction.'
+
+/** Bounded repair observations, never a delivery decision or an HTML response.
+ * Scope and audience checks precede even the path query. Final verification
+ * still rechecks access, current authorship and storage after this snapshot. */
+async function savedRepairCandidates(context: RunVerificationContext) {
+  const database = context.database as Queryable, { work } = context
+  const channelId = productConversationId(work)
+  await loadRuntimeBinding({ ...work, conversationId: channelId }, database)
+  await assertFrozenAudience(database, work)
+  await authorizeAudienceRead(context, { action: 'conversation:read', resource: { type: 'conversation', id: channelId } })
+  const actor = { companyId: work.tenantId, channelId, userId: work.principalId! }
+  await assertVisualizeActor(database, actor)
+  const rows = await database.query<{ path: string }>(`SELECT path FROM im_visualize_documents
+    WHERE company_id=$1 AND channel_id=$2 AND run_id=$3 AND agent_id=$4 AND created_by=$5 AND request_version=$6
+    ORDER BY path ASC LIMIT 4`, [work.tenantId, channelId, work.id, work.agentId, work.principalId, context.requestVersion])
+  const savedCandidates: Array<{ reference: string; version: number; sourceHash: string }> = []
+  for (const { path } of rows.rows.slice(0, 3)) {
+    context.signal.throwIfAborted()
+    const doc = await readAuthorizedVisualizeSnapshot({ ...actor, path }, database)
+    // A callback can use a pool outside a transaction in a diagnostic fixture;
+    // recheck identity after the discovery query as well as at final commit.
+    if (doc.run_id !== work.id || doc.agent_id !== work.agentId || doc.created_by !== work.principalId
+      || doc.request_version !== context.requestVersion) continue
+    try { validateVisualizeFragment(basename(doc.path), doc.html) }
+    catch (error) { if (error instanceof HttpError && error.status === 400) continue; throw error }
+    const sourceHash = createHash('sha256').update(doc.html).digest('hex')
+    if (sourceHash !== doc.source_hash) continue
+    savedCandidates.push({ reference: `::visualize${JSON.stringify({ path: doc.path })}`, version: doc.version, sourceHash })
+  }
+  return { savedCandidates, candidatesTruncated: rows.rows.length > 3 }
+}
 
 /** Native pending decisions keep the final guard closed but are inconclusive.
  * The public failed-check channel explicitly asks the worker to repair the gap;
@@ -24,8 +56,21 @@ export async function verifyVisualizeAuthoringCandidate(context: RunVerification
   const decisions = await verifyVisualizeDelivery(context)
   const gaps = decisions.filter(decision => decision.outcome === 'pending')
   const nonDelivery = decisions.filter(decision => decision.outcome === 'unsupported' || decision.outcome === 'failed')
+  let repair: Awaited<ReturnType<typeof savedRepairCandidates>> | undefined
+  if (gaps.some(gap => gap.evidence.missingReference === true)) {
+    try { repair = await savedRepairCandidates(context) }
+    catch (error) {
+      context.signal.throwIfAborted()
+      // Authorization/resource changes reveal no candidates. Infrastructure
+      // errors must not masquerade as an empty, successful lookup.
+      if (!(error instanceof HttpError) && !(error instanceof NoEffectError) && !(error instanceof ForbiddenError)) throw error
+    }
+  }
   const records: VerificationRecord[] = gaps.length ? [{ checker: 'product:visualize-authoring',status: 'failed',evidence: {
-    hint: gaps.map(gap => String(gap.evidence.hint)).join('\n'),
+    hint: repair?.savedCandidates.length
+      ? 'The final answer lacks a usable reference. These are authorized current-request storage snapshots, not proof of semantic correctness or browser execution. Reconcile known errors first. If the selected version has already been read back and checked with no known errors, use its exact literal reference outside code in the final answer; do not save again merely to obtain a reference. If content is wrong, correct and read back that content before delivery. Do not deliver an older draft or choose a candidate only because of its version number.'
+      : gaps.map(gap => String(gap.evidence.hint)).join('\n'),
+    ...(repair ?? {}),
     pendingActivationIds: gaps.map(gap => gap.activationId),deliveryProven: false,
   } }] : []
   // Native may durably resolve an honest non-delivery, but it cannot satisfy
@@ -62,7 +107,7 @@ export async function verifyVisualizeDelivery(context: RunVerificationContext): 
     const parts = projectGenUiReferences(context.candidate.body, true)
     const references = parts.flatMap(part => part.kind === 'ui' ? [part.reference] : [])
     if (!references.length || references.length > 32 || parts.some(part => part.kind === 'invalid' || part.kind === 'pending')) {
-      decisions.push(pending(activation.id, 'Authoring is activated but no complete usable visualization was delivered. Save and read back the current-request fragment; put its actual literal ::visualize JSON reference outside code in the final answer.')); continue
+      decisions.push({ activationId: activation.id, outcome: 'pending', evidence: { missingReference: true, hint: missingReferenceHint } }); continue
     }
     try {
       const channelId = productConversationId(work)
