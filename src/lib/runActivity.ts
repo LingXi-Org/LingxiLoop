@@ -45,12 +45,18 @@ export const toolDisplaySchema = z.object({
 export type ToolDisplay = z.infer<typeof toolDisplaySchema>
 
 const labels: Record<string, readonly [string, string]> = {
+  ipython: ['执行脚本', '执行本次请求所需的脚本并检查实际结果。'],
+  'skills.load': ['读取技能说明', '读取当前任务所需的技能使用说明。'],
+  'skills.activate': ['确认技能交付', '记录本次请求需要交付的技能结果。'],
+  'observations.read': ['读取工具结果', '继续读取已获授权的工具结果。'],
   'catalog.discover': ['查找可用工具', '查找当前授权允许使用的工具。'],
   'response.upgrade': ['准备完整答复', '按当前请求准备完整的答复格式。'],
   'task.read_evidence': ['回查引用依据', '读取已收集且获授权的依据片段。'],
   'task.read_attachment': ['回查请求附件', '按请求中的附件版本读取所需片段。'],
   'visualize.read_reference': ['查看可视化参考', '查阅当前可视化组件的使用说明。'],
   'visualize.save': ['保存可视化', '保存当前任务的可视化内容。'],
+  'visualize.chart': ['生成数据图表', '根据给定数据计算并保存图表。'],
+  'visualize.diagram': ['生成流程图', '根据给定步骤生成并保存流程图。'],
   'visualize.read': ['读取可视化', '读取已保存且获授权的可视化内容。'],
   'visualize.export': ['导出可视化', '将已保存的可视化导出为附件。'],
   'documents.list': ['查找文档', '列出当前有权访问的文档。'],
@@ -170,6 +176,11 @@ export function toolDisplay(action: string, status?: unknown): ToolDisplay {
     cancelled: '这一步已停止。', unknown: '操作结果尚未确认，请先核对结果，避免重复执行。',
     'awaiting-approval': '需要你确认后才能继续。',
   }
+  if (status === 'completed' && ['visualize.save','visualize.chart','visualize.diagram'].includes(action)) {
+    return { title,purpose,summary: '可视化内容已保存；展示引用是否交付会在答复中确认。' }
+  }
+  if (status === 'failed' && action.startsWith('visualize.')) return { title,purpose,summary: `${title}未完成；本次工具调用没有确认交付结果。` }
+  if (status === 'failed' && action === 'ipython') return { title,purpose,summary: '本次脚本执行未完成，请以已确认的工具结果为准。' }
   return { title, purpose, ...(typeof status === 'string' && summaries[status] ? { summary: summaries[status] } : {}) }
 }
 
