@@ -28,14 +28,14 @@ not ok 2 - concurrent migrators serialize and apply each migration once
   error: |-
     Expected values to be strictly deep-equal:
     + actual - expected
-    
+
       [
         {
     +     count: 51
     -     count: 50
         }
       ]
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected:
