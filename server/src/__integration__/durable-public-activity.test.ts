@@ -12,6 +12,7 @@ import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { assistantRunResponse, readRunProjection } from '../agent-runtime/assistant-transport.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeText, type NativeMessage } from '../../../src/lib/nativeMessage.js'
+import type { RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
 // Failure model: docs/evidence/issue-215-public/FAILURE-MODEL.md, cases 2/3/5.
@@ -114,8 +115,34 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
       const streamedFinal = await terminal
       assert.equal(streamedFinal.content.filter(part => part.type === 'text' && part.text === 'The inspection is complete.').length,1)
     }
-    if (outcome !== 'unsafe') assert.equal(retained.length,1)
-    assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
+    if (outcome === 'unsafe') {
+      // PR270 archives the rejected no-tool candidate after its safe replacement.
+      // Preserve its authorized history identity without hiding a missing answer.
+      const current = await api.readRunState(identity)
+      assert.ok(current?.message && current.run.resultId)
+      assert.equal(current.run.status,'succeeded')
+      assert.equal(current.message.agentId,identity.agentId)
+      assert.equal(current.message.envelope.requestVersion,current.run.requestVersion)
+      assert.equal(current.message.envelope.body,'The inspection is complete.')
+      const harness = replay.metadata.custom.harness as unknown as RunDisplayState
+      assert.equal(harness.resultId,current.run.resultId)
+      assert.equal(harness.messageFence,current.run.resultFence)
+      assert.deepEqual(replay.status,{ type: 'complete',reason: 'stop' })
+      assert.equal(nativeText(replay),'The inspection is complete.')
+      assert.ok(calls >= 2,'the unsafe candidate must be replaced by a later successful response')
+      assert.equal(retained.length,0,'the rejected candidate must not remain in the foreground')
+      const publishedId = activityAnnotation(published[0])?.id
+      assert.ok(publishedId)
+      const history = replayProjection.activityPage(0)
+      const archived = history.message.content.filter(part => activityAnnotation(part)?.id === publishedId)
+      assert.equal(archived.length,1)
+      assert.ok(archived[0].type === 'text')
+      assert.equal(archived[0].text,'I will inspect the available files.')
+      assert.doesNotMatch(JSON.stringify(history),/candidate-json|PRIVATE_REASONING|PRIVATE_ARGUMENTS|PRIVATE_AFTER_REVOKE_OR_CANCEL|PRIVATE_STREAM_SENTINEL/)
+    } else {
+      assert.equal(retained.length,1)
+      assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
+    }
     assert.equal(replay.content.some(part => part.type === 'tool-call' && part.toolName === 'files.list'),completes)
     if (outcome === 'cancelled' || outcome === 'revoked') assert.deepEqual(replay.status,{ type: 'incomplete',reason: outcome === 'cancelled' ? 'cancelled' : 'error' })
     const allEvents = await api.readEvents(identity)

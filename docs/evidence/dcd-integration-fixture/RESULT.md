@@ -1,0 +1,11 @@
+# Integration fixture correction
+
+The failed [integration job](https://github.com/LingXi-Org/LingxiLoop/actions/runs/39537549519/job/119017666014) for `dcd71bd269bcc9281e95bc85fa9263766456ad8f` was downloaded successfully once using the existing GitHub authorization. It reported 357 passed, one failed and 14 skipped. The sole failure was the unsafe case's obsolete foreground stable-ID assertion. The other four cases in this file passed in that CI run.
+
+Only `durable-public-activity.test.ts` changes. The unsafe case now requires a successful replacement response from the public `readRunState` API, the exact safe final answer, matching accepted result/fence in the foreground projection, and a second model call. The rejected candidate must be absent from foreground commentary but remain exactly once in authorized history under its original stable ID and exact safe text. History, replay and public events still reject the private sentinel. No product projection, authorization or runtime code changes.
+
+Local checks: the single changed file passes Biome lint, TypeScript syntax transpilation and `git diff --check`. Transpilation is not a full typecheck.
+
+The owning integration file has **not passed locally**. A dedicated loopback-only PostgreSQL/Redis fixture used already cached Docker images with `--pull=never` and temporary in-memory data directories; the local test database migrated successfully. The first invocation stopped on a missing explicit test environment value. After supplying it, the test loader stopped because the sparse worktree lacked the generated `server/assets/visualize-range.js`; no test body ran. A disk-capacity alert then required stopping local execution. Both self-created containers (`lingxi-dcd-fixture-pg`, `lingxi-dcd-fixture-redis`) were removed and free space recovered to 218 MiB. No production configuration or data was accessed, and no provider calls, installs or image pulls occurred.
+
+Preserved external evidence: `/workspace/integration-dcd-review/{job-failed.log,local-migrate.log,local-red.log,local-red-ready.log,fixture-lint.log,fixture-transpile.log}`. Final exact-candidate CI must run this owning file successfully before release. No green result is claimed for the newly added integration assertions.
