@@ -1,0 +1,16 @@
+
+ RUN  e2e v0.17.0 /tmp/LingxiLoop-issue275
+      run 01a15efc-cb97-7edd-bc2f-25a448fe3615 · targets: web
+
+ ✓ |web| e2e/web/react-public-activity.e2e.ts (1 test) 4.23s
+   ✓ public process is disclosed while answer chunks, terminal fragments and replay stay visible 4.23s
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  15:03:08
+   Duration  4.85s
+     Report  .e2e/issue275-settled/report.json
+
+      JUnit  .e2e/issue275-settled/junit.xml
+   Markdown  .e2e/issue275-settled/summary.md
+
