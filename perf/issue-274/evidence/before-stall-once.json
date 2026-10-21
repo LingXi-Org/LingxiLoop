@@ -1,0 +1,116 @@
+{
+  "phase": "error",
+  "error": "无法加载交互视图交互视图准备运行资源超时，请重试。重试",
+  "elapsed": 15037.299999999988,
+  "stamps": {},
+  "errors": [],
+  "requests": [
+    {
+      "name": "pages",
+      "start": 38.79999999998836,
+      "end": 43.40000000002328,
+      "bytes": 7704
+    },
+    {
+      "name": "visualize.css",
+      "start": 44.70000000001164,
+      "end": 49.09999999997672,
+      "bytes": 30909
+    },
+    {
+      "name": "visualize.html",
+      "start": 44.90000000002328,
+      "end": 49.40000000002328,
+      "bytes": 17807
+    },
+    {
+      "name": "calendar.js",
+      "start": 45.29999999998836,
+      "end": 49.29999999998836,
+      "bytes": 13797
+    },
+    {
+      "name": "vendor/floating-ui-core-1.7.3.min.js",
+      "start": 50.70000000001164,
+      "end": 56.20000000001164,
+      "bytes": 12829
+    },
+    {
+      "name": "vendor/floating-ui-dom-1.7.4.min.js",
+      "start": 50.79999999998836,
+      "end": 56.40000000002328,
+      "bytes": 10551
+    },
+    {
+      "name": "vendor/d3-7.9.0.min.js",
+      "start": 51,
+      "end": 56.5,
+      "bytes": 280006
+    },
+    {
+      "name": "vendor/lucide-1.17.0.js",
+      "start": 51,
+      "end": 59.09999999997672,
+      "bytes": 601980
+    }
+  ],
+  "transport": {
+    "attempts": [
+      {
+        "name": "visualize.css",
+        "attempt": 1,
+        "start": 3403.41096,
+        "end": 3405.25599,
+        "outcome": "complete"
+      },
+      {
+        "name": "visualize.html",
+        "attempt": 1,
+        "start": 3403.644506,
+        "end": 3405.422226,
+        "outcome": "complete"
+      },
+      {
+        "name": "gen-ui.js",
+        "attempt": 1,
+        "start": 3404.459699,
+        "outcome": "stalled"
+      },
+      {
+        "name": "calendar.js",
+        "attempt": 1,
+        "start": 3404.623242,
+        "end": 3405.369588,
+        "outcome": "complete"
+      },
+      {
+        "name": "vendor/floating-ui-core-1.7.3.min.js",
+        "attempt": 1,
+        "start": 3409.012319,
+        "end": 3410.889762,
+        "outcome": "complete"
+      },
+      {
+        "name": "vendor/floating-ui-dom-1.7.4.min.js",
+        "attempt": 1,
+        "start": 3409.244633,
+        "end": 3411.820572,
+        "outcome": "complete"
+      },
+      {
+        "name": "vendor/lucide-1.17.0.js",
+        "attempt": 1,
+        "start": 3409.39745,
+        "end": 3414.536058,
+        "outcome": "complete"
+      },
+      {
+        "name": "vendor/d3-7.9.0.min.js",
+        "attempt": 1,
+        "start": 3409.618968,
+        "end": 3411.447509,
+        "outcome": "complete"
+      }
+    ]
+  }
+}

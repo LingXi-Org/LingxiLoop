@@ -6,6 +6,7 @@ import { genUiWidgetStateSchema, type GenUiStateChange, type GenUiWidgetState } 
 import type { IGenUiService, PluginSandboxHandle, PluginSandboxPlatformPort } from './contracts'
 import { buildWebDocument, buildWebShell } from './document'
 import { lingxiApiFetch } from '@/api/transport'
+import { readWebResource } from './resource'
 
 type Page = PluginSandboxHandle & {
   target: GenUiCardTarget; html: string; state: GenUiWidgetState | null; frame?: HTMLIFrameElement
@@ -212,13 +213,14 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
   const requirePage = () => { if (!active) throw new Error('Interactive view is not ready'); current(active,false); return active }
   const service: IGenUiService = {
     async readDocument() { return {path:target.path,html:''} },
-    async prepareSandbox(_input, signal) {
+    async prepareSandbox(_input, signal, onProgress) {
       assertScope()
       signal?.throwIfAborted()
       // Retention uses target.instanceKey; acquisition uses an attempt identity.
       // An aborted POST can still commit remotely after a successful retry.
       // Its late transaction must not revoke that newer page as a replacement.
       const instanceKey = crypto.randomUUID()
+      onProgress?.({stage:'page'})
       const result = await http<{pageId:string;initId:string;html:string;state:GenUiWidgetState|null;stateRevision:number;path:string}>(`${path(target)}/pages`, {method:'POST',signal,body:JSON.stringify({path:target.path,sourceMessageId:target.sourceMessageId,instanceKey})})
       const page: Page = {...result,sandboxId:result.pageId,shellUrl:'about:srcdoc',partition:'opaque',target,html:'',state:result.state === null ? null : genUiWidgetStateSchema.parse(result.state),active:false,disposed:false,gestureAt:-Infinity,captures:new Map(),loadCount:0,revision:result.stateRevision ?? 0,userId:ownerUserId}
       pages.set(page.sandboxId,page)
@@ -228,11 +230,19 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
         assertScope()
         signal?.throwIfAborted()
         active = page
+        const pending = new Set<string>()
+        const progress = () => onProgress?.({stage:'resources',pending:[...pending]})
         page.html = await buildWebDocument(result.html,result.state,async name => {
-          assertScope()
-          const response = await lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',headers:headers(page),signal:resourceSignal})
-          if (!response.ok) throw new Error(`Visualize resource unavailable (${response.status})`)
-          return response.text()
+          pending.add(name);progress()
+          try {
+            return await readWebResource(name, attemptSignal => {
+              assertScope()
+              // Match the resource route's no-store policy even before headers
+              // arrive, so a recovery GET is not queued behind an idle GET of
+              // the same URL by the browser's HTTP cache lock.
+              return lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',cache:'no-store',headers:headers(page),signal:attemptSignal})
+            }, resourceSignal)
+          } finally { pending.delete(name);progress() }
         })
         assertScope()
         signal?.throwIfAborted()

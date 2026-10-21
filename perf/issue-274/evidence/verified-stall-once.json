@@ -1,0 +1,151 @@
+{
+  "phase": "ready",
+  "error": "",
+  "elapsed": 5753.699999999953,
+  "stamps": {
+    "frame": 5331.900000000023,
+    "initialized": 5729
+  },
+  "errors": [],
+  "requests": [
+    {
+      "name": "pages",
+      "start": 39.59999999997672,
+      "end": 45.90000000002328,
+      "bytes": 7704
+    },
+    {
+      "name": "visualize.css",
+      "start": 49.199999999953434,
+      "end": 53.5,
+      "bytes": 30909
+    },
+    {
+      "name": "visualize.html",
+      "start": 49.90000000002328,
+      "end": 53.79999999993015,
+      "bytes": 17807
+    },
+    {
+      "name": "gen-ui.js",
+      "start": 50.29999999993015,
+      "end": 5306.5,
+      "bytes": 0
+    },
+    {
+      "name": "calendar.js",
+      "start": 50.79999999993015,
+      "end": 54.09999999997672,
+      "bytes": 13797
+    },
+    {
+      "name": "vendor/floating-ui-core-1.7.3.min.js",
+      "start": 56.90000000002328,
+      "end": 63.40000000002328,
+      "bytes": 12829
+    },
+    {
+      "name": "vendor/floating-ui-dom-1.7.4.min.js",
+      "start": 57.09999999997672,
+      "end": 63.699999999953434,
+      "bytes": 10551
+    },
+    {
+      "name": "vendor/lucide-1.17.0.js",
+      "start": 57.29999999993015,
+      "end": 64.29999999993015,
+      "bytes": 601980
+    },
+    {
+      "name": "vendor/d3-7.9.0.min.js",
+      "start": 57.40000000002328,
+      "end": 64.09999999997672,
+      "bytes": 280006
+    },
+    {
+      "name": "gen-ui.js",
+      "start": 5301.099999999977,
+      "end": 5304.099999999977,
+      "bytes": 506505
+    },
+    {
+      "name": "state",
+      "start": 5306.29999999993,
+      "end": 5310.5,
+      "bytes": 327
+    },
+    {
+      "name": "validate",
+      "start": 5740.199999999953,
+      "end": 5746.199999999953,
+      "bytes": 302
+    }
+  ],
+  "transport": {
+    "attempts": [
+      {
+        "name": "visualize.css",
+        "attempt": 1,
+        "start": 2660.865632,
+        "end": 2662.664648,
+        "outcome": "complete"
+      },
+      {
+        "name": "visualize.html",
+        "attempt": 1,
+        "start": 2661.445451,
+        "end": 2662.751277,
+        "outcome": "complete"
+      },
+      {
+        "name": "gen-ui.js",
+        "attempt": 1,
+        "start": 2661.766016,
+        "outcome": "stalled",
+        "end": 7920.586329
+      },
+      {
+        "name": "calendar.js",
+        "attempt": 1,
+        "start": 2662.184597,
+        "end": 2662.880508,
+        "outcome": "complete"
+      },
+      {
+        "name": "vendor/floating-ui-core-1.7.3.min.js",
+        "attempt": 1,
+        "start": 2670.05922,
+        "end": 2672.424677,
+        "outcome": "complete"
+      },
+      {
+        "name": "vendor/floating-ui-dom-1.7.4.min.js",
+        "attempt": 1,
+        "start": 2671.187773,
+        "end": 2672.517604,
+        "outcome": "complete"
+      },
+      {
+        "name": "vendor/lucide-1.17.0.js",
+        "attempt": 1,
+        "start": 2671.382952,
+        "end": 2672.869306,
+        "outcome": "complete"
+      },
+      {
+        "name": "vendor/d3-7.9.0.min.js",
+        "attempt": 1,
+        "start": 2671.608006,
+        "end": 2672.682198,
+        "outcome": "complete"
+      },
+      {
+        "name": "gen-ui.js",
+        "attempt": 2,
+        "start": 7912.817922,
+        "end": 7913.813228,
+        "outcome": "complete"
+      }
+    ]
+  }
+}

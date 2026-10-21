@@ -1,0 +1,24 @@
+{
+  "base": "63948c598b9778a35941f3dcabf8ef57e2e2d6d8",
+  "checks": {
+    "baselineStall": "expected failure",
+    "recoveryBrowser": "8 passed",
+    "deadlineBrowser": "2 passed",
+    "owningLint": 0,
+    "scopedTypecheck": 0,
+    "assetVerifier": 0,
+    "fullTypecheck": "blocked: missing private runtime package"
+  },
+  "sha256": {
+    "src/features/chat/visualize/web/resource.ts": "6de7c7aea8b83e565ece8adf40d399784d4762e9f028c8c75eac1bc8008bc884",
+    "src/features/chat/visualize/web/host.ts": "4b665c69d8e22a94553ede4b547a871f488b9ddcac95e1e8d2fc1fdb30477ae0",
+    "src/features/chat/visualize/web/contracts.ts": "9f71c47e6a98ee1e13f1b64842c1ff859ea64adcbdb44492f156c2fd65d6d138",
+    "src/features/chat/visualize/zcode/gen-ui/adapters/page.ts": "824a9274e1d5cd92ca88a07c71852aa8c33e8faf2818627c6ad28a03b093ba49",
+    "e2e/visualize/fixture-api.ts": "f33683bbf559467a951cb10934ff0b3e69f5394fff8124890ebbb16ed1f177b5",
+    "e2e/visualize/resources.e2e.ts": "cde27bf880d0a9417e8a4aae1414314cf51ebc8d015b44560e1d59d7b50fc244",
+    "e2e/visualize/timeout.e2e.ts": "e54553fba47b18120a89af7802c0e666beb179877ce21e96171f943cba8119df",
+    "e2e.visualize-resources.config.ts": "189d33b61db9e618a668309bb9ce8f89a32fd2f3623acf9bd335f1983b77eaf8",
+    "package-lock.json": "44e34b1a352c8d1c51ab4821786156cc028abd174927c4301a8f6caed5346673",
+    "server/assets/visualize-runtime/gen-ui.js": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494"
+  }
+}

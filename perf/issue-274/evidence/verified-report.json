@@ -1,0 +1,1426 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15ef7-d113-7089-abad-304817107525",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-21T14:57:42.106Z",
+    "finishedAt": "2026-10-21T14:58:24.640Z",
+    "project": {
+      "id": "lingxiloop-issue193-visualize",
+      "configDigest": "208c2965a5afb3d6e8c944c33b11a35da26d48c9e1f15be05e8a45a487938252"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "63948c598b9778a35941f3dcabf8ef57e2e2d6d8",
+      "branch": "fix/274-resource-preparation",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "ea184bed2891d008fab6117153c41be5d02f2bd21ac6924e77577c8585c0f305",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20stall-once",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "resource recovery: stall-once"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T14:57:43.969Z",
+            "durationMs": 8670,
+            "artifacts": [
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:6"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20stall-once-635b7079/default/attempt-0/screenshots/001-usable-stall-once.png",
+                "size": 41737,
+                "sha256": "2c2919c427aa4c2806d6cd4aa34afc94570bbe306399b59fee7d601af163d60d"
+              },
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20stall-once-635b7079/default/attempt-0/trace/trace.zip",
+                "size": 877039,
+                "sha256": "4ecb2fafe3e2984a21b6f5553e69060cfb793ea1b726785d46542f36fc511484"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:44.057Z",
+                "durationMs": 640,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:44.698Z",
+                "durationMs": 5823,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:50.524Z",
+                "durationMs": 425,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 85,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-chart rect\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:50.949Z",
+                "durationMs": 302,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 86,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:51.253Z",
+                "durationMs": 900,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 87,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:52.155Z",
+                "durationMs": 316,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 88,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "usable-stall-once",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:52.471Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [
+                  "01a15ef7-da21-7b33-9be0-7e3fa8f3026c:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 98,
+                  "column": 17
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "77a68ff9059165c5b1b9f4d801e5823214e74ecebf9b59be75bfed5a00d1bc05",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20drop-once",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "resource recovery: drop-once"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15ef7-fc00-721e-9833-f39f62bbb261",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T14:57:52.640Z",
+            "durationMs": 3336,
+            "artifacts": [
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15ef7-fc00-721e-9833-f39f62bbb261:6"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20drop-once-780477f8/default/attempt-0/screenshots/001-usable-drop-once.png",
+                "size": 41737,
+                "sha256": "2c2919c427aa4c2806d6cd4aa34afc94570bbe306399b59fee7d601af163d60d"
+              },
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20drop-once-780477f8/default/attempt-0/trace/trace.zip",
+                "size": 820919,
+                "sha256": "134b994fc294794ca1273c161b7d083c582919ff9e7b81fc9a3be76024a57736"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:52.648Z",
+                "durationMs": 454,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:53.102Z",
+                "durationMs": 822,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:53.926Z",
+                "durationMs": 346,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 85,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-chart rect\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:54.272Z",
+                "durationMs": 293,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 86,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:54.565Z",
+                "durationMs": 938,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 87,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:55.504Z",
+                "durationMs": 303,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 88,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef7-fc00-721e-9833-f39f62bbb261:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "usable-drop-once",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:55.807Z",
+                "durationMs": 57,
+                "events": [],
+                "artifacts": [
+                  "01a15ef7-fc00-721e-9833-f39f62bbb261:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 98,
+                  "column": 17
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "caee119e6a65876897f798716409a736c3b178d77dc6fdaa691f11e672ae0051",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20503-once",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "resource recovery: 503-once"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T14:57:55.976Z",
+            "durationMs": 3386,
+            "artifacts": [
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:6"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20503-once-d4aa9c2f/default/attempt-0/screenshots/001-usable-503-once.png",
+                "size": 41737,
+                "sha256": "2c2919c427aa4c2806d6cd4aa34afc94570bbe306399b59fee7d601af163d60d"
+              },
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20503-once-d4aa9c2f/default/attempt-0/trace/trace.zip",
+                "size": 803114,
+                "sha256": "340fe62043ee6d49cd349e135bf42cb47fa7d253013eace6973cebe4c11992da"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:55.993Z",
+                "durationMs": 483,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:56.477Z",
+                "durationMs": 805,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:57.284Z",
+                "durationMs": 426,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 85,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-chart rect\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:57.710Z",
+                "durationMs": 288,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 86,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:57.998Z",
+                "durationMs": 906,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 87,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:58.904Z",
+                "durationMs": 306,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 88,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "usable-503-once",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:59.211Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [
+                  "01a15ef8-0908-7b80-ab0b-e0f0b61dadd1:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 98,
+                  "column": 17
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9fe0c97b6758ec087a2285ed2676553c53f40851d1244afeb98fdeb2b2c94d20",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20slow-body",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "resource recovery: slow-body"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T14:57:59.364Z",
+            "durationMs": 11422,
+            "artifacts": [
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:6"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20slow-body-49802165/default/attempt-0/screenshots/001-usable-slow-body.png",
+                "size": 41737,
+                "sha256": "2c2919c427aa4c2806d6cd4aa34afc94570bbe306399b59fee7d601af163d60d"
+              },
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20slow-body-49802165/default/attempt-0/trace/trace.zip",
+                "size": 968798,
+                "sha256": "94fcc5cdf023954880e537537b819c44339963ba55bf16e0a8100a69d27a3be6"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:59.371Z",
+                "durationMs": 495,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:57:59.866Z",
+                "durationMs": 8632,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:08.503Z",
+                "durationMs": 493,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 85,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-chart rect\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:08.997Z",
+                "durationMs": 308,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 86,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:09.307Z",
+                "durationMs": 977,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 87,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:10.285Z",
+                "durationMs": 298,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 88,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "usable-slow-body",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:10.584Z",
+                "durationMs": 83,
+                "events": [],
+                "artifacts": [
+                  "01a15ef8-1643-7d5d-b75a-f5a7c4c7e268:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 98,
+                  "column": 17
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "aabcd0e77fe616a0b6abcfe26196cc11b762c2e6a1b78f7cf8e698c69fb17706",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20slow-headers",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "resource recovery: slow-headers"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15ef8-42e3-7734-929f-393f792d53ac",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T14:58:10.787Z",
+            "durationMs": 9196,
+            "artifacts": [
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15ef8-42e3-7734-929f-393f792d53ac:6"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20slow-headers-3934ee30/default/attempt-0/screenshots/001-usable-slow-headers.png",
+                "size": 41737,
+                "sha256": "2c2919c427aa4c2806d6cd4aa34afc94570bbe306399b59fee7d601af163d60d"
+              },
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20slow-headers-3934ee30/default/attempt-0/trace/trace.zip",
+                "size": 1040732,
+                "sha256": "d48c4f8add6f563bf0c7fe40802cdb8da851cf94205b5e8f1b24c7d9d79c1627"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:10.798Z",
+                "durationMs": 431,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:11.229Z",
+                "durationMs": 6520,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:17.751Z",
+                "durationMs": 418,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 85,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-chart rect\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:18.170Z",
+                "durationMs": 323,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 86,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:18.495Z",
+                "durationMs": 968,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 87,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:19.464Z",
+                "durationMs": 320,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 88,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-42e3-7734-929f-393f792d53ac:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "usable-slow-headers",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:19.784Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [
+                  "01a15ef8-42e3-7734-929f-393f792d53ac:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 98,
+                  "column": 17
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7619349282ad4be0ca8faef3ee2f689e3f6c9525a3dacf13358ede28db257aa5",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20offline",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "resource recovery: offline"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T14:58:19.984Z",
+            "durationMs": 3366,
+            "artifacts": [
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15ef8-66d0-763c-b031-a1fde193fe3b:10"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20offline-40ae5ab7/default/attempt-0/screenshots/001-usable-offline.png",
+                "size": 41737,
+                "sha256": "2c2919c427aa4c2806d6cd4aa34afc94570bbe306399b59fee7d601af163d60d"
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20offline-40ae5ab7/default/attempt-0/trace/trace.zip",
+                "size": 767577,
+                "sha256": "fb309bce638ece4b0a21dbcc8e1e03e4f8baa463d770b3326d5ccda75ded547e"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:19.996Z",
+                "durationMs": 447,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:20.444Z",
+                "durationMs": 381,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:20.826Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 80,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重试\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:20.834Z",
+                "durationMs": 119,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 81,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:20.953Z",
+                "durationMs": 720,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 85,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-chart rect\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:21.673Z",
+                "durationMs": 273,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 86,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:21.946Z",
+                "durationMs": 904,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 87,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:22.850Z",
+                "durationMs": 293,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 88,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:23.145Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 90,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:23.176Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 91,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a15ef8-66d0-763c-b031-a1fde193fe3b:10",
+                "index": 10,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "usable-offline",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:23.189Z",
+                "durationMs": 54,
+                "events": [],
+                "artifacts": [
+                  "01a15ef8-66d0-763c-b031-a1fde193fe3b:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 98,
+                  "column": 17
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "05f026e826d91bf9c1214a2bc813e3a3ec1f145f86601e0a51a8aff131c2f0fd",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20denied",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "resource recovery: denied"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15ef8-73f6-70b6-9e91-585c3a640a11",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T14:58:23.350Z",
+            "durationMs": 606,
+            "artifacts": [
+              {
+                "id": "01a15ef8-73f6-70b6-9e91-585c3a640a11:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20denied-3f6e5a39/default/attempt-0/trace/trace.zip",
+                "size": 159708,
+                "sha256": "202a332ba2b768d212496cb0fa60441ab8e7b1e85cd63fb8077fd489955386cd"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15ef8-73f6-70b6-9e91-585c3a640a11:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:23.361Z",
+                "durationMs": 488,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef8-73f6-70b6-9e91-585c3a640a11:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:23.849Z",
+                "durationMs": 73,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "079b2f5db1c061966a13b2f77d304dbbc29a4df3c3bc8e1078538d5f78331188",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20retry-after",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "resource recovery: retry-after"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15ef8-7654-75e8-a911-01d703fa2bce",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T14:58:23.956Z",
+            "durationMs": 602,
+            "artifacts": [
+              {
+                "id": "01a15ef8-7654-75e8-a911-01d703fa2bce:artifact:0",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20retry-after-9271ed04/default/attempt-0/trace/trace.zip",
+                "size": 159713,
+                "sha256": "9699ec5ff61b2573dc7aa7ca9dafa75f9899538d6eca2eaed61e06265f4923ff"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15ef8-7654-75e8-a911-01d703fa2bce:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:23.965Z",
+                "durationMs": 474,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef8-7654-75e8-a911-01d703fa2bce:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:58:24.439Z",
+                "durationMs": 87,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 8,
+      "selected": 8,
+      "executed": 8,
+      "passed": 8,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 8,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 5848022,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

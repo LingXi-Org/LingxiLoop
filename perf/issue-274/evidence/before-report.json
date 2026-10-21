@@ -1,0 +1,380 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15ef2-041a-792b-87dd-e48591c9084e",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-21T14:51:22.179Z",
+    "finishedAt": "2026-10-21T14:51:41.000Z",
+    "project": {
+      "id": "lingxiloop-issue193-visualize",
+      "configDigest": "208c2965a5afb3d6e8c944c33b11a35da26d48c9e1f15be05e8a45a487938252"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "63948c598b9778a35941f3dcabf8ef57e2e2d6d8",
+      "branch": "fix/274-resource-preparation",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "ea184bed2891d008fab6117153c41be5d02f2bd21ac6924e77577c8585c0f305",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20stall-once",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "resource recovery: stall-once"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a15ef2-0ee2-7b5b-8709-7a586dc9aec1",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-21T14:51:24.258Z",
+            "durationMs": 16691,
+            "artifacts": [
+              {
+                "id": "01a15ef2-0ee2-7b5b-8709-7a586dc9aec1:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20stall-once-635b7079/default/attempt-0/failure/screen.txt",
+                "size": 646,
+                "sha256": "813f25cdfc43b1fe59eec0b8e9925c0a5818f5f0a3d7926c32c40a3a9e4f8b31"
+              },
+              {
+                "id": "01a15ef2-0ee2-7b5b-8709-7a586dc9aec1:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20stall-once-635b7079/default/attempt-0/screenshots/001-failure.png",
+                "size": 25152,
+                "sha256": "cbdb042c76d8a509e92802a8e529ddda1e64a515b709a4aa6bddbe6ebe3a74d9"
+              },
+              {
+                "id": "01a15ef2-0ee2-7b5b-8709-7a586dc9aec1:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_resources.e2e.ts__resource_20recovery_3A_20stall-once-635b7079/default/attempt-0/trace/trace.zip",
+                "size": 860852,
+                "sha256": "d84ed64446abd5b954e0ae2beef1272e60637d8f60ff955e0fedb57bf1f9e6f9"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expected \"error\" to be \"ready\"",
+              "retryable": false,
+              "phase": "body",
+              "source": {
+                "file": "e2e/visualize/resources.e2e.ts",
+                "line": 58,
+                "column": 31
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5193/e2e/visualize/loading.html?count=1",
+              "screen": "01a15ef2-0ee2-7b5b-8709-7a586dc9aec1:artifact:0",
+              "screenshot": "01a15ef2-0ee2-7b5b-8709-7a586dc9aec1:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a15ef2-0ee2-7b5b-8709-7a586dc9aec1:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:51:24.915Z",
+                "durationMs": 622,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15ef2-0ee2-7b5b-8709-7a586dc9aec1:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T14:51:25.537Z",
+                "durationMs": 15073,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/resources.e2e.ts",
+                  "line": 10,
+                  "column": 39
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "77a68ff9059165c5b1b9f4d801e5823214e74ecebf9b59be75bfed5a00d1bc05",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20drop-once",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "resource recovery: drop-once"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "caee119e6a65876897f798716409a736c3b178d77dc6fdaa691f11e672ae0051",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20503-once",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "resource recovery: 503-once"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "9fe0c97b6758ec087a2285ed2676553c53f40851d1244afeb98fdeb2b2c94d20",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20slow-body",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "resource recovery: slow-body"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "7619349282ad4be0ca8faef3ee2f689e3f6c9525a3dacf13358ede28db257aa5",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20offline",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "resource recovery: offline"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "05f026e826d91bf9c1214a2bc813e3a3ec1f145f86601e0a51a8aff131c2f0fd",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20denied",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "resource recovery: denied"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "079b2f5db1c061966a13b2f77d304dbbc29a4df3c3bc8e1078538d5f78331188",
+        "testId": "e2e/visualize/resources.e2e.ts::resource%20recovery%3A%20retry-after",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "resource recovery: retry-after"
+        ],
+        "file": "e2e/visualize/resources.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/resources.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 7,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 7,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 886650,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
