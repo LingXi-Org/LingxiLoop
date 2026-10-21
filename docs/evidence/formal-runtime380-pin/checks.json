@@ -1,0 +1,29 @@
+{
+  "format": "formal-runtime380-owning-checks/v1",
+  "verified": true,
+  "base": "3b8a712af056b6937e7735d9328c646b920f75d8",
+  "node": "22.23.3",
+  "serverTypecheckExit": 0,
+  "webTypecheckExit": 0,
+  "owning": {
+    "passed": 20,
+    "failed": 0,
+    "files": [
+      "native-run-trace.test.ts",
+      "trace-presentation-coverage.test.ts",
+      "native-public-purpose.test.ts",
+      "public-text-deployment.test.ts",
+      "run-trace-runtime-profile.test.ts"
+    ]
+  },
+  "newPgProviderBrowserRuns": false,
+  "files": {
+    "formal-package.json": "f784cf95175b25d5e5edcd6eddb3fa234d189b03ad314302580bec216881b2ff",
+    "consumer-verification.json": "4660a4b00a5d900c6fc6749928e9dfb44dec6c5cba8e0bd72a0b6be8de57bfa1",
+    "owning-green.log": "8fff4a6dc21ea45d06876eb5367d5f5e2318f31a113e100914e81f580e2701c9",
+    "server-typecheck.log": "c2b9e0a92ca31a3268f6d2e7af4b310de9f1c7d5a21b79a5afd7f6b8a628a558",
+    "web-typecheck.log": "892c3a122c9abd6e5f372a8228f28bab5042705a5cf19a9d989f4cb968c61ccd",
+    "web-typecheck-sparse-missing.log": "64a45c37bd11f05fde7dc5ec4f9b1727019baf759d98d194e3fbe4e5769ebf2b",
+    "verify-consumer.mjs": "8a6d684eee1ff1dabb5196d3b3a6687d4d347701989ae6aabc204f760f4886b6"
+  }
+}

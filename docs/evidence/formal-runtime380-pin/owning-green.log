@@ -1,0 +1,132 @@
+TAP version 13
+# Subtest: native purpose keeps a same-attempt tool answer visible through actual transport decoding and supersedes by identity
+ok 1 - native purpose keeps a same-attempt tool answer visible through actual transport decoding and supersedes by identity
+  ---
+  duration_ms: 91.00766
+  type: 'test'
+  ...
+# Subtest: a completed commentary part cannot hide a separate answer preview
+ok 2 - a completed commentary part cannot hide a separate answer preview
+  ---
+  duration_ms: 6.645434
+  type: 'test'
+  ...
+# Subtest: explicit failed answer becomes history when the next declared attempt begins
+ok 3 - explicit failed answer becomes history when the next declared attempt begins
+  ---
+  duration_ms: 0.435157
+  type: 'test'
+  ...
+# Subtest: first declared commentary and successive answer chunks stay correctly visible before stream EOF
+ok 4 - first declared commentary and successive answer chunks stay correctly visible before stream EOF
+  ---
+  duration_ms: 9.782094
+  type: 'test'
+  ...
+# Subtest: public native hierarchy, actual origin and measured usage survive DTO replay without private payloads
+ok 5 - public native hierarchy, actual origin and measured usage survive DTO replay without private payloads
+  ---
+  duration_ms: 10.122339
+  type: 'test'
+  ...
+# Subtest: trace frames replace metadata, clear unavailable descendants and totals, and reject a superseded request
+ok 6 - trace frames replace metadata, clear unavailable descendants and totals, and reject a superseded request
+  ---
+  duration_ms: 50.973296
+  type: 'test'
+  ...
+# Subtest: new events downgrade coverage until a full current replacement; truncation and unknown fields never become zero
+ok 7 - new events downgrade coverage until a full current replacement; truncation and unknown fields never become zero
+  ---
+  duration_ms: 10.209359
+  type: 'test'
+  ...
+# Subtest: deployment metadata is a pure immutable enabled producer configuration source
+ok 8 - deployment metadata is a pure immutable enabled producer configuration source
+  ---
+  duration_ms: 1.059103
+  type: 'test'
+  ...
+# Subtest: normal Worker model configuration consumes the same producer leaf without changing budgets
+ok 9 - normal Worker model configuration consumes the same producer leaf without changing budgets
+  ---
+  duration_ms: 3040.668482
+  type: 'test'
+  ...
+# Subtest: 0052 requires the exact native trace package and preserves previous exact profiles
+ok 10 - 0052 requires the exact native trace package and preserves previous exact profiles
+  ---
+  duration_ms: 14.853424
+  type: 'test'
+  ...
+# (node:119174) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: current leased failed refresh hides totals, retains spans, and later success restores coverage
+ok 11 - current leased failed refresh hides totals, retains spans, and later success restores coverage
+  ---
+  duration_ms: 23.660434
+  type: 'test'
+  ...
+# Subtest: current succeeded failed refresh hides totals, retains spans, and later success restores coverage
+ok 12 - current succeeded failed refresh hides totals, retains spans, and later success restores coverage
+  ---
+  duration_ms: 4.776327
+  type: 'test'
+  ...
+# Subtest: current failed failed refresh hides totals, retains spans, and later success restores coverage
+ok 13 - current failed failed refresh hides totals, retains spans, and later success restores coverage
+  ---
+  duration_ms: 2.93451
+  type: 'test'
+  ...
+# Subtest: current cancelled failed refresh hides totals, retains spans, and later success restores coverage
+ok 14 - current cancelled failed refresh hides totals, retains spans, and later success restores coverage
+  ---
+  duration_ms: 5.041841
+  type: 'test'
+  ...
+# Subtest: an older concurrent failed refresh cannot invalidate a newer same-revision success
+ok 15 - an older concurrent failed refresh cannot invalidate a newer same-revision success
+  ---
+  duration_ms: 1.456324
+  type: 'test'
+  ...
+# Subtest: an older concurrent success cannot promote coverage after a newer failed refresh
+ok 16 - an older concurrent success cannot promote coverage after a newer failed refresh
+  ---
+  duration_ms: 1.310377
+  type: 'test'
+  ...
+# Subtest: superseded request refresh failure leaves the newer success intact
+ok 17 - superseded request refresh failure leaves the newer success intact
+  ---
+  duration_ms: 3.198673
+  type: 'test'
+  ...
+# Subtest: superseded fence refresh failure leaves the newer success intact
+ok 18 - superseded fence refresh failure leaves the newer success intact
+  ---
+  duration_ms: 3.345731
+  type: 'test'
+  ...
+# Subtest: superseded lifecycle refresh failure leaves the newer success intact
+ok 19 - superseded lifecycle refresh failure leaves the newer success intact
+  ---
+  duration_ms: 2.386756
+  type: 'test'
+  ...
+# Subtest: aborting a refresh leaves confirmed coverage intact, including an already-aborted entry
+ok 20 - aborting a refresh leaves confirmed coverage intact, including an already-aborted entry
+  ---
+  duration_ms: 4.397514
+  type: 'test'
+  ...
+1..20
+# tests 20
+# suites 0
+# pass 20
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6616.438625
