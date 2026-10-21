@@ -62,7 +62,8 @@ export function visualizeFixtureApi(): Plugin {
           if(!allowed.includes(name)){reply({},404);return}
           if(fault.split(',').includes('handshake')&&name==='gen-ui.js'){res.setHeader('content-type','text/plain');res.end('/* fault fixture: runtime unavailable */');return}
           const file=name==='gen-ui.js'?'server/assets/visualize-runtime/gen-ui.js':path.join('third_party/zcode/skills/visualize/assets',name)
-          const delay = Number(process.env.E2E_VISUALIZE_RESOURCE_DELAY ?? 0)
+          const delays = JSON.parse(process.env.E2E_VISUALIZE_RESOURCE_DELAYS ?? '{}') as Record<string, number>
+          const delay = Number(delays[name] ?? process.env.E2E_VISUALIZE_RESOURCE_DELAY ?? 0)
           if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay))
           res.setHeader('cache-control','no-store')
           res.setHeader('content-type','text/plain');res.end(await readFile(file));return

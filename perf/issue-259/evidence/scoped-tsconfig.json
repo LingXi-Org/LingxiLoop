@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "node",
+      "vite/client"
+    ]
+  },
+  "include": [
+    "../src/features/chat/visualize/web/document.ts",
+    "../e2e/visualize/first-card.e2e.ts",
+    "../e2e/visualize/fixture-api.ts",
+    "../e2e.visualize-first-card.config.ts"
+  ]
+}

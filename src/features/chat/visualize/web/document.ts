@@ -12,19 +12,23 @@ const vendors = [
 ]
 /** Same ordering as ZCode service/protocol; all resources are fetched by the authorized host. */
 export async function buildWebDocument(fragment: string, state: GenUiWidgetState | null, resource: (name: string) => Promise<string>) {
-  const [css, kit, runtime, calendar] = await Promise.all([
-    resource('visualize.css'),resource('visualize.html'),resource('gen-ui.js'),
+  const [css, content, runtime, calendar] = await Promise.all([
+    resource('visualize.css'),resource('visualize.html').then(async kit => {
+      let content = fragment + kit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
+      // Only the kit/fragment determines these dependencies. Start their reads
+      // as soon as it arrives, without waiting for unrelated CSS/runtime/calendar.
+      // Keep the whole chain in Promise.all so any failure aborts preparation.
+      const sources = await Promise.all(vendors.filter(([url]) => content.includes(url))
+        .map(async ([url, name]) => [url, await resource(name)] as const))
+      // Fetch timing does not change script execution order (Core before DOM).
+      for (const [url,source] of sources) {
+        const escaped = url.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
+        content = content.replace(new RegExp(`<script\\b[^>]*\\bsrc=["']${escaped}["'][^>]*>\\s*</script>`, 'gi'), () => script(source))
+      }
+      return content
+    }),resource('gen-ui.js'),
     /\bviz-calendar\b/i.test(fragment) ? resource('calendar.js') : Promise.resolve(''),
   ])
-  let content = fragment + kit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
-  // Download independent authorized resources concurrently. Replace in the
-  // original order so Floating UI Core still executes before DOM and author JS.
-  const sources = await Promise.all(vendors.filter(([url]) => content.includes(url))
-    .map(async ([url, name]) => [url, await resource(name)] as const))
-  for (const [url,source] of sources) {
-    const escaped = url.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
-    content = content.replace(new RegExp(`<script\\b[^>]*\\bsrc=["']${escaped}["'][^>]*>\\s*</script>`, 'gi'), () => script(source))
-  }
   const initial = JSON.stringify(state).replaceAll('<','\\u003c')
   return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${SANDBOX_CSP}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script(captureLibrary+'\n;('+trustedBootstrap.toString()+')();')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
 }
