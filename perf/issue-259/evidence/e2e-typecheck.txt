@@ -1,0 +1,103 @@
+
+> lingxiloop@0.1.0-beta test:e2e:typecheck
+> tsc -p e2e/tsconfig.json
+
+e2e/forum/api.ts(100,36): error TS2345: Argument of type '() => OpenAI' is not assignable to parameter of type '() => OpenAI | Promise<OpenAI>'.
+  Type 'OpenAI' is not assignable to type 'OpenAI | Promise<OpenAI>'.
+    Type 'import("/tmp/lingxi-web-verification/node_modules/openai/client").OpenAI' is not assignable to type 'import("/workspace/LingxiLoop/server/node_modules/openai/client").OpenAI'.
+      Property '#private' in type 'OpenAI' refers to a different member that cannot be accessed from within type 'OpenAI'.
+server/src/agent-runtime/activity-tool.ts(9,64): error TS2345: Argument of type 'ZodObject<{ version: ZodLiteral<1>; id: ZodString; kind: ZodEnum<{ plan: "plan"; commentary: "commentary"; reasoning: "reasoning"; }>; label: ZodPipe<ZodString, ZodString>; text: ZodString; state: ZodEnum<...>; plan: ZodOptional<...>; }, $strict>' is not assignable to parameter of type 'ZodObject<$ZodLooseShape, $strip>'.
+  Property 'exactPartial' is missing in type 'ZodObject<{ version: ZodLiteral<1>; id: ZodString; kind: ZodEnum<{ plan: "plan"; commentary: "commentary"; reasoning: "reasoning"; }>; label: ZodPipe<ZodString, ZodString>; text: ZodString; state: ZodEnum<...>; plan: ZodOptional<...>; }, $strict>' but required in type 'ZodObject<$ZodLooseShape, $strip>'.
+server/src/agent-runtime/activity-tool.ts(18,46): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+server/src/agent-runtime/assistant-transport.ts(3,58): error TS2305: Module '"@lyyzka/lingxios/ui"' has no exported member 'consumePublicTextAttempts'.
+server/src/agent-runtime/assistant-transport.ts(3,149): error TS2305: Module '"@lyyzka/lingxios/ui"' has no exported member 'PublicTextAttempt'.
+server/src/agent-runtime/assistant-transport.ts(4,44): error TS2305: Module '"@lyyzka/lingxios"' has no exported member 'RuntimeOperationContext'.
+server/src/agent-runtime/assistant-transport.ts(73,144): error TS2554: Expected 1 arguments, but got 2.
+server/src/agent-runtime/assistant-transport.ts(106,54): error TS2554: Expected 1 arguments, but got 2.
+server/src/agent-runtime/assistant-transport.ts(137,56): error TS2339: Property 'publicTextParts' does not exist on type 'RunView'.
+server/src/agent-runtime/assistant-transport.ts(137,91): error TS2339: Property 'publicTextAttempts' does not exist on type 'RunView'.
+server/src/agent-runtime/assistant-transport.ts(148,44): error TS2339: Property 'publicTextParts' does not exist on type 'RunView'.
+server/src/agent-runtime/assistant-transport.ts(148,74): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/assistant-transport.ts(186,49): error TS2554: Expected 1 arguments, but got 2.
+server/src/agent-runtime/assistant-transport.ts(194,55): error TS2554: Expected 1-2 arguments, but got 3.
+server/src/agent-runtime/assistant-transport.ts(195,43): error TS2339: Property 'publicTextAttempts' does not exist on type '{ events: RunEvent[]; nextSeq: number; }'.
+server/src/agent-runtime/assistant-transport.ts(201,51): error TS2554: Expected 1 arguments, but got 2.
+server/src/agent-runtime/context.ts(6,8): error TS2305: Module '"@lyyzka/lingxios"' has no exported member 'CapabilityResolutionContext'.
+server/src/agent-runtime/context.ts(219,12): error TS4113: This member cannot have an 'override' modifier because it is not declared in the base class 'DefaultRuntimePolicy'.
+server/src/agent-runtime/conversations.ts(1,51): error TS2305: Module '"@lyyzka/lingxios"' has no exported member 'RuntimeOperationContext'.
+server/src/agent-runtime/conversations.ts(65,43): error TS2554: Expected 1 arguments, but got 2.
+server/src/agent-runtime/delivery.ts(39,57): error TS2554: Expected 1 arguments, but got 2.
+server/src/agent-runtime/delivery.ts(120,85): error TS2554: Expected 1-2 arguments, but got 3.
+server/src/agent-runtime/message-projection.ts(62,14): error TS2339: Property 'publicTextParts' does not exist on type 'RunView'.
+server/src/agent-runtime/message-projection.ts(62,41): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(67,27): error TS2339: Property 'publicTextParts' does not exist on type 'RunView'.
+server/src/agent-runtime/public-text-safety.ts(1,15): error TS2305: Module '"@lyyzka/lingxios"' has no exported member 'PublicTextSafetyInput'.
+server/src/agent-runtime/public-text-safety.ts(1,38): error TS2305: Module '"@lyyzka/lingxios"' has no exported member 'PublicTextSafetyDecision'.
+server/src/agent-runtime/runtime.ts(73,5): error TS1360: Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' does not satisfy the expected type 'ModelDriver | ModelConfiguration'.
+  Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' is not assignable to type 'ModelConfiguration'.
+    Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' is not assignable to type 'Omit<OpenAIDriverOptions, "maxAttempts" | "fetchImpl" | "sleep" | "retryBaseMs">'.
+      Types of property 'reasoningEffort' are incompatible.
+        Type '"low" | undefined' is not assignable to type '"max" | "high" | undefined'.
+          Type '"low"' is not assignable to type '"max" | "high" | undefined'.
+server/src/agent-runtime/runtime.ts(111,15): error TS2353: Object literal may only specify known properties, and 'allowPublicText' does not exist in type 'RealtimeOptions'.
+server/src/agent-runtime/runtime.ts(111,31): error TS7006: Parameter 'work' implicitly has an 'any' type.
+server/src/agent-runtime/runtime.ts(111,37): error TS7006: Parameter '_requestVersion' implicitly has an 'any' type.
+server/src/agent-runtime/runtime.ts(111,54): error TS7006: Parameter 'context' implicitly has an 'any' type.
+server/src/agent-runtime/runtime.ts(126,9): error TS2353: Object literal may only specify known properties, and 'allocation' does not exist in type '{ ratio?: number | undefined; maxTokens?: number | undefined; concurrency?: number | undefined; timeoutMs?: number | undefined; optionalRecall?: boolean | undefined; recallTimeoutMs?: number | undefined; }'.
+server/src/agent-runtime/runtime.ts(128,64): error TS2561: Object literal may only specify known properties, but 'benchmark' does not exist in type '{ benchmarkId: string; }'. Did you mean to write 'benchmarkId'?
+server/src/agent-runtime/runtime.ts(226,5): error TS2322: Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' is not assignable to type 'ModelDriver | ModelConfiguration'.
+  Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' is not assignable to type 'ModelConfiguration'.
+    Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' is not assignable to type 'Omit<OpenAIDriverOptions, "maxAttempts" | "fetchImpl" | "sleep" | "retryBaseMs">'.
+      Types of property 'reasoningEffort' are incompatible.
+        Type '"low" | undefined' is not assignable to type '"max" | "high" | undefined'.
+          Type '"low"' is not assignable to type '"max" | "high" | undefined'.
+server/src/agent-runtime/runtime.ts(242,28): error TS2345: Argument of type '{ policy: ProductRuntimePolicy; model: { contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; ... 9 more ...; baseUrl: string; }; ... 7 more ...; controlPlane: { ...; }; }' is not assignable to parameter of type 'WorkerOptions'.
+  Types of property 'model' are incompatible.
+    Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' is not assignable to type 'ModelDriver | ModelConfiguration'.
+      Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' is not assignable to type 'ModelConfiguration'.
+        Type '{ contextWindowTokens?: number | undefined; reasoningEffort?: "low" | undefined; compactionReasoningEffort?: "low" | undefined; auxiliaryStreaming?: boolean | undefined; recovery: { ...; }; ... 7 more ...; baseUrl: string; }' is not assignable to type 'Omit<OpenAIDriverOptions, "maxAttempts" | "fetchImpl" | "sleep" | "retryBaseMs">'.
+          Types of property 'reasoningEffort' are incompatible.
+            Type '"low" | undefined' is not assignable to type '"max" | "high" | undefined'.
+              Type '"low"' is not assignable to type '"max" | "high" | undefined'.
+server/src/agent-runtime/visualize-delivery.ts(3,71): error TS2305: Module '"@lyyzka/lingxios"' has no exported member 'SkillDeliveryDecision'.
+server/src/agent-runtime/visualize-delivery.ts(43,31): error TS2339: Property 'skillActivations' does not exist on type 'RunVerificationContext'.
+server/src/agent-runtime/visualize-delivery.ts(43,55): error TS7006: Parameter 'activation' implicitly has an 'any' type.
+server/src/agent-runtime/visualize-delivery.ts(53,17): error TS2339: Property 'unavailableSkillActivationIds' does not exist on type 'RunVerificationContext'.
+server/src/agent-runtime/visualize-skill.ts(13,3): error TS2353: Object literal may only specify known properties, and 'delivery' does not exist in type 'SkillDefinition'.
+server/src/agent-runtime/visualize-tools.ts(26,16): error TS2339: Property 'activateSkillDelivery' does not exist on type 'ActionContext'.
+server/src/agent-runtime/visualize-tools.ts(28,17): error TS2339: Property 'activateSkillDelivery' does not exist on type 'ActionContext'.
+server/src/db/migrate.ts(38,113): error TS2551: Property 'schema012' does not exist on type '{ schema: string; schema011: string; migration008: string; memoryReset009: string; migration010: string; migration011: string; migration012: string; migration013: string; migration014: string; runner: string; }'. Did you mean 'schema011'?
+server/src/db/migrate.ts(38,150): error TS2551: Property 'schema013' does not exist on type '{ schema: string; schema011: string; migration008: string; memoryReset009: string; migration010: string; migration011: string; migration012: string; migration013: string; migration014: string; runner: string; }'. Did you mean 'schema011'?
+server/src/db/migrate.ts(71,81): error TS2551: Property 'migration015' does not exist on type '{ schema: string; schema011: string; migration008: string; memoryReset009: string; migration010: string; migration011: string; migration012: string; migration013: string; migration014: string; runner: string; }'. Did you mean 'migration010'?
+server/src/db/migrate.ts(71,125): error TS2551: Property 'migration016' does not exist on type '{ schema: string; schema011: string; migration008: string; memoryReset009: string; migration010: string; migration011: string; migration012: string; migration013: string; migration014: string; runner: string; }'. Did you mean 'migration010'?
+server/src/db/migrate.ts(196,30): error TS2367: This comparison appears to be unintentional because the types '"3.5.2"' and '"3.6.0"' have no overlap.
+server/src/db/migrate.ts(196,69): error TS2367: This comparison appears to be unintentional because the types '12' and '14' have no overlap.
+server/src/im/router.ts(161,140): error TS2554: Expected 1 arguments, but got 2.
+server/src/im/router.ts(242,74): error TS2345: Argument of type 'ZodArray<SomeType>' is not assignable to parameter of type '$ZodType<any, string[], $ZodTypeInternals<any, string[]>>'.
+  The types of '_zod.input' are incompatible between these types.
+    Type 'unknown[]' is not assignable to type 'string[]'.
+      Type 'unknown' is not assignable to type 'string'.
+server/src/im/router.ts(242,82): error TS2345: Argument of type 'ZodString' is not assignable to parameter of type 'SomeType'.
+  The types of '_zod.version.minor' are incompatible between these types.
+    Type '4' is not assignable to type '5'.
+server/src/im/router.ts(251,14): error TS2589: Type instantiation is excessively deep and possibly infinite.
+server/src/im/router.ts(254,50): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+server/src/modules/memory/configuration.ts(23,5): error TS2322: Type '{ indexVersion: string; requestTimeoutMs: number; inputCostMicrosPerMillion: number; expectedDimensions: number; id: string; apiKey: string; baseUrl: string; } | { indexVersion: string; requestTimeoutMs: number; ... 4 more ...; baseUrl: string; }' is not assignable to type 'EmbeddingOptions | undefined'.
+  Object literal may only specify known properties, and 'indexVersion' does not exist in type 'EmbeddingOptions'.
+server/src/modules/memory/public.ts(37,14): error TS2322: Type '(identity: any, database: any, signal: any, operation: any) => Promise<MemoryScope[]>' is not assignable to type '(identity: MemoryIdentity, database: SqlQueryable, signal?: AbortSignal | undefined) => Promise<MemoryScope[]>'.
+  Target signature provides too few arguments. Expected 4 or more, but got 3.
+server/src/modules/memory/public.ts(37,75): error TS7006: Parameter 'identity' implicitly has an 'any' type.
+server/src/modules/memory/public.ts(37,85): error TS7006: Parameter 'database' implicitly has an 'any' type.
+server/src/modules/memory/public.ts(37,95): error TS7006: Parameter 'signal' implicitly has an 'any' type.
+server/src/modules/memory/public.ts(37,103): error TS7006: Parameter 'operation' implicitly has an 'any' type.
+server/src/modules/memory/public.ts(67,5): error TS2353: Object literal may only specify known properties, and 'continuity' does not exist in type 'MemoryScope'.
+server/src/modules/memory/public.ts(74,7): error TS2353: Object literal may only specify known properties, and 'continuity' does not exist in type 'MemoryScope'.
+server/src/modules/memory/public.ts(83,89): error TS2353: Object literal may only specify known properties, and 'continuity' does not exist in type 'MemoryScope'.
+server/src/modules/memory/public.ts(85,92): error TS2353: Object literal may only specify known properties, and 'readOnly' does not exist in type 'MemoryScope'.
+src/lib/agentRunSnapshot.ts(2,48): error TS2307: Cannot find module '@lyyzka/lingxios/ui' or its corresponding type declarations.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

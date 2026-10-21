@@ -1,0 +1,536 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15c53-68a3-7c80-9268-3fb47d40a24f",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-21T02:38:53.008Z",
+    "finishedAt": "2026-10-21T02:39:14.673Z",
+    "project": {
+      "id": "lingxiloop-244-timeout",
+      "configDigest": "5b2f31f041a66bcfb6cb0a3062a2631930ab382285fe692af7acb4b6a323751a"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "c66e847d14f838e72d0ab19e252e6cd4e2b68a76",
+      "branch": "fix/259-first-visible-latency",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "9a5721a1274725f1a4e660a9f951e6505d96a5f92ceb1ef165c0f97334177f0d",
+        "testId": "e2e/visualize/late-create.e2e.ts::a%20late%20committed%20acquisition%20cannot%20revoke%20a%20successful%20retry",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "a late committed acquisition cannot revoke a successful retry"
+        ],
+        "file": "e2e/visualize/late-create.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/late-create.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "3914ef3ebd88060a1f8968ee36c32240ea11dde83acf62fe0400a08730c6d4b3",
+        "testId": "e2e/visualize/timeout.e2e.ts::initialization%20deadline%20covers%20create%20and%20retry%20survives%20stalled%20cleanup",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "initialization deadline covers create and retry survives stalled cleanup"
+        ],
+        "file": "e2e/visualize/timeout.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/timeout.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "11f4e989ae5d2ed7014bae62a42b1cbef0097a07069399703bfc594c0a8c98d8",
+        "testId": "e2e/visualize/timeout.e2e.ts::initialization%20deadline%20covers%20resources%20and%20retry%20survives%20stalled%20cleanup",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "initialization deadline covers resources and retry survives stalled cleanup"
+        ],
+        "file": "e2e/visualize/timeout.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/timeout.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15c53-7085-73d3-a59d-e834c82483b6",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T02:38:54.597Z",
+            "durationMs": 20025,
+            "artifacts": [
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15c53-7085-73d3-a59d-e834c82483b6:6"
+                },
+                "path": "web/e2e_visualize_timeout.e2e.ts__initialization_20deadline_20covers_20resources_20and_20retry_20survives_20stalled-d2cfb492/default/attempt-0/screenshots/001-deadline-resources.png",
+                "size": 25429,
+                "sha256": "81fd3d116e365e0eadde2532974ed35194590d43fe340750dce85654afa6a4ab"
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15c53-7085-73d3-a59d-e834c82483b6:14"
+                },
+                "path": "web/e2e_visualize_timeout.e2e.ts__initialization_20deadline_20covers_20resources_20and_20retry_20survives_20stalled-d2cfb492/default/attempt-0/screenshots/002-recovered-resources.png",
+                "size": 41967,
+                "sha256": "1c52ecfcbfcade1f9049944c08eff24b278b27c99f192184031d086f6957d3cc"
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_timeout.e2e.ts__initialization_20deadline_20covers_20resources_20and_20retry_20survives_20stalled-d2cfb492/default/attempt-0/trace/trace.zip",
+                "size": 1374399,
+                "sha256": "21de801e32858ac92f1ef6d3ffcebdf748fa422b9d2c70821a69b9f68ebad04c"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:54.691Z",
+                "durationMs": 512,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 9,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:55.205Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 10,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"进入 A\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:55.226Z",
+                "durationMs": 144,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 20,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"对话输入\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:55.370Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 21,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:55.405Z",
+                "durationMs": 16419,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 23,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:11.825Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 28,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "deadline-resources",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:11.837Z",
+                "durationMs": 47,
+                "events": [],
+                "artifacts": [
+                  "01a15c53-7085-73d3-a59d-e834c82483b6:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 38,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:11.884Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 42,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重试\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:11.893Z",
+                "durationMs": 94,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 43,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:11.988Z",
+                "durationMs": 783,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 45,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:12.772Z",
+                "durationMs": 1212,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 46,
+                  "column": 42
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:13.985Z",
+                "durationMs": 326,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 47,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:14.311Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 48,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:14.321Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 49,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a15c53-7085-73d3-a59d-e834c82483b6:14",
+                "index": 14,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "recovered-resources",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:39:14.345Z",
+                "durationMs": 64,
+                "events": [],
+                "artifacts": [
+                  "01a15c53-7085-73d3-a59d-e834c82483b6:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/visualize/timeout.e2e.ts",
+                  "line": 61,
+                  "column": 15
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e64a82f6bb31e42c0b05345127086b9f9e1b2c392061b18b3ca1144df1273c88",
+        "testId": "e2e/visualize/timeout.e2e.ts::initialization%20deadline%20covers%20state%20and%20retry%20survives%20stalled%20cleanup",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "initialization deadline covers state and retry survives stalled cleanup"
+        ],
+        "file": "e2e/visualize/timeout.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/timeout.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b0ca5dd58b74773f427d60c254b51fe4d7d386866f6533e0b09d88ca6cf19a35",
+        "testId": "e2e/visualize/timeout.e2e.ts::initialization%20deadline%20covers%20handshake%20and%20retry%20survives%20stalled%20cleanup",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "initialization deadline covers handshake and retry survives stalled cleanup"
+        ],
+        "file": "e2e/visualize/timeout.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/timeout.e2e.ts",
+          "line": 8,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 5,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 5,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 1441795,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

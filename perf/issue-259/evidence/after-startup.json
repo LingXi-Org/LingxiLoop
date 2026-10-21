@@ -1,0 +1,147 @@
+[
+  {
+    "sample": 1,
+    "result": {
+      "frame": 1277,
+      "initializeRequest": 1505.100000000035,
+      "initialized": 1591.7000000000116,
+      "ready": 1597.8000000000466,
+      "contentSize": 1597.9000000000233,
+      "paint": 1606.8000000000466,
+      "documents": [
+        {
+          "frame": "outer",
+          "event": "created",
+          "time": 1264.4000000000233,
+          "url": "about:blank"
+        },
+        {
+          "frame": "outer",
+          "event": "DOMContentLoaded",
+          "time": 1264.7000488281483,
+          "url": "about:blank"
+        },
+        {
+          "frame": "outer",
+          "event": "load",
+          "time": 1264.7999023437733,
+          "url": "about:blank"
+        },
+        {
+          "frame": "outer",
+          "event": "created",
+          "time": 1298.5000976562733,
+          "url": "about:srcdoc"
+        },
+        {
+          "frame": "outer",
+          "event": "DOMContentLoaded",
+          "time": 1356.7000488281483,
+          "url": "about:srcdoc"
+        },
+        {
+          "frame": "inner",
+          "event": "created",
+          "time": 1368.4000000000233,
+          "url": "about:srcdoc"
+        },
+        {
+          "frame": "inner",
+          "event": "DOMContentLoaded",
+          "time": 1567.1998046875233,
+          "url": "about:srcdoc"
+        },
+        {
+          "frame": "inner",
+          "event": "load",
+          "time": 1568.6998046875233,
+          "url": "about:srcdoc"
+        },
+        {
+          "frame": "outer",
+          "event": "load",
+          "time": 1569.2000488281483,
+          "url": "about:srcdoc"
+        }
+      ],
+      "longTasks": [
+        {
+          "start": 1389.7000000000116,
+          "duration": 82
+        }
+      ],
+      "resources": [
+        {
+          "name": "pages",
+          "start": 44.600000000034925,
+          "end": 49.40000000002328,
+          "duration": 4.7999999999883585,
+          "bytes": 7704
+        },
+        {
+          "name": "visualize.css",
+          "start": 51.300000000046566,
+          "end": 96.30000000004657,
+          "duration": 45,
+          "bytes": 30909
+        },
+        {
+          "name": "visualize.html",
+          "start": 51.600000000034925,
+          "end": 96.80000000004657,
+          "duration": 45.20000000001164,
+          "bytes": 17807
+        },
+        {
+          "name": "gen-ui.js",
+          "start": 51.70000000001164,
+          "end": 1255.600000000035,
+          "duration": 1203.9000000000233,
+          "bytes": 506505
+        },
+        {
+          "name": "calendar.js",
+          "start": 51.90000000002328,
+          "end": 96.5,
+          "duration": 44.59999999997672,
+          "bytes": 13797
+        },
+        {
+          "name": "vendor/floating-ui-core-1.7.3.min.js",
+          "start": 98.90000000002328,
+          "end": 603.2000000000116,
+          "duration": 504.29999999998836,
+          "bytes": 12829
+        },
+        {
+          "name": "vendor/floating-ui-dom-1.7.4.min.js",
+          "start": 99,
+          "end": 603.3000000000466,
+          "duration": 504.30000000004657,
+          "bytes": 10551
+        },
+        {
+          "name": "vendor/d3-7.9.0.min.js",
+          "start": 99.10000000003492,
+          "end": 604.1000000000349,
+          "duration": 505,
+          "bytes": 280006
+        },
+        {
+          "name": "vendor/lucide-1.17.0.js",
+          "start": 99.10000000003492,
+          "end": 604.9000000000233,
+          "duration": 505.79999999998836,
+          "bytes": 601980
+        },
+        {
+          "name": "state",
+          "start": 1257.7000000000116,
+          "end": 1259.100000000035,
+          "duration": 1.400000000023283,
+          "bytes": 327
+        }
+      ]
+    }
+  }
+]

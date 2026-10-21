@@ -1,0 +1,294 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a15c52-cb26-77ac-becd-318ce886796a",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-21T02:38:12.670Z",
+    "finishedAt": "2026-10-21T02:38:18.686Z",
+    "project": {
+      "id": "lingxiloop-issue193-visualize",
+      "configDigest": "2a0a8cb7f0a8ef7bb82bd520a0e585ecd42bfc97f7be92649c67d78de29434ba"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "c66e847d14f838e72d0ab19e252e6cd4e2b68a76",
+      "branch": "fix/259-first-visible-latency",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "59f25ee2d0c5d4a1913b2ea535a0c26ec06303c1596afb5feb061938a80b4e2e",
+        "testId": "e2e/visualize/first-card.e2e.ts::first%20visible%20card%20overlaps%20declared%20vendors%20with%20slow%20runtime",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "first visible card overlaps declared vendors with slow runtime"
+        ],
+        "file": "e2e/visualize/first-card.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/first-card.e2e.ts",
+          "line": 9,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a15c52-d2f4-7617-9f46-384bb7a99254",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-21T02:38:14.260Z",
+            "durationMs": 4385,
+            "artifacts": [
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a15c52-d2f4-7617-9f46-384bb7a99254:7"
+                },
+                "path": "web/e2e_visualize_first-card.e2e.ts__first_20visible_20card_20overlaps_20declared_20vendors_20with_20slow_20runtime-2983c831/default/attempt-0/screenshots/001-first-card-usable.png",
+                "size": 41737,
+                "sha256": "2c2919c427aa4c2806d6cd4aa34afc94570bbe306399b59fee7d601af163d60d"
+              },
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:artifact:1",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_first-card.e2e.ts__first_20visible_20card_20overlaps_20declared_20vendors_20with_20slow_20runtime-2983c831/default/attempt-0/trace/trace.zip",
+                "size": 952734,
+                "sha256": "e4f4970a583abef2c61fa89b3c39a0bbdf3caa0289b05006b912ab4f56a572bb"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:14.348Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/first-card.e2e.ts",
+                  "line": 12,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/loading.html?count=1",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:14.350Z",
+                "durationMs": 503,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/first-card.e2e.ts",
+                  "line": 32,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:14.854Z",
+                "durationMs": 1634,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/first-card.e2e.ts",
+                  "line": 33,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"[data-fixture-ready=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:16.488Z",
+                "durationMs": 459,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/first-card.e2e.ts",
+                  "line": 86,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-chart rect\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:16.948Z",
+                "durationMs": 332,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/first-card.e2e.ts",
+                  "line": 87,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:17.280Z",
+                "durationMs": 890,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/first-card.e2e.ts",
+                  "line": 88,
+                  "column": 42
+                }
+              },
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> locator(\"#fixture-play-label\")",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:18.173Z",
+                "durationMs": 306,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/first-card.e2e.ts",
+                  "line": 89,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a15c52-d2f4-7617-9f46-384bb7a99254:7",
+                "index": 7,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "first-card-usable",
+                "status": "passed",
+                "startedAt": "2026-10-21T02:38:18.479Z",
+                "durationMs": 48,
+                "events": [],
+                "artifacts": [
+                  "01a15c52-d2f4-7617-9f46-384bb7a99254:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/first-card.e2e.ts",
+                  "line": 91,
+                  "column": 15
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 994471,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
