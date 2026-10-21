@@ -2,7 +2,7 @@ import { nativeText } from '../im/message-types.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { publicTextSafety } from './public-text-safety.js'
 import { productConversationId, bindProductRun, assertFrozenAudience } from './identity.js'
-import { NoEffectError, DefaultRuntimePolicy, classifyToolFailure, modelFailure, type CapabilityGrant, type ContextMessage, type ContextProvider,
+import { NoEffectError, DefaultRuntimePolicy, executionSnapshot, classifyToolFailure, modelFailure, type CapabilityGrant, type ContextMessage, type ContextProvider,
   type CapabilityResolutionContext, type ToolDefinition, type TurnContext, type WorkItem } from '@lyyzka/lingxios'
 import { pool } from '../db/pool.js'
 import { nativeContext, audienceHumanIds, authorizeAudienceRead } from '../agents/tools.js'
@@ -19,6 +19,7 @@ import { GROUP_COLLABORATION_RULES, IM_CONVERSATION_RULES } from './conversation
 import { TEACHER_KNOWLEDGE_ACTIONS, TEACHER_PROMPT } from '../modules/learning/teacher-preset.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
 import { visualizeModelContext } from './visualize-state-context.js'
+import { selectedSkillRules } from './skill-context.js'
 import { visualizeHostInstructions } from './visualize-skill.js'
 import { ensureVisualizeOutputDirectory, listVisualizeModelState } from '../im/visualize.js'
 import { lingxiOSControl } from './runtime.js'
@@ -216,6 +217,10 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
+  override productRules(candidate: Parameters<DefaultRuntimePolicy['productRules']>[0], context: TurnContext) {
+    const execution = executionSnapshot(context, this)
+    return super.productRules(candidate, context) + selectedSkillRules({ ...context, tools: execution.tools, grants: execution.grants })
+  }
   override publicTextSafety(input: Parameters<typeof publicTextSafety>[0]) { return publicTextSafety(input) }
   override validateAssistantText(text: string, context: TurnContext) {
     return assistantTextViolation(text) ?? super.validateAssistantText(text, context) ?? citationTextViolation(text, context.evidence ?? [])

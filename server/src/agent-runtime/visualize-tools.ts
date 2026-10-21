@@ -30,12 +30,12 @@ async function activateAuthoring(context: ActionContext) {
 }
 export const visualizeTools: ToolDefinition[] = [
   nativeTool('visualize.read_reference', z.object({ path: z.string().max(200) }).strict(), {
-    description: 'Read a complete unchanged visualize skill reference by its skill-relative path, e.g. SKILL.md, references/api.md, references/styles.md, tweak.md, widgets/calendar.md or examples/calendar.html. Product DOM-range additions are host/range-overlay.md and host/range-overlay.js. No arbitrary filesystem access.',
+    description: 'Read a needed visualize reference by its skill-relative path, e.g. references/api.md, references/styles.md, tweak.md, widgets/calendar.md or examples/calendar.html. Select the skill once with native skills.load for its complete host rules; do not page through SKILL.md. Product DOM-range additions are host/range-overlay.md and host/range-overlay.js. No arbitrary filesystem access.',
     effect: 'read', approval: false, authorize,
     async execute(_context, input) { return { ok: true, value: { path: input.path, text: await readVisualizeReference(input.path), complete: true } } },
   }),
   nativeTool('visualize.save', z.object({ name, html: z.string().min(1).max(5_000_000) }).strict(), {
-    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Load the visualize skill first. Derive numeric labels and decisions from the same computed data as the plot; check branches, units and same-series differences against the original inputs. name is lowercase-hyphenated without .html. Returns the actual authorized absolute path for a final ::visualize JSON reference; read back with visualize.read and reconcile calculations, labels and final prose before delivery. Saving verifies storage, not numeric correctness. Never send a full HTML document or unfinished script.',
+    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Follow the complete visualize skill supplied in host rules after selecting it once with native skills.load. Derive numeric labels and decisions from the same computed data as the plot; check branches, units and same-series differences against the original inputs. name is lowercase-hyphenated without .html. Returns the actual authorized absolute path for a final ::visualize JSON reference; read back with visualize.read and reconcile calculations, labels and final prose before delivery. Saving verifies storage, not numeric correctness. Never send a full HTML document or unfinished script.',
     effect: 'transaction', approval: false, authorize, semanticVersion: '2',
     async execute(context, input) {
       try { validateVisualizeFragment(input.name, input.html) }
