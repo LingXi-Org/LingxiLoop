@@ -38,7 +38,10 @@ test('production GLM worker preserves conversation continuity across repeated co
     assert.equal(request.model, 'zai-org/GLM-5.3-Flash')
     assert.equal(request.enable_thinking, false)
     assert.equal(request.reasoning_effort, 'low')
-    const auxiliary = request.response_format?.type === 'json_object'
+    assert.equal(request.response_format?.type, 'json_object')
+    // JSON mode is also required for main public-purpose turns in runtime 3.7.
+    const auxiliary = !request.messages.some((message: { role: string; content: string }) =>
+      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v1):'))
     const compacting = auxiliary && String(request.messages[0]?.content).includes('observedResults')
     const purpose = compacting ? 'compaction' : auxiliary ? 'structured' : 'agent-turn'
     requests.push({ bytes: Buffer.byteLength(body), stream: request.stream === true, purpose })
@@ -48,7 +51,7 @@ test('production GLM worker preserves conversation continuity across repeated co
     if (compacting) assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'summary must be grounded in the preceding context')
     const content = auxiliary ? JSON.stringify(compacting
       ? { observedResults: '用户的项目名称是蓝宝石47。', decisions: '', remainingWork: '', uncertainties: '' } : { missing: [] })
-      : '已收到，蓝宝石47。'
+      : JSON.stringify({ commentary: '', answer: '已收到，蓝宝石47。' })
     if (request.stream) {
       return new Response(`data: ${JSON.stringify({ choices: [{ index: 0,
         delta: { role: 'assistant', content }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`,
