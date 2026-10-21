@@ -15,10 +15,10 @@ not ok 2 - trace frames replace metadata, clear unavailable descendants and tota
   error: |-
     Expected values to be strictly equal:
     + actual - expected
-    
+
     + 'running'
     - 'cancelled'
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 'cancelled'

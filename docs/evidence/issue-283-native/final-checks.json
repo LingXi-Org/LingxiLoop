@@ -39,5 +39,11 @@
     "src/components/trace-waterfall/trace-waterfall.tsx": "29e2bea01c440ad2c12263b09780ad2e34f771d419572ad29565b1bd4dc5c4e7",
     "server/src/__tests__/native-run-trace.test.ts": "b5222a5114bb0c1add6a275060d1d75fb158fe2c99d942032a87fdc170d68ddd",
     "server/src/__integration__/native-run-trace.test.ts": "02235b1d97c12ded11824ac0f1752aa1bd4d4b2a371256415254d836eaedc729"
+  },
+  "evidenceNormalization": {
+    "file": "review-lifecycle-red.log",
+    "change": "trailing whitespace on two blank diagnostic lines only",
+    "originalSha256": "ffc733e64d2bcc6ce0d0be6ff6c5bd185895cc651d98e15b3a53b936d852b372",
+    "originalLocalPath": "/tmp/loop-native-trace-review-red-original.log"
   }
 }
