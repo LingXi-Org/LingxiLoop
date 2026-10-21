@@ -1,3 +1,5 @@
+> Historical pre-publication evidence. Current formal 3.7.0 qualification and the single-leaf second-stage enablement are recorded in [issue-280-producer](../issue-280-producer/README.md). Statements below about pending publication, source overlays and the old hardcoded switch describe earlier commits, not the final reader/producer configuration.
+
 # Native public purpose product draft
 
 Tracks #280; #275 remains open. Base b8f29ef32360ad7569174145b6a206c18be6b9ca. No production operations or restricted data access.
