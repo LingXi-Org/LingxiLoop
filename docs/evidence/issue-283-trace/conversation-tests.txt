@@ -1,0 +1,27 @@
+(node:5677) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5677) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ the real conversation thread displays native v2 messages (92.837233ms)
+✔ tool terminal and approval states are visible without requiring a result (72.449497ms)
+✔ adjacent ordinary tools group in place while retired records stay visible (23.981426ms)
+✔ native run parts keep tools, answers and decisions outside the process disclosure (21.033809ms)
+✔ run activity retains cancelled, error and incomplete outcomes (53.692645ms)
+✔ existing data names render descriptive cards without dumping JSON (12.49063ms)
+✔ memory metadata does not expose summaries in conversation messages (8.494867ms)
+✔ all senders omit bubble timestamps and only outgoing messages show delivery (29.362004ms)
+✔ attachments retain delivery feedback without a timestamp (10.383138ms)
+✔ running and completed replies omit timestamps and completion labels (14.021374ms)
+✔ mixed content and cards omit timestamps (28.088888ms)
+✔ agent replies have one complete action row after all message parts (16.641698ms)
+✔ failed streamed replies retain prose and show the official error banner with retry (7.548912ms)
+✔ sender kind owns bubble chrome and agent avatars align at the top (35.600909ms)
+✔ explicit public process uses RunActivity across memory tools without legacy history controls (28.671545ms)
+✔ RunActivity contains process on both sides of a streaming answer without hiding the answer or restoring old controls (12.639966ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10949.938619

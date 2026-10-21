@@ -1,0 +1,10 @@
+
+> lingxiloop@0.1.0-beta server:lint
+> biome lint server
+
+Checked 622 files in 786ms. No fixes applied.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,116 @@
+
+> lingxiloop@0.1.0-beta test
+> node scripts/run-tests.mjs web
+
+(node:7284) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7284) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ a current session rejection stops automatic recovery but a stale rejection cannot clear a new sign-in (71.279932ms)
+✔ caller headers override matching defaults without dropping request context (24.582081ms)
+✔ presigned uploads keep the File body on the browser fetch path (0.812052ms)
+(node:7323) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7323) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ streamed prose and incomplete Markdown blocks appear before completion (476.373951ms)
+✔ mixed message text keeps global citation positions and copy across non-text parts (23.339478ms)
+✔ lists and paragraphs retain their semantic layout without bubble wrappers (169.202236ms)
+✔ unfinished structural blocks remain visible during streaming and interruption (93.651338ms)
+✔ only live agent text enables the streaming tail; settled and interrupted text is static (11.256798ms)
+✔ committed citations preserve Markdown and normal links, with one shared basis slot (49.255826ms)
+✔ only the active occurrence describes its fixed, accessible basis region (3.864221ms)
+✔ copying and quoting strip only supplied citation spans (4.643172ms)
+✔ citation excerpts render safe compact Markdown while source titles remain literal (10.187851ms)
+✔ new citations underline answer wording and consume internal links before Link rendering (20.506718ms)
+✔ new drafts show only body text and never activate citation navigation or stale confidence (25.564033ms)
+✔ cached Markdown processors keep each message and regenerated claim identity separate (39.605249ms)
+(node:7417) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7417) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ the real conversation thread displays native v2 messages (105.975711ms)
+✔ tool terminal and approval states are visible without requiring a result (69.82334ms)
+✔ adjacent ordinary tools group in place while retired records stay visible (23.420039ms)
+✔ native run parts keep tools, answers and decisions outside the process disclosure (24.958683ms)
+✔ run activity retains cancelled, error and incomplete outcomes (76.873763ms)
+✔ existing data names render descriptive cards without dumping JSON (14.876762ms)
+✔ memory metadata does not expose summaries in conversation messages (10.942235ms)
+✔ all senders omit bubble timestamps and only outgoing messages show delivery (33.261789ms)
+✔ attachments retain delivery feedback without a timestamp (29.202885ms)
+✔ running and completed replies omit timestamps and completion labels (21.338289ms)
+✔ mixed content and cards omit timestamps (42.118527ms)
+✔ agent replies have one complete action row after all message parts (16.758893ms)
+✔ failed streamed replies retain prose and show the official error banner with retry (7.664817ms)
+✔ sender kind owns bubble chrome and agent avatars align at the top (15.719149ms)
+✔ explicit public process uses RunActivity across memory tools without legacy history controls (22.517842ms)
+✔ RunActivity contains process on both sides of a streaming answer without hiding the answer or restoring old controls (13.194142ms)
+✔ a single safe search source uses LinkPreview after completion, replay and reload (20.39466ms)
+✔ multiple sources use Citation while a deduplicated single source uses LinkPreview (4.825897ms)
+✔ empty results are silent while failures, malformed results and cancellation stay visible (1.238873ms)
+✔ single-source images survive replay and select the with-image preview; invalid images keep the text card (6.568307ms)
+✔ one submission commits all attachments in order with one identity and one question (9.590783ms)
+✔ memory steps survive history and cache normalization without legacy private payloads (17.925657ms)
+✔ native identity, date, role and content survive IM decoration independently of the viewer (0.727794ms)
+✔ business data stays native and JSON replay retains all fields instead of fabricating tool calls (6.553155ms)
+✔ batch conversion is stable, deduplicated, and projects sender grouping (0.849387ms)
+✔ clusters adjacent text, attachments, and assistant-ui cards by sender rather than message kind (1.131201ms)
+✔ a card-first agent cluster inherits the following bubble chrome once (0.441213ms)
+✔ group projection preserves messages whose cluster position did not change (0.280853ms)
+✔ retired content protocols and forged run identities fail closed (1.128928ms)
+(node:7552) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7552) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ run API consumes only assistant transport and reads the same projected snapshot (47.679196ms)
+✔ native response text and presentation cards retain segment order and stable identities (3.313794ms)
+✔ public native tool events retain complete assistant-ui history and survive committed IM replay (19.97674ms)
+✔ native committed partial answers retain artifact hashes and provenance without appearing complete (4.646527ms)
+✔ native citations keep occurrence identities, all source versions and truncation, without grading support (2.397776ms)
+✔ distinct chunks of one PDF remain specific across repeated and combined citations (0.732402ms)
+✔ history, API snapshots and later attempts converge to one current message without restoring an old wait (5.244106ms)
+(node:7591) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7591) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ message updates require a recorded run timestamp and preserve it during previews (16.074042ms)
+✔ snapshot presentation follows rich content and clears stale card styling when content becomes text (3.845423ms)
+✔ same-result snapshots preserve canonical IM fallback content while updating run controls (4.021828ms)
+✔ sent messages, native final citations and interleaved users survive replay and reload in IM order (10.460661ms)
+✔ a run discovered after a sent message owns a separate preview and cannot erase sent text on cancellation or failure (4.907079ms)
+✔ a failure retains streamed text and a safe error across snapshot replay (2.736105ms)
+✔ live replies follow the triggering user despite clock skew, late receipts and late source events (4.001487ms)
+✔ a live reply keeps its anchor until canonical delivery establishes IM order (2.442022ms)
+✔ snapshots preserve IM order after reload and older history does not move the reply (1.632405ms)
+✔ memory activity survives run replies, HTTP replay and IM merging (16.332281ms)
+✔ reload keeps interleaved user clusters when run start times disagree with committed message order (4.40211ms)
+✔ committed replies ignore duplicate snapshots and stale deltas without regressing content (1.495289ms)
+✔ citation projections agree across snapshots and IM replay and disappear before the next draft (6.71036ms)
+✔ paragraph deltas display immediately, deduplicate, and cancellation clears uncommitted drafts (2.053909ms)
+✔ a reply at the page boundary leaves room for subsequently loaded older history (0.694765ms)
+✔ initial history is ready before slow run snapshots, which merge without duplicate replies (116.238925ms)
+✔ separate agents and child threads cannot overwrite each other (1.022127ms)
+✔ canonical merge replaces optimistic messages by client identity and preserves pagination order (1.940248ms)
+✔ invalid receipts cannot replace a known send time and later valid receipts repair missing times (0.372562ms)
+✔ poll events replace canonical assistant-ui form state without retaining a second payload model (0.675198ms)
+(node:7631) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7631) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ deleting an interrupted upload resets only its request key across both source views (25.025105ms)
+✔ generates a stable local avatar for each course (10.052145ms)
+✔ generates a local avatar when the course identifier is blank (1.251488ms)
+✔ presentation boundaries accept only explicit v1 schema versions (2.03531ms)
+✔ lecture deck artifacts fail closed (0.553204ms)
+✔ the active viewer runs only authenticated Blob HTML in a script-only sandbox (0.529669ms)
+✔ settings restores keyboard focus and interactive surfaces have accessible labels (1.146259ms)
+✔ account exit clears identity and authentication submits the CAPTCHA response (0.454916ms)
+✔ invitation landing remains reachable before authentication and clears on completion (0.2052ms)
+✔ user-visible errors are mapped before rendering provider details (0.347524ms)
+ℹ tests 81
+ℹ suites 0
+ℹ pass 81
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 24570.784583
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

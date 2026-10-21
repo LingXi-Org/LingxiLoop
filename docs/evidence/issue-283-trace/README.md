@@ -33,7 +33,7 @@ The UI uses Langfuse's MIT non-ee row metrics/bar presentation, independently co
 - Browser evidence is from the isolated local Vite fixture and owning synthetic projection snapshots, not a real model/database/worker. Production bundle build is checked separately.
 - Before-code regression source and failure model were written first. The initial red command could not load `tsx` until dependencies were installed; do not count that as a behavioral red test. A later animated-collapse regression was caught by E2E (descendants still considered visible despite clipped height), fixed with visibility/inert/aria-hidden, then all four cases passed.
 
-Logs and hashed screenshots are alongside this file. The browser report's recorded VCS base predates the uncommitted implementation; screenshot hashes and the subsequent commit provide source traceability. A parent independent review and exact-head CI remain release gates.
+Plain-text check logs (`*.txt`, ANSI/trailing whitespace normalized), source-manifest.json and hashed screenshots are alongside this file. Implementation commit: `87bac5844e8cf351383c02a89dc700965238d3e0`; follow-up evidence-only commits do not change source. The browser report's recorded VCS base predates the uncommitted implementation; screenshot hashes and the subsequent commit provide source traceability. A parent independent review and exact-head CI remain release gates.
 
 ## Remaining blocker; issue stays open and PR stays draft
 

@@ -1,0 +1,54 @@
+{
+  "implementationCommit": "87bac5844e8cf351383c02a89dc700965238d3e0",
+  "baseCommit": "d601b461fbde5da05bc94b27d8dae565935de21c",
+  "files": [
+    {
+      "file": "src/lib/runTrace.ts",
+      "sha256": "52e1ff557c464f0ae7080dc45931372bdabe339be9a933fe70de06d8130eaa74"
+    },
+    {
+      "file": "src/components/trace-waterfall/TimelineRowMetrics.tsx",
+      "sha256": "5d6a83bbfbbc559cb380bb7744f2d6daad1bf7b2f0536519c225d113b7a388c5"
+    },
+    {
+      "file": "src/components/trace-waterfall/trace-waterfall.tsx",
+      "sha256": "a97f63d6264da9a2d8736a916dc87da6677a38f0eb4ab5247ef82b541e239697"
+    },
+    {
+      "file": "src/components/assistant-ui/elements/run-activity.tsx",
+      "sha256": "431427203b77ebeb3b91904087df31a33062edce0b8cf8120faa48ff17bbba2e"
+    },
+    {
+      "file": "src/features/chat/components/NativeMessageContent.tsx",
+      "sha256": "44e1f75d9bd11e58031c6c3a3240447e5359744c6de48046fe46cd9edee7aee0"
+    },
+    {
+      "file": "server/src/agent-runtime/assistant-transport.ts",
+      "sha256": "4590e884b2f96b2a56b88596f887cc2f6289f714b05bd25087ae0ae38ac89584"
+    },
+    {
+      "file": "server/src/agent-runtime/tool-activity.ts",
+      "sha256": "55c039b5f1993dabf2d82d26a29547a4829fb427961ee4d2e3fa9360e6388f15"
+    },
+    {
+      "file": "server/src/agent-runtime/run-trace.ts",
+      "sha256": "445cf929dbf089d4e60d81bece4b0e122a3af7842bd6395b8ad46be80d2896de"
+    },
+    {
+      "file": "server/src/agent-runtime/trace-activity.ts",
+      "sha256": "27c500bfd23bd735c1f082e42ee9bca48cce028b5180e259b31c13e9251ab424"
+    },
+    {
+      "file": "server/src/__tests__/run-trace.test.ts",
+      "sha256": "63a1a38bd37ace6ab0951257be2f12b40a654777c0b8edda146ed659c2f70f3b"
+    },
+    {
+      "file": "server/src/__tests__/trace-activity.test.ts",
+      "sha256": "b57b6caa55f13c6dbe6b775400acd4758dd65bd5f249c27613186dd3c224ef6f"
+    },
+    {
+      "file": "e2e/web/run-trace.e2e.ts",
+      "sha256": "b1d7caf031c36c1f522a238008aa96fdcbfbd21eae3e4ec77e398a8e2e9430f2"
+    }
+  ]
+}
