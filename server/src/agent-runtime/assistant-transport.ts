@@ -21,6 +21,7 @@ export class RunStreamProjection {
   private tools: HarnessToolPart[] = []
   private llm: PublicLlmTrace[] = []
   private presentationAvailable = false
+  private presentationReadRevision = 0
   private error: string | null = null
   private sourceRef: string | null = null
   private durableDraft = ''
@@ -86,18 +87,21 @@ export class RunStreamProjection {
 
   async syncPresentation(identity: RunIdentity, signal?: AbortSignal): Promise<void> {
     if (signal?.aborted) return
-    const view = this.view
+    const view = this.view,readRevision = ++this.presentationReadRevision
     const revisions = new Map(this.tools.map(tool => [tool.toolCallId, tool.eventSeq]))
     const presentation = await readOptionalTraceActivity(identity,signal)
-    if (!presentation) return
-    const records = new Map(presentation.tools.map(record => [record.toolCallId,record]))
     // Native text/receipt events do not invalidate display metadata. Request,
     // fence, lifecycle and tool revisions do; a relevant event coalesces another
     // refresh without allowing an old read to mutate new authoritative content.
-    if (this.view.requestVersion !== view.requestVersion || this.view.fence !== view.fence
+    if (readRevision !== this.presentationReadRevision || this.view.requestVersion !== view.requestVersion || this.view.fence !== view.fence
       || this.view.lifecycle !== view.lifecycle || signal?.aborted) return
+    // Retain confirmed spans on a current failed read, but never present that
+    // cached subset as complete current usage. Only the latest matching read
+    // may downgrade or restore coverage, including concurrent failures.
+    this.presentationAvailable = presentation !== null
+    if (!presentation) return
+    const records = new Map(presentation.tools.map(record => [record.toolCallId,record]))
     this.llm = presentation.llm
-    this.presentationAvailable = true
     this.tools = this.tools.map(tool => {
       const recorded = records.get(tool.toolCallId)
       return recorded && revisions.get(tool.toolCallId) === tool.eventSeq ? { ...tool, timing: recorded.timing, display: recorded.display } : tool
