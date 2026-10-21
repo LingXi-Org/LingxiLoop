@@ -9,6 +9,7 @@ import { readAuthorizedVisualizeDocument, saveVisualizeDocument, validateVisuali
 import { HttpError } from '../http/errors.js'
 import { DiagramInputError, sequenceDiagramSchema, renderSequenceDiagram } from '../im/visualize-diagram.js'
 import { NumericChartError, numericChartSchema, renderNumericChart } from '../im/visualize-numeric.js'
+import { SlidingWindowInputError, slidingWindowSchema, renderSlidingWindow } from '../im/visualize-sliding-window.js'
 import { readVisualizeReference, visualizeSkill } from './visualize-skill.js'
 import { renderVisualizeStandalone } from './visualize-export.js'
 import { visualizeReferences } from './visualize-projection.js'
@@ -29,7 +30,7 @@ async function activateAuthoring(context: ActionContext) {
 }
 export const visualizeTools: ToolDefinition[] = [
   nativeTool('visualize.read_reference', z.object({ path: z.string().max(200) }).strict(), {
-    description: 'Read a complete unchanged visualize skill reference by its skill-relative path, e.g. SKILL.md, references/api.md, references/styles.md, tweak.md, widgets/calendar.md or examples/calendar.html. No arbitrary filesystem access.',
+    description: 'Read a complete unchanged visualize skill reference by its skill-relative path, e.g. SKILL.md, references/api.md, references/styles.md, tweak.md, widgets/calendar.md or examples/calendar.html. Product DOM-range additions are host/range-overlay.md and host/range-overlay.js. No arbitrary filesystem access.',
     effect: 'read', approval: false, authorize,
     async execute(_context, input) { return { ok: true, value: { path: input.path, text: await readVisualizeReference(input.path), complete: true } } },
   }),
@@ -114,6 +115,34 @@ export const visualizeTools: ToolDefinition[] = [
       const expected = renderSequenceDiagram(input.diagram, context.signal).html
       const hash = (html: string) => createHash('sha256').update(html).digest('hex')
       return compareResource(`visualize:${saved.path}`, { sha256: hash(expected) }, { sha256: hash(document.html) })
+    },
+  }),
+  nativeTool('visualize.sliding_window', z.object({ name, window: slidingWindowSchema }).strict(), {
+    description: 'Create an interactive packet sliding-window teaching demo with next/send/ack, autoplay, reset and a window-size slider. Supply title, packetCount (2–60) and windowSize (1–12, at most packetCount). Packet states, range labels and the DOM-measured outline share one state; no pixel geometry or HTML is needed. Resizing the window resets the simulation. This is a batch send/ack illustration, not a full TCP/loss/retransmission simulation. Does not repair historical HTML. Returns the actual saved reference; read back with visualize.read.',
+    effect: 'transaction', approval: false, authorize,
+    async execute(context, input) {
+      context.signal.throwIfAborted()
+      let rendered: ReturnType<typeof renderSlidingWindow>
+      try { rendered = renderSlidingWindow(input.window, context.signal) }
+      catch (error) {
+        if (!(error instanceof SlidingWindowInputError) && !(error instanceof z.ZodError)) throw error
+        return { ok: false, code: 'invalid_arguments', executionState: 'no_effect',
+          error: 'Window size must be between 1 and 12 and not exceed packetCount (2–60). No document was saved.' }
+      }
+      validateVisualizeFragment(input.name, rendered.html)
+      context.signal.throwIfAborted()
+      await activateAuthoring(context)
+      const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
+        name: input.name, html: rendered.html, requestVersion: context.requestVersion!, database: context.database as Queryable })
+      return { ok: true, value: { path: document.path, reference: `::visualize${JSON.stringify({ path: document.path })}`,
+        bytes: Buffer.byteLength(document.html), sourceHash: createHash('sha256').update(document.html).digest('hex'), summary: rendered.summary } }
+    },
+    async verify(context, input, value) {
+      await authorize(context)
+      const saved = z.object({ path }).passthrough().parse(value)
+      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path }, context.database as Queryable)
+      const hash = (html: string) => createHash('sha256').update(html).digest('hex')
+      return compareResource(`visualize:${saved.path}`, { sha256: hash(renderSlidingWindow(input.window, context.signal).html) }, { sha256: hash(document.html) })
     },
   }),
   nativeTool('visualize.read', z.object({ path }).strict(), {
