@@ -2,7 +2,7 @@
 
 Use `scripts/host-release.mjs` only after the preceding production release has a sealed successful acceptance. This path keeps Komodo's native host-file source, leaves core-state and app B's gateway unchanged, and does not call the legacy rollout procedure. The normal trigger still rejects unexplained host/pinned state.
 
-The same-schema format supports native13/product48 or product49. Source and target must have identical runtime version, published package tarball/integrity, protocol, native schema/hash and every product migration name/checksum. It never imports the application migrator. Web A, Web B, Worker A, Worker B are the only deploy targets.
+The same-schema format supports native13/product48 or product49, and the explicit formal3.6.0/native14/product50 profile. Source and target must have identical runtime version, published package tarball/integrity, protocol, native schema/hash and every product migration name/checksum (all50 rows for native14). It never imports the application migrator or performs a backup. Both old Workers stop; Web A, Web B, Worker A, Worker B are the only deploy targets. Native14 same-schema releases retain the ordinary8 preparation plus26 release native actions, without seed or migration actions.
 
 The separate `product-schema-host-release/v1` format permits only the reviewed
 runtime3.5.8/native13/product48→49 transition. Formal package/protocol/native
@@ -26,7 +26,7 @@ Descriptor fields:
 
 | Field | Contract |
 | --- | --- |
-| `format` | `same-schema-host-release/v1`, or explicit `product-schema-host-release/v1` for the reviewed48→49 transition only. Native14 uses `native-schema-host-release/v1` with the extra `backup` field described in its runbook. |
+| `format` | `same-schema-host-release/v1` for an unchanged supported profile, or explicit `product-schema-host-release/v1` for the reviewed48→49 transition only. The native13→14 transition uses `native-schema-host-release/v1` with the extra `backup` field described in its runbook; native14/product50→50 uses the same-schema format. |
 | `createdAt` | ISO timestamp. |
 | `source`, `target` | `releaseDescriptor(commit, formalRelease)` output plus `image` below. |
 | `sourceAcceptanceSha256` | SHA256 of the previous successful acceptance JSON bytes. It must have `passed:true`, exact source `candidate`, and every named check true. |

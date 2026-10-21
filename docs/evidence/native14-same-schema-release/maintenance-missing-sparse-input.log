@@ -1,0 +1,288 @@
+TAP version 13
+# Subtest: host verification refreshes every actual stack and emits only fixed hash evidence
+ok 1 - host verification refreshes every actual stack and emits only fixed hash evidence
+  ---
+  duration_ms: 4.840543
+  type: 'test'
+  ...
+# Subtest: all source/path/hook drift and remote errors fail closed without an execute
+ok 2 - all source/path/hook drift and remote errors fail closed without an execute
+  ---
+  duration_ms: 11.361193
+  type: 'test'
+  ...
+# Subtest: host unavailable after refresh cannot pass using retained matching cache
+ok 3 - host unavailable after refresh cannot pass using retained matching cache
+  ---
+  duration_ms: 0.392033
+  type: 'test'
+  ...
+# Subtest: maintenance operations check the actual relevant host before metadata, stop, pull and deploy
+ok 4 - maintenance operations check the actual relevant host before metadata, stop, pull and deploy
+  ---
+  duration_ms: 2.617801
+  type: 'test'
+  ...
+# Subtest: B metadata executes on B after host proof; arbitrary destinations are rejected
+ok 5 - B metadata executes on B after host proof; arbitrary destinations are rejected
+  ---
+  duration_ms: 0.519232
+  type: 'test'
+  ...
+# Subtest: transport exposes only fixed host-cache refresh, never an arbitrary write
+ok 6 - transport exposes only fixed host-cache refresh, never an arbitrary write
+  ---
+  duration_ms: 24.983837
+  type: 'test'
+  ...
+# Subtest: descriptor derives actual committed Compose bytes and rejects unsafe branch names
+ok 7 - descriptor derives actual committed Compose bytes and rejects unsafe branch names
+  ---
+  duration_ms: 40.768318
+  type: 'test'
+  ...
+# Subtest: ordinary release blocks12→13 and unknown/inconsistent state, leaves13→13 alone
+ok 8 - ordinary release blocks12→13 and unknown/inconsistent state, leaves13→13 alone
+  ---
+  duration_ms: 1.91798
+  type: 'test'
+  ...
+# Subtest: barrier requires actual read-only/full visibility and every lease/client class zero
+ok 9 - barrier requires actual read-only/full visibility and every lease/client class zero
+  ---
+  duration_ms: 0.592901
+  type: 'test'
+  ...
+# Subtest: happy path verifies cached images before stopping, Workers before Web, backup after barrier, one migration then staged recovery
+ok 10 - happy path verifies cached images before stopping, Workers before Web, backup after barrier, one migration then staged recovery
+  ---
+  duration_ms: 5.190623
+  type: 'test'
+  ...
+# Subtest: cached image or metadata mismatch never stops service
+ok 11 - cached image or metadata mismatch never stops service
+  ---
+  duration_ms: 1.357577
+  type: 'test'
+  ...
+# Subtest: accepted stop, uncertain stop, live leases, failed backup all prohibit migration
+ok 12 - accepted stop, uncertain stop, live leases, failed backup all prohibit migration
+  ---
+  duration_ms: 2.546854
+  type: 'test'
+  ...
+# Subtest: unknown migration outcome is not retried and never starts/deploys old or new services
+ok 13 - unknown migration outcome is not retried and never starts/deploys old or new services
+  ---
+  duration_ms: 1.834055
+  type: 'test'
+  ...
+# Subtest: 47 committed then48 failure reports fix-forward, not rollback
+ok 14 - 47 committed then48 failure reports fix-forward, not rollback
+  ---
+  duration_ms: 0.983873
+  type: 'test'
+  ...
+# Subtest: markers require one exact receipt and successful complete update; raw secret-like logs never enter errors
+ok 15 - markers require one exact receipt and successful complete update; raw secret-like logs never enter errors
+  ---
+  duration_ms: 0.414826
+  type: 'test'
+  ...
+# Subtest: transport does not retry unknown execute and polls only its returned update id
+ok 16 - transport does not retry unknown execute and polls only its returned update id
+  ---
+  duration_ms: 24.642789
+  type: 'test'
+  ...
+# Subtest: transport rejects receipt identity drift and refuses unlisted mutations
+ok 17 - transport rejects receipt identity drift and refuses unlisted mutations
+  ---
+  duration_ms: 1.811352
+  type: 'test'
+  ...
+# Subtest: ordinary trigger performs schema guard before config writes, historical drain and webhook
+ok 18 - ordinary trigger performs schema guard before config writes, historical drain and webhook
+  ---
+  duration_ms: 21.536143
+  type: 'test'
+  ...
+# Subtest: maintenance scripts have an owning deployment contract in CI
+ok 19 - maintenance scripts have an owning deployment contract in CI
+  ---
+  duration_ms: 0.991945
+  type: 'test'
+  ...
+# Subtest: offline package check rejects a candidate relabelled3.5.6/schema13
+ok 20 - offline package check rejects a candidate relabelled3.5.6/schema13
+  ---
+  duration_ms: 1.332199
+  type: 'test'
+  ...
+# Subtest: real operations fail closed on a running procedure or retrying migration container
+ok 21 - real operations fail closed on a running procedure or retrying migration container
+  ---
+  duration_ms: 0.84768
+  type: 'test'
+  ...
+# Subtest: pin and restore payloads contain only the actual stack id and commit
+ok 22 - pin and restore payloads contain only the actual stack id and commit
+  ---
+  duration_ms: 0.443489
+  type: 'test'
+  ...
+# Subtest: SQL state receipts accept only fixed metadata fields and numeric aggregates
+ok 23 - SQL state receipts accept only fixed metadata fields and numeric aggregates
+  ---
+  duration_ms: 0.522406
+  type: 'test'
+  ...
+# Subtest: real App manifests with repeated equal pins reach metadata and preserve same-schema ordinary rollout
+not ok 24 - real App manifests with repeated equal pins reach metadata and preserve same-schema ordinary rollout
+  ---
+  duration_ms: 2.023326
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-same-schema-release/scripts/schema-upgrade-maintenance.test.mjs:118:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/workspace/LingxiLoop-native14-same-schema-release/deploy/komodo/lingxiloop-app-a/compose.yml'"
+  code: 'ENOENT'
+  stack: |-
+    async open (node:internal/fs/promises:639:25)
+    async readFile (node:internal/fs/promises:1252:14)
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/schema-upgrade-maintenance.test.mjs:121:15)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: effective Compose parser accepts actual inherited pins and rejects stale overrides before planning
+not ok 25 - effective Compose parser accepts actual inherited pins and rejects stale overrides before planning
+  ---
+  duration_ms: 2.437532
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-same-schema-release/scripts/schema-upgrade-maintenance.test.mjs:143:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/workspace/LingxiLoop-native14-same-schema-release/deploy/komodo/lingxiloop-app-a/compose.yml'"
+  code: 'ENOENT'
+  stack: |-
+    async open (node:internal/fs/promises:639:25)
+    async readFile (node:internal/fs/promises:1252:14)
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/schema-upgrade-maintenance.test.mjs:147:16)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: ordinary gate and manifest-commit plan use the same effective-service pin validation
+ok 26 - ordinary gate and manifest-commit plan use the same effective-service pin validation
+  ---
+  duration_ms: 2.746095
+  type: 'test'
+  ...
+# Subtest: service requests accept only the exact Komodo2.3.3 service operation at acceptance and completion
+ok 27 - service requests accept only the exact Komodo2.3.3 service operation at acceptance and completion
+  ---
+  duration_ms: 13.089732
+  type: 'test'
+  ...
+# Subtest: service receipt mapping keeps stack target and polled operation identity strict; one-off enum unchanged
+ok 28 - service receipt mapping keeps stack target and polled operation identity strict; one-off enum unchanged
+  ---
+  duration_ms: 4.640195
+  type: 'test'
+  ...
+# Subtest: generated metadata inventory escaping accepts SQL names and rejects lookalikes and gaps
+ok 29 - generated metadata inventory escaping accepts SQL names and rejects lookalikes and gaps
+  ---
+  duration_ms: 0.518009
+  type: 'test'
+  ...
+# Subtest: legacy plans fail before any operations and both nodes qualify before drain
+ok 30 - legacy plans fail before any operations and both nodes qualify before drain
+  ---
+  duration_ms: 1.086234
+  type: 'test'
+  ...
+# Subtest: maintenance reuses audited cached images without explicit registry pull
+ok 31 - maintenance reuses audited cached images without explicit registry pull
+  ---
+  duration_ms: 0.860609
+  type: 'test'
+  ...
+# Subtest: planning binds exact source and contains no candidate migration or remote call
+ok 32 - planning binds exact source and contains no candidate migration or remote call
+  ---
+  duration_ms: 229.863185
+  type: 'test'
+  ...
+# Subtest: malformed identities and altered source or command fail before any remote call
+ok 33 - malformed identities and altered source or command fail before any remote call
+  ---
+  duration_ms: 335.942349
+  type: 'test'
+  ...
+# Subtest: receipt parser requires terminal success, consistent counts, and no duplicate markers
+ok 34 - receipt parser requires terminal success, consistent counts, and no duplicate markers
+  ---
+  duration_ms: 59.140003
+  type: 'test'
+  ...
+# Subtest: execution uses only reviewed fixed service operation and persists its update id
+ok 35 - execution uses only reviewed fixed service operation and persists its update id
+  ---
+  duration_ms: 162.446488
+  type: 'test'
+  ...
+# Subtest: lost execute acknowledgement remains uncertain and is never retried
+ok 36 - lost execute acknowledgement remains uncertain and is never retried
+  ---
+  duration_ms: 133.80778
+  type: 'test'
+  ...
+# Subtest: pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+ok 37 - pre-abort sends no request; cancellation after acceptance preserves update id without resubmission
+  ---
+  duration_ms: 191.627832
+  type: 'test'
+  ...
+# Subtest: overall timeout reaches the generated inner timeout group before killing cleanup
+ok 38 - overall timeout reaches the generated inner timeout group before killing cleanup
+  ---
+  duration_ms: 1365.55651
+  type: 'test'
+  ...
+# Subtest: native13/product49 backup profile derives exact formal source and preserves snapshot/restore command
+ok 39 - native13/product49 backup profile derives exact formal source and preserves snapshot/restore command
+  ---
+  duration_ms: 157.849583
+  type: 'test'
+  ...
+# Subtest: native13 backup exact Stack/operation and fresh terminal required; unknown read stops without retry
+ok 40 - native13 backup exact Stack/operation and fresh terminal required; unknown read stops without retry
+  ---
+  duration_ms: 488.903661
+  type: 'test'
+  ...
+# Subtest: native13 backup refuses undocumented nonterminal status without a poll or retry
+ok 41 - native13 backup refuses undocumented nonterminal status without a poll or retry
+  ---
+  duration_ms: 134.016519
+  type: 'test'
+  ...
+# Subtest: source-bound backup contracts run in the existing deployment CI job with historical fixtures available
+ok 42 - source-bound backup contracts run in the existing deployment CI job with historical fixtures available
+  ---
+  duration_ms: 1.416414
+  type: 'test'
+  ...
+# Subtest: native13 backup binds guarded Core identity before submission
+ok 43 - native13 backup binds guarded Core identity before submission
+  ---
+  duration_ms: 136.48957
+  type: 'test'
+  ...
+1..43
+# tests 43
+# suites 0
+# pass 41
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3471.663185

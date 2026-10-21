@@ -21,7 +21,7 @@ const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
  const releasePlan=sealHostPlan({...plan,...(fault.native14?{format:'native-schema-host-release/v1',backup:nativeBackup()} : fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
-  source:{...source,...(fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.native14?formal50:fault.upgrade||fault.product49?formal49:formal)}})
+  source:{...source,...(fault.sameNative14?formal50:fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.sameNative14||fault.native14?formal50:fault.upgrade||fault.product49?formal49:formal)}})
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
  let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0,migrated=false
  const ops={
@@ -49,6 +49,42 @@ test('same formal package and all48 checksums required; native13 alone is insuff
   const bad=structuredClone(target);bad[key]=key==='migrations'?migrations.slice(1):typeof bad[key]==='number'?bad[key]+1:'different'
   assert.throws(()=>assertSameSchema(source,bad))
  }
+})
+test('native14 same-schema accepts exact formal3.6.0/product50 and binds every formal key and all50 rows',()=>{
+ const {source,target}=fixture({sameNative14:true}).plan
+ assert.doesNotThrow(()=>assertSameSchema(source,target))
+ assert.doesNotThrow(()=>validateHostPlanShape(fixture({sameNative14:true}).plan))
+ for(const key of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion']){
+  const bad=structuredClone(target);bad[key]=typeof bad[key]==='number'?bad[key]+1:'different'
+  assert.throws(()=>assertSameSchema(source,bad),/differs/)
+ }
+ for(let row=0;row<50;row++)for(const key of ['name','checksum']){
+  const bad=structuredClone(target);bad.migrations[row][key]=key==='name'?'different':'e'.repeat(64)
+  assert.throws(()=>assertSameSchema(source,bad),/differs/)
+ }
+ for(const rows of [target.migrations.slice(1),[...target.migrations.slice(0,49),target.migrations[48]]]){
+  assert.throws(()=>assertSameSchema({...source,migrations:rows},{...target,migrations:rows}),/inventory/)
+ }
+})
+test('native14 same-schema rejects other profiles and native transitions before any action',async()=>{
+ for(const patch of [{runtime:'3.6.1'},{runtime:'3.5.8'},{schema:15},{productVersion:49},{productVersion:51}]){
+  const f=fixture({sameNative14:true}),bad=sealHostPlan({...f.plan,source:{...f.plan.source,...patch},target:{...f.plan.target,...patch}})
+  await assert.rejects(runHostRelease({plan:bad,ops:f.ops}));assert.deepEqual(f.trace,[])
+ }
+ const native=fixture({native14:true}).plan,{backup:_,...ordinary}=native
+ for(const [source,target] of [[native.source,native.target],[native.target,native.source]]){
+  assert.throws(()=>validateHostPlanShape(sealHostPlan({...ordinary,format:'same-schema-host-release/v1',source,target})))
+ }
+})
+test('native14 same-schema retains Worker-only drain and ordered rollout without backup or migration',async()=>{
+ const f=fixture({sameNative14:true}),result=await f.run()
+ assert.equal(result.status,'complete');assert.equal(result.state.installedSchema,14);assert.equal(result.state.product,50)
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),apps.map(s=>'stop:'+s+':worker'))
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)))
+ const firstStop=f.trace.findIndex(x=>x.startsWith('stop:')),firstDeploy=f.events.findIndex(e=>e.phase==='rollout')
+ for(const stack of apps)assert.ok(f.trace.indexOf('metadata:'+stack)<firstStop)
+ assert.ok(f.events.slice(0,firstDeploy).filter(e=>e.status==='zero-leases').length>=2)
+ assert.equal(f.trace.some(x=>/pull|migrate|backup|restore/.test(x)),false)
 })
 test('distinct format and sealed per-stack core identity; exact app policy only',()=>{
  assert.doesNotThrow(()=>validateHostPlanShape(plan))

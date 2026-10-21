@@ -32,7 +32,7 @@ function assertMigrationInventory(descriptor){
  if(descriptor.productVersion>=49)check(equal(descriptor.migrations[48],migration49),'Only reviewed product migration49 supported')
 }
 export function assertSameSchema(source,target){
- check(source.schema===13,'Only reviewed native13 same-schema releases supported')
+ check(source.schema===13||source.schema===14&&source.runtime==='3.6.0'&&source.productVersion===50,'Only reviewed native13 or formal3.6.0/native14/product50 same-schema profiles supported')
  check(equal(select(source,formalKeys),select(target,formalKeys)),'Formal package/schema/inventory differs; dedicated migration required')
  assertMigrationInventory(source)
 }
