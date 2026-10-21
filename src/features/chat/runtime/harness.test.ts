@@ -116,7 +116,8 @@ test('native citations keep occurrence identities, all source versions and trunc
   assert.deepEqual((legacy.data as { claims: MarkdownConfidenceClaim[] }).claims[0].evidence,
     [view.message!.envelope.citationEvidence[0], legacyChunk])
   view.lifecycle = 'queued'
-  assert.deepEqual(harnessParts(view), [])
+  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '请求已接收，正在等待处理。',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'observed-progress:1:1', kind: 'commentary', label: '任务状态' } } } }])
   view.draft = '新的草稿'
   assert.deepEqual(harnessParts(view), [])
   view.lifecycle = 'leased'
