@@ -9,11 +9,11 @@ not ok 1 - 0052 fresh history, exact51 upgrade and repeat preserve native14 with
   error: |-
     Expected values to be strictly equal:
     + actual - expected
-    
+
     + '0051_public_text_reader'
     - '0052_run_trace_provenance'
           ^
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: '0052_run_trace_provenance'
@@ -37,11 +37,11 @@ not ok 2 - 0052 ledger failure rolls provenance back and mismatched source or ta
   error: |-
     Expected values to be strictly equal:
     + actual - expected
-    
+
     + '0051_public_text_reader'
     - '0052_run_trace_provenance'
           ^
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: '0052_run_trace_provenance'

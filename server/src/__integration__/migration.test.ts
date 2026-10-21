@@ -614,12 +614,40 @@ for (const [version, pending] of [['3.3.0', 25], ['3.3.1', 26], ['3.3.2', 28], [
   })
 })
 
-test('a recorded runtime patch repairs a stale LingxiOS schema before serving', async () => {
+test('a historical recorded runtime patch repairs a stale LingxiOS schema before serving', async () => {
+  await withMigrationRange(28, async migrationsUrl => {
+    await withDatabase(async database => {
+      await migrateDatabase(database, migrationsUrl)
+      const fields='runtime_version,schema_version,protocol_version,schema_sha256'
+      const installed=(await database.query(`SELECT ${fields} FROM lingxios_installation`)).rows
+      const history=(await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows
+      assert.equal(history.at(-1).version,28)
+      await restoreSchema10(database, '3.3.4')
+      await assert.rejects(assertMigrationsCurrent(database,migrationsUrl),/package\/schema mismatch/)
+      assert.deepEqual(await migrateDatabase(database,migrationsUrl),[])
+      await assertMigrationsCurrent(database,migrationsUrl)
+      assert.deepEqual((await database.query(`SELECT ${fields} FROM lingxios_installation`)).rows,installed)
+      assert.deepEqual((await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows,history)
+      assert.equal((await database.query('SELECT version FROM lingxios.schema_version')).rows[0].version,11)
+    })
+  })
+})
+
+test('a recorded reader upgrade rejects damaged native state without changing provenance or history', async () => {
   await withDatabase(async database => {
     await migrateDatabase(database)
     await restoreSchema10(database, '3.3.4')
-    await migrateDatabase(database)
-    await assertMigrationsCurrent(database)
+    const installed=(await database.query('SELECT * FROM lingxios_installation')).rows
+    const history=(await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows
+    const native=(await database.query('SELECT * FROM lingxios.schema_version')).rows
+    assert.equal(history.at(-1).version,52)
+    assert.equal(native[0].version,10)
+    for(const operation of [()=>migrateDatabase(database),()=>assertMigrationsCurrent(database)]){
+      await assert.rejects(operation,/package\/schema mismatch/)
+      assert.deepEqual((await database.query('SELECT * FROM lingxios_installation')).rows,installed)
+      assert.deepEqual((await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows,history)
+      assert.deepEqual((await database.query('SELECT * FROM lingxios.schema_version')).rows,native)
+    }
   })
 })
 test('the affinity migration backfills the most recent worker without changing the Home epoch', async () => {
@@ -718,7 +746,7 @@ test('concurrent migrators serialize and apply each migration once', async () =>
         [],
       ])
       const { rows } = await database.query('SELECT COUNT(*)::int AS count FROM schema_migrations')
-    assert.deepEqual(rows, [{ count: 50 }])
+      assert.deepEqual(rows, [{ count: 52 }])
     } finally {
       await second.end()
     }
