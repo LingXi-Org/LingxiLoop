@@ -1,0 +1,15 @@
+# Native public purpose product draft
+
+Tracks #280; #275 remains open. Base b8f29ef32360ad7569174145b6a206c18be6b9ca. No production operations or restricted data access.
+
+The public upstream contract supplies immutable `PublicTextPart.purpose` from the first v2 event. Projection uses it while preserving current attempt/accepted history rules. Genuine answer text remains visible even when its wording resembles process commentary. Completed commentary alone cannot suppress a separate answer preview. The normal Worker model configuration explicitly opts into `purpose-json-v1` and checks `releaseVersions.publicText === 2`; a field-only reader change is insufficient.
+
+**Do not merge or deploy this draft against runtime 3.6.0.** Local tests use a task-owned node_modules overlay pointing only @lyyzka/lingxios to /workspace/LingxiOS-public-purpose. This is unpublished-source evidence, not formal package qualification; no dependency/lock changes have been fabricated. Formal upstream publication and exact version+lock pin are pending. Proposed upstream release3.7.0 is for the release owner to allocate; no version has been published here.
+
+Release order: first formally publish and pin the v2-capable reader, upgrade all readers with producer option disabled, qualify the configured provider's JSON-object+native-tools+streaming mode using synthetic inputs, then enable this draft's producer configuration. After any v2 event is written, disabling production does not make old strict readers safe: keep v2-capable readers and fix forward. Native schema14/product50 are unchanged; that is not a claim of downgrade compatibility.
+
+Generation framing provides a verifiable declared purpose before text; it does not prove arbitrary prose semantics. Private provider reasoning is ignored, not projected. No Chinese regex, private-ledger parsing, full-answer buffering or removed aggregate UI is used. External provider/browser qualification remains unrun.
+
+Evidence: failure model before changes; red first commentary classified as answer and commentary suppressing separate preview; green actual assistant-stream decoding/replay and affected existing projection suites; local source-overlay server typecheck and targeted lint. Full log files are synthetic only. Reproduce with Node22 and the described task-owned overlay, using a dummy loopback DATABASE_URL for import-time configuration; these projection tests do not connect to a database. Do not use production configuration.
+
+Frozen upstream implementation: `308255ac11b00df995f50517d6bf4bb31e636f4f` (base `bbe5d4892ea1a805f5c923611bbd91d4320e472a`). Final upstream55/55 owns provider framing, source binding, safety and authorization. Product local source-overlay checks: initial owning15/15; after the additional supersession fix, the three affected files passed11/11 (16 distinct cases covered across the runs). Final server typecheck and targeted lint exit0. The existing 1100-call case took58.998s and passed in the first run; it was not repeated after the narrow precedence fix.

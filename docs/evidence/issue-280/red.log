@@ -1,0 +1,60 @@
+TAP version 13
+# Subtest: native purpose is effective at the first chunk and survives actual transport decoding
+not ok 1 - native purpose is effective at the first chunk and survives actual transport decoding
+  ---
+  duration_ms: 32.13136
+  type: 'test'
+  location: '/workspace/LingxiLoop-native-public-purpose/server/src/__tests__/native-public-purpose.test.ts:1:1103'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'answer'
+    - 'commentary'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'commentary'
+  actual: 'answer'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-native-public-purpose/server/src/__tests__/native-public-purpose.test.ts:27:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: a completed commentary part cannot hide a separate answer preview
+not ok 2 - a completed commentary part cannot hide a separate answer preview
+  ---
+  duration_ms: 6.862196
+  type: 'test'
+  location: '/workspace/LingxiLoop-native-public-purpose/server/src/__tests__/native-public-purpose.test.ts:4:1458'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(parts.some(part=>part.type==='text'&&part.text==='A genuine answer preview'&&activityAnnotation(part)?.kind==='answer'))
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop-native-public-purpose/server/src/__tests__/native-public-purpose.test.ts:41:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 507.919786
