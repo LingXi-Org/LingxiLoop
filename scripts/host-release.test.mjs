@@ -1,3 +1,4 @@
+const traceFormat='run-trace-provenance-host-release/v1',traceMigration={version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'};
 import test from 'node:test'
 import {READER_FORMAT,PRODUCER_FORMAT,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
@@ -24,12 +25,13 @@ function state(descriptor=formal){return {...descriptor,installedSchema:13,produ
 function fixture(fault={}){
  let releasePlan=sealHostPlan({...plan,...(fault.native14?{format:'native-schema-host-release/v1',backup:nativeBackup()} : fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
   source:{...source,...(fault.sameNative14?formal50:fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.sameNative14||fault.native14?formal50:fault.upgrade||fault.product49?formal49:formal)}})
- if(fault.reader||fault.producer){
+ if(fault.reader||fault.producer||fault.trace){
   const source={...releasePlan.source,...formal50,schemaHash:SCHEMA14},target={...releasePlan.target,...formal50,runtime:'3.7.0',schemaHash:SCHEMA14,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.7.0/fixture',productVersion:51,migrations:[...formal50.migrations,MIGRATION51]};
-  if(fault.producer)Object.assign(source,{...target,sha});
+  if(fault.producer||fault.trace)Object.assign(source,{...target,sha});
   const raw=(commit,node)=>JSON.stringify({config:{Env:['NODE_VERSION='+node,'LINGXILOOP_COMMIT_SHA='+commit],Cmd:['node']}}),imageConfigs={source:raw(sha,'22.23.4'),target:raw(next,'22.23.5')};
   source.image={...source.image,configDigest:'sha256:'+createHash('sha256').update(imageConfigs.source).digest('hex')};target.image={...target.image,configDigest:'sha256:'+createHash('sha256').update(imageConfigs.target).digest('hex')};
-  releasePlan=sealHostPlan({...releasePlan,format:fault.reader?READER_FORMAT:PRODUCER_FORMAT,source,target,imageConfigs,publicText:{source:fault.reader?null:{reader:2,producer:'disabled'},target:{reader:2,producer:fault.reader?'disabled':'purpose-json-v1'},sourceConfigurationSha256:fault.reader?null:hash,targetConfigurationSha256:hash,sourceContainers:fault.producer?['lingxiloop-app-a','lingxiloop-app-b'].flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,service,id:String(i*2+j+1).repeat(64),imageId:'sha256:'+'c'.repeat(64)}))):null}});
+  if(fault.trace)Object.assign(target,{runtime:'3.8.0',productVersion:52,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.0/fixture',migrations:[...source.migrations,traceMigration]});
+  releasePlan=sealHostPlan({...releasePlan,format:fault.trace?traceFormat:fault.reader?READER_FORMAT:PRODUCER_FORMAT,source,target,imageConfigs,publicText:{source:fault.reader?null:{reader:2,producer:fault.trace?'purpose-json-v1':'disabled'},target:{reader:2,producer:fault.reader?'disabled':'purpose-json-v1'},sourceConfigurationSha256:fault.reader?null:hash,targetConfigurationSha256:hash,sourceContainers:fault.producer||fault.trace?['lingxiloop-app-a','lingxiloop-app-b'].flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,service,id:String(i*2+j+1).repeat(64),imageId:'sha256:'+'c'.repeat(64)}))):null}});
  }
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
  let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0,migrated=false
@@ -39,7 +41,7 @@ function fixture(fault={}){
   async state(){trace.push('state');if(++stateReads>fault.stateUnknownAfter||migrated&&fault.migrationStateUnknown)throw Object.assign(Error('unknown state'),{uncertain:true});const s=state(migrated?releasePlan.target:releasePlan.source);s.installedSchema=s.schema;if(fault.native14)s.otherClients=stops===4?0:4;if(fault.otherClients&&stops===4)s.otherClients=1;if(fault.busy&&stops===2)s.liveWork=1;if(fault.schema&&deployed)s.schemaHash='e'.repeat(64);return s},
   async verifyImages(which='target'){trace.push('images:'+which);if(fault.image&&which==='target')throw Error('missing image')},
   async stage(stack){trace.push('stage:'+stack);staged++;if(fault.stage&&staged===2)throw Object.assign(Error('unknown'),{uncertain:true})},
-  async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...((fault.reader||fault.producer)?{publicText:2,deployment:{...releasePlan.publicText.target,...(fault.producerLeak?{producer:'purpose-json-v1'}:{})},configurationSha256:hash,modelOptions:fault.producer?{publicTextProtocol:'purpose-json-v1'}:{}}:{}),...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
+  async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...((fault.reader||fault.producer||fault.trace)?{publicText:2,deployment:{...releasePlan.publicText.target,...(fault.producerLeak?{producer:'purpose-json-v1'}:{})},configurationSha256:hash,modelOptions:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:1}:{})}:{}),...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
   async seedPrecheck(){trace.push('seed');if(fault.seedUnknown)throw Object.assign(Error('unknown seed'),{uncertain:true});if(fault.seed)throw Error('seed drift');return {equal:true}},
   async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
   async migrate(){trace.push('migrate');if(fault.migrationUnknown)throw Object.assign(Error('unknown migration'),{uncertain:true});if(fault.migrationFailed)throw Error('migration failed');migrated=true;if(fault.migrationCommittedFailure)throw Error('migration committed before failure')},
@@ -254,3 +256,21 @@ test('separate producer phase keeps capable readers, worker-only drain, no migra
 });
 
 test('producer source container replacement refuses staging and stopping',async()=>{const f=fixture({producer:true});f.plan.publicText.sourceContainers[0].id='0'.repeat(64);f.plan=sealHostPlan(f.plan);await assert.rejects(runHostRelease({plan:f.plan,ops:f.ops}));assert.equal(f.trace.some(x=>x.startsWith('stage:')||x.startsWith('stop:')),false);});
+
+test('explicit trace profile accepts only enabled3.7 full51 to3.8 full52 and retains old profile rejection',()=>{
+ const f=fixture({trace:true});assert.doesNotThrow(()=>validateHostPlanShape(f.plan));
+ for(const change of [p=>p.source.runtime='3.6.0',p=>p.target.runtime='3.8.1',p=>p.target.productVersion=51,p=>p.target.schema=15,p=>p.target.protocol=12,p=>p.target.schemaHash='0'.repeat(64),p=>p.target.migrations[3].checksum='0'.repeat(64),p=>p.target.migrations[50].checksum='0'.repeat(64),p=>p.target.migrations[51].checksum='0'.repeat(64),p=>p.publicText.source.producer='disabled',p=>p.publicText.target.producer='disabled',p=>p.publicText.sourceContainers.pop(),p=>p.format=PRODUCER_FORMAT,p=>p.format=READER_FORMAT,p=>p.format='same-schema-host-release/v1']){
+  const bad=JSON.parse(JSON.stringify(f.plan));change(bad);assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)));
+ }
+});
+test('trace provenance drains all4 once after seed, migrates once, and deploys both Web before Worker',async()=>{
+ const f=fixture({trace:true}),result=await f.run();assert.equal(result.state.runtime,'3.8.0');assert.equal(result.state.product,52);assert.equal(result.runTrace,1);assert.deepEqual(result.publicText,{reader:2,producer:'purpose-json-v1'});
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)));
+ assert.equal(f.trace.filter(x=>x==='migrate').length,1);assert.ok(f.trace.indexOf('seed')<f.trace.findIndex(x=>x.startsWith('stop:')));assert.ok(f.trace.indexOf('migrate')>f.trace.indexOf('wait'));
+ assert.equal(f.events.filter(e=>e.status==='zero-leases'&&e.state.product===51).length,2);assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)));assert.equal(f.trace.includes('backup'),false);
+ const replaced=fixture({trace:true});replaced.plan.publicText.sourceContainers[0].id='0'.repeat(64);await assert.rejects(runHostRelease({plan:sealHostPlan(replaced.plan),ops:replaced.ops}));assert.equal(replaced.trace.some(x=>x.startsWith('stage:')||x.startsWith('stop:')),false);
+});
+test('trace unknown results stop all calls; committed52 is fix-forward without a second migration',async()=>{
+ for(const [fault,last]of [[{seedUnknown:true},'seed'],[{migrationUnknown:true},'migrate'],[{migrationStateUnknown:true},'state']]){const f=fixture({trace:true,...fault});await assert.rejects(f.run(),e=>e.uncertain);assert.equal(f.trace.at(-1),last);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);assert.equal(f.events.at(-1).recovery,'unknown');}
+ for(const [fault,recovery]of [[{migrationFailed:true},'source-unchanged-recovery-requires-review'],[{migrationCommittedFailure:true},'fix-forward']]){const f=fixture({trace:true,...fault});await assert.rejects(f.run());assert.equal(f.events.at(-1).recovery,recovery);assert.equal(f.trace.filter(x=>x==='migrate').length,1);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);}
+});
