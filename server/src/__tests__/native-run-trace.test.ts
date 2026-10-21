@@ -1,0 +1,63 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import type { RunTraceSnapshot, RunTraceSpan } from '@lyyzka/lingxios'
+import { buildNativeRunTrace } from '../agent-runtime/run-trace.js'
+import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
+import { runTraceSchema } from '../../../src/lib/runTrace.js'
+
+// Failure model: docs/evidence/issue-283-native/FAILURE-MODEL.md (before code).
+const origin = 1000
+const span = (overrides: Partial<RunTraceSpan>): RunTraceSpan => ({ spanId: 'root',parentSpanId: null,runId: 'run',kind: 'agent',state: 'running',
+  startedAt: origin,completedAt: null,timingBasis: 'run-execution',seq: 1,revision: 'span-revision',requestVersion: null,fence: null,attemptId: null,...overrides })
+const snapshot = (): RunTraceSnapshot => ({ version: 1,runId: 'run',rootSpanId: 'root',requestVersion: 1,fence: 1,seq: 7,revision: 'snapshot-revision',queuedAt: 900,origin,truncated: false,
+  spans: [span({}),span({ spanId: 'child',parentSpanId: 'root',runId: 'child-run',childRunId: 'child-run',startedAt: 1100 }),
+    span({ spanId: 'call',parentSpanId: 'child',runId: 'child-run',kind: 'llm',startedAt: 1120,completedAt: 1250,state: 'complete',timingBasis: 'model-invocation',
+      callId: 'opaque-call',model: 'synthetic-model',usageAvailable: true,inputTokens: 11,outputTokens: 7,costMicros: null,fence: 1,requestVersion: 1,attemptId: 'opaque-call' }),
+    span({ spanId: 'tool',parentSpanId: 'root',kind: 'tool',startedAt: 1300,timingBasis: 'host-action',toolCallId: 'host:tool',name: 'documents.read',state: 'unknown' })] })
+const state = (version = 1,fence = 1) => ({ type: 'state' as const,state: { run: { id: 'run',status: 'leased' as const,fence,requestVersion: version,resultId: null,resultFence: null,kind: 'turn',attempts: 1,
+  createdAt: new Date(900).toISOString(),availableAt: '',heartbeatAt: null,lastProgressAt: null,goalOutcome: null,error: null },message: null,delivery: null } })
+const trace = (projection: RunStreamProjection) => runTraceSchema.parse(projection.snapshot.message.metadata.custom.runTrace)
+test('public native hierarchy, actual origin and measured usage survive DTO replay without private payloads', () => {
+  const value = buildNativeRunTrace(snapshot(),[{ type: 'tool-call',toolCallId: 'host:tool',toolName: 'documents.read',argsText: 'PRIVATE_ARGS',args: { private: true },
+    result: { private: 'PRIVATE_RESULT' },display: { title: '阅读文档',purpose: '读取授权内容。',summary: '已读取。' } }])
+  assert.equal(value.startedAt,1000); assert.equal(value.queuedAt,900); assert.equal(value.timingBasis,'execution')
+  const child = value.root.children.find(item=>item.kind === 'agent')!
+  assert.equal(child.start,100); assert.equal(child.children[0]!.start,120); assert.equal(child.children[0]!.end,250)
+  assert.equal(child.children[0]!.durationMs,130); assert.equal(child.tokensIn,11); assert.equal(value.root.tokensOut,7); assert.equal(value.root.cost,null)
+  assert.equal(value.root.children.find(item=>item.kind === 'tool')!.end,null)
+  assert.doesNotMatch(JSON.stringify(value),/PRIVATE|principal|session|opaque-call/)
+  assert.deepEqual(runTraceSchema.parse(JSON.parse(JSON.stringify(value))),JSON.parse(JSON.stringify(value)))
+})
+test('trace frames replace metadata, clear unavailable descendants and totals, and reject a superseded request', () => {
+  const projection = new RunStreamProjection('run',false)
+  projection.apply(state())
+  const body = projection.snapshot.message.content
+  projection.apply({ type: 'trace',runId: 'run',trace: snapshot() })
+  assert.equal(trace(projection).root.tokensIn,11)
+  assert.deepEqual(projection.snapshot.message.content,body)
+  projection.apply({ type: 'trace',runId: 'run',trace: snapshot() })
+  assert.equal(trace(projection).root.children.length,2)
+  projection.apply({ type: 'trace',runId: 'run',trace: null })
+  assert.equal(trace(projection).root.tokensIn,null); assert.equal(trace(projection).root.children.length,0)
+  projection.apply({ type: 'trace',runId: 'run',trace: snapshot() })
+  projection.apply(state(2,1))
+  projection.apply({ type: 'trace',runId: 'run',trace: snapshot() })
+  assert.equal(trace(projection).root.children.length,0)
+  assert.throws(()=>projection.apply({ type: 'trace',runId: 'other',trace: snapshot() }),/身份/)
+  const current = { ...snapshot(),requestVersion: 2 }
+  projection.apply({ type: 'trace',runId: 'run',trace: current })
+  const cancelled = state(2)
+  projection.apply({ ...cancelled,state: { ...cancelled.state,run: { ...cancelled.state.run,status: 'cancelled' } } })
+  assert.equal(trace(projection).root.status,'cancelled'); assert.equal(trace(projection).root.children.length,0,'old running clocks stop until a current receipt is available')
+})
+test('new events downgrade coverage until a full current replacement; truncation and unknown fields never become zero', () => {
+  const projection = new RunStreamProjection('run',false)
+  projection.apply(state()); projection.apply({ type: 'trace',runId: 'run',trace: snapshot() })
+  projection.apply({ type: 'event',event: { runId: 'run',seq: 8,kind: 'model.request.started',stage: 'started',visibility: 'user',data: {} } })
+  assert.equal(trace(projection).root.tokensIn,null); assert.ok(trace(projection).limitations.includes('presentation-unavailable'))
+  projection.apply({ type: 'trace',runId: 'run',trace: { ...snapshot(),seq: 8,revision: 'current' } })
+  assert.equal(trace(projection).root.tokensIn,11)
+  const incomplete = buildNativeRunTrace({ ...snapshot(),truncated: true,origin: null })
+  assert.equal(incomplete.root.start,null); assert.equal(incomplete.root.tokensIn,null); assert.equal(incomplete.root.cost,null)
+  assert.equal(incomplete.root.children[0]!.start,null)
+})

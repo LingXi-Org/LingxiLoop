@@ -1,14 +1,14 @@
 import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk, type AssistantTransportStateOperation } from 'assistant-stream'
 import type { ReadonlyJSONValue } from 'assistant-stream/utils'
 import { consumeAssistantMessage, consumeRunStreamEvent, consumePublicTextAttempts, createRunView, type AssistantMessage, type RunStreamEvent, type PublicTextAttempt } from '@lyyzka/lingxios/ui'
-import type { createLingxiOS, RunIdentity, RuntimeOperationContext } from '@lyyzka/lingxios'
+import type { createLingxiOS, RunIdentity, RuntimeOperationContext, RunTraceSnapshot } from '@lyyzka/lingxios'
 import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { createNativeMessage } from '../im/message-types.js'
 import { archivedPublicText, runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { readOptionalTraceActivity } from './tool-activity.js'
-import { buildRunTrace,type PublicLlmTrace } from './run-trace.js'
+import { buildRunTrace,buildNativeRunTrace,type PublicLlmTrace } from './run-trace.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import type { Queryable } from '../db/queryable.js'
@@ -22,6 +22,9 @@ export class RunStreamProjection {
   private llm: PublicLlmTrace[] = []
   private presentationAvailable = false
   private presentationReadRevision = 0
+  private nativeTrace: RunTraceSnapshot | null | undefined
+  private nativeTraceAvailable = false
+  private nativeTraceReadRevision = 0
   private error: string | null = null
   private sourceRef: string | null = null
   private durableDraft = ''
@@ -50,6 +53,17 @@ export class RunStreamProjection {
     if (id !== this.view.runId) throw new Error('运行身份不一致')
     const before = this.view
     this.view = consumeRunStreamEvent(before, item)
+    if (this.view.requestVersion !== before.requestVersion || this.view.fence !== before.fence || this.view.lifecycle !== before.lifecycle) {
+      if (this.nativeTrace !== undefined) this.nativeTrace = null
+      this.nativeTraceAvailable = false
+    }
+    if (this.nativeTrace && this.view.lastSeq > this.nativeTrace.seq) this.nativeTraceAvailable = false
+    if (item.type === 'trace') {
+      this.nativeTraceReadRevision++
+      if (item.trace && (item.trace.runId !== this.view.runId || item.trace.fence !== this.view.fence || item.trace.requestVersion !== this.view.requestVersion)) return
+      this.nativeTrace = item.trace
+      this.nativeTraceAvailable = item.trace !== null && item.trace.seq >= this.view.lastSeq
+    }
     if (this.view.lifecycle !== 'leased' || this.view.fence !== before.fence
       || this.view.requestVersion !== before.requestVersion || this.view.messageFence === this.view.fence) this.durableDraft = ''
     if (item.type === 'event' && this.view !== before && item.event.visibility === 'user'
@@ -68,6 +82,16 @@ export class RunStreamProjection {
       if (this.view !== before && event.kind === 'run.failed' && typeof event.data.error === 'string') this.error = event.data.error
       if (event.kind === 'run.started' && typeof event.data.sourceRef === 'string') this.sourceRef = event.data.sourceRef
     }
+  }
+
+  async syncNativeTrace(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readRunTrace'>, identity: RunIdentity, signal?: AbortSignal): Promise<void> {
+    if (signal?.aborted) return
+    const version = ++this.nativeTraceReadRevision, view = this.view
+    let trace: RunTraceSnapshot | null = null
+    try { trace = await api.readRunTrace(identity,{ signal,deadlineAt: new Date(Date.now()+500).toISOString() }) } catch { /* Optional metadata: unavailable, never cached totals. */ }
+    if (signal?.aborted || version !== this.nativeTraceReadRevision || view.fence !== this.view.fence || view.requestVersion !== this.view.requestVersion) return
+    this.nativeTrace = trace && trace.runId === this.view.runId && trace.fence === this.view.fence && trace.requestVersion === this.view.requestVersion ? trace : null
+    this.nativeTraceAvailable = this.nativeTrace !== null && this.nativeTrace.seq >= this.view.lastSeq
   }
 
   async syncApprovals(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval'>, identity: RunIdentity, operation?: RuntimeOperationContext): Promise<void> {
@@ -167,7 +191,7 @@ export class RunStreamProjection {
     const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
       content: parts, status: runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
-        runTrace: buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable }),
+        runTrace: this.traceSnapshot(),
         ...(acceptedPublicParts ? { activityHistory: { total: activity.length+acceptedPublicParts,attention: attention.length } } : {}),
         ...(this.questionnaireWait?.requestVersion === this.view.requestVersion && this.view.goalOutcome?.status === 'awaiting_input'
           ? { questionnaireWait: this.questionnaireWait } : {}),
@@ -192,9 +216,21 @@ export class RunStreamProjection {
     compact.content = parts.filter(part => !activitySet.has(part))
     return { message: createNativeMessage(compact) }
   }
+
+  private traceSnapshot() {
+    if (this.nativeTrace === undefined) return buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt!,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable })
+    if (!this.nativeTrace) return { ...buildRunTrace({ runId: this.view.runId,createdAt: '',lifecycle: this.view.lifecycle,tools: [],llm: [],presentationAvailable: false }),timingBasis: 'execution' as const }
+    const trace = buildNativeRunTrace(this.nativeTrace,this.tools)
+    if (!this.nativeTraceAvailable) {
+      if (!trace.limitations.includes('presentation-unavailable')) trace.limitations.push('presentation-unavailable')
+      const clear = (span: typeof trace.root) => { if (span.kind === 'agent') span.tokensIn = span.tokensOut = span.cost = null; span.children.forEach(clear) }
+      clear(trace.root)
+    }
+    return trace
+  }
 }
 
-export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal, database?: Queryable, operation?: RuntimeOperationContext) {
+export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal, database?: Queryable, operation?: RuntimeOperationContext, includeTrace = true) {
   const state = await api.readRunState(identity,operation)
   if (!state) throw new Error('run not found')
   const projection = new RunStreamProjection(identity.runId,canControl,identity)
@@ -216,7 +252,15 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   await projection.syncApprovals(api,identity,operation)
   await projection.syncTerminal(api,identity,operation)
   await projection.syncQuestionnaire(identity,database)
-  await projection.syncPresentation(identity, presentationSignal)
+  await Promise.all([projection.syncPresentation(identity, presentationSignal),
+    ...(includeTrace ? [projection.syncNativeTrace(api,identity,presentationSignal ?? operation?.signal)] : [])])
+  if (includeTrace) {
+    // Optional enrichment may fail for either availability or revoked access.
+    // Required root authorization still gates the response after that work.
+    const authorized = await api.readRunState(identity,operation)
+    if (!authorized) throw new Error('run not found')
+    projection.apply({ type: 'state',state: authorized })
+  }
   return projection
 }
 
