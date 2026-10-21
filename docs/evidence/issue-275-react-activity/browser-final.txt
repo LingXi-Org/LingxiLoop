@@ -17,4 +17,3 @@
 
       JUnit  .e2e/issue275-final/junit.xml
    Markdown  .e2e/issue275-final/summary.md
-

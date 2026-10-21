@@ -13,4 +13,3 @@
 
       JUnit  .e2e/issue275-settled/junit.xml
    Markdown  .e2e/issue275-settled/summary.md
-
