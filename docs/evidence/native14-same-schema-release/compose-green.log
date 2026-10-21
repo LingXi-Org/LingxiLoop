@@ -1,0 +1,41 @@
+TAP version 13
+# Subtest: effective candidate preserves all existing policy, with only immutable image and never pull changes
+    # Subtest: app a, source always
+    ok 1 - app a, source always
+      ---
+      duration_ms: 1288.555003
+      type: 'test'
+      ...
+    # Subtest: app a, source never
+    ok 2 - app a, source never
+      ---
+      duration_ms: 1017.475452
+      type: 'test'
+      ...
+    # Subtest: app b, source always
+    ok 3 - app b, source always
+      ---
+      duration_ms: 883.597839
+      type: 'test'
+      ...
+    # Subtest: app b, source never
+    ok 4 - app b, source never
+      ---
+      duration_ms: 1146.004773
+      type: 'test'
+      ...
+    1..4
+ok 1 - effective candidate preserves all existing policy, with only immutable image and never pull changes
+  ---
+  duration_ms: 4337.348926
+  type: 'test'
+  ...
+1..1
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4403.605225

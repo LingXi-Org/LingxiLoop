@@ -1,0 +1,91 @@
+TAP version 13
+# Subtest: native14 same-schema public adapter keeps8 preparation and26 release actions, no maintenance command
+not ok 1 - native14 same-schema public adapter keeps8 preparation and26 release actions, no maintenance command
+  ---
+  duration_ms: 3.185624
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-same-schema-release/scripts/host-release-komodo.test.mjs:88:1'
+  failureType: 'testCodeFailure'
+  error: 'Only reviewed native13 same-schema releases supported'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    check (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:15:48)
+    assertSameSchema (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:35:2)
+    validateHostPlanShape (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:66:7)
+    createHostReleaseOperations (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release-komodo.mjs:12:2)
+    fixture (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release-komodo.test.mjs:77:47)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release-komodo.test.mjs:89:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: native14 same-schema accepts exact formal3.6.0/product50 and binds every formal key and all50 rows
+not ok 2 - native14 same-schema accepts exact formal3.6.0/product50 and binds every formal key and all50 rows
+  ---
+  duration_ms: 2.168422
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.test.mjs:53:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception.
+    Actual message: "Only reviewed native13 same-schema releases supported"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: 'Only reviewed native13 same-schema releases supported'
+  stack: |-
+    check (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:15:48)
+    assertSameSchema (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:35:2)
+    file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.test.mjs:55:26
+    getActual (node:assert:609:5)
+    Function.doesNotThrow (node:assert:777:32)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.test.mjs:55:9)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  operator: 'doesNotThrow'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.test.mjs:55:9)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: native14 same-schema rejects other profiles and native transitions before any action
+ok 3 - native14 same-schema rejects other profiles and native transitions before any action
+  ---
+  duration_ms: 9.118118
+  type: 'test'
+  ...
+# Subtest: native14 same-schema retains Worker-only drain and ordered rollout without backup or migration
+not ok 4 - native14 same-schema retains Worker-only drain and ordered rollout without backup or migration
+  ---
+  duration_ms: 0.729283
+  type: 'test'
+  location: '/workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.test.mjs:79:1'
+  failureType: 'testCodeFailure'
+  error: 'Only reviewed native13 same-schema releases supported'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    check (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:15:48)
+    assertSameSchema (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:35:2)
+    validateHostPlanShape (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:66:7)
+    runHostRelease (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.mjs:137:2)
+    Object.run (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.test.mjs:44:52)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-native14-same-schema-release/scripts/host-release.test.mjs:80:54)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 1
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 90.851248

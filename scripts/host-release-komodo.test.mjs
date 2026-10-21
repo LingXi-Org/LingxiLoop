@@ -7,9 +7,10 @@ function fixture(fault={}){
  const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:h,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations:Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(i+1),checksum:h}))}
  const image={indexDigest:d,configDigest:'sha256:'+'d'.repeat(64),manifestDigest:'sha256:'+'e'.repeat(64),diffIds:[d],auditSha256:h}
  const source={sha:a,...formal,image},target={sha:b,...formal,image},files=new Map(),configs=new Map(),actualFiles=new Map(),events=[],calls=[]
- if(fault.native14){
+ if(fault.native14||fault.sameNative14){
   const m49={version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}
   Object.assign(source,{productVersion:49,migrations:[...formal.migrations,m49]});Object.assign(target,{runtime:'3.6.0',schema:14,productVersion:50,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.6.0/fixture',migrations:[...source.migrations,{version:50,name:'native_skill_delivery',checksum:h}]})
+  if(fault.sameNative14)Object.assign(source,{...target,sha:a})
  }
  const backup={format:2,profile:'native13-product49',source:{sha:a,productVersion:source.productVersion,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,source[k]])),migrations:source.migrations},commandHash:h,attempt:'synthetic',nonce:'0123456789abcdef',command:'synthetic',migrationRehearsal:'not-performed',isolatedDatabase:'memory_verify_synthetic',backupDir:'/synthetic'}
  if(fault.upgrade){target.productVersion=49;target.migrations=[...formal.migrations,{version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}]}
@@ -32,7 +33,7 @@ function fixture(fault={}){
   State:{Running:true,Restarting:false,Pid:1,OOMKilled:false,Health:{Status:'healthy'}},RestartCount:0,
   HostConfig:{ReadonlyRootfs:service==='worker',Privileged:false,SecurityOpt:[],CapAdd:[],CapDrop:[],PidsLimit:128},
  })))
- const state={...formal,migrations:source.migrations,installedSchema:13,product:source.productVersion,count:source.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:4,queued:3,pendingCapture:1}
+ const state={...formal,runtime:source.runtime,schema:source.schema,migrations:source.migrations,installedSchema:source.schema,product:source.productVersion,count:source.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:4,queued:3,pendingCapture:1}
  delete state.integrity;delete state.tarball;delete state.productVersion
  const t={
   async read(op,p){
@@ -83,6 +84,21 @@ test('real adapter/engine contract stages public host files, preserves core and 
  assert.equal(f.calls.some(c=>c.op==='PullStack'),false)
  assert.equal(JSON.stringify(f.events).includes('private fixture'),false)
  assert.ok(APPS.every(s=>f.configs.get(s).config.environment==='private fixture never persist'))
+})
+test('native14 same-schema public adapter keeps8 preparation and26 release actions, no maintenance command',async()=>{
+ const f=fixture({sameNative14:true}),original=structuredClone(f.configs)
+ const native=c=>['WriteStackFileContents','RunStackService','PullStack','StopStack','DeployStack','SnapshotRestore'].includes(c.op)
+ await runImagePreparation({plan:f.plan,ops:f.ops})
+ assert.equal(f.calls.filter(native).length,8);assert.deepEqual(f.configs,original)
+ const offset=f.calls.length;await f.run();const release=f.calls.slice(offset)
+ assert.equal(release.filter(native).length,26)
+ assert.deepEqual(release.filter(c=>c.op==='StopStack').map(c=>c.stack+':'+c.services[0]),APPS.map(a=>a+':worker'))
+ assert.deepEqual(release.filter(c=>c.op==='DeployStack').map(c=>c.stack+':'+c.services[0]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>a+':'+s)))
+ assert.equal(f.calls.some(c=>c.op==='SnapshotRestore'||c.op==='RunStackService'&&(JSON.stringify(c.command).includes('migrate-bin')||Object.hasOwn(c,'env'))),false)
+ assert.equal(f.actualFiles.get(CORE),f.files.get(CORE).source)
+ assert.ok(APPS.every(s=>f.configs.get(s).config.environment===original.get(s).config.environment))
+ assert.equal(JSON.stringify(f.events).includes('private fixture'),false)
+ const before=f.calls.length;await assert.rejects(f.ops.migrate());await assert.rejects(f.ops.backup());assert.equal(f.calls.length,before)
 })
 test('product migration adapter runs exact isolated A command once, no env override or old-Web stop',async()=>{
  const f=fixture({upgrade:true});await f.run()
