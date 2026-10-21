@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: 0050 upgrades only schema13, preserves historical SQL and rolls native/provenance/ledger back together
+ok 1 - 0050 upgrades only schema13, preserves historical SQL and rolls native/provenance/ledger back together
+  ---
+  duration_ms: 827.934461
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1267.670605
