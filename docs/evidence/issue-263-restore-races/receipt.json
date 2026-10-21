@@ -12,9 +12,11 @@
   },
   "evidenceSha256": {
     "baseline-overlay.cjs": "f55f60ebce6d3f1c146f884ac72bc9eb3dca8ac2e63eb3e79feed572d27a26d6",
-    "baseline-red.txt": "dbf734150b3aa1b695aaf6b98603b1cd61e8d9256490d75d2ad7d9fdc69f4f23",
+    "baseline-red.tap.gz": "ac17e2421eaa892be94a3fb63405be3b2e77fa4782cd84f25faba4afbc54cf19",
+    "baseline-red.txt": "cb557163e41c42cca265564a9c68065c84853f0a53c7a410602edf89344564fc",
     "candidate-green.txt": "471e1928c147e57c698a88fe629cbd95e2c7af47c5b9a111461594647b877d0b",
     "targeted-lint.txt": "1aa67fad31efe1ebf481057eec1c450f618959709570721c8f35c87a7891b7ed",
     "targeted-typecheck.txt": "abdbf4dea88b369bfcf3335207ea0686b85aaa95442ca1def231ea299bc83244"
-  }
+  },
+  "rawBaselineSha256": "dbf734150b3aa1b695aaf6b98603b1cd61e8d9256490d75d2ad7d9fdc69f4f23"
 }

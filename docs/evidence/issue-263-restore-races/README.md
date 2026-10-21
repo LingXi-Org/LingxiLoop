@@ -28,4 +28,4 @@ To reproduce the red suite without modifying a working tree, the private in-memo
 node --require ./docs/evidence/issue-263-restore-races/baseline-overlay.cjs --import tsx --test src/features/settings/removedConversationsLifecycle.test.ts
 ```
 
-The second command intentionally exits 1. The baseline commit must exist locally. `receipt.json` binds tested source and evidence hashes. No package or lockfile changed.
+The second command intentionally exits 1. The baseline commit must exist locally. `baseline-red.tap.gz` preserves the original Node failure transcript byte-for-byte; the readable .txt copy removes only trailing whitespace. `receipt.json` binds tested source and evidence hashes. No package or lockfile changed.

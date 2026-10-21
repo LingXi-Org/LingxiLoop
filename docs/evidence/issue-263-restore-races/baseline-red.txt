@@ -19,9 +19,9 @@
 test at src/features/settings/removedConversationsLifecycle.test.ts:1:5494
 ✖ closing immediately fences a restore before animation cleanup (171.447054ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   1 !== 0
-  
+
       at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:109:10)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
@@ -36,9 +36,9 @@ test at src/features/settings/removedConversationsLifecycle.test.ts:1:5494
 test at src/features/settings/removedConversationsLifecycle.test.ts:1:5764
 ✖ reopening before acceptance converges the new removed list (79.655263ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   1 !== 0
-  
+
       at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:120:10)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
@@ -53,9 +53,9 @@ test at src/features/settings/removedConversationsLifecycle.test.ts:1:5764
 test at src/features/settings/removedConversationsLifecycle.test.ts:1:6227
 ✖ list invalidation does not strand the current restore pending state (58.890355ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   2 !== 1
-  
+
       at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:128:10)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
@@ -70,9 +70,9 @@ test at src/features/settings/removedConversationsLifecycle.test.ts:1:6227
 test at src/features/settings/removedConversationsLifecycle.test.ts:1:7039
 ✖ failure preserves its row and permits a successful retry (58.912473ms)
   AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
-  
+
     assert.ok(f.reads.length > reads)
-  
+
       at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:155:10)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
@@ -87,9 +87,9 @@ test at src/features/settings/removedConversationsLifecycle.test.ts:1:7039
 test at src/features/settings/removedConversationsLifecycle.test.ts:1:7495
 ✖ rapid close/reopen fences old completion even while the old view awaits cleanup (59.442471ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   1 !== 0
-  
+
       at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:165:10)
       at async Test.run (node:internal/test_runner/test:1389:7)
       at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
@@ -104,9 +104,9 @@ test at src/features/settings/removedConversationsLifecycle.test.ts:1:7495
 test at src/features/settings/removedConversationsLifecycle.test.ts:1:7827
 ✖ data view generation leaves unrelated settings transitions unchanged (32.712567ms)
   AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
-  
+
     assert.ok(f.settings.getState().dataAccountEpoch > initial)
-  
+
       at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:173:10)
       at Test.runInAsyncScope (node:async_hooks:227:14)
       at Test.run (node:internal/test_runner/test:1382:25)
