@@ -1,0 +1,116 @@
+integration	Run npm run test:integration	2026-10-21T15:18:46.8157275Z # Subtest: durable prefix crosses real Worker/SSE and state-first reload (complete)
+integration	Run npm run test:integration	2026-10-21T15:18:46.8158577Z not ok 99 - durable prefix crosses real Worker/SSE and state-first reload (complete)
+integration	Run npm run test:integration	2026-10-21T15:18:46.8159103Z   ---
+integration	Run npm run test:integration	2026-10-21T15:18:46.8159454Z   duration_ms: 20545.84665
+integration	Run npm run test:integration	2026-10-21T15:18:46.8159849Z   type: 'test'
+integration	Run npm run test:integration	2026-10-21T15:18:46.8160482Z   location: '/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/durable-public-activity.test.ts:1:1151'
+integration	Run npm run test:integration	2026-10-21T15:18:46.8161180Z   failureType: 'testTimeoutFailure'
+integration	Run npm run test:integration	2026-10-21T15:18:46.8161536Z   error: 'test timed out after 20000ms'
+integration	Run npm run test:integration	2026-10-21T15:18:46.8161921Z   code: 'ERR_TEST_FAILURE'
+integration	Run npm run test:integration	2026-10-21T15:18:46.8162281Z   ...
+integration	Run npm run test:integration	2026-10-21T15:19:06.8149338Z # Subtest: durable prefix crosses real Worker/SSE and state-first reload (cancelled)
+integration	Run npm run test:integration	2026-10-21T15:19:06.8150737Z not ok 100 - durable prefix crosses real Worker/SSE and state-first reload (cancelled)
+integration	Run npm run test:integration	2026-10-21T15:19:06.8151350Z   ---
+integration	Run npm run test:integration	2026-10-21T15:19:06.8151782Z   duration_ms: 20000.182065
+integration	Run npm run test:integration	2026-10-21T15:19:06.8152161Z   type: 'test'
+integration	Run npm run test:integration	2026-10-21T15:19:06.8152937Z   location: '/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/durable-public-activity.test.ts:1:1151'
+integration	Run npm run test:integration	2026-10-21T15:19:06.8153735Z   failureType: 'testTimeoutFailure'
+integration	Run npm run test:integration	2026-10-21T15:19:06.8154154Z   error: 'test timed out after 20000ms'
+integration	Run npm run test:integration	2026-10-21T15:19:06.8154953Z   code: 'ERR_TEST_FAILURE'
+integration	Run npm run test:integration	2026-10-21T15:19:06.8155457Z   ...
+integration	Run npm run test:integration	2026-10-21T15:19:26.8141773Z # Subtest: durable prefix crosses real Worker/SSE and state-first reload (revoked)
+integration	Run npm run test:integration	2026-10-21T15:19:26.8142968Z not ok 101 - durable prefix crosses real Worker/SSE and state-first reload (revoked)
+integration	Run npm run test:integration	2026-10-21T15:19:26.8143501Z   ---
+integration	Run npm run test:integration	2026-10-21T15:19:26.8143800Z   duration_ms: 19999.150712
+integration	Run npm run test:integration	2026-10-21T15:19:26.8144219Z   type: 'test'
+integration	Run npm run test:integration	2026-10-21T15:19:26.8144837Z   location: '/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/durable-public-activity.test.ts:1:1151'
+integration	Run npm run test:integration	2026-10-21T15:19:26.8145418Z   failureType: 'testTimeoutFailure'
+integration	Run npm run test:integration	2026-10-21T15:19:26.8146033Z   error: 'test timed out after 20000ms'
+integration	Run npm run test:integration	2026-10-21T15:19:26.8146323Z   code: 'ERR_TEST_FAILURE'
+integration	Run npm run test:integration	2026-10-21T15:19:26.8146643Z   ...
+integration	Run npm run test:integration	2026-10-21T15:19:46.8142530Z # Subtest: durable prefix crosses real Worker/SSE and state-first reload (unsafe)
+integration	Run npm run test:integration	2026-10-21T15:19:46.8143322Z not ok 102 - durable prefix crosses real Worker/SSE and state-first reload (unsafe)
+integration	Run npm run test:integration	2026-10-21T15:19:46.8144392Z   ---
+integration	Run npm run test:integration	2026-10-21T15:19:46.8144851Z   duration_ms: 20000.043382
+integration	Run npm run test:integration	2026-10-21T15:19:46.8146019Z   type: 'test'
+integration	Run npm run test:integration	2026-10-21T15:19:46.8146715Z   location: '/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/durable-public-activity.test.ts:1:1151'
+integration	Run npm run test:integration	2026-10-21T15:19:46.8147353Z   failureType: 'testTimeoutFailure'
+integration	Run npm run test:integration	2026-10-21T15:19:46.8147708Z   error: 'test timed out after 20000ms'
+integration	Run npm run test:integration	2026-10-21T15:19:46.8148006Z   code: 'ERR_TEST_FAILURE'
+integration	Run npm run test:integration	2026-10-21T15:19:46.8148278Z   ...
+integration	Run npm run test:integration	2026-10-21T15:20:06.8151972Z # Subtest: durable prefix crosses real Worker/SSE and state-first reload (final-stream)
+integration	Run npm run test:integration	2026-10-21T15:20:06.8152705Z not ok 103 - durable prefix crosses real Worker/SSE and state-first reload (final-stream)
+integration	Run npm run test:integration	2026-10-21T15:20:06.8153084Z   ---
+integration	Run npm run test:integration	2026-10-21T15:20:06.8153340Z   duration_ms: 20000.670747
+integration	Run npm run test:integration	2026-10-21T15:20:06.8153670Z   type: 'test'
+integration	Run npm run test:integration	2026-10-21T15:20:06.8154160Z   location: '/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/durable-public-activity.test.ts:1:1151'
+integration	Run npm run test:integration	2026-10-21T15:20:06.8154706Z   failureType: 'testTimeoutFailure'
+integration	Run npm run test:integration	2026-10-21T15:20:06.8155006Z   error: 'test timed out after 20000ms'
+integration	Run npm run test:integration	2026-10-21T15:20:06.8155269Z   code: 'ERR_TEST_FAILURE'
+integration	Run npm run test:integration	2026-10-21T15:20:06.8155552Z   ...
+integration	Run npm run test:integration	2026-10-21T15:20:06.8279139Z # Error: Test "durable prefix crosses real Worker/SSE and state-first reload (complete)" at server/src/__integration__/durable-public-activity.test.ts:1:1151 generated asynchronous activity after the test ended. This activity created the error "Error: control plane stopped" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+integration	Run npm run test:integration	2026-10-21T15:20:06.8293657Z # Error: Test "durable prefix crosses real Worker/SSE and state-first reload (complete)" at server/src/__integration__/durable-public-activity.test.ts:1:1151 generated asynchronous activity after the test ended. This activity created the error "Error: control plane stopped" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+integration	Run npm run test:integration	2026-10-21T15:20:06.8297015Z # Error: Test "durable prefix crosses real Worker/SSE and state-first reload (complete)" at server/src/__integration__/durable-public-activity.test.ts:1:1151 generated asynchronous activity after the test ended. This activity created the error "Error: control plane stopped" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+integration	Run npm run test:integration	2026-10-21T15:20:06.8299733Z # Error: Test "durable prefix crosses real Worker/SSE and state-first reload (complete)" at server/src/__integration__/durable-public-activity.test.ts:1:1151 generated asynchronous activity after the test ended. This activity created the error "Error: control plane stopped" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+integration	Run npm run test:integration	2026-10-21T15:20:06.8302230Z # Error: Test "durable prefix crosses real Worker/SSE and state-first reload (complete)" at server/src/__integration__/durable-public-activity.test.ts:1:1151 generated asynchronous activity after the test ended. This activity created the error "Error: control plane stopped" and would have caused the test to fail, but instead triggered an unhandledRejection event.
+
+integration	Run npm run test:integration	2026-10-21T15:21:49.6073806Z # Subtest: memory public content crosses provider, durable ledger and SSE before tool/final completion
+integration	Run npm run test:integration	2026-10-21T15:21:49.6074690Z not ok 191 - memory public content crosses provider, durable ledger and SSE before tool/final completion
+integration	Run npm run test:integration	2026-10-21T15:21:49.6075162Z   ---
+integration	Run npm run test:integration	2026-10-21T15:21:49.6075389Z   duration_ms: 1704.967137
+integration	Run npm run test:integration	2026-10-21T15:21:49.6076280Z   type: 'test'
+integration	Run npm run test:integration	2026-10-21T15:21:49.6076864Z   location: '/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/memory-public-streaming.test.ts:1:1468'
+integration	Run npm run test:integration	2026-10-21T15:21:49.6077398Z   failureType: 'testCodeFailure'
+integration	Run npm run test:integration	2026-10-21T15:21:49.6077869Z   error: 'assembled prompt must request public content before tools'
+integration	Run npm run test:integration	2026-10-21T15:21:49.6078310Z   code: 'ERR_ASSERTION'
+integration	Run npm run test:integration	2026-10-21T15:21:49.6078550Z   name: 'AssertionError'
+integration	Run npm run test:integration	2026-10-21T15:21:49.6078782Z   expected: true
+integration	Run npm run test:integration	2026-10-21T15:21:49.6079043Z   actual: false
+integration	Run npm run test:integration	2026-10-21T15:21:49.6079249Z   operator: '=='
+integration	Run npm run test:integration	2026-10-21T15:21:49.6079496Z   stack: |-
+integration	Run npm run test:integration	2026-10-21T15:21:49.6080072Z     TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/memory-public-streaming.test.ts:110:12)
+integration	Run npm run test:integration	2026-10-21T15:21:49.6080843Z     process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+integration	Run npm run test:integration	2026-10-21T15:21:49.6081347Z     async Test.run (node:internal/test_runner/test:1054:7)
+integration	Run npm run test:integration	2026-10-21T15:21:49.6081814Z     async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+integration	Run npm run test:integration	2026-10-21T15:21:49.6082214Z   ...
+
+integration	Run npm run test:integration	2026-10-21T15:26:21.7973126Z # Subtest: visualization failure retains real public content through provider, durable ledger and SSE before final completion
+integration	Run npm run test:integration	2026-10-21T15:26:21.7975319Z not ok 357 - visualization failure retains real public content through provider, durable ledger and SSE before final completion
+integration	Run npm run test:integration	2026-10-21T15:26:21.7976193Z   ---
+integration	Run npm run test:integration	2026-10-21T15:26:21.7976625Z   duration_ms: 1611.356239
+integration	Run npm run test:integration	2026-10-21T15:26:21.7977078Z   type: 'test'
+integration	Run npm run test:integration	2026-10-21T15:26:21.7977709Z   location: '/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/visualize-failure-public-streaming.test.ts:1:1510'
+integration	Run npm run test:integration	2026-10-21T15:26:21.7978461Z   failureType: 'testCodeFailure'
+integration	Run npm run test:integration	2026-10-21T15:26:21.7978928Z   error: 'assembled prompt must request public content before tools'
+integration	Run npm run test:integration	2026-10-21T15:26:21.7979819Z   code: 'ERR_ASSERTION'
+integration	Run npm run test:integration	2026-10-21T15:26:21.7980039Z   name: 'AssertionError'
+integration	Run npm run test:integration	2026-10-21T15:26:21.7980263Z   expected: true
+integration	Run npm run test:integration	2026-10-21T15:26:21.7980456Z   actual: false
+integration	Run npm run test:integration	2026-10-21T15:26:21.7980651Z   operator: '=='
+integration	Run npm run test:integration	2026-10-21T15:26:21.7980906Z   stack: |-
+integration	Run npm run test:integration	2026-10-21T15:26:21.7981453Z     TestContext.<anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/server/src/__integration__/visualize-failure-public-streaming.test.ts:108:12)
+integration	Run npm run test:integration	2026-10-21T15:26:21.7982171Z     process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+integration	Run npm run test:integration	2026-10-21T15:26:21.7982662Z     async Test.run (node:internal/test_runner/test:1054:7)
+integration	Run npm run test:integration	2026-10-21T15:26:21.7983098Z     async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+integration	Run npm run test:integration	2026-10-21T15:26:21.7983419Z   ...
+
+integration	Run npm run test:integration	2026-10-21T15:26:54.1869473Z   ...
+integration	Run npm run test:integration	2026-10-21T15:26:56.1502604Z # [worker] reconciled 1/1 IM channels
+integration	Run npm run test:integration	2026-10-21T15:26:56.1506291Z # [worker] ready · tasks=0
+integration	Run npm run test:integration	2026-10-21T15:26:56.1506729Z # [lifecycle] stopping (test)
+integration	Run npm run test:integration	2026-10-21T15:26:56.1547197Z # Subtest: production Worker reconciliation uses passive local context before runner startup
+integration	Run npm run test:integration	2026-10-21T15:26:56.1548555Z ok 381 - production Worker reconciliation uses passive local context before runner startup
+integration	Run npm run test:integration	2026-10-21T15:26:56.1549098Z   ---
+integration	Run npm run test:integration	2026-10-21T15:26:56.1549322Z   duration_ms: 725.991693
+integration	Run npm run test:integration	2026-10-21T15:26:56.1549575Z   type: 'test'
+integration	Run npm run test:integration	2026-10-21T15:26:56.1549882Z   ...
+integration	Run npm run test:integration	2026-10-21T15:26:56.1756870Z 1..381
+integration	Run npm run test:integration	2026-10-21T15:26:56.1757185Z # tests 381
+integration	Run npm run test:integration	2026-10-21T15:26:56.1757442Z # suites 0
+integration	Run npm run test:integration	2026-10-21T15:26:56.1757665Z # pass 360
+integration	Run npm run test:integration	2026-10-21T15:26:56.1758313Z # fail 2
+integration	Run npm run test:integration	2026-10-21T15:26:56.1758519Z # cancelled 5
+integration	Run npm run test:integration	2026-10-21T15:26:56.1758721Z # skipped 14
+integration	Run npm run test:integration	2026-10-21T15:26:56.1758913Z # todo 0
+integration	Run npm run test:integration	2026-10-21T15:26:56.1759137Z # duration_ms 620347.215513
+integration	Run npm run test:integration	2026-10-21T15:26:56.1887984Z ##[error]Process completed with exit code 1.

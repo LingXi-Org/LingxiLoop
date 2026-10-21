@@ -1,0 +1,36 @@
+{
+  "base": "b8f29ef32360ad7569174145b6a206c18be6b9ca",
+  "implementationCommit": "5432fe5494fce8bdd83d8c0c856568b48992927e",
+  "runtime": "3.6.0",
+  "node": "22.23.3",
+  "originalCi": {
+    "runId": "39623951322",
+    "passed": 360,
+    "failed": 2,
+    "timedOut": 5,
+    "skipped": 14
+  },
+  "owning": {
+    "passed": 7,
+    "failed": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "durationMs": 22132.930464,
+    "exitCode": 0
+  },
+  "serverTypecheckExitCode": 0,
+  "biomeExitCode": 0,
+  "sourceSha256": {
+    "server/src/__integration__/durable-public-activity.test.ts": "7f925a335fde2c487e1ddf845cf249da10e2bdbe0e430728cffc38461c92b8e1",
+    "server/src/__integration__/memory-public-streaming.test.ts": "380828534189a32f4b5a6570150edb837c75d6393c36e6b7e6bca9e223dba072",
+    "server/src/__integration__/visualize-failure-public-streaming.test.ts": "5a35311120a0cf4b63c35f3570c81d19cbdbe89d14b523fbb27ec70795383924"
+  },
+  "evidenceSha256": {
+    "FAILURE-MODEL.md": "093bf746f5d29e01c105844ffb0e9e19d75a894289b84d9e250ace5166ad1c63",
+    "README.md": "c02b303a028295bb8525d04522b1241dcb55b606ebc3720e252c2648666e110b",
+    "ci-red.txt": "215fd2b1b8091d3c64cde62a7433b9ebd6d830a97ab4ba6d947c875aab614a7e",
+    "lint.txt": "37e9f965dd7f7fcf3bafd6b7d363894c37fefbf512b7481e8daeb948a0b0d899",
+    "owning-green.txt": "bc4a2eb4892487daa0164eaff532681a22cf9de8539550f8c920ba0a8b82c4b8",
+    "server-typecheck.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
