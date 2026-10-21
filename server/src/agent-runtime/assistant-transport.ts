@@ -4,7 +4,7 @@ import { consumeAssistantMessage, consumeRunStreamEvent, consumePublicTextAttemp
 import type { createLingxiOS, RunIdentity, RuntimeOperationContext } from '@lyyzka/lingxios'
 import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { createNativeMessage } from '../im/message-types.js'
-import { runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
+import { archivedPublicText, runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { readOptionalToolActivity } from './tool-activity.js'
@@ -145,7 +145,7 @@ export class RunStreamProjection {
     // A committed answer explicitly names its streamed source part. Keep that
     // immutable prefix in activityPage, but do not repeat it above the answer.
     const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools,{ includeAcceptedPublicText: false })
-    const acceptedPublicParts = (this.view.publicTextParts ?? []).filter(part => part.acceptedResultId).length
+    const acceptedPublicParts = (this.view.publicTextParts ?? []).filter(part => archivedPublicText(part,this.view,this.tools)).length
     const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
     const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
     const activitySet = new Set(activity)
