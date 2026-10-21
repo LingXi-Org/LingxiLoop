@@ -1,7 +1,6 @@
 import {
   Cancel01Icon,
   Database01Icon,
-  Logout03Icon,
   Notification02Icon,
   PaintBrush01Icon,
   Settings02Icon,
@@ -69,7 +68,7 @@ const SETTINGS_SECTIONS = [
   {
     id: 'data-account',
     label: '数据与账号',
-    description: '管理登录状态、账号访问权与身份数据。',
+    description: '恢复已删除的对话，管理登录状态。',
     icon: Database01Icon,
   },
 ] as const satisfies ReadonlyArray<{
@@ -136,7 +135,7 @@ export function SettingsDialog() {
           <div className="flex shrink-0 justify-center bg-popover px-3 pb-2 pt-2">
             <TabsList aria-label="设置栏目" className="h-13 rounded-full p-1">
               {SETTINGS_SECTIONS.map((section) => {
-                const mobileLabel = section.id === 'data-account' ? '退出登录与账号' : section.label
+                const mobileLabel = section.label
                 return <TabsTrigger
                   key={section.id}
                   value={section.id}
@@ -144,7 +143,7 @@ export function SettingsDialog() {
                   aria-label={mobileLabel}
                   title={mobileLabel}
                 >
-                  <HugeiconsIcon icon={section.id === 'data-account' ? Logout03Icon : section.icon} strokeWidth={2} />
+                  <HugeiconsIcon icon={section.icon} strokeWidth={2} />
                   <span className="sr-only">{mobileLabel}</span>
                 </TabsTrigger>
               })}

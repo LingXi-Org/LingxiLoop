@@ -1,0 +1,17 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop-settings/e2e/settings-removal
+      run 01a15c54-54b3-7e3b-8bdd-0d97515137c3 · targets: web
+
+ ✓ |web| browser.e2e.ts (3 tests) 10.86s
+   ✓ settings list restores, retries and cancels without losing personal rows 3.12s
+   ✓ mobile settings uses existing navigation and fits the viewport 1.95s
+   ✓ closing settings fences a pending restore completion 5.79s
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  02:39:53
+   Duration  11.28s
+     Report  .output/report.json
+
+      JUnit  .output/junit.xml
+   Markdown  .output/summary.md
