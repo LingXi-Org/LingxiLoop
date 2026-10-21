@@ -1,0 +1,58 @@
+{
+  "format": "web-same-schema-acceptance/v1",
+  "at": "2026-10-21T03:24:07.397Z",
+  "candidate": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+  "planHash": "8510cf6b69e07573044273d72c475a9a636e3ee3e6240e467d9cef42808adb87",
+  "checks": {
+    "sealedSameSchemaPlan": true,
+    "acceptedSource": true,
+    "executionAndPreparation": true,
+    "auditBytes": true,
+    "exactCiAndEvidenceBytes": true,
+    "terminalReceipts": true,
+    "freshPostflight": true,
+    "exactCurrentContainers": true,
+    "exactCurrentSources": true,
+    "actualHostImageIdentity": true,
+    "policyUnchanged": true,
+    "schema": true,
+    "publicHealthAndVersion": true,
+    "workerStartupSelfChecksInferred": true
+  },
+  "passed": true,
+  "inputs": [
+    {
+      "name": "inputs.json",
+      "sha256": "031164485216350304fc1d4e70af4d46cc24a629e23c2771b3f3006ef5a952cf"
+    },
+    {
+      "name": "plan.json",
+      "sha256": "1c244c86f09f57d8b353930d6c965d2bc4ca89e6fa01c855cf692f296624eaf7"
+    },
+    {
+      "name": "release-execution.json",
+      "sha256": "cac97fdea7f49c22106247699b26fe5221ea9c0a1c83f82a4cef3a5c13b03ad1"
+    },
+    {
+      "name": "image-preparation.json",
+      "sha256": "fbf6024e1456d37de31fc7b317f408f4a098adc340bd827c93381258bf6e6cff"
+    },
+    {
+      "name": "production-after.json",
+      "sha256": "33302dc945f056bd73e3bd44d292a5879184a1d9c88626c81d44a500654f7d18"
+    },
+    {
+      "name": "terminal-receipts.json",
+      "sha256": "200f22e7c45112c448b3cc526bbb6b21a865e44ca39a082899e9e17752fe3dc5"
+    }
+  ],
+  "externalEvidence": {
+    "targetAudit": "11765c97fbcaba111828480f45e3c3e9098480fb47d3498d17e15cdcadb3373d",
+    "webCi": "4b08748b6a27436f2045354df71a29f541e6fe01bdfbca57825d23ca1b43680d",
+    "deployCi": "d45c2fa519d20baf5c3d02265d02ed2156e325fc0460686e35ceae958422c9db"
+  },
+  "sourceAcceptanceSha256": "4e20d36acc1ab4d6789a623f8c6b7462b57122135a0e30a78a4362a5167d3150",
+  "sourceProductionReadSha256": "975848af9be18608aba0866628da8008d55f882a16f3d1a5b56a02d28fd2c885",
+  "isolationScope": "Exact production entrypoint and native readyz imply shipped startup self-check completion; no full production isolation/fault-injection matrix.",
+  "authenticatedSmoke": "not-run: no existing authorized identity injected; no credential created/copied"
+}

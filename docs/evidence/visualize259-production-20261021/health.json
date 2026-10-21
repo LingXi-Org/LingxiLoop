@@ -1,0 +1,185 @@
+{
+  "candidate": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+  "startedAt": "2026-10-21T03:23:36.062Z",
+  "finishedAt": "2026-10-21T03:23:51.423Z",
+  "counts": {
+    "read": 15,
+    "write": 0,
+    "execute": 0,
+    "sql": 0,
+    "provider": 0
+  },
+  "summary": {
+    "healthyContainers": 4,
+    "healthyServers": 3,
+    "stacksIdle": true,
+    "matchingSourceOnBothNodes": true,
+    "targetImageIdentified": true,
+    "publicPassed": true
+  },
+  "containers": [
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "serverId": "6aa8a1bcb35d27bdd4e12a26",
+      "service": "lingxiloop",
+      "id": "4817ddd3a7767192f4748df1d8346b4dc9ff4275f88d1edce1900cf2382035c8",
+      "imageSource": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+      "declaredSource": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+      "imageId": "sha256:cab66b63b5e57c9b746de808ea6c8f2b92c2ed92b05890ed5f44222e45a3ac0f",
+      "running": true,
+      "restarting": false,
+      "healthy": true,
+      "restartCount": 0,
+      "oomKilled": false,
+      "startedAt": "2026-10-21T03:14:49.839627789Z",
+      "latestHealthAt": "2026-10-21T11:23:29.676629256+08:00",
+      "healthFailingStreak": 0,
+      "policy": {
+        "readOnly": false,
+        "privileged": false,
+        "securityOpt": [],
+        "capAdd": [],
+        "capDrop": [],
+        "pidsLimit": null,
+        "user": "",
+        "productionMode": true
+      }
+    },
+    {
+      "stack": "lingxiloop-app-a",
+      "server": "shanghai-a",
+      "serverId": "6aa8a1bcb35d27bdd4e12a26",
+      "service": "worker",
+      "id": "e0e9ca69fe69a5425b228068b138b1a185baa2e6343a435502c734bd19827fb4",
+      "imageSource": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+      "declaredSource": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+      "imageId": "sha256:cab66b63b5e57c9b746de808ea6c8f2b92c2ed92b05890ed5f44222e45a3ac0f",
+      "running": true,
+      "restarting": false,
+      "healthy": true,
+      "restartCount": 0,
+      "oomKilled": false,
+      "startedAt": "2026-10-21T03:16:37.7307913Z",
+      "latestHealthAt": "2026-10-21T11:23:30.177048783+08:00",
+      "healthFailingStreak": 0,
+      "workerCommandMatches": true,
+      "workerEntrypointMatches": true,
+      "workerReadyzCheckMatches": true,
+      "policy": {
+        "readOnly": true,
+        "privileged": false,
+        "securityOpt": [
+          "seccomp=unconfined"
+        ],
+        "capAdd": [],
+        "capDrop": [],
+        "pidsLimit": 128,
+        "user": "",
+        "productionMode": true
+      }
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "serverId": "6aa8a1b9b35d27bdd4e12a24",
+      "service": "lingxiloop",
+      "id": "c612c84a6da8a2ebb3252476b814e7b227b98afe8b6a33413ac87ec4d61377f6",
+      "imageSource": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+      "declaredSource": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+      "imageId": "sha256:cab66b63b5e57c9b746de808ea6c8f2b92c2ed92b05890ed5f44222e45a3ac0f",
+      "running": true,
+      "restarting": false,
+      "healthy": true,
+      "restartCount": 0,
+      "oomKilled": false,
+      "startedAt": "2026-10-21T03:15:45.803977473Z",
+      "latestHealthAt": "2026-10-21T11:23:40.625575857+08:00",
+      "healthFailingStreak": 0,
+      "policy": {
+        "readOnly": false,
+        "privileged": false,
+        "securityOpt": [],
+        "capAdd": [],
+        "capDrop": [],
+        "pidsLimit": null,
+        "user": "",
+        "productionMode": true
+      }
+    },
+    {
+      "stack": "lingxiloop-app-b",
+      "server": "shanghai-b",
+      "serverId": "6aa8a1b9b35d27bdd4e12a24",
+      "service": "worker",
+      "id": "4a650368dafff91b93494146d31cdc38c54550348edd256961c61d7090aa824c",
+      "imageSource": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+      "declaredSource": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+      "imageId": "sha256:cab66b63b5e57c9b746de808ea6c8f2b92c2ed92b05890ed5f44222e45a3ac0f",
+      "running": true,
+      "restarting": false,
+      "healthy": true,
+      "restartCount": 0,
+      "oomKilled": false,
+      "startedAt": "2026-10-21T03:17:23.272792223Z",
+      "latestHealthAt": "2026-10-21T11:23:35.686172067+08:00",
+      "healthFailingStreak": 0,
+      "workerCommandMatches": true,
+      "workerEntrypointMatches": true,
+      "workerReadyzCheckMatches": true,
+      "policy": {
+        "readOnly": true,
+        "privileged": false,
+        "securityOpt": [
+          "seccomp=unconfined"
+        ],
+        "capAdd": [],
+        "capDrop": [],
+        "pidsLimit": 128,
+        "user": "",
+        "productionMode": true
+      }
+    }
+  ],
+  "public": [
+    {
+      "path": "/api/health",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/readyz",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "path": "/api/health/dependencies",
+      "status": 200,
+      "ok": true,
+      "dependencies": {
+        "database": true,
+        "redis": true,
+        "openNotebook": true
+      }
+    },
+    {
+      "path": "/api/meta",
+      "status": 200,
+      "ok": true,
+      "meta": {
+        "product": "LingxiLoop",
+        "version": "0.1.0-beta",
+        "commitSha": "10bfbfccba4df73fc359169ee12249264c5bd6a0",
+        "reasoningRuntime": {
+          "name": "@lyyzka/lingxios",
+          "runtime": "3.6.0",
+          "controlPlane": 11,
+          "kernel": 2,
+          "schema": 14,
+          "assistantMessage": 2
+        }
+      }
+    }
+  ],
+  "verified": true
+}
