@@ -65,16 +65,16 @@ test('the latest published explanation survives the 40-part snapshot window whil
   assert.equal(ids.length,86); assert.equal(new Set(ids).size,86)
 })
 
-test('only explicit accepted-result identity archives a public prefix from the foreground, preserving every historical part', () => {
+test('tool preambles remain while accepted results are archived, preserving every historical part', () => {
   const base = { version: 1 as const,runId: 'run',requestVersion: 1,fence: 1,partIndex: 0,lastSeq: 6,endedSeq: 6,chunkCount: 1,
     status: 'complete' as const,reason: 'completed' as const }
   const view = { ...createRunView('run'),requestVersion: 2,fence: 2,lifecycle: 'leased' as const,
-    publicTextParts: [{ ...base,partId: 'tool-prefix',attemptId: 'call-1',firstSeq: 1,text: 'Settled answer.',acceptedResultId: null },
+    publicTextParts: [{ ...base,reason: 'tool' as const,partId: 'tool-prefix',attemptId: 'call-1',firstSeq: 1,text: 'Settled answer.',acceptedResultId: null },
       { ...base,partId: 'final-prefix',attemptId: 'call-2',firstSeq: 5,text: 'Different prefix, accepted by identity.',acceptedResultId: 'prior-result' }] }
   const history = runMessageParts(view,[])
   const foreground = runMessageParts(view,[],{ includeAcceptedPublicText: false })
   assert.equal(history.length,2,'accepted text remains in its original history position')
-  assert.equal(foreground.length,1,'completed alone is not acceptance, and old accepted parts cannot reappear on the next turn')
+  assert.equal(foreground.length,1,'tool preambles remain, and old accepted parts cannot reappear on the next turn')
   assert.equal(foreground[0].type === 'text' && foreground[0].text,'Settled answer.')
   assert.equal(activityAnnotation(foreground[0])?.id,activityAnnotation(history[0])?.id)
 })

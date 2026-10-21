@@ -1,6 +1,6 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { createHash } from 'node:crypto'
-import { responseSegments, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
+import { responseSegments, type PublicTextPart, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
@@ -55,6 +55,19 @@ function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Om
   return { ...part, providerMetadata: { ...('providerMetadata' in part ? part.providerMetadata : {}),
     lingxiloop: { activity: { version: 1, ...annotation } } } }
 }
+/** Archive superseded answer attempts, never deduplicate by their text. Tool
+ * preambles stay interleaved; the immutable public ledger stays pageable. */
+export function archivedPublicText(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): boolean {
+  if (part.acceptedResultId) return true
+  const hasTool = tools.some(tool => tool.activityIdentity?.requestVersion === part.requestVersion
+    && tool.activityIdentity.fence === part.fence && tool.activityIdentity.attemptId === part.attemptId)
+  if (part.reason === 'tool' || hasTool) return false
+  if (part.reason === 'superseded') return true
+  const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
+    || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
+    || !!view.message && view.message.envelope.requestVersion >= part.requestVersion
+  return part.status !== 'running' && replaced
+}
 function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean): ThreadAssistantMessagePart[] {
   const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
   const attempts = [
@@ -65,7 +78,7 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   const put = (id: string,seq: number,part: ThreadAssistantMessagePart) => parts.set(id,{ seq: parts.get(id)?.seq ?? seq,part })
   const stableId = (prefix: string,identity: unknown[]) => `${prefix}:${createHash('sha256').update(JSON.stringify(identity)).digest('hex')}`
   for (const part of view.publicTextParts ?? []) {
-    if (!includeAcceptedPublicText && part.acceptedResultId) continue
+    if (!includeAcceptedPublicText && archivedPublicText(part,view,tools)) continue
     const id = stableId('public-text',[part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
@@ -115,7 +128,14 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
   const cards = activityParts(view, tools, options.includeAcceptedPublicText !== false)
   if (view.lifecycle === 'queued') return cards
   // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
-  if (view.lifecycle === 'leased' && view.draft) return [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]
+  if (view.lifecycle === 'leased' && view.draft) {
+    // Native emits model.delta after ending the current public candidate. That
+    // is an additional preview, not another answer. Acceptance still requires
+    // the explicit committed source ID; no text comparison is involved.
+    const publicCandidate = (view.publicTextParts ?? []).some(part => part.requestVersion === view.requestVersion
+      && part.fence === view.fence && part.reason === 'completed' && !part.acceptedResultId)
+    return publicCandidate ? cards : [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]
+  }
   if (!view.message) return cards
   assertVisualizeCitationSpans(view.message.envelope.body, view.message.envelope.citations)
   const segments = responseSegments(view.message.envelope)
