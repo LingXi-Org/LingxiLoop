@@ -12,6 +12,7 @@ const kindLabels = { agent: 'Agent',llm: 'LLM',tool: 'Tool' }
 const icons = { agent: BotIcon,llm: SparklesIcon,tool: WrenchIcon }
 const hues = { agent: 'bg-indigo-400 dark:bg-indigo-400',llm: 'bg-sky-400 dark:bg-sky-400',tool: 'bg-teal-400 dark:bg-teal-400' }
 function flatten(span: TraceSpan): TraceSpan[] { return [span,...span.children.flatMap(flatten)] }
+const rowColumns = 'grid grid-cols-[minmax(0,40%)_minmax(0,1fr)_4.5rem]'
 
 /** Local composition around Langfuse's MIT bar metrics. No external requests. */
 export function TraceWaterfall({ trace }: { trace: RunTrace }) {
@@ -39,22 +40,26 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
   const all = useMemo(() => flatten(trace.root),[trace.root])
   const selected = all.find(span => span.id === selectedId)
   const elapsed = running && trace.startedAt !== null ? Math.max(0,now-trace.startedAt) : null
-  const maxEnd = Math.max(1,elapsed ?? 0,...all.flatMap(span => span.end === null ? [] : [span.end]))
+  // Include all descendants even when collapsed; starts can extend beyond the
+  // current clock. Axis headroom is display space, never an invented event time.
+  const observedEnd = Math.max(1,elapsed ?? 0,...all.flatMap(span => [span.start ?? 0,span.end ?? 0]))
+  const maxEnd = Math.ceil(observedEnd*1.08)
   const slowest = all.filter(span => span.kind !== 'agent' && span.durationMs !== null)
     .reduce<TraceSpan|undefined>((largest,span) => !largest || span.durationMs! > largest.durationMs! ? span : largest,undefined)
   const toggle = (id: string) => setCollapsed(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next })
-  const measurer = useMemo(() => ({ measure: (text: string) => text.length*6.5 }),[])
   const row = (span: TraceSpan,depth: number) => {
     const Icon = icons[span.kind],isCollapsed = collapsed.has(span.id)
     const end = span.end ?? (span.status === 'running' ? elapsed : null)
-    const known = span.start !== null && end !== null
+    const known = span.start !== null && end !== null && end >= span.start
     const x = known ? Math.min(laneWidth,Math.max(0,span.start!/maxEnd*laneWidth)) : 0
     const width = known ? Math.min(laneWidth-x,Math.max(1,(end!-span.start!)/maxEnd*laneWidth)) : 0
     const duration = span.durationMs ?? (known ? end!-span.start! : null)
     return <li key={span.id} data-trace-kind={span.kind} data-trace-status={span.status}>
-      <div className={cn('grid grid-cols-[minmax(0,42%)_minmax(0,1fr)] items-center rounded-sm transition-colors duration-150 motion-reduce:transition-none hover:bg-muted/50',
+      <div data-trace-row className={cn(rowColumns,'items-center rounded-sm transition-colors duration-150 motion-reduce:transition-none hover:bg-muted/50',
         selected?.id === span.id && 'bg-muted/70')}>
-        <div className="flex min-w-0 items-center gap-1 py-2 pe-2" style={{paddingInlineStart: Math.min(depth,6)*12+4}}>
+        <div className="relative flex min-w-0 items-center gap-1 py-2 pe-2" style={{paddingInlineStart: Math.min(depth,6)*12+4}}>
+          {Array.from({length: Math.min(depth,6)},(_,level) => <span key={level} aria-hidden="true" className="pointer-events-none absolute inset-y-0 border-s border-border/50" style={{left: level*12+9}} />)}
+          {depth > 0 && <span aria-hidden="true" className="pointer-events-none absolute top-1/2 h-px w-2 bg-border/50" style={{left: (Math.min(depth,6)-1)*12+9}} />}
           {span.children.length ? <button type="button" onClick={() => toggle(span.id)} aria-label={`${isCollapsed ? '展开' : '收起'} ${span.name}`} aria-expanded={!isCollapsed}
             className="rounded-sm p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <ChevronRightIcon className={cn('size-3 transition-transform duration-200 motion-reduce:transition-none',!isCollapsed && 'rotate-90')} />
@@ -63,21 +68,23 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
             className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-ring" title={`${span.name} · ${labels[span.status]} · ${ms(duration)} · ${cost(span)}`}>
             <Icon className="text-muted-foreground size-3 shrink-0" aria-hidden="true" />
             <span className="min-w-0 truncate text-xs">{span.name}</span>
+            {span.id === slowest?.id && <span data-trace-slowest aria-label="最慢调用" title="最慢调用" className="text-muted-foreground inline-flex h-4 shrink-0 items-center gap-0.5 rounded-sm border border-border/60 bg-muted/50 px-0.5 text-[9px] leading-none">
+              <Clock3Icon className="size-2.5" aria-hidden="true" /><span className="hidden sm:inline">最慢</span>
+            </span>}
             <span className={cn('size-1.5 shrink-0 rounded-full',span.status === 'error' ? 'bg-destructive' : span.status === 'complete' ? 'bg-emerald-500' : span.status === 'running' ? 'bg-sky-500' : 'bg-muted-foreground/50')} aria-label={labels[span.status]} />
           </button>
         </div>
         <button type="button" onClick={() => setSelectedId(span.id)} aria-label={`${span.name} 时间 ${ms(duration)}，${cost(span)}`}
-          className="relative h-8 min-w-0 rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          data-trace-lane data-trace-start={span.start ?? ''} data-trace-end={end ?? ''}
+          className="relative h-8 min-w-0 overflow-hidden rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <span className="absolute inset-0 border-s border-border/30 bg-[linear-gradient(to_right,transparent_calc(50%-1px),var(--border)_50%,transparent_calc(50%+1px))] opacity-40" aria-hidden="true" />
-          {known ? <span aria-hidden="true" className={cn('absolute top-1/2 h-2 -translate-y-1/2 cursor-pointer rounded-[2px] transition-[width,left] duration-200 ease-out motion-reduce:transition-none',hues[span.kind],span.status === 'error' && 'bg-destructive',span.status === 'cancelled' && 'opacity-50')}
-            style={{left: x,width}} /> : <span className="text-muted-foreground relative ps-2 text-[11px]">{span.durationMs === null ? '时间未知' : `${ms(span.durationMs)} · 起点未知`}</span>}
-          {known && <TimelineRowMetrics row={{ x,width,label: ms(duration),labelPlacement: 'after' }} laneWidth={laneWidth} measurer={measurer}
-            density={{ labelGapPx: 6,labelPaddingPx: 4,labelFontPx: 11 }} metrics={{ costText: span.cost === null ? undefined : cost(span) }} showDuration toneClass="text-slate-950" />}
+          {known ? <span data-trace-bar aria-hidden="true" className={cn('absolute top-1/2 h-2 -translate-y-1/2 cursor-pointer rounded-[2px] transition-[width,left] duration-200 ease-out motion-reduce:transition-none',hues[span.kind],span.status === 'error' && 'bg-destructive',span.status === 'cancelled' && 'opacity-50')}
+            style={{left: x,width}} /> : <span className="text-muted-foreground relative ps-2 text-[11px]">{span.start === null && span.durationMs !== null ? '起点未知' : '时间未知'}</span>}
         </button>
+        <TimelineRowMetrics durationText={ms(duration)} costText={span.cost === null ? undefined : cost(span)} />
       </div>
-      {span.id === slowest?.id && <span className="text-muted-foreground ms-6 inline-flex items-center gap-1 pb-1 text-[10px]"><Clock3Icon className="size-2.5" aria-hidden="true" />最慢调用</span>}
       {span.children.length > 0 && <div className={cn('grid transition-[grid-template-rows,visibility] duration-200 ease-out motion-reduce:transition-none',isCollapsed ? 'invisible grid-rows-[0fr]' : 'visible grid-rows-[1fr]')} inert={isCollapsed} aria-hidden={isCollapsed}>
-        <div className="min-h-0 overflow-hidden"><ol className="border-border/40 ms-2 border-s">{span.children.map(child => row(child,depth+1))}</ol></div>
+        <div className="min-h-0 overflow-hidden"><ol className="m-0 p-0">{span.children.map(child => row(child,depth+1))}</ol></div>
       </div>}
     </li>
   }
@@ -90,10 +97,13 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
       <span>输入 {tokens(trace.root.tokensIn)}</span><span>输出 {tokens(trace.root.tokensOut)}</span><span>{cost(trace.root)}</span>
       <span className="ms-auto">{all.length} 个步骤</span>
     </div>
-    <div className="grid grid-cols-[minmax(0,42%)_minmax(0,1fr)] border-y border-border/40 px-2 py-1 text-[10px] text-muted-foreground">
-      <span className="ps-1">步骤</span><div ref={rail} className="flex justify-between font-mono tabular-nums"><span>0 ms</span><span>{ms(maxEnd)}</span></div>
+    <div data-trace-viewport className="max-h-80 overflow-y-auto [scrollbar-gutter:stable]">
+      <div className={cn(rowColumns,'bg-background text-muted-foreground sticky top-0 z-10 border-y border-border/40 px-2 py-1 text-[10px]')}>
+        <span className="ps-1">步骤</span><div ref={rail} data-trace-axis data-trace-axis-end={maxEnd} className="relative flex min-w-0 justify-between whitespace-nowrap font-mono tabular-nums"><span>0 ms</span><span>{ms(maxEnd)}</span></div>
+        <span className="pe-1 text-end">耗时 / 费用</span>
+      </div>
+      <ol className="m-0 px-2 py-1">{row(trace.root,0)}</ol>
     </div>
-    <ol className="max-h-80 overflow-y-auto px-2 py-1">{row(trace.root,0)}</ol>
     <div id={detailId} className="border-t border-border/50 px-3 py-3 text-xs">
       {selected ? <div className="grid gap-2">
         <div className="flex flex-wrap justify-between gap-1"><h4 className="font-medium">{selected.name}</h4><span className="text-muted-foreground">{kindLabels[selected.kind]} · {labels[selected.status]}</span></div>

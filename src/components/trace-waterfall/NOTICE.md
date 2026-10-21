@@ -11,7 +11,8 @@ Copyright (c) 2023-2026 ClickHouse, Inc. MIT Expat, full notice in LICENSE.
 No ee/ files or enterprise modules are used. No Langfuse backend/data ingestion,
 SDK, external service, prompt panel or raw/hidden-reasoning renderer is imported.
 
-Changes: reduced component types, product semantic colors, nullable relative time,
+Changes: reduced component types, fixed duration/cost column instead of labels on thin bars,
+shared axis/row geometry, descendant-domain headroom, product semantic colors, nullable relative time,
 React tree and safe-details shell, keyboard controls, clock and reduced-motion
 transitions. The local shell/data adapter were independently implemented. No claim
 of pixel-identical/full Langfuse or affectUI functionality. No paid source/assets.
