@@ -1,0 +1,72 @@
+[
+  {
+    "file": "agentprism-dark-collapsed.png",
+    "sha256": "34a7031010f49b05fc4796176e3b52dc7a78fb42a1b92d56fa3959945417fec5",
+    "bytes": 490229
+  },
+  {
+    "file": "agentprism-dark-expanded.png",
+    "sha256": "822e6e7d99e10c451895b9ad16e9e5b718ea2d7617f0c1d8bfc33ff62c0af5fc",
+    "bytes": 560274
+  },
+  {
+    "file": "agentprism-light-collapsed.png",
+    "sha256": "34a7031010f49b05fc4796176e3b52dc7a78fb42a1b92d56fa3959945417fec5",
+    "bytes": 490229
+  },
+  {
+    "file": "agentprism-light-expanded.png",
+    "sha256": "00885b5f43d3b51aaa14d13195fe14e3710a3c1eabab09c1b8f36b2a3b236221",
+    "bytes": 424516
+  },
+  {
+    "file": "jaeger-dark-collapsed.png",
+    "sha256": "2b69cf300a439222407110e6bd60bce3ec614eb40f020644c3a712472453d61c",
+    "bytes": 55232
+  },
+  {
+    "file": "jaeger-dark-expanded.png",
+    "sha256": "5ed7437f31ba698d363b665647aeacbb03c20cdd3cfc76c41ee33ecc74f8de89",
+    "bytes": 159843
+  },
+  {
+    "file": "jaeger-light-collapsed.png",
+    "sha256": "06b21460db7ccb34d217e92733629ce22878b188f3e6fdf861cb0c468d90ed65",
+    "bytes": 50288
+  },
+  {
+    "file": "jaeger-light-expanded.png",
+    "sha256": "08671d9b1dfee0cd061073a7647d4674dc37866f63991a908d192a2436f7b84c",
+    "bytes": 148049
+  },
+  {
+    "file": "langfuse-dark-expanded.png",
+    "sha256": "cb957152e5035158349ce2c776f2fbed955b4bdc98ef65261d15bc00b5ad8d78",
+    "bytes": 51717
+  },
+  {
+    "file": "langfuse-light-expanded.png",
+    "sha256": "2f203d240a4446207d8ca2d97afd056369853c6c5d704c48e5794bc48a3ca650",
+    "bytes": 55198
+  },
+  {
+    "file": "waterfall-dark-expanded-no-native-theme.png",
+    "sha256": "c233d26424a62036649f9b293b22b880c1351117d71029c476a4a82698a8c12e",
+    "bytes": 28913
+  },
+  {
+    "file": "waterfall-dark-mini-no-native-theme.png",
+    "sha256": "14ff77f9ae860512beb128ce274b2fd751cf377e5cff831961513242b2f8c794",
+    "bytes": 20782
+  },
+  {
+    "file": "waterfall-light-expanded.png",
+    "sha256": "ec319544f79a88088042cf2da9400ac936cec30287eaa401aa7e3d47b104145d",
+    "bytes": 33473
+  },
+  {
+    "file": "waterfall-light-mini.png",
+    "sha256": "52311eac5fe489d14f122e1f2d57a1aed6287a8b142dac0a3e1c0cfbc4feabca",
+    "bytes": 25407
+  }
+]

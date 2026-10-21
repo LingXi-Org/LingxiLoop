@@ -1,0 +1,14 @@
+{
+  "command": [
+    "npm",
+    "run",
+    "test:e2e:web",
+    "--",
+    "e2e/web/run-trace.e2e.ts",
+    "--output",
+    ".e2e/issue283-geometry-verified"
+  ],
+  "buildMode": "external app via E2E_BASE_URL",
+  "browser": "installed Chrome over CDP through official @e2e-dev/web",
+  "build": null
+}

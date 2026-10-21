@@ -1,6 +1,6 @@
 import { VisualizeText } from '../visualize/VisualizeText'
 import { MessagePrimitive, MessagePartPrimitive, useAui, useAuiState, type PartState, type SourceMessagePartProps, type TextMessagePartComponent } from '@assistant-ui/react'
-import { createContext, type ReactNode, useContext, useState } from 'react'
+import { createContext, type ReactNode, useContext, useMemo, useState } from 'react'
 import { z } from 'zod'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { DocumentReference } from '@/components/assistant-ui/elements/document-reference'
@@ -9,6 +9,8 @@ import { AgentPlan, type AgentPlanStep } from '@/components/assistant-ui/element
 import { ToolGroup } from '@/components/assistant-ui/elements/tool-group'
 import { RunActivity, type RunActivityStatus } from '@/components/assistant-ui/elements/run-activity'
 import { activityAnnotation } from '@/lib/runActivity'
+import { readRunTrace } from '@/lib/runTrace'
+import { TraceWaterfall } from '@/components/trace-waterfall/trace-waterfall'
 import { MarkdownText, type MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 import { MessageFooterContext, MessageFooterContents } from '@/components/assistant-ui/message-footer'
 import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/generative-ui'
@@ -117,6 +119,8 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   const readOnly = useContext(ReadOnlyMessage)
   const message = useAuiState(state => state.message)
   const [activityOpen, setActivityOpen] = useState(false)
+  const trace = useMemo(() => message.role === 'assistant' ? readRunTrace(message.metadata.custom.runTrace) : undefined,
+    [message.role,message.metadata.custom.runTrace])
   const entries = message.role === 'assistant' ? message.content.flatMap((part,index) => {
     const annotation = activityAnnotation(part)
     return annotation && isPublicProcess(part)
@@ -134,7 +138,8 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   const last = message.content.reduce((last, part, index) => !(entries.length > 0 && isPublicProcess(part))
     && (part.type !== 'data' || part.name !== 'citation-claims') ? index : last, -1)
   return <GroupOwnsFooter.Provider value={false}><div className="native-message-content grid min-w-0 gap-2" data-aui-theme="elements">
-    {entries.length > 0 && <RunActivity status={status} statusLabel={statusLabel} entries={entries} open={activityOpen} onOpenChange={setActivityOpen} />}
+    {(entries.length > 0 || trace) && <RunActivity status={status} statusLabel={statusLabel} entries={entries} open={activityOpen} onOpenChange={setActivityOpen}
+      trace={trace ? <TraceWaterfall key={trace.root.id} trace={trace} /> : undefined} />}
     <MessagePrimitive.GroupedParts groupBy={groupParts} indicator="never">
       {({ part, children }) => {
         if (part.type === 'indicator') return null
