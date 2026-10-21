@@ -260,7 +260,7 @@ test('producer source container replacement refuses staging and stopping',async(
 test('explicit trace profile accepts only enabled3.7 full51 to3.8 full52 and retains old profile rejection',()=>{
  const f=fixture({trace:true});assert.doesNotThrow(()=>validateHostPlanShape(f.plan));
  for(const change of [p=>p.source.runtime='3.6.0',p=>p.target.runtime='3.8.1',p=>p.target.productVersion=51,p=>p.target.schema=15,p=>p.target.protocol=12,p=>p.target.schemaHash='0'.repeat(64),p=>p.target.migrations[3].checksum='0'.repeat(64),p=>p.target.migrations[50].checksum='0'.repeat(64),p=>p.target.migrations[51].checksum='0'.repeat(64),p=>p.publicText.source.producer='disabled',p=>p.publicText.target.producer='disabled',p=>p.publicText.sourceContainers.pop(),p=>p.format=PRODUCER_FORMAT,p=>p.format=READER_FORMAT,p=>p.format='same-schema-host-release/v1']){
-  const bad=structuredClone(f.plan);change(bad);assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)));
+  const bad=JSON.parse(JSON.stringify(f.plan));change(bad);assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)));
  }
 });
 test('trace provenance drains all4 once after seed, migrates once, and deploys both Web before Worker',async()=>{

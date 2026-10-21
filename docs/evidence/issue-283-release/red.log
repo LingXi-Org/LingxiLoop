@@ -349,9 +349,9 @@ not ok 48 - trace unknown results stop all calls; committed52 is fix-forward wit
   failureType: 'testCodeFailure'
   error: |-
     The validation function is expected to return "true". Received undefined
-    
+
     Caught error:
-    
+
     Error: Invalid sealed host-release plan
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
