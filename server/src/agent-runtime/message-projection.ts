@@ -56,20 +56,24 @@ function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Om
   return { ...part, providerMetadata: { ...('providerMetadata' in part ? part.providerMetadata : {}),
     lingxiloop: { activity: { version: 1, ...annotation } } } }
 }
-/** Archive superseded answer attempts, never deduplicate by their text. Tool
- * preambles stay interleaved; the immutable public ledger stays pageable. */
-export function archivedPublicText(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): boolean {
-  if (part.acceptedResultId) return true
+/** Only an explicit accepted source is replaced by the final answer. Other
+ * attempts remain available as process, never deduplicated by their text. */
+export function archivedPublicText(part: PublicTextPart): boolean {
+  return !!part.acceptedResultId
+}
+function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): 'answer' | 'commentary' {
+  if (part.acceptedResultId || part.requestVersion !== view.requestVersion || part.fence !== view.fence
+    || part.reason === 'superseded' || view.message && view.message.envelope.requestVersion >= part.requestVersion) return 'commentary'
   const hasTool = tools.some(tool => tool.activityIdentity?.requestVersion === part.requestVersion
     && tool.activityIdentity.fence === part.fence && tool.activityIdentity.attemptId === part.attemptId)
-  if (part.reason === 'tool' || hasTool) return false
-  if (part.reason === 'superseded') return true
+  if (part.reason === 'tool' || hasTool) return 'commentary'
   const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
     || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
-    || !!view.message && view.message.envelope.requestVersion >= part.requestVersion
-  return part.status !== 'running' && replaced
+  // 3.6.0 has no per-delta purpose: keep the current unresolved candidate live
+  // until public tool/result evidence establishes its role, including failures.
+  return replaced ? 'commentary' : 'answer'
 }
-function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean): ThreadAssistantMessagePart[] {
+function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean, history: boolean): ThreadAssistantMessagePart[] {
   const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
   const attempts = [
     ...tools.flatMap(tool => tool.activityIdentity ? [{ ...tool.activityIdentity,seq: tool.startedSeq ?? 0 }] : []),
@@ -79,14 +83,15 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   const put = (id: string,seq: number,part: ThreadAssistantMessagePart) => parts.set(id,{ seq: parts.get(id)?.seq ?? seq,part })
   const stableId = (prefix: string,identity: unknown[]) => `${prefix}:${createHash('sha256').update(JSON.stringify(identity)).digest('hex')}`
   for (const part of view.publicTextParts ?? []) {
-    if (!includeAcceptedPublicText && archivedPublicText(part,view,tools)) continue
+    if (!includeAcceptedPublicText && archivedPublicText(part)) continue
     const id = stableId('public-text',[part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
     // Public text is an unverified archive, including candidates superseded by
     // repair. Only the delivered answer may activate a renderer reference.
+    const kind = history ? 'commentary' : publicTextPurpose(part,view,tools)
     for (const text of projectVisualizeText(part.text, true)) {
-      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind: 'commentary',label: part.acceptedResultId ? '答复片段' : '公开说明' }))
+      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind,label: kind === 'answer' ? '答复' : part.acceptedResultId ? '答复片段' : '公开说明' }))
     }
   }
   for (const { eventSeq, startedSeq, activityIdentity, display: recordedDisplay, ...tool } of tools) {
@@ -131,8 +136,8 @@ function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]
   return parts.map((part, index) => part.type === 'text'
     ? annotated(part, { id: `answer:${view.requestVersion}:${index}`, kind: 'answer', label: '答复' }) : part)
 }
-export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = [], options: { includeAcceptedPublicText?: boolean } = {}): ThreadAssistantMessagePart[] {
-  const cards = activityParts(view, tools, options.includeAcceptedPublicText !== false)
+export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = [], options: { includeAcceptedPublicText?: boolean; activityHistory?: boolean } = {}): ThreadAssistantMessagePart[] {
+  const cards = activityParts(view, tools, options.includeAcceptedPublicText !== false, options.activityHistory === true)
   const progress = observedProgress(view,tools,!!view.draft || cards.some(part => part.type === 'text' || part.type === 'reasoning'))
   if (progress) cards.push(annotated({ type: 'text',text: progress },{
     id: `observed-progress:${view.requestVersion}:${view.fence}`,kind: 'commentary',label: '任务状态',

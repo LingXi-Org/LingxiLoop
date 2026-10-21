@@ -1,0 +1,343 @@
+{
+  "running": {
+    "message": {
+      "id": "run-run",
+      "createdAt": "2026-10-21T00:00:00Z",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Public tool preamble.",
+          "status": {
+            "type": "running"
+          },
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "public-text:5f7338896d0618a5894b7334dbb9b02720ad8f0a737706bc948b88ad0001a489",
+                "kind": "commentary",
+                "label": "公开说明"
+              }
+            }
+          }
+        },
+        {
+          "type": "tool-call",
+          "toolCallId": "host:read",
+          "toolName": "documents.read",
+          "args": {
+            "fields": []
+          },
+          "argsText": "",
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "host:read",
+                "kind": "tool",
+                "label": "阅读文档"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "Substantive answer.",
+          "status": {
+            "type": "running"
+          },
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "public-text:8a18ed8178e9bcdc8cc966e4875c6de5f1af9f24322ebc09b44b957668a07493",
+                "kind": "answer",
+                "label": "答复"
+              }
+            }
+          }
+        }
+      ],
+      "status": {
+        "type": "running"
+      },
+      "metadata": {
+        "custom": {
+          "runId": "run",
+          "harness": {
+            "runId": "run",
+            "lastSeq": 3,
+            "goalOutcome": null,
+            "requestVersion": 1,
+            "fence": 1,
+            "messageFence": 0,
+            "resultId": null,
+            "lifecycle": "leased",
+            "delivery": null,
+            "artifacts": []
+          },
+          "harnessControl": false,
+          "activityPresentation": {
+            "version": 1
+          },
+          "suppressAgentWake": true
+        },
+        "unstable_state": null,
+        "unstable_annotations": [],
+        "unstable_data": [],
+        "steps": []
+      }
+    }
+  },
+  "failed": {
+    "message": {
+      "id": "run-run",
+      "createdAt": "2026-10-21T00:00:00Z",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Public process.",
+          "status": {
+            "type": "complete"
+          },
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "public-text:234f135fe63ced5a71a61007d45e38cfa4f478b8c8f72b8259590557d7f8c232",
+                "kind": "commentary",
+                "label": "公开说明"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "Partial useful answer.",
+          "status": {
+            "type": "incomplete",
+            "reason": "error"
+          },
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "public-text:8a18ed8178e9bcdc8cc966e4875c6de5f1af9f24322ebc09b44b957668a07493",
+                "kind": "answer",
+                "label": "答复"
+              }
+            }
+          }
+        }
+      ],
+      "status": {
+        "type": "incomplete",
+        "reason": "error"
+      },
+      "metadata": {
+        "custom": {
+          "runId": "run",
+          "harness": {
+            "runId": "run",
+            "lastSeq": 4,
+            "goalOutcome": null,
+            "requestVersion": 1,
+            "fence": 1,
+            "messageFence": 0,
+            "resultId": null,
+            "lifecycle": "failed",
+            "delivery": null,
+            "previewClosedFence": 1,
+            "artifacts": []
+          },
+          "harnessControl": false,
+          "activityPresentation": {
+            "version": 1
+          },
+          "suppressAgentWake": true
+        },
+        "unstable_state": null,
+        "unstable_annotations": [],
+        "unstable_data": [],
+        "steps": []
+      }
+    }
+  },
+  "cancelled": {
+    "message": {
+      "id": "run-run",
+      "createdAt": "2026-10-21T00:00:00Z",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Public process.",
+          "status": {
+            "type": "complete"
+          },
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "public-text:234f135fe63ced5a71a61007d45e38cfa4f478b8c8f72b8259590557d7f8c232",
+                "kind": "commentary",
+                "label": "公开说明"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "Partial useful answer.",
+          "status": {
+            "type": "incomplete",
+            "reason": "cancelled"
+          },
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "public-text:8a18ed8178e9bcdc8cc966e4875c6de5f1af9f24322ebc09b44b957668a07493",
+                "kind": "answer",
+                "label": "答复"
+              }
+            }
+          }
+        }
+      ],
+      "status": {
+        "type": "incomplete",
+        "reason": "cancelled"
+      },
+      "metadata": {
+        "custom": {
+          "runId": "run",
+          "harness": {
+            "runId": "run",
+            "lastSeq": 4,
+            "goalOutcome": null,
+            "requestVersion": 1,
+            "fence": 1,
+            "messageFence": 0,
+            "resultId": null,
+            "lifecycle": "cancelled",
+            "delivery": null,
+            "previewClosedFence": 1,
+            "artifacts": []
+          },
+          "harnessControl": false,
+          "activityPresentation": {
+            "version": 1
+          },
+          "suppressAgentWake": true
+        },
+        "unstable_state": null,
+        "unstable_annotations": [],
+        "unstable_data": [],
+        "steps": []
+      }
+    }
+  },
+  "completed": {
+    "message": {
+      "id": "run-run",
+      "createdAt": "2026-10-21T00:00:00Z",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "text",
+          "text": "Verified final answer.",
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "answer:1:0",
+                "kind": "answer",
+                "label": "答复"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "First public process.",
+          "status": {
+            "type": "complete"
+          },
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "public-text:234f135fe63ced5a71a61007d45e38cfa4f478b8c8f72b8259590557d7f8c232",
+                "kind": "commentary",
+                "label": "公开说明"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "Later public process.",
+          "status": {
+            "type": "complete"
+          },
+          "providerMetadata": {
+            "lingxiloop": {
+              "activity": {
+                "version": 1,
+                "id": "public-text:27cce60a344bb642e0cae1cff1c79a8cb3792941159ac30bf6e85df23a6c3363",
+                "kind": "commentary",
+                "label": "公开说明"
+              }
+            }
+          }
+        }
+      ],
+      "status": {
+        "type": "complete",
+        "reason": "stop"
+      },
+      "metadata": {
+        "custom": {
+          "runId": "run",
+          "harness": {
+            "runId": "run",
+            "lastSeq": 6,
+            "goalOutcome": {
+              "status": "satisfied",
+              "verification": "passed",
+              "requestVersion": 1
+            },
+            "requestVersion": 1,
+            "fence": 1,
+            "messageFence": 1,
+            "resultId": "result",
+            "lifecycle": "succeeded",
+            "delivery": "delivered",
+            "previewClosedFence": 1,
+            "artifacts": []
+          },
+          "harnessControl": false,
+          "activityPresentation": {
+            "version": 1
+          },
+          "activityHistory": {
+            "total": 3,
+            "attention": 0
+          },
+          "refs": {
+            "runId": "run",
+            "agentId": "agent"
+          },
+          "suppressAgentWake": true
+        },
+        "unstable_state": null,
+        "unstable_annotations": [],
+        "unstable_data": [],
+        "steps": []
+      }
+    }
+  }
+}

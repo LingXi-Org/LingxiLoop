@@ -21,7 +21,7 @@ export function createProductHarness(productTools: ToolDefinition[]): HarnessPro
     },
   }))
   return { id: 'lingxiloop', version: '3.4.1-system-skill-context-1', mode: 'execute',
-    rules: 'For an applicable built-in workflow, select its exact current index once with the native skills.load tool, not Python or paged reference reads. The host supplies its complete current body directly in subsequent prompts; do not paginate or reload that skill, including after compaction. Select only skills needed for this request; selection grants no permissions and is not delivery activation. A brief substantive public explanation may precede selection; do not narrate document loading instead of helping the user.',
+    rules: 'For an applicable built-in workflow, select its exact current index once with the native skills.load tool, not Python or paged reference reads. The host supplies its complete current body directly in subsequent prompts; do not paginate or reload that skill, including after compaction. Select only skills needed for this request; selection grants no permissions and is not delivery activation. A brief substantive public explanation may precede selection. Keep substantive answers streaming in ordinary response text, and publish process or status updates through chat.report_progress when available without repeating them in answer text; do not narrate document loading instead of helping the user.',
     capabilities: [...new Set(tools.map(tool => tool.action.split('.')[0]))].map(id => ({ id,
       tools: tools.filter(tool => tool.action.startsWith(`${id}.`)),
       skills: productSkills.filter(skill => skill.actions[0].startsWith(`${id}.`)),

@@ -81,9 +81,10 @@ test('adjacent ordinary tools group in place while retired records stay visible'
 
 // Failure cases: a run's tools appear twice or in multiple disclosures; answers or
 // decisions get hidden; failed/cancelled runs are presented as successful.
-test('native run parts retain tools, answers and decisions without activity aggregation', () => {
+test('native run parts keep tools, answers and decisions outside the process disclosure', () => {
   const tool = (id: string) => ({ type: 'tool-call' as const, toolCallId: id, toolName: `fixture.${id}`, args: {}, argsText: '{}', result: { ok: true }, providerMetadata: { lingxiloop: { activity: { version: 1,id,kind: 'tool',label: '处理任务' } } } })
   const reply = { ...message('1'), status: { type: 'requires-action', reason: 'tool-calls' }, content: [
+    { type: 'text',text: 'Synthetic public process.',providerMetadata: { lingxiloop: { activity: { version: 1,id: 'process',kind: 'commentary',label: '公开过程' } } } },
     tool('one'), { type: 'text', text: '公开答复' },
     { ...tool('approval'), result: undefined, approval: { id: 'gate' } }, tool('two'),
     { ...tool('error'), isError: true },
@@ -91,10 +92,11 @@ test('native run parts retain tools, answers and decisions without activity aggr
     harness: { ...createRunView('run'), lifecycle: 'waiting', artifacts: [] } } },
   } as ThreadMessage
   const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
-  assert.equal($('[data-slot="run-activity"]').length, 0)
+  assert.equal($('[data-slot="run-activity"]').length, 1)
   assert.equal($('[data-slot="tool-group-root"]').length, 0)
   assert.equal($.text().split('公开答复').length - 1, 1)
   for (const label of ['等待有权限的成员审批。', '这一步未完成，请重试。']) assert.ok($.text().includes(label), label)
+  assert.doesNotMatch($('[data-slot="run-activity"]').text(), /公开答复|等待有权限的成员审批|这一步未完成/)
   assert.equal($('[data-native-part="tool-call"]').length, 4)
 })
 
@@ -239,9 +241,9 @@ test('sender kind owns bubble chrome and agent avatars align at the top', () => 
   }
 })
 
-// #245 failure model: both public prefixes disappear into an aggregate when a
-// newer explanation arrives, and historical metadata resurrects count buttons.
-test('all public text stays visible across memory tools and legacy activity counts', () => {
+// #275 replaces flat explicit process text with RunActivity; the removed
+// aggregate history controls must still never return from legacy metadata.
+test('explicit public process uses RunActivity across memory tools without legacy history controls', () => {
   for (const count of [7, 110, 1100]) {
     const commentary = (id: string, text: string) => ({ type: 'text' as const, text,
       providerMetadata: { lingxiloop: { activity: { version: 1, id, kind: 'commentary', label: '公开说明' } } } })
@@ -252,12 +254,25 @@ test('all public text stays visible across memory tools and legacy activity coun
     ], metadata: { custom: { ...getLingxiMessageMetadata(message('1')), activityPresentation: { version: 1 },
       activityHistory: { total: count, attention: 1 }, runId: 'run' } } } as ThreadMessage
     const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
-    assert.equal($('[data-slot="run-activity"]').length, 0)
+    assert.equal($('[data-slot="run-activity"]').length, 1)
     assert.doesNotMatch($.text(), /查看全部活动|查看需要注意的记录|显示更多活动|工具执行记录/)
     const text = $.text()
-    assert.ok(text.includes('我先查看你授权的记忆。'))
     assert.ok(text.includes('已查到目录，正在核对相关条目。'))
-    assert.ok(text.indexOf('我先查看') < text.indexOf('已查到目录'))
+    assert.equal($('[data-agent-body]').length, 0, 'explicit process is not rendered as answer body')
     assert.equal($('[data-native-part="tool-call"]').length, 1)
   }
+})
+
+// #275: explicit process belongs to RunActivity; live answers and recovery stay outside it.
+test('RunActivity contains process on both sides of a streaming answer without hiding the answer or restoring old controls', () => {
+  const part = (id: string, kind: 'commentary' | 'answer', text: string) => ({ type: 'text' as const,text,
+    providerMetadata: { lingxiloop: { activity: { version: 1,id,kind,label: kind === 'commentary' ? '公开过程' : '答复' } } } })
+  const reply = { ...message('1'),status: { type: 'running' },content: [
+    part('before','commentary','Synthetic process before.'),part('answer','answer','Synthetic answer still streaming.'),part('after','commentary','Synthetic process after.'),
+  ],metadata: { custom: { ...getLingxiMessageMetadata(message('1')),runId: 'run',activityPresentation: { version: 1 },activityHistory: { total: 120,attention: 1 } } } } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.equal($('[data-slot="run-activity"]').length,1)
+  assert.equal($('[data-agent-body]').text(),'Synthetic answer still streaming.')
+  assert.doesNotMatch($('[data-agent-body]').text(),/process before|process after/)
+  assert.doesNotMatch($.text(),/查看全部活动|查看需要注意的记录|显示更多活动/)
 })

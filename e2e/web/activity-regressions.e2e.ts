@@ -9,6 +9,7 @@ test.describe('Activity integration regressions', {
   test('latest committed public explanation stays visible through the next tool and terminal history', async ({ app, browser, screen }) => {
     await app.open('/e2e/run-activity.html?mode=running&public=1')
     await expect(screen.getByText('已经核对条件，接下来检查资料。', { exact: true })).toBeVisible()
+    await browser.locator('[data-slot="run-activity"] button').first().tap()
     await app.screenshot('public-explanation-running')
     for (const state of ['取消', '失败', '完成']) {
       await screen.getByRole('button', state, { exact: true }).tap()

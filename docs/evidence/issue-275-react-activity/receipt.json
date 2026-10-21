@@ -1,0 +1,85 @@
+{
+  "issue": 275,
+  "base": "63948c598b9778a35941f3dcabf8ef57e2e2d6d8",
+  "implementationCommit": "733762f6ee852c6799eb06d5cb77507eb97b4ed2",
+  "runtime": "3.6.0",
+  "node": "v24.19.0",
+  "dependencyMode": "existing formal 3.6.0 node_modules symlink; no installation",
+  "red": {
+    "publicProjection": {
+      "passed": 1,
+      "failed": 5
+    },
+    "ReactSSR": {
+      "passed": 15,
+      "failed": 1
+    },
+    "note": "Initial combined command also hit a sparse-checkout missing fixture import. Original UI file rerun after materializing its tracked dependency gives the separate real red."
+  },
+  "green": {
+    "owning": {
+      "tests": 49,
+      "passed": 49,
+      "failed": 0
+    },
+    "officialBrowser": {
+      "tests": 6,
+      "passed": 6,
+      "seconds": 19.52
+    },
+    "settledScreenshotRerun": {
+      "tests": 1,
+      "passed": 1,
+      "seconds": 4.23
+    },
+    "webTypecheck": 0,
+    "serverTypecheck": 0,
+    "e2eTypecheck": 0,
+    "lint": {
+      "exitCode": 0,
+      "files": 16
+    }
+  },
+  "limits": [
+    "Synthetic public events and HTTP stream snapshots, actual public reducer/decoder/store/React; no real provider or database/production validation.",
+    "Current unresolved text is an answer candidate until tool/result evidence establishes its purpose; no per-delta purpose exists in 3.6.0.",
+    "Existing 1100-call owning case exceeded a 30-second local process limit; that batch was aborted, not passed. Final 49-case focused set excludes that file.",
+    "No final merged-head CI or production release claimed."
+  ],
+  "sourceSha256": {
+    "e2e/vite.react-activity.config.ts": "63c34cb1ec84744c4d534286bf2629cbb303bebe5883d244a3e975dbee749a9e",
+    "e2e/web/activity-presentation.e2e.ts": "6ea43f05b7a08be4ca9bc27b7e732afdbfca932bc754af2b27a96528c86de8fd",
+    "e2e/web/activity-regressions.e2e.ts": "2db6c5c50b8e217b82396ff807e9f0262fc30d02626c77dcf766364a6b5c7a42",
+    "e2e/web/memory-public-streaming.e2e.ts": "fbcb3f57b1e799b58c06b7323257185c44b6875879c2c3a28c12a540d514573a",
+    "e2e/web/public-activity-history.e2e.ts": "1cabe358cd6f767e3f003383a5a8daa28a312c3e93584e256bae3c43f904b82c",
+    "e2e/web/react-public-activity.e2e.ts": "7888ce84d42e91ef0badc69511e0345a5ff984b0c1f2015b09df0e1f65f34c59",
+    "e2e/web/run-activity.e2e.ts": "d683f7049e166d31ec93361860c6aa27d81c6f1f7f1c08de5944e3b75e70a846",
+    "server/src/__tests__/react-public-purpose.test.ts": "4e1ea4eb76a8a25d5dc05ffde157d4a55ec292b112ca4349b8dbeac1d680f762",
+    "server/src/__tests__/repair-public-projection.test.ts": "5929be8cb2cd7bfa392871f970444447d2742654221ed01bbf9b98f68fa27962",
+    "server/src/__tests__/visualize-public-boundary.test.ts": "e651e04ad3bb7279a820719e487e679c70a9bf759a6d6b1f508343bf29fdbcdb",
+    "server/src/agent-runtime/activity-tool.ts": "8028b351a6145aecdcd5924825b68d2df252a4beb7b8733d13e8cea93053ec58",
+    "server/src/agent-runtime/assistant-transport.ts": "d9a83745d6be86dae4cd7e72c4f294818d5fb0c289af14c3f63bd1000573f01f",
+    "server/src/agent-runtime/context.ts": "1eb47a2c0aefc383cc506f32e29eb432c7ea10caaf0ba5e1d78603b8e8a4b148",
+    "server/src/agent-runtime/message-projection.ts": "26f91ad09e024366285a252a4a7b622321d8d56506913950297f2b351bf343da",
+    "src/features/chat/components/ConversationMessage.test.tsx": "85681c51e442da76fb3981c002cefaedf3090a2cdec1d4378c8e40b510ce43d7",
+    "src/features/chat/components/NativeMessageContent.tsx": "83d38ced3279fde31ffb523b887f5ba200156d628707c0ddc8ea1b85633d2abe"
+  },
+  "evidenceSha256": {
+    "FAILURE-MODEL.md": "3e81368d4e7356cfe64e41e3bd437a28944ac4684a82450b6ea04af23537f0ef",
+    "browser-final.txt": "12e85f8697a763f50d283b35ab27628ce88865f66d3d49231ec3f2011c8a4b3d",
+    "browser-settled.txt": "39935ed68b459255b05c85dc2911c897dc23a92a54b95952457b18a26679ab8f",
+    "browser-snapshots.json": "f8405a66b03b2eb2adc9615088aeddae234f3b8172cbb55144be45ec2568ef37",
+    "e2e-typecheck.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "final-focused.txt": "f7ca02edbebecd6d02835c232c39984fbb1d54a8748440257617e888968620bb",
+    "lint.txt": "770e58b75de5537e6e987df0d066f1e28c85e8d9dbc1acb6804ef3e05a2cb5d0",
+    "red.txt": "2c4521540ebd2f19e6cee00bbedc0eac46e6432758743964140911ebcead72e3",
+    "render-timing.json": "9246885139c8735712b9910e072366c1544ffd583aae77fa5ad81574c9ebdbbf",
+    "screenshots/001-react-public-running-collapsed.png": "9b3216fd5f476952bd6f3b7ce7140cdda038d6370a7862967c7a924e2acd336a",
+    "screenshots/002-react-public-final-expanded.png": "a9fb420f245a00e105645c16d07b46f4bec3363c0c725b7c222f893d7d2369cf",
+    "screenshots/003-react-public-replayed.png": "c6fe1cf1416f888c524cd9301dd075964b6a8b03bc87ff7f9758450322c868ad",
+    "server-typecheck.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ui-red.txt": "399e9f67e6bad380b5edf50cc6922eaa1049d4241fbfe65ecf54268835f2027c",
+    "web-typecheck.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "README.md": "c5c794219ba631018b5be2db91b8e1debefb0b4a88f9224721c436be7dd85df8"
+  }
+}
