@@ -1,0 +1,26 @@
+✔ native purpose keeps a same-attempt tool answer visible through actual transport decoding and supersedes by identity (32.815626ms)
+✔ a completed commentary part cannot hide a separate answer preview (0.48223ms)
+✔ explicit failed answer becomes history when the next declared attempt begins (0.315127ms)
+✔ reader migration package qualification is exact; legacy0050 keeps its old runtime profile (4.692559ms)
+✔ deployment metadata is a pure immutable reader-only configuration source (1.670855ms)
+(node:11196) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:11196) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ current leased failed refresh hides totals, retains spans, and later success restores coverage (81.170608ms)
+✔ current succeeded failed refresh hides totals, retains spans, and later success restores coverage (12.792945ms)
+✔ current failed failed refresh hides totals, retains spans, and later success restores coverage (2.849945ms)
+✔ current cancelled failed refresh hides totals, retains spans, and later success restores coverage (6.362337ms)
+✔ an older concurrent failed refresh cannot invalidate a newer same-revision success (4.971846ms)
+✔ an older concurrent success cannot promote coverage after a newer failed refresh (20.029125ms)
+✔ superseded request refresh failure leaves the newer success intact (4.340657ms)
+✔ superseded fence refresh failure leaves the newer success intact (7.418103ms)
+✔ superseded lifecycle refresh failure leaves the newer success intact (7.140587ms)
+✔ aborting a refresh leaves confirmed coverage intact, including an already-aborted entry (4.644383ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2359.938661

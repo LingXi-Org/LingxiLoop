@@ -1,5 +1,5 @@
 {
-  "implementationCommit": "18c88ae0",
+  "implementationCommit": "782350a334dcef0200a91389605b772e61a82c3c",
   "baseCommit": "d601b461fbde5da05bc94b27d8dae565935de21c",
   "files": [
     {
@@ -24,7 +24,7 @@
     },
     {
       "file": "server/src/agent-runtime/assistant-transport.ts",
-      "sha256": "4590e884b2f96b2a56b88596f887cc2f6289f714b05bd25087ae0ae38ac89584"
+      "sha256": "770e7494044e6880b2e3194e9926104ab384f16640804e743251b511c9db1e1f"
     },
     {
       "file": "server/src/agent-runtime/tool-activity.ts",
@@ -49,7 +49,14 @@
     {
       "file": "e2e/web/run-trace.e2e.ts",
       "sha256": "1726cabe2693d38026bf48785532d8421a20078e742af92720ad9d848b93c3e5"
+    },
+    {
+      "file": "server/src/__tests__/trace-presentation-coverage.test.ts",
+      "sha256": "fb9c88610a69b0d52b86fd34a71bcc94c68c3ab01b75986544fcfed58f1486f6"
     }
   ],
-  "initialImplementationCommit": "87bac5844e8cf351383c02a89dc700965238d3e0"
+  "initialImplementationCommit": "87bac5844e8cf351383c02a89dc700965238d3e0",
+  "visualFixCommit": "18c88ae084625e5be515fb11a4e7f371068fb5ae",
+  "integratedMainCommit": "37b8d70d211da4e1b44a6ff35ddf4e4d532ada47",
+  "runtimeVersion": "3.7.0"
 }

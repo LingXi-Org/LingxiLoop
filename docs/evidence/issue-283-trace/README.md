@@ -37,7 +37,7 @@ Plain-text check logs (`*.txt`, ANSI/trailing whitespace normalized), source-man
 
 ## Remaining blocker; issue stays open and PR stays draft
 
-The **current published runtime 3.6.0** does not expose trustworthy LLM offsets, settled run end time or authorized child-span discovery. The product's usage callback has actual latency but no actual start/end timestamps. This branch therefore cannot claim complete real-time per-LLM/subagent parity for new runs. The precise required public contract is in [native-contract.md](native-contract.md) and the #283 coordination comment. It must be added/integrated for new runs and verified with real native stream/replay; legacy records remain honestly unknown. Renderer-only synthetic child spans prove UI folding, not production lineage. Model in-flight clocks and fully measured root terminal duration depend on that contract.
+The original bridge targeted runtime 3.6.0; this branch now retains main's formal **3.7.0 reader** dependency and purpose behavior. Neither of those contracts exposes trustworthy LLM offsets, settled run end time or authorized child-span discovery. The product's usage callback has actual latency but no actual start/end timestamps. This branch therefore cannot claim complete real-time per-LLM/subagent parity for new runs. The precise required public contract is in [native-contract.md](native-contract.md) and the #283 coordination comment. It must be added/integrated for new runs and verified with real native stream/replay; legacy records remain honestly unknown. Renderer-only synthetic child spans prove UI folding, not production lineage. Model in-flight clocks and fully measured root terminal duration depend on that contract.
 
 No production conversations, restricted production HTML, deployment, purchase, Pro install/access-key transfer, runtime publication or merge was performed. Parent-thread messaging through the environment agent tool failed with `tunnel_client_not_seen`; the public issue comment and contract document completed the coordination handoff without retrying or bypassing that service failure.
 
@@ -91,3 +91,49 @@ No new version is confirmed; earlier product Library IDs must not be presented a
 corrected images. No direct-upload fallback/retry was attempted. The corrected
 PNG files are published in this PR's `product/` evidence directory; the parent
 can use its functioning Library connection to save those exact reviewed files.
+
+## Coverage-refresh P2 (failure model before the fix)
+
+A successful optional read can be followed by a matching-revision failure or
+100ms timeout after another model call. Keeping the old `presentationAvailable`
+true incorrectly presents old cached spans as complete current root totals.
+Keep confirmed span metrics but downgrade coverage on a current failure, yielding
+null root input/output/cost and `presentation-unavailable`; a later success may
+restore coverage. Check request/fence/lifecycle/signal before either mutation.
+Also fence concurrent reads: an older failure must not replace a newer success,
+and an older success must not promote coverage after a newer failed refresh.
+Aborted or superseded reads must leave the current projection untouched. Verify
+these paths with a queued optional-reader fixture before changing server code.
+No renderer/provider rerun is required for this server-only correction.
+
+
+### Coverage-refresh correction results
+
+Fixed the review P2 in `782350a334dcef0200a91389605b772e61a82c3c`.
+`syncPresentation` now checks request/fence/lifecycle, signal and a monotonic read
+revision before either coverage downgrade or restoration. A matching failed
+optional read keeps confirmed old spans but marks presentation unavailable;
+root input/output/cost become null, and a subsequent matching success restores
+totals. Older concurrent failures cannot invalidate newer successes, and older
+successes cannot promote coverage after a newer failure. Aborted reads and
+superseded request/fence/lifecycle reads leave the current projection unchanged.
+
+The before-code reader fixture reproduced five failing paths on the previous
+code; after correction all ten cases pass. Full server smoke plus trace and
+socket regressions passed **130/130** before syncing the new reader main.
+After merging `37b8d70d211da4e1b44a6ff35ddf4e4d532ada47` and installing its exact
+formal `@lyyzka/lingxios` 3.7.0 lock, the coverage + native public-purpose +
+deployment/profile combination passed **15/15**; server typecheck and lint passed.
+No UI source changed in this correction, so the reviewed geometry screenshots
+and 5/5 browser receipt remain applicable; no provider/browser rerun was needed.
+`coverage-*.txt` contains the red/green and combination receipts.
+
+The native author fixed a separate public trace contract proposal at
+https://github.com/LingXi-Org/LingxiOS/blob/c4b6df3/docs/public-run-trace/contract.md :
+complete replacement snapshots from `readRunTrace(identity)`, explicit opt-in
+`{type:'trace',trace}` SSE, immutable span/parent identity, actual epoch timing,
+usage/cost nulls, authorized child coverage, revocation and truncation boundaries.
+That implementation remains unpublished; no unpublished runtime source is
+installed in this product branch. The author will add its server bridge on this
+final UI/coverage head. #283 remains open pending formal package, bridge,
+combined real native stream/replay verification and release review.
