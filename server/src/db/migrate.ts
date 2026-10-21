@@ -4,6 +4,7 @@ import type { Pool, PoolClient } from 'pg'
 import { packageResources, releaseVersions } from '@lyyzka/lingxios'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
 import { pool } from './pool.js'
+import { assertMigrationRuntime } from './runtime-profile.js'
 
 const MIGRATIONS_URL = new URL('./migrations/', import.meta.url)
 const MIGRATION_FILE = /^(\d{4})_([a-z0-9][a-z0-9_-]*)\.sql$/
@@ -193,9 +194,8 @@ export async function migrateDatabase(
 ): Promise<readonly string[]> {
   const migrations = await loadMigrations(migrationsUrl)
   const hasDeliveryUpgrade = migrations.some(migration => migration.version===50 && migration.name==='skill_delivery')
-  if (hasDeliveryUpgrade && (releaseVersions.runtime !== '3.6.0' || releaseVersions.schema !== 14)) {
-    throw new Error('0050 requires the formally published LingxiOS 3.6.0/schema14 package')
-  }
+  const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
+  assertMigrationRuntime(hasDeliveryUpgrade,hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined)
   const client = await database.connect()
   const appliedNow: string[] = []
   try {
@@ -223,7 +223,7 @@ export async function migrateDatabase(
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
     const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
     const targetSchema = hasDeliveryUpgrade ? 14 : hasContinuityUpgrade ? 13 : hasReliabilityUpgrade ? 12 : LEGACY_RUNTIME_SCHEMA
-    const targetRuntime = hasDeliveryUpgrade ? '3.6.0' : hasContinuityUpgrade ? '3.5.8' : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
+    const targetRuntime = hasPurposeReader ? '3.7.0' : hasDeliveryUpgrade ? '3.6.0' : hasContinuityUpgrade ? '3.5.8' : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
     const cutover = installsRuntime && applied.length < NATIVE_INSTALL_VERSION
     if (cutover) {
       await client.query('BEGIN')
@@ -235,6 +235,9 @@ export async function migrateDatabase(
     for (const migration of migrations.slice(applied.length)) {
       if (!cutover) await client.query('BEGIN')
       try {
+        if (migration.version===51 && migration.name==='public_text_reader') {
+          await assertRuntimeCurrent(client,14,'3.6.0')
+        }
         await client.query(migration.sql)
         if (installsRuntime && migration.version === NATIVE_INSTALL_VERSION) {
           const schema = await runtimeSchema(LEGACY_RUNTIME_SCHEMA)
@@ -272,8 +275,12 @@ export async function migrateDatabase(
     }
     if (cutover) await client.query('COMMIT')
     if (installsRuntime) {
-      await client.query('BEGIN')
-      try { await applyRuntimeUpgrade(client,targetRuntime,targetSchema); await client.query('COMMIT') } catch (error) { await client.query('ROLLBACK'); throw error }
+      //0051 owns its provenance write in the ledger transaction. Repeats must
+      // reject a mismatched target instead of silently repairing/stamping it.
+      if (!hasPurposeReader) {
+        await client.query('BEGIN')
+        try { await applyRuntimeUpgrade(client,targetRuntime,targetSchema); await client.query('COMMIT') } catch (error) { await client.query('ROLLBACK'); throw error }
+      }
       await assertRuntimeCurrent(client,targetSchema,targetRuntime)
     }
     await client.query('BEGIN')
@@ -300,6 +307,9 @@ export async function assertMigrationsCurrent(
   migrationsUrl: URL = MIGRATIONS_URL,
 ): Promise<void> {
   const migrations = await loadMigrations(migrationsUrl)
+  const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
+  assertMigrationRuntime(migrations.some(migration => migration.version===50 && migration.name==='skill_delivery'),
+    hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined)
   const client = await database.connect()
   try {
     if (!(await migrationTableExists(client))) {
@@ -315,7 +325,7 @@ export async function assertMigrationsCurrent(
       const hasContinuity = migrations.some(migration => migration.version===47 && migration.name==='memory_continuity')
       const hasReliability = migrations.some(migration => migration.version===RELIABILITY_UPGRADE_VERSION && migration.name==='lingxios_3_5_0')
       await assertRuntimeCurrent(client,hasDelivery ? 14 : hasContinuity ? 13 : hasReliability ? 12 : LEGACY_RUNTIME_SCHEMA,
-        hasDelivery ? '3.6.0' : hasContinuity ? '3.5.8' : hasReliability ? '3.5.6' : LEGACY_RUNTIME_RELEASE)
+        hasPurposeReader ? '3.7.0' : hasDelivery ? '3.6.0' : hasContinuity ? '3.5.8' : hasReliability ? '3.5.6' : LEGACY_RUNTIME_RELEASE)
     }
   } finally {
     client.release()

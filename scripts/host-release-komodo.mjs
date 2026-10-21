@@ -1,5 +1,7 @@
 // Native Komodo2.3.3 calls. Only explicit reviewed product/native plans may migrate.
 // No Git/private API, secret or env writes.
+import {READER_FORMAT,isPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality} from './public-text-release.mjs'
+import {seedCommand} from './public-text-seed.mjs'
 import {isDeepStrictEqual as equal} from 'node:util'
 import {setTimeout as delay} from 'node:timers/promises'
 import {createTransport,parseMarker,validateStateReceipt,stateCommand,METADATA_CODE} from './schema-upgrade-komodo.mjs'
@@ -7,14 +9,15 @@ import {executeMemoryBackup} from './verify-memory-backup.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,assertNativeBackupReceipt,metadataKeys,check,hash,validateHostPlanShape,assertImageIdentity} from './host-release.mjs'
 const actions=['pulling','deploying','starting','restarting','pausing','unpausing','stopping','destroying']
 const id=/^[a-f0-9]{24}$/,hex=/^[a-f0-9]{64}$/
+const PUBLIC_METADATA_CODE=`const {publicTextDeployment,publicTextModelOptions}=await import('./server/src/agent-runtime/public-text-deployment.ts');Object.assign(metadata,{publicText:releaseVersions.publicText,deployment:publicTextDeployment,configurationSha256:hash(await readFile('server/src/agent-runtime/public-text-deployment.ts')),modelOptions:publicTextModelOptions()});`;
 const oneOff=(stack,service,extra)=>({stack,service,no_tty:true,no_deps:true,detach:false,service_ports:false,pull:false,...extra})
 export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,onProgress=async()=>{},transport,wait=delay,backupExecutor=executeMemoryBackup}){
  validateHostPlanShape(plan)
- const native=plan.format===NATIVE_SCHEMA_FORMAT
- const t=transport??createTransport({apiKey,apiSecret,signal,onProgress,confirmTerminal:native})
+ const native=plan.format===NATIVE_SCHEMA_FORMAT,reader=plan.format===READER_FORMAT,publicText=isPublicTextPlan(plan),nodeEnvironments=publicText?qualifyImageEnvironments(plan):null
+ const t=transport??createTransport({apiKey,apiSecret,signal,onProgress,confirmTerminal:native||publicText})
  const phases=new Map(plan.stacks.map(r=>[r.stack,'source'])),configs=new Map(),identities=new Map(),images=new Map(),containerPolicies=new Map()
  const stoppedWriters=new Set()
- let migrationSubmitted=false,backupSubmitted=false,backupVerified=false
+ let migrationSubmitted=false,backupSubmitted=false,backupVerified=false,seedSubmitted=false,seedVerified=false
  const rowFor=stack=>{const r=plan.stacks.find(r=>r.stack===stack);check(r,'Unexpected stack');return r}
  const imageKey=(which,server)=>which+':'+server
  async function hosts(){
@@ -81,7 +84,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
     const which=source===plan.source.sha?'source':'target',qualified=images.get(imageKey(which,row.server))
     if(qualified)check(c.Image===qualified,'Container image differs from actual qualified host image')
     // Keep secret-bearing values only in memory. Never persist their contents.
-    const protectedConfig={env:env.filter(x=>!x.startsWith('LINGXILOOP_COMMIT_SHA=')).toSorted(),host:c.HostConfig,user:c.Config.User,command:c.Config.Cmd,entrypoint:c.Config.Entrypoint,health:c.Config.Healthcheck,mounts:c.Mounts}
+    const protectedConfig={env:publicText?normalizeImageEnvironment(env,source,nodeEnvironments):env.filter(x=>!x.startsWith('LINGXILOOP_COMMIT_SHA=')).toSorted(),host:c.HostConfig,user:c.Config.User,command:c.Config.Cmd,entrypoint:c.Config.Entrypoint,health:c.Config.Healthcheck,mounts:c.Mounts}
     // Docker fills container-specific host fields; compare security/volume fields
     // explicitly instead of comparing the whole HostConfig object.
     protectedConfig.host=Object.fromEntries(['ReadonlyRootfs','Privileged','SecurityOpt','CapAdd','CapDrop','PidsLimit','Binds','Tmpfs','PortBindings','Memory','NanoCpus','Devices','DeviceRequests'].map(k=>[k,c.HostConfig?.[k]]))
@@ -99,6 +102,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
   const descriptor=plan[which]
   for(const stack of onlyStack?[onlyStack]:APPS){
    const row=rowFor(stack),actual=await t.read('InspectImage',{server:row.server,image:IMAGE+descriptor.sha}),imageId=assertImageIdentity(actual,descriptor.image)
+   if(publicText)check(equal(actual.Config?.Env,nodeEnvironments.get(descriptor.sha).config.Env),'Host image Env differs from audited public config')
    const key=imageKey(which,row.server)
    if(images.has(key))check(images.get(key)===imageId,'Cached image changed during release')
    images.set(key,imageId)
@@ -131,11 +135,11 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
  async function metadata(stack){
   check(APPS.includes(stack)&&phases.get(stack)==='target','Metadata requires qualified target host source')
   await guard([stack])
-  return parseMarker(await t.execute('RunStackService',oneOff(stack,'db-migrate',{command:['timeout','-k','5','30','node','--input-type=module','-e',METADATA_CODE+`console.log('SCHEMA_UPGRADE_METADATA='+JSON.stringify(metadata));`]})),'METADATA')
+  return parseMarker(await t.execute('RunStackService',oneOff(stack,'db-migrate',{command:['timeout','-k','5','30','node',...(publicText?['--import','tsx']:[]),'--input-type=module','-e',METADATA_CODE+(publicText?PUBLIC_METADATA_CODE:'')+`console.log('SCHEMA_UPGRADE_METADATA='+JSON.stringify(metadata));`]})),'METADATA')
  }
  return {assertIdle,inspect,verifyImages,stage,state,metadata,
   async stop(stack,service){
-   check(APPS.includes(stack)&&(service==='worker'||native&&service==='lingxiloop')&&phases.get(stack)==='target','Only reviewed old writers may be drained')
+   check(APPS.includes(stack)&&(service==='worker'||(native||reader)&&service==='lingxiloop')&&phases.get(stack)==='target','Only reviewed old writers may be drained')
    await guard([stack]);const result=await t.execute('StopStack',{stack,services:[service],stop_time:150})
    stoppedWriters.add(stack+':'+service);return result
   },
@@ -147,18 +151,24 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    const receipt=await backupExecutor({plan:plan.backup,apiKey,apiSecret,signal,expectedStackId:identities.get(CORE),onProgress:async event=>onProgress({phase:'backup-native',...event})})
    assertNativeBackupReceipt(plan,receipt);backupVerified=true;return receipt
   },
+  async seedPrecheck(){
+   check(reader&&!seedSubmitted&&!migrationSubmitted,'Only one reader seed precheck permitted');await guard();seedSubmitted=true;
+   const u=await t.execute('RunStackService',oneOff(CORE,'postgres',{entrypoint:'sh',user:'postgres',command:['-ec',await seedCommand()]}));
+   const value=parseMarker(u,'METADATA');assertSeedEquality(value);seedVerified=true;
+   return {...value,native:{id:u._id?.$oid,operation:u.operation,target:u.target,status:u.status,success:u.success,startTs:u.start_ts,endTs:u.end_ts}};
+  },
   async migrate(){
-   check([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT].includes(plan.format)&&!migrationSubmitted&&(!native||backupVerified)
-    &&APPS.every(stack=>phases.get(stack)==='target'&&(native?['worker','lingxiloop']:['worker']).every(service=>stoppedWriters.has(stack+':'+service))),'Only one staged, drained and backup-qualified migration may submit')
+   check([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT].includes(plan.format)&&!migrationSubmitted&&(!native||backupVerified)&&(!reader||seedVerified)
+    &&APPS.every(stack=>phases.get(stack)==='target'&&(native||reader?['worker','lingxiloop']:['worker']).every(service=>stoppedWriters.has(stack+':'+service))),'Only one staged, drained and backup-qualified migration may submit')
    await guard()
    const rows=await inspect()
    check(rows.every(row=>row.source===plan.source.sha&&row.restartCount===0&&!row.restarting
-    &&(native||row.service==='worker'?!row.running&&row.pid===0:row.running&&row.healthy&&row.pid>0)),'Original writer state differs from reviewed migration boundary')
-   const expected=Object.fromEntries(metadataKeys.map(key=>[key,plan.target[key]]))
+    &&(native||reader||row.service==='worker'?!row.running&&row.pid===0:row.running&&row.healthy&&row.pid>0)),'Original writer state differs from reviewed migration boundary')
+   const expected={...Object.fromEntries(metadataKeys.map(key=>[key,plan.target[key]])),...(publicText?{publicText:2,deployment:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,modelOptions:plan.publicText.target.producer==='disabled'?{}:{publicTextProtocol:'purpose-json-v1'}}:{})}
    // The executing image proves all public release metadata before opening DB.
    // Product-only migrations never inject env. Native maintenance injects the
    // drain acknowledgement into this oneoff only, after verified fresh backup.
-   const code=METADATA_CODE+`import{isDeepStrictEqual}from'node:util';if(!isDeepStrictEqual(metadata,${JSON.stringify(expected)}))throw Error('target drift');await import('./server/src/migrate-bin.ts');if(process.exitCode)throw Error('migration failed');console.log('SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:metadata.sha,schema:metadata.schema,product:metadata.productVersion}));`
+   const code=METADATA_CODE+(publicText?PUBLIC_METADATA_CODE:'')+`import{isDeepStrictEqual}from'node:util';if(!isDeepStrictEqual(metadata,${JSON.stringify(expected)}))throw Error('target drift');await import('./server/src/migrate-bin.ts');if(process.exitCode)throw Error('migration failed');console.log('SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:metadata.sha,schema:metadata.schema,product:metadata.productVersion}));`
    migrationSubmitted=true
    const receipt=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{...(native?{env:{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'}}:{}),command:['timeout','-k','30','300','node','--import','tsx','--input-type=module','-e',code]})),'MIGRATED')
    check(equal(receipt,{sha:plan.target.sha,schema:plan.target.schema,product:plan.target.productVersion}),'Migration marker mismatch')

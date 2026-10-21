@@ -197,6 +197,8 @@ jobs:
               - 'scripts/prepare-forum-rollout.mjs'
               - 'scripts/schema-upgrade-*.mjs'
               - 'scripts/host-release*.mjs'
+              - 'scripts/public-text-*.mjs'
+              - 'scripts/public-text-*.sql'
               - 'scripts/verify-memory-backup*.mjs'
               - 'scripts/sync-komodo-config.mjs'
               - 'scripts/test-distributed-realtime.mjs'
@@ -206,6 +208,8 @@ jobs:
               - 'scripts/prepare-forum-rollout.mjs'
               - 'scripts/schema-upgrade-*.mjs'
               - 'scripts/host-release*.mjs'
+              - 'scripts/public-text-*.mjs'
+              - 'scripts/public-text-*.sql'
               - 'scripts/verify-memory-backup*.mjs'
               - 'scripts/sync-komodo-config.mjs'
               - 'deploy/**'
@@ -320,7 +324,7 @@ jobs:
         working-directory: third_party/open-notebook
         run: uv run --frozen --python 3.12 pytest -q
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
+        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/public-text-release.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test --test-name-pattern 'effective candidate' scripts/host-release.local.test.mjs
       - if: matrix.component == 'release'
