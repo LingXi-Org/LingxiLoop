@@ -1,12 +1,14 @@
 import { VisualizeText } from '../visualize/VisualizeText'
 import { MessagePrimitive, MessagePartPrimitive, useAui, useAuiState, type PartState, type SourceMessagePartProps, type TextMessagePartComponent } from '@assistant-ui/react'
-import { createContext, type ReactNode, useContext } from 'react'
+import { createContext, type ReactNode, useContext, useState } from 'react'
 import { z } from 'zod'
 import { AttachmentCard } from '@/components/assistant-ui/elements/attachment-card'
 import { DocumentReference } from '@/components/assistant-ui/elements/document-reference'
 import { Reasoning } from '@/components/assistant-ui/elements/reasoning'
 import { AgentPlan, type AgentPlanStep } from '@/components/assistant-ui/elements/agent-plan'
 import { ToolGroup } from '@/components/assistant-ui/elements/tool-group'
+import { RunActivity, type RunActivityStatus } from '@/components/assistant-ui/elements/run-activity'
+import { activityAnnotation } from '@/lib/runActivity'
 import { MarkdownText, type MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 import { MessageFooterContext, MessageFooterContents } from '@/components/assistant-ui/message-footer'
 import { styledGenerativeUILibrary } from '@/components/assistant-ui/elements/generative-ui'
@@ -19,6 +21,8 @@ import { NativeTool, hasRichTool } from './NativeTool'
 
 const ReadOnlyMessage = createContext(false)
 const GroupOwnsFooter = createContext(false)
+const isPublicProcess = (part: { type: string }) => activityAnnotation(part)?.kind === 'commentary'
+  && ['text','reasoning','generative-ui'].includes(part.type)
 
 function SourcePart(part: SourceMessagePartProps) {
   return <MessageFooterContents inset={false}>
@@ -52,6 +56,7 @@ const DefaultText = () => {
 }
 
 function groupParts(part: PartState): readonly ('group-reasoning' | 'group-tools')[] {
+  if (activityAnnotation(part)?.kind === 'commentary') return []
   if (part.type === 'reasoning') return []
   if (part.type !== 'tool-call' || hasRichTool(part.toolName) || part.approval || part.interrupt || part.messages?.length || part.isError
     || part.status.type === 'incomplete' || part.status.type === 'requires-action') return []
@@ -63,7 +68,8 @@ function PartFrame({ children, footer, mediaFooter }: { children: ReactNode; foo
   const groupOwnsFooter = useContext(GroupOwnsFooter)
   const part = useAuiState(state => state.part)
   const isLast = useAuiState(state => {
-    const last = state.message.parts.filter(part => part.type !== 'data' || part.name !== 'citation-claims').at(-1)
+    const last = state.message.parts.filter(part => !(state.message.role === 'assistant' && isPublicProcess(part))
+      && (part.type !== 'data' || part.name !== 'citation-claims')).at(-1)
     return last === state.part
   })
   const value = !groupOwnsFooter && isLast ? part.type === 'image' || part.type === 'file' ? mediaFooter : footer : null
@@ -102,14 +108,33 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: {
   return <PartFrame footer={footer} mediaFooter={mediaFooter}>{content}</PartFrame>
 }
 
+function ActivityPart() { return <NativePart /> }
+const activityComponents = { Text: ActivityPart, Reasoning: ActivityPart, generativeUI: { components: generativeComponents } }
+
 export function NativeMessageContent({ Text = DefaultText, footer = null, mediaFooter = null, attention = null }: {
   Text?: TextMessagePartComponent; footer?: ReactNode; mediaFooter?: ReactNode; attention?: ReactNode
 }) {
   const readOnly = useContext(ReadOnlyMessage)
   const message = useAuiState(state => state.message)
+  const [activityOpen, setActivityOpen] = useState(false)
+  const entries = message.role === 'assistant' ? message.content.flatMap((part,index) => {
+    const annotation = activityAnnotation(part)
+    return annotation && isPublicProcess(part)
+      ? [{ id: annotation.id,kind: 'commentary' as const,
+          label: part.type === 'text' ? part.text.slice(0,500).replace(/\s+/gu,' ').trim().slice(0,160) || annotation.label : annotation.label,
+          content: <GroupOwnsFooter.Provider value={true}><MessagePrimitive.PartByIndex index={index} components={activityComponents} /></GroupOwnsFooter.Provider> }]
+      : []
+  }) : []
+  const status: RunActivityStatus = message.status?.type === 'running' ? 'running'
+    : message.status?.type === 'requires-action' ? 'requires-action'
+    : message.status?.type === 'incomplete' ? message.status.reason === 'cancelled' ? 'cancelled' : message.status.reason === 'error' ? 'error' : 'incomplete'
+    : 'complete'
+  const statusLabel = { running: '处理中', 'requires-action': '等待处理', complete: '处理过程', cancelled: '已取消', incomplete: '未完成', error: '处理失败' }[status]
   const attachments = message.role === 'user' ? message.attachments : []
-  const last = message.content.reduce((last, part, index) => part.type !== 'data' || part.name !== 'citation-claims' ? index : last, -1)
+  const last = message.content.reduce((last, part, index) => !(entries.length > 0 && isPublicProcess(part))
+    && (part.type !== 'data' || part.name !== 'citation-claims') ? index : last, -1)
   return <GroupOwnsFooter.Provider value={false}><div className="native-message-content grid min-w-0 gap-2" data-aui-theme="elements">
+    {entries.length > 0 && <RunActivity status={status} statusLabel={statusLabel} entries={entries} open={activityOpen} onOpenChange={setActivityOpen} />}
     <MessagePrimitive.GroupedParts groupBy={groupParts} indicator="never">
       {({ part, children }) => {
         if (part.type === 'indicator') return null
@@ -128,9 +153,11 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
             </GroupOwnsFooter.Provider></MessageFooterContents>
           </MessageFooterContext.Provider>
         }
+        if (entries.length > 0 && isPublicProcess(part)) return null
         return <NativePart Text={Text} footer={footer} mediaFooter={mediaFooter} />
       }}
     </MessagePrimitive.GroupedParts>
+    {entries.length > 0 && last < 0 && <MessageFooterContents inset={false}>{footer}</MessageFooterContents>}
     {attention}
     {attachments.map(attachment => <div key={attachment.id} data-native-attachment={attachment.id} className="grid min-w-0 gap-1">
       {attachment.content.map((part, index) => <MessageFooterContext.Provider key={index} value={!message.content.length && attachment === attachments.at(-1) && index === attachment.content.length - 1 ? mediaFooter : null}>

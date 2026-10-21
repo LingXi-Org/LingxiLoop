@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createRunView, consumeRunEvent, type PublicTextPart, type RunView } from '@lyyzka/lingxios/ui'
 import { harnessToolParts, runMessageParts } from '../agent-runtime/message-projection.js'
+import { activityAnnotation } from '../../../src/lib/runActivity.js'
 
 // Failure model: docs/evidence/feedback-262/FAILURE-MODEL.md (written first).
 const part = (attemptId: string, seq: number, reason: PublicTextPart['reason'], text: string): PublicTextPart => ({
@@ -13,7 +14,8 @@ const texts = (view: RunView, tools = harnessToolParts('run',[]), history = fals
 test('repair archives an abandoned candidate by identity and preserves new text immediately and exact history', () => {
   const old = part('first',1,'superseded','An entire superseded explanation.'), next = part('repair',4,null,'I will read the saved result.')
   const view: RunView = { ...createRunView('run'),lifecycle: 'leased',requestVersion: 1,fence: 1,publicTextParts: [old,next] }
-  assert.deepEqual(texts(view),[next.text])
+  assert.deepEqual(texts(view),[old.text,next.text],'old process stays available inside RunActivity')
+  assert.deepEqual(runMessageParts(view).filter(p => activityAnnotation(p)?.kind === 'answer').map(p => p.type === 'text' && p.text),[next.text])
   assert.deepEqual(texts(view,[],true),[old.text,next.text])
   assert.equal(view.publicTextParts![0].text,old.text,'immutable archive is not rewritten')
 })

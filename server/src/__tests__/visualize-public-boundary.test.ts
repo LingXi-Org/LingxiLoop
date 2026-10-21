@@ -22,13 +22,10 @@ test('unverified public references stay inert during generation, after repair an
     { resultId: 'result',fence: 1 }),delivery: 'delivered' as const,lifecycle: 'succeeded' as const }
   for (const state of [view,final]) for (const includeAcceptedPublicText of [false,true]) {
     const parts = runMessageParts(state,[],{ includeAcceptedPublicText })
-    const commentary = parts.find(part => activityAnnotation(part)?.kind === 'commentary')
-    if (state === final && !includeAcceptedPublicText) {
-      assert.equal(commentary,undefined,'the replaced candidate is archived from the foreground')
-    } else {
-      assert.ok(commentary?.type === 'text')
-      assert.equal(commentary.text,'Public explanation.\n\nMore explanation.')
-    }
+    const prefix = parts.find(part => part.type === 'text' && part.text === 'Public explanation.\n\nMore explanation.')
+    assert.ok(prefix?.type === 'text')
+    assert.equal(activityAnnotation(prefix)?.kind,state === final ? 'commentary' : 'answer',
+      'live candidate remains visible; replaced process goes to RunActivity')
     const refs = parts.flatMap(part => part.type === 'text' ? visualizeReferences(part.text) : [])
     assert.deepEqual(refs.map(part => part.reference.path),state === final ? ['/current-conversation/network.html'] : [])
   }

@@ -16,7 +16,7 @@ test.describe('Public activity presentation', {
       while (performance.now() - start < 1200) {
         await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
         const receive = performance.getEntriesByName('activity-fixture-receive').at(-1)?.startTime
-        if (receive !== undefined && [...document.querySelectorAll('[data-native-part="text"]')].some(node => visible(node) && node.textContent?.includes('公开说明增量'))) {
+        if (receive !== undefined && [...document.querySelectorAll('[data-slot="run-activity"] p')].some(node => visible(node) && node.textContent?.includes('公开说明增量'))) {
           textMs = performance.now() - receive
           break
         }

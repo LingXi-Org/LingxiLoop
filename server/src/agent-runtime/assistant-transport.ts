@@ -117,7 +117,7 @@ export class RunStreamProjection {
 
   activityPage(offset: number, attentionOnly = false) {
     if (!Number.isSafeInteger(offset) || offset < 0) throw new Error('invalid activity offset')
-    const parts = runMessageParts(this.view, this.tools).filter(part => {
+    const parts = runMessageParts(this.view, this.tools,{ activityHistory: true }).filter(part => {
       const kind = activityAnnotation(part)?.kind
       return attentionOnly ? kind === 'attention' : kind === 'tool' || kind === 'commentary' || kind === 'attention'
     })
@@ -145,7 +145,7 @@ export class RunStreamProjection {
     // A committed answer explicitly names its streamed source part. Keep that
     // immutable prefix in activityPage, but do not repeat it above the answer.
     const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools,{ includeAcceptedPublicText: false })
-    const acceptedPublicParts = (this.view.publicTextParts ?? []).filter(part => archivedPublicText(part,this.view,this.tools)).length
+    const acceptedPublicParts = (this.view.publicTextParts ?? []).filter(archivedPublicText).length
     const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
     const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
     const activitySet = new Set(activity)
