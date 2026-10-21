@@ -10,6 +10,23 @@ The complete 24-file skill is unchanged in [`third_party/zcode/skills/visualize`
 
 The model saves literal HTML fragments and reads them back. Inline save/hosting accepts at most 5,000,000 UTF-8 bytes. The server checks current conversation authorization, principal/run/agent binding, author ownership and a lowercase hyphenated filename. The output directory derives from company and conversation under `AGENT_OS_HOMES_ROOT/visualize` (using the existing homes default when unset). Files are executor mirrors; PostgreSQL `im_visualize_documents` owns source HTML, hash and version. A model reference never grants arbitrary filesystem access.
 
+For interactive packet windows, `visualize.sliding_window` supplies a bounded
+send/ack demo with next, autoplay, reset and size controls. One state produces
+packet colors, range text and the selected DOM elements. Its outline measures
+actual element edges in its own coordinate system; widths and gaps are not
+duplicated as arithmetic constants. The reusable explicit binding and contract
+are available through `visualize.read_reference` at `host/range-overlay.js` and
+`host/range-overlay.md`, outside the immutable upstream skill tree. The helper
+is embedded only when chosen; there is no arbitrary-HTML rewrite. Existing
+`visualize.chart` and `visualize.diagram` are static and do not cover this
+interaction. See the [failure model](visualize-range-failure-model.md).
+
+This supported path does **not** modify historical saved fragments. A reported
+old component still needs its authorized original HTML and a targeted repair;
+passing synthetic geometry tests is not evidence that that old component was
+fixed. The browser regression is `e2e.visualize-window.config.ts` and stores
+independent packet/outline rectangle comparisons plus synthetic screenshots.
+
 Final assistant text uses the actual returned path:
 
 ```text
