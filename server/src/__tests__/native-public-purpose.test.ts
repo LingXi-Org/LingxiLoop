@@ -12,8 +12,11 @@ const delta=(seq:number,purpose:'commentary'|'answer',text:string):RunEvent=>({r
 }})
 const state={run:{id:'run',status:'leased' as const,fence:1,requestVersion:1,resultId:null,resultFence:null,kind:'turn',attempts:1,createdAt:'2026-10-21T00:00:00Z',availableAt:'',heartbeatAt:null,lastProgressAt:null,goalOutcome:null,error:null},message:null,delivery:null}
 
-test('native purpose is effective at the first chunk and survives actual transport decoding',async()=>{
-  const frames=[{type:'state',state},{type:'event',event:delta(1,'commentary','任意公开过程 A')},{type:'event',event:delta(2,'answer','I will explain why this answer is correct.')}]
+test('native purpose keeps a same-attempt tool answer visible through actual transport decoding and supersedes by identity',async()=>{
+  const frames=[{type:'state',state},{type:'event',event:delta(1,'commentary','任意公开过程 A')},{type:'event',event:delta(2,'answer','I will explain why this answer is correct.')},
+    {type:'event',event:{...delta(3,'answer',''),kind:'public.text.ended',stage:'completed',data:{version:2,requestVersion:1,fence:1,attemptId:'attempt',partId:'answer',partIndex:1,purpose:'answer',chunkCount:1,reason:'tool'}}},
+    {type:'event',event:{runId:'run',seq:4,kind:'tool.started',stage:'started',visibility:'user',data:{requestVersion:1,fence:1,attemptId:'attempt',toolCallId:'probe',name:'documents.read'}}},
+    {type:'event',event:{runId:'run',seq:5,kind:'tool.completed',stage:'completed',visibility:'user',data:{requestVersion:1,fence:1,attemptId:'attempt',toolCallId:'probe',result:{ok:true}}}}]
   const projection=new RunStreamProjection('run',true)
   const bytes=new TextEncoder().encode(frames.map(frame=>`event: ${frame.type}\ndata: ${JSON.stringify(frame)}\n\n`).join(''))
   const response=assistantRunResponse(new ReadableStream({start(controller){controller.enqueue(bytes);controller.close()}}),projection)
@@ -30,8 +33,13 @@ test('native purpose is effective at the first chunk and survives actual transpo
     ['任意公开过程 A','commentary'],['I will explain why this answer is correct.','answer'],
   ])
   let replay={...createRunView('run'),requestVersion:1,fence:1,lifecycle:'leased' as const}
-  for(const event of [delta(1,'commentary','任意公开过程 A'),delta(2,'answer','I will explain why this answer is correct.')])replay=consumeRunEvent(replay,event) as typeof replay
-  assert.deepEqual(runMessageParts(replay,[]).map(activityAnnotation),last.message.content.map(activityAnnotation))
+  for(const frame of frames)if('event' in frame)replay=consumeRunEvent(replay,frame.event as RunEvent) as typeof replay
+  assert.deepEqual(runMessageParts(replay,[]).filter(part=>part.type==='text').map(activityAnnotation),last.message.content.filter(part=>part.type==='text').map(activityAnnotation))
+  const next=delta(6,'answer','The final corrected answer.')
+  replay=consumeRunEvent(replay,{...next,data:{...next.data,attemptId:'final-attempt',partId:'final-answer'}}) as typeof replay
+  assert.deepEqual(runMessageParts(replay,[]).filter(part=>part.type==='text').map(part=>[part.text,activityAnnotation(part)?.kind]),[
+    ['任意公开过程 A','commentary'],['I will explain why this answer is correct.','commentary'],['The final corrected answer.','answer'],
+  ])
 })
 
 test('a completed commentary part cannot hide a separate answer preview',()=>{
