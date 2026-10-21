@@ -1,0 +1,15 @@
+✔ closing immediately fences a restore before animation cleanup (136.997519ms)
+✔ reopening before acceptance converges the new removed list (54.640322ms)
+✔ list invalidation does not strand the current restore pending state (40.388299ms)
+✔ old-scope success cannot invalidate the current scope (43.89526ms)
+✔ failure preserves its row and permits a successful retry (35.417826ms)
+✔ rapid close/reopen fences old completion even while the old view awaits cleanup (29.395078ms)
+✔ data view generation leaves unrelated settings transitions unchanged (22.751188ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 990.511123

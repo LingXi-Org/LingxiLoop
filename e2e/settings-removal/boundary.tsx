@@ -20,13 +20,14 @@ export function captureConversationScope() {
   const project = useWorkspace.getState().selectedId
   return () => useWorkspace.getState().selectedId === project
 }
-export const useConversations = { getState: () => ({ restore: async (id: string) => {
+export const useConversations = create<{ removedListRevision: number; restore: (id: string) => Promise<boolean> }>(set => ({ removedListRevision: 0, restore: async (id: string) => {
   fixture.restores.push(id)
   if (fixture.restoreHeld) await new Promise<void>(resolve => { fixture.releaseRestore = resolve })
   if (fixture.restoreFails) throw new Error('恢复失败，请稍后重试。')
   fixture.mode = 'empty'
+  set(state => ({ removedListRevision: state.removedListRevision + 1 }))
   return true
-} }) }
+} }))
 export const authApi = { signOut: async () => {} }
 export const AccountSettingsPanel = () => <p>账号资料</p>
 export const AppearanceSoundSettingsPanel = () => null

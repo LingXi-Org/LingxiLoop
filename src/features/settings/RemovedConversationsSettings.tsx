@@ -7,6 +7,7 @@ import { conversationsApi } from '@/features/conversations/api'
 import type { ApiConversation } from '@/features/conversations/contracts'
 import { captureConversationScope, useConversations } from '@/features/conversations/store'
 import { SettingsGroup } from './SettingsComponents'
+import { useSettingsDialog } from './store'
 
 /** Mounted with a user/company/project key so closed and pending views cannot cross scopes. */
 export function RemovedConversationsSettings() {
@@ -15,11 +16,26 @@ export function RemovedConversationsSettings() {
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
-  const request = useRef<AbortController | null>(null)
+  const mounted = useRef(false)
+  const revision = useConversations(state => state.removedListRevision)
 
   useEffect(() => {
-    const controller = new AbortController(), current = captureConversationScope()
-    request.current = controller
+    mounted.current = true
+    return () => { mounted.current = false }
+  }, [])
+
+  const captureView = () => {
+    const scopeCurrent = captureConversationScope()
+    const epoch = useSettingsDialog.getState().dataAccountEpoch
+    return () => {
+      const settings = useSettingsDialog.getState()
+      return mounted.current && settings.open && settings.activeSection === 'data-account'
+        && settings.dataAccountEpoch === epoch && scopeCurrent()
+    }
+  }
+
+  useEffect(() => {
+    const controller = new AbortController(), current = captureView()
     setLoading(true); setError(null); setRows([])
     void conversationsApi.getRemovedConversations(controller.signal).then(result => {
       if (!controller.signal.aborted && current()) setRows(result)
@@ -29,11 +45,11 @@ export function RemovedConversationsSettings() {
       if (!controller.signal.aborted && current()) setLoading(false)
     })
     return () => controller.abort()
-  }, [attempt])
+  }, [attempt, revision])
 
   const restore = async (row: ApiConversation) => {
-    const scopeCurrent = captureConversationScope(), controller = request.current
-    const current = () => Boolean(controller && !controller.signal.aborted && scopeCurrent())
+    // Read invalidation can abort/refetch without cancelling this view's mutation.
+    const current = captureView()
     if (!current() || pending !== null) return
     setPending(row.id); setError(null)
     try {

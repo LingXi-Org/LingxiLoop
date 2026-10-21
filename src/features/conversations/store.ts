@@ -20,6 +20,7 @@ interface ConversationsState {
   loaded: boolean
   loading: boolean
   error: string | null
+  removedListRevision: number
   load: () => Promise<void>
   reload: () => Promise<void>
   reset: () => void
@@ -229,6 +230,7 @@ export const useConversations = create<ConversationsState>((set) => ({
   loaded: false,
   loading: false,
   error: null,
+  removedListRevision: 0,
   async load() {
     const workspace = getWorkspaceSession()
     if (!workspace) { useConversations.getState().reset(); return }
@@ -323,6 +325,9 @@ export const useConversations = create<ConversationsState>((set) => ({
     if (!current()) return false
     await conversationsApi.restoreConversation(id)
     if (!current()) return false
+    // A settings view may have reopened while this accepted request was pending.
+    // Invalidate its read without retaining conversation data outside this scope.
+    set(state => ({ removedListRevision: state.removedListRevision + 1 }))
     await useConversations.getState().reload()
     return current()
   },
