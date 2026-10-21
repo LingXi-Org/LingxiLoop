@@ -90,7 +90,7 @@ export async function beginPublicToolActivity(context: ActionContext, input: Rec
 
 export async function finishPublicToolActivity(context: ActionContext, display: ToolDisplay, result?: ActionResult): Promise<void> {
   const action = context.action.action, value = result?.value
-  let summary = !result ? '这一步未完成，请重试。' : result.ok ? '这一步已完成。'
+  let summary = !result ? '这一步未完成，请重试。' : result.ok ? toolDisplay(action,'completed').summary ?? '这一步已完成。'
     : result.executionState === 'unknown' ? '操作结果尚未确认，请先核对结果，避免重复执行。' : '这一步未完成，请重试。'
   if (result?.ok) {
     if (action === 'files.list' && Array.isArray(value)) summary = `已检查本次请求的附件，共 ${value.length} 个。`

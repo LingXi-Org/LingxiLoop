@@ -4,6 +4,7 @@ import { responseSegments, type RunEvent, type RunView } from '@lyyzka/lingxios/
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
+import { observedProgress } from './observed-progress.js'
 import { assertVisualizeCitationSpans, projectVisualizeText } from './visualize-projection.js'
 import { publicActivitySchema, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
@@ -113,6 +114,10 @@ function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]
 }
 export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = [], options: { includeAcceptedPublicText?: boolean } = {}): ThreadAssistantMessagePart[] {
   const cards = activityParts(view, tools, options.includeAcceptedPublicText !== false)
+  const progress = observedProgress(view,tools,!!view.draft || cards.some(part => part.type === 'text' || part.type === 'reasoning'))
+  if (progress) cards.push(annotated({ type: 'text',text: progress },{
+    id: `observed-progress:${view.requestVersion}:${view.fence}`,kind: 'commentary',label: '任务状态',
+  }))
   if (view.lifecycle === 'queued') return cards
   // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
   if (view.lifecycle === 'leased' && view.draft) return [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]
