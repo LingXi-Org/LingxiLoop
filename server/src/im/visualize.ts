@@ -96,10 +96,12 @@ export async function saveVisualizeDocument(input: VisualizeActor & { runId: str
       source_hash=EXCLUDED.source_hash,run_id=EXCLUDED.run_id,request_version=EXCLUDED.request_version,version=im_visualize_documents.version+1,updated_at=clock_timestamp()
       WHERE im_visualize_documents.source_hash<>EXCLUDED.source_hash OR im_visualize_documents.run_id<>EXCLUDED.run_id
         OR im_visualize_documents.request_version IS DISTINCT FROM EXCLUDED.request_version`, [input.companyId, input.channelId, path, input.runId, input.agentId, input.userId, input.html, digest(input.html), input.requestVersion ?? null])
+    // The no-op upsert deliberately does not increment version. Read the actual
+    // row under the same transaction/lock instead of predicting its version.
+    const stored = await document(db, { ...input, path })
+    return { path: stored.path, html: stored.html, version: stored.version, sourceHash: stored.source_hash }
   }
-  if (input.database) await save(input.database)
-  else await withTransaction(pool, save)
-  return { path, html: input.html }
+  return input.database ? save(input.database) : withTransaction(pool, save)
 }
 export async function readAuthorizedVisualizeSnapshot(input: VisualizeActor & { path: string }, db: Queryable = pool) {
   await assertVisualizeActor(db, input)

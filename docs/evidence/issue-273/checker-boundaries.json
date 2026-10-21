@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "same-transaction-save-read-metadata-and-noop-version",
+    "empty-remains-pending",
+    "all-scope-request-and-integrity-filters",
+    "path-order-three-limit-fourth-truncated-not-content-proof",
+    "enrichment-only-for-current-activation-reference-gap",
+    "authorization-precedes-candidate-reads",
+    "fresh-final-check-rejects-overwrite-and-revocation"
+  ],
+  "command": "npm run test:integration -- --file visualize-delivery-repair-boundaries.test.ts",
+  "scope": "database metadata, repair-candidate isolation and fresh delivery checks; no model/browser verification"
+}
