@@ -1,0 +1,302 @@
+TAP version 13
+# Subtest: real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration
+ok 1 - real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration
+  ---
+  duration_ms: 43.45495
+  type: 'test'
+  ...
+# Subtest: native14 same-schema public adapter keeps8 preparation and26 release actions, no maintenance command
+ok 2 - native14 same-schema public adapter keeps8 preparation and26 release actions, no maintenance command
+  ---
+  duration_ms: 26.395431
+  type: 'test'
+  ...
+# Subtest: product migration adapter runs exact isolated A command once, no env override or old-Web stop
+ok 3 - product migration adapter runs exact isolated A command once, no env override or old-Web stop
+  ---
+  duration_ms: 14.727004
+  type: 'test'
+  ...
+# Subtest: ordinary or unstaged adapter cannot migrate, uncertain native migration ends all requests
+ok 4 - ordinary or unstaged adapter cannot migrate, uncertain native migration ends all requests
+  ---
+  duration_ms: 7.680071
+  type: 'test'
+  ...
+# Subtest: host errors, platform mismatch and unexpected full-config change fail before stops
+ok 5 - host errors, platform mismatch and unexpected full-config change fail before stops
+  ---
+  duration_ms: 10.629084
+  type: 'test'
+  ...
+# Subtest: actual container image must equal verified host ID, not merely declared source
+ok 6 - actual container image must equal verified host ID, not merely declared source
+  ---
+  duration_ms: 7.374948
+  type: 'test'
+  ...
+# Subtest: explicit online preparation uses pull template then restores exact original files and config
+ok 7 - explicit online preparation uses pull template then restores exact original files and config
+  ---
+  duration_ms: 4.615368
+  type: 'test'
+  ...
+# Subtest: native14 adapter requires all4 stopped and fresh verified backup before one drain-marked public migration
+ok 8 - native14 adapter requires all4 stopped and fresh verified backup before one drain-marked public migration
+  ---
+  duration_ms: 19.539704
+  type: 'test'
+  ...
+# Subtest: reader adapter drains four, seed reads once, migration once without env injection, and derives Node metadata from images
+not ok 9 - reader adapter drains four, seed reads once, migration once without env injection, and derives Node metadata from images
+  ---
+  duration_ms: 20.184622
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-text-host-release/scripts/host-release-komodo.test.mjs:162:1'
+  failureType: 'testCodeFailure'
+  error: 'Host release stopped; resolve the private receipt before any further action'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    failed (file:///workspace/LingxiLoop-public-text-host-release/scripts/host-release.mjs:138:22)
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop-public-text-host-release/scripts/host-release-komodo.test.mjs:163:33)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: producer adapter uses already capable source identities and never migrates or seeds
+not ok 10 - producer adapter uses already capable source identities and never migrates or seeds
+  ---
+  duration_ms: 16.379679
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-text-host-release/scripts/host-release-komodo.test.mjs:169:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'includes')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    file:///workspace/LingxiLoop-public-text-host-release/scripts/host-release-komodo.test.mjs:170:103
+    Array.some (<anonymous>)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-public-text-host-release/scripts/host-release-komodo.test.mjs:170:70)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: seed mismatch and unknown provenance migration stop without deployment or automatic replay
+not ok 11 - seed mismatch and unknown provenance migration stop without deployment or automatic replay
+  ---
+  duration_ms: 14.181553
+  type: 'test'
+  location: '/workspace/LingxiLoop-public-text-host-release/scripts/host-release-komodo.test.mjs:173:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The validation function is expected to return "true". Received false
+    
+    Caught error:
+    
+    Error: Host release stopped; resolve the private receipt before any further action
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop-public-text-host-release/scripts/host-release-komodo.test.mjs:175:55)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: same formal package and all48 checksums required; native13 alone is insufficient
+ok 12 - same formal package and all48 checksums required; native13 alone is insufficient
+  ---
+  duration_ms: 2.781573
+  type: 'test'
+  ...
+# Subtest: native14 same-schema accepts exact formal3.6.0/product50 and binds every formal key and all50 rows
+ok 13 - native14 same-schema accepts exact formal3.6.0/product50 and binds every formal key and all50 rows
+  ---
+  duration_ms: 8.992371
+  type: 'test'
+  ...
+# Subtest: native14 same-schema rejects other profiles and native transitions before any action
+ok 14 - native14 same-schema rejects other profiles and native transitions before any action
+  ---
+  duration_ms: 6.743154
+  type: 'test'
+  ...
+# Subtest: native14 same-schema retains Worker-only drain and ordered rollout without backup or migration
+ok 15 - native14 same-schema retains Worker-only drain and ordered rollout without backup or migration
+  ---
+  duration_ms: 6.582831
+  type: 'test'
+  ...
+# Subtest: distinct format and sealed per-stack core identity; exact app policy only
+ok 16 - distinct format and sealed per-stack core identity; exact app policy only
+  ---
+  duration_ms: 5.375127
+  type: 'test'
+  ...
+# Subtest: worker barrier allows Web clients and queue but rejects every live lease and prepared transaction
+ok 17 - worker barrier allows Web clients and queue but rejects every live lease and prepared transaction
+  ---
+  duration_ms: 0.379454
+  type: 'test'
+  ...
+# Subtest: actual per-host image ID is not inferred from config digest
+ok 18 - actual per-host image ID is not inferred from config digest
+  ---
+  duration_ms: 0.443819
+  type: 'test'
+  ...
+# Subtest: online qualification precedes stop; only both Workers stop; WebA/B then WorkerA/B
+ok 19 - online qualification precedes stop; only both Workers stop; WebA/B then WorkerA/B
+  ---
+  duration_ms: 2.978725
+  type: 'test'
+  ...
+# Subtest: missing image never stages; partial unknown stage never stops or makes further requests
+ok 20 - missing image never stages; partial unknown stage never stops or makes further requests
+  ---
+  duration_ms: 2.176043
+  type: 'test'
+  ...
+# Subtest: metadata mismatch leaves all services running
+ok 21 - metadata mismatch leaves all services running
+  ---
+  duration_ms: 1.193443
+  type: 'test'
+  ...
+# Subtest: known failure followed by uncertain classification oneoff remains finally uncertain
+ok 22 - known failure followed by uncertain classification oneoff remains finally uncertain
+  ---
+  duration_ms: 1.356906
+  type: 'test'
+  ...
+# Subtest: live leases, ineffective stop and unknown stop prevent new Web
+ok 23 - live leases, ineffective stop and unknown stop prevent new Web
+  ---
+  duration_ms: 2.974409
+  type: 'test'
+  ...
+# Subtest: unknown deploy stops immediately; health/policy/schema failure prevents remaining rollout
+ok 24 - unknown deploy stops immediately; health/policy/schema failure prevents remaining rollout
+  ---
+  duration_ms: 10.713339
+  type: 'test'
+  ...
+# Subtest: explicit image preparation restores accepted host source and never stops/deploys
+ok 25 - explicit image preparation restores accepted host source and never stops/deploys
+  ---
+  duration_ms: 2.737618
+  type: 'test'
+  ...
+# Subtest: product-only format permits exact48→49 and same-schema49, never altered history/package or downgrade
+ok 26 - product-only format permits exact48→49 and same-schema49, never altered history/package or downgrade
+  ---
+  duration_ms: 7.213118
+  type: 'test'
+  ...
+# Subtest: 48→49 retains old Web, drains two Workers, migrates once after two barriers and before any deploy
+ok 27 - 48→49 retains old Web, drains two Workers, migrates once after two barriers and before any deploy
+  ---
+  duration_ms: 2.586433
+  type: 'test'
+  ...
+# Subtest: 49→49 and48→49 image preparation never execute a migration
+ok 28 - 49→49 and48→49 image preparation never execute a migration
+  ---
+  duration_ms: 3.839134
+  type: 'test'
+  ...
+# Subtest: failed migration classifies fresh exact source or committed49 without deploy or retry
+ok 29 - failed migration classifies fresh exact source or committed49 without deploy or retry
+  ---
+  duration_ms: 2.467056
+  type: 'test'
+  ...
+# Subtest: unknown migration or post-migration state forbids all further requests
+ok 30 - unknown migration or post-migration state forbids all further requests
+  ---
+  duration_ms: 2.438593
+  type: 'test'
+  ...
+# Subtest: native14 explicit profile rejects wrong boundary, altered49 history and missing/fake source backup
+ok 31 - native14 explicit profile rejects wrong boundary, altered49 history and missing/fake source backup
+  ---
+  duration_ms: 6.3194
+  type: 'test'
+  ...
+# Subtest: native14 stops all4 writers, makes fresh backup between full barriers, migrates once then ordered recovery
+ok 32 - native14 stops all4 writers, makes fresh backup between full barriers, migrates once then ordered recovery
+  ---
+  duration_ms: 3.582053
+  type: 'test'
+  ...
+# Subtest: native14 busy Web/invalid restore/unknown backup prevents migration and unknown makes no further request
+ok 33 - native14 busy Web/invalid restore/unknown backup prevents migration and unknown makes no further request
+  ---
+  duration_ms: 6.443234
+  type: 'test'
+  ...
+# Subtest: native14 known failures classify unchanged source13 or target14, uncertainty remains final
+ok 34 - native14 known failures classify unchanged source13 or target14, uncertainty remains final
+  ---
+  duration_ms: 8.735511
+  type: 'test'
+  ...
+# Subtest: native14 image preparation never drains, backs up or migrates
+ok 35 - native14 image preparation never drains, backs up or migrates
+  ---
+  duration_ms: 1.059434
+  type: 'test'
+  ...
+# Subtest: reader provenance release disables producer, drains four originals, migrates once, then both Web before Workers
+ok 36 - reader provenance release disables producer, drains four originals, migrates once, then both Web before Workers
+  ---
+  duration_ms: 3.66107
+  type: 'test'
+  ...
+# Subtest: reader producer leak/seed drift aborts before stop; unknown migration makes no further calls
+ok 37 - reader producer leak/seed drift aborts before stop; unknown migration makes no further calls
+  ---
+  duration_ms: 4.771991
+  type: 'test'
+  ...
+# Subtest: reader transaction failed before or after commit is classified without repeat
+ok 38 - reader transaction failed before or after commit is classified without repeat
+  ---
+  duration_ms: 3.004654
+  type: 'test'
+  ...
+# Subtest: separate producer phase keeps capable readers, worker-only drain, no migration or seed
+ok 39 - separate producer phase keeps capable readers, worker-only drain, no migration or seed
+  ---
+  duration_ms: 2.722595
+  type: 'test'
+  ...
+# Subtest: explicit reader upgrade binds unchanged native/full50 plus reviewed51; legacy shape is not accepted
+ok 40 - explicit reader upgrade binds unchanged native/full50 plus reviewed51; legacy shape is not accepted
+  ---
+  duration_ms: 12.168807
+  type: 'test'
+  ...
+# Subtest: producer phase retains full formal reader profile; no downgrade or legacy source
+ok 41 - producer phase retains full formal reader profile; no downgrade or legacy source
+  ---
+  duration_ms: 4.000004
+  type: 'test'
+  ...
+# Subtest: only digest-qualified Node metadata is normalized; other env, source and startup cannot drift
+ok 42 - only digest-qualified Node metadata is normalized; other env, source and startup cannot drift
+  ---
+  duration_ms: 1.924289
+  type: 'test'
+  ...
+# Subtest: canonical seed read rejects missing, changed, invisible or incomplete aggregate
+ok 43 - canonical seed read rejects missing, changed, invisible or incomplete aggregate
+  ---
+  duration_ms: 0.56505
+  type: 'test'
+  ...
+1..43
+# tests 43
+# suites 0
+# pass 40
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 280.07559
