@@ -1,0 +1,29 @@
+TAP version 13
+# Subtest: 0050 upgrades only schema13, preserves historical SQL and rolls native/provenance/ledger back together
+not ok 1 - 0050 upgrades only schema13, preserves historical SQL and rolls native/provenance/ledger back together
+  ---
+  duration_ms: 1.102198
+  type: 'test'
+  location: '/workspace/LingxiLoop-runtime380-provenance/server/src/__integration__/migration.test.ts:1:1093'
+  failureType: 'testCodeFailure'
+  error: 'Invalid URL'
+  code: 'ERR_INVALID_URL'
+  name: 'TypeError'
+  stack: |-
+    new URL (node:internal/url:818:25)
+    withDatabase (/workspace/LingxiLoop-runtime380-provenance/server/src/__integration__/migration.test.ts:314:18)
+    TestContext.<anonymous> (/workspace/LingxiLoop-runtime380-provenance/server/src/__integration__/migration.test.ts:22:9)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 474.801913
