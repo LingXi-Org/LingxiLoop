@@ -1,5 +1,7 @@
 import test from 'node:test'
+import {READER_FORMAT,PRODUCER_FORMAT,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
+import {createHash} from 'node:crypto'
 import {sealHostPlan,assertSameSchema,assertWorkerBarrier,assertImageIdentity,validateHostPlanShape,runHostRelease,runImagePreparation} from './host-release.mjs'
 
 const sha='a'.repeat(40),next='b'.repeat(40),hash='c'.repeat(64),digest='sha256:'+hash
@@ -20,8 +22,15 @@ const targetRef={commit:next,branch:'release/target',sha256:'d'.repeat(64),autoP
 const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:hash,qualification:{commit:next,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/123'},stacks:[...apps,core].map((stack,i)=>({stack,server:i===1?'shanghai-b':'shanghai-a',source:sourceRef,target:i===2?sourceRef:targetRef,...(i!==2?{preparation:{commit:next,sha256:'e'.repeat(64)}}:{})}))})
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
- const releasePlan=sealHostPlan({...plan,...(fault.native14?{format:'native-schema-host-release/v1',backup:nativeBackup()} : fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
+ let releasePlan=sealHostPlan({...plan,...(fault.native14?{format:'native-schema-host-release/v1',backup:nativeBackup()} : fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
   source:{...source,...(fault.sameNative14?formal50:fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.sameNative14||fault.native14?formal50:fault.upgrade||fault.product49?formal49:formal)}})
+ if(fault.reader||fault.producer){
+  const source={...releasePlan.source,...formal50,schemaHash:SCHEMA14},target={...releasePlan.target,...formal50,runtime:'3.7.0',schemaHash:SCHEMA14,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.7.0/fixture',productVersion:51,migrations:[...formal50.migrations,MIGRATION51]};
+  if(fault.producer)Object.assign(source,{...target,sha});
+  const raw=(commit,node)=>JSON.stringify({config:{Env:['NODE_VERSION='+node,'LINGXILOOP_COMMIT_SHA='+commit],Cmd:['node']}}),imageConfigs={source:raw(sha,'22.23.4'),target:raw(next,'22.23.5')};
+  source.image={...source.image,configDigest:'sha256:'+createHash('sha256').update(imageConfigs.source).digest('hex')};target.image={...target.image,configDigest:'sha256:'+createHash('sha256').update(imageConfigs.target).digest('hex')};
+  releasePlan=sealHostPlan({...releasePlan,format:fault.reader?READER_FORMAT:PRODUCER_FORMAT,source,target,imageConfigs,publicText:{source:fault.reader?null:{reader:2,producer:'disabled'},target:{reader:2,producer:fault.reader?'disabled':'purpose-json-v1'},sourceConfigurationSha256:fault.reader?null:hash,targetConfigurationSha256:hash,sourceContainers:fault.producer?['lingxiloop-app-a','lingxiloop-app-b'].flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,service,id:String(i*2+j+1).repeat(64),imageId:'sha256:'+'c'.repeat(64)}))):null}});
+ }
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
  let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0,migrated=false
  const ops={
@@ -30,7 +39,8 @@ function fixture(fault={}){
   async state(){trace.push('state');if(++stateReads>fault.stateUnknownAfter||migrated&&fault.migrationStateUnknown)throw Object.assign(Error('unknown state'),{uncertain:true});const s=state(migrated?releasePlan.target:releasePlan.source);s.installedSchema=s.schema;if(fault.native14)s.otherClients=stops===4?0:4;if(fault.otherClients&&stops===4)s.otherClients=1;if(fault.busy&&stops===2)s.liveWork=1;if(fault.schema&&deployed)s.schemaHash='e'.repeat(64);return s},
   async verifyImages(which='target'){trace.push('images:'+which);if(fault.image&&which==='target')throw Error('missing image')},
   async stage(stack){trace.push('stage:'+stack);staged++;if(fault.stage&&staged===2)throw Object.assign(Error('unknown'),{uncertain:true})},
-  async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
+  async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...((fault.reader||fault.producer)?{publicText:2,deployment:{...releasePlan.publicText.target,...(fault.producerLeak?{producer:'purpose-json-v1'}:{})},configurationSha256:hash,modelOptions:fault.producer?{publicTextProtocol:'purpose-json-v1'}:{}}:{}),...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
+  async seedPrecheck(){trace.push('seed');if(fault.seedUnknown)throw Object.assign(Error('unknown seed'),{uncertain:true});if(fault.seed)throw Error('seed drift');return {equal:true}},
   async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
   async migrate(){trace.push('migrate');if(fault.migrationUnknown)throw Object.assign(Error('unknown migration'),{uncertain:true});if(fault.migrationFailed)throw Error('migration failed');migrated=true;if(fault.migrationCommittedFailure)throw Error('migration committed before failure')},
   async stop(stack,service){trace.push('stop:'+stack+':'+service);stops++;if(fault.stopUnknown)throw Object.assign(Error('unknown'),{uncertain:true});const row=rows.find(x=>x.stack===stack&&x.service===service);if(!fault.stillRunning){row.running=false;row.pid=0}},
@@ -224,3 +234,23 @@ test('native14 known failures classify unchanged source13 or target14, uncertain
 test('native14 image preparation never drains, backs up or migrates',async()=>{
  const f=fixture({native14:true});await f.prepare();assert.equal(f.trace.some(x=>x==='backup'||x==='migrate'||x.startsWith('stop:')),false)
 })
+
+test('reader provenance release disables producer, drains four originals, migrates once, then both Web before Workers',async()=>{
+ const f=fixture({reader:true}),result=await f.run();assert.equal(result.state.product,51);assert.equal(result.state.runtime,'3.7.0');
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)));
+ assert.equal(f.trace.filter(x=>x==='migrate').length,1);assert.ok(f.trace.indexOf('seed')<f.trace.findIndex(x=>x.startsWith('stop:')));assert.ok(f.trace.indexOf('migrate')>f.trace.indexOf('wait'));
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)));
+ assert.equal(f.trace.includes('backup'),false);assert.deepEqual(result.publicText,{reader:2,producer:'disabled'});
+});
+test('reader producer leak/seed drift aborts before stop; unknown migration makes no further calls',async()=>{
+ for(const fault of [{producerLeak:true},{seed:true},{seedUnknown:true}]){const f=fixture({reader:true,...fault});await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('stop:')),false);}
+ const f=fixture({reader:true,migrationUnknown:true});await assert.rejects(f.run(),e=>e.uncertain);assert.equal(f.trace.at(-1),'migrate');assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);
+});
+test('reader transaction failed before or after commit is classified without repeat',async()=>{
+ for(const [fault,recovery] of [[{migrationFailed:true},'source-unchanged-recovery-requires-review'],[{migrationCommittedFailure:true},'fix-forward']]){const f=fixture({reader:true,...fault});await assert.rejects(f.run());assert.equal(f.trace.filter(x=>x==='migrate').length,1);assert.equal(f.events.at(-1).recovery,recovery);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);}
+});
+test('separate producer phase keeps capable readers, worker-only drain, no migration or seed',async()=>{
+ const f=fixture({producer:true}),r=await f.run();assert.equal(r.publicText.producer,'purpose-json-v1');assert.equal(f.trace.some(x=>['seed','migrate','backup'].includes(x)),false);assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),apps.map(a=>'stop:'+a+':worker'));
+});
+
+test('producer source container replacement refuses staging and stopping',async()=>{const f=fixture({producer:true});f.plan.publicText.sourceContainers[0].id='0'.repeat(64);f.plan=sealHostPlan(f.plan);await assert.rejects(runHostRelease({plan:f.plan,ops:f.ops}));assert.equal(f.trace.some(x=>x.startsWith('stage:')||x.startsWith('stop:')),false);});
