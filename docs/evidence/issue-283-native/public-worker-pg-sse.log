@@ -1,0 +1,17 @@
+TAP version 13
+# {"ts":"2026-10-21T17:10:39.772Z","level":"info","msg":"worker stopped","workerId":"trace-bridge-worker","timedOut":false}
+# Subtest: native persisted execution trace crosses product history/SSE with exact replay and revoked access denied
+ok 1 - native persisted execution trace crosses product history/SSE with exact replay and revoked access denied
+  ---
+  duration_ms: 632.811491
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1229.206473
