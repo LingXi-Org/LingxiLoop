@@ -1,0 +1,13 @@
+
+> lingxiloop@0.1.0-beta typecheck
+> tsc --noEmit && tsc -p tsconfig.node.json --noEmit
+
+src/components/assistant-ui/elements/streaming-text.tsx(9,22): error TS2307: Cannot find module '../../../../third_party/assistant-ui/streaming-text/upstream/utils/range' or its corresponding type declarations.
+src/components/assistant-ui/elements/streaming-text.tsx(65,21): error TS7031: Binding element 'word' implicitly has an 'any' type.
+src/components/assistant-ui/elements/streaming-text.tsx(65,33): error TS7031: Binding element 'isMono' implicitly has an 'any' type.
+src/components/assistant-ui/elements/streaming-text.tsx(65,73): error TS7006: Parameter 'i' implicitly has an 'any' type.
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,107 @@
+{
+  "format": "public-run-trace-formal-package/v1",
+  "verified": true,
+  "versions": {
+    "runtime": "3.8.0",
+    "controlPlane": 11,
+    "kernel": 2,
+    "schema": 14,
+    "assistantMessage": 2,
+    "publicText": 2,
+    "runTrace": 1
+  },
+  "registryGitHead": "9ae65079085f196870ece41500472a333f9abfbf",
+  "integrity": "sha512-F9XUf5Pjg1pRmuyT8tU7Eee3StZOY5xBCx1Zm+tUsPVLL1TKJYOpNTKafQ+yo4HEbIJv2eNDPKeYrUkHsZUvew==",
+  "tarball": {
+    "format": "formal-runtime-cached-tarball/v1",
+    "verified": true,
+    "version": "3.8.0",
+    "gitHead": "9ae65079085f196870ece41500472a333f9abfbf",
+    "path": "/workspace/runtime380-release/lyyzka-lingxios-3.8.0.tgz",
+    "bytes": 588031,
+    "sha256": "7882cf7d7761a1dfe1775bcde6cdc396c30b1a3a78b9d4b47b40822d31d1d92e",
+    "integrity": "sha512-F9XUf5Pjg1pRmuyT8tU7Eee3StZOY5xBCx1Zm+tUsPVLL1TKJYOpNTKafQ+yo4HEbIJv2eNDPKeYrUkHsZUvew==",
+    "shasum": "c1f110354d319e95711cd1bf5646b97653634c26",
+    "source": "Exact npm integrity-addressed cache after registry installation; no repack or second download"
+  },
+  "schemaHash": "c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f",
+  "publicImports": [
+    "@lyyzka/lingxios",
+    "@lyyzka/lingxios/ui",
+    "@lyyzka/lingxios/worker",
+    "@lyyzka/lingxios/eval"
+  ],
+  "checks": [
+    "actual registry metadata exact version/gitHead",
+    "fresh registry installation exact version/integrity/url",
+    "public main/ui/worker/eval imports",
+    "runTrace1/publicText2/runtime3.8/native14 metadata",
+    "all installed package paths and bytes equal original cache tar",
+    "all14 native SQL bytes equal formal3.7 and exact3.8 Git"
+  ],
+  "scope": "Published package provenance/import check; no provider, production or database operation",
+  "packageFiles": 488,
+  "allInstalledBytesMatchTarball": true,
+  "nativeSqlFiles": [
+    {
+      "path": "db/migrations/008-governance.sql",
+      "sha256": "81d5b14dfb18e8fc790394f26a8a2410f4257e30bfdce46d5f9f9ce41ec79b8b"
+    },
+    {
+      "path": "db/migrations/009-cognitive-memory-reset.sql",
+      "sha256": "89df12787464d124cbb0baf3cb660ada65663e1c4eda3319e8592e7812d2b72f"
+    },
+    {
+      "path": "db/migrations/010-im-collaboration.sql",
+      "sha256": "ac8fd10729ff3443fddef7970bc52c812817e71dc7282754a667fd0e34a5eb9b"
+    },
+    {
+      "path": "db/migrations/011-performance-notifications.sql",
+      "sha256": "02dee05cd42a338fdc6163283bc2e60d00f09d77890fe506963437fac66a2bd6"
+    },
+    {
+      "path": "db/migrations/012-async-admission.sql",
+      "sha256": "23081a8cfd801eaffb855361e4630c6329a4d184dcbc3ac93a53aa3c4445d03f"
+    },
+    {
+      "path": "db/migrations/013-distributed-workspaces.sql",
+      "sha256": "0b84fff44e3b03fd08c04c51136b98d91008608c10770152e455f313e391d0e3"
+    },
+    {
+      "path": "db/migrations/014-terminal-feedback.sql",
+      "sha256": "3a6f955ae2860eb69275787ecc1cf125e92746e4f58522019717c4c4c16d1e15"
+    },
+    {
+      "path": "db/migrations/015-memory-continuity-rollback.sql",
+      "sha256": "f1a7bf2b78e4a5a62548dbaa938de0b13b0ae20de7837220ee01432d862786bf"
+    },
+    {
+      "path": "db/migrations/015-memory-continuity.sql",
+      "sha256": "4b79d81f69634a0a543d70655113568c944782953ad789d48956351b74abc938"
+    },
+    {
+      "path": "db/migrations/016-skill-delivery.sql",
+      "sha256": "45e382104d9d8d83a9aaf38ffec6192389f884a95ec1590fde7948af6b6066f2"
+    },
+    {
+      "path": "db/schema-011.sql",
+      "sha256": "5d77d0140de93d5c9fc205942c77b850b799d257ef49c056da2af84e15f4bb9f"
+    },
+    {
+      "path": "db/schema-012.sql",
+      "sha256": "e8c09fa33af0c073f57effa99aad7beae4f4737dd2966d6584519ec5d4aa1d1a"
+    },
+    {
+      "path": "db/schema-013.sql",
+      "sha256": "2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41"
+    },
+    {
+      "path": "db/schema.sql",
+      "sha256": "c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f"
+    }
+  ],
+  "nativeSqlMatchesFormal370Commit": "6e715df85de9e6fa4d852d9102772e5c3ca4e8a7",
+  "nativeSqlMatchesCurrentCommit": "9ae65079085f196870ece41500472a333f9abfbf",
+  "packageInventorySha256": "9ac28f0f34dc5cfc17e0e49f01041eced389b0e6b497420eb70276a3ed787895",
+  "registrySha256": "96a2a7b6c85efe6466d787f415fdd03d87e2320af6396e02bc14b1dc4c0fcea9"
+}
