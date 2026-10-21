@@ -76,7 +76,7 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
           if (next.value.type !== 'update-state') continue
           tracker.append(next.value.operations)
           const message = (tracker.state as unknown as { message?: NativeMessage }).message
-          if (message?.content.some(part => part.type === 'text' && part.text === 'I will inspect the available files.' && activityAnnotation(part)?.kind === 'commentary')) sawPrefix()
+          if (message?.content.some(part => part.type === 'text' && part.text === 'I will inspect the available files.' && activityAnnotation(part)?.kind === 'answer')) sawPrefix()
           if (message?.status?.type === 'complete') sawTerminal(message)
         }
       } finally { await reader.cancel(); reader.releaseLock() }
@@ -88,15 +88,16 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
     assert.equal(page.events.some(event => event.kind === 'tool.started'),false)
     await Promise.race([visible,running.then(() => { throw new Error('Worker returned before the public prefix reached SSE') })])
     const beforeTool = (await readRunProjection(api,identity,true)).snapshot.message
-    assert.equal(nativeText(beforeTool),'','public commentary cannot masquerade as a validated answer')
-    const published = beforeTool.content.filter(part => activityAnnotation(part)?.kind === 'commentary')
+    assert.equal(nativeText(beforeTool),'I will inspect the available files.','an unresolved public prefix must remain a live answer candidate')
+    assert.equal(beforeTool.status?.type,'running','the visible candidate is not a committed final answer')
+    const published = beforeTool.content.filter(part => activityAnnotation(part)?.kind === 'answer')
     assert.equal(published.length,1)
     if (outcome === 'cancelled') await api.cancel(identity)
     if (outcome === 'revoked') await pool.query("UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1",
       [conversationId,JSON.stringify([...members,'new-recipient'])])
     release(); await running
     const replayProjection = await readRunProjection(api,identity,true), replay = replayProjection.snapshot.message
-    if (outcome !== 'unsafe') assert.equal(nativeText(replay),completes ? 'The inspection is complete.' : '')
+    if (outcome !== 'unsafe') assert.equal(nativeText(replay),completes ? 'The inspection is complete.' : 'I will inspect the available files.')
     const retained = replay.content.filter(part => activityAnnotation(part)?.kind === 'commentary')
     if (outcome === 'final-stream') {
       const copies = replay.content.filter(part => part.type === 'text' && part.text === 'The inspection is complete.')
@@ -116,8 +117,8 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
       assert.equal(streamedFinal.content.filter(part => part.type === 'text' && part.text === 'The inspection is complete.').length,1)
     }
     if (outcome === 'unsafe') {
-      // PR270 archives the rejected no-tool candidate after its safe replacement.
-      // Preserve its authorized history identity without hiding a missing answer.
+      // A safe prefix from the rejected candidate remains in RunActivity after
+      // replacement, with its identity intact and only the committed answer in the body.
       const current = await api.readRunState(identity)
       assert.ok(current?.message && current.run.resultId)
       assert.equal(current.run.status,'succeeded')
@@ -130,7 +131,8 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
       assert.deepEqual(replay.status,{ type: 'complete',reason: 'stop' })
       assert.equal(nativeText(replay),'The inspection is complete.')
       assert.ok(calls >= 2,'the unsafe candidate must be replaced by a later successful response')
-      assert.equal(retained.length,0,'the rejected candidate must not remain in the foreground')
+      assert.equal(retained.length,1,'the replaced safe prefix belongs in RunActivity')
+      assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
       const publishedId = activityAnnotation(published[0])?.id
       assert.ok(publishedId)
       const history = replayProjection.activityPage(0)
@@ -139,9 +141,17 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
       assert.ok(archived[0].type === 'text')
       assert.equal(archived[0].text,'I will inspect the available files.')
       assert.doesNotMatch(JSON.stringify(history),/candidate-json|PRIVATE_REASONING|PRIVATE_ARGUMENTS|PRIVATE_AFTER_REVOKE_OR_CANCEL|PRIVATE_STREAM_SENTINEL/)
-    } else {
+    } else if (completes) {
       assert.equal(retained.length,1)
       assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
+    } else {
+      assert.equal(retained.length,0,'cancellation or revocation does not turn the already authorized partial answer into process')
+      const partial = replay.content.filter(part => activityAnnotation(part)?.kind === 'answer')
+      assert.equal(partial.length,1)
+      assert.equal(activityAnnotation(partial[0])?.id,activityAnnotation(published[0])?.id)
+      const history = replayProjection.activityPage(0)
+      assert.equal(history.message.content.filter(part => activityAnnotation(part)?.id === activityAnnotation(published[0])?.id).length,1)
+      assert.doesNotMatch(JSON.stringify(history),/PRIVATE_AFTER_REVOKE_OR_CANCEL|PRIVATE_STREAM_SENTINEL/)
     }
     assert.equal(replay.content.some(part => part.type === 'tool-call' && part.toolName === 'files.list'),completes)
     if (outcome === 'cancelled' || outcome === 'revoked') assert.deepEqual(replay.status,{ type: 'incomplete',reason: outcome === 'cancelled' ? 'cancelled' : 'error' })
