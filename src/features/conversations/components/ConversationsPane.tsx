@@ -26,7 +26,6 @@ import { useUiCommand } from '@/stores/uiCommands'
 import type { Conversation, Participant } from '@/types'
 import type { ConversationSearchResults } from '../contracts'
 import { NewConversationDialog } from './NewConversationDialog'
-import { RemovedConversationsDialog } from './RemovedConversationsDialog'
 
 interface ConversationMenuItem {
   label: string
@@ -144,7 +143,6 @@ function AddMembersDialog({ conversation, onClose }: { conversation: Conversatio
 export function ConversationsPane({ onConversationSelected }: { onConversationSelected?: (conversationId: string) => void } = {}) {
   const isMobile = useIsMobile()
   const companyId = useAuth((state) => state.activeCompanyId)
-  const userId = useAuth((state) => state.user?.id)
   const projectId = useWorkspace((state) => state.selectedId)
   const workspaceTitle = useWorkspace((state) => state.list.find((workspace) => workspace.id === state.selectedId)?.name)
   const list = useConversations((s) => s.list)
@@ -233,11 +231,11 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
     try {
       if (!await confirmSensitiveAction({
         title: '删除对话？',
-        description: `将“${conversation.title}”从你的列表移除。消息和成员关系会保留，你可在“已删除的对话”中恢复。`,
+        description: `将“${conversation.title}”从你的列表移除。消息和成员关系会保留，你可在设置的“数据与账号”中恢复。`,
         confirmLabel: '删除对话', tone: 'destructive',
       }) || !current()) return
       if (await useConversations.getState().remove(conversation.id) && current()) {
-        notifyAction({ title: '对话已从你的列表删除', description: '可在“已删除的对话”中恢复。' })
+        notifyAction({ title: '对话已从你的列表删除', description: '可在设置的“数据与账号”中恢复。' })
       }
     } catch (reason) {
       if (current()) notifyAction({ title: '删除对话失败', description: userFacingError(reason, '操作未完成，请稍后重试。'), type: 'error' })
@@ -343,7 +341,6 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
         )}
       </SidebarContent>
 
-      {userId && companyId && projectId && <div className="shrink-0 border-t px-2 py-1"><RemovedConversationsDialog key={`${userId}:${companyId}:${projectId}`} /></div>}
       {addingMembers && <AddMembersDialog conversation={addingMembers} onClose={() => setAddingMembers(null)} />}
     </aside>
   )

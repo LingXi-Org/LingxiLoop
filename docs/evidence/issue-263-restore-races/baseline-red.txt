@@ -1,0 +1,123 @@
+✖ closing immediately fences a restore before animation cleanup (171.447054ms)
+✖ reopening before acceptance converges the new removed list (79.655263ms)
+✖ list invalidation does not strand the current restore pending state (58.890355ms)
+✔ old-scope success cannot invalidate the current scope (70.272525ms)
+✖ failure preserves its row and permits a successful retry (58.912473ms)
+✖ rapid close/reopen fences old completion even while the old view awaits cleanup (59.442471ms)
+✖ data view generation leaves unrelated settings transitions unchanged (32.712567ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 1
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1274.16265
+
+✖ failing tests:
+
+test at src/features/settings/removedConversationsLifecycle.test.ts:1:5494
+✖ closing immediately fences a restore before animation cleanup (171.447054ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 0
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:109:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src/features/settings/removedConversationsLifecycle.test.ts:1:5764
+✖ reopening before acceptance converges the new removed list (79.655263ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 0
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:120:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src/features/settings/removedConversationsLifecycle.test.ts:1:6227
+✖ list invalidation does not strand the current restore pending state (58.890355ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  2 !== 1
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:128:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 2,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src/features/settings/removedConversationsLifecycle.test.ts:1:7039
+✖ failure preserves its row and permits a successful retry (58.912473ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(f.reads.length > reads)
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:155:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at src/features/settings/removedConversationsLifecycle.test.ts:1:7495
+✖ rapid close/reopen fences old completion even while the old view awaits cleanup (59.442471ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  1 !== 0
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:165:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src/features/settings/removedConversationsLifecycle.test.ts:1:7827
+✖ data view generation leaves unrelated settings transitions unchanged (32.712567ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+    assert.ok(f.settings.getState().dataAccountEpoch > initial)
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop-settings263-races/src/features/settings/removedConversationsLifecycle.test.ts:173:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

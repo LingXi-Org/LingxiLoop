@@ -1,0 +1,2 @@
+
+{"kind":"targeted TS roots with exact-head Git fallback for unchanged imports; no emit or full checkout","roots":["src/features/settings/store.ts","src/features/settings/RemovedConversationsSettings.tsx","src/features/settings/DataAccountSettingsPanel.tsx","src/features/conversations/store.ts","src/features/settings/removedConversationsLifecycle.test.ts","e2e/settings-removal/boundary.tsx","src/features/chat/visualize/web/dom.d.ts","src/vite-env.d.ts"],"sourceFiles":1666,"diagnostics":0,"gitFilesRead":65}
