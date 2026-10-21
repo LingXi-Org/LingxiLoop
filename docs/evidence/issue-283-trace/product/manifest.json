@@ -1,0 +1,22 @@
+[
+  {
+    "file": "run-trace-dark-1440.png",
+    "sha256": "59a0db5cec7f751d1af9acc7717c7f381cd25a6250aeba8f0caf6122d463f487",
+    "bytes": 55773
+  },
+  {
+    "file": "run-trace-dark-390.png",
+    "sha256": "403b8fdea73a8582b40def25fc251c3068d5b4bb25493aea9f3df900b5149ea4",
+    "bytes": 47527
+  },
+  {
+    "file": "run-trace-light-1440.png",
+    "sha256": "5ba518b3dcf7fd4711929ff0aef1cbe81aa5e754294770e5bfa96c03548252e7",
+    "bytes": 54986
+  },
+  {
+    "file": "run-trace-light-390.png",
+    "sha256": "1531404743513b84d57b582d5bca1722c5d550da108f7530712c607320de981e",
+    "bytes": 46682
+  }
+]

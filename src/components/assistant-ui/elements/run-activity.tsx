@@ -33,6 +33,8 @@ export type RunActivityProps = {
   entries: readonly RunActivityEntry[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Optional trace detail remains inside the activity disclosure. */
+  trace?: ReactNode;
   /** Pending decisions and recovery controls remain outside the disclosure. */
   attention?: ReactNode;
   /** Final-answer content remains outside the disclosure. */
@@ -48,6 +50,7 @@ export function RunActivity({
   open,
   onOpenChange,
   attention,
+  trace,
   children,
   className,
 }: RunActivityProps) {
@@ -69,7 +72,7 @@ export function RunActivity({
       data-status={status}
       className={cn("flex min-w-0 flex-col gap-3", className)}
     >
-      {entries.length > 0 ? (
+      {entries.length > 0 || trace ? (
         <Collapsible open={open} onOpenChange={onOpenChange}>
           <CollapsibleTrigger
             aria-busy={status === "running"}
@@ -82,13 +85,14 @@ export function RunActivity({
             {summary}
           </CollapsibleTrigger>
           <CollapsibleContent className={cn(collapsePanel, "peer")}>
-            <ol className="border-border ms-1.5 flex min-w-0 flex-col gap-3 border-s ps-3.5 pt-2 text-sm wrap-anywhere">
+            {trace && <div className="pt-2">{trace}</div>}
+            {entries.length > 0 && <ol className="border-border ms-1.5 flex min-w-0 flex-col gap-3 border-s ps-3.5 pt-2 text-sm wrap-anywhere">
               {entries.map((entry) => (
                 <li key={entry.id} data-activity-kind={entry.kind}>
                   {entry.content}
                 </li>
               ))}
-            </ol>
+            </ol>}
           </CollapsibleContent>
           {!open && latestActivity && (
             // The panel stays mounted during its exit transition.

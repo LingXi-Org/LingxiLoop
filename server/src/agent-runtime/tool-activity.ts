@@ -2,6 +2,7 @@ import type { ActionContext, ActionResult, RunIdentity } from '@lyyzka/lingxios'
 import { pool, presentationPool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
 import { toolDisplay, toolDisplaySchema, type ToolDisplay } from '../../../src/lib/runActivity.js'
+import { readPublicLlmTrace } from './trace-activity.js'
 
 export interface PublicToolActivity {
   toolCallId: string
@@ -10,8 +11,8 @@ export interface PublicToolActivity {
 }
 
 /** Optional display only: required authorization/approval/terminal reads never use this pool. */
-export async function readOptionalToolActivity(identity: RunIdentity, requestSignal?: AbortSignal): Promise<PublicToolActivity[]> {
-  if (requestSignal?.aborted) return []
+async function optionalPresentation<T>(read: (db: Queryable) => Promise<T>,requestSignal?: AbortSignal): Promise<T|null> {
+  if (requestSignal?.aborted) return null
   const deadline = new AbortController()
   const timer = setTimeout(() => deadline.abort(), 100)
   const signal = requestSignal ? AbortSignal.any([requestSignal, deadline.signal]) : deadline.signal
@@ -35,8 +36,8 @@ export async function readOptionalToolActivity(identity: RunIdentity, requestSig
     signal.addEventListener('abort', abort, { once: true })
     try {
       signal.throwIfAborted()
-      const records = await readPublicToolActivity(identity, client)
-      return signal.aborted ? [] : records
+      const records = await read(client)
+      return signal.aborted ? null : records
     } finally {
       signal.removeEventListener('abort', abort)
       release(signal.aborted)
@@ -44,8 +45,16 @@ export async function readOptionalToolActivity(identity: RunIdentity, requestSig
     }
   } catch {
     // Keep authoritative event contents and the existing generic display.
-    return []
+    return null
   } finally { clearTimeout(timer) }
+}
+
+export async function readOptionalToolActivity(identity: RunIdentity,requestSignal?: AbortSignal): Promise<PublicToolActivity[]> {
+  return await optionalPresentation(db => readPublicToolActivity(identity,db),requestSignal) ?? []
+}
+
+export async function readOptionalTraceActivity(identity: RunIdentity,requestSignal?: AbortSignal) {
+  return optionalPresentation(async db => ({ tools: await readPublicToolActivity(identity,db),llm: await readPublicLlmTrace(identity,db) }),requestSignal)
 }
 
 const inputFields: Record<string, readonly [string, string][]> = {

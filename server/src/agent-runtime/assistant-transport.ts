@@ -7,7 +7,8 @@ import { createNativeMessage } from '../im/message-types.js'
 import { archivedPublicText, runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
 import { nativeRunEvents, publicRunEvent } from './public-events.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
-import { readOptionalToolActivity } from './tool-activity.js'
+import { readOptionalTraceActivity } from './tool-activity.js'
+import { buildRunTrace,type PublicLlmTrace } from './run-trace.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import type { Queryable } from '../db/queryable.js'
@@ -18,6 +19,8 @@ export class RunStreamProjection {
   private view: ReturnType<typeof createRunView>
   private createdAt: string | null = null
   private tools: HarnessToolPart[] = []
+  private llm: PublicLlmTrace[] = []
+  private presentationAvailable = false
   private error: string | null = null
   private sourceRef: string | null = null
   private durableDraft = ''
@@ -82,15 +85,19 @@ export class RunStreamProjection {
   }
 
   async syncPresentation(identity: RunIdentity, signal?: AbortSignal): Promise<void> {
-    if (!this.tools.length || signal?.aborted) return
+    if (signal?.aborted) return
     const view = this.view
     const revisions = new Map(this.tools.map(tool => [tool.toolCallId, tool.eventSeq]))
-    const records = new Map((await readOptionalToolActivity(identity, signal)).map(record => [record.toolCallId, record]))
+    const presentation = await readOptionalTraceActivity(identity,signal)
+    if (!presentation) return
+    const records = new Map(presentation.tools.map(record => [record.toolCallId,record]))
     // Native text/receipt events do not invalidate display metadata. Request,
     // fence, lifecycle and tool revisions do; a relevant event coalesces another
     // refresh without allowing an old read to mutate new authoritative content.
     if (this.view.requestVersion !== view.requestVersion || this.view.fence !== view.fence
       || this.view.lifecycle !== view.lifecycle || signal?.aborted) return
+    this.llm = presentation.llm
+    this.presentationAvailable = true
     this.tools = this.tools.map(tool => {
       const recorded = records.get(tool.toolCallId)
       return recorded && revisions.get(tool.toolCallId) === tool.eventSeq ? { ...tool, timing: recorded.timing, display: recorded.display } : tool
@@ -156,6 +163,7 @@ export class RunStreamProjection {
     const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
       content: parts, status: runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
+        runTrace: buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable }),
         ...(acceptedPublicParts ? { activityHistory: { total: activity.length+acceptedPublicParts,attention: attention.length } } : {}),
         ...(this.questionnaireWait?.requestVersion === this.view.requestVersion && this.view.goalOutcome?.status === 'awaiting_input'
           ? { questionnaireWait: this.questionnaireWait } : {}),
@@ -263,7 +271,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
           if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
           if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
           if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'goal.waiting')) await projection.syncQuestionnaire(approvals.identity)
-          if (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed'].includes(item.event.kind)) refreshRequested = true
+          if (item.type === 'state' || item.type === 'event' && ['tool.started', 'tool.completed','model.request.finished','run.failed','run.cancelled'].includes(item.event.kind)) refreshRequested = true
           // Only required reads precede the authoritative frame. Display work
           // continues independently and at most one refresh is in flight.
           refresh()
