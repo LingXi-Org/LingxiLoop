@@ -1,0 +1,313 @@
+{
+  "planHash": "7bdfd2f8a2e44ad9f1337c4ba2287e4bac8d2c8f801d1f60d28b85bb361fe55c",
+  "normalRecipeCount": 34,
+  "verified": true,
+  "updates": [
+    {
+      "id": "6ad83663e06d5e1f798395d3",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554595330,
+      "endTs": 1792554596025
+    },
+    {
+      "id": "6ad83674e06d5e1f798395d7",
+      "operation": "WriteStackContents",
+      "stack": "lingxiloop-app-a",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554612021,
+      "endTs": 1792554612120
+    },
+    {
+      "id": "6ad8367be06d5e1f798395db",
+      "operation": "PullStackService",
+      "stack": "lingxiloop-app-a",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554619736,
+      "endTs": 1792554664898
+    },
+    {
+      "id": "6ad836b1e06d5e1f798395e5",
+      "operation": "WriteStackContents",
+      "stack": "lingxiloop-app-a",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554673298,
+      "endTs": 1792554673396
+    },
+    {
+      "id": "6ad836c1e06d5e1f798395e9",
+      "operation": "WriteStackContents",
+      "stack": "lingxiloop-app-b",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554689729,
+      "endTs": 1792554689864
+    },
+    {
+      "id": "6ad836cae06d5e1f798395ed",
+      "operation": "PullStackService",
+      "stack": "lingxiloop-app-b",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554698049,
+      "endTs": 1792554730313
+    },
+    {
+      "id": "6ad836f0e06d5e1f798395f7",
+      "operation": "WriteStackContents",
+      "stack": "lingxiloop-app-b",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554736802,
+      "endTs": 1792554736937
+    },
+    {
+      "id": "6ad836ffe06d5e1f798395fb",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554751537,
+      "endTs": 1792554752256
+    },
+    {
+      "id": "6ad8373ce06d5e1f79839608",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554812302,
+      "endTs": 1792554813049
+    },
+    {
+      "id": "6ad8374ae06d5e1f7983960c",
+      "operation": "WriteStackContents",
+      "stack": "lingxiloop-app-a",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554826869,
+      "endTs": 1792554826969
+    },
+    {
+      "id": "6ad8375ae06d5e1f79839611",
+      "operation": "WriteStackContents",
+      "stack": "lingxiloop-app-b",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554842766,
+      "endTs": 1792554842901
+    },
+    {
+      "id": "6ad83765e06d5e1f79839613",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-a",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554853111,
+      "endTs": 1792554854188
+    },
+    {
+      "id": "6ad8376ae06d5e1f79839617",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-app-b",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554858140,
+      "endTs": 1792554859253
+    },
+    {
+      "id": "6ad8376ee06d5e1f79839618",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554862979,
+      "endTs": 1792554863684
+    },
+    {
+      "id": "6ad8377ce06d5e1f7983961c",
+      "operation": "StopStackService",
+      "stack": "lingxiloop-app-a",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554876050,
+      "endTs": 1792554876602
+    },
+    {
+      "id": "6ad8378ee06d5e1f79839620",
+      "operation": "StopStackService",
+      "stack": "lingxiloop-app-b",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554894741,
+      "endTs": 1792554895417
+    },
+    {
+      "id": "6ad83797e06d5e1f79839624",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554903820,
+      "endTs": 1792554904498
+    },
+    {
+      "id": "6ad837a1e06d5e1f79839625",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554913043,
+      "endTs": 1792554913711
+    },
+    {
+      "id": "6ad837ade06d5e1f79839629",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554925037,
+      "endTs": 1792554925715
+    },
+    {
+      "id": "6ad837b3e06d5e1f7983962d",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554931698,
+      "endTs": 1792554932427
+    },
+    {
+      "id": "6ad837bae06d5e1f7983962e",
+      "operation": "DeployStackService",
+      "stack": "lingxiloop-app-a",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554938510,
+      "endTs": 1792554939709
+    },
+    {
+      "id": "6ad837d3e06d5e1f79839635",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554963258,
+      "endTs": 1792554963938
+    },
+    {
+      "id": "6ad837dfe06d5e1f79839636",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554975263,
+      "endTs": 1792554976029
+    },
+    {
+      "id": "6ad837e5e06d5e1f7983963a",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554981911,
+      "endTs": 1792554982590
+    },
+    {
+      "id": "6ad837ece06d5e1f7983963b",
+      "operation": "DeployStackService",
+      "stack": "lingxiloop-app-b",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792554988738,
+      "endTs": 1792554990325
+    },
+    {
+      "id": "6ad83804e06d5e1f79839642",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555012217,
+      "endTs": 1792555012885
+    },
+    {
+      "id": "6ad83810e06d5e1f79839646",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555024281,
+      "endTs": 1792555024986
+    },
+    {
+      "id": "6ad83816e06d5e1f79839647",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555030895,
+      "endTs": 1792555031591
+    },
+    {
+      "id": "6ad8381de06d5e1f7983964b",
+      "operation": "DeployStackService",
+      "stack": "lingxiloop-app-a",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555037689,
+      "endTs": 1792555038698
+    },
+    {
+      "id": "6ad83835e06d5e1f7983964f",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555061188,
+      "endTs": 1792555061925
+    },
+    {
+      "id": "6ad83841e06d5e1f79839653",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555073164,
+      "endTs": 1792555073867
+    },
+    {
+      "id": "6ad83847e06d5e1f79839654",
+      "operation": "DeployStackService",
+      "stack": "lingxiloop-app-b",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555079954,
+      "endTs": 1792555081354
+    },
+    {
+      "id": "6ad8385fe06d5e1f7983965b",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555103442,
+      "endTs": 1792555104120
+    },
+    {
+      "id": "6ad8386be06d5e1f7983965f",
+      "operation": "RunStackService",
+      "stack": "lingxiloop-core-state",
+      "status": "Complete",
+      "success": true,
+      "startTs": 1792555115455,
+      "endTs": 1792555116167
+    }
+  ]
+}

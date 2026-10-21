@@ -1,0 +1,8 @@
+Source: https://github.com/LingXi-Org/LingxiLoop/actions/runs/39539561437/job/119024002968
+Exact commit: b7d1a601410d1f68b746883bc7a5cdb77e35fc60
+2026-10-21T03:40:44.9668929Z # Subtest: durable prefix crosses real Worker/SSE and state-first reload (unsafe)
+2026-10-21T03:40:44.9670681Z ok 102 - durable prefix crosses real Worker/SSE and state-first reload (unsafe)
+2026-10-21T03:48:28.3457085Z # tests 372
+2026-10-21T03:48:28.3457752Z # pass 358
+2026-10-21T03:48:28.3457940Z # fail 0
+2026-10-21T03:48:28.3458345Z # skipped 14

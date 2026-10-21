@@ -1,0 +1,22 @@
+# Feedback production release
+
+Accepted at 2026-10-21T03:59:54.327Z. Production is `b7d1a601410d1f68b746883bc7a5cdb77e35fc60`, above accepted source `10bfbfccba4df73fc359169ee12249264c5bd6a0`. Runtime3.6.0/native14/protocol11/product50 stayed unchanged; no migration, backup, seed or production-data rewrite occurred.
+
+| Issue | Included PR | Delivered scope / remaining case |
+| --- | --- | --- |
+|259|266|First-card dependency scheduling shipped in the prior release and retained here. Original production long-wait case remains open.|
+|260|267|Old commentary/candidate references remain inert; delivered references render, with cross-conversation403 retained. Original screenshot reference source remains unconfirmed; keep open.|
+|261|271|Observed public lifecycle/tool/delivery text distinguishes waiting, saving and failure; current public text is streamed. Ready for closure after this accepted release.|
+|262|270|Superseded whole-answer candidates archive by native identity, and accepted final text is not duplicated. No aggregate activity UI is restored. Ready for closure.|
+|263|265|Deleted-conversation recovery moved to Settings; close/reopen and delayed restore races fixed. Personal-list removal semantics and messages/membership preserved. Ready for closure.|
+|264|268|Explicit measured-range helper and controlled sliding-window tool share label/state/outline range. Existing saved HTML was not read or repaired; keep original case open.|
+
+PR269 supplies the reviewed same-schema native driver. All seven PRs are merged. Independent exact-diff reviews and narrow corrections are recorded in `../feedback-260-264-integration/` and beside this file. The final CI fixture-only corrections retain current-request clearing, accepted safe-answer identity, stable authorized history and private-sentinel filtering; they do not change product behavior.
+
+Exact-target [server/deployment/integration CI39539561437](https://github.com/LingXi-Org/LingxiLoop/actions/runs/39539561437) and [Web/image CI39539570962](https://github.com/LingXi-Org/LingxiLoop/actions/runs/39539570962) succeeded. Actual integration log:372 tests,358 passed,0 failed,14 skipped; the prior failed unsafe case passes. Legacy deploy/update-manifests/rollout jobs were skipped. Failed dcd candidate runs39537549519/39537559334 are preserved as failed history, not qualification.
+
+Image index `sha256:26a6c426559a27020437983b540584664d65e3e370e19cd04b49c4516092b556`, amd64 manifest `sha256:49b124d2310942b68d7c2c5e4513d6b4fe543fa87958afe0ec043f36f4dac35c`, config `sha256:3a05f562f5d0c2c8a80456b34caf09b636104b0f345199aae5b86b87254a3e8c`. Bounded streaming verification checked22 layers and matched runtime479/479 and PDF379/379 formal package files. Audit receipt SHA256 `126f6f33b15809b57bb98887a2e96a9d2ae335c7ae79a707fa86d4f25beef42c`. The registered accelerator is unchanged. Final application Compose `9d54312bac6c4407f6adc0031106afd6ceede599`, preparation `f2c0b521fcaa92e386b79a36af3743239ef30325`, branch `release/feedback260-264-host-20261021`; gateway/Core/security/volumes were preserved.
+
+The normal recipe completed8 online preparation +26 release operations, all actual native `Complete/success:true`:18 read-only state probes,2 image metadata probes,6 Compose writes,2 pulls,2 Worker stops,4 deployments. Both Workers drained, five zero-lease barriers passed, then WebA→WebB→WorkerA→WorkerB became healthy. Fresh read-only postflight verifies four current target IDs/images, both Worker readyz healthchecks, three healthy hosts, idle app stacks and four public HTTP200 health/meta endpoints. `acceptance.json` has14 true checks; SHA256 `ba09bd91401c3acabff4789792b15bac0a75cbd99989d79bf72291e48b6268a3`. Plan hash `7bdfd2f8a2e44ad9f1337c4ba2287e4bac8d2c8f801d1f60d28b85bb361fe55c`. The final native state update is `6ad8386be06d5e1f7983965f`. No release operation remains pending.
+
+The first-card2196.2→1606.8ms and range maximum0.0266px are prior local synthetic results, not original production latency or screenshot proof. Actual provider first-token latency, private original conversation/HTML and an authenticated-user production browser flow were not newly measured. The prior automatic-review rejection of targeted private-content access remains binding pending new user authorization; no workaround or fresh private-content read occurred. Issues259/260/264 retain the specific original-case follow-up, while delivered fixes may be used now. Fixed3.5.3 durability observation remains untouched.
