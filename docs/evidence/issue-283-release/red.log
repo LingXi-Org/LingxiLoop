@@ -1,0 +1,448 @@
+TAP version 13
+# Subtest: real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration
+ok 1 - real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration
+  ---
+  duration_ms: 40.67566
+  type: 'test'
+  ...
+# Subtest: native14 same-schema public adapter keeps8 preparation and26 release actions, no maintenance command
+ok 2 - native14 same-schema public adapter keeps8 preparation and26 release actions, no maintenance command
+  ---
+  duration_ms: 26.818848
+  type: 'test'
+  ...
+# Subtest: product migration adapter runs exact isolated A command once, no env override or old-Web stop
+ok 3 - product migration adapter runs exact isolated A command once, no env override or old-Web stop
+  ---
+  duration_ms: 16.526855
+  type: 'test'
+  ...
+# Subtest: ordinary or unstaged adapter cannot migrate, uncertain native migration ends all requests
+ok 4 - ordinary or unstaged adapter cannot migrate, uncertain native migration ends all requests
+  ---
+  duration_ms: 7.700242
+  type: 'test'
+  ...
+# Subtest: host errors, platform mismatch and unexpected full-config change fail before stops
+ok 5 - host errors, platform mismatch and unexpected full-config change fail before stops
+  ---
+  duration_ms: 10.192794
+  type: 'test'
+  ...
+# Subtest: actual container image must equal verified host ID, not merely declared source
+ok 6 - actual container image must equal verified host ID, not merely declared source
+  ---
+  duration_ms: 8.277198
+  type: 'test'
+  ...
+# Subtest: explicit online preparation uses pull template then restores exact original files and config
+ok 7 - explicit online preparation uses pull template then restores exact original files and config
+  ---
+  duration_ms: 4.332968
+  type: 'test'
+  ...
+# Subtest: native14 adapter requires all4 stopped and fresh verified backup before one drain-marked public migration
+ok 8 - native14 adapter requires all4 stopped and fresh verified backup before one drain-marked public migration
+  ---
+  duration_ms: 24.912601
+  type: 'test'
+  ...
+# Subtest: reader adapter drains four, seed reads once, migration once without env injection, and derives Node metadata from images
+ok 9 - reader adapter drains four, seed reads once, migration once without env injection, and derives Node metadata from images
+  ---
+  duration_ms: 30.682019
+  type: 'test'
+  ...
+# Subtest: producer adapter uses already capable source identities and never migrates or seeds
+ok 10 - producer adapter uses already capable source identities and never migrates or seeds
+  ---
+  duration_ms: 12.711587
+  type: 'test'
+  ...
+# Subtest: seed mismatch and unknown provenance migration stop without deployment or automatic replay
+ok 11 - seed mismatch and unknown provenance migration stop without deployment or automatic replay
+  ---
+  duration_ms: 13.729519
+  type: 'test'
+  ...
+# Subtest: trace real adapter proves8+31 recipe, capability metadata and public migration without env or backup
+not ok 12 - trace real adapter proves8+31 recipe, capability metadata and public migration without env or backup
+  ---
+  duration_ms: 0.744686
+  type: 'test'
+  location: '/workspace/LingxiLoop-run-trace-host-release/scripts/host-release-komodo.test.mjs:180:1'
+  failureType: 'testCodeFailure'
+  error: 'Invalid sealed host-release plan'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    check (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.mjs:17:48)
+    validateHostPlanShape (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.mjs:62:2)
+    createHostReleaseOperations (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release-komodo.mjs:15:2)
+    fixture (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release-komodo.test.mjs:88:47)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release-komodo.test.mjs:181:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+  ...
+# Subtest: public host file write binds real WriteStackContents receipt and re-reads exact update
+ok 13 - public host file write binds real WriteStackContents receipt and re-reads exact update
+  ---
+  duration_ms: 21.031038
+  type: 'test'
+  ...
+# Subtest: wrong receipt/unknown write is never retried or treated as success
+ok 14 - wrong receipt/unknown write is never retried or treated as success
+  ---
+  duration_ms: 2.731719
+  type: 'test'
+  ...
+# Subtest: native config patch changes only exact app provenance and cache/dependency policy
+ok 15 - native config patch changes only exact app provenance and cache/dependency policy
+  ---
+  duration_ms: 0.886106
+  type: 'test'
+  ...
+# Subtest: native-maintenance terminal confirmation reads exact update and stops on contradictory/unknown result
+ok 16 - native-maintenance terminal confirmation reads exact update and stops on contradictory/unknown result
+  ---
+  duration_ms: 2.948051
+  type: 'test'
+  ...
+# Subtest: same formal package and all48 checksums required; native13 alone is insufficient
+ok 17 - same formal package and all48 checksums required; native13 alone is insufficient
+  ---
+  duration_ms: 3.141016
+  type: 'test'
+  ...
+# Subtest: native14 same-schema accepts exact formal3.6.0/product50 and binds every formal key and all50 rows
+ok 18 - native14 same-schema accepts exact formal3.6.0/product50 and binds every formal key and all50 rows
+  ---
+  duration_ms: 10.287785
+  type: 'test'
+  ...
+# Subtest: native14 same-schema rejects other profiles and native transitions before any action
+ok 19 - native14 same-schema rejects other profiles and native transitions before any action
+  ---
+  duration_ms: 6.489232
+  type: 'test'
+  ...
+# Subtest: native14 same-schema retains Worker-only drain and ordered rollout without backup or migration
+ok 20 - native14 same-schema retains Worker-only drain and ordered rollout without backup or migration
+  ---
+  duration_ms: 5.235809
+  type: 'test'
+  ...
+# Subtest: distinct format and sealed per-stack core identity; exact app policy only
+ok 21 - distinct format and sealed per-stack core identity; exact app policy only
+  ---
+  duration_ms: 3.591015
+  type: 'test'
+  ...
+# Subtest: worker barrier allows Web clients and queue but rejects every live lease and prepared transaction
+ok 22 - worker barrier allows Web clients and queue but rejects every live lease and prepared transaction
+  ---
+  duration_ms: 0.22148
+  type: 'test'
+  ...
+# Subtest: actual per-host image ID is not inferred from config digest
+ok 23 - actual per-host image ID is not inferred from config digest
+  ---
+  duration_ms: 0.319355
+  type: 'test'
+  ...
+# Subtest: online qualification precedes stop; only both Workers stop; WebA/B then WorkerA/B
+ok 24 - online qualification precedes stop; only both Workers stop; WebA/B then WorkerA/B
+  ---
+  duration_ms: 2.542558
+  type: 'test'
+  ...
+# Subtest: missing image never stages; partial unknown stage never stops or makes further requests
+ok 25 - missing image never stages; partial unknown stage never stops or makes further requests
+  ---
+  duration_ms: 2.091267
+  type: 'test'
+  ...
+# Subtest: metadata mismatch leaves all services running
+ok 26 - metadata mismatch leaves all services running
+  ---
+  duration_ms: 1.217579
+  type: 'test'
+  ...
+# Subtest: known failure followed by uncertain classification oneoff remains finally uncertain
+ok 27 - known failure followed by uncertain classification oneoff remains finally uncertain
+  ---
+  duration_ms: 1.350837
+  type: 'test'
+  ...
+# Subtest: live leases, ineffective stop and unknown stop prevent new Web
+ok 28 - live leases, ineffective stop and unknown stop prevent new Web
+  ---
+  duration_ms: 3.469595
+  type: 'test'
+  ...
+# Subtest: unknown deploy stops immediately; health/policy/schema failure prevents remaining rollout
+ok 29 - unknown deploy stops immediately; health/policy/schema failure prevents remaining rollout
+  ---
+  duration_ms: 7.029734
+  type: 'test'
+  ...
+# Subtest: explicit image preparation restores accepted host source and never stops/deploys
+ok 30 - explicit image preparation restores accepted host source and never stops/deploys
+  ---
+  duration_ms: 1.896508
+  type: 'test'
+  ...
+# Subtest: product-only format permits exact48→49 and same-schema49, never altered history/package or downgrade
+ok 31 - product-only format permits exact48→49 and same-schema49, never altered history/package or downgrade
+  ---
+  duration_ms: 9.959197
+  type: 'test'
+  ...
+# Subtest: 48→49 retains old Web, drains two Workers, migrates once after two barriers and before any deploy
+ok 32 - 48→49 retains old Web, drains two Workers, migrates once after two barriers and before any deploy
+  ---
+  duration_ms: 5.488976
+  type: 'test'
+  ...
+# Subtest: 49→49 and48→49 image preparation never execute a migration
+ok 33 - 49→49 and48→49 image preparation never execute a migration
+  ---
+  duration_ms: 3.420663
+  type: 'test'
+  ...
+# Subtest: failed migration classifies fresh exact source or committed49 without deploy or retry
+ok 34 - failed migration classifies fresh exact source or committed49 without deploy or retry
+  ---
+  duration_ms: 2.571371
+  type: 'test'
+  ...
+# Subtest: unknown migration or post-migration state forbids all further requests
+ok 35 - unknown migration or post-migration state forbids all further requests
+  ---
+  duration_ms: 2.421969
+  type: 'test'
+  ...
+# Subtest: native14 explicit profile rejects wrong boundary, altered49 history and missing/fake source backup
+ok 36 - native14 explicit profile rejects wrong boundary, altered49 history and missing/fake source backup
+  ---
+  duration_ms: 7.58497
+  type: 'test'
+  ...
+# Subtest: native14 stops all4 writers, makes fresh backup between full barriers, migrates once then ordered recovery
+ok 37 - native14 stops all4 writers, makes fresh backup between full barriers, migrates once then ordered recovery
+  ---
+  duration_ms: 3.388795
+  type: 'test'
+  ...
+# Subtest: native14 busy Web/invalid restore/unknown backup prevents migration and unknown makes no further request
+ok 38 - native14 busy Web/invalid restore/unknown backup prevents migration and unknown makes no further request
+  ---
+  duration_ms: 4.168103
+  type: 'test'
+  ...
+# Subtest: native14 known failures classify unchanged source13 or target14, uncertainty remains final
+ok 39 - native14 known failures classify unchanged source13 or target14, uncertainty remains final
+  ---
+  duration_ms: 7.777637
+  type: 'test'
+  ...
+# Subtest: native14 image preparation never drains, backs up or migrates
+ok 40 - native14 image preparation never drains, backs up or migrates
+  ---
+  duration_ms: 1.217269
+  type: 'test'
+  ...
+# Subtest: reader provenance release disables producer, drains four originals, migrates once, then both Web before Workers
+ok 41 - reader provenance release disables producer, drains four originals, migrates once, then both Web before Workers
+  ---
+  duration_ms: 3.476065
+  type: 'test'
+  ...
+# Subtest: reader producer leak/seed drift aborts before stop; unknown migration makes no further calls
+ok 42 - reader producer leak/seed drift aborts before stop; unknown migration makes no further calls
+  ---
+  duration_ms: 4.928232
+  type: 'test'
+  ...
+# Subtest: reader transaction failed before or after commit is classified without repeat
+ok 43 - reader transaction failed before or after commit is classified without repeat
+  ---
+  duration_ms: 3.436987
+  type: 'test'
+  ...
+# Subtest: separate producer phase keeps capable readers, worker-only drain, no migration or seed
+ok 44 - separate producer phase keeps capable readers, worker-only drain, no migration or seed
+  ---
+  duration_ms: 3.338991
+  type: 'test'
+  ...
+# Subtest: producer source container replacement refuses staging and stopping
+ok 45 - producer source container replacement refuses staging and stopping
+  ---
+  duration_ms: 1.142798
+  type: 'test'
+  ...
+# Subtest: explicit trace profile accepts only enabled3.7 full51 to3.8 full52 and retains old profile rejection
+not ok 46 - explicit trace profile accepts only enabled3.7 full51 to3.8 full52 and retains old profile rejection
+  ---
+  duration_ms: 1.317637
+  type: 'test'
+  location: '/workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:260:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception.
+    Actual message: "Invalid sealed host-release plan"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: 'Invalid sealed host-release plan'
+  stack: |-
+    check (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.mjs:17:48)
+    validateHostPlanShape (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.mjs:62:2)
+    file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:261:56
+    getActual (node:assert:609:5)
+    Function.doesNotThrow (node:assert:777:32)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:261:39)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+  operator: 'doesNotThrow'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:261:39)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: trace provenance drains all4 once after seed, migrates once, and deploys both Web before Worker
+not ok 47 - trace provenance drains all4 once after seed, migrates once, and deploys both Web before Worker
+  ---
+  duration_ms: 0.655704
+  type: 'test'
+  location: '/workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:266:1'
+  failureType: 'testCodeFailure'
+  error: 'Invalid sealed host-release plan'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    check (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.mjs:17:48)
+    validateHostPlanShape (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.mjs:62:2)
+    runHostRelease (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.mjs:141:2)
+    Object.run (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:56:52)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:267:47)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+  ...
+# Subtest: trace unknown results stop all calls; committed52 is fix-forward without a second migration
+not ok 48 - trace unknown results stop all calls; committed52 is fix-forward without a second migration
+  ---
+  duration_ms: 0.8816
+  type: 'test'
+  location: '/workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:273:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The validation function is expected to return "true". Received undefined
+    
+    Caught error:
+    
+    Error: Invalid sealed host-release plan
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  stack: |-
+    async TestContext.<anonymous> (file:///workspace/LingxiLoop-run-trace-host-release/scripts/host-release.test.mjs:274:172)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: explicit reader upgrade binds unchanged native/full50 plus reviewed51; legacy shape is not accepted
+ok 49 - explicit reader upgrade binds unchanged native/full50 plus reviewed51; legacy shape is not accepted
+  ---
+  duration_ms: 6.740916
+  type: 'test'
+  ...
+# Subtest: producer phase retains full formal reader profile; no downgrade or legacy source
+ok 50 - producer phase retains full formal reader profile; no downgrade or legacy source
+  ---
+  duration_ms: 3.230579
+  type: 'test'
+  ...
+# Subtest: only digest-qualified Node metadata is normalized; other env, source and startup cannot drift
+ok 51 - only digest-qualified Node metadata is normalized; other env, source and startup cannot drift
+  ---
+  duration_ms: 1.937038
+  type: 'test'
+  ...
+# Subtest: canonical seed read rejects missing, changed, invisible or incomplete aggregate
+ok 52 - canonical seed read rejects missing, changed, invisible or incomplete aggregate
+  ---
+  duration_ms: 0.338032
+  type: 'test'
+  ...
+# Subtest: producer phase rejects incomplete/foreign acceptance and active reader identity changes
+ok 53 - producer phase rejects incomplete/foreign acceptance and active reader identity changes
+  ---
+  duration_ms: 0.55214
+  type: 'test'
+  ...
+# Subtest: actual leaf options must match reader-only or explicit producer deployment; capability alone is insufficient
+ok 54 - actual leaf options must match reader-only or explicit producer deployment; capability alone is insufficient
+  ---
+  duration_ms: 0.528926
+  type: 'test'
+  ...
+# Subtest: later fix-forward may keep or disable production only while retaining capable formal3.7 readers
+ok 55 - later fix-forward may keep or disable production only while retaining capable formal3.7 readers
+  ---
+  duration_ms: 1.170429
+  type: 'test'
+  ...
+# Subtest: trace source acceptance must be actual enabled reader identities; actual target advertises runTrace1
+not ok 56 - trace source acceptance must be actual enabled reader identities; actual target advertises runTrace1
+  ---
+  duration_ms: 1.190449
+  type: 'test'
+  location: '/workspace/LingxiLoop-run-trace-host-release/scripts/public-text-release.test.mjs:47:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Got unwanted exception.
+    Actual message: "Explicit public-text release format required"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: 'Explicit public-text release format required'
+  stack: |-
+    check (file:///workspace/LingxiLoop-run-trace-host-release/scripts/public-text-release.mjs:9:41)
+    assertPublicTextPlan (file:///workspace/LingxiLoop-run-trace-host-release/scripts/public-text-release.mjs:17:2)
+    file:///workspace/LingxiLoop-run-trace-host-release/scripts/public-text-release.test.mjs:49:283
+    getActual (node:assert:609:5)
+    Function.doesNotThrow (node:assert:777:32)
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-run-trace-host-release/scripts/public-text-release.test.mjs:49:266)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+  operator: 'doesNotThrow'
+  stack: |-
+    TestContext.<anonymous> (file:///workspace/LingxiLoop-run-trace-host-release/scripts/public-text-release.test.mjs:49:266)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..56
+# tests 56
+# suites 0
+# pass 51
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 275.145827

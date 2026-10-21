@@ -1,3 +1,4 @@
+const traceFormat='run-trace-provenance-host-release/v1',traceMigration={version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'};
 import test from 'node:test'
 import {READER_FORMAT,PRODUCER_FORMAT,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
@@ -8,21 +9,22 @@ function fixture(fault={}){
  const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:h,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations:Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(i+1),checksum:h}))}
  const image={indexDigest:d,configDigest:'sha256:'+'d'.repeat(64),manifestDigest:'sha256:'+'e'.repeat(64),diffIds:[d],auditSha256:h}
  const source={sha:a,...formal,image},target={sha:b,...formal,image},files=new Map(),configs=new Map(),actualFiles=new Map(),events=[],calls=[]
- if(fault.native14||fault.sameNative14||fault.reader||fault.producer){
+ if(fault.native14||fault.sameNative14||fault.reader||fault.producer||fault.trace){
   const m49={version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}
   Object.assign(source,{productVersion:49,migrations:[...formal.migrations,m49]});Object.assign(target,{runtime:'3.6.0',schema:14,productVersion:50,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.6.0/fixture',migrations:[...source.migrations,{version:50,name:'native_skill_delivery',checksum:h}]})
-  if(fault.sameNative14||fault.reader||fault.producer)Object.assign(source,{...target,sha:a})
+  if(fault.sameNative14||fault.reader||fault.producer||fault.trace)Object.assign(source,{...target,sha:a})
  }
  const backup={format:2,profile:'native13-product49',source:{sha:a,productVersion:source.productVersion,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,source[k]])),migrations:source.migrations},commandHash:h,attempt:'synthetic',nonce:'0123456789abcdef',command:'synthetic',migrationRehearsal:'not-performed',isolatedDatabase:'memory_verify_synthetic',backupDir:'/synthetic'}
  if(fault.upgrade){target.productVersion=49;target.migrations=[...formal.migrations,{version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}]}
  const rawConfig=(commit,node)=>JSON.stringify({config:{Env:['NODE_VERSION='+node,'LINGXILOOP_COMMIT_SHA='+commit],Cmd:['node']}}),imageConfigs={source:rawConfig(a,'22.23.4'),target:rawConfig(b,'22.23.5')};
- const publicText={source:fault.producer?{reader:2,producer:'disabled'}:null,target:{reader:2,producer:fault.producer?'purpose-json-v1':'disabled'},sourceConfigurationSha256:fault.producer?h:null,targetConfigurationSha256:h,sourceContainers:fault.producer?APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,service,id:String(i*2+j+1).repeat(64),imageId:'sha256:'+'f'.repeat(64)}))):null};
- if(fault.reader||fault.producer){
+ const publicText={source:fault.producer||fault.trace?{reader:2,producer:fault.trace?'purpose-json-v1':'disabled'}:null,target:{reader:2,producer:fault.producer||fault.trace?'purpose-json-v1':'disabled'},sourceConfigurationSha256:fault.producer||fault.trace?h:null,targetConfigurationSha256:h,sourceContainers:fault.producer||fault.trace?APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,service,id:String(i*2+j+1).repeat(64),imageId:'sha256:'+'f'.repeat(64)}))):null};
+ if(fault.reader||fault.producer||fault.trace){
   source.schemaHash=SCHEMA14;Object.assign(target,{runtime:'3.7.0',schemaHash:SCHEMA14,productVersion:51,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.7.0/fixture',migrations:[...source.migrations,MIGRATION51]});
-  if(fault.producer)Object.assign(source,{...target,sha:a});
+  if(fault.producer||fault.trace)Object.assign(source,{...target,sha:a});
+  if(fault.trace)Object.assign(target,{runtime:'3.8.0',productVersion:52,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.0/fixture',migrations:[...source.migrations,traceMigration]});
   source.image={...image,configDigest:'sha256:'+hash(imageConfigs.source)};target.image={...image,configDigest:'sha256:'+hash(imageConfigs.target)};
  }
- const plan=sealHostPlan({format:fault.reader?READER_FORMAT:fault.producer?PRODUCER_FORMAT:fault.native14?'native-schema-host-release/v1':fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',...(fault.native14?{backup}:{}),...((fault.reader||fault.producer)?{publicText,imageConfigs}:{}),createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
+ const plan=sealHostPlan({format:fault.trace?traceFormat:fault.reader?READER_FORMAT:fault.producer?PRODUCER_FORMAT:fault.native14?'native-schema-host-release/v1':fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',...(fault.native14?{backup}:{}),...((fault.reader||fault.producer||fault.trace)?{publicText,imageConfigs}:{}),createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
   const source='public source '+stack,target=i===2?source:'public target '+stack,preparation='public pull '+stack
   files.set(stack,{source,target,preparation});actualFiles.set(stack,source)
   const s={commit:a,branch:'release/source',sha256:hash(source),autoPull:true,extraArgs:[]}
@@ -37,7 +39,7 @@ function fixture(fault={}){
  }})
  const containers=APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({
   stack,service,Id:String(i*2+j+1).repeat(64),Image:'sha256:'+(fault.sourceImageMismatch?'0':'f').repeat(64),
-  Config:{Image:IMAGE+a,Env:['LINGXILOOP_COMMIT_SHA='+a,...((fault.reader||fault.producer)?['NODE_VERSION=22.23.4']:[]),'NODE_ENV=production','SECRET=private fixture never persist'],User:'node',Cmd:['npm','run',service==='worker'?'worker:start':'server:start']},
+  Config:{Image:IMAGE+a,Env:['LINGXILOOP_COMMIT_SHA='+a,...((fault.reader||fault.producer||fault.trace)?['NODE_VERSION=22.23.4']:[]),'NODE_ENV=production','SECRET=private fixture never persist'],User:'node',Cmd:['npm','run',service==='worker'?'worker:start':'server:start']},
   State:{Running:true,Restarting:false,Pid:1,OOMKilled:false,Health:{Status:'healthy'}},RestartCount:0,
   HostConfig:{ReadonlyRootfs:service==='worker',Privileged:false,SecurityOpt:[],CapAdd:[],CapDrop:[],PidsLimit:128},
  })))
@@ -52,7 +54,7 @@ function fixture(fault={}){
    if(op==='GetStack')return {...structuredClone(configs.get(p.stack)),info:{remote_contents:[{path:'compose.yml',contents:actualFiles.get(p.stack)}],remote_errors:fault.stale?['unavailable']:[],missing_files:[]}}
    if(op==='ListStackServices')return containers.filter(c=>c.stack===p.stack).map(c=>({service:c.service,container:{id:c.Id}}))
    if(op==='InspectContainer')return structuredClone(containers.find(c=>c.Id===p.container))
-   if(op==='InspectImage')return {...((fault.reader||fault.producer)?{Config:JSON.parse(imageConfigs[p.image===IMAGE+a?'source':'target']).config}:{}),Id:'sha256:'+'f'.repeat(64),RepoDigests:[IMAGE.slice(0,-1)+'@'+d],Os:'linux',Architecture:fault.image?'arm64':'amd64',RootFS:{Type:'layers',Layers:[d]}}
+   if(op==='InspectImage')return {...((fault.reader||fault.producer||fault.trace)?{Config:JSON.parse(imageConfigs[p.image===IMAGE+a?'source':'target']).config}:{}),Id:'sha256:'+'f'.repeat(64),RepoDigests:[IMAGE.slice(0,-1)+'@'+d],Os:'linux',Architecture:fault.image?'arm64':'amd64',RootFS:{Type:'layers',Layers:[d]}}
    throw Error('Unexpected read '+op)
   },
   async refreshStackCache(stack){calls.push({op:'RefreshStackCache',stack})},
@@ -64,22 +66,22 @@ function fixture(fault={}){
     assert.equal(p.no_deps,true);assert.equal(p.pull,false);assert.equal(p.service_ports,false);assert.equal(p.detach,false)
     if(JSON.stringify(p).includes('expected_plans'))return {_id:{$oid:'9'.repeat(24)},operation:'RunStackService',target:{type:'Stack',id:'3'.repeat(24)},status:'Complete',success:true,start_ts:1,end_ts:2,logs:[{stdout:'SCHEMA_UPGRADE_METADATA='+JSON.stringify({readOnly:true,fullVisibility:true,canonicalSha256:'18182ceea150aec2db43a871e6100d6e7793ddcfec326cfd5031266cd84bb2e7',equal:true,counts:{missing:0,mismatched:fault.seed?1:0,plans:1,entitlements:8,planEntitlements:8}})}]};
     if(JSON.stringify(p).includes('migrate-bin')){
-     assert.ok(fault.upgrade||fault.native14||fault.reader);assert.equal(p.stack,APPS[0]);assert.equal(p.service,'db-migrate')
-     assert.equal(Object.hasOwn(p,'env'),Boolean(fault.native14));assert.equal(JSON.stringify(p).includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED'),Boolean(fault.native14));if(fault.reader)assert.ok(containers.every(c=>!c.State.Running));if(fault.native14){assert.deepEqual(p.env,{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'});assert.ok(containers.every(c=>!c.State.Running))}
+     assert.ok(fault.upgrade||fault.native14||fault.reader||fault.trace);assert.equal(p.stack,APPS[0]);assert.equal(p.service,'db-migrate')
+     assert.equal(Object.hasOwn(p,'env'),Boolean(fault.native14));assert.equal(JSON.stringify(p).includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED'),Boolean(fault.native14));if(fault.reader||fault.trace)assert.ok(containers.every(c=>!c.State.Running));if(fault.native14){assert.deepEqual(p.env,{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'});assert.ok(containers.every(c=>!c.State.Running))}
      assert.equal(containers.filter(c=>c.service==='worker').every(c=>!c.State.Running),true)
      if(fault.migrationUnknown)throw Object.assign(Error('unknown native migration'),{uncertain:true})
      Object.assign(state,{runtime:target.runtime,schema:target.schema,installedSchema:target.schema,product:target.productVersion,count:target.productVersion,migrations:target.migrations})
      return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:b,schema:target.schema,product:target.productVersion})}]}
     }
     if(fault.native14)state.otherClients=containers.every(c=>!c.State.Running)?0:4;
-    const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:{...target,...((fault.reader||fault.producer)?{publicText:2,deployment:publicText.target,configurationSha256:h,modelOptions:fault.producer?{publicTextProtocol:'purpose-json-v1'}:{}}:{})}
+    const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:{...target,...((fault.reader||fault.producer||fault.trace)?{publicText:2,deployment:publicText.target,configurationSha256:h,modelOptions:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:fault.traceMetadataWrong?0:1}:{})}:{})}
     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_'+marker+'='+JSON.stringify(value)}]}
    }
    if(op==='PullStack'){assert.deepEqual(p.services,['db-migrate']);return}
    const c=containers.find(c=>c.stack===p.stack&&c.service===p.services[0])
    if(op==='StopStack'){c.State.Running=false;c.State.Pid=0;return}
    assert.equal(op,'DeployStack');assert.deepEqual(configs.get(p.stack).config.extra_args,RELEASE_ARGS);assert.equal(configs.get(p.stack).config.auto_pull,false)
-   c.Id='e'+c.Id.slice(1);c.Config.Image=IMAGE+b;c.Config.Env[0]='LINGXILOOP_COMMIT_SHA='+b;if(fault.reader||fault.producer)c.Config.Env=c.Config.Env.map(x=>x.startsWith('NODE_VERSION=')?'NODE_VERSION=22.23.5':x);c.State.Running=true;c.State.Pid=2
+   c.Id='e'+c.Id.slice(1);c.Config.Image=IMAGE+b;c.Config.Env[0]='LINGXILOOP_COMMIT_SHA='+b;if(fault.reader||fault.producer||fault.trace)c.Config.Env=c.Config.Env.map(x=>x.startsWith('NODE_VERSION=')?'NODE_VERSION=22.23.5':x);c.State.Running=true;c.State.Pid=2
    if(fault.containerImage)c.Image='sha256:'+'0'.repeat(64)
   },
  }
@@ -174,4 +176,13 @@ test('producer adapter uses already capable source identities and never migrates
 test('seed mismatch and unknown provenance migration stop without deployment or automatic replay',async()=>{
  const a=fixture({reader:true,seed:true});await assert.rejects(a.run());assert.equal(a.calls.some(c=>c.op==='StopStack'),false);
  const b=fixture({reader:true,migrationUnknown:true});await assert.rejects(b.run(),e=>e.uncertain);assert.match(JSON.stringify(b.calls.at(-1).command),/migrate-bin/);assert.equal(b.calls.some(c=>c.op==='DeployStack'),false);
+});
+test('trace real adapter proves8+31 recipe, capability metadata and public migration without env or backup',async()=>{
+ const f=fixture({trace:true}),native=c=>['WriteStackFileContents','RunStackService','PullStack','StopStack','DeployStack'].includes(c.op);
+ await runImagePreparation({plan:f.plan,ops:f.ops});assert.equal(f.calls.filter(native).length,8);f.calls.length=0;await f.run();assert.equal(f.calls.filter(native).length,31);
+ const migrations=f.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin'));assert.equal(migrations.length,1);assert.equal(Object.hasOwn(migrations[0],'env'),false);assert.match(migrations[0].command.at(-1),/releaseVersions\.runTrace/);assert.match(migrations[0].command.at(-1),/"runTrace":1/);
+ assert.deepEqual(f.calls.filter(c=>c.op==='StopStack').map(c=>[c.stack,c.services[0]]),['worker','lingxiloop'].flatMap(s=>APPS.map(a=>[a,s])));assert.deepEqual(f.calls.filter(c=>c.op==='DeployStack').map(c=>[c.stack,c.services[0]]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>[a,s])));
+ assert.equal(f.calls.filter(c=>JSON.stringify(c.command??[]).includes('expected_plans')).length,1);assert.equal(f.calls.some(c=>c.op==='SnapshotRestore'),false);assert.equal(JSON.stringify(f.events).includes('private fixture'),false);
+ const n=f.calls.length;await assert.rejects(f.ops.migrate());await assert.rejects(f.ops.backup());assert.equal(f.calls.length,n);
+ const bad=fixture({trace:true,traceMetadataWrong:true});await assert.rejects(bad.run());assert.equal(bad.calls.some(c=>c.op==='StopStack'||c.op==='DeployStack'),false);
 });

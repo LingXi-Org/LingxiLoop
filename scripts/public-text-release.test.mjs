@@ -43,3 +43,11 @@ test('actual leaf options must match reader-only or explicit producer deployment
 });
 
 test('later fix-forward may keep or disable production only while retaining capable formal3.7 readers',()=>{for(const old of ['disabled','purpose-json-v1']){const p=fixture(true);p.publicText.source.producer=old;p.publicText.target.producer='disabled';assert.doesNotThrow(()=>assertPublicTextPlan(p));}});
+
+test('trace source acceptance must be actual enabled reader identities; actual target advertises runTrace1',()=>{
+ const p=fixture(true);p.format='run-trace-provenance-host-release/v1';p.publicText.source.producer='purpose-json-v1';p.target.runtime='3.8.0';p.target.productVersion=52;p.target.migrations.push({version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'});
+ const accepted={format:'public-text-host-acceptance/v1',passed:true,candidate:p.source.sha,checks:{actualReaders:true},publicText:p.publicText.source,configurationSha256:p.publicText.sourceConfigurationSha256,readerContainers:p.publicText.sourceContainers};assert.doesNotThrow(()=>assertPublicTextPlan(p));assert.doesNotThrow(()=>assertAcceptedPublicTextSource(accepted,p));
+ for(const change of [a=>a.publicText.producer='disabled',a=>a.readerContainers.pop(),a=>a.format='web-same-schema-acceptance/v1',a=>a.configurationSha256='0'.repeat(64)]){const bad=structuredClone(accepted);change(bad);assert.throws(()=>assertAcceptedPublicTextSource(bad,p));}
+ const metadata={publicText:2,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'}};assert.doesNotThrow(()=>assertPublicTextMetadata(metadata,p));
+ for(const value of [undefined,0,2])assert.throws(()=>assertPublicTextMetadata({...metadata,runTrace:value},p));
+});
