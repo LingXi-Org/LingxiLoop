@@ -35,3 +35,11 @@ Commands: `node --import tsx --test --test-isolation=none --test-force-exit` wit
 `npm run server:typecheck`; `npm run typecheck`.
 
 The accompanying JSON is synthetic local evidence only; productionRequests=0.
+
+Independent combination review found that a generated reference with public
+`delivery: failed` was described as still waiting. A new public-state regression
+failed first, then passed after the narrow status correction: failed explicitly
+reports non-delivery, only pending says waiting, and not_observed/null remain
+unconfirmed. The existing delivered-only renderer gate is unchanged. Combined
+projection, transport, public-event and Web harness owning checks passed35/35;
+touched-file lint passed. No additional provider or production test was run.

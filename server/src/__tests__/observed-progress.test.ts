@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createRunView, type RunView } from '@lyyzka/lingxios/ui'
+import { consumeAssistantMessage, createRunView, type RunView } from '@lyyzka/lingxios/ui'
 import { harnessToolParts, runMessageParts } from '../agent-runtime/message-projection.js'
+import { visualizeReferences } from '../agent-runtime/visualize-projection.js'
 import { toolDisplay } from '../../../src/lib/runActivity.js'
 
 // Failure model: docs/evidence/feedback-261/FAILURE-MODEL.md (written first).
@@ -28,4 +29,22 @@ test('closed public tool labels describe actual work without leaking runtime nam
   for(const name of ['ipython','skills__load','skills.activate','observations.read','visualize.chart','visualize.diagram']) assert.notEqual(toolDisplay(name).title,'处理任务',name)
   assert.match(toolDisplay('visualize.save','completed').summary!,/已保存/)
   assert.match(toolDisplay('visualize.read','failed').summary!,/读取.*未完成/)
+})
+test('current public delivery state distinguishes failed, pending and unconfirmed; only delivered renders',()=>{
+  const body='::visualize'+JSON.stringify({path:'/synthetic/current/view.html'})
+  const committed=consumeAssistantMessage(view,{version:2,runId:'run',agentId:'agent',sessionId:'session',body,
+    envelope:{version:1,requestVersion:1,body,evidenceSnapshotId:'synthetic',
+      goalOutcome:{status:'satisfied',requestVersion:1,verification:'passed'},citations:[],artifacts:[]}},
+  {resultId:'result',fence:1})
+  for(const delivery of ['pending','failed','not_observed',null,'delivered'] as const){
+    const output=text({...committed,delivery})
+    assert.equal(visualizeReferences(output).length,delivery==='delivered'?1:0)
+    if(delivery==='pending')assert.match(output,/正在等待答复交付/)
+    else if(delivery==='failed'){
+      assert.match(output,/交付失败/);assert.match(output,/未交付/)
+      assert.doesNotMatch(output,/正在等待/)
+    }else if(delivery!=='delivered'){
+      assert.match(output,/尚未确认/);assert.doesNotMatch(output,/正在等待|交付失败/)
+    }else assert.doesNotMatch(output,/正在等待|交付失败|尚未确认/)
+  }
 })

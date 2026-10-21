@@ -18,7 +18,9 @@ export function observedProgress(view: RunView, tools: readonly HarnessToolPart[
   const saved = current.some(tool => ['visualize.save','visualize.chart','visualize.diagram'].includes(tool.toolName) && status(tool) === 'completed')
   if (saved && !(view.delivery === 'delivered' && view.message?.envelope.requestVersion === view.requestVersion && visualizeReferences(view.message.envelope.body).length)) {
     if (view.message?.envelope.requestVersion === view.requestVersion && visualizeReferences(view.message.envelope.body).length) {
-      return '可视化展示引用已生成，正在等待答复交付。'
+      if (view.delivery === 'failed') return '可视化内容已保存，但答复交付失败，未交付可用的展示引用。'
+      return view.delivery === 'pending' ? '可视化展示引用已生成，正在等待答复交付。'
+        : '可视化展示引用已生成，但答复交付状态尚未确认。'
     }
     return view.lifecycle === 'leased'
       ? '可视化内容已保存，尚未交付可用的展示引用。'

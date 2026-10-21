@@ -16,3 +16,15 @@ paths must never be used as substitute text.
 
 This changes server public projection and copy only. Client iframe startup and
 geometry remain owned by the other workstream. No runtime version change.
+
+## Independent review: failed delivery must not look pending
+
+With a confirmed save and a current committed visualization reference, the
+public runtime can report `delivery: failed`. The original projection called
+both failed and pending delivery "waiting", hiding a confirmed failure.
+Before changing this branch, add a narrow public-state regression: pending
+remains waiting, failed explicitly means not delivered, not_observed/null stay
+unconfirmed, and only delivered activates the existing reference. Use the real
+public consumeAssistantMessage helper and synthetic receipts; no provider or
+production call is needed. Preserve the original reproduction and failing diff
+in the independent review handoff.
