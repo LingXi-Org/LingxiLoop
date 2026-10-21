@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: 0051 fresh history, exact50 upgrade and repeat preserve native14 without DDL
+ok 1 - 0051 fresh history, exact50 upgrade and repeat preserve native14 without DDL
+  ---
+  duration_ms: 737.458603
+  type: 'test'
+  ...
+# Subtest: 0051 ledger failure rolls provenance back and mismatched source or target cannot be adopted
+ok 2 - 0051 ledger failure rolls provenance back and mismatched source or target cannot be adopted
+  ---
+  duration_ms: 758.251641
+  type: 'test'
+  ...
+# Subtest: native purpose keeps a same-attempt tool answer visible through actual transport decoding and supersedes by identity
+ok 3 - native purpose keeps a same-attempt tool answer visible through actual transport decoding and supersedes by identity
+  ---
+  duration_ms: 29.16958
+  type: 'test'
+  ...
+# Subtest: a completed commentary part cannot hide a separate answer preview
+ok 4 - a completed commentary part cannot hide a separate answer preview
+  ---
+  duration_ms: 0.794791
+  type: 'test'
+  ...
+# Subtest: explicit failed answer becomes history when the next declared attempt begins
+ok 5 - explicit failed answer becomes history when the next declared attempt begins
+  ---
+  duration_ms: 0.30989
+  type: 'test'
+  ...
+# Subtest: reader migration package qualification is exact; legacy0050 keeps its old runtime profile
+ok 6 - reader migration package qualification is exact; legacy0050 keeps its old runtime profile
+  ---
+  duration_ms: 0.99572
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2654.3054

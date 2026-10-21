@@ -64,14 +64,18 @@ export function archivedPublicText(part: PublicTextPart): boolean {
 function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): 'answer' | 'commentary' {
   if (part.acceptedResultId || part.requestVersion !== view.requestVersion || part.fence !== view.fence
     || part.reason === 'superseded' || view.message && view.message.envelope.requestVersion >= part.requestVersion) return 'commentary'
+  const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
+    || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
+  if (replaced) return 'commentary'
+  // Native v2 declares public purpose before its first text character. This is
+  // producer metadata, not a classification of arbitrary prose.
+  if (part.version === 2 && part.purpose) return part.purpose
   const hasTool = tools.some(tool => tool.activityIdentity?.requestVersion === part.requestVersion
     && tool.activityIdentity.fence === part.fence && tool.activityIdentity.attemptId === part.attemptId)
   if (part.reason === 'tool' || hasTool) return 'commentary'
-  const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
-    || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
   // 3.6.0 has no per-delta purpose: keep the current unresolved candidate live
   // until public tool/result evidence establishes its role, including failures.
-  return replaced ? 'commentary' : 'answer'
+  return 'answer'
 }
 function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean, history: boolean): ThreadAssistantMessagePart[] {
   const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
@@ -149,7 +153,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
     // is an additional preview, not another answer. Acceptance still requires
     // the explicit committed source ID; no text comparison is involved.
     const publicCandidate = (view.publicTextParts ?? []).some(part => part.requestVersion === view.requestVersion
-      && part.fence === view.fence && part.reason === 'completed' && !part.acceptedResultId)
+      && part.fence === view.fence && part.reason === 'completed' && part.purpose !== 'commentary' && !part.acceptedResultId)
     return publicCandidate ? cards : [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]
   }
   if (!view.message) return cards

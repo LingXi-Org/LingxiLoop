@@ -1,4 +1,4 @@
-import { assembleHarness, createLingxiOS, doctor, type ModelCallObservation, type DeliveryContext } from '@lyyzka/lingxios'
+import { assembleHarness, createLingxiOS, doctor, releaseVersions, type ModelCallObservation, type DeliveryContext } from '@lyyzka/lingxios'
 import { createWorker, type WorkerOptions } from '@lyyzka/lingxios/worker'
 import { execFileSync } from 'node:child_process'
 import { pool } from '../db/pool.js'
@@ -25,6 +25,7 @@ import { verifyVisualizeDelivery, verifyVisualizeAuthoringCandidate } from './vi
 import { verifyVisualizeCandidate } from './visualize-tools.js'
 import { runProductCallback } from './product-callbacks.js'
 import type { Queryable } from '../db/queryable.js'
+import { publicTextDeployment, publicTextModelOptions } from './public-text-deployment.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -58,9 +59,12 @@ function providerPricing(model = env.OPENAI_MODEL) {
 
 /** Build the product Worker's bounded provider configuration. */
 export function runtimeModelConfiguration(model: { id: string; apiKey: string; baseUrl: string }, requestTimeoutMs: number) {
+  if (releaseVersions.publicText !== publicTextDeployment.reader) throw new Error('Public purpose requires a formally qualified v2 runtime reader')
+  // Reader-first release: omit publicTextProtocol until every active reader is upgraded.
   const siliconFlow = new URL(model.baseUrl).hostname === 'api.siliconflow.cn'
   return {
     ...model,
+    ...publicTextModelOptions(),
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
