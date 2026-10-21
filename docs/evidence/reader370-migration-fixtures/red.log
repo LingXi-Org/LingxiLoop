@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: a recorded runtime patch repairs a stale LingxiOS schema before serving
+not ok 1 - a recorded runtime patch repairs a stale LingxiOS schema before serving
+  ---
+  duration_ms: 1090.368829
+  type: 'test'
+  location: '/workspace/LingxiLoop-reader370-migration-fixtures/server/src/__integration__/migration.test.ts:137:534'
+  failureType: 'testCodeFailure'
+  error: 'installed LingxiOS package/schema mismatch; install a matching package and run the explicit database installation'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    assertRuntimeCurrent (/workspace/LingxiLoop-reader370-migration-fixtures/server/src/db/migrate.ts:98:49)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async migrateDatabase (/workspace/LingxiLoop-reader370-migration-fixtures/server/src/db/migrate.ts:284:7)
+    async <anonymous> (/workspace/LingxiLoop-reader370-migration-fixtures/server/src/__integration__/migration.test.ts:621:5)
+    async withDatabase (/workspace/LingxiLoop-reader370-migration-fixtures/server/src/__integration__/migration.test.ts:324:5)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-reader370-migration-fixtures/server/src/__integration__/migration.test.ts:618:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: concurrent migrators serialize and apply each migration once
+not ok 2 - concurrent migrators serialize and apply each migration once
+  ---
+  duration_ms: 1092.205815
+  type: 'test'
+  location: '/workspace/LingxiLoop-reader370-migration-fixtures/server/src/__integration__/migration.test.ts:144:1997'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly deep-equal:
+    + actual - expected
+    
+      [
+        {
+    +     count: 51
+    -     count: 50
+        }
+      ]
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+    0:
+      count: 50
+  actual:
+    0:
+      count: 51
+  operator: 'deepStrictEqual'
+  stack: |-
+    <anonymous> (/workspace/LingxiLoop-reader370-migration-fixtures/server/src/__integration__/migration.test.ts:721:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    async withDatabase (/workspace/LingxiLoop-reader370-migration-fixtures/server/src/__integration__/migration.test.ts:324:5)
+    async TestContext.<anonymous> (/workspace/LingxiLoop-reader370-migration-fixtures/server/src/__integration__/migration.test.ts:712:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2558.459893
