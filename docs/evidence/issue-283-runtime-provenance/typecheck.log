@@ -1,0 +1,2 @@
+server/src/agent-runtime/assistant-transport.ts(45,61): error TS2339: Property 'runId' does not exist on type '{ type: "trace"; trace: RunTraceSnapshot; } | { type: "reset"; runId: string; reason: "unavailable" | "superseded"; }'.
+  Property 'runId' does not exist on type '{ type: "trace"; trace: RunTraceSnapshot; }'.

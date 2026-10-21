@@ -18,8 +18,8 @@ async function source50(db:Pool){
   const applied=await migrateDatabase(db)
   assert.equal(applied.at(-1),'0052_run_trace_provenance')
   await assertMigrationsCurrent(db)
-  // Local synthetic fixture:0051/0052 are provenance-only, so restore0051 source
-  // source metadata to exercise the actual50->51 transition, never production.
+  // Local synthetic fixture:0051/0052 are provenance-only. Restore the source
+  // metadata to exercise50->51 followed by52, never production.
   await db.query("DELETE FROM schema_migrations WHERE version>=51; UPDATE lingxios_installation SET runtime_version='3.6.0'")
 }
 const installed=async(db:Pool)=>(await db.query('SELECT * FROM lingxios_installation')).rows
