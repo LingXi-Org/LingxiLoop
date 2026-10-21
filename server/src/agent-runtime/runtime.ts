@@ -1,4 +1,4 @@
-import { assembleHarness, createLingxiOS, doctor, type ModelCallObservation, type DeliveryContext } from '@lyyzka/lingxios'
+import { assembleHarness, createLingxiOS, doctor, releaseVersions, type ModelCallObservation, type DeliveryContext } from '@lyyzka/lingxios'
 import { createWorker, type WorkerOptions } from '@lyyzka/lingxios/worker'
 import { execFileSync } from 'node:child_process'
 import { pool } from '../db/pool.js'
@@ -58,9 +58,11 @@ function providerPricing(model = env.OPENAI_MODEL) {
 
 /** Build the product Worker's bounded provider configuration. */
 export function runtimeModelConfiguration(model: { id: string; apiKey: string; baseUrl: string }, requestTimeoutMs: number) {
+  if (releaseVersions.publicText !== 2) throw new Error('Public purpose requires a formally qualified v2 runtime reader')
   const siliconFlow = new URL(model.baseUrl).hostname === 'api.siliconflow.cn'
   return {
     ...model,
+    publicTextProtocol: 'purpose-json-v1',
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
