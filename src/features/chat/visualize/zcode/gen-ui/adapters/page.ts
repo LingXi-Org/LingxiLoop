@@ -285,7 +285,12 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
       html: document.html,
       instanceKey: target.instanceKey,
       ownerWebContentsId,
-    }, initialization.signal);
+    }, initialization.signal, (progress) => {
+      if (disposed || initialization.signal.aborted) return;
+      initializationStage = progress.stage === "page"
+        ? "申请页面"
+        : `准备运行资源${progress.pending.length ? `（等待 ${progress.pending.join("、")}）` : ""}`;
+    });
     if (disposed || initialization.signal.aborted) {
       await platform.disposeSandbox(prepared.sandboxId, prepared.initId);
       return;

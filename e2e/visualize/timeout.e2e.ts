@@ -27,6 +27,7 @@ for (const stage of ['create', 'resources', 'state', 'handshake']) {
     })
     const evidence = await browser.evaluate(async () => ({
       phase: document.querySelector('[data-testid="gen-ui-card"]')?.getAttribute('data-gen-ui-phase') ?? null,
+      error: document.querySelector('[data-testid="gen-ui-card"]')?.textContent ?? '',
       elapsed: performance.now() - performance.getEntriesByName('conversation-entry').at(-1)!.startTime,
       phases: (window as unknown as { __deadlinePhases: { phase: string | null; at: number }[] }).__deadlinePhases,
       input: document.querySelector<HTMLInputElement>('input')?.value ?? null,

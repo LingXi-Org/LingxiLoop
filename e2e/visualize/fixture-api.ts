@@ -12,6 +12,8 @@ export function visualizeFixtureApi(): Plugin {
   const follows:string[]=[],external:string[]=[],denied:string[]=[]
   let failOnce=false,closedPages=0,externalHits=0,acceptedSaves=0
   let fault=''
+  let resourceFault=''
+  const resourceAttempts: {name:string;attempt:number;start:number;end?:number;outcome?:string}[]=[]
   const held=new Set<()=>void>(),blocked:string[]=[],aborted:string[]=[]
   const stateKey=(page:Pick<Page,'channel'|'path'>)=>JSON.stringify([page.channel,page.path])
   return {name:'issue193-presentation-api',configureServer(server){
@@ -20,8 +22,10 @@ export function visualizeFixtureApi(): Plugin {
       const reply=(value:unknown,status=200)=>{res.statusCode=status;res.setHeader('content-type','application/json');res.end(JSON.stringify(value))}
       if(url.pathname==='/__visualize_fixture/ready'){reply({},process.env.E2E_VISUALIZE_READY==='1'?200:503);return}
       if(url.pathname==='/__visualize_fixture/fault') {fault=url.searchParams.get('stage')??'';if(url.searchParams.has('release')){for(const release of held)release();held.clear()}reply({});return}
+      if(url.pathname==='/__visualize_fixture/resource-fault') {resourceFault=url.searchParams.get('mode')??'';reply({});return}
+      if(url.pathname==='/__visualize_fixture/resource-evidence') {reply({attempts:resourceAttempts});return}
       if(url.pathname==='/__visualize_fixture/evidence') {reply({follows,external,denied,externalHits,acceptedSaves,activePages:[...pages.values()].filter(page=>page.active).length,closedPages,blocked,aborted});return}
-      if(url.pathname==='/__visualize_fixture/reset') {fault='';for(const release of held)release();held.clear();blocked.length=aborted.length=0;pages.clear();states.clear();revisions.clear();follows.length=external.length=denied.length=0;closedPages=externalHits=acceptedSaves=0;failOnce=url.searchParams.get('failOnce')==='1';reply({});return}
+      if(url.pathname==='/__visualize_fixture/reset') {fault='';resourceFault='';resourceAttempts.length=0;for(const release of held)release();held.clear();blocked.length=aborted.length=0;pages.clear();states.clear();revisions.clear();follows.length=external.length=denied.length=0;closedPages=externalHits=acceptedSaves=0;failOnce=url.searchParams.get('failOnce')==='1';reply({});return}
       if(url.pathname==='/__visualize_fixture/invalidate') {for(const page of pages.values())if(page.active)page.stale=true;reply({});return}
       if(url.pathname==='/__visualize_fixture/external') {externalHits++;res.setHeader('content-type','text/plain');res.end('Local fictional visualization link');return}
       const match=/^\/api\/im\/channels\/([^/]+)\/visualize\/pages(?:\/([^/]+)(?:\/(.*))?)?$/.exec(url.pathname)
@@ -63,6 +67,36 @@ export function visualizeFixtureApi(): Plugin {
           if(!allowed.includes(name)){reply({},404);return}
           if(fault.split(',').includes('handshake')&&name==='gen-ui.js'){res.setHeader('content-type','text/plain');res.end('/* fault fixture: runtime unavailable */');return}
           const file=name==='gen-ui.js'?'server/assets/visualize-runtime/gen-ui.js':path.join('third_party/zcode/skills/visualize/assets',name)
+          const attempt = resourceAttempts.filter(item=>item.name===name).length + 1
+          const entry: typeof resourceAttempts[number] = {name,attempt,start:performance.now()}
+          resourceAttempts.push(entry)
+          res.once('close',()=>{entry.end=performance.now();entry.outcome??=res.writableEnded?'complete':'aborted'})
+          if(name==='gen-ui.js') {
+            if(resourceFault==='slow-headers')await new Promise(resolve=>setTimeout(resolve,6000))
+            if(resourceFault==='stall-once'&&attempt===1) {entry.outcome='stalled';return}
+            if(resourceFault==='offline') {
+              res.setHeader('content-length','500000');res.write('/* interrupted')
+              setTimeout(()=>{entry.outcome='disconnected';res.destroy()},20);return
+            }
+            if(resourceFault==='denied') {entry.outcome='403';reply({},403);return}
+            if(resourceFault==='503-once'&&attempt===1) {entry.outcome='503';reply({},503);return}
+            if(resourceFault==='retry-after') {entry.outcome='503';res.setHeader('retry-after','60');reply({},503);return}
+            if(resourceFault==='drop-once'&&attempt===1) {
+              const bytes=await readFile(file)
+              res.setHeader('content-length',bytes.length);res.write(bytes.subarray(0,1024))
+              setTimeout(()=>{entry.outcome='body-disconnected';res.destroy()},100);return
+            }
+            if(resourceFault==='slow-body') {
+              const bytes=await readFile(file),size=Math.ceil(bytes.length/9)
+              res.setHeader('content-length',bytes.length);res.setHeader('content-type','text/plain');res.setHeader('cache-control','no-store')
+              for(let offset=0;offset<bytes.length;offset+=size) {
+                if(res.destroyed)return
+                res.write(bytes.subarray(offset,offset+size))
+                if(offset+size<bytes.length)await new Promise(resolve=>setTimeout(resolve,1000))
+              }
+              res.end();return
+            }
+          }
           const delays = JSON.parse(process.env.E2E_VISUALIZE_RESOURCE_DELAYS ?? '{}') as Record<string, number>
           const delay = Number(delays[name] ?? process.env.E2E_VISUALIZE_RESOURCE_DELAY ?? 0)
           if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay))

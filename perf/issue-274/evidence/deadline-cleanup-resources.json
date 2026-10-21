@@ -1,0 +1,27 @@
+{
+  "follows": [],
+  "external": [],
+  "denied": [],
+  "externalHits": 0,
+  "acceptedSaves": 0,
+  "activePages": 1,
+  "closedPages": 1,
+  "blocked": [
+    "resources",
+    "resources",
+    "resources",
+    "resources",
+    "resources",
+    "resources",
+    "delete"
+  ],
+  "aborted": [
+    "resources",
+    "resources",
+    "resources",
+    "resources",
+    "resources",
+    "resources",
+    "delete"
+  ]
+}

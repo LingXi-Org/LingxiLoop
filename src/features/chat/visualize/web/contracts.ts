@@ -1,6 +1,7 @@
 import type { GenUiDocument, GenUiStateChange, GenUiStateTarget, GenUiWidgetState } from '../zcode/shared/gen-ui/index.js'
 export type McpAppsStyleVariables = Record<string, string>
 export type PluginSandboxTransportPort = MessagePort
+export type SandboxPreparationProgress = { stage: 'page' } | { stage: 'resources'; pending: string[] }
 export interface PluginSandboxHandle { sandboxId: string; initId: string; shellUrl: string; partition: string }
 export interface PluginSandboxPlatformPort {
   getOwnerWebContentsId(): Promise<number>
@@ -12,7 +13,7 @@ export interface PluginSandboxPlatformPort {
 }
 export interface IGenUiService {
   readDocument(target: GenUiStateTarget, signal?: AbortSignal): Promise<GenUiDocument>
-  prepareSandbox(input: GenUiStateTarget & { html: string; instanceKey: string; ownerWebContentsId: number }, signal?: AbortSignal): Promise<PluginSandboxHandle>
+  prepareSandbox(input: GenUiStateTarget & { html: string; instanceKey: string; ownerWebContentsId: number }, signal?: AbortSignal, onProgress?: (progress: SandboxPreparationProgress) => void): Promise<PluginSandboxHandle>
   getState(target: GenUiStateTarget, signal?: AbortSignal): Promise<GenUiWidgetState | null>
   setState(input: {target: GenUiStateTarget; state: GenUiWidgetState}): Promise<void>
   onStateChanged(listener: (change: GenUiStateChange) => void): {dispose(): void}
