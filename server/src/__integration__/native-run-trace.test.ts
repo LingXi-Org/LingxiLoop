@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { readFile,mkdtemp,rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { setTimeout as delay } from 'node:timers/promises'
 import { Pool } from 'pg'
 import { createLingxiOS,packageResources,type ConversationPolicy } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
@@ -82,6 +83,15 @@ test('native persisted execution trace crosses product history/SSE with exact re
     await assert.rejects(readRunProjection(app,identity,false),/participant|forbidden|capability/)
     await assert.rejects(app.streamRun(identity,{ trace: true }),/participant|forbidden|capability/)
   } finally {
-    await worker.stop(); await app.stop(); await db.end(); await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`); await admin.end(); await rm(directory,{ recursive: true,force: true })
+    await worker.stop(); await app.stop(); await db.end()
+    // Pool.end resolves when client sockets have been closed locally; PostgreSQL
+    // can still be consuming their final frames. Wait for this fixture's own
+    // sessions to leave before dropping it, instead of killing open readers.
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const active = await admin.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM pg_stat_activity WHERE datname=$1',[name])
+      if (active.rows[0]?.count === '0') break
+      await delay(25)
+    }
+    await admin.query(`DROP DATABASE "${name}"`);await admin.end();await rm(directory,{ recursive: true,force: true })
   }
 })
