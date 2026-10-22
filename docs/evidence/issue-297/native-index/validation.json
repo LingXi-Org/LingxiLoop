@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-22T17:37:02.968472+00:00",
+  "recordedAt": "2026-10-22T17:44:35.521552+00:00",
   "baseCommit": "58c1a214590e56d35caf328553df5ee1f2c6c0f1",
   "node": "22.23.3",
   "dependencyInstall": "isolated worktree npm ci from committed lock; shared root dependency symlink removed before install",
@@ -13,12 +13,12 @@
     "serverTypecheck": "passed",
     "serverLint": "passed",
     "cliRegression": {
-      "passed": 17,
+      "passed": 19,
       "failed": 0,
       "skipped": 0
     },
     "baselineCliRegression": {
-      "passed": 6,
+      "passed": 8,
       "failed": 4,
       "meaning": "new successful status/enqueue modes and uncertainty checkpoints are absent on the unchanged baseline"
     },
@@ -36,6 +36,11 @@
       "skipped": 0,
       "sourceCommit": "64f2adbac3310280a9bd776531d464e6acb48686",
       "scope": "existing matching-source tests, distinct from the installed-package public API integration"
+    },
+    "preFixErrorRedaction": {
+      "passed": 10,
+      "failed": 2,
+      "meaning": "new binding/control initialization errors leaked the synthetic sentinel before the outer new-mode error boundary"
     }
   },
   "initialDependencyFailure": "Shared startup-updated dependencies produced two unchanged integration test type errors; exact locked worktree install cleared them without editing either test.",
@@ -43,8 +48,8 @@
   "sourceFiles": [
     {
       "path": "server/src/bin/memory-maintenance.ts",
-      "bytes": 3144,
-      "sha256": "595076025fca51f0e5962820e426236bf9b6c2f49664c73bcde41c35bef3b220"
+      "bytes": 3188,
+      "sha256": "bf758b8652589c9e3a90105da2beb6a778ebed816c9ad50779cd866af26abd31"
     },
     {
       "path": "server/src/agent-runtime/memory-index-maintenance.ts",
@@ -53,8 +58,8 @@
     },
     {
       "path": "server/src/__tests__/memory-index-maintenance.test.ts",
-      "bytes": 6465,
-      "sha256": "19f1079b6844fc1af49249706a8b1761829d66e4c550e740952baea8845ecec6"
+      "bytes": 6653,
+      "sha256": "c118c107e7a31db81ccca1fba142968aad21b1f0666523f3dbda648cc417b780"
     },
     {
       "path": "server/src/__tests__/memory-maintenance-lifecycle.test.ts",
@@ -70,13 +75,13 @@
   "artifacts": [
     {
       "path": "docs/evidence/issue-297/native-index/cli-baseline-red.tap",
-      "bytes": 5185,
-      "sha256": "f31bdf6b00900336f8576a783c1806b7c850a8d647c3c05d8c916a404a93233d"
+      "bytes": 6286,
+      "sha256": "77133b06d613e6270602f8924886135a35382b4b588e0ca76a814da0ffccb7ef"
     },
     {
       "path": "docs/evidence/issue-297/native-index/cli-final-green.tap",
-      "bytes": 3595,
-      "sha256": "873b9d8df76d0c2f54e8a81e1ddeeb575354fd5b351445953d5d3ee2534155e1"
+      "bytes": 3946,
+      "sha256": "01d312e0bd71d78f5d0bdb60df92557b6d7180583bc679c21e4f84dbd80c5b38"
     },
     {
       "path": "docs/evidence/issue-297/native-index/server-typecheck.log",
@@ -86,7 +91,7 @@
     {
       "path": "docs/evidence/issue-297/native-index/server-lint.log",
       "bytes": 309,
-      "sha256": "8ae961e1ebdd208ecec86b18044be14456be1459c67d59f89754f8e37d1b2a85"
+      "sha256": "9ee2fcd139fb0b014fa0be3dd5d92edbb858140587717779922be866a66431d7"
     },
     {
       "path": "docs/evidence/issue-297/native-index/public-api-retention.json",
@@ -107,6 +112,12 @@
       "path": "docs/evidence/issue-297/native-index/initial-shared-dependency-typecheck.log",
       "bytes": 1310,
       "sha256": "7a4a2bd78481d7088e4628468cde8209fdeb661157c3c510630d4424471a70ea"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/cli-error-redaction-red.tap",
+      "bytes": 6919,
+      "sha256": "b843e2a32d212d8cb8347f28d72df5bf5527e2e6fe8fdd444e5dc3c0ef78a996"
     }
-  ]
+  ],
+  "artifactNormalization": "Text evidence may trim trailing line whitespace; hashes bind the committed evidence bytes."
 }

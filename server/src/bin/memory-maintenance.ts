@@ -16,15 +16,13 @@ try {
   if(!run || run.principalId!==principalId) throw new Error('memory maintenance run identity is unavailable')
   const identity={...run,principalId,workId:runId},app=await lingxiOSControl(),memory=app.memory!
   if(mode==='index-status'||mode==='index-reindex') {
-    try {
-      if(extra.length||(mode==='index-status'&&(resumeCursor!==undefined||indexLimit!==undefined))
-        ||(mode==='index-reindex'&&(!resumeCursor||!indexLimit||!/^\d+$/.test(indexLimit))))throw new Error('invalid native memory index arguments')
-      const {memoryEmbeddings}=await import('../modules/memory/configuration.js')
-      const {memoryIndexStatus,enqueueMemoryIndex}=await import('../agent-runtime/memory-index-maintenance.js')
-      const status=await memoryIndexStatus(memory,identity,memoryEmbeddings())
-      console.log(JSON.stringify(mode==='index-status'?status.receipt:
-        await enqueueMemoryIndex(memory,identity,status,resumeCursor!,Number(indexLimit),receipt=>console.log(JSON.stringify(receipt)))))
-    } catch {throw new Error('native memory index maintenance failed; inspect aggregate receipts before another enqueue')}
+    if(extra.length||(mode==='index-status'&&(resumeCursor!==undefined||indexLimit!==undefined))
+      ||(mode==='index-reindex'&&(!resumeCursor||!indexLimit||!/^\d+$/.test(indexLimit))))throw new Error('invalid native memory index arguments')
+    const {memoryEmbeddings}=await import('../modules/memory/configuration.js')
+    const {memoryIndexStatus,enqueueMemoryIndex}=await import('../agent-runtime/memory-index-maintenance.js')
+    const status=await memoryIndexStatus(memory,identity,memoryEmbeddings())
+    console.log(JSON.stringify(mode==='index-status'?status.receipt:
+      await enqueueMemoryIndex(memory,identity,status,resumeCursor!,Number(indexLimit),receipt=>console.log(JSON.stringify(receipt)))))
   } else if(mode==='reindex') {
     for(const scope of await memory.scopes(identity)) console.log(JSON.stringify({scopeType:scope.scopeType,...await memory.reindex(identity,scope)}))
   } else {
@@ -37,6 +35,9 @@ try {
       if(page===199) throw new Error('migration page budget reached; resume with the reported cursor')
     }
   }
+} catch(error) {
+  if(mode==='index-status'||mode==='index-reindex')throw new Error('native memory index maintenance failed; inspect aggregate receipts before another enqueue')
+  throw error
 } finally {
   for(const [name,close] of [
     ['control',stopLingxiOSControl],

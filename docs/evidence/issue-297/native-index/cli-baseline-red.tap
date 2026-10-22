@@ -2,13 +2,18 @@ TAP version 13
 # Subtest: native index status emits only the current model/key and hashed aggregate scope coverage
 not ok 1 - native index status emits only the current model/key and hashed aggregate scope coverage
   ---
-  duration_ms: 585.58278
+  duration_ms: 1223.96741
   type: 'test'
   location: '/workspace/native-memory-297/server/src/__tests__/memory-index-maintenance.test.ts:28:665'
   failureType: 'testCodeFailure'
   error: |-
-    (node:13059) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+    (node:28395) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
     (Use `node --trace-warnings ...` to show where the warning was created)
+    Error: usage: memory-maintenance <companyId> <principalId> <runId> [inspect|migrate|reindex] [cursor]
+        at <anonymous> (/workspace/native-memory-297/server/src/bin/.native-index-baseline.ts:12:11)
+        at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+        at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+        at async file:///workspace/native-memory-297/[eval1]:26:9
     
     
     1 !== 0
@@ -19,6 +24,10 @@ not ok 1 - native index status emits only the current model/key and hashed aggre
   actual: 1
   operator: 'strictEqual'
   stack: |-
+    <anonymous> (/workspace/native-memory-297/server/src/bin/.native-index-baseline.ts:12:11)
+    ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    async file:///workspace/native-memory-297/[eval1]:26:9
     TestContext.<anonymous> (/workspace/native-memory-297/server/src/__tests__/memory-index-maintenance.test.ts:51:10)
     Test.runInAsyncScope (node:async_hooks:214:14)
     Test.run (node:internal/test_runner/test:1047:25)
@@ -28,7 +37,7 @@ not ok 1 - native index status emits only the current model/key and hashed aggre
 # Subtest: complete scope coverage is distinct from partial, absent and empty configuration
 not ok 2 - complete scope coverage is distinct from partial, absent and empty configuration
   ---
-  duration_ms: 504.290654
+  duration_ms: 899.686504
   type: 'test'
   location: '/workspace/native-memory-297/server/src/__tests__/memory-index-maintenance.test.ts:28:1312'
   failureType: 'testCodeFailure'
@@ -47,45 +56,57 @@ not ok 2 - complete scope coverage is distinct from partial, absent and empty co
 # Subtest: index inspection rejects identity without enqueue
 ok 3 - index inspection rejects identity without enqueue
   ---
-  duration_ms: 397.878951
+  duration_ms: 332.40639
+  type: 'test'
+  ...
+# Subtest: index inspection rejects binding-error without enqueue
+ok 4 - index inspection rejects binding-error without enqueue
+  ---
+  duration_ms: 312.83174
+  type: 'test'
+  ...
+# Subtest: index inspection rejects control-error without enqueue
+ok 5 - index inspection rejects control-error without enqueue
+  ---
+  duration_ms: 336.145439
   type: 'test'
   ...
 # Subtest: index inspection rejects cross-tenant without enqueue
-ok 4 - index inspection rejects cross-tenant without enqueue
+ok 6 - index inspection rejects cross-tenant without enqueue
   ---
-  duration_ms: 385.669786
+  duration_ms: 410.474705
   type: 'test'
   ...
 # Subtest: index inspection rejects duplicate without enqueue
-ok 5 - index inspection rejects duplicate without enqueue
+ok 7 - index inspection rejects duplicate without enqueue
   ---
-  duration_ms: 431.55355
+  duration_ms: 533.645862
   type: 'test'
   ...
 # Subtest: index inspection rejects wrong-key without enqueue
-ok 6 - index inspection rejects wrong-key without enqueue
+ok 8 - index inspection rejects wrong-key without enqueue
   ---
-  duration_ms: 489.981011
+  duration_ms: 605.841335
   type: 'test'
   ...
 # Subtest: index inspection rejects invalid-count without enqueue
-ok 7 - index inspection rejects invalid-count without enqueue
+ok 9 - index inspection rejects invalid-count without enqueue
   ---
-  duration_ms: 556.100237
+  duration_ms: 580.740254
   type: 'test'
   ...
 # Subtest: index inspection rejects revoked without enqueue
-ok 8 - index inspection rejects revoked without enqueue
+ok 10 - index inspection rejects revoked without enqueue
   ---
-  duration_ms: 475.511812
+  duration_ms: 882.411082
   type: 'test'
   ...
 # Subtest: index reindex requires the reviewed scope plan and an explicit sufficient bound
-not ok 9 - index reindex requires the reviewed scope plan and an explicit sufficient bound
+not ok 11 - index reindex requires the reviewed scope plan and an explicit sufficient bound
   ---
-  duration_ms: 557.48638
+  duration_ms: 667.486619
   type: 'test'
-  location: '/workspace/native-memory-297/server/src/__tests__/memory-index-maintenance.test.ts:28:2021'
+  location: '/workspace/native-memory-297/server/src/__tests__/memory-index-maintenance.test.ts:28:2053'
   failureType: 'testCodeFailure'
   error: "Cannot read properties of undefined (reading 'planHash')"
   code: 'ERR_TEST_FAILURE'
@@ -100,11 +121,11 @@ not ok 9 - index reindex requires the reviewed scope plan and an explicit suffic
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
 # Subtest: uncertain enqueue stops without retry or enqueueing a remaining scope
-not ok 10 - uncertain enqueue stops without retry or enqueueing a remaining scope
+not ok 12 - uncertain enqueue stops without retry or enqueueing a remaining scope
   ---
-  duration_ms: 308.378713
+  duration_ms: 880.858309
   type: 'test'
-  location: '/workspace/native-memory-297/server/src/__tests__/memory-index-maintenance.test.ts:28:2814'
+  location: '/workspace/native-memory-297/server/src/__tests__/memory-index-maintenance.test.ts:28:2846'
   failureType: 'testCodeFailure'
   error: "Cannot read properties of undefined (reading 'planHash')"
   code: 'ERR_TEST_FAILURE'
@@ -118,12 +139,12 @@ not ok 10 - uncertain enqueue stops without retry or enqueueing a remaining scop
     Test.run (node:internal/test_runner/test:1101:12)
     async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
-1..10
-# tests 10
+1..12
+# tests 12
 # suites 0
-# pass 6
+# pass 8
 # fail 4
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 5440.118873
+# duration_ms 8424.672271

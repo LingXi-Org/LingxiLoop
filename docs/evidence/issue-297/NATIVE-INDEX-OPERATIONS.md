@@ -8,6 +8,19 @@ Prepare a finite internal list of existing `{companyId, principalId, runId}` bin
 
 If binding metadata needs confirmation, use the public `readRunReference` for each exact approved company/run pair and compare its principal. The relevant product metadata is `agent_run_bindings(company_id, principal_id, agent_id, run_id, session_id)` and current participant/channel/project membership. There is no reason to search message text, inspect prompts, enumerate all conversations or reuse private-case investigation permissions. This CLI deliberately has no `all runs` or automatic identity-discovery mode.
 
+If the operator does not yet have the finite list, the smallest proposed metadata-only inventory is the following read-only query, restricted to an explicit approved company allowlist and a positive bound of at most2000. Run it only through an already authorized database read path; this document does not execute it or extend a private-case investigation. Receiving the extra row means the inventory is incomplete and no global coverage claim is possible. It returns only existing identity tuples, with one newest source per session/agent/principal; public API authorization remains authoritative and may exclude any row. It neither reads nor searches messages, prompts, memory bodies or conversation titles.
+
+```sql
+SELECT DISTINCT ON (company_id, session_id, agent_id, principal_id)
+  company_id, principal_id, agent_id, run_id, session_id
+FROM agent_run_bindings
+WHERE company_id = ANY($1::text[]) AND NOT internal
+ORDER BY company_id, session_id, agent_id, principal_id, created_at DESC, run_id DESC
+LIMIT ($2::int + 1);
+```
+
+Keep returned IDs in an internal ephemeral manifest, never in a public PR receipt. Its manifest must name the maintenance purpose, approved company allowlist, maximum binding/scope counts, exact deployed commit/image/config receipt, observation time and the existing identity triples. Hash the exact manifest bytes and retain only that hash plus aggregate receipts externally. Resolve every triple with `readRunReference`, obtain fresh `index-status`, and record rejected/revoked rows as exclusions rather than replacing identities. Dedupe returned authorized scope hashes, retain a coverage denominator and explicitly mark the finite closure incomplete when any identity/scope is missing. This proposed inventory does not by itself prove that all historical orphaned or currently unauthorized scopes are covered.
+
 For each existing binding, using the normal authenticated production command path:
 
 ```text

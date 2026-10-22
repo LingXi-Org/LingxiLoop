@@ -17,22 +17,22 @@ function run(mode: string, scenario = 'partial', planHash?: string, limit?: stri
     if(scenario==='cross-tenant')scopes[1].tenantId='other-company';
     if(scenario==='duplicate')scopes[1]=scopes[0];
     let inspections=0;
-    mock.module('@lyyzka/lingxios',{namedExports:{readRunReference:async()=>scenario==='identity'?null:identity}});
+    mock.module('@lyyzka/lingxios',{namedExports:{readRunReference:async()=>{if(scenario==='binding-error')throw Error(privateValue);return scenario==='identity'?null:identity}}});
     mock.module(${JSON.stringify(new URL('db/pool.ts', source).href)},{namedExports:{pool:{},closeDatabasePools:async()=>events.push('database')}});
     mock.module(${JSON.stringify(new URL('redis.ts', source).href)},{namedExports:{sub:{disconnect:()=>events.push('subscriber')},redis:{disconnect:()=>events.push('redis')}}});
     mock.module(${JSON.stringify(new URL('modules/memory/configuration.ts', source).href)},{namedExports:{memoryEmbeddings:()=>scenario==='unconfigured'?undefined:options}});
     mock.module(${JSON.stringify(new URL('agent-runtime/runtime.ts', source).href)},{namedExports:{
       prepareLingxiOSWorkerContext:()=>{},stopLingxiOSControl:async()=>events.push('control'),
-      lingxiOSControl:async()=>({memory:{scopes:async()=>scenario==='empty'?[]:scopes,
+      lingxiOSControl:async()=>{if(scenario==='control-error')throw Error(privateValue);return {memory:{scopes:async()=>scenario==='empty'?[]:scopes,
         doctor:async()=>{inspections++;if(scenario==='revoked')throw Error(privateValue);return {
           conflicts:[{reason:privateValue}],brokenLinks:[{path:privateValue}],expired:[privateValue],
           ...(scenario==='unconfigured'?{}:{index:{key:scenario==='wrong-key'&&inspections===2?'f'.repeat(64):key,eligible:scenario==='plan-drift'?9:3,indexed:scenario==='invalid-count'?4:scenario==='complete'?3:1}})
         }},
         reindex:async(_identity,scope)=>{events.push('enqueue:'+scope.scopeType);if(scenario==='enqueue-failure')throw Error(privateValue);return {configured:true,queued:2}}
-      }})
+      }}}
     }});
     process.argv=['node','memory-maintenance',identity.tenantId,identity.principalId,identity.runId,${JSON.stringify(mode)},...${JSON.stringify([planHash,limit].filter(x => x !== undefined))}];
-    try{await import(${JSON.stringify(cli.href)})}catch{process.exitCode=1}
+    try{await import(${JSON.stringify(cli.href)})}catch(error){process.exitCode=1;console.error(error)}
     console.log('SYNTHETIC_EVENTS='+JSON.stringify({events,inspections}));
   `
   const child = spawnSync(process.execPath, ['--import','tsx','--experimental-test-module-mocks','--input-type=module','-e',script], {
@@ -71,7 +71,7 @@ test('complete scope coverage is distinct from partial, absent and empty configu
   }
 })
 
-for(const scenario of ['identity','cross-tenant','duplicate','wrong-key','invalid-count','revoked']) {
+for(const scenario of ['identity','binding-error','control-error','cross-tenant','duplicate','wrong-key','invalid-count','revoked']) {
   test(`index inspection rejects ${scenario} without enqueue`,()=>{
     const {child,events}=run('index-status',scenario)
     assert.equal(child.status,1)
