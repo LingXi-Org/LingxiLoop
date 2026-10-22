@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util'
 import { projectGenUiReferences } from '../../../src/features/chat/visualize/zcode/gen-ui/domain/references.js'
 import { constants } from 'node:fs'
 import { lstat, mkdir, open, readFile, realpath, rename, unlink } from 'node:fs/promises'
-import { dirname, join, resolve, sep } from 'node:path'
+import { dirname, join, parse, resolve, sep } from 'node:path'
 import { z } from 'zod'
 import { pool } from '../db/pool.js'
 import type { Queryable } from '../db/queryable.js'
@@ -49,8 +49,8 @@ async function document(db: Queryable, input: VisualizeActor & { path: string })
 /** Files are an executor mirror only. All product reads are from authorized PostgreSQL rows. */
 async function ensureOutputDirectory(directory: string) {
   await mkdir(directory, { recursive: true, mode: 0o700 })
-  let current: string = sep
-  for (const segment of directory.split(sep).filter(Boolean)) {
+  let current = parse(directory).root
+  for (const segment of directory.slice(current.length).split(sep).filter(Boolean)) {
     current = join(current, segment)
     if ((await lstat(current)).isSymbolicLink()) throw new HttpError(403, 'Visualize output cannot contain symbolic links.')
   }

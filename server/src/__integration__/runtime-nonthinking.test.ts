@@ -15,6 +15,7 @@ import { env } from '../env.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 import { visualizeReferences } from '../agent-runtime/visualize-projection.js'
+import { activityAnnotation } from '../../../src/lib/runActivity.js'
 
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
@@ -130,8 +131,15 @@ test('production workers always expose full tools and disable thinking even with
         if (chunk.type === 'update-state') replayState.append(chunk.operations)
       }
       const final = replayState.state as unknown as AgentRunSnapshot
+      const previewPart = snapshots.filter(snapshot => snapshot.message.status?.type === 'running')
+        .map(snapshot => snapshot.message.content.find(part => part.type === 'text' && part.text === '第一段'))
+        .find(part => part !== undefined)
+      assert.ok(previewPart)
+      const previewActivity = activityAnnotation(previewPart)
+      assert.equal(previewActivity?.kind, 'answer')
+      assert.match(previewActivity!.id, /^public-text:[a-f0-9]{64}$/)
       assert.deepEqual(final.message.content.filter(part => part.type === 'text'), [{ type: 'text', text: body,
-        providerMetadata: { lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } } } }])
+        providerMetadata: { lingxiloop: { activity: { version: 1, id: previewActivity!.id, kind: 'answer', label: '答复' } } } }])
       assert.equal((final.message.metadata.custom.harness as RunDisplayState).delivery, 'delivered')
       assert.ok(snapshots.some(snapshot => snapshot.message.status?.type === 'running' && snapshot.message.content.some(part => part.type === 'text' && part.text === '第一段')))
       const snapshotResponse = await fetch(`${origin}/api/im/channels/${conversationId}/agents/${agentId}/runs/${run.runId}`, { headers, signal: timeout })

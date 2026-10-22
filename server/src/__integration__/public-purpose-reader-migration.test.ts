@@ -3,7 +3,12 @@ import test from 'node:test'
 import { randomUUID } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
 import { Pool } from 'pg'
-import { migrateDatabase, assertMigrationsCurrent } from '../db/migrate.js'
+import { migrateDatabase as migrateCurrentDatabase, assertMigrationsCurrent as assertCurrentMigrations } from '../db/migrate.js'
+import { migrationHistoryThrough } from './_migration-history.js'
+
+const migrations = await migrationHistoryThrough(53)
+const migrateDatabase = (db: Pool) => migrateCurrentDatabase(db, migrations)
+const assertMigrationsCurrent = (db: Pool) => assertCurrentMigrations(db, migrations)
 
 async function isolated(run:(db:Pool)=>Promise<void>){
   const url=new URL(process.env.DATABASE_URL!)

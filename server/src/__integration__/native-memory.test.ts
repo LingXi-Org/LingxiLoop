@@ -55,7 +55,8 @@ test('native memory steps reach Run Activity and preserve reviewed versioned wri
   worker=createWorker({ controlPlane: app,worker: { id: 'native-memory-worker' },model: {
     modelId: 'native-memory-fixture',contextWindowTokens: 200000,
     async run(input) {
-      assert.deepEqual(input.tools!.filter(tool=>tool.name.startsWith('memory__')).map(tool=>tool.name.slice(8)).sort(),methods)
+      // The host's summary tool is additional to the nine native memory methods.
+      assert.deepEqual(input.tools!.filter(tool=>tool.name.startsWith('memory__')).map(tool=>tool.name.slice(8)).sort(),[...methods,'summary'].sort())
       if(document && method==='read') assert.ok(JSON.stringify(input).includes(document.body),'core memory reaches the next turn')
       hop++
       if(hop===1) return { output: [{ type: 'function_call',callId: document ? 'update-memory' : 'create-memory',name: `memory__${method}`,arguments: JSON.stringify({ scopeType: scope.scopeType,scopeId: scope.scopeId,

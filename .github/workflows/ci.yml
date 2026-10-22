@@ -191,6 +191,8 @@ jobs:
               - 'deploy/komodo/lingxiloop-app-b/gateway.conf'
               - 'deploy/komodo/lingxiloop-app-b/gateway.Dockerfile'
             ci:
+              - '.gitattributes'
+              - 'scripts/checkout-bytes.test.mjs'
               - '.github/workflows/ci.yml'
               - 'scripts/ci-scope.mjs'
               - 'scripts/production-rag-contract.test.mjs'
@@ -326,6 +328,8 @@ jobs:
       - if: matrix.component == 'open-notebook'
         working-directory: third_party/open-notebook
         run: uv run --frozen --python 3.12 pytest -q
+      - if: matrix.component == 'deploy-contract'
+        run: node --test scripts/checkout-bytes.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/public-text-release.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
       - if: matrix.component == 'deploy-contract'
