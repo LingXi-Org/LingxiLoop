@@ -1,11 +1,11 @@
-import type OpenAI from 'openai'
 import { createHash, randomUUID } from 'node:crypto'
 import { setTimeout as delay } from 'node:timers/promises'
-import { acquireCircuit, modelFailure, recoveryPolicy, type ModelFailure } from '@lyyzka/lingxios'
+import { acquireCircuit, type ModelFailure, modelFailure, recoveryPolicy } from '@lyyzka/lingxios'
+import type OpenAI from 'openai'
+import { siliconFlowCost, siliconFlowPricingForModel } from './agent-runtime/pricing.js'
 import { env } from './env.js'
 import { createOpenAIClient } from './llm-client.js'
 import { type LlmCallContext, type LlmUsage, recordLlmCall } from './llm-ledger.js'
-import { siliconFlowCost, siliconFlowPricingForModel } from './agent-runtime/pricing.js'
 
 let testOverride: (() => OpenAI | Promise<OpenAI>) | null = null
 export function __setLlmClientOverrideForTesting(override: typeof testOverride): void {
@@ -140,10 +140,11 @@ export async function createChatCompletion(
 export async function createEmbedding(
   context: LlmCallContext,
   request: OpenAI.Embeddings.EmbeddingCreateParams,
+  options?: OpenAI.RequestOptions,
 ): Promise<OpenAI.Embeddings.CreateEmbeddingResponse> {
   return tracked(context, request.model, async (provider, options) => provider.embeddings.create(request,options), (response) => ({
     prompt_tokens: response.usage.prompt_tokens,completion_tokens: 0,
-  }),{},'embedding')
+  }),options,'embedding')
 }
 
 export async function createImage(
