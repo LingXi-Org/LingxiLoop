@@ -2,6 +2,7 @@
 // No Git/private API, secret or env writes.
 import {READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,isPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality} from './public-text-release.mjs'
 import {seedCommand} from './public-text-seed.mjs'
+import {assertStoppedReceipt,assertStoppedContainers,assertRecoveryConfig} from './host-release-stopped-recovery.mjs'
 import {isDeepStrictEqual as equal} from 'node:util'
 import {setTimeout as delay} from 'node:timers/promises'
 import {createTransport,parseMarker,validateStateReceipt,stateCommand,METADATA_CODE} from './schema-upgrade-komodo.mjs'
@@ -12,7 +13,7 @@ const id=/^[a-f0-9]{24}$/,hex=/^[a-f0-9]{64}$/
 const PUBLIC_METADATA_CODE=`const {publicTextDeployment,publicTextModelOptions}=await import('./server/src/agent-runtime/public-text-deployment.ts');Object.assign(metadata,{publicText:releaseVersions.publicText,deployment:publicTextDeployment,configurationSha256:hash(await readFile('server/src/agent-runtime/public-text-deployment.ts')),modelOptions:publicTextModelOptions()});`;
 const TRACE_METADATA_CODE=`Object.assign(metadata,{runTrace:releaseVersions.runTrace});`;
 const oneOff=(stack,service,extra)=>({stack,service,no_tty:true,no_deps:true,detach:false,service_ports:false,pull:false,...extra})
-export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,onProgress=async()=>{},transport,wait=delay,backupExecutor=executeMemoryBackup}){
+export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,onProgress=async()=>{},transport,wait=delay,backupExecutor=executeMemoryBackup,sourceConfigurationProof}){
  validateHostPlanShape(plan)
  const native=plan.format===NATIVE_SCHEMA_FORMAT,trace=[TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan),nodeEnvironments=publicText?qualifyImageEnvironments(plan):null
  const t=transport??createTransport({apiKey,apiSecret,signal,onProgress,confirmTerminal:native||publicText})
@@ -139,6 +140,20 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
   return parseMarker(await t.execute('RunStackService',oneOff(stack,'db-migrate',{command:['timeout','-k','5','30','node',...(publicText?['--import','tsx']:[]),'--input-type=module','-e',METADATA_CODE+(publicText?PUBLIC_METADATA_CODE:'')+(trace?TRACE_METADATA_CODE:'')+`console.log('SCHEMA_UPGRADE_METADATA='+JSON.stringify(metadata));`]})),'METADATA')
  }
  return {assertIdle,inspect,verifyImages,stage,state,metadata,
+  async resumeStoppedBoundary(receipt){
+   const original=assertStoppedReceipt(plan,receipt)
+   check([...phases.values()].every(p=>p==='source')&&configs.size===0&&!migrationSubmitted&&!seedSubmitted,'Recovery initialization may run only once')
+   for(const stack of APPS)phases.set(stack,'target')
+   await guard();assertStoppedContainers(await inspect(),original)
+   for(const row of plan.stacks)assertRecoveryConfig(await t.read('GetStack',{stack:row.stack}),row,sourceConfigurationProof?.find(r=>r.stack===row.stack))
+   const operations={StopStack:'StopStackService',RunStackService:'RunStackService',WriteStackFileContents:'WriteStackContents'}
+   for(const e of receipt.events.filter(e=>e.phase==='komodo'&&e.status==='complete')){
+    const u=await t.read('GetUpdate',{id:e.updateId})
+    check(u?._id?.$oid===e.updateId&&u.operation===operations[e.operation]&&u.target?.type==='Stack'&&u.target.id===identities.get(e.stack)&&u.status==='Complete'&&u.success===true,'Saved native update not confirmed')
+   }
+   for(const r of original)stoppedWriters.add(r.stack+':'+r.service)
+   await onProgress({phase:'recovery',status:'old-updates-and-stopped-boundary-confirmed'})
+  },
   async stop(stack,service){
    check(APPS.includes(stack)&&(service==='worker'||(native||provenanceUpgrade)&&service==='lingxiloop')&&phases.get(stack)==='target','Only reviewed old writers may be drained')
    await guard([stack]);const result=await t.execute('StopStack',{stack,services:[service],stop_time:150})
