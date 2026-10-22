@@ -1,6 +1,6 @@
 {
   "format": "model-config-release-validation/v1",
-  "recordedAt": "2026-10-22T17:29:17.132Z",
+  "recordedAt": "2026-10-22T17:33:07.993Z",
   "productionWrites": false,
   "productionReads": "GetStack metadata only; raw environment never persisted",
   "testedSourceFiles": [
@@ -11,8 +11,8 @@
     },
     {
       "path": "scripts/host-release-model-config-komodo.mjs",
-      "bytes": 12731,
-      "sha256": "0eebda3bf17a23462a6f13d57538a652c63d08627c2233a17b69e813a68a6a20"
+      "bytes": 12900,
+      "sha256": "d4c575fb28a4f95e78df23c8bd169271b627ecdf2fae71d48ed84687c9c38be5"
     },
     {
       "path": "scripts/host-release-model-config-evidence.mjs",
@@ -26,8 +26,8 @@
     },
     {
       "path": "scripts/host-release-model-config.test.mjs",
-      "bytes": 14608,
-      "sha256": "2f29ebc20cc616a296e8fca831c0d4dc93d31f9922b67ee6cba5864c705d717f"
+      "bytes": 14690,
+      "sha256": "97b5ecba5a96b9948e2b571870193181d5d7c51385f3e03f29b6920d0845861f"
     },
     {
       "path": ".github/workflows/ci.yml",
@@ -46,7 +46,7 @@
     "passed": 215,
     "failed": 0,
     "skipped": 0,
-    "rawLogSha256": "a153586e3b62b55bdc4991c5d6f12603f9e09f236c911b7376f000aee3de50cf"
+    "rawLogSha256": "f6ecd2d414935c38612d43f231ae9ee3769ef018f83fb3f4c20050f453d41d17"
   },
   "cliFunctionalEvidence": "cli-functional.json",
   "initialRed": "Focused core and adapter contracts failed with missing modules before implementation; not a claimed production defect reproduction",
@@ -56,5 +56,10 @@
     "actual source acceptance and stopped knowledge/fence evidence",
     "authorized production execution and HTTPS acceptance",
     "separate shadow generation and native memory completion"
-  ]
+  ],
+  "additionalRedGreen": {
+    "scenario": "same-image container NODE_VERSION drift",
+    "red": "Missing expected rejection before explicit audited baked Node22 binding",
+    "green": "Full 215 owning checks passed after minimal adapter guard"
+  }
 }

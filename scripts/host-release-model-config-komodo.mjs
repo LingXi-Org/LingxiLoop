@@ -20,6 +20,7 @@ export function createModelConfigOperations({plan,imageConfig,apiKey,apiSecret,s
  validateModelConfigPlan(plan)
  check(apiKey&&apiSecret&&typeof imageConfig==='string'&&'sha256:'+modelHash(imageConfig)===plan.release.image.configDigest,'Existing credentials and audited source image config required')
  const baked=JSON.parse(imageConfig).config?.Env;check(Array.isArray(baked),'Audited image environment unavailable')
+ const bakedNode=environment(baked).get('NODE_VERSION');check(/^22\.\d+\.\d+$/.test(bakedNode??''),'Audited Node22 image required')
  let current={stopped:new Set(),configured:new Set(),deployed:new Map()},nativeContext={}
  const t=transport??createTransport({apiKey,apiSecret,signal,fetcher,wait,confirmTerminal:true,onProgress:e=>onProgress({...e,...nativeContext})})
  const rowFor=stack=>{const r=plan.stacks.find(r=>r.stack===stack);check(r,'Unexpected stack');return r}
@@ -60,7 +61,7 @@ export function createModelConfigOperations({plan,imageConfig,apiKey,apiSecret,s
   const row=rowFor(stack),matches=(await t.read('ListStackServices',{stack})).filter(r=>r.service===service)
   check(matches.length===1&&hex.test(matches[0].container?.id??''),'Ambiguous application container')
   const c=await t.read('InspectContainer',{server:row.server,container:matches[0].container.id}),env=environment(c.Config?.Env)
-  check(c.Id===matches[0].container.id&&c.Config.Image===IMAGE+plan.release.sha&&env.get('LINGXILOOP_COMMIT_SHA')===plan.release.sha&&c.State?.OOMKilled===false&&c.State?.Restarting===false&&c.RestartCount===0&&Number.isSafeInteger(c.State.Pid)&&c.State.Pid>=0,'Application image/state changed')
+  check(c.Id===matches[0].container.id&&c.Config.Image===IMAGE+plan.release.sha&&env.get('LINGXILOOP_COMMIT_SHA')===plan.release.sha&&env.get('NODE_VERSION')===bakedNode&&c.State?.OOMKilled===false&&c.State?.Restarting===false&&c.RestartCount===0&&Number.isSafeInteger(c.State.Pid)&&c.State.Pid>=0,'Application image/state changed')
   return {c,env,policy:modelContainerPolicyHash(c)}
  }
  async function assertBoundary(ctx=current){

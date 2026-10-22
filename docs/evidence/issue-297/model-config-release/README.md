@@ -12,6 +12,11 @@ modules did not yet exist. The final focused suite has 9 passing cases, and
 the existing owning deployment-contract command including this suite has
 215 passing cases, zero failures and zero skips.
 
+A later same-image `NODE_VERSION` drift negative first failed with a missing
+rejection. The adapter now binds that value to the audited baked Node22 value
+before accepting any container; the complete 215-case command was rerun and
+passed after the two-line guard change.
+
 `cli-functional.json` records two complete offline CLI checks. Credentials
 were absent and the proxy pointed to an unreachable loopback address. Exact
 historical public source provenance was validated together with explicitly
