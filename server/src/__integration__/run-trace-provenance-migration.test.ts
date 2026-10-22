@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { randomUUID } from 'node:crypto'
+import { setTimeout as delay } from 'node:timers/promises'
 import { Pool } from 'pg'
 import { migrateDatabase, assertMigrationsCurrent } from '../db/migrate.js'
 
@@ -12,15 +13,24 @@ async function isolated(run:(db:Pool)=>Promise<void>){
   await admin.query(`CREATE DATABASE "${name}"`)
   url.pathname='/'+name
   const db=new Pool({connectionString:url.toString()})
-  try{await run(db)}finally{await db.end();await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);await admin.end()}
+  try{await run(db)}finally{
+    await db.end()
+    // Pool.end closes local sockets before PostgreSQL necessarily consumes their
+    // final frames. Do not FORCE-terminate this fixture's just-closed readers.
+    for(let attempt=0;attempt<40;attempt++){
+      if(!(await admin.query('SELECT 1 FROM pg_stat_activity WHERE datname=$1',[name])).rowCount)break
+      await delay(25)
+    }
+    await admin.query(`DROP DATABASE "${name}"`);await admin.end()
+  }
 }
 async function source51(db:Pool){
   const applied=await migrateDatabase(db)
-  assert.equal(applied.at(-1),'0052_run_trace_provenance')
+  assert.equal(applied.at(-1),'0053_conversation_repair_provenance')
   await assertMigrationsCurrent(db)
-  // Local synthetic fixture:0052 is provenance-only, so restore precisely its
-  // source metadata to exercise the actual51->52 transition, never production.
-  await db.query("DELETE FROM schema_migrations WHERE version=52; UPDATE lingxios_installation SET runtime_version='3.7.0'")
+  // Local synthetic fixture:0052/0053 are provenance-only, so restore the0052
+  // source metadata to exercise51->52 followed by53, never production.
+  await db.query("DELETE FROM schema_migrations WHERE version>=52; UPDATE lingxios_installation SET runtime_version='3.7.0'")
 }
 const installed=async(db:Pool)=>(await db.query('SELECT * FROM lingxios_installation')).rows
 const history=async(db:Pool)=>(await db.query('SELECT * FROM schema_migrations ORDER BY version')).rows
@@ -33,9 +43,9 @@ test('0052 fresh history, exact51 upgrade and repeat preserve native14 without D
   const native=await db.query("SELECT oid,relname FROM pg_class WHERE relnamespace='lingxios'::regnamespace ORDER BY oid")
   await db.query(`CREATE FUNCTION forbid_trace_ddl() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'unexpected native DDL'; END $$;
     CREATE EVENT TRIGGER forbid_trace_ddl ON ddl_command_start EXECUTE FUNCTION forbid_trace_ddl()`)
-  assert.deepEqual(await migrateDatabase(db),['0052_run_trace_provenance'])
+  assert.deepEqual(await migrateDatabase(db),['0052_run_trace_provenance','0053_conversation_repair_provenance'])
   assert.deepEqual((await history(db)).slice(0,51),old)
-  assert.equal((await installed(db))[0].runtime_version,'3.8.0')
+  assert.equal((await installed(db))[0].runtime_version,'3.8.2')
   assert.equal((await db.query('SELECT version FROM lingxios.schema_version')).rows[0].version,14)
   assert.deepEqual((await db.query("SELECT oid,relname FROM pg_class WHERE relnamespace='lingxios'::regnamespace ORDER BY oid")).rows,native.rows)
   const target=await installed(db),targetHistory=await history(db)
@@ -70,7 +80,7 @@ test('0052 ledger failure rolls provenance back and mismatched source or target 
   await db.query("UPDATE schema_migrations SET checksum=repeat('b',64) WHERE version=51")
   await assert.rejects(migrateDatabase(db),/checksum mismatch/)
   await db.query('UPDATE schema_migrations SET checksum=$1 WHERE version=51',[old[50].checksum])
-  assert.deepEqual(await migrateDatabase(db),['0052_run_trace_provenance'])
+  assert.deepEqual(await migrateDatabase(db),['0052_run_trace_provenance','0053_conversation_repair_provenance'])
   const target=await installed(db),targetHistory=await history(db)
   for(const [column,value] of [['runtime_version','3.7.0'],['schema_version',13],['protocol_version',12],['schema_sha256','a'.repeat(64)]] as const){
     await db.query(`UPDATE lingxios_installation SET ${column}=$1`,[value])

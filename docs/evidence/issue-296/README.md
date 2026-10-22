@@ -2,7 +2,7 @@
 
 This evidence uses synthetic local records and the user's redacted three-call example. It contains no production conversations, original visualization HTML, credentials or raw model input. Production access was not retried, and no production change or acceptance is claimed.
 
-`ended.png` records an execution that has ended with a genuine `partial` lifecycle and `inconclusive` goal outcome; it does not establish a satisfied goal. The formal 3.8.0 trace reader maps this state to `unknown`, so the screenshot's trace label is `结果未知` while the message is `未完成`. The separate issue 298 upgrade and its product status patch preserve `partial`/`blocked` after the formal 3.8.1 package is available. These captures establish real recorded intervals, not a successful outcome for this fixture.
+`ended.png` records an execution that has ended with a genuine `partial` lifecycle and `inconclusive` goal outcome; it does not establish a satisfied goal. The formal 3.8.0 trace reader maps this state to `unknown`, so the screenshot's trace label is `结果未知` while the message is `未完成`. The separate issue 298 upgrade and its product status patch preserve `partial`/`blocked` and require the formally published 3.8.2 package. Formal 3.8.1 fixed direct reads but still discarded these terminal traces during SSE replay; [LingxiOS #45](https://github.com/LingXi-Org/LingxiOS/issues/45) records that follow-up defect and its 3.8.2 correction. These captures establish real recorded intervals, not a successful outcome for this fixture.
 
 ## Findings and correction
 

@@ -1,10 +1,11 @@
 const traceFormat='run-trace-provenance-host-release/v1',traceMigration={version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'};
 import test from 'node:test'
-import {READER_FORMAT,PRODUCER_FORMAT,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
+import {READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION53,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
 import {createHostReleaseOperations} from './host-release-komodo.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,hash,sealHostPlan,runHostRelease,runImagePreparation} from './host-release.mjs'
 function fixture(fault={}){
+ fault={...fault,trace:fault.trace||fault.repair}
  const a='a'.repeat(40),b='b'.repeat(40),h='c'.repeat(64),d='sha256:'+h
  const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:h,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations:Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(i+1),checksum:h}))}
  const image={indexDigest:d,configDigest:'sha256:'+'d'.repeat(64),manifestDigest:'sha256:'+'e'.repeat(64),diffIds:[d],auditSha256:h}
@@ -22,9 +23,10 @@ function fixture(fault={}){
   source.schemaHash=SCHEMA14;Object.assign(target,{runtime:'3.7.0',schemaHash:SCHEMA14,productVersion:51,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.7.0/fixture',migrations:[...source.migrations,MIGRATION51]});
   if(fault.producer||fault.trace)Object.assign(source,{...target,sha:a});
   if(fault.trace)Object.assign(target,{runtime:'3.8.0',productVersion:52,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.0/fixture',migrations:[...source.migrations,traceMigration]});
+  if(fault.repair){Object.assign(source,{runtime:target.runtime,productVersion:target.productVersion,tarball:target.tarball,migrations:target.migrations});Object.assign(target,{runtime:'3.8.2',productVersion:53,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.2/fixture',migrations:[...source.migrations,MIGRATION53]});}
   source.image={...image,configDigest:'sha256:'+hash(imageConfigs.source)};target.image={...image,configDigest:'sha256:'+hash(imageConfigs.target)};
  }
- const plan=sealHostPlan({format:fault.trace?traceFormat:fault.reader?READER_FORMAT:fault.producer?PRODUCER_FORMAT:fault.native14?'native-schema-host-release/v1':fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',...(fault.native14?{backup}:{}),...((fault.reader||fault.producer||fault.trace)?{publicText,imageConfigs}:{}),createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
+ const plan=sealHostPlan({format:fault.repair?CONVERSATION_FORMAT:fault.trace?traceFormat:fault.reader?READER_FORMAT:fault.producer?PRODUCER_FORMAT:fault.native14?'native-schema-host-release/v1':fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',...(fault.native14?{backup}:{}),...((fault.reader||fault.producer||fault.trace)?{publicText,imageConfigs}:{}),createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
   const source='public source '+stack,target=i===2?source:'public target '+stack,preparation='public pull '+stack
   files.set(stack,{source,target,preparation});actualFiles.set(stack,source)
   const s={commit:a,branch:'release/source',sha256:hash(source),autoPull:true,extraArgs:[]}
@@ -185,4 +187,14 @@ test('trace real adapter proves8+31 recipe, capability metadata and public migra
  assert.equal(f.calls.filter(c=>JSON.stringify(c.command??[]).includes('expected_plans')).length,1);assert.equal(f.calls.some(c=>c.op==='SnapshotRestore'),false);assert.equal(JSON.stringify(f.events).includes('private fixture'),false);
  const n=f.calls.length;await assert.rejects(f.ops.migrate());await assert.rejects(f.ops.backup());assert.equal(f.calls.length,n);
  const bad=fixture({trace:true,traceMetadataWrong:true});await assert.rejects(bad.run());assert.equal(bad.calls.some(c=>c.op==='StopStack'||c.op==='DeployStack'),false);
+});
+
+test('conversation repair adapter proves8+31 recipe, capability metadata and public migration without env or backup',async()=>{
+ const f=fixture({repair:true}),native=c=>['WriteStackFileContents','RunStackService','PullStack','StopStack','DeployStack'].includes(c.op);
+ await runImagePreparation({plan:f.plan,ops:f.ops});assert.equal(f.calls.filter(native).length,8);f.calls.length=0;await f.run();assert.equal(f.calls.filter(native).length,31);
+ const migrations=f.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin'));assert.equal(migrations.length,1);assert.equal(Object.hasOwn(migrations[0],'env'),false);assert.match(migrations[0].command.at(-1),/releaseVersions\.runTrace/);assert.match(migrations[0].command.at(-1),/"runTrace":1/);
+ assert.deepEqual(f.calls.filter(c=>c.op==='StopStack').map(c=>[c.stack,c.services[0]]),['worker','lingxiloop'].flatMap(s=>APPS.map(a=>[a,s])));assert.deepEqual(f.calls.filter(c=>c.op==='DeployStack').map(c=>[c.stack,c.services[0]]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>[a,s])));
+ assert.equal(f.calls.filter(c=>JSON.stringify(c.command??[]).includes('expected_plans')).length,1);assert.equal(f.calls.some(c=>c.op==='SnapshotRestore'),false);assert.equal(JSON.stringify(f.events).includes('private fixture'),false);
+ const n=f.calls.length;await assert.rejects(f.ops.migrate());await assert.rejects(f.ops.backup());assert.equal(f.calls.length,n);
+ const bad=fixture({repair:true,traceMetadataWrong:true});await assert.rejects(bad.run());assert.equal(bad.calls.some(c=>c.op==='StopStack'||c.op==='DeployStack'),false);
 });

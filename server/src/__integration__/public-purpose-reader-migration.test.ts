@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { randomUUID } from 'node:crypto'
+import { setTimeout as delay } from 'node:timers/promises'
 import { Pool } from 'pg'
 import { migrateDatabase, assertMigrationsCurrent } from '../db/migrate.js'
 
@@ -12,14 +13,23 @@ async function isolated(run:(db:Pool)=>Promise<void>){
   await admin.query(`CREATE DATABASE "${name}"`)
   url.pathname='/'+name
   const db=new Pool({connectionString:url.toString()})
-  try{await run(db)}finally{await db.end();await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);await admin.end()}
+  try{await run(db)}finally{
+    await db.end()
+    // Pool.end closes local sockets before PostgreSQL necessarily consumes their
+    // final frames. Do not FORCE-terminate this fixture's just-closed readers.
+    for(let attempt=0;attempt<40;attempt++){
+      if(!(await admin.query('SELECT 1 FROM pg_stat_activity WHERE datname=$1',[name])).rowCount)break
+      await delay(25)
+    }
+    await admin.query(`DROP DATABASE "${name}"`);await admin.end()
+  }
 }
 async function source50(db:Pool){
   const applied=await migrateDatabase(db)
-  assert.equal(applied.at(-1),'0052_run_trace_provenance')
+  assert.equal(applied.at(-1),'0053_conversation_repair_provenance')
   await assertMigrationsCurrent(db)
-  // Local synthetic fixture:0051/0052 are provenance-only. Restore the source
-  // metadata to exercise50->51 followed by52, never production.
+  // Local synthetic fixture:0051/0052/0053 are provenance-only. Restore the source
+  // metadata to exercise50->51 followed by52/53, never production.
   await db.query("DELETE FROM schema_migrations WHERE version>=51; UPDATE lingxios_installation SET runtime_version='3.6.0'")
 }
 const installed=async(db:Pool)=>(await db.query('SELECT * FROM lingxios_installation')).rows
@@ -33,9 +43,9 @@ test('0051 fresh history, exact50 upgrade and repeat preserve native14 without D
   const native=await db.query("SELECT oid,relname FROM pg_class WHERE relnamespace='lingxios'::regnamespace ORDER BY oid")
   await db.query(`CREATE FUNCTION forbid_reader_ddl() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'unexpected native DDL'; END $$;
     CREATE EVENT TRIGGER forbid_reader_ddl ON ddl_command_start EXECUTE FUNCTION forbid_reader_ddl()`)
-  assert.deepEqual(await migrateDatabase(db),['0051_public_text_reader','0052_run_trace_provenance'])
+  assert.deepEqual(await migrateDatabase(db),['0051_public_text_reader','0052_run_trace_provenance','0053_conversation_repair_provenance'])
   assert.deepEqual((await history(db)).slice(0,50),old)
-  assert.equal((await installed(db))[0].runtime_version,'3.8.0')
+  assert.equal((await installed(db))[0].runtime_version,'3.8.2')
   assert.equal((await db.query('SELECT version FROM lingxios.schema_version')).rows[0].version,14)
   assert.deepEqual((await db.query("SELECT oid,relname FROM pg_class WHERE relnamespace='lingxios'::regnamespace ORDER BY oid")).rows,native.rows)
   const target=await installed(db),targetHistory=await history(db)
@@ -70,7 +80,7 @@ test('0051 ledger failure rolls provenance back and mismatched source or target 
   await db.query("UPDATE schema_migrations SET checksum=repeat('b',64) WHERE version=50")
   await assert.rejects(migrateDatabase(db),/checksum mismatch/)
   await db.query('UPDATE schema_migrations SET checksum=$1 WHERE version=50',[old[49].checksum])
-  assert.deepEqual(await migrateDatabase(db),['0051_public_text_reader','0052_run_trace_provenance'])
+  assert.deepEqual(await migrateDatabase(db),['0051_public_text_reader','0052_run_trace_provenance','0053_conversation_repair_provenance'])
   await db.query("UPDATE lingxios_installation SET runtime_version='3.6.0'")
   const mismatched=await installed(db)
   await assert.rejects(assertMigrationsCurrent(db),/package\/schema mismatch/)
