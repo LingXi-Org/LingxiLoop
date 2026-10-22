@@ -1,0 +1,124 @@
+TAP version 13
+# Subtest: native index status emits only the current model/key and hashed aggregate scope coverage
+ok 1 - native index status emits only the current model/key and hashed aggregate scope coverage
+  ---
+  duration_ms: 734.852204
+  type: 'test'
+  ...
+# Subtest: complete scope coverage is distinct from partial, absent and empty configuration
+ok 2 - complete scope coverage is distinct from partial, absent and empty configuration
+  ---
+  duration_ms: 1523.122536
+  type: 'test'
+  ...
+# Subtest: index inspection rejects identity without enqueue
+ok 3 - index inspection rejects identity without enqueue
+  ---
+  duration_ms: 305.034326
+  type: 'test'
+  ...
+# Subtest: index inspection rejects binding-error without enqueue
+ok 4 - index inspection rejects binding-error without enqueue
+  ---
+  duration_ms: 387.595351
+  type: 'test'
+  ...
+# Subtest: index inspection rejects control-error without enqueue
+ok 5 - index inspection rejects control-error without enqueue
+  ---
+  duration_ms: 393.55054
+  type: 'test'
+  ...
+# Subtest: index inspection rejects cross-tenant without enqueue
+ok 6 - index inspection rejects cross-tenant without enqueue
+  ---
+  duration_ms: 326.667145
+  type: 'test'
+  ...
+# Subtest: index inspection rejects duplicate without enqueue
+ok 7 - index inspection rejects duplicate without enqueue
+  ---
+  duration_ms: 337.018159
+  type: 'test'
+  ...
+# Subtest: index inspection rejects wrong-key without enqueue
+ok 8 - index inspection rejects wrong-key without enqueue
+  ---
+  duration_ms: 291.338331
+  type: 'test'
+  ...
+# Subtest: index inspection rejects invalid-count without enqueue
+ok 9 - index inspection rejects invalid-count without enqueue
+  ---
+  duration_ms: 372.349727
+  type: 'test'
+  ...
+# Subtest: index inspection rejects revoked without enqueue
+ok 10 - index inspection rejects revoked without enqueue
+  ---
+  duration_ms: 478.446292
+  type: 'test'
+  ...
+# Subtest: index reindex requires the reviewed scope plan and an explicit sufficient bound
+ok 11 - index reindex requires the reviewed scope plan and an explicit sufficient bound
+  ---
+  duration_ms: 2425.730221
+  type: 'test'
+  ...
+# Subtest: uncertain enqueue stops without retry or enqueueing a remaining scope
+ok 12 - uncertain enqueue stops without retry or enqueueing a remaining scope
+  ---
+  duration_ms: 673.418584
+  type: 'test'
+  ...
+# Subtest: memory maintenance closes every resource and exits naturally: none
+ok 13 - memory maintenance closes every resource and exits naturally: none
+  ---
+  duration_ms: 445.323175
+  type: 'test'
+  ...
+# Subtest: memory maintenance closes every resource and exits naturally: operation
+ok 14 - memory maintenance closes every resource and exits naturally: operation
+  ---
+  duration_ms: 681.423149
+  type: 'test'
+  ...
+# Subtest: memory maintenance closes every resource and exits naturally: arguments
+ok 15 - memory maintenance closes every resource and exits naturally: arguments
+  ---
+  duration_ms: 379.973268
+  type: 'test'
+  ...
+# Subtest: memory maintenance closes every resource and exits naturally: control
+ok 16 - memory maintenance closes every resource and exits naturally: control
+  ---
+  duration_ms: 459.870392
+  type: 'test'
+  ...
+# Subtest: memory maintenance closes every resource and exits naturally: subscriber
+ok 17 - memory maintenance closes every resource and exits naturally: subscriber
+  ---
+  duration_ms: 395.92139
+  type: 'test'
+  ...
+# Subtest: memory maintenance closes every resource and exits naturally: redis
+ok 18 - memory maintenance closes every resource and exits naturally: redis
+  ---
+  duration_ms: 372.886447
+  type: 'test'
+  ...
+# Subtest: memory maintenance closes every resource and exits naturally: database
+ok 19 - memory maintenance closes every resource and exits naturally: database
+  ---
+  duration_ms: 385.0451
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 9040.303452
