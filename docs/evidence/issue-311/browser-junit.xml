@@ -1,18 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="13" failures="0" errors="0" skipped="0" time="35.850">
-  <testsuite name="e2e/forum-submission/submission.e2e.ts" tests="13" failures="0" errors="0" skipped="0" time="35.850">
-    <testcase name="missing reference explains the blocker without submitting [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="4.281"/>
-    <testcase name="history loading does not disable editing or valid submission [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="3.125"/>
-    <testcase name="rooms-retry recovers without losing the answer [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.655"/>
-    <testcase name="messages-retry recovers without losing the answer [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.816"/>
-    <testcase name="submit failure retains content, attachment, reference and retry key [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="3.442"/>
-    <testcase name="upload retry keeps the draft [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.158"/>
-    <testcase name="late room list from another course is ignored [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.560"/>
-    <testcase name="empty offers refresh after a real completed turn [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.611"/>
-    <testcase name="incomplete offers refresh after a real completed turn [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.833"/>
-    <testcase name="fixed homework conversation still loads without the course room list [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.446"/>
-    <testcase name="pending upload explains why submission is disabled [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.290"/>
-    <testcase name="entering the course conversation and returning retains the draft [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.462"/>
-    <testcase name="a late accepted submission cannot clear a newly opened draft [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="4.171"/>
+<testsuites name="e2e" tests="15" failures="0" errors="0" skipped="0" time="78.861">
+  <testsuite name="e2e/forum-submission/submission.e2e.ts" tests="15" failures="0" errors="0" skipped="0" time="78.861">
+    <testcase name="missing reference explains the blocker without submitting [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="4.589"/>
+    <testcase name="history loading does not disable editing or valid submission [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.248"/>
+    <testcase name="rooms-retry recovers without losing the answer [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.140"/>
+    <testcase name="messages-retry recovers without losing the answer [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.658"/>
+    <testcase name="submit failure retains content, attachment, reference and retry key [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.734"/>
+    <testcase name="upload retry keeps the draft [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.788"/>
+    <testcase name="late room list from another course is ignored [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.303"/>
+    <testcase name="empty offers refresh after a real completed turn [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.080"/>
+    <testcase name="incomplete offers refresh after a real completed turn [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.308"/>
+    <testcase name="fixed homework conversation still loads without the course room list [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.178"/>
+    <testcase name="pending upload explains why submission is disabled [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.899"/>
+    <testcase name="entering the course conversation and returning retains the draft [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.928"/>
+    <testcase name="a late accepted submission cannot clear a newly opened draft [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="3.252"/>
+    <testcase name="history polling accepts a response slower than its five second cadence [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="12.644"/>
+    <testcase name="history polling reaches its real thirty second timeout and exposes retry [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="36.112"/>
   </testsuite>
 </testsuites>

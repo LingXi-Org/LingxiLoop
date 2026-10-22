@@ -12,8 +12,8 @@
     "webBuild": "passed (existing CSS/chunk warnings)",
     "e2eTypecheck": "passed",
     "officialBrowser": {
-      "runId": "01a1642d-9e1e-7016-a1e2-8d499345eacf",
-      "passed": 13,
+      "runId": "01a16438-7ac3-78fd-beee-6f3baf601506",
+      "passed": 15,
       "failed": 0
     }
   },
@@ -30,12 +30,12 @@
     },
     {
       "path": "src/features/learning/forum/ForumSubmission.tsx",
-      "sha256": "28965bab77a1c01c0abdef08fb122db1012cf3f89f1a6e2703fbaf60c323b8c8",
-      "bytes": 17195
+      "sha256": "62000c1f23ee701b906e79d26d82aa5359853e3e3a76184f37a6c6448a2aecc1",
+      "bytes": 17210
     },
     {
       "path": "e2e.forum-submission.config.ts",
-      "sha256": "132f3276d88f38e24464609b598ea2a5caa44b5ea57386479e33a555ca47861d",
+      "sha256": "5f3058e0937d40822480e25d5abdd9bca1194310750b3a1a8c946b3ceee172d6",
       "bytes": 773
     },
     {
@@ -55,13 +55,13 @@
     },
     {
       "path": "e2e/forum-submission/main.tsx",
-      "sha256": "5f217d64f6abf8adb903e3251c270c1e0ae77e881b56fe6eaaeb082d65b81da2",
-      "bytes": 6411
+      "sha256": "944b1a111ebf7d26098df1b9c607529ce85475f453e4334d4b071a454b6f96ca",
+      "bytes": 7233
     },
     {
       "path": "e2e/forum-submission/submission.e2e.ts",
-      "sha256": "705f3516b8c2a954b1c75ec239c2cebf0a38c7e05e51b72a1f55c3d01e29bf87",
-      "bytes": 10804
+      "sha256": "cff39b092df4a2a631832af5c71e27e75faff5adf4eaabea0d2df733afe48ba3",
+      "bytes": 11989
     },
     {
       "path": "e2e/forum-submission/vite.config.ts",
@@ -129,11 +129,42 @@
     {
       "path": "D:\\Temp\\issue311-final-build.log",
       "sha256": "6e3db604370fbd814be5462c3dcb87f846aa73017dd9aef35a1096e064dd1710"
+    },
+    {
+      "path": "D:\\Temp\\issue311-poll-red.log",
+      "sha256": "cab1a4510f99beafc6904558d86609e4dad61e8dfd9bd98b65042a314cfed28a"
+    },
+    {
+      "path": "D:\\Temp\\issue311-poll-final15.log",
+      "sha256": "35a1d103d9919942f75903f005b1c98a20b7bac0d143e222a122520fa30e1ec3"
+    },
+    {
+      "path": "D:\\Temp\\issue311-poll-lint.log",
+      "sha256": "0770e8088119a426bb20a6a9e260d4683a96dc10924f9339657e7554acc088b7"
+    },
+    {
+      "path": "D:\\Temp\\issue311-poll-test.log",
+      "sha256": "93aae4ee2abfb43e3a0e1bf8f9f91f5173df168687e9aa7db4f370e7b1d52631"
+    },
+    {
+      "path": "D:\\Temp\\issue311-poll-test-e2e-typecheck.log",
+      "sha256": "7ce569a2f971c1f1673cec0f0cb5cc97b0761d0f28efe8c217204d1059a26846"
+    },
+    {
+      "path": "D:\\Temp\\issue311-poll-build.log",
+      "sha256": "ba9958ae3cf16faae8d6e749aef0d7c5e4164a004037e48b0faa8523a48f498f"
     }
   ],
   "lateReceiptNegative": {
     "oldBehavior": "failed on actually empty reopened editor",
     "fixedBehavior": "passed",
     "redLog": "D:\\Temp\\issue311-late-red3.log"
+  },
+  "pollingRegression": {
+    "oldBehavior": "both slow response and real timeout failed",
+    "fixedBehavior": "both passed; five seconds after completion, actual thirty-second read deadline unchanged",
+    "slowResponseMs": 6500,
+    "readTimeoutMs": 30000,
+    "redLog": "D:\\Temp\\issue311-poll-red.log"
   }
 }

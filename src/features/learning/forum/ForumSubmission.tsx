@@ -64,9 +64,9 @@ function StudentSubmission({ space, item }: { space: LearningSpace; item: ForumI
   },[space.courseId,space.canReview,item.id])
   useEffect(()=>{mounted.current=true;void load();return()=>{mounted.current=false;historyRequest.current?.abort()}},[load])
   useEffect(()=>{
-    if(!versions.some(v=>v.assessment?.status==='PENDING'||v.assessment?.status==='FAILED'))return
-    const timer=setInterval(()=>void load(),5000);return ()=>clearInterval(timer)
-  },[versions,load])
+    if(loading||!versions.some(v=>v.assessment?.status==='PENDING'||v.assessment?.status==='FAILED'))return
+    const timer=setTimeout(()=>void load(),5000);return ()=>clearTimeout(timer)
+  },[versions,load,loading])
   const disabled=busy||uploading
   const blocker=uploading?'附件正在上传，请等待上传完成。':!answer.trim()&&!links.trim()&&!attachments.length?'请填写作业内容，或添加链接、附件。':!references.length?'请先选择学习对话，并勾选至少一段本人作答和助手回复。':''
   return <section aria-label="作业提交" className="space-y-4 pt-6">

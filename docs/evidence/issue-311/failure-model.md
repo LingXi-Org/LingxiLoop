@@ -7,4 +7,5 @@
 - Upload in progress must block submission with visible status. Upload failure must retain the draft and successful attachments and permit retry.
 - Failed submission must retain content, attachments, references and the same idempotency key for an unchanged retry; success alone clears them. Double submission must not race.
 - An old successful submission after leaving must not clear a reopened and already saved new draft.
+- Automatic history polling must wait for the current read to finish: a response slower than five seconds must complete, and a hung request must reach the real thirty-second timeout and expose retry.
 - Browser regressions mount the actual ForumSubmission and ConversationReferencePicker with synthetic HTTP, using tester-army/e2e and @e2e-dev/web. They are not an original private production-case replay or provider/DB integration proof.

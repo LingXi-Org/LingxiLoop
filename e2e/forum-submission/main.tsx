@@ -15,7 +15,8 @@ useAuth.setState({ activeCompanyId: 'company', user: { id: 'student', name: '学
 useConversations.setState({ projectId: 'project', list: [{ id: 'room' } as never] })
 localStorage.clear()
 localStorage.setItem('lingxiloop.forum.draft:company:student:submission:course:assignment', JSON.stringify({ updatedAt: Date.now(), value: { body: '两个三角形拼成长方形。', links: '', attachments: [] } }))
-const evidence = { rooms: 0, messages: 0, history: 0, puts: 0, submissions: [] as unknown[] }
+const evidence = { rooms: 0, messages: 0, history: 0, historyAborts: 0, puts: 0, submissions: [] as unknown[] }
+const historyPage = (ready=false) => ({ items: [{id:'version',learnerId:'student',learnerName:'学生',submittedAt:'2026-10-22T00:00:00Z',version:1,source:'STUDENT_ORIGINAL',late:false,answer:'已保存的作答',links:[],attachments:[],conversationReferences:[],feedback:[],assessment:ready?{status:'READY',mastery:'MASTERED'}:{status:'PENDING'}}],nextOffset:null })
 const messages = (room: string) => [{ id: `${room}-user`, role: 'user', text: '为什么面积除以二？', sequence: 1 },
   { id: `${room}-assistant`, role: 'assistant', text: '两个三角形可以拼成长方形。', sequence: 2 }]
 let releaseOld: (() => void) | undefined
@@ -38,6 +39,13 @@ window.fetch = async (url, init) => {
   }
   if (path.includes('/submissions?')) {
     evidence.history++
+    if(scenario.startsWith('history-poll-')) {
+      if(evidence.history===1)return Response.json(historyPage())
+      return new Promise((resolve,reject)=>{
+        const timer=scenario==='history-poll-slow'?setTimeout(()=>resolve(Response.json(historyPage(true))),6500):undefined
+        init?.signal?.addEventListener('abort',()=>{clearTimeout(timer);evidence.historyAborts++;reject(init.signal!.reason)},{once:true})
+      })
+    }
     if (scenario === 'history') return new Promise((_, reject) => init?.signal?.addEventListener('abort', () => reject(init.signal!.reason), { once: true }))
     return Response.json({ items: [], nextOffset: null })
   }

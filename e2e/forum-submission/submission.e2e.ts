@@ -154,3 +154,21 @@ test('a late accepted submission cannot clear a newly opened draft', async ({ ap
   await expect(screen.getByLabel('作业内容', { exact: true })).toContainText('新的作答不能被旧回执清空。')
   await app.screenshot('late-submission-keeps-new-draft')
 })
+
+test('history polling accepts a response slower than its five second cadence', async ({ app, screen }) => {
+  await app.open('/e2e/forum-submission/index.html?scenario=history-poll-slow')
+  await expect(screen.getByText(/第 1 版 · .*评价生成中/)).toBeVisible()
+  await expect(screen.getByText(/第 1 版 · .*已掌握/)).toBeVisible({timeout:20000})
+  await expect(screen.getByLabel('提交证据')).toContainText('"historyAborts":0')
+  await expect(screen.getByLabel('作业内容',{exact:true})).toBeEnabled()
+  await app.screenshot('slow-history-poll-completes')
+})
+
+test('history polling reaches its real thirty second timeout and exposes retry', async ({ app, screen }) => {
+  await app.open('/e2e/forum-submission/index.html?scenario=history-poll-timeout')
+  await expect(screen.getByText(/第 1 版 · .*评价生成中/)).toBeVisible()
+  await expect(screen.getByRole('button','重新加载记录',{exact:true})).toBeEnabled({timeout:42000})
+  await expect(screen.getByLabel('提交证据')).toContainText('"historyAborts":1')
+  await expect(screen.getByLabel('作业内容',{exact:true})).toBeEnabled()
+  await app.screenshot('history-poll-timeout-allows-retry')
+})
