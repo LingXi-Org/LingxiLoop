@@ -1,0 +1,60 @@
+{
+  "format": "model-config-release-validation/v1",
+  "recordedAt": "2026-10-22T17:29:17.132Z",
+  "productionWrites": false,
+  "productionReads": "GetStack metadata only; raw environment never persisted",
+  "testedSourceFiles": [
+    {
+      "path": "scripts/host-release-model-config.mjs",
+      "bytes": 12841,
+      "sha256": "58cea058430266f9b1eeb56535f6c0fe0f4ab37be2a1cbb2b4d7529eda72434d"
+    },
+    {
+      "path": "scripts/host-release-model-config-komodo.mjs",
+      "bytes": 12731,
+      "sha256": "0eebda3bf17a23462a6f13d57538a652c63d08627c2233a17b69e813a68a6a20"
+    },
+    {
+      "path": "scripts/host-release-model-config-evidence.mjs",
+      "bytes": 8904,
+      "sha256": "a2178a0be617137eca940af54d19ce3cb8dac5d338247c5dbbcb5a1ae77f9654"
+    },
+    {
+      "path": "scripts/host-release-model-config-cli.mjs",
+      "bytes": 5519,
+      "sha256": "ad0a516321f3a65504c59f4812b13df32666368dd0d43ec2c95666fb4c017c97"
+    },
+    {
+      "path": "scripts/host-release-model-config.test.mjs",
+      "bytes": 14608,
+      "sha256": "2f29ebc20cc616a296e8fca831c0d4dc93d31f9922b67ee6cba5864c705d717f"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 26953,
+      "sha256": "11241f1b26a5e9c2708b15aafa9a6b893ca8ae42e0777956fe58678a92064f75"
+    }
+  ],
+  "focused": {
+    "command": "node --test scripts/host-release-model-config.test.mjs",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0
+  },
+  "owningDeploymentContracts": {
+    "command": "node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-model-config.test.mjs scripts/host-release-stopped-recovery.test.mjs scripts/host-release-image-recovery.test.mjs scripts/host-release-lease-wait.test.mjs scripts/public-text-release.test.mjs scripts/current-source52-acceptance.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs",
+    "passed": 215,
+    "failed": 0,
+    "skipped": 0,
+    "rawLogSha256": "a153586e3b62b55bdc4991c5d6f12603f9e09f236c911b7376f000aee3de50cf"
+  },
+  "cliFunctionalEvidence": "cli-functional.json",
+  "initialRed": "Focused core and adapter contracts failed with missing modules before implementation; not a claimed production defect reproduction",
+  "remaining": [
+    "exact-head CI",
+    "independent final review",
+    "actual source acceptance and stopped knowledge/fence evidence",
+    "authorized production execution and HTTPS acceptance",
+    "separate shadow generation and native memory completion"
+  ]
+}

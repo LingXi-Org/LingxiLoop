@@ -1,0 +1,24 @@
+{
+  "format": "model-config-cli-functional-verification/v1",
+  "performedAt": "2026-10-22T17:27:28.163Z",
+  "synthetic": true,
+  "productionRead": false,
+  "productionWrite": false,
+  "credentialsAbsent": true,
+  "proxyUnreachable": true,
+  "results": [
+    {
+      "scenario": "offline CLI validates exact source with synthetic shadow/fence",
+      "exit": 0,
+      "output": {
+        "mode": "offline-verification",
+        "planHash": "89201e4966c65f8bbd121aacaa38a6aed6b9704aa9e5b0b5e2e3a626ab4223d9",
+        "passed": true
+      }
+    },
+    {
+      "scenario": "wrong fence revision rejected despite resealed hashes",
+      "exit": 1
+    }
+  ]
+}
