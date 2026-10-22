@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { randomUUID } from 'node:crypto'
-import { readFile,mkdtemp,rm } from 'node:fs/promises'
+import { readFile,mkdtemp,rm,writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -67,6 +67,16 @@ test('native persisted execution trace crosses product history/SSE with exact re
     const trace = runTraceSchema.parse(history.message.metadata.custom.runTrace)
     assert.equal(trace.startedAt,native.origin); assert.equal(trace.revision,native.revision)
     assert.equal(trace.timingBasis,'execution'); assert.ok(trace.root.children.some(span=>span.kind === 'llm' && span.start !== null && span.end !== null))
+    const nativeRoot = native.spans.find(span=>span.spanId === native.rootSpanId)!
+    assert.equal(trace.root.start,0)
+    assert.equal(trace.root.end,nativeRoot.completedAt!-native.origin!)
+    assert.equal(trace.root.durationMs,nativeRoot.completedAt!-nativeRoot.startedAt!)
+    for (const item of native.spans.filter(span=>span.runId === identity.runId)) {
+      const mapped = trace.root.id === item.spanId ? trace.root : trace.root.children.find(span=>span.id === item.spanId)
+      assert.ok(mapped)
+      assert.equal(mapped.start,item.startedAt === null ? null : item.startedAt-native.origin!)
+      assert.equal(mapped.end,item.completedAt === null ? null : item.completedAt-native.origin!)
+    }
     assert.equal(nativeText(history.message),'合成结果是42。')
     const upstream = await app.streamRun(identity,{ trace: true,lastEventId: '99999' })
     const projection = new RunStreamProjection(identity.runId,false,identity)
@@ -76,6 +86,9 @@ test('native persisted execution trace crosses product history/SSE with exact re
     finally { await reader.cancel() }
     const replay = tracker.state as unknown as AgentRunSnapshot
     assert.deepEqual(replay.message.metadata.custom.runTrace,history.message.metadata.custom.runTrace)
+    const reload = (await readRunProjection(app,identity,false,undefined,undefined,undefined,true)).snapshot
+    assert.deepEqual(reload.message.metadata.custom.runTrace,history.message.metadata.custom.runTrace)
+    if (process.env.ISSUE296_SNAPSHOTS) await writeFile(process.env.ISSUE296_SNAPSHOTS,JSON.stringify({ initial: history,replay,reload }))
     assert.equal(nativeText(replay.message),'合成结果是42。')
     assert.doesNotMatch(JSON.stringify(replay),/PRIVATE_TOOL_RESULT|model\.request|leaseToken|instructionsSha256/)
     await assert.rejects(readRunProjection(app,{ ...identity,tenantId: 'other' },false),/not found/)

@@ -19,3 +19,16 @@ test('LLM presentation read is scoped and zero-default costs remain unknown', as
   const unknown = (await readPublicLlmTrace({ tenantId: 'tenant',runId: 'run',agentId: 'agent',sessionId: 'session',principalId: 'principal' },db))[0]!
   assert.equal(unknown.cost,null); assert.equal(unknown.tokensIn,null)
 })
+test('only captured timing, call identity and purpose cross the scoped presentation boundary', async () => {
+  let query = ''
+  const row = { id: 'lingxios-call',call_id: 'call',model: 'Pro/BAAI/bge-m3',purpose: 'lingxios.embedding',status: 'succeeded',
+    latency_ms: 134,measured: true,input_tokens: 10,output_tokens: 0,cost_usd: '0.0000001',cost_estimated: true,priced: true,
+    started_at: '1000',completed_at: '1134' }
+  const db = { async query(sql: string) { query=sql; return { rows: [row],rowCount: 1 } } } as Queryable
+  const result = (await readPublicLlmTrace({ tenantId: 't',runId: 'r',agentId: 'a',sessionId: 's',principalId: 'p' },db))[0]!
+  assert.equal(result.apiKind,'embedding'); assert.equal(result.callId,'call')
+  assert.equal(result.startedAt,1000); assert.equal(result.completedAt,1134)
+  assert.equal(result.cost,0.0000001)
+  assert.match(query,/providerPricing/)
+  assert.doesNotMatch(query,/created_at\s+(?:AS\s+)?(?:started_at|completed_at)/i)
+})

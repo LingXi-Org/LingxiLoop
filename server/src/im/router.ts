@@ -179,7 +179,7 @@ imRouter.get('/companies/:companyId/channels/:id/agents/:agentId/runs/:runId/str
   try {
     const app = await lingxiOSControl()
     const permission = await permissionService.can({ actorUserId: userId, companyId, action: 'agent_run:control', resource: { type: 'conversation', id: conversationId } })
-    const projection = await readRunProjection(app,run,permission.allowed,cancellation.signal,undefined,undefined,false)
+    const projection = await readRunProjection(app,run,permission.allowed,cancellation.signal,undefined,undefined,true)
     const upstream = await app.streamRun(run, { signal: cancellation.signal,trace: true })
     if (!upstream.ok || !upstream.body) throw new HttpError(502, '运行流暂不可用')
     const stream = assistantRunResponse(upstream.body, projection, { api: app, identity: run, signal: cancellation.signal })

@@ -42,6 +42,28 @@ test('invalid/negative timestamps stay unknown, and duplicate IDs do not duplica
   assert.equal(trace.root.children.length,1); assert.equal(trace.root.children[0]!.start,null)
   assert.equal(trace.root.children[0]!.durationMs,500)
 })
+test('the supplied duration-only sample retains partial cost without manufacturing offsets or run duration', () => {
+  const trace = buildRunTrace({ runId: 'run',createdAt: new Date(origin).toISOString(),lifecycle: 'succeeded',tools: [],llm: [
+    { id: 'embedding',model: 'BAAI/bge-m3',apiKind: 'embedding',status: 'complete',durationMs: 134,tokensIn: 10,tokensOut: 0,cost: null,costEstimated: false },
+    { id: 'chat-a',model: 'historical-chat',status: 'complete',durationMs: 33730,tokensIn: 50000,tokensOut: 1000,cost: 0.00506501,costEstimated: true },
+    { id: 'chat-b',model: 'historical-chat',status: 'complete',durationMs: 3049,tokensIn: 26127,tokensOut: 105,cost: 0.00344143,costEstimated: true },
+  ] })
+  assert.equal(trace.root.durationMs,null)
+  assert.equal(trace.root.cost,null)
+  assert.equal(trace.root.knownCost,0.00850644)
+  assert.equal(trace.root.costIncomplete,true)
+  assert.equal(trace.root.tokensIn,76137); assert.equal(trace.root.tokensOut,1105)
+  assert.equal(trace.root.children[0]!.kind,'embedding')
+  assert.deepEqual(trace.root.children.map(span=>[span.start,span.end,span.durationMs]),[[null,null,134],[null,null,33730],[null,null,3049]])
+})
+test('recorded call epochs map to exact offsets and preserve measured duration', () => {
+  const trace = buildRunTrace({ runId: 'run',createdAt: new Date(origin).toISOString(),lifecycle: 'succeeded',tools: [],llm: [
+    { id: 'new',model: 'Pro/BAAI/bge-m3',apiKind: 'embedding',status: 'complete',durationMs: 134,
+      startedAt: origin+500,completedAt: origin+634,tokensIn: 10,tokensOut: 0,cost: 0.0000001,costEstimated: true },
+  ] })
+  assert.deepEqual([trace.root.children[0]!.start,trace.root.children[0]!.end,trace.root.children[0]!.durationMs],[500,634,134])
+  assert.equal(trace.root.durationMs,null,'call endpoints are not a root terminal timestamp')
+})
 test('native state/event projection carries an honest root trace without body pollution', () => {
   const projection = new RunStreamProjection('run',false)
   const running = projection.apply({ type: 'state',state: runState() })

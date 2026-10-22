@@ -218,8 +218,8 @@ export class RunStreamProjection {
 
   private traceSnapshot() {
     if (this.nativeTrace === undefined) return buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt!,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable })
-    if (!this.nativeTrace) return { ...buildRunTrace({ runId: this.view.runId,createdAt: '',lifecycle: this.view.lifecycle,tools: [],llm: [],presentationAvailable: false }),timingBasis: 'execution' as const }
-    const trace = buildNativeRunTrace(this.nativeTrace,this.tools)
+    if (!this.nativeTrace) return buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt!,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable })
+    const trace = buildNativeRunTrace(this.nativeTrace,this.tools,this.llm)
     if (!this.nativeTraceAvailable) {
       if (!trace.limitations.includes('presentation-unavailable')) trace.limitations.push('presentation-unavailable')
       const clear = (span: typeof trace.root) => { if (span.kind === 'agent') span.tokensIn = span.tokensOut = span.cost = null; span.children.forEach(clear) }
@@ -282,7 +282,7 @@ function changes(previous: ReadonlyJSONValue | undefined, next: ReadonlyJSONValu
   return operations
 }
 
-export function assistantRunResponse(body: ReadableStream<Uint8Array>, projection: RunStreamProjection, approvals?: { api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval' | 'readTerminal'>; identity: RunIdentity; signal?: AbortSignal }): Response {
+export function assistantRunResponse(body: ReadableStream<Uint8Array>, projection: RunStreamProjection, approvals?: { api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readApproval' | 'readTerminal'> & Partial<Pick<Awaited<ReturnType<typeof createLingxiOS>>,'readRunTrace'>>; identity: RunIdentity; signal?: AbortSignal }): Response {
   const cancellation = new AbortController()
   const signal = approvals?.signal ? AbortSignal.any([cancellation.signal, approvals.signal]) : cancellation.signal
   async function* chunks(): AsyncGenerator<AssistantStreamChunk> {
@@ -299,7 +299,9 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
     const refresh = () => {
       if (!approvals || presentation || !refreshRequested || signal.aborted) return
       refreshRequested = false
-      presentation = projection.syncPresentation(approvals.identity, signal).then(() => ({ type: 'presentation' as const }))
+      presentation = Promise.all([projection.syncPresentation(approvals.identity, signal),
+        ...(approvals.api.readRunTrace ? [projection.syncNativeTrace({ readRunTrace: approvals.api.readRunTrace },approvals.identity,signal)] : []),
+      ]).then(() => ({ type: 'presentation' as const }))
     }
     try {
       while (incoming || presentation) {

@@ -20,6 +20,8 @@ mock.module('../agent-runtime/tool-activity.js',{ namedExports: {
   },
 } })
 const { RunStreamProjection } = await import('../agent-runtime/assistant-transport.js')
+const { assistantRunResponse } = await import('../agent-runtime/assistant-transport.js')
+const { AssistantStream,AssistantTransportDecoder,AssistantTransportDeltaTracker } = await import('assistant-stream')
 after(() => mock.restoreAll())
 beforeEach(() => { reads=[]; calls=0 })
 const identity: RunIdentity = { tenantId: 'fixture-tenant',principalId: 'fixture-principal',agentId: 'fixture-agent',sessionId: 'fixture-session',runId: 'run' }
@@ -112,4 +114,23 @@ test('aborting a refresh leaves confirmed coverage intact, including an already-
   await value.syncPresentation(identity,abort.signal)
   assert.equal(calls,count,'already-aborted calls do not read or change coverage')
   completeTotals(value)
+})
+test('stream startup refreshes the native execution trace independently of answer frames',async () => {
+  const initial = state(),origin = Date.parse(initial.run.createdAt)
+  const native = { version: 1,runId: 'run',rootSpanId: 'root',requestVersion: 1,fence: 1,seq: 0,revision: 'first-native',queuedAt: origin,origin,truncated: false,
+    spans: [{ spanId: 'root',parentSpanId: null,runId: 'run',kind: 'agent',state: 'running',startedAt: origin,completedAt: null,
+      timingBasis: 'run-execution',seq: 0,revision: 'root',requestVersion: null,fence: null,attemptId: null }] }
+  reads.push(Promise.resolve(result([])))
+  let nativeReads = 0
+  const body = new ReadableStream<Uint8Array>({ start(controller) {
+    controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'state',state: initial })}\n\n`));controller.close()
+  } })
+  const response = assistantRunResponse(body,new RunStreamProjection('run',false),{ identity,api: {
+    readRunTrace: async () => { nativeReads++;return native },readApproval: async () => null,readTerminal: async () => null,
+  } as never })
+  const tracker = new AssistantTransportDeltaTracker()
+  for await (const chunk of AssistantStream.fromResponse(response,new AssistantTransportDecoder())) if (chunk.type === 'update-state') tracker.append(chunk.operations)
+  assert.equal(nativeReads,1)
+  const final = tracker.state as unknown as { message: { metadata: { custom: { runTrace: unknown } } } }
+  assert.equal(runTraceSchema.parse(final.message.metadata.custom.runTrace).revision,'first-native')
 })
