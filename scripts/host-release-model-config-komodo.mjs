@@ -60,7 +60,7 @@ export function createModelConfigOperations({plan,imageConfig,knowledgePlan,apiK
  }
  async function probeImage(){
   const p=plan.knowledge.probe.image,actual=await request('read','InspectImage',{server:plan.knowledge.server,image:p.reference}),repo=p.reference.slice(0,p.reference.lastIndexOf(':'))
-  check(actual.Id===p.configDigest&&actual.RepoDigests?.includes(repo+'@'+p.indexDigest)&&actual.Os==='linux'&&actual.Architecture==='amd64'&&actual.RootFS?.Type==='layers'&&equal(actual.RootFS.Layers,p.diffIds)&&(!actual.Descriptor||[p.indexDigest,p.manifestDigest].includes(actual.Descriptor.digest)),'Knowledge status probe image differs from audited identity/layers')
+  check([p.indexDigest,p.manifestDigest,p.configDigest].includes(actual.Id)&&actual.RepoDigests?.includes(repo+'@'+p.indexDigest)&&actual.Os==='linux'&&actual.Architecture==='amd64'&&actual.RootFS?.Type==='layers'&&equal(actual.RootFS.Layers,p.diffIds)&&(!actual.Descriptor||[p.indexDigest,p.manifestDigest].includes(actual.Descriptor.digest)),'Knowledge status probe image differs from audited identity/layers')
   return actual.Id
  }
  async function verifyKnowledgeFence(){
