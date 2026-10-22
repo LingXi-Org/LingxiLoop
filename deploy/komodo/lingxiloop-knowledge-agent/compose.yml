@@ -28,7 +28,7 @@ services:
 
   open-notebook:
     image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-open-notebook:6987038c96a14c36050cb002494ad6cbed46a2d4
-    pull_policy: never
+    pull_policy: always
     restart: unless-stopped
     depends_on:
       surrealdb:
