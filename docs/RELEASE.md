@@ -24,8 +24,8 @@ Ordinary chat always uses deep execution with all authorized capabilities.
 Legacy response-policy and fast-model environment values no longer select a
 restricted fast profile. Requests disable provider thinking for both main answers and auxiliary validation.
 Providers may nevertheless return metered reasoning tokens; only final
-content enters user previews. Its default per-attempt timeout is 180 seconds,
-with bounded native recovery; explicit timeout overrides still apply. Verify the
+content enters user previews. The default DeepSeek per-attempt timeout is 90 seconds,
+with bounded native recovery; `AGENT_OS_MODEL_REQUEST_TIMEOUT_MS` overrides it. Verify the
 real tool-result continuation before release.
 
 The default chat model is SiliconFlow `deepseek-ai/DeepSeek-V4.1-Flash` at
