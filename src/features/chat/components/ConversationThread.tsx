@@ -214,6 +214,26 @@ export function ConversationThread({
             <ConversationMessages />
           </div>
         </ThreadPrimitive.Viewport>
+      {readingHistory ? <Button type="button" variant="outline" size="icon"
+        className="absolute bottom-3 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground md:size-9"
+        aria-label="滚动到底部" data-chat-scroll-bottom onClick={() => {
+          flushSync(() => setReadingHistory(false))
+          viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'instant' })
+          // An already-bottom viewport emits no scroll event; notify the
+          // primitive so its bottom-following intent is restored as well.
+          viewportRef.current?.dispatchEvent(new Event('scroll'))
+        }}><HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} /></Button> : <ThreadPrimitive.ScrollToBottom asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="absolute bottom-3 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible md:size-9"
+          aria-label="滚动到底部"
+          data-chat-scroll-bottom
+        >
+          <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
+        </Button>
+      </ThreadPrimitive.ScrollToBottom>}
       </div>
       {!readOnly && <div className="relative z-20 shrink-0 bg-background pt-2 md:pt-4" data-chat-composer-bar>
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-full h-12 select-none" data-chat-composer-transition>
@@ -230,26 +250,6 @@ export function ConversationThread({
           placeholder={threadRootId ? '在帖子中回复…' : undefined}
         />
       </div>}
-      {readingHistory ? <Button type="button" variant="outline" size="icon"
-        className="absolute bottom-24 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground md:size-9"
-        aria-label="滚动到底部" data-chat-scroll-bottom onClick={() => {
-          flushSync(() => setReadingHistory(false))
-          viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'instant' })
-          // An already-bottom viewport emits no scroll event; notify the
-          // primitive so its bottom-following intent is restored as well.
-          viewportRef.current?.dispatchEvent(new Event('scroll'))
-        }}><HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} /></Button> : <ThreadPrimitive.ScrollToBottom asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="absolute bottom-24 end-5 z-30 size-11 rounded-full border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground disabled:invisible md:size-9"
-          aria-label="滚动到底部"
-          data-chat-scroll-bottom
-        >
-          <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
-        </Button>
-      </ThreadPrimitive.ScrollToBottom>}
     </ThreadPrimitive.Root>
   )
 }

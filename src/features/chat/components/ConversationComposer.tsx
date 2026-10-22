@@ -26,6 +26,7 @@ import { useUiCommand } from '@/stores/uiCommands'
 import { useTypingEmitter } from '../useTypingEmitter'
 import { ComposerLexicalInput } from './ComposerLexicalInput'
 import { ComposerTriggers } from './ComposerTriggers'
+import { ComposerQuotePreview } from './QuotePreview'
 import { chatTransport } from '../runtime/transport'
 import { useChatThreadStore } from '../runtime/store'
 import { canCancelRun } from '../runtime/harness'
@@ -104,15 +105,7 @@ export function ConversationComposer({
             setAttachmentError(null)
             void Promise.all(files.map(file => aui.composer.addAttachment(file).catch(() => setAttachmentError('附件未能添加，请重新选择文件。'))))
           }} />
-        <ComposerPrimitive.Quote className="mx-1 mb-2 flex min-w-0 items-center gap-2 rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
-          <div className="h-4 w-0.5 shrink-0 rounded-full bg-primary" />
-          <ComposerPrimitive.QuoteText className="min-w-0 flex-1 truncate" />
-          <ComposerPrimitive.QuoteDismiss asChild>
-            <Button type="button" variant="ghost" size="icon-xs" aria-label="取消回复">
-              <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
-            </Button>
-          </ComposerPrimitive.QuoteDismiss>
-        </ComposerPrimitive.Quote>
+        <ComposerQuotePreview onDismiss={() => requestAnimationFrame(focusInput)} />
         <AttachmentGroup className="px-1 pb-2 pt-1 empty:hidden" role="group" aria-label="待发送附件" tabIndex={0}>
           <ComposerPrimitive.Attachments>
             {({ attachment }) => {

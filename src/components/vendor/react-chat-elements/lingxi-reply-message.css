@@ -1,0 +1,58 @@
+/* Product adaptation of MIT RCE ReplyMessage; only this vendored component.
+   Keep the upstream layout, with logical spacing, theme tokens and focus. */
+.lingxi-reply-message.rce-mbox-reply {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 28rem;
+  min-height: 48px;
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border: 0;
+  border-inline-start: 3px solid var(--primary);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  color: var(--foreground);
+  text-align: start;
+  line-height: 1.4;
+  font-family: inherit;
+  letter-spacing: normal;
+  white-space: normal;
+  transition: background-color 120ms ease;
+}
+.lingxi-reply-message.rce-mbox-reply:hover { opacity: 1; }
+button.lingxi-reply-message.rce-mbox-reply:hover {
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.lingxi-reply-message.rce-mbox-reply:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.lingxi-reply-message .rce-mbox-reply-left {
+  min-width: 0;
+  padding: 0;
+  gap: 2px;
+}
+.lingxi-reply-message .rce-mbox-reply-owner {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+.lingxi-reply-message .rce-mbox-reply-message {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  max-width: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  font-weight: 400;
+}
+[data-composer-quote] .lingxi-reply-message { margin: 0; max-width: none; cursor: default; }
+@media (prefers-reduced-motion: reduce) {
+  .lingxi-reply-message.rce-mbox-reply { transition: none; }
+}
