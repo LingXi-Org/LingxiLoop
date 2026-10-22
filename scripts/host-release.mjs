@@ -7,7 +7,7 @@ import {isAbsolute,resolve} from 'node:path'
 import {fileURLToPath,pathToFileURL} from 'node:url'
 import {releaseDescriptor,assertInstalledTarget,assertBarrier} from './schema-upgrade-maintenance.mjs'
 import {validateMemoryBackupPlan} from './verify-memory-backup.mjs'
-import {READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,isPublicTextPlan,assertPublicTextPlan,assertReaderInventory,assertTraceInventory,assertConversationRepairInventory,assertRunPresentationInventory,assertPublicTextMetadata,assertAcceptedPublicTextSource,DEPLOYMENT_PATH} from './public-text-release.mjs'
+import {READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,isPublicTextPlan,assertPublicTextPlan,assertReaderInventory,assertTraceInventory,assertConversationRepairInventory,assertRunPresentationInventory,assertPublicTextMetadata,assertAcceptedPublicTextSource,DEPLOYMENT_PATH} from './public-text-release.mjs'
 import {assertSeedDefinitions} from './public-text-seed.mjs'
 import {assertHostComposeChange} from './host-release-compose.mjs'
 import {waitForWorkerLeaseExpiry} from './host-release-lease-wait.mjs'
@@ -66,7 +66,7 @@ export function assertNativeBackupReceipt(plan,receipt){
 }
 export function validateHostPlanShape(plan){
  check(exactKeys(plan,['format','createdAt','source','target','sourceAcceptanceSha256','qualification','stacks','planHash',...(plan?.format===NATIVE_SCHEMA_FORMAT?['backup']:[]),...(isPublicTextPlan(plan)?['publicText','imageConfigs']:[])])
-  &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
+  &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
  if(plan.format===NATIVE_SCHEMA_FORMAT){
   assertNativeSchemaUpgrade(plan.source,plan.target)
   check(plan.backup?.format===2&&plan.backup.profile==='native13-product49'&&equal(plan.backup.source,backupSource(plan.source))
@@ -148,7 +148,7 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
  const record=e=>onProgress({planHash:plan.planHash,...e}),native=plan.format===NATIVE_SCHEMA_FORMAT,provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan)
  try{
   await ops.assertIdle();const original=await ops.inspect();assertInventory(original,plan)
-  if([PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format))for(const c of plan.publicText.sourceContainers){const actual=original.find(r=>r.stack===c.stack&&r.service===c.service);check(actual?.id===c.id&&actual.imageId===c.imageId,'Accepted reader container replaced before producer phase')}
+  if([PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format))for(const c of plan.publicText.sourceContainers){const actual=original.find(r=>r.stack===c.stack&&r.service===c.service);check(actual?.id===c.id&&actual.imageId===c.imageId,'Accepted reader container replaced before producer phase')}
   assertCompatibleState(await ops.state(),plan.source)
   await ops.verifyImages('source');await ops.verifyImages('target')
   assertInventory(await ops.inspect(),plan,original)
@@ -161,14 +161,14 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
   if(provenanceUpgrade){const receipt=await ops.seedPrecheck();await record({phase:'seed-precheck',status:'verified',receipt})}
   const stopped=new Set(),deployed=new Map()
   let installed=plan.source
-  for(const service of native||provenanceUpgrade?['worker','lingxiloop']:['worker'])for(const stack of APPS){await ops.assertIdle();await ops.stop(stack,service);stopped.add(stack+':'+service);assertInventory(await ops.inspect(),plan,original,stopped);await record({phase:'drain',status:'stopped',stack,service})}
+  for(const service of native||provenanceUpgrade||plan.format===SAME54_FORMAT?['worker','lingxiloop']:['worker'])for(const stack of APPS){await ops.assertIdle();await ops.stop(stack,service);stopped.add(stack+':'+service);assertInventory(await ops.inspect(),plan,original,stopped);await record({phase:'drain',status:'stopped',stack,service})}
   const barrier=async(waitForExpiry=false)=>{
    const read=async()=>{assertInventory(await ops.inspect(),plan,original,stopped,deployed);const state=await ops.state();assertCompatibleState(state,installed);return state}
    const state=waitForExpiry?await waitForWorkerLeaseExpiry({read,wait:ops.wait,onProgress:record}):await read()
    if(native&&installed===plan.source)assertBarrier(state);else assertWorkerBarrier(state)
    await record({phase:'drain',status:'zero-leases',state})
   }
-  await barrier([CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format));await ops.wait(2000);await barrier()
+  await barrier([CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format));await ops.wait(2000);await barrier()
   if(native){
    await ops.assertIdle();const receipt=await ops.backup();assertNativeBackupReceipt(plan,receipt)
    await record({phase:'backup',status:'verified',receipt})
@@ -189,7 +189,13 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
    // Before the first new Worker, every native lease must still be empty.
    if(![...deployed.keys()].some(k=>k.endsWith(':worker')))await barrier()
    assertInventory(await ops.inspect(),plan,original,stopped,deployed)
-   await ops.deploy(stack,service);await ops.verifyHealthy(stack,service)
+   await ops.deploy(stack,service)
+   if(plan.format===SAME54_FORMAT){
+    const actual=(await ops.inspect()).find(r=>r.stack===stack&&r.service===service)
+    check(actual?.source===plan.target.sha&&hex.test(actual.id??'')&&digest.test(actual.imageId??''),'Deployed target identity unavailable')
+    await record({phase:'rollout',status:'observed',stack,service,containerId:actual.id,imageId:actual.imageId})
+   }
+   await ops.verifyHealthy(stack,service)
    const rows=await ops.inspect(),healthy=rows.find(r=>r.stack===stack&&r.service===service)
    check(healthy,'Healthy target identity unavailable');deployed.set(stack+':'+service,{id:healthy.id,imageId:healthy.imageId})
    assertInventory(rows,plan,original,stopped,deployed)
@@ -198,7 +204,7 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
   }
   await ops.assertIdle();await ops.verifyImages('target');const state=await ops.state();assertCompatibleState(state,plan.target)
   const containers=await ops.inspect();assertInventory(containers,plan,original,stopped,deployed)
-  const result={phase:'complete',status:'complete',planHash:plan.planHash,state,containers,...(publicText?{publicText:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,readerContainers:containers.map(({stack,service,id,imageId})=>({stack,service,id,imageId})),...([TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format)?{runTrace:1}:{})}:{})}
+  const result={phase:'complete',status:'complete',planHash:plan.planHash,state,containers,...(publicText?{publicText:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,readerContainers:containers.map(({stack,service,id,imageId})=>({stack,service,id,imageId})),...([TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format)?{runTrace:1}:{})}:{})}
   await record(result);return result
  }catch(error){return failed({error,ops,plan,record})}
 }
@@ -231,7 +237,7 @@ export async function validateHostPlan(plan,{acceptance,sourceAudit,targetAudit}
  if(isPublicTextPlan(plan)){
   assertAcceptedPublicTextSource(accepted,plan)
   check(hash(await git(['show',`${plan.target.sha}:${DEPLOYMENT_PATH}`]))===plan.publicText.targetConfigurationSha256,'Target deployment leaf changed')
-  if([READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format))await assertSeedDefinitions(plan.source.sha,plan.target.sha,git)
+  if([READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format))await assertSeedDefinitions(plan.source.sha,plan.target.sha,git)
   if(plan.format!==READER_FORMAT){
    check(hash(await git(['show',`${plan.source.sha}:${DEPLOYMENT_PATH}`]))===plan.publicText.sourceConfigurationSha256,'Source deployment leaf changed')
   }
@@ -269,7 +275,7 @@ async function main(){
  check(!(values['--execute']&&values['--prepare-images']),'Choose release or explicit online image preparation')
  for(const k of allowed.slice(2))check(isAbsolute(values[k]??''),'Absolute input/evidence/output paths required')
  const input=JSON.parse(await readFile(values['--input'],'utf8')),execute=values['--execute']||values['--prepare-images'],plan=execute?input:sealHostPlan(input)
- const files=await validateHostPlan(plan,{acceptance:await readFile(values['--acceptance']),sourceAudit:await readFile(values['--source-audit']),targetAudit:await readFile(values['--target-audit'])})
+ const acceptance=await readFile(values['--acceptance']);const files=await validateHostPlan(plan,{acceptance,sourceAudit:await readFile(values['--source-audit']),targetAudit:await readFile(values['--target-audit'])})
  if(!execute){await writeFile(values['--output'],JSON.stringify(plan,null,2)+'\n',{flag:'wx',mode:0o600});console.log(JSON.stringify({mode:'offline-plan',planHash:plan.planHash}));return}
  const abort=new AbortController(),stop=()=>abort.abort(),out={planHash:plan.planHash,mode:values['--prepare-images']?'online-images-only':isPublicTextPlan(plan)?plan.format:plan.format===NATIVE_SCHEMA_FORMAT?'native-schema-maintenance':plan.format===PRODUCT_SCHEMA_FORMAT?'product-schema-release':'same-schema-release',startedAt:new Date().toISOString(),complete:false,events:[]}
  await writeFile(values['--output'],JSON.stringify(out)+'\n',{flag:'wx',mode:0o600})
@@ -277,7 +283,7 @@ async function main(){
  process.once('SIGINT',stop);process.once('SIGTERM',stop)
  try{
   const {createHostReleaseOperations}=await import('./host-release-komodo.mjs')
-  const ops=createHostReleaseOperations({plan,files,apiKey:process.env.KOMODO_API_KEY,apiSecret:process.env.KOMODO_API_SECRET,signal:abort.signal,onProgress})
+  const ops=createHostReleaseOperations({plan,files,sourceConfigurationProof:JSON.parse(acceptance).evidence?.observed?.stacks,apiKey:process.env.KOMODO_API_KEY,apiSecret:process.env.KOMODO_API_SECRET,signal:abort.signal,onProgress})
   await (values['--prepare-images']?runImagePreparation:runHostRelease)({plan,ops,onProgress})
   console.log(JSON.stringify({status:'complete',mode:out.mode,planHash:plan.planHash}))
  }finally{process.off('SIGINT',stop);process.off('SIGTERM',stop)}

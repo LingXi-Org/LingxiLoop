@@ -1,6 +1,6 @@
 // Native Komodo2.3.3 calls. Only explicit reviewed product/native plans may migrate.
 // No Git/private API, secret or env writes.
-import {READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,isPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality} from './public-text-release.mjs'
+import {READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,isPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality} from './public-text-release.mjs'
 import {seedCommand} from './public-text-seed.mjs'
 import {assertStoppedReceipt,assertStoppedContainers,assertRecoveryConfig} from './host-release-stopped-recovery.mjs'
 import {isDeepStrictEqual as equal} from 'node:util'
@@ -15,10 +15,11 @@ const TRACE_METADATA_CODE=`Object.assign(metadata,{runTrace:releaseVersions.runT
 const oneOff=(stack,service,extra)=>({stack,service,no_tty:true,no_deps:true,detach:false,service_ports:false,pull:false,...extra})
 export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,onProgress=async()=>{},transport,wait=delay,backupExecutor=executeMemoryBackup,sourceConfigurationProof}){
  validateHostPlanShape(plan)
- const native=plan.format===NATIVE_SCHEMA_FORMAT,trace=[TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan),nodeEnvironments=publicText?qualifyImageEnvironments(plan):null
+ const native=plan.format===NATIVE_SCHEMA_FORMAT,trace=[TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format),provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan),nodeEnvironments=publicText?qualifyImageEnvironments(plan):null
  const t=transport??createTransport({apiKey,apiSecret,signal,onProgress,confirmTerminal:native||publicText})
  const phases=new Map(plan.stacks.map(r=>[r.stack,'source'])),configs=new Map(),identities=new Map(),images=new Map(),containerPolicies=new Map()
  const stoppedWriters=new Set()
+ let restoringSource=false
  let migrationSubmitted=false,backupSubmitted=false,backupVerified=false,seedSubmitted=false,seedVerified=false
  const rowFor=stack=>{const r=plan.stacks.find(r=>r.stack===stack);check(r,'Unexpected stack');return r}
  const imageKey=(which,server)=>which+':'+server
@@ -28,7 +29,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
   return result
  }
  function assertConfig(detail,row,serverId){
-  const c=detail?.config,phase=phases.get(row.stack),ref=phase==='target'?row.target:row.source,emptyHook={path:'',command:'',shell_mode:false}
+  const c=detail?.config,phase=phases.get(row.stack),ref=['target','source-file'].includes(phase)?row.target:row.source,emptyHook={path:'',command:'',shell_mode:false}
   check(id.test(detail?._id?.$oid??'')&&c&&c.server_id===serverId&&c.swarm_id===''&&c.repo==='LingXi-Org/LingxiLoop'
    &&c.branch===ref.branch&&c.commit===ref.commit&&c.files_on_host===true&&c.reclone===false&&c.clone_path===''
    &&c.git_account===''&&c.registry_account===''&&c.linked_repo===''&&c.file_contents===''
@@ -37,6 +38,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    &&c.poll_for_updates===false&&c.auto_pull===ref.autoPull&&equal(c.extra_args,ref.extraArgs)&&c.run_build===false
    &&c.destroy_before_deploy===false&&c.project_name===''&&c.compose_cmd_wrapper===''&&equal(c.build_extra_args,[])
    &&equal(c.pre_deploy,emptyHook)&&equal(c.post_deploy,emptyHook)&&equal(c.ignore_services,row.stack===CORE?[]:['db-migrate']),'Frozen source/configuration drift')
+  if(plan.format===SAME54_FORMAT)assertRecoveryConfig(detail,row,sourceConfigurationProof?.find(r=>r.stack===row.stack))
   if(identities.has(row.stack))check(identities.get(row.stack)===detail._id.$oid,'Stack identity changed')
   else identities.set(row.stack,detail._id.$oid)
   if(configs.has(row.stack))check(equal(c,configs.get(row.stack)),'Full stack configuration changed')
@@ -55,7 +57,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    check(equal(before.config,after.config),'Source configuration changed while refreshing')
    const info=after.info,remote=info?.remote_contents
    check(equal(info?.remote_errors,[])&&equal(info?.missing_files,[])&&Array.isArray(remote)&&remote.length===1&&remote[0].path==='compose.yml'&&typeof remote[0].contents==='string','Fresh host source unavailable')
-   const phase=phases.get(stack),ref=phase==='target-file'?row.target:phase==='preparation'?row.preparation:row[phase]
+   const phase=phases.get(stack),ref=phase==='target-file'?row.target:phase==='source-file'?row.source:phase==='preparation'?row.preparation:row[phase]
    check(hash(remote[0].contents)===ref.sha256,'Host Compose hash differs from sealed source')
    await onProgress({phase:'host-source',status:'verified',stack,sourcePhase:phase,sha256:ref.sha256})
   }
@@ -82,7 +84,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
     const env=c.Config?.Env,source=env?.find(x=>x.startsWith('LINGXILOOP_COMMIT_SHA='))?.slice('LINGXILOOP_COMMIT_SHA='.length)
     check([plan.source.sha,plan.target.sha].includes(source)&&c.Id===matches[0].container.id&&c.Config?.Image===IMAGE+source
      &&/^sha256:[a-f0-9]{64}$/.test(c.Image??'')&&typeof c.State?.Running==='boolean'&&typeof c.State?.Restarting==='boolean'
-     &&Number.isSafeInteger(c.RestartCount)&&Number.isSafeInteger(c.State.Pid)&&c.State.Pid>=0&&c.State.OOMKilled===false,'Unexpected actual container identity/state')
+     &&Number.isSafeInteger(c.RestartCount)&&Number.isSafeInteger(c.State.Pid)&&c.State.Pid>=0&&(c.State.OOMKilled===false||restoringSource&&source===plan.target.sha),'Unexpected actual container identity/state')
     const which=source===plan.source.sha?'source':'target',qualified=images.get(imageKey(which,row.server))
     if(qualified)check(c.Image===qualified,'Container image differs from actual qualified host image')
     // Keep secret-bearing values only in memory. Never persist their contents.
@@ -94,7 +96,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
     if(containerPolicies.has(key))check(equal(containerPolicies.get(key),protectedConfig),'Actual environment/security/volumes/startup policy changed')
     else containerPolicies.set(key,structuredClone(protectedConfig))
     result.push({stack,server:row.server,service,id:c.Id,source,imageId:c.Image,running:c.State.Running,restarting:c.State.Restarting,restartCount:c.RestartCount,pid:c.State.Pid,healthy:c.State.Health?.Status==='healthy',
-     policy:{readOnly:c.HostConfig?.ReadonlyRootfs,privileged:c.HostConfig?.Privileged,securityOpt:c.HostConfig?.SecurityOpt,capAdd:c.HostConfig?.CapAdd,capDrop:c.HostConfig?.CapDrop,pidsLimit:c.HostConfig?.PidsLimit,user:c.Config.User,productionMode:env.includes('NODE_ENV=production')}})
+     policy:{readOnly:c.HostConfig?.ReadonlyRootfs,privileged:c.HostConfig?.Privileged,securityOpt:c.HostConfig?.SecurityOpt,capAdd:c.HostConfig?.CapAdd,capDrop:c.HostConfig?.CapDrop,pidsLimit:c.HostConfig?.PidsLimit,user:c.Config.User,productionMode:env.includes('NODE_ENV=production'),...(plan.format===SAME54_FORMAT?{configurationSha256:hash(JSON.stringify(protectedConfig))}:{})}})
    }
   }
   return result
@@ -110,6 +112,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    images.set(key,imageId)
    await onProgress({phase:'image',status:'verified',stack,release:which,source:descriptor.sha,imageId,indexDigest:descriptor.image.indexDigest,platform:'linux/amd64',layers:descriptor.image.diffIds.length})
   }
+  return Object.fromEntries((onlyStack?[onlyStack]:APPS).map(stack=>[stack,images.get(imageKey(which,rowFor(stack).server))]))
  }
  async function writeFile(stack,which,nextPhase){
   const row=rowFor(stack);check(APPS.includes(stack),'Core source writes prohibited')
@@ -134,12 +137,49 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
   await guard([CORE])
   return validateStateReceipt(parseMarker(await t.execute('RunStackService',oneOff(CORE,'postgres',{entrypoint:'sh',user:'postgres',command:['-ec',stateCommand]})),'STATE'))
  }
- async function metadata(stack){
-  check(APPS.includes(stack)&&phases.get(stack)==='target','Metadata requires qualified target host source')
+ async function metadata(stack,which='target'){
+  check(APPS.includes(stack)&&['source','target'].includes(which)&&(which==='target'||restoringSource)&&phases.get(stack)===which,'Metadata requires qualified target host source')
   await guard([stack])
   return parseMarker(await t.execute('RunStackService',oneOff(stack,'db-migrate',{command:['timeout','-k','5','30','node',...(publicText?['--import','tsx']:[]),'--input-type=module','-e',METADATA_CODE+(publicText?PUBLIC_METADATA_CODE:'')+(trace?TRACE_METADATA_CODE:'')+`console.log('SCHEMA_UPGRADE_METADATA='+JSON.stringify(metadata));`]})),'METADATA')
  }
  return {assertIdle,inspect,verifyImages,stage,state,metadata,
+  async prepareSourceRestoration(boundary){
+   check(plan.format===SAME54_FORMAT&&!restoringSource&&configs.size===0&&boundary.original?.length===4,'Source restoration may initialize only once')
+   const matches=(c,r)=>c.commit===r.commit&&c.branch===r.branch&&c.auto_pull===r.autoPull&&equal(c.extra_args,r.extraArgs)
+   for(const row of plan.stacks){
+    await t.refreshStackCache(row.stack);const detail=await t.read('GetStack',{stack:row.stack})
+    assertRecoveryConfig(detail,row,sourceConfigurationProof?.find(r=>r.stack===row.stack))
+    const remote=detail.info?.remote_contents
+    check(equal(detail.info?.remote_errors,[])&&equal(detail.info?.missing_files,[])&&remote?.length===1&&remote[0].path==='compose.yml','Restoration host source unavailable')
+    const fileHash=hash(remote[0].contents),source=matches(detail.config,row.source),target=row.stack!==CORE&&matches(detail.config,row.target)
+    check(source||target,'Unrecognized source/target configuration')
+    if(fileHash===row.source.sha256){check(source,'Unexplained source file under target configuration');phases.set(row.stack,'source')}
+    else {check(row.stack!==CORE&&fileHash===row.target.sha256,'Unrecognized host source');phases.set(row.stack,target?'target':'target-file')}
+   }
+   await guard()
+   const names={RunStackService:'RunStackService',WriteStackFileContents:'WriteStackContents',StopStack:'StopStackService',DeployStack:'DeployStackService'}
+   for(const e of boundary.operations){
+    const u=await t.read('GetUpdate',{id:e.updateId})
+    check(u?._id?.$oid===e.updateId&&u.operation===names[e.operation]&&u.target?.type==='Stack'&&u.target.id===identities.get(e.stack)&&u.status==='Complete'&&u.success===e.success,'Saved operation is not the same known terminal update')
+   }
+   restoringSource=true
+   await assertIdle()
+  },
+  async restoreAcceptedSource(stack){
+   check(restoringSource&&plan.format===SAME54_FORMAT&&APPS.includes(stack),'Only explicit same54 source restoration allowed')
+   await guard();const rows=await inspect()
+   check(rows.length===4&&rows.every(r=>!r.running&&!r.restarting&&r.pid===0),'All four writers must remain stopped before source restoration')
+   const phase=phases.get(stack)
+   if(phase==='source')return
+   check(['target','target-file'].includes(phase),'Unknown restoration source phase')
+   await writeFile(stack,'source',phase==='target'?'source-file':'source')
+   if(phase==='target'){
+    const row=rowFor(stack),before=structuredClone(configs.get(stack)),patch={commit:row.source.commit,branch:row.source.branch,auto_pull:false,extra_args:RELEASE_ARGS}
+    await t.setHostReleaseConfig(stack,patch)
+    try{const after=await t.read('GetStack',{stack});check(after?._id?.$oid===identities.get(stack)&&equal(after.config,{...before,...patch}),'Restoration configuration readback differs');configs.set(stack,structuredClone(after.config));phases.set(stack,'source');await guard([stack])}
+    catch{throw Object.assign(Error('Restoration configuration outcome unresolved'),{uncertain:true})}
+   }
+  },
   async resumeStoppedBoundary(receipt){
    const original=assertStoppedReceipt(plan,receipt)
    check([...phases.values()].every(p=>p==='source')&&configs.size===0&&!migrationSubmitted&&!seedSubmitted,'Recovery initialization may run only once')
@@ -155,8 +195,8 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    await onProgress({phase:'recovery',status:'old-updates-and-stopped-boundary-confirmed'})
   },
   async stop(stack,service){
-   check(APPS.includes(stack)&&(service==='worker'||(native||provenanceUpgrade)&&service==='lingxiloop')&&phases.get(stack)==='target','Only reviewed old writers may be drained')
-   await guard([stack]);const result=await t.execute('StopStack',{stack,services:[service],stop_time:150})
+   check(APPS.includes(stack)&&(service==='worker'||(native||provenanceUpgrade||plan.format===SAME54_FORMAT)&&service==='lingxiloop')&&(phases.get(stack)==='target'||restoringSource),'Only reviewed old writers may be drained')
+   await guard([stack]);if(plan.format===SAME54_FORMAT)await onProgress({phase:'service-action',action:'StopStack',stack,service});const result=await t.execute('StopStack',{stack,services:[service],stop_time:150})
    stoppedWriters.add(stack+':'+service);return result
   },
   async backup(){
@@ -189,12 +229,12 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    const receipt=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{...(native?{env:{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'}}:{}),command:['timeout','-k','30','300','node','--import','tsx','--input-type=module','-e',code]})),'MIGRATED')
    check(equal(receipt,{sha:plan.target.sha,schema:plan.target.schema,product:plan.target.productVersion}),'Migration marker mismatch')
   },
-  async deploy(stack,service){check(APPS.includes(stack)&&['lingxiloop','worker'].includes(service)&&phases.get(stack)==='target','Only qualified app services may deploy');await guard([stack]);return t.execute('DeployStack',{stack,services:[service]})},
+  async deploy(stack,service){check(APPS.includes(stack)&&['lingxiloop','worker'].includes(service)&&phases.get(stack)===(restoringSource?'source':'target'),'Only qualified app services may deploy');await guard([stack]);if(plan.format===SAME54_FORMAT)await onProgress({phase:'service-action',action:'DeployStack',stack,service});return t.execute('DeployStack',{stack,services:[service]})},
   async verifyHealthy(stack,service){
    const deadline=Date.now()+180000
    while(Date.now()<deadline){
     const r=(await inspect()).find(r=>r.stack===stack&&r.service===service)
-    check(r?.source===plan.target.sha&&r.imageId===images.get(imageKey('target',r.server)),'Deployed service is not qualified target')
+    check(r?.source===plan[restoringSource?'source':'target'].sha&&r.imageId===images.get(imageKey(restoringSource?'source':'target',r.server)),'Deployed service is not qualified target')
     if(r.running&&!r.restarting&&r.healthy&&r.restartCount===0)return
     await wait(2000,undefined,{signal})
    }
