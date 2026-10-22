@@ -29,4 +29,3 @@ const ReplyMessage: React.FC<IReplyMessageProps> = ({onClick, ...props}) => {
 }
 
 export default ReplyMessage
-
