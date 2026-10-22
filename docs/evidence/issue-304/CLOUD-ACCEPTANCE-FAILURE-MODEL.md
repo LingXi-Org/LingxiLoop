@@ -14,6 +14,11 @@ Recorded before adding the focused browser regression. Source baseline is
 - Existing v2 first-character/handoff/correction, input/approval uniqueness,
   history races, manual scroll and visualization-owner regressions must still
   pass against this exact combined source. Report synthetic scope honestly.
+- Cover persisted questionnaire replay/retry through the existing isolated
+  questionnaire fixture. Failed/cancelled/partial/blocked outcomes must retain
+  their honest status and visible results; a user without approval control must
+  see the waiting notice without an actionable approval, even after disclosure
+  and reload. No synthetic fixture proves production principal authorization.
 - Reduced motion requires the browser's real
   `matchMedia('(prefers-reduced-motion: reduce)').matches` to be true before
   product assertions. A missing engine API or overridden browser preference is
