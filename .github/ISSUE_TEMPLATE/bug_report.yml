@@ -9,7 +9,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        谢谢你反馈！不用懂技术或 Markdown，填写前 4 项即可，后面的都可以跳过。
+        谢谢你反馈！不用懂技术或 Markdown，只需选择功能并描述问题，其余都可以跳过。
 
         上方标题请用一句话描述问题，例如：“点击发送后一直转圈，没有回复”。
 
@@ -42,10 +42,15 @@ body:
     validations:
       required: true
 
+  - type: markdown
+    attributes:
+      value: |
+        **以下都可以跳过。** 知道的话可以补充，方便我们更快找到原因。
+
   - type: textarea
     id: steps
     attributes:
-      label: 出现问题前，你做了什么？
+      label: 出现问题前，你做了什么？（选填）
       description: 记得多少写多少；不记得就填“不记得了”。
       placeholder: |
         例如：
@@ -54,21 +59,16 @@ body:
         3. 页面一直转圈
         不记得具体操作也没关系，写“不记得了”即可。
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: expected
     attributes:
-      label: 你希望正常情况下是什么样？
+      label: 你希望正常情况下是什么样？（选填）
       description: 简单说说你原本想完成什么。
       placeholder: 例如：发送消息后能看到回复，等待时能看到进度。
     validations:
-      required: true
-
-  - type: markdown
-    attributes:
-      value: |
-        **以下都可以跳过。** 知道的话可以补充，方便我们更快找到原因。
+      required: false
 
   - type: dropdown
     id: device
