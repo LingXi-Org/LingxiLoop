@@ -36,7 +36,7 @@ jobs:
       OPEN_NOTEBOOK_ENABLED: 'false'
       OPENAI_EMBEDDING_MODEL: disabled
       OPENAI_BASE_URL: https://api.siliconflow.cn/v1
-      OPENAI_MODEL: zai-org/GLM-5.3-Flash
+      OPENAI_MODEL: deepseek-ai/DeepSeek-V4.1-Flash
       LINGXIOS_LIVE_AVAILABLE_CAPABILITIES: '1'
       AGENT_OS_MODEL_CONCURRENCY: '1'
       AGENT_OS_MAX_MODEL_CALLS: '10'

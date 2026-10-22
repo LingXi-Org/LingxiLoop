@@ -37,7 +37,7 @@ function wukongUserTokenSecret(): string {
     .update('lingxiloop:wukong-user-token:v1')
     .digest('base64url')
 }
-const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || 'zai-org/GLM-5.3-Flash'
+const DEFAULT_MODEL = process.env.OPENAI_MODEL?.trim() || 'deepseek-ai/DeepSeek-V4.1-Flash'
 export const env = {
   PORT: Number(process.env.PORT ?? 5181),
   NODE_ENV: process.env.NODE_ENV ?? 'development',
@@ -59,7 +59,7 @@ export const env = {
    * The global OpenAI Chat Completions model for retained product utilities.
    */
   OPENAI_MODEL: DEFAULT_MODEL,
-  OPENAI_EMBEDDING_MODEL: required('OPENAI_EMBEDDING_MODEL'),
+  OPENAI_EMBEDDING_MODEL: process.env.OPENAI_EMBEDDING_MODEL?.trim() || 'Pro/BAAI/bge-m3',
   OPENAI_IMAGE_MODEL: process.env.OPENAI_IMAGE_MODEL?.trim() || '',
   /**
    * Webhook URL for process-level alerts (unhandledRejection /

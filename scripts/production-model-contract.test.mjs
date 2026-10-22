@@ -7,7 +7,7 @@ import test from 'node:test'
 // from Web; resource sync overrides the reviewed model; stale admission tariffs
 // are required even though the provider tariff can derive them; unrelated models change.
 test('A/B rendered Web and Worker environments share the reviewed chat model', () => {
-  const model = 'zai-org/GLM-5.3-Flash'
+  const model = 'deepseek-ai/DeepSeek-V4.1-Flash'
   const resources = readFileSync('deploy/komodo/resources.toml', 'utf8')
   for (const slot of ['a', 'b']) {
     const path = `deploy/komodo/lingxiloop-app-${slot}/compose.yml`
@@ -30,7 +30,24 @@ test('A/B rendered Web and Worker environments share the reviewed chat model', (
     }
     const stack = resources.split('[[stack]]').find(block => block.includes(`name = "lingxiloop-app-${slot}"`))
     assert.ok(stack?.includes(`OPENAI_MODEL = ${model}`))
+    assert.ok(stack?.includes('OPENAI_EMBEDDING_MODEL = Pro/BAAI/bge-m3'))
     assert.ok(!stack.includes('AGENT_OS_INPUT_COST_MICROS_PER_MILLION = [['))
     assert.ok(!stack.includes('AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION = [['))
   }
+})
+
+test('development, knowledge and production templates share the exact new defaults', () => {
+  const model = 'deepseek-ai/DeepSeek-V4.1-Flash', embedding = 'Pro/BAAI/bge-m3'
+  for (const file of ['.env.example', '.env.local.example']) {
+    const source = readFileSync(file, 'utf8')
+    assert.match(source, new RegExp(`^OPENAI_MODEL=${model.replaceAll('.', '\\.')}\\s*$`, 'm'))
+    assert.match(source, new RegExp(`^OPENAI_EMBEDDING_MODEL=${embedding}\\s*$`, 'm'))
+  }
+  for (const file of ['docker-compose.mvp.yml', 'deploy/komodo/lingxiloop-app-a/compose.yml', 'deploy/komodo/lingxiloop-app-b/compose.yml', 'deploy/komodo/lingxiloop-knowledge-agent/compose.yml']) {
+    const source = readFileSync(file, 'utf8')
+    assert.ok(source.includes(`OPENAI_EMBEDDING_MODEL: \${OPENAI_EMBEDDING_MODEL:-${embedding}}`), file)
+    if (file !== 'deploy/komodo/lingxiloop-knowledge-agent/compose.yml') assert.ok(source.includes(`OPENAI_MODEL: \${OPENAI_MODEL:-${model}}`), file)
+  }
+  assert.ok(readFileSync('eval/.env.example', 'utf8').includes(`EVAL_CANDIDATE_MODEL=${model}`))
+  assert.ok(readFileSync('.github/workflows/available-capabilities.yml', 'utf8').includes(`OPENAI_MODEL: ${model}`))
 })
