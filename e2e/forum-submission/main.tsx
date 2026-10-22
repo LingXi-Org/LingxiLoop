@@ -21,6 +21,7 @@ const messages = (room: string) => [{ id: `${room}-user`, role: 'user', text: '�
 let releaseOld: (() => void) | undefined
 let completed = false
 let finishUpload: (()=>void) | undefined
+let finishSubmission: (()=>void) | undefined
 window.fetch = async (url, init) => {
   const path = String(url)
   if (path.includes('/uploads/capabilities')) return Response.json({ maxBytes: 10000, allowedMimes: [] })
@@ -30,7 +31,11 @@ window.fetch = async (url, init) => {
     if(scenario === 'upload-pending')return new Promise(resolve=>{finishUpload=()=>resolve(new Response('',{status:200}))})
     return new Response('', { status: scenario === 'upload' && evidence.puts === 1 ? 503 : 200 })
   }
-  if (path.includes('/submit')) { evidence.submissions.push(JSON.parse(String(init?.body))); return Response.json(scenario === 'submit-retry' && evidence.submissions.length === 1 ? { error: '提交暂时失败，请重试' } : { attemptId: 'attempt' }, { status: scenario === 'submit-retry' && evidence.submissions.length === 1 ? 503 : 201 }) }
+  if (path.includes('/submit')) {
+    evidence.submissions.push(JSON.parse(String(init?.body)))
+    if(scenario === 'late-submit')return new Promise(resolve=>{finishSubmission=()=>resolve(Response.json({attemptId:'attempt'},{status:201}))})
+    return Response.json(scenario === 'submit-retry' && evidence.submissions.length === 1 ? { error: '提交暂时失败，请重试' } : { attemptId: 'attempt' }, { status: scenario === 'submit-retry' && evidence.submissions.length === 1 ? 503 : 201 })
+  }
   if (path.includes('/submissions?')) {
     evidence.history++
     if (scenario === 'history') return new Promise((_, reject) => init?.signal?.addEventListener('abort', () => reject(init.signal!.reason), { once: true }))
@@ -54,16 +59,18 @@ const item = { id: 'assignment', targetType: 'post', kind: 'assignment', status:
 const space = { companyId: 'company', courseId: 'course', projectId: 'project', canSubmit: true, canReview: false, perspective: 'learner' } as LearningSpace
 function App() {
   const [, render] = useState(0), [courseId, setCourse] = useState('course'), [refs, setRefs] = useState<ConversationReference[]>([])
+  const [hidden,setHidden]=useState(false)
   const selectedConversation=useApp(state=>state.selectedConversationId)
   useEffect(() => { const timer = setInterval(() => render(value => value + 1), 50); return () => clearInterval(timer) }, [])
   return <TooltipProvider><main style={{ maxWidth: 900, padding: 24 }}>
     {['empty','incomplete'].includes(scenario) && <button onClick={()=>{completed=true}}>模拟完成学习对话</button>}
     {scenario === 'upload-pending' && <button onClick={()=>finishUpload?.()}>模拟上传完成</button>}
+    {scenario === 'late-submit' && <><button onClick={()=>setHidden(value=>!value)}>{hidden?'重开作业':'离开作业'}</button><button onClick={()=>finishSubmission?.()}>模拟旧提交成功</button></>}
     {scenario === 'scope' ? <><button onClick={() => setCourse('other')}>切换课程</button><button onClick={() => releaseOld?.()}>返回旧请求</button><ConversationReferencePicker courseId={courseId} value={refs} onChange={setRefs} disabled={false} /></>
       : scenario === 'fixed' ? <ConversationReferencePicker courseId="course" channelId="room" value={refs} onChange={setRefs} disabled={false}/>
         : scenario === 'navigation' && selectedConversation ? <><p>课程对话已打开</p><button onClick={()=>useApp.getState().selectConversation(null)}>返回作业</button></>
-          : <ForumSubmission space={space} item={item} />}
-    <output aria-label="提交证据">{JSON.stringify(evidence)}</output>
+          : !hidden && <ForumSubmission space={space} item={item} />}
+    <output aria-label="提交证据">{JSON.stringify({...evidence,draft:JSON.parse(localStorage.getItem('lingxiloop.forum.draft:company:student:submission:course:assignment')??'null')?.value?.body})}</output>
   </main></TooltipProvider>
 }
 createRoot(document.getElementById('root')!).render(<App />)

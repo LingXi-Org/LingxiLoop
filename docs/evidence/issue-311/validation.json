@@ -12,8 +12,8 @@
     "webBuild": "passed (existing CSS/chunk warnings)",
     "e2eTypecheck": "passed",
     "officialBrowser": {
-      "runId": "01a16423-111c-75b0-8063-ccb00b04e117",
-      "passed": 12,
+      "runId": "01a1642d-9e1e-7016-a1e2-8d499345eacf",
+      "passed": 13,
       "failed": 0
     }
   },
@@ -30,7 +30,7 @@
     },
     {
       "path": "src/features/learning/forum/ForumSubmission.tsx",
-      "sha256": "25ce929290b9022a850e50de83b0df22b0c35f07ee5f3c547596c36b5a75c16e",
+      "sha256": "28965bab77a1c01c0abdef08fb122db1012cf3f89f1a6e2703fbaf60c323b8c8",
       "bytes": 17195
     },
     {
@@ -55,13 +55,13 @@
     },
     {
       "path": "e2e/forum-submission/main.tsx",
-      "sha256": "4f821c2a364f961f4bc17c4ccf93f26a10e5c3f2ec6b9f5f3d6c0b9e1e8c789f",
-      "bytes": 5813
+      "sha256": "5f217d64f6abf8adb903e3251c270c1e0ae77e881b56fe6eaaeb082d65b81da2",
+      "bytes": 6411
     },
     {
       "path": "e2e/forum-submission/submission.e2e.ts",
-      "sha256": "fc9a6271c888f86d9fbc3624c7d762f18f58428c2350fb2afe3c0e9f3f79510f",
-      "bytes": 9476
+      "sha256": "705f3516b8c2a954b1c75ec239c2cebf0a38c7e05e51b72a1f55c3d01e29bf87",
+      "bytes": 10804
     },
     {
       "path": "e2e/forum-submission/vite.config.ts",
@@ -105,6 +105,35 @@
     {
       "path": "D:\\Temp\\issue311-e2e-final-typecheck.log",
       "sha256": "7ce569a2f971c1f1673cec0f0cb5cc97b0761d0f28efe8c217204d1059a26846"
+    },
+    {
+      "path": "D:\\Temp\\issue311-late-red3.log",
+      "sha256": "248775914f9b5dfd7ca774a15afe9c6019646ab208811cdb2d7523b38aaeb0ce"
+    },
+    {
+      "path": "D:\\Temp\\issue311-final13-browser.log",
+      "sha256": "181854980f95572b9443d74c3f0aecd8402e96b4f0c08800309f14b1251845fe"
+    },
+    {
+      "path": "D:\\Temp\\issue311-final-lint.log",
+      "sha256": "198b234264dc4cd1fc65021ee92f05a3961140ad052caa29d64599d0ac051a19"
+    },
+    {
+      "path": "D:\\Temp\\issue311-final-test.log",
+      "sha256": "7a1095d36f6daed1e78ce3087a9a9b4ce9f4edc92e5b05b2dc434ecb3163d633"
+    },
+    {
+      "path": "D:\\Temp\\issue311-final-test-e2e-typecheck.log",
+      "sha256": "7ce569a2f971c1f1673cec0f0cb5cc97b0761d0f28efe8c217204d1059a26846"
+    },
+    {
+      "path": "D:\\Temp\\issue311-final-build.log",
+      "sha256": "6e3db604370fbd814be5462c3dcb87f846aa73017dd9aef35a1096e064dd1710"
     }
-  ]
+  ],
+  "lateReceiptNegative": {
+    "oldBehavior": "failed on actually empty reopened editor",
+    "fixedBehavior": "passed",
+    "redLog": "D:\\Temp\\issue311-late-red3.log"
+  }
 }

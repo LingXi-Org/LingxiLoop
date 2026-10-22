@@ -76,7 +76,7 @@ function StudentSubmission({ space, item }: { space: LearningSpace; item: ForumI
       const content={answer,editorDocument:draft.editorDocument,links:contentLinks(links),attachments,conversationReferences:references},fingerprint=JSON.stringify(content)
       if(pending.current?.fingerprint!==fingerprint)pending.current={fingerprint,key:crypto.randomUUID()}
       submitting.current=true;setBusy(true);setError('');setSaved(false)
-      try {await forumApi.submit(space.courseId!,item.id,{...content,idempotencyKey:pending.current.key});pending.current=null;setDraft(emptyContent);discard();if(mounted.current){setReferences([]);setSaved(true);void load()}}
+      try {await forumApi.submit(space.courseId!,item.id,{...content,idempotencyKey:pending.current.key});pending.current=null;if(mounted.current){setDraft(emptyContent);discard();setReferences([]);setSaved(true);void load()}}
       catch(reason){if(mounted.current)setError(userFacingError(reason,'提交失败，请检查对话引用和作业状态后重试。'))}finally{submitting.current=false;if(mounted.current)setBusy(false)}
     }}>
       <ForumContentFields body={answer} editorDocument={draft.editorDocument} setBody={(body,editorDocument)=>setDraft(old=>({...old,body,editorDocument}))} label="作业内容" links={links} setLinks={links=>setDraft(old=>({...old,links}))} attachments={attachments} setAttachments={attachments=>setDraft(old=>({...old,attachments}))} disabled={disabled} onUploading={setUploading}/>
