@@ -195,6 +195,7 @@ jobs:
               - 'scripts/checkout-bytes.test.mjs'
               - '.github/workflows/ci.yml'
               - 'scripts/ci-scope.mjs'
+              - 'scripts/knowledge-shadow-pg-*.mjs'
               - 'scripts/production-rag-contract.test.mjs'
               - 'scripts/release-smoke*.mjs'
               - 'scripts/update-deployment-images.mjs'
@@ -360,6 +361,9 @@ jobs:
         run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-model-config.test.mjs scripts/host-release-stopped-recovery.test.mjs scripts/host-release-image-recovery.test.mjs scripts/host-release-lease-wait.test.mjs scripts/public-text-release.test.mjs scripts/current-source52-acceptance.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test --test-name-pattern 'effective candidate' scripts/host-release.local.test.mjs
+      - name: Check shadow PG gate deadline and coordinator boundaries
+        if: matrix.component == 'deploy-contract'
+        run: node --experimental-test-module-mocks --test scripts/knowledge-shadow-pg-*.test.mjs
       - if: matrix.component == 'release'
         run: npm run version:check
 
