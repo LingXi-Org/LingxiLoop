@@ -1,0 +1,108 @@
+{
+  "format": "model-config-rag-runtime-profile-fix/v1",
+  "recordedAt": "2026-10-22T19:40:01.146Z",
+  "base": "aac7686a84e7ecd784f8dd27d80af4e717adfddb",
+  "productionRead": false,
+  "productionWrite": false,
+  "actualAudit": {
+    "rawSha256": "4c2e666ac759b51d1c39ee5c7a3a8a8e31d3857f5c8018b2d70a96ad33259d9e",
+    "sourceCommit": "6987038c96a14c36050cb002494ad6cbed46a2d4",
+    "sourceComparisons": 81,
+    "pythonDistributions": 66,
+    "httpxPresent": true,
+    "openaiPresent": false
+  },
+  "sourceProfile": {
+    "files": [
+      {
+        "path": "pyproject.toml",
+        "sha256": "ceda25466b6762a780473dd1052de733826d82959bb5afeab20e1bced597f0d4"
+      },
+      {
+        "path": "uv.lock",
+        "sha256": "3564a633c486bd79caefcfcb33242da172b633fe54761b587e3029663e7e3cde"
+      },
+      {
+        "path": "Dockerfile",
+        "sha256": "98fb147e90e28bd303245598126c9dbecab74b8d54f5b5ac43af69e0a021deb3"
+      },
+      {
+        "path": "open_notebook/rag/shadow.py",
+        "sha256": "7c4f146ee8ed66eee59e6b6fd8110f3a4bbaa4c81e3b4f2226a028abd2e0a318"
+      }
+    ],
+    "projectDependencies": [
+      "boto3>=1.40,<2",
+      "fastapi>=0.104.0",
+      "uvicorn>=0.24.0",
+      "python-multipart>=0.0.20",
+      "pydantic>=2.9.2",
+      "loguru>=0.7.2",
+      "tiktoken>=0.12.0",
+      "httpx[socks]>=0.27.0",
+      "pypdf>=6.0,<7",
+      "python-docx>=1.2,<2",
+      "surrealdb>=1.0.4",
+      "surreal-commands>=1.3.1,<2"
+    ],
+    "dockerFrozenMinimalProfile": true,
+    "shadowImportsHttpx": true,
+    "shadowUsesHttpxClient": true
+  },
+  "offlineActualKnowledgeInputVerification": {
+    "passed": true,
+    "inputDraftSha256": "c212e7bf25c87705efb8f0d9c50512d04fa562028dc88a478fdc7e256977c701",
+    "knowledgeInputSha256": {
+      "knowledgePlan": "13403b1185635050527c3a7083110aadd9187fd6a00dfb309603df9956647eec",
+      "knowledgeFence": "2d0514dd1ceb005bc92f7e62a770bedabe866c7b04b601c06666b1ffa5b1b242",
+      "knowledgeImageAudit": "4c2e666ac759b51d1c39ee5c7a3a8a8e31d3857f5c8018b2d70a96ad33259d9e"
+    },
+    "counts": {
+      "chunks": 35,
+      "commands": 4,
+      "notebooks": 5,
+      "references": 4,
+      "sources": 4
+    }
+  },
+  "red": "Minimal RAG audit with httpx and no optional OpenAI SDK rejected before production-code change",
+  "focused": {
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "rawLogSha256": "02833ff605c0c0b72ebbf2069d42cb29bb1ca061fca3c4ab6b80f037cdbdbad8"
+  },
+  "owningDeploymentContracts": {
+    "passed": 221,
+    "failed": 0,
+    "skipped": 0,
+    "rawLogSha256": "ee32847d009514a06ef10ed76888d33e393633a73e752ec565ae9f2c3092bef4"
+  },
+  "functional": {
+    "file": "httpx-cli-functional.json",
+    "passedGroups": 5,
+    "rawSha256": "16d10e9af9624d1a0e775b40b02d3390202d6faf69008fe9702c736da1552a14"
+  },
+  "testedFiles": [
+    {
+      "path": "scripts/host-release-model-config-evidence.mjs",
+      "bytes": 11075,
+      "sha256": "df1fb991b1619032142f2f4842da74dffe4a4809610721b36b31e4e44832eb70"
+    },
+    {
+      "path": "scripts/host-release-model-config.test.mjs",
+      "bytes": 22579,
+      "sha256": "29dda44de09eedc4b0067a3fd6c831001530c6e064bab05c288f95da6871d23b"
+    },
+    {
+      "path": "docs/evidence/issue-297/model-config-release/verify-cli.mjs",
+      "bytes": 8908,
+      "sha256": "f8b22fea7b7b35909d51be227ba9d77be8025aaf86f14973c0ddb6f4afc5bd8b"
+    }
+  ],
+  "remaining": [
+    "exact-head CI",
+    "independent final review",
+    "sole parent integration and authorized preflight"
+  ]
+}

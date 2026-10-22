@@ -1,0 +1,44 @@
+{
+  "format": "model-config-cli-functional-verification/v1",
+  "performedAt": "2026-10-22T19:39:05.444Z",
+  "synthetic": true,
+  "productionRead": false,
+  "productionWrite": false,
+  "credentialsAbsent": true,
+  "proxyUnreachable": true,
+  "sourceAcceptance": {
+    "candidate": "c7c5812d7784bb95436fe4d64bcdb85228ec0a51",
+    "rawSha256": "ba3192ba31898b883da3d56ec9a82f7c898d97ab6dd734f75f94ee9b0464f3c8"
+  },
+  "sourceAuditSha256": "b10cfeedfece7ab490993a0208596ff1529af224ae9abe7370a28cef7f445af7",
+  "fixtureDirectory": "/tmp/model-config-cli-final-l5YFZL",
+  "results": [
+    {
+      "scenario": "offline exact latest source plus synthetic knowledge plan-fence-audit",
+      "exit": 0,
+      "output": {
+        "mode": "offline-verification",
+        "planHash": "926428a6d7ff339cf14ffb7511b4b1f4cb1e51e3d8e5153bac78e534ab9fcb14",
+        "passed": true
+      }
+    },
+    {
+      "scenario": "wrong fence revision rejects despite resealed hashes",
+      "exit": 1
+    },
+    {
+      "scenario": "failed knowledge source audit rejects despite resealed hashes",
+      "exit": 1
+    },
+    {
+      "scenario": "terminal failed native ID is freshly read and nonterminal-contradictory-outcome-wrong-target refuse",
+      "passed": true,
+      "readbacks": 4
+    },
+    {
+      "scenario": "read HTTP403 preserved in execution receipt and continuation refused",
+      "passed": true,
+      "httpStatus": 403
+    }
+  ]
+}
