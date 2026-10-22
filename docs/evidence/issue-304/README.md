@@ -4,7 +4,8 @@ Historical receipt below. The implementation was later restored and merged in
 PR306, then released to product54. The first cloud supplement's genuine25/25
 result used a dependency underlay that differed from production locks and is
 [preserved as history](CLOUD-ACCEPTANCE.md). The corrective isolated dependency
-installation and browser acceptance are tracked in
+installation and25/25 browser acceptance, with127/127 production dependencies
+matching their locks before/after, are recorded in
 [LOCKED-CLOUD-ACCEPTANCE.md](LOCKED-CLOUD-ACCEPTANCE.md). Earlier access and
 media-capability failures below describe that earlier execution only.
 
