@@ -1,11 +1,13 @@
 import {spawnSync} from 'node:child_process'
 import {isDeepStrictEqual as equal} from 'node:util'
+import {devNull} from 'node:os'
+import {offlineComposeEnvironment} from './compose-offline.mjs'
 const IMAGE='accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:'
 const services=['db-migrate','lingxiloop','worker']
 export function parsePublicCompose(source){
  if(typeof source!=='string'||Buffer.byteLength(source)>512*1024)throw Error('Invalid public Compose source')
- const r=spawnSync('docker',['compose','--env-file','/dev/null','--project-name','lingxiloop-host-preflight','--file','-','config','--no-interpolate','--no-env-resolution','--no-path-resolution','--format','json'],
-  {input:source,encoding:'utf8',env:{PATH:process.env.PATH},timeout:10000,killSignal:'SIGKILL',maxBuffer:1024*1024})
+ const r=spawnSync('docker',['compose','--env-file',devNull,'--project-name','lingxiloop-host-preflight','--file','-','config','--no-interpolate','--no-env-resolution','--no-path-resolution','--format','json'],
+  {input:source,encoding:'utf8',env:offlineComposeEnvironment(),timeout:10000,killSignal:'SIGKILL',maxBuffer:1024*1024})
  if(r.error||r.status!==0)throw Error('Public Compose validation failed')
  try{return JSON.parse(r.stdout)}catch{throw Error('Public Compose validation failed')}
 }

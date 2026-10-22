@@ -1,0 +1,44 @@
+// Failure model: a historical summary, foreign candidate, partial inventory,
+// replaced reader, failed update/HTTP response, image drift or missing asset
+// evidence must never qualify the currently running source. No network or DDL.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
+import {assertCurrentSource52Acceptance, CURRENT_SOURCE52_FORMAT} from './current-source52-acceptance.mjs';
+const hash=x=>createHash('sha256').update(x).digest('hex'),hex='a'.repeat(64),id='b'.repeat(24);
+function fixture(){
+ const source={sha:'110d1a2389605b6a0649807d79c6b932261609e4',runtime:'3.8.0',schema:14,protocol:11,schemaHash:hex,productVersion:52,migrations:Array.from({length:52},(_,i)=>({version:i+1,name:'m_'+i,checksum:hex})),integrity:'sha512-formal'};
+ const image={indexDigest:'sha256:'+hex,configDigest:'sha256:'+hex,manifestDigest:'sha256:'+hex,diffIds:['sha256:'+hex]};
+ const html='<html><script src="/assets/app.js"></script><script src="/assets/extra.js"></script><link href="/assets/app.css" rel="stylesheet"></html>';
+ const files={'/':html,'/assets/app.js':'export const a=1','/assets/extra.js':'export const b=2','/assets/app.css':'body{margin:0}'};
+ const inventory=JSON.stringify(Object.fromEntries(Object.entries(files).map(([name,body])=>[name==='/'?'app/dist/index.html':'app/dist'+name,{kind:'file',bytes:Buffer.byteLength(body),sha256:hash(body)}])));
+ const audit=JSON.stringify({passed:true,sourceCommit:source.sha,indexDigest:image.indexDigest,configDigest:image.configDigest,linuxAmd64ManifestDigest:image.manifestDigest,layers:[{diffId:image.diffIds[0]}],formalRuntimeIntegrity:source.integrity,inventorySha256:hash(inventory),packageComparisons:[{matches:true,actualFiles:488,expectedFiles:488,prefix:'app/node_modules/@lyyzka/lingxios/'}],sourceComparisons:[{matches:true}]});
+ source.image={...image,auditSha256:hash(audit)};
+ const publicText={reader:2,producer:'purpose-json-v1'},stacks=['lingxiloop-app-a','lingxiloop-app-b','lingxiloop-core-state'].map((stack,i)=>({stack,server:i===1?'shanghai-b':'shanghai-a',source:{commit:'c'.repeat(40)}}));
+ const containers=stacks.slice(0,2).flatMap(({stack,server},i)=>['lingxiloop','worker'].map((service,j)=>({stack,server,service,id:String(i*2+j+1).repeat(64),imageId:image.indexDigest,source:source.sha,image:'accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:'+source.sha,running:true,restarting:false,oomKilled:false,health:'healthy',healthFailingStreak:0})));
+ const readerContainers=containers.map(({stack,service,id,imageId})=>({stack,service,id,imageId}));
+ const checkedAt='2026-10-22T10:00:00.000Z';
+ const observed={candidate:source.sha,startedAt:checkedAt,finishedAt:checkedAt,servers:['manager','shanghai-a','shanghai-b'].map(name=>({name,state:'Ok'})),stacks,containers,images:stacks.slice(0,2).map(({server})=>({server,id:image.indexDigest,repoDigests:['accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server@'+image.indexDigest],architecture:'amd64',os:'linux',rootFS:{Type:'layers',Layers:image.diffIds}})),metadata:stacks.slice(0,2).map(({stack})=>({stack,status:'Complete',success:true,updateId:id,metadata:{...source,publicText:2,runTrace:1,deployment:publicText,configurationSha256:hex,modelOptions:{publicTextProtocol:'purpose-json-v1'}}})),public:[{path:'/api/health',status:200,ok:true,body:{ok:true}},{path:'/readyz',status:200,ok:true,body:{ok:true,dependencies:{database:true,redis:true,control:true}}},{path:'/api/health/dependencies',status:200,ok:true,body:{ok:true,dependencies:{database:true,redis:true,openNotebook:true}}},{path:'/api/meta',status:200,ok:true,body:{commitSha:source.sha,reasoningRuntime:{runtime:source.runtime,schema:14,controlPlane:11,publicText:2,runTrace:1}}}]};
+ const state={readOnly:true,fullVisibility:true,schema:14,installedSchema:14,runtime:source.runtime,protocol:11,schemaHash:hex,product:52,count:52,migrations:source.migrations};
+ const schema={checkedAt,events:[{phase:'komodo',status:'complete',operation:'RunStackService',stack:'lingxiloop-core-state',updateId:id},{phase:'read-only-provenance',updateId:id,state}]};
+ const assets={passed:true,candidate:source.sha,startedAt:checkedAt,finishedAt:checkedAt,inventorySha256:hash(inventory),paths:Object.entries(files).map(([path,body])=>({path,status:200,ok:true,bytes:Buffer.byteLength(body),sha256:hash(body),matchesAudit:true}))};
+ const plan={format:'conversation-repair-provenance-host-release/v1',source,target:{sha:'d5481cd258058784e7004169b5ef1235460384f1',runtime:'3.8.2',productVersion:53},stacks,publicText:{source:publicText,sourceConfigurationSha256:hex,sourceContainers:readerContainers}};
+ const accepted={format:CURRENT_SOURCE52_FORMAT,qualification:'current-source-observation',historicalReleaseReceipt:'unavailable',passed:true,candidate:source.sha,createdAt:checkedAt,checks:{currentSource:true},publicText,configurationSha256:hex,readerContainers,evidence:{observed,schema,assets,audit,inventory,html}};
+ return {accepted,plan};
+}
+test('fresh source52 qualification binds actual readers, full provenance, audit and public checks without claiming an earlier release',()=>{const {accepted,plan}=fixture();assert.doesNotThrow(()=>assertCurrentSource52Acceptance(accepted,plan));});
+test('incomplete or foreign evidence cannot open the narrow source52 gate',()=>{
+ const changes=[(a,p)=>p.format='run-presentation-contract-host-release/v1',(a,p)=>p.source.sha='d'.repeat(40),(a,p)=>p.target.sha='e'.repeat(40),a=>a.historicalReleaseReceipt='reconstructed',a=>a.qualification='historical',a=>a.evidence.observed.error={},a=>a.evidence.observed.servers.pop(),a=>a.evidence.observed.servers[0].state='NotOk',a=>a.evidence.observed.containers.pop(),a=>a.evidence.observed.containers[0].health='unhealthy',a=>a.evidence.observed.containers[0].id='f'.repeat(64),a=>a.evidence.observed.images[0].rootFS.Layers=[],a=>a.evidence.observed.images[0].id='sha256:'+'f'.repeat(64),a=>a.evidence.observed.metadata[0].success=false,a=>a.evidence.observed.metadata[0].metadata.migrations=[],a=>a.evidence.observed.metadata[0].metadata.runTrace=0,a=>a.evidence.observed.metadata[0].metadata.modelOptions={},a=>a.evidence.schema.events[1].state.migrations=[],a=>a.evidence.schema.events[1].state.fullVisibility=false,a=>a.evidence.schema.events[0].status='pending',a=>a.evidence.observed.public[0].status=403,a=>a.evidence.observed.public[1].body.dependencies.redis=false,a=>a.evidence.observed.public[3].body.commitSha='e'.repeat(40),a=>a.evidence.assets.paths.pop(),a=>a.evidence.assets.paths[0].matchesAudit=false,a=>a.evidence.assets.inventorySha256='f'.repeat(64),a=>a.evidence.audit+=' ',a=>a.evidence.observed.stacks.pop(),a=>a.createdAt='2026-10-23T10:00:00.000Z'];
+ for(const change of changes){const {accepted,plan}=fixture();change(accepted,plan);assert.throws(()=>assertCurrentSource52Acceptance(accepted,plan),String(change));}
+});
+
+for(const [name,change] of [
+ ['resource sha256 alone',a=>a.evidence.assets.paths[1].sha256='f'.repeat(64)],
+ ['resource byte length alone',a=>a.evidence.assets.paths[1].bytes++],
+ ['resource path alone',a=>a.evidence.assets.paths[1].path='/assets/foreign.js'],
+ ['omitted HTML reference while JS and CSS remain',a=>a.evidence.assets.paths.splice(2,1)],
+ ['changed full inventory bytes',a=>a.evidence.inventory+=' '],
+ ['changed HTML bytes',a=>a.evidence.html+=' '],
+ ['missing full inventory',a=>delete a.evidence.inventory],
+ ['missing HTML',a=>delete a.evidence.html],
+])test('asset proof rejects '+name,()=>{const {accepted,plan}=fixture();change(accepted);assert.throws(()=>assertCurrentSource52Acceptance(accepted,plan));});

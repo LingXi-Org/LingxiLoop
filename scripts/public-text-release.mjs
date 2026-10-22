@@ -1,6 +1,7 @@
 // Explicit public-text capability/provenance contracts. No network or product imports.
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual as equal} from 'node:util';
+import {CURRENT_SOURCE52_FORMAT,assertCurrentSource52Acceptance} from './current-source52-acceptance.mjs';
 export const READER_FORMAT='reader-provenance-host-release/v1';
 export const PRODUCER_FORMAT='purpose-producer-host-release/v1';
 export const TRACE_FORMAT='run-trace-provenance-host-release/v1';
@@ -77,6 +78,7 @@ export function assertSeedEquality(value){
 
 export function assertAcceptedPublicTextSource(accepted,plan){
  check(accepted?.passed===true&&accepted.candidate===plan.source.sha&&Object.keys(accepted.checks??{}).length>0&&Object.values(accepted.checks).every(v=>v===true),'Accepted actual source evidence required');
+ if(accepted.format===CURRENT_SOURCE52_FORMAT){assertCurrentSource52Acceptance(accepted,plan);return;}
  if(plan.format===READER_FORMAT)check(['web-same-schema-acceptance/v1','d601-interrupted-release-recovery-acceptance/v1'].includes(accepted.format),'Unsupported source acceptance format');
  else check(accepted.format==='public-text-host-acceptance/v1'&&equal(accepted.publicText,plan.publicText.source)&&accepted.configurationSha256===plan.publicText.sourceConfigurationSha256&&equal(accepted.readerContainers,plan.publicText.sourceContainers),'Producer phase requires actual accepted four-reader source');
 }

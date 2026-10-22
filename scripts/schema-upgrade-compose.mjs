@@ -1,14 +1,16 @@
 // Resolve YAML anchors/overrides with Compose itself; never interpolate secrets
 // or contact the Docker daemon. Only the three writer/migrator image pins escape.
 import {spawnSync} from 'node:child_process'
+import {devNull} from 'node:os'
+import {offlineComposeEnvironment} from './compose-offline.mjs'
 const IMAGE='accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:'
 const SERVICES=['db-migrate','lingxiloop','worker'],SHA=/^[a-f0-9]{40}$/
 export function assertEffectiveComposePin(source,expected) {
  if(typeof source!=='string'||Buffer.byteLength(source)>512*1024)throw Error('Compose input invalid')
  const result=spawnSync('docker',[
-  'compose','--env-file','/dev/null','--project-name','lingxiloop-schema-preflight','--file','-',
+  'compose','--env-file',devNull,'--project-name','lingxiloop-schema-preflight','--file','-',
   'config','--no-interpolate','--no-env-resolution','--no-path-resolution','--format','json',
- ],{input:source,encoding:'utf8',env:{PATH:process.env.PATH},timeout:10000,killSignal:'SIGKILL',maxBuffer:1024*1024})
+ ],{input:source,encoding:'utf8',env:offlineComposeEnvironment(),timeout:10000,killSignal:'SIGKILL',maxBuffer:1024*1024})
  // No rendered config/stderr in exceptions: it can contain environment values.
  if(result.error||result.status!==0)throw Error('Compose configuration unavailable or invalid')
  let config

@@ -90,6 +90,28 @@ is part of this work.
 
 ## Qualification and plan
 
+### Fresh qualification when the historical source52 receipt is unavailable
+
+`current-source52-acceptance/v1` is a separate, narrowly reviewed source input for
+the exact `110d1a2389605b6a0649807d79c6b932261609e4` to
+`d5481cd258058784e7004169b5ef1235460384f1` conversation-repair release only.
+It is a new observation of the running source, not a recreated historical release
+receipt, browser acceptance, provider smoke or drain barrier. Its evidence must
+retain the current healthy control-plane servers, all three actual host sources,
+four healthy reader identities, both inspected image inventories and successful
+metadata updates, complete read-only database provenance, the exact full OCI
+audit bytes, all four public health/version responses and the audited HTML/JS/CSS
+comparison. The acceptance embeds the complete raw rootfs inventory and public
+HTML bytes. The reviewed consumer hashes the inventory against the plan-bound
+audit, checks each resource path/hash/length against that inventory, verifies the
+HTML bytes, and requires evidence for its exact complete JS/CSS reference set.
+The sealer must seal observations within one hour.
+
+The host driver revalidates this evidence and all ordinary online source,
+configuration, image, seed and drain safeguards. It does not claim that the
+source was idle when observed. This input cannot qualify 53-to54: that phase
+still needs a fresh successful product53 release and its normal acceptance.
+
 All input paths below are absolute. A plan is sealed from a descriptor by the offline default mode. The CLI independently checks the accepted source receipt, image audit bytes, Git objects, four package manifests/locks, migration files, effective Compose and locally installed formal package. Use the already qualified dependency installation; no installation, image build, credential discovery or remote request is performed by plan mode.
 
 Descriptor fields:
