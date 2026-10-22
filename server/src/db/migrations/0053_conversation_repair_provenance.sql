@@ -12,5 +12,5 @@ BEGIN
     RAISE EXCEPTION '0053 requires exact runtime3.8.0/native14/product52 source provenance';
   END IF;
 END $$;
-UPDATE public.lingxios_installation SET runtime_version='3.8.1',installed_at=NOW()
+UPDATE public.lingxios_installation SET runtime_version='3.8.2',installed_at=NOW()
 WHERE singleton AND runtime_version='3.8.0';

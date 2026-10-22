@@ -8,7 +8,8 @@ assert.deepEqual(process.argv.slice(2),[])
 const cwd = resolve(import.meta.dirname,'../..'), output = resolve(cwd,'artifacts/issue-298')
 await mkdir(output,{ recursive: true })
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) => /^(PATH|HOME|TMP|TEMP|SYSTEMROOT)$/i.test(name)))
-const databaseName = 'lingxiloop_visualize298_test'
+// Keep the earlier 3.8.1 reproduction database intact; 0053 was never deployed.
+const databaseName = 'lingxiloop_visualize298_382_test'
 Object.assign(env,{
   NODE_ENV: 'test',DOTENV_CONFIG_PATH: resolve(output,'__no_dotenv__'),
   DATABASE_URL: `postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/${databaseName}`,

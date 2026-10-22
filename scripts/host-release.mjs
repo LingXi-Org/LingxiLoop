@@ -28,7 +28,7 @@ const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.i
 export function sealHostPlan(value){const {planHash:_,...body}=value;return {...body,planHash:hash(stable(body))}}
 const exactKeys=(v,keys)=>v&&equal(Object.keys(v).sort(),keys.toSorted())
 function assertMigrationInventory(descriptor){
- if(['3.7.0','3.8.0','3.8.1'].includes(descriptor?.runtime)){if(descriptor.runtime==='3.8.1')assertConversationRepairInventory(descriptor);else if(descriptor.runtime==='3.8.0')assertTraceInventory(descriptor);else assertReaderInventory(descriptor);check(equal(descriptor.migrations[48],migration49),'Historical49 changed');return}
+ if(['3.7.0','3.8.0','3.8.2'].includes(descriptor?.runtime)){if(descriptor.runtime==='3.8.2')assertConversationRepairInventory(descriptor);else if(descriptor.runtime==='3.8.0')assertTraceInventory(descriptor);else assertReaderInventory(descriptor);check(equal(descriptor.migrations[48],migration49),'Historical49 changed');return}
  check((descriptor.schema===13&&[48,49].includes(descriptor.productVersion)||descriptor.schema===14&&descriptor.productVersion===50)&&Array.isArray(descriptor.migrations)
   &&descriptor.migrations.length===descriptor.productVersion
   &&descriptor.migrations.every((m,i)=>exactKeys(m,['version','name','checksum'])&&m.version===i+1&&/^[a-z0-9_]+$/.test(m.name??'')&&hex.test(m.checksum??'')),'Exact reviewed native/product inventory required')
@@ -253,7 +253,7 @@ export async function validateHostPlan(plan,{acceptance,sourceAudit,targetAudit}
 }
 async function main(){
  const args=process.argv.slice(2),values={},allowed=['--execute','--prepare-images','--input','--output','--acceptance','--source-audit','--target-audit']
- if(args.length===1&&args[0]==='--help'){console.log('Offline by default. --input <descriptor.json> --output <exclusive plan/receipt.json> --acceptance <accepted source.json> --source-audit <audit.json> --target-audit <audit.json>. All paths absolute. --execute follows an explicit same-schema, product48→49, native13/product49→native14/product50, reader-provenance, purpose-producer or exact enabled3.7/full51 to3.8/full52 trace-provenance, or exact enabled3.8/full52 to3.8.1/full53 conversation-repair plan format; --prepare-images only prepares images online and restores source files. No automatic retry/recovery.');return}
+ if(args.length===1&&args[0]==='--help'){console.log('Offline by default. --input <descriptor.json> --output <exclusive plan/receipt.json> --acceptance <accepted source.json> --source-audit <audit.json> --target-audit <audit.json>. All paths absolute. --execute follows an explicit same-schema, product48→49, native13/product49→native14/product50, reader-provenance, purpose-producer or exact enabled3.7/full51 to3.8/full52 trace-provenance, or exact enabled3.8/full52 to3.8.2/full53 conversation-repair plan format; --prepare-images only prepares images online and restores source files. No automatic retry/recovery.');return}
  for(let i=0;i<args.length;i++){const k=args[i];check(allowed.includes(k)&&!(k in values),'Unknown or repeated argument');values[k]=['--execute','--prepare-images'].includes(k)?true:args[++i]}
  check(!(values['--execute']&&values['--prepare-images']),'Choose release or explicit online image preparation')
  for(const k of allowed.slice(2))check(isAbsolute(values[k]??''),'Absolute input/evidence/output paths required')

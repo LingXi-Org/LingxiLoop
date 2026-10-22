@@ -225,7 +225,7 @@ export async function migrateDatabase(
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
     const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
     const targetSchema = hasDeliveryUpgrade ? 14 : hasContinuityUpgrade ? 13 : hasReliabilityUpgrade ? 12 : LEGACY_RUNTIME_SCHEMA
-    const targetRuntime = hasConversationRepair ? '3.8.1' : hasRunTrace ? '3.8.0' : hasPurposeReader ? '3.7.0' : hasDeliveryUpgrade ? '3.6.0' : hasContinuityUpgrade ? '3.5.8' : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
+    const targetRuntime = hasConversationRepair ? '3.8.2' : hasRunTrace ? '3.8.0' : hasPurposeReader ? '3.7.0' : hasDeliveryUpgrade ? '3.6.0' : hasContinuityUpgrade ? '3.5.8' : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
     const cutover = installsRuntime && applied.length < NATIVE_INSTALL_VERSION
     if (cutover) {
       await client.query('BEGIN')
@@ -335,7 +335,7 @@ export async function assertMigrationsCurrent(
       const hasContinuity = migrations.some(migration => migration.version===47 && migration.name==='memory_continuity')
       const hasReliability = migrations.some(migration => migration.version===RELIABILITY_UPGRADE_VERSION && migration.name==='lingxios_3_5_0')
       await assertRuntimeCurrent(client,hasDelivery ? 14 : hasContinuity ? 13 : hasReliability ? 12 : LEGACY_RUNTIME_SCHEMA,
-        hasConversationRepair ? '3.8.1' : hasRunTrace ? '3.8.0' : hasPurposeReader ? '3.7.0' : hasDelivery ? '3.6.0' : hasContinuity ? '3.5.8' : hasReliability ? '3.5.6' : LEGACY_RUNTIME_RELEASE)
+        hasConversationRepair ? '3.8.2' : hasRunTrace ? '3.8.0' : hasPurposeReader ? '3.7.0' : hasDelivery ? '3.6.0' : hasContinuity ? '3.5.8' : hasReliability ? '3.5.6' : LEGACY_RUNTIME_RELEASE)
     }
   } finally {
     client.release()

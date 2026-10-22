@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { randomUUID } from 'node:crypto'
+import { setTimeout as delay } from 'node:timers/promises'
 import { Pool } from 'pg'
 import { migrateDatabase, assertMigrationsCurrent } from '../db/migrate.js'
 
@@ -12,7 +13,16 @@ async function isolated(run:(db:Pool)=>Promise<void>){
   await admin.query(`CREATE DATABASE "${name}"`)
   url.pathname='/'+name
   const db=new Pool({connectionString:url.toString()})
-  try{await run(db)}finally{await db.end();await admin.query(`DROP DATABASE "${name}" WITH (FORCE)`);await admin.end()}
+  try{await run(db)}finally{
+    await db.end()
+    // Pool.end closes local sockets before PostgreSQL necessarily consumes their
+    // final frames. Do not FORCE-terminate this fixture's just-closed readers.
+    for(let attempt=0;attempt<40;attempt++){
+      if(!(await admin.query('SELECT 1 FROM pg_stat_activity WHERE datname=$1',[name])).rowCount)break
+      await delay(25)
+    }
+    await admin.query(`DROP DATABASE "${name}"`);await admin.end()
+  }
 }
 async function source51(db:Pool){
   const applied=await migrateDatabase(db)
@@ -35,7 +45,7 @@ test('0052 fresh history, exact51 upgrade and repeat preserve native14 without D
     CREATE EVENT TRIGGER forbid_trace_ddl ON ddl_command_start EXECUTE FUNCTION forbid_trace_ddl()`)
   assert.deepEqual(await migrateDatabase(db),['0052_run_trace_provenance','0053_conversation_repair_provenance'])
   assert.deepEqual((await history(db)).slice(0,51),old)
-  assert.equal((await installed(db))[0].runtime_version,'3.8.1')
+  assert.equal((await installed(db))[0].runtime_version,'3.8.2')
   assert.equal((await db.query('SELECT version FROM lingxios.schema_version')).rows[0].version,14)
   assert.deepEqual((await db.query("SELECT oid,relname FROM pg_class WHERE relnamespace='lingxios'::regnamespace ORDER BY oid")).rows,native.rows)
   const target=await installed(db),targetHistory=await history(db)

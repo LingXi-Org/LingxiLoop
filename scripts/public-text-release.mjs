@@ -8,7 +8,7 @@ export const CONVERSATION_FORMAT='conversation-repair-provenance-host-release/v1
 export const SCHEMA14='c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f';
 export const MIGRATION51={version:51,name:'public_text_reader',checksum:'0d8d2e5a24af7ca41df8b40d58fed42bfbc72d369c1bd4574e22738857c77185'};
 export const MIGRATION52={version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'};
-export const MIGRATION53={version:53,name:'conversation_repair_provenance',checksum:'7a8c867a5d21ff6bc988f4da55a0f67eab00a8b4da48a535303cd91b12b0ebd8'};
+export const MIGRATION53={version:53,name:'conversation_repair_provenance',checksum:'733e035ba5de5aa5a9142c516e0364f83fe24e6dc0937e6045a89078371529dd'};
 export const DEPLOYMENT_PATH='server/src/agent-runtime/public-text-deployment.ts';
 const check=(ok,message)=>{if(!ok)throw Error(message)},hex=/^[a-f0-9]{64}$/;
 const keys=(v,k)=>v&&typeof v==='object'&&!Array.isArray(v)&&equal(Object.keys(v).sort(),k.toSorted());
@@ -23,7 +23,7 @@ export function assertTraceInventory(d){
  assertReaderInventory({...d,runtime:'3.7.0',productVersion:51,migrations:d.migrations.slice(0,51)});
 }
 export function assertConversationRepairInventory(d){
- check(d?.runtime==='3.8.1'&&d.productVersion===53&&d.migrations?.length===53&&equal(d.migrations[52],MIGRATION53),'Exact repair3.8.1/full53 profile required');
+ check(d?.runtime==='3.8.2'&&d.productVersion===53&&d.migrations?.length===53&&equal(d.migrations[52],MIGRATION53),'Exact repair3.8.2/full53 profile required');
  assertTraceInventory({...d,runtime:'3.8.0',productVersion:52,migrations:d.migrations.slice(0,52)});
 }
 export function assertPublicTextPlan(plan){

@@ -55,7 +55,7 @@ test('trace source acceptance must be actual enabled reader identities; actual t
 function repairFixture(){
  const p=fixture(true);p.format=CONVERSATION_FORMAT;p.publicText.source.producer='purpose-json-v1';
  Object.assign(p.source,{runtime:'3.8.0',productVersion:52,migrations:[...p.source.migrations,MIGRATION52]});
- Object.assign(p.target,{runtime:'3.8.1',productVersion:53,migrations:[...p.target.migrations,MIGRATION52,MIGRATION53]});return p;
+ Object.assign(p.target,{runtime:'3.8.2',productVersion:53,migrations:[...p.target.migrations,MIGRATION52,MIGRATION53]});return p;
 }
 test('conversation repair exact profile binds full52 source and reviewed53 without relaxing trace capability',()=>{
  const p=repairFixture();assert.doesNotThrow(()=>assertPublicTextPlan(p));
