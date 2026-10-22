@@ -1,10 +1,12 @@
 # Issue304 local integration receipt
 
 Historical receipt below. The implementation was later restored and merged in
-PR306, then released to product54. The fresh [cloud acceptance supplement](CLOUD-ACCEPTANCE.md)
-records25/25 official browser scenarios on main including PR315, with real
-reduced-motion and complete390px light/dark disclosure captures. Earlier access
-and media-capability failures below describe that earlier execution only.
+PR306, then released to product54. The first cloud supplement's genuine25/25
+result used a dependency underlay that differed from production locks and is
+[preserved as history](CLOUD-ACCEPTANCE.md). The corrective isolated dependency
+installation and browser acceptance are tracked in
+[LOCKED-CLOUD-ACCEPTANCE.md](LOCKED-CLOUD-ACCEPTANCE.md). Earlier access and
+media-capability failures below describe that earlier execution only.
 
 Issue: https://github.com/LingXi-Org/LingxiLoop/issues/304
 

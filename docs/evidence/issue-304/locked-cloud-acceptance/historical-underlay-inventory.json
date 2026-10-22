@@ -1,0 +1,1242 @@
+{
+  "format": "issue304-direct-dependency-inventory/v1",
+  "sourceHead": "b30692a5b487810d98165cc322623dcaa0d06128",
+  "scope": "historical shared underlay before correction",
+  "packageLockSha256": "092b7466fa283aeec4d144b66d5df1b88b33ee89a5a2a3a3af32b734e30f0395",
+  "count": 153,
+  "mismatched": 54,
+  "packages": [
+    {
+      "name": "@assistant-ui/react",
+      "declared": "^0.15.16",
+      "lockVersion": "0.15.16",
+      "installedVersion": "0.15.30",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@assistant-ui/react-generative-ui",
+      "declared": "^0.0.16",
+      "lockVersion": "0.0.16",
+      "installedVersion": "0.0.16",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@assistant-ui/react-lexical",
+      "declared": "0.2.11",
+      "lockVersion": "0.2.11",
+      "installedVersion": "0.2.11",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@assistant-ui/react-markdown",
+      "declared": "0.14.13",
+      "lockVersion": "0.14.13",
+      "installedVersion": "0.14.13",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@assistant-ui/react-streamdown",
+      "declared": "^0.3.12",
+      "lockVersion": "0.3.12",
+      "installedVersion": "0.3.20",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@aws-sdk/client-s3",
+      "declared": "^3.1045.0",
+      "lockVersion": "3.1045.0",
+      "installedVersion": "3.1155.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@aws-sdk/s3-request-presigner",
+      "declared": "^3.1045.0",
+      "lockVersion": "3.1045.0",
+      "installedVersion": "3.1155.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@base-ui/react",
+      "declared": "^1.7.0",
+      "lockVersion": "1.7.0",
+      "installedVersion": "1.9.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@bible-strong/avatar-react",
+      "declared": "0.1.0",
+      "lockVersion": "0.1.0",
+      "installedVersion": "0.1.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@biomejs/biome",
+      "declared": "2.5.8",
+      "lockVersion": "2.5.8",
+      "installedVersion": "2.5.8",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "@blocknote/code-block",
+      "declared": "0.56.0",
+      "lockVersion": "0.56.0",
+      "installedVersion": "0.56.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@blocknote/core",
+      "declared": "0.56.0",
+      "lockVersion": "0.56.0",
+      "installedVersion": "0.56.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@blocknote/diagram-block",
+      "declared": "0.56.0",
+      "lockVersion": "0.56.0",
+      "installedVersion": "0.56.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@blocknote/mantine",
+      "declared": "0.56.0",
+      "lockVersion": "0.56.0",
+      "installedVersion": "0.56.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@blocknote/math-block",
+      "declared": "0.56.0",
+      "lockVersion": "0.56.0",
+      "installedVersion": "0.56.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@blocknote/react",
+      "declared": "0.56.0",
+      "lockVersion": "0.56.0",
+      "installedVersion": "0.56.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@cloudflare/vitest-pool-workers",
+      "declared": "^0.11.1",
+      "lockVersion": "0.11.1",
+      "installedVersion": "0.11.1",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "@codemirror/autocomplete",
+      "declared": "6.20.3",
+      "lockVersion": "6.20.3",
+      "installedVersion": "6.20.3",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@codemirror/commands",
+      "declared": "6.11.0",
+      "lockVersion": "6.11.0",
+      "installedVersion": "6.11.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@codemirror/lang-markdown",
+      "declared": "6.5.2",
+      "lockVersion": "6.5.2",
+      "installedVersion": "6.5.2",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@codemirror/language",
+      "declared": "6.12.4",
+      "lockVersion": "6.12.4",
+      "installedVersion": "6.12.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@codemirror/state",
+      "declared": "6.7.2",
+      "lockVersion": "6.7.2",
+      "installedVersion": "6.7.2",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@codemirror/view",
+      "declared": "6.43.10",
+      "lockVersion": "6.43.10",
+      "installedVersion": "6.43.10",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@dicebear/core",
+      "declared": "^10.7.0",
+      "lockVersion": "10.7.0",
+      "installedVersion": "10.7.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@dicebear/styles",
+      "declared": "^10.6.0",
+      "lockVersion": "10.6.0",
+      "installedVersion": "10.6.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@e2e-dev/web",
+      "declared": "0.12.0",
+      "lockVersion": "0.12.0",
+      "installedVersion": "0.15.2",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "@floating-ui/dom",
+      "declared": "1.7.6",
+      "lockVersion": "1.7.6",
+      "installedVersion": "1.7.6",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@fontsource-variable/geist",
+      "declared": "^5.3.0",
+      "lockVersion": "5.3.0",
+      "installedVersion": "5.3.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@fontsource-variable/inter",
+      "declared": "^5.3.0",
+      "lockVersion": "5.3.0",
+      "installedVersion": "5.3.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@github/relative-time-element",
+      "declared": "5.0.0",
+      "lockVersion": "5.0.0",
+      "installedVersion": "5.0.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@hugeicons/core-free-icons",
+      "declared": "^4.3.0",
+      "lockVersion": "4.3.0",
+      "installedVersion": "4.3.5",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@hugeicons/react",
+      "declared": "^1.1.10",
+      "lockVersion": "1.1.10",
+      "installedVersion": "1.1.10",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@lezer/highlight",
+      "declared": "1.2.3",
+      "lockVersion": "1.2.3",
+      "installedVersion": "1.2.3",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@lezer/markdown",
+      "declared": "1.6.4",
+      "lockVersion": "1.6.4",
+      "installedVersion": "1.6.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@lyyzka/lingxios",
+      "declared": "3.8.2",
+      "lockVersion": "3.8.2",
+      "installedVersion": "3.8.2",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@mantine/core",
+      "declared": "8.3.18",
+      "lockVersion": "8.3.18",
+      "installedVersion": "8.3.18",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@mantine/hooks",
+      "declared": "8.3.18",
+      "lockVersion": "8.3.18",
+      "installedVersion": "8.3.18",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@modelcontextprotocol/ext-apps",
+      "declared": "2.0.0",
+      "lockVersion": "2.0.0",
+      "installedVersion": "2.0.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@modelcontextprotocol/sdk",
+      "declared": "1.30.0",
+      "lockVersion": "1.30.0",
+      "installedVersion": "1.30.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@openplait/core",
+      "declared": "^1.0.0",
+      "lockVersion": "1.0.0",
+      "installedVersion": "1.0.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@opentelemetry/api",
+      "declared": "1.9.0",
+      "lockVersion": "1.9.0",
+      "installedVersion": "1.9.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-accordion",
+      "declared": "^1.2.20",
+      "lockVersion": "1.2.20",
+      "installedVersion": "1.3.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-checkbox",
+      "declared": "^1.3.11",
+      "lockVersion": "1.3.11",
+      "installedVersion": "1.4.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-collapsible",
+      "declared": "^1.1.20",
+      "lockVersion": "1.1.20",
+      "installedVersion": "1.2.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-dialog",
+      "declared": "^1.1.23",
+      "lockVersion": "1.1.23",
+      "installedVersion": "1.3.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-popover",
+      "declared": "^1.1.23",
+      "lockVersion": "1.1.23",
+      "installedVersion": "1.3.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-select",
+      "declared": "^2.3.7",
+      "lockVersion": "2.3.7",
+      "installedVersion": "2.4.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-separator",
+      "declared": "^1.1.15",
+      "lockVersion": "1.1.15",
+      "installedVersion": "1.2.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-slider",
+      "declared": "^1.4.7",
+      "lockVersion": "1.4.7",
+      "installedVersion": "1.6.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-slot",
+      "declared": "^1.3.3",
+      "lockVersion": "1.3.3",
+      "installedVersion": "1.5.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@radix-ui/react-tooltip",
+      "declared": "^1.2.16",
+      "lockVersion": "1.2.16",
+      "installedVersion": "1.4.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@refinedev/core",
+      "declared": "^5.0.12",
+      "lockVersion": "5.0.12",
+      "installedVersion": "5.0.12",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@refinedev/react-router",
+      "declared": "^2.0.4",
+      "lockVersion": "2.0.4",
+      "installedVersion": "2.0.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@shadcn/react",
+      "declared": "^0.3.0",
+      "lockVersion": "0.3.0",
+      "installedVersion": "0.3.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@streamdown/code",
+      "declared": "1.1.1",
+      "lockVersion": "1.1.1",
+      "installedVersion": "1.1.1",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@streamdown/math",
+      "declared": "1.0.3",
+      "lockVersion": "1.0.3",
+      "installedVersion": "1.0.3",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@streamdown/mermaid",
+      "declared": "1.0.3",
+      "lockVersion": "1.0.3",
+      "installedVersion": "1.0.3",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tailwindcss/postcss",
+      "declared": "^4.3.3",
+      "lockVersion": "4.3.3",
+      "installedVersion": "4.3.3",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tailwindcss/typography",
+      "declared": "0.5.19",
+      "lockVersion": "0.5.19",
+      "installedVersion": "0.5.19",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "@tanstack/react-query",
+      "declared": "^5.102.8",
+      "lockVersion": "5.102.8",
+      "installedVersion": "5.104.5",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/core",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/extension-collaboration",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/extension-collaboration-caret",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/extension-image",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/extension-link",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/extension-mention",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/extension-placeholder",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/extension-table",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/pm",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/react",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/starter-kit",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/suggestion",
+      "declared": "3.23.4",
+      "lockVersion": "3.23.4",
+      "installedVersion": "3.23.4",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@tiptap/y-tiptap",
+      "declared": "3.0.3",
+      "lockVersion": "3.0.3",
+      "installedVersion": "3.0.3",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "@types/compression",
+      "declared": "^1.8.1",
+      "lockVersion": "1.8.1",
+      "installedVersion": "1.8.1",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "@types/express",
+      "declared": "^5.0.6",
+      "lockVersion": "5.0.6",
+      "installedVersion": "5.0.6",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "@types/pg",
+      "declared": "^8.20.0",
+      "lockVersion": "8.20.0",
+      "installedVersion": "8.23.1",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "@types/react",
+      "declared": "^19.2.18",
+      "lockVersion": "19.2.18",
+      "installedVersion": "19.3.0",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "@types/react-dom",
+      "declared": "^19.2.5",
+      "lockVersion": "19.2.5",
+      "installedVersion": "19.3.0",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "@types/ws",
+      "declared": "^8.18.1",
+      "lockVersion": "8.18.1",
+      "installedVersion": "8.18.2",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "@vitejs/plugin-react",
+      "declared": "^4.3.3",
+      "lockVersion": "4.7.0",
+      "installedVersion": "4.7.0",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "@xterm/xterm",
+      "declared": "5.5.0",
+      "lockVersion": "5.5.0",
+      "installedVersion": "5.5.0",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "assistant-stream",
+      "declared": "0.3.39",
+      "lockVersion": "0.3.39",
+      "installedVersion": "0.3.39",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "better-auth",
+      "declared": "^1.7.2",
+      "lockVersion": "1.7.2",
+      "installedVersion": "1.7.12",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "cheerio",
+      "declared": "^1.2.0",
+      "lockVersion": "1.2.0",
+      "installedVersion": "1.2.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "class-variance-authority",
+      "declared": "0.7.1",
+      "lockVersion": "0.7.1",
+      "installedVersion": "0.7.1",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "clsx",
+      "declared": "^2.1.1",
+      "lockVersion": "2.1.1",
+      "installedVersion": "2.1.1",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "cmdk",
+      "declared": "^1.1.1",
+      "lockVersion": "1.1.1",
+      "installedVersion": "1.1.1",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "compression",
+      "declared": "^1.8.1",
+      "lockVersion": "1.8.1",
+      "installedVersion": "1.8.2",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "concurrently",
+      "declared": "^9.2.1",
+      "lockVersion": "9.2.1",
+      "installedVersion": "9.2.5",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "cross-env",
+      "declared": "^7.0.3",
+      "lockVersion": "7.0.3",
+      "installedVersion": "7.0.3",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "dotenv",
+      "declared": "^17.4.2",
+      "lockVersion": "17.4.2",
+      "installedVersion": "17.4.2",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "drizzle-orm",
+      "declared": "^0.45.2",
+      "lockVersion": "0.45.2",
+      "installedVersion": "0.45.4",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "e2e",
+      "declared": "0.17.0",
+      "lockVersion": "0.17.0",
+      "installedVersion": "0.21.2",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "electron",
+      "declared": "^33.4.11",
+      "lockVersion": "33.4.11",
+      "installedVersion": "33.4.11",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "emoji-regex",
+      "declared": "^10.6.0",
+      "lockVersion": "10.6.0",
+      "installedVersion": "10.6.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "esbuild",
+      "declared": "0.21.5",
+      "lockVersion": "0.21.5",
+      "installedVersion": "0.21.5",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "express",
+      "declared": "^5.2.1",
+      "lockVersion": "5.2.1",
+      "installedVersion": "5.3.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "framer-motion",
+      "declared": "^11.11.17",
+      "lockVersion": "11.18.2",
+      "installedVersion": "11.18.2",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "hono",
+      "declared": "^4.13.5",
+      "lockVersion": "4.13.5",
+      "installedVersion": "4.13.13",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "html-to-image",
+      "declared": "1.11.13",
+      "lockVersion": "1.11.13",
+      "installedVersion": "1.11.13",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "ioredis",
+      "declared": "^5.10.1",
+      "lockVersion": "5.10.1",
+      "installedVersion": "5.11.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "katex",
+      "declared": "0.16.47",
+      "lockVersion": "0.16.47",
+      "installedVersion": "0.16.47",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "lib0",
+      "declared": "^0.2.117",
+      "lockVersion": "0.2.117",
+      "installedVersion": "0.2.119",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "lucide-react",
+      "declared": "^1.34.0",
+      "lockVersion": "1.34.0",
+      "installedVersion": "1.61.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "mdast-util-from-markdown",
+      "declared": "2.0.3",
+      "lockVersion": "2.0.3",
+      "installedVersion": "2.0.3",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "mdast-util-gfm",
+      "declared": "3.1.0",
+      "lockVersion": "3.1.0",
+      "installedVersion": "3.1.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "mermaid",
+      "declared": "11.17.2",
+      "lockVersion": "11.17.2",
+      "installedVersion": "11.17.2",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "micromark-extension-gfm",
+      "declared": "3.0.0",
+      "lockVersion": "3.0.0",
+      "installedVersion": "3.0.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "micromark-util-decode-string",
+      "declared": "2.0.1",
+      "lockVersion": "2.0.1",
+      "installedVersion": "2.0.1",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "motion",
+      "declared": "13.1.0",
+      "lockVersion": "13.1.0",
+      "installedVersion": "13.1.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "next-themes",
+      "declared": "^0.4.6",
+      "lockVersion": "0.4.6",
+      "installedVersion": "0.4.6",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "openai",
+      "declared": "^6.37.0",
+      "lockVersion": "6.37.0",
+      "installedVersion": "6.49.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "openlit",
+      "declared": "1.15.0",
+      "lockVersion": "1.15.0",
+      "installedVersion": "1.15.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "pdfjs-dist",
+      "declared": "^6.2.108",
+      "lockVersion": "6.3.289",
+      "installedVersion": "6.4.299",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "pg",
+      "declared": "^8.20.0",
+      "lockVersion": "8.20.0",
+      "installedVersion": "8.23.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "postcss",
+      "declared": "^8.4.47",
+      "lockVersion": "8.5.26",
+      "installedVersion": "8.5.31",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "posthog-js",
+      "declared": "^1.373.5",
+      "lockVersion": "1.373.5",
+      "installedVersion": "1.438.16",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "radix-ui",
+      "declared": "^1.6.7",
+      "lockVersion": "1.6.7",
+      "installedVersion": "1.8.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "react",
+      "declared": "^19.2.8",
+      "lockVersion": "19.2.8",
+      "installedVersion": "19.3.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "react-day-picker",
+      "declared": "9.14.0",
+      "lockVersion": "9.14.0",
+      "installedVersion": "9.14.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "react-dom",
+      "declared": "^19.2.8",
+      "lockVersion": "19.2.8",
+      "installedVersion": "19.3.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "react-markdown",
+      "declared": "^10.1.0",
+      "lockVersion": "10.1.0",
+      "installedVersion": "10.1.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "react-resizable-panels",
+      "declared": "^4.12.3",
+      "lockVersion": "4.12.3",
+      "installedVersion": "4.14.8",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "react-router",
+      "declared": "^7.18.3",
+      "lockVersion": "7.18.3",
+      "installedVersion": "7.18.4",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "react-virtuoso",
+      "declared": "^4.18.7",
+      "lockVersion": "4.18.7",
+      "installedVersion": "4.18.19",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "recharts",
+      "declared": "^3.8.0",
+      "lockVersion": "3.8.0",
+      "installedVersion": "3.10.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "rehype-katex",
+      "declared": "7.0.1",
+      "lockVersion": "7.0.1",
+      "installedVersion": "7.0.1",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "remark-breaks",
+      "declared": "^4.0.0",
+      "lockVersion": "4.0.0",
+      "installedVersion": "4.0.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "remark-gfm",
+      "declared": "^4.0.1",
+      "lockVersion": "4.0.1",
+      "installedVersion": "4.0.1",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "remark-math",
+      "declared": "6.0.0",
+      "lockVersion": "6.0.0",
+      "installedVersion": "6.0.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "shadcn",
+      "declared": "^4.19.0",
+      "lockVersion": "4.19.0",
+      "installedVersion": "4.22.1",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "shiki",
+      "declared": "^4.4.3",
+      "lockVersion": "4.4.3",
+      "installedVersion": "4.5.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "sonner",
+      "declared": "^2.0.8",
+      "lockVersion": "2.0.8",
+      "installedVersion": "2.0.8",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "streamdown",
+      "declared": "^2.6.0",
+      "lockVersion": "2.6.0",
+      "installedVersion": "2.7.1",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "tailwind-merge",
+      "declared": "^2.5.4",
+      "lockVersion": "2.6.1",
+      "installedVersion": "2.6.1",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "tailwind-scrollbar-hide",
+      "declared": "4.0.0",
+      "lockVersion": "4.0.0",
+      "installedVersion": "4.0.0",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "tailwindcss",
+      "declared": "^4.3.3",
+      "lockVersion": "4.3.3",
+      "installedVersion": "4.3.3",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "tsx",
+      "declared": "^4.21.0",
+      "lockVersion": "4.21.0",
+      "installedVersion": "4.23.15",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "tw-animate-css",
+      "declared": "^1.4.0",
+      "lockVersion": "1.4.0",
+      "installedVersion": "1.4.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "tw-shimmer",
+      "declared": "^0.4.12",
+      "lockVersion": "0.4.12",
+      "installedVersion": "0.4.14",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "typescript",
+      "declared": "^5.6.3",
+      "lockVersion": "5.9.3",
+      "installedVersion": "5.9.3",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "unist-util-visit",
+      "declared": "^5.1.0",
+      "lockVersion": "5.1.0",
+      "installedVersion": "5.1.0",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "vaul",
+      "declared": "^1.1.2",
+      "lockVersion": "1.1.2",
+      "installedVersion": "1.1.2",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "vite",
+      "declared": "^5.4.10",
+      "lockVersion": "5.4.21",
+      "installedVersion": "5.4.21",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "vitest",
+      "declared": "^3.2.4",
+      "lockVersion": "3.2.7",
+      "installedVersion": "3.2.7",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "wait-on",
+      "declared": "^8.0.5",
+      "lockVersion": "8.0.5",
+      "installedVersion": "8.0.5",
+      "matchesLock": true,
+      "scope": "development"
+    },
+    {
+      "name": "wrangler",
+      "declared": "^4.127.1",
+      "lockVersion": "4.127.1",
+      "installedVersion": "4.152.0",
+      "matchesLock": false,
+      "scope": "development"
+    },
+    {
+      "name": "ws",
+      "declared": "^8.20.0",
+      "lockVersion": "8.21.0",
+      "installedVersion": "8.22.0",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "wukongimjssdk",
+      "declared": "1.3.5",
+      "lockVersion": "1.3.5",
+      "installedVersion": "1.3.5",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "y-protocols",
+      "declared": "^1.0.7",
+      "lockVersion": "1.0.7",
+      "installedVersion": "1.0.7",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "yjs",
+      "declared": "^13.6.30",
+      "lockVersion": "13.6.33",
+      "installedVersion": "13.6.33",
+      "matchesLock": true,
+      "scope": "production"
+    },
+    {
+      "name": "zod",
+      "declared": "^4.4.3",
+      "lockVersion": "4.4.3",
+      "installedVersion": "4.6.7",
+      "matchesLock": false,
+      "scope": "production"
+    },
+    {
+      "name": "zustand",
+      "declared": "^5.0.1",
+      "lockVersion": "5.0.15",
+      "installedVersion": "5.0.16",
+      "matchesLock": false,
+      "scope": "production"
+    }
+  ],
+  "production": {
+    "count": 127,
+    "mismatched": 44
+  },
+  "development": {
+    "count": 26,
+    "mismatched": 10
+  }
+}

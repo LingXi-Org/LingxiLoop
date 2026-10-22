@@ -1,4 +1,11 @@
-# Current-cloud #304 interaction acceptance
+# Historical shared-underlay #304 browser run
+
+PR316's independent review found that this run used a shared dependency underlay
+which had44 mismatches among127 production direct dependencies. The screenshots
+and25/25 result are genuine, but this run does **not** establish production54
+dependency acceptance. Its original reports remain unchanged as history. The
+corrective isolated-lock installation and rerun are tracked in
+[LOCKED-CLOUD-ACCEPTANCE.md](LOCKED-CLOUD-ACCEPTANCE.md).
 
 The missing reduced-motion and narrow light-theme checks are now verified with
 the official browser engine. The final clean candidate was
