@@ -144,6 +144,7 @@ jobs:
               - 'src/lib/nativeMessage.ts'
               - 'src/lib/userFacingError.ts'
               - 'src/lib/runActivity.ts'
+              - 'src/lib/runTrace.ts'
               - 'src/lib/memoryActivity.ts'
               - 'src/features/chat/visualize/zcode/shared/gen-ui/**'
               - 'src/features/chat/visualize/zcode/gen-ui/domain/**'
