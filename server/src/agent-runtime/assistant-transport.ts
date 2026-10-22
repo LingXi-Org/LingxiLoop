@@ -18,6 +18,7 @@ import { projectActivityTasks } from './activity-tasks.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
 export class RunStreamProjection {
+  get hasState(): boolean { return this.createdAt !== null }
   private view: ReturnType<typeof createRunView>
   private createdAt: string | null = null
   private tools: HarnessToolPart[] = []
@@ -317,6 +318,10 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
       ]).then(() => ({ type: 'presentation' as const }))
     }
     try {
+      if (projection.hasState) {
+        previous = JSON.parse(JSON.stringify(projection.snapshot)) as ReadonlyJSONValue
+        yield { type: 'update-state', path: [], operations: changes(undefined, previous) }
+      }
       while (incoming || presentation) {
         // Race independent event sources, never a timeout against uncancelled SQL.
         const ready = await Promise.race([...incoming ? [incoming] : [], ...presentation ? [presentation] : []])

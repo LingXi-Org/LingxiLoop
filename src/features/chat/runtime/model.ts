@@ -71,7 +71,7 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   harness?: RunDisplayState
   harnessControl?: boolean
   harnessError?: string
-  runConnection?: 'checking' | 'released' | 'inaccessible'
+  runConnection?: 'checking' | 'released' | 'inaccessible' | 'missing' | 'unauthenticated'
   regenerateOfClientMsgNo?: string
   replyBranches?: { key: string; rootId: string; threadRootId: string | null; ids: string[]; clientIds: string[]; index: number }
   unresolvedActions?: Array<{ actionKey: string; action: string }>

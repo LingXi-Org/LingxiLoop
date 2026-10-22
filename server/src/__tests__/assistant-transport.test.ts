@@ -31,6 +31,25 @@ function nativeBody(events: RunStreamEvent[]) {
     controller.close()
   } })
 }
+
+test('an authorized prepared snapshot is delivered before an idle upstream emits any event', async () => {
+  const projection = new RunStreamProjection('run', true)
+  projection.apply({ type: 'state', state: runState('succeeded') })
+  let cancelled = false
+  const upstream = new ReadableStream<Uint8Array>({ cancel() { cancelled = true } })
+  const response = assistantRunResponse(upstream, projection)
+  const reader = AssistantStream.fromResponse(response, new AssistantTransportDecoder()).getReader()
+  try {
+    const first = await Promise.race([reader.read(), delay(100).then(() => { throw new Error('prepared snapshot is blocked by idle upstream') })])
+    assert.equal(first.value?.type, 'update-state')
+    if (first.value?.type !== 'update-state') return
+    const tracker = new AssistantTransportDeltaTracker()
+    tracker.append(first.value.operations)
+    assert.deepEqual((tracker.state as unknown as AgentRunSnapshot).message.content, projection.snapshot.message.content)
+  } finally { await reader.cancel(); reader.releaseLock() }
+  await delay(20)
+  assert.equal(cancelled, true)
+})
 test('native state operations stream text once, retract it, and end with canonical content', async () => {
   const delta: RunStreamEvent = { type: 'preview', preview: { kind: 'delta', runId: 'run', fence: 1,
     requestVersion: 1, attemptId: 'attempt', fromSeq: 1, seq: 2, delta: '\n\n第二段😀' } }

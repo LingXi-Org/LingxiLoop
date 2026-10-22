@@ -42,7 +42,7 @@ import { applyRunSnapshot, needsRunStream } from './run-updates'
 import { canCancelRun, isOlderRun, isRunMessage } from './harness'
 import { attachmentMessage, uploadedAttachment } from './attachment-messages'
 import { chatLatency } from './latency'
-import { OUTBOX_RECOVERY, RUN_RECOVERY, permanentRecoveryError, retryDelay, waitForRecovery } from './recovery'
+import { OUTBOX_RECOVERY, RUN_RECOVERY, RUN_RECOVERY_MESSAGE, permanentRecoveryError, recoveryHttpStatus, retryDelay, waitForRecovery } from './recovery'
 import { registerAuthTeardown } from '@/stores/authTeardown'
 
 const TYPING_STALE_MS = 45_000
@@ -50,15 +50,57 @@ const TYPING_STALE_MS = 45_000
 type UploadedAttachment = ApiAttachment & { key?: string }
 type RequestContext = { signal: AbortSignal; identity: string; current: () => boolean }
 type RunTargets = Awaited<ReturnType<typeof harnessApi.list>>
-type RunRecovery = { targets: RunTargets; snapshots: { target: AgentRunTarget; snapshot: AgentRunSnapshot }[]; error: string | null }
+type RunRecovery = { targets: RunTargets; snapshots: { target: AgentRunTarget; snapshot: AgentRunSnapshot }[];
+  failures: Map<string, NonNullable<LingxiMessageMetadata['runConnection']>>; current(runId: string): boolean; error(): string | null }
 type OutboxRecovery = { request: RequestContext; deadline: number; passes: number; attempts: Map<string, number>;
   cursor: number; running: boolean; timer?: number }
 
+function withRunConnection(message: ThreadMessage, connection: NonNullable<LingxiMessageMetadata['runConnection']>): ThreadMessage {
+  const meta = messageMetadata(message)
+  if (!isRunMessage(meta)) return message
+  return { ...message, status: message.status?.type === 'running' ? { type: 'requires-action', reason: 'interrupt' } : message.status,
+    metadata: { ...message.metadata, custom: { ...meta, runConnection: connection, harnessControl: false } },
+  } as ThreadMessage
+}
+
 function restoreStoppedRuns(state: ConversationChatState, recovery: RunRecovery): ConversationChatState {
+  const failures = new Map([...recovery.failures].filter(([runId]) => recovery.current(runId)))
+  state = { ...state, messages: state.messages.map(message => {
+    const connection = failures.get(messageMetadata(message).runId ?? '')
+    return connection ? withRunConnection(message, connection) : message
+  }), activeRuns: Object.fromEntries(Object.entries(state.activeRuns).filter(([, run]) => !failures.has(run.id))) }
   for (const { target, snapshot } of recovery.snapshots) {
+    if (!recovery.current(target.runId)) continue
     state = applyRunSnapshot(state, target, snapshot, useParticipants.getState().byId[target.agentId])
   }
-  return { ...state, error: recovery.error }
+  return { ...state, error: recovery.error() }
+}
+
+function runConnectionFailure(error: unknown): NonNullable<LingxiMessageMetadata['runConnection']> {
+  const status = recoveryHttpStatus(error)
+  return status === 401 ? 'unauthenticated' : status === 403 ? 'inaccessible'
+    : status === 404 || status === 410 ? 'missing' : permanentRecoveryError(error) ? 'released' : 'checking'
+}
+
+function restoreRunHistory(state: ConversationChatState, messages: ThreadMessage[], recovery: RunRecovery): ConversationChatState {
+  const restored = preserveLiveRuns(state, messages).map(message => {
+    const meta = messageMetadata(message)
+    const connection = (meta.runId && recovery.current(meta.runId) ? recovery.failures.get(meta.runId) : undefined)
+      ?? (recovery.error() ? 'checking' : undefined)
+    return connection ? withRunConnection(message, connection) : message
+  })
+  return restoreStoppedRuns({ ...state, messages: mergeCanonicalMessages(state.messages, restored) }, recovery)
+}
+
+function preserveLiveRuns(state: ConversationChatState, messages: ThreadMessage[]): ThreadMessage[] {
+  const known = new Map(state.messages.filter(message => isRunMessage(messageMetadata(message)))
+    .map(message => [message.id, messageMetadata(message).harness!]))
+  return messages.filter(message => {
+    const view = messageMetadata(message).harness, current = known.get(message.id)
+    // Public counters do not include preview revisions; cached running IM cannot replace a live preview.
+    return !view || !current || !['running', 'requires-action'].includes(message.status?.type ?? '')
+      || current.requestVersion < view.requestVersion || current.fence < view.fence
+  })
 }
 
 function conversionContext() {
@@ -140,7 +182,9 @@ export class ChatTransport {
   private readonly initialLoads = new Map<string, { request: RequestContext; controller: AbortController; promise: Promise<void>; historyReady: boolean; trailingReload?: Promise<void> }>()
   private outboxRecovery: OutboxRecovery | undefined
   private readonly sends = new Map<string, { request: RequestContext; promise: Promise<boolean> }>()
-  private readonly blockedRuns = new Set<string>()
+  private readonly blockedRuns = new Map<string, boolean>()
+  private readonly unconfirmedRuns = new Map<string, string>()
+  private readonly runObservations = new Map<string, number>()
   private readonly questionnaireSubmissions = new Map<string, Promise<QuestionnaireState>>()
 
   boot(): void {
@@ -295,7 +339,8 @@ export class ChatTransport {
         // flash as active. Already-live store messages remain untouched.
         // Merge against the latest store so live deliveries cannot be overwritten.
         updateConversation(conversationId, state => ({ ...state,
-          messages: mergeCanonicalMessages(state.messages, messages.filter(message => !deferredIds.has(message.id))),
+          messages: mergeCanonicalMessages(state.messages, preserveLiveRuns(state, messages.filter(message => !deferredIds.has(message.id) || message.content.length > 0))
+            .map(message => deferredIds.has(message.id) ? withRunConnection(message, 'checking') : message)),
           loaded: true, isLoading: false, isRecovering: deferred.length > 0,
           hasMoreOlder: state.loaded ? state.hasMoreOlder : envelopes.length >= CHAT_HISTORY_PAGE_SIZE,
         }))
@@ -303,10 +348,8 @@ export class ChatTransport {
         if (pending?.request === request) pending.historyReady = true
         const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
         if (!request.current()) return
-        if (deferred.length || recovery.snapshots.length || recovery.error) {
-          updateConversation(conversationId, state => restoreStoppedRuns({ ...state, isRecovering: false,
-            messages: recovery.error ? state.messages : mergeCanonicalMessages(state.messages, deferred),
-          }, recovery))
+        if (deferred.length || recovery.snapshots.length || recovery.error()) {
+          updateConversation(conversationId, state => restoreRunHistory({ ...state, isRecovering: false }, deferred, recovery))
         }
         this.syncRunStreams(conversationId)
         this.subscribeDiscoveredRuns(conversationId, recovery.targets)
@@ -342,12 +385,11 @@ export class ChatTransport {
       if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
         .filter((message) => (messageMetadata(message).sequence ?? Number.MAX_SAFE_INTEGER) < before)
-      updateConversation(conversationId, (state) => restoreStoppedRuns({
+      updateConversation(conversationId, (state) => restoreRunHistory({
         ...state,
-        messages: mergeCanonicalMessages(state.messages, messages),
         isLoadingOlder: false,
         hasMoreOlder: envelopes.length >= CHAT_HISTORY_PAGE_SIZE && messages.length > 0,
-      }, recovery))
+      }, messages, recovery))
       this.syncRunStreams(conversationId)
       this.subscribeDiscoveredRuns(conversationId, recovery.targets)
     } catch (error) {
@@ -548,6 +590,7 @@ export class ChatTransport {
     this.runStreams.get(target.runId)?.abort()
     this.runStreams.delete(target.runId)
     this.blockedRuns.delete(target.runId)
+    this.runObservations.set(target.runId, (this.runObservations.get(target.runId) ?? 0) + 1)
     this.subscribeRun(target)
   }
 
@@ -599,22 +642,48 @@ export class ChatTransport {
   }
 
   private async readRunRecovery(conversationId: string, request: RequestContext, anchors?: RunHistoryAnchors): Promise<RunRecovery> {
-    const recovery: RunRecovery = { targets: [], snapshots: [], error: null }
+    const observations = new Map<string, number>()
+    let discoveryFailed = false
+    const recovery: RunRecovery = { targets: [], snapshots: [], failures: new Map(),
+      current: runId => request.current() && observations.get(runId) === (this.runObservations.get(runId) ?? 0),
+      error: () => discoveryFailed || [...this.unconfirmedRuns.values()].includes(conversationId) ? RUN_RECOVERY_MESSAGE : null,
+    }
     const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30_000)])
     try {
-      const [recent, historical] = await Promise.all([harnessApi.list(conversationId,signal),
+      const sources = await Promise.allSettled([harnessApi.list(conversationId,signal),
         anchors && (anchors.sourceClientMsgNos.length || anchors.runIds.length) ? harnessApi.history(conversationId,anchors,signal) : []])
+      const [recent, historical] = sources.map(result => {
+        if (result.status === 'fulfilled') return result.value
+        discoveryFailed = true
+        return []
+      })
       recovery.targets = [...new Map([...recent,...historical].map(target => [target.runId,target])).values()]
       if (!request.current()) return recovery
       // Stopped runs may have no committed IM message. Hydrate their durable
       // snapshot without holding already-readable messages behind diagnostics.
       const snapshots = await Promise.all(recovery.targets.map(async target => {
-        if (target.status !== 'failed' && target.status !== 'cancelled') return null
-        try { return { target, snapshot: await harnessApi.read(target, signal) } }
-        catch (error) { recovery.error = userFacingError(error, '任务进度暂不可用，请刷新。'); return null }
+        if (needsRunStream(target.status)) return null
+        observations.set(target.runId, this.runObservations.get(target.runId) ?? 0)
+        try {
+          const snapshot = await harnessApi.read(target, signal)
+          if (!recovery.current(target.runId)) return null
+          this.unconfirmedRuns.delete(target.runId)
+          return { target, snapshot }
+        }
+        catch (error) {
+          if (recovery.current(target.runId)) {
+            this.unconfirmedRuns.set(target.runId, conversationId)
+            recovery.failures.set(target.runId, runConnectionFailure(error))
+            if (permanentRecoveryError(error)) {
+              this.blockedRuns.set(target.runId, true)
+              this.runStreams.get(target.runId)?.abort()
+            }
+          }
+          return null
+        }
       }))
       recovery.snapshots = snapshots.filter((item): item is NonNullable<typeof item> => item !== null)
-    } catch (error) { recovery.error = userFacingError(error, '任务进度暂不可用，请刷新。') }
+    } catch { discoveryFailed = true }
     return recovery
   }
 
@@ -670,21 +739,30 @@ export class ChatTransport {
     let confirmedAt = Date.now(), released = false, waitTimer: number | undefined
     const clearWait = () => { if (waitTimer !== undefined) window.clearTimeout(waitTimer); waitTimer = undefined }
     signal.addEventListener('abort', clearWait, { once: true })
-    const uncertain = (inaccessible = false) => {
-      released ||= inaccessible || Date.now() - confirmedAt >= RUN_RECOVERY.waitMs
+    const uncertain = (reason?: LingxiMessageMetadata['runConnection']) => {
+      released ||= Boolean(reason) || Date.now() - confirmedAt >= RUN_RECOVERY.waitMs
+      this.runObservations.set(target.runId, (this.runObservations.get(target.runId) ?? 0) + 1)
+      this.unconfirmedRuns.set(target.runId, target.conversationId)
       updateConversation(target.conversationId, state => ({ ...state,
+        error: released && !state.messages.some(message => messageMetadata(message).runId === target.runId)
+          ? RUN_RECOVERY_MESSAGE : state.error,
         activeRuns: released ? Object.fromEntries(Object.entries(state.activeRuns).filter(([, run]) => run.id !== target.runId)) : state.activeRuns,
         messages: state.messages.map(message => {
           const meta = messageMetadata(message)
           if (meta.runId !== target.runId || !isRunMessage(meta)) return message
-          return { ...message, status: message.role === 'assistant' && message.status?.type === 'running'
+          return { ...message, status: released && message.role === 'assistant' && message.status?.type === 'running'
             ? { type: 'requires-action', reason: 'interrupt' } : message.status,
             metadata: { ...message.metadata, custom: { ...meta,
-              ...(inaccessible ? { harnessControl: false } : {}),
-              runConnection: inaccessible ? 'inaccessible' : released ? 'released' : 'checking',
+              ...(reason ? { harnessControl: false } : {}),
+              runConnection: reason ?? (released ? 'released' : 'checking'),
             } } } as ThreadMessage
         }),
       }))
+      if (released) {
+        this.blockedRuns.set(target.runId, Boolean(reason))
+        controller.abort()
+        return
+      }
       if (!released && waitTimer === undefined) waitTimer = window.setTimeout(() => {
         waitTimer = undefined
         if (!signal.aborted && request.current()) uncertain()
@@ -696,7 +774,11 @@ export class ChatTransport {
       const previous = useChatThreadStore.getState().conversations[target.conversationId]?.messages
         .map(messageMetadata).find(meta => meta.runId === target.runId && isRunMessage(meta))?.harness
       if (previous && isOlderRun(previous, view)) return
-      updateConversation(target.conversationId, state => applyRunSnapshot(state, target, snapshot, useParticipants.getState().byId[target.agentId]))
+      this.runObservations.set(target.runId, (this.runObservations.get(target.runId) ?? 0) + 1)
+      this.unconfirmedRuns.delete(target.runId)
+      updateConversation(target.conversationId, state => applyRunSnapshot({ ...state,
+        error: state.error === RUN_RECOVERY_MESSAGE && ![...this.unconfirmedRuns.values()].includes(target.conversationId) ? null : state.error,
+      }, target, snapshot, useParticipants.getState().byId[target.agentId]))
       clearWait()
       confirmedAt = Date.now(); released = false
       if (!needsRunStream(view.lifecycle, view.delivery)) controller.abort()
@@ -704,15 +786,14 @@ export class ChatTransport {
     const failed = (error: unknown) => {
       if (signal.aborted || !request.current()) return
       chatLatency.disconnected(target.runId)
-      const inaccessible = permanentRecoveryError(error)
-      uncertain(inaccessible)
-      if (inaccessible) { this.blockedRuns.add(target.runId); controller.abort() }
+      const connection = runConnectionFailure(error)
+      uncertain(connection === 'checking' ? undefined : connection)
     }
     // Poll durable work/result/delivery even while SSE is open: a proxy can
     // silently swallow the terminal frame without closing the connection.
     const polling = (async () => {
       while (!signal.aborted && request.current()) {
-        await waitForRecovery(released ? RUN_RECOVERY.backgroundMs : RUN_RECOVERY.pollMs, signal)
+        await waitForRecovery(RUN_RECOVERY.pollMs, signal)
         if (signal.aborted || !request.current()) return
         try {
           receive(await harnessApi.read(target, AbortSignal.any([signal, AbortSignal.timeout(RUN_RECOVERY.requestMs)])))
@@ -738,7 +819,8 @@ export class ChatTransport {
           }, signal)
           if (!signal.aborted) throw new Error('运行流提前结束')
         } catch (error) { failed(error) }
-        await waitForRecovery(released ? RUN_RECOVERY.backgroundMs : retryDelay(failures++, 30_000), signal)
+        if (signal.aborted || !request.current()) return
+        await waitForRecovery(retryDelay(failures++, 30_000), signal)
       }
     })()
     void Promise.all([polling, streaming]).finally(() => {
@@ -795,10 +877,13 @@ export class ChatTransport {
     this.outboxRecovery = undefined
     this.sends.clear()
     this.blockedRuns.clear()
+    this.unconfirmedRuns.clear()
+    this.runObservations.clear()
   }
 
   private recoverConnection(): void {
     if (!this.booted) return
+    for (const [runId, permanent] of this.blockedRuns) if (!permanent) this.blockedRuns.delete(runId)
     this.wakeOutbox()
     void lingxiIm.connect().catch(() => {})
     void this.discoverRuns()

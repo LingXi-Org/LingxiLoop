@@ -80,7 +80,9 @@ test('readable history precedes slow recovery, reads coalesce and cancellation f
   const stopped = transport.reloadConversation('a')
   finishHistory!([{ ...envelope, fromUid: 'agent', messageId: 'run-stopped', clientMsgNo: 'run-stopped', payload: stalePayload }])
   await setImmediate()
-  assert.equal(useChatThreadStore.getState().conversations.a.messages.some(message => message.id === 'run-stopped'), false)
+  const readable = useChatThreadStore.getState().conversations.a.messages.find(message => message.id === 'run-stopped')
+  assert.equal(readable?.content[0].type === 'text' && readable.content[0].text, 'stale running')
+  assert.equal(readable?.status?.type, 'requires-action', 'saved prose is readable without claiming the old run is active')
   assert.equal(useChatThreadStore.getState().conversations.a.isRecovering, true)
   finishStopped({ message: { ...stalePayload, status: { type: 'incomplete', reason: 'cancelled' }, metadata: { ...stalePayload.metadata,
     custom: { ...stalePayload.metadata.custom, harness: { ...stoppedView, lifecycle: 'cancelled' } } } } } as Awaited<ReturnType<typeof harnessApi.read>>)

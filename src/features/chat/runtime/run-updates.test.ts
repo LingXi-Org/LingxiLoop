@@ -365,6 +365,7 @@ test('initial history is ready before slow run snapshots, which merge without du
   const cancelled: string[] = []
   let receiveIm!: (envelope: ImEnvelope) => void
   const imHistory: ImEnvelope[] = []
+  let deferReads = true
   mock.module('@/api/core/realtime', { namedExports: { ws: { connect: async () => {},on: () => () => {} } } })
   mock.module('@/features/agents/api', { namedExports: { agentsApi: {} } })
   mock.module('@/features/agents/state', { namedExports: { useParticipants: { getState: () => ({ byId: participants }) } } })
@@ -384,7 +385,8 @@ test('initial history is ready before slow run snapshots, which merge without du
     },
     list: async () => ['run', 'second', 'active'].map(runId => ({ ...target, runId, requestVersion: 1, fence: 1,
       status: runId === 'active' ? 'leased' : 'succeeded' })),
-    read: async () => { throw new Error('history must not hydrate with a separate run read') },
+    read: (runTarget: typeof target) => deferReads ? new Promise<AgentRunSnapshot>(resolve => { callbacks.set(runTarget.runId, resolve) })
+      : Promise.resolve(project({ type: 'state', state: snapshot(runTarget.runId) }, runTarget.runId)),
     subscribe: (runTarget: typeof target, receive: (item: AgentRunSnapshot) => void, signal: AbortSignal) => {
       subscribed.push(runTarget.runId); callbacks.set(runTarget.runId, receive)
       return new Promise<void>(resolve => signal.addEventListener('abort', () => resolve(), { once: true }))
@@ -405,12 +407,13 @@ test('initial history is ready before slow run snapshots, which merge without du
     await new Promise(resolve => setImmediate(resolve))
     assert.equal(useChatThreadStore.getState().conversations.room?.isLoading, false)
     assert.deepEqual(batches, [[]])
-    await loading
     callbacks.get('run')!(project({ type: 'state', state: snapshot() }))
     callbacks.get('second')!(project({ type: 'state', state: snapshot('second') },'second'))
+    deferReads = false
+    await loading
     await new Promise(resolve => setImmediate(resolve))
-    assert.ok(batches.length >= 3)
-    assert.deepEqual(subscribed, ['run', 'second', 'active'])
+    assert.deepEqual(batches.at(-1), ['run-run', 'run-second'])
+    assert.deepEqual(subscribed, ['active'])
     const messages = useChatThreadStore.getState().conversations.room!.messages
     assert.deepEqual(messages.slice(0, 2).map(message => message.content), [
       [{ type: 'text', text: 'run 的完整历史回复',
@@ -426,7 +429,7 @@ test('initial history is ready before slow run snapshots, which merge without du
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], null).map(message => message.id), ['visible'])
     assert.deepEqual(filterThreadMessages([tool, user('visible', 5, 5000)], 'visible').map(message => message.id), ['visible'])
     await transport.reloadConversation('room')
-    assert.deepEqual(subscribed, ['run', 'second', 'active'])
+    assert.deepEqual(subscribed, ['active'])
     assert.equal(useChatThreadStore.getState().conversations.room!.messages.length, 3)
     const activeBefore = useChatThreadStore.getState().conversations.room!
     useChatThreadStore.setState({ conversations: { room: { ...activeBefore,typingAgentIds: ['agent'] } } })
