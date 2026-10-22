@@ -18,7 +18,6 @@ import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '@/features/conversations/store'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
-import { useConversationUi } from '@/stores/conversationUi'
 import type { Participant } from '@/types'
 import { chatTransport } from '../runtime/transport'
 import type { LingxiMessageMetadata } from '../runtime/model'
@@ -27,6 +26,7 @@ import { HarnessDetails } from './HarnessDetails'
 import { chatLatency } from '../runtime/latency'
 import { copyMessageText, MessageActions, useMessageCopyText } from './MessageActions'
 import { AssistantMessageActions } from './AssistantMessageActions'
+import { MessageQuotePreview } from './QuotePreview'
 
 function FailedSendActions({ metadata }: { metadata: LingxiMessageMetadata }) {
   const [busy, setBusy] = useState(false)
@@ -43,21 +43,6 @@ function FailedSendActions({ metadata }: { metadata: LingxiMessageMetadata }) {
       <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => chatTransport.discard(metadata.conversationId, metadata.clientMessageId)}>移除待发消息</Button>
     </div>
   </div>
-}
-
-function QuotePart({ text, messageId }: { text: string; messageId: string }) {
-  const jumpToMessage = useConversationUi((state) => state.jumpToMessage)
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      onClick={() => jumpToMessage(messageId)}
-      className="mb-2 h-auto w-full max-w-md justify-start rounded-none border-s-2 border-primary/60 px-0 ps-2 text-start text-xs font-normal text-muted-foreground"
-    >
-      <span className="line-clamp-2">{text || '原消息不可用'}</span>
-    </Button>
-  )
 }
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '🙏', '🔥'] as const
@@ -133,6 +118,7 @@ function MessageTextPart() {
   const footer = useContext(MessageFooterContext)
   const isAgent = metadata.senderKind === 'agent'
   const isHuman = metadata.senderKind === 'human'
+  const ownsQuote = useAuiState(state => state.message.parts[0] === state.part)
   const inlineCitations = Boolean(metadata.runId)
   const { rawText, confidenceClaims, getText } = useMessageCopyText(bodyRef)
   useEffect(() => {
@@ -161,7 +147,7 @@ function MessageTextPart() {
   }
   const startLongPress = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!isMobile || event.button !== 0) return
-    if (event.target instanceof Element && event.target.closest('[data-confidence-id], [data-slot="confidence-basis"]')) return
+    if (event.target instanceof Element && event.target.closest('button, a, [data-confidence-id], [data-slot="confidence-basis"]')) return
     cancelLongPress()
     longPressOrigin.current = { x: event.clientX, y: event.clientY }
     longPressTimer.current = window.setTimeout(() => {
@@ -202,6 +188,7 @@ function MessageTextPart() {
         isHuman && metadata.delivery === 'failed' && ['ring-1 ring-destructive/50', bubbleRadius],
       )}
     >
+      {isHuman && ownsQuote && metadata.quote && <MessageQuotePreview quote={metadata.quote} />}
       {isAgent ? <>{markdown}{footer}</> : <MessageFooterContents inset={false}>{markdown}</MessageFooterContents>}
     </div>
     {isMobile && <MobileMessageActions metadata={metadata} getText={getText} open={mobileActionsOpen} onOpenChange={setMobileActionsOpen} />}
@@ -241,6 +228,7 @@ export function ConversationMessage() {
   const isMobile = useIsMobile()
   const custom = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
   const isSpecialCard = custom.presentation === 'special-card'
+  const quoteInsideText = useAuiState(state => state.message.content[0]?.type === 'text')
   const running = useAuiState((state) => state.message.status?.type === 'running')
   const messageId = useAuiState((state) => state.message.id)
   const awaitingContent = useAuiState((state) => (
@@ -309,7 +297,11 @@ export function ConversationMessage() {
         )}
         <div className={cn('row-start-2 grid w-full max-w-[800px] min-w-0 gap-0.5', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>
           {awaitingContent && <TypingIndicator variant="bare" className="min-h-5 items-center px-0.5" />}
-          {custom.quote && <QuotePart text={custom.quote.text} messageId={custom.quote.messageId} />}
+          {custom.quote && (custom.senderKind !== 'human' || !quoteInsideText) && (
+            <div className={cn('min-w-0 max-w-md', custom.isMine && 'w-full justify-self-end')}>
+              <MessageQuotePreview quote={custom.quote} />
+            </div>
+          )}
           <NativeMessageContent Text={MessageTextPart} footer={footer} mediaFooter={footer}
             attention={custom.senderKind === 'agent' && custom.harness && custom.runId ? <HarnessDetails metadata={custom} /> : null} />
           {custom.isMine && custom.delivery === 'failed' && <FailedSendActions metadata={custom} />}

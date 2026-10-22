@@ -1,0 +1,2026 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a161b9-ce94-723c-9cd8-6ef8179781f9",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-22T03:48:50.593Z",
+    "finishedAt": "2026-10-22T03:49:47.787Z",
+    "project": {
+      "id": "lingxiloop-quote-preview",
+      "configDigest": "5f93b02d7358f382ac488f5cebeefd1098cfec943b883b5647289ab08064c36c"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "aab0441b62c79af15380f08b98d6b86aadf89423",
+      "branch": "fix/302-quoted-reply-preview",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5189",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "519d8f69c3240a824d3ba26ce90d5e9526e5a51d9318ca0f5021b1968baa7f04",
+        "testId": "e2e/quote-preview/browser.e2e.ts::quoted%20reply%20surfaces%201280",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "quoted reply surfaces 1280"
+        ],
+        "file": "e2e/quote-preview/browser.e2e.ts",
+        "source": {
+          "file": "e2e/quote-preview/browser.e2e.ts",
+          "line": 10,
+          "column": 33
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T03:48:54.135Z",
+            "durationMs": 25848,
+            "artifacts": [
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:5"
+                },
+                "path": "web/e2e_quote-preview_browser.e2e.ts__quoted_20reply_20surfaces_201280-7b029d80/default/attempt-0/screenshots/001-after-light-1280.png",
+                "size": 126627,
+                "sha256": "b804d9b5f8a0ab81d405dbb4f18bad5838783588732b285f4057351ea4c8dfae"
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:26"
+                },
+                "path": "web/e2e_quote-preview_browser.e2e.ts__quoted_20reply_20surfaces_201280-7b029d80/default/attempt-0/screenshots/002-after-composer-1280.png",
+                "size": 122843,
+                "sha256": "823e05ea1a75d32fec9588335562f6f7a86170f656c9a5077225973002ddde38"
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:48"
+                },
+                "path": "web/e2e_quote-preview_browser.e2e.ts__quoted_20reply_20surfaces_201280-7b029d80/default/attempt-0/screenshots/003-after-dark-1280.png",
+                "size": 133378,
+                "sha256": "e6a7b3508393aa772e9a5dadfffac0e1d82dedcacd88c0e959e9e11983cc18d2"
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:artifact:3",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_quote-preview_browser.e2e.ts__quoted_20reply_20surfaces_201280-7b029d80/default/attempt-0/trace/trace.zip",
+                "size": 10368814,
+                "sha256": "64dbfee7e845b6fed03675afa2681d4a96d393524134a3991912484f1d111c93"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:48:54.329Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1280,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 11,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/quote-preview/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:48:54.331Z",
+                "durationMs": 9989,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 12,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:04.322Z",
+                "durationMs": 438,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 13,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:04.763Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 14,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:04.789Z",
+                "durationMs": 136,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 16,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-light-1280",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:04.926Z",
+                "durationMs": 523,
+                "events": [],
+                "artifacts": [
+                  "01a161b9-e0f7-761c-aa4e-259b0e638a1d:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 23,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.459Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 29,
+                  "column": 80
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"file-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.510Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 30,
+                  "column": 86
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"unavailable\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.557Z",
+                "durationMs": 44,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 31,
+                  "column": 87
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"file-only-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.602Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 32,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"multi-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.695Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 33,
+                  "column": 87
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"snapshot-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.731Z",
+                "durationMs": 63,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 34,
+                  "column": 90
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"incoming-reply\\\"] [data-message-bubble] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.794Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 35,
+                  "column": 112
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.848Z",
+                "durationMs": 150,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 37,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:05.998Z",
+                "durationMs": 149,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 37,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:06.153Z",
+                "durationMs": 65,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 38,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:16",
+                "index": 16,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:06.219Z",
+                "durationMs": 159,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 39,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Space",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:06.379Z",
+                "durationMs": 127,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 39,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:06.508Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 40,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:06.543Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"empty-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:06.569Z",
+                "durationMs": 63,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 42,
+                  "column": 128
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"tool-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:06.633Z",
+                "durationMs": 73,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 42,
+                  "column": 128
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:22",
+                "index": 22,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"补全原文\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:06.708Z",
+                "durationMs": 636,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 43,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:23",
+                "index": 23,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"empty-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:07.345Z",
+                "durationMs": 119,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 44,
+                  "column": 128
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"tool-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:07.464Z",
+                "durationMs": 89,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 44,
+                  "column": 128
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:25",
+                "index": 25,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"准备回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:07.554Z",
+                "durationMs": 463,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 46,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:26",
+                "index": 26,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-composer-1280",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:08.017Z",
+                "durationMs": 522,
+                "events": [],
+                "artifacts": [
+                  "01a161b9-e0f7-761c-aa4e-259b0e638a1d:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 47,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-composer-quote]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:08.543Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 49,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:28",
+                "index": 28,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:08.641Z",
+                "durationMs": 458,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 50,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:29",
+                "index": 29,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-composer-quote]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:09.100Z",
+                "durationMs": 87,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 51,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:09.187Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 52,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:31",
+                "index": 31,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"回复净化文本\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:09.238Z",
+                "durationMs": 526,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 53,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-composer-quote] .rce-mbox-reply-message\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:09.764Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 54,
+                  "column": 84
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:33",
+                "index": 33,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:09.787Z",
+                "durationMs": 411,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 55,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:34",
+                "index": 34,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"回复隐藏文本\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:10.200Z",
+                "durationMs": 476,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 56,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-composer-quote] .rce-mbox-reply-message\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:10.676Z",
+                "durationMs": 50,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 57,
+                  "column": 84
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:10.726Z",
+                "durationMs": 333,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 58,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:37",
+                "index": 37,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"回复附件\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:11.060Z",
+                "durationMs": 393,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 59,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:38",
+                "index": 38,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-composer-quote]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:11.456Z",
+                "durationMs": 79,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 60,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:39",
+                "index": 39,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:11.536Z",
+                "durationMs": 450,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 61,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:40",
+                "index": 40,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"准备回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:11.988Z",
+                "durationMs": 631,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 62,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:12.619Z",
+                "durationMs": 182,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 63,
+                  "column": 55
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:42",
+                "index": 42,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:12.801Z",
+                "durationMs": 394,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 64,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:13.197Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 65,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:44",
+                "index": 44,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:13.252Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 66,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:45",
+                "index": 45,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-composer-quote]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:13.278Z",
+                "durationMs": 48,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 67,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:46",
+                "index": 46,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"切换主题\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:13.326Z",
+                "durationMs": 567,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 69,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:47",
+                "index": 47,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:13.893Z",
+                "durationMs": 239,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 70,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:48",
+                "index": 48,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-dark-1280",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:14.133Z",
+                "durationMs": 588,
+                "events": [],
+                "artifacts": [
+                  "01a161b9-e0f7-761c-aa4e-259b0e638a1d:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 71,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:49",
+                "index": 49,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/quote-preview/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:14.726Z",
+                "durationMs": 3638,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 75,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a161b9-e0f7-761c-aa4e-259b0e638a1d:50",
+                "index": 50,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:18.365Z",
+                "durationMs": 163,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 76,
+                  "column": 80
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "5bb6e0f66799e58cb9969693233a01758463297eeb3075378cfae497a8356914",
+        "testId": "e2e/quote-preview/browser.e2e.ts::quoted%20reply%20surfaces%20390",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "quoted reply surfaces 390"
+        ],
+        "file": "e2e/quote-preview/browser.e2e.ts",
+        "source": {
+          "file": "e2e/quote-preview/browser.e2e.ts",
+          "line": 10,
+          "column": 33
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a161ba-45f1-78bd-8b57-a12337871f5b",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T03:49:19.986Z",
+            "durationMs": 27451,
+            "artifacts": [
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a161ba-45f1-78bd-8b57-a12337871f5b:5"
+                },
+                "path": "web/e2e_quote-preview_browser.e2e.ts__quoted_20reply_20surfaces_20390-7cd8eb9f/default/attempt-0/screenshots/001-after-light-390.png",
+                "size": 85513,
+                "sha256": "840282105fc0f068d2b13efac52b7da59cb5f1fdd22837d251ad967a8b833742"
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a161ba-45f1-78bd-8b57-a12337871f5b:26"
+                },
+                "path": "web/e2e_quote-preview_browser.e2e.ts__quoted_20reply_20surfaces_20390-7cd8eb9f/default/attempt-0/screenshots/002-after-composer-390.png",
+                "size": 87275,
+                "sha256": "62bf569ac7f0ac67010637b0517ef48e6b1255d97107be139830922dfd51ae7f"
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a161ba-45f1-78bd-8b57-a12337871f5b:48"
+                },
+                "path": "web/e2e_quote-preview_browser.e2e.ts__quoted_20reply_20surfaces_20390-7cd8eb9f/default/attempt-0/screenshots/003-after-dark-390.png",
+                "size": 91058,
+                "sha256": "fcb98c765013d794afd532f7f3944f57a4e1a154d730f081e80391b210d22290"
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:artifact:3",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_quote-preview_browser.e2e.ts__quoted_20reply_20surfaces_20390-7cd8eb9f/default/attempt-0/trace/trace.zip",
+                "size": 14628367,
+                "sha256": "95949ab159260cb72ebb736ad2c59ead6e1aabf7d1ef16953a84c2f44005f15d"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:20.069Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 11,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/quote-preview/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:20.070Z",
+                "durationMs": 5096,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 12,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:25.167Z",
+                "durationMs": 934,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 13,
+                  "column": 57
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:26.102Z",
+                "durationMs": 59,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 14,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:26.162Z",
+                "durationMs": 56,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 16,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:5",
+                "index": 5,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-light-390",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:26.219Z",
+                "durationMs": 505,
+                "events": [],
+                "artifacts": [
+                  "01a161ba-45f1-78bd-8b57-a12337871f5b:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 23,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:26.731Z",
+                "durationMs": 150,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 29,
+                  "column": 80
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"file-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:26.883Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 30,
+                  "column": 86
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"unavailable\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:26.961Z",
+                "durationMs": 71,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 31,
+                  "column": 87
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"file-only-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:27.032Z",
+                "durationMs": 130,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 32,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"multi-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:27.163Z",
+                "durationMs": 100,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 33,
+                  "column": 87
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"snapshot-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:27.267Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 34,
+                  "column": 90
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"incoming-reply\\\"] [data-message-bubble] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:27.360Z",
+                "durationMs": 198,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 35,
+                  "column": 112
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:27.559Z",
+                "durationMs": 404,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 37,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:27.963Z",
+                "durationMs": 249,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 37,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:28.223Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 38,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:16",
+                "index": 16,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:28.266Z",
+                "durationMs": 142,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 39,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Space",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:28.408Z",
+                "durationMs": 122,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 39,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:28.532Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 40,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:28.587Z",
+                "durationMs": 73,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 41,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"empty-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:28.661Z",
+                "durationMs": 61,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 42,
+                  "column": 128
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"tool-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:28.723Z",
+                "durationMs": 152,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 42,
+                  "column": 128
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:22",
+                "index": 22,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"补全原文\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:28.876Z",
+                "durationMs": 1510,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 43,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:23",
+                "index": 23,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"empty-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:30.393Z",
+                "durationMs": 289,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 44,
+                  "column": 128
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"tool-reply\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:30.683Z",
+                "durationMs": 350,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 44,
+                  "column": 128
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:25",
+                "index": 25,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"准备回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:31.034Z",
+                "durationMs": 840,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 46,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:26",
+                "index": 26,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-composer-390",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:31.878Z",
+                "durationMs": 288,
+                "events": [],
+                "artifacts": [
+                  "01a161ba-45f1-78bd-8b57-a12337871f5b:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 47,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-composer-quote]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:32.166Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 49,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:28",
+                "index": 28,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:32.253Z",
+                "durationMs": 479,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 50,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:29",
+                "index": 29,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-composer-quote]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:32.732Z",
+                "durationMs": 121,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 51,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:32.854Z",
+                "durationMs": 173,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 52,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:31",
+                "index": 31,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"回复净化文本\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:33.027Z",
+                "durationMs": 453,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 53,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:32",
+                "index": 32,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-composer-quote] .rce-mbox-reply-message\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:33.481Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 54,
+                  "column": 84
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:33",
+                "index": 33,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:33.537Z",
+                "durationMs": 411,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 55,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:34",
+                "index": 34,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"回复隐藏文本\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:33.948Z",
+                "durationMs": 912,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 56,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-composer-quote] .rce-mbox-reply-message\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:34.860Z",
+                "durationMs": 119,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 57,
+                  "column": 84
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:34.980Z",
+                "durationMs": 669,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 58,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:37",
+                "index": 37,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"回复附件\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:35.649Z",
+                "durationMs": 508,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 59,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:38",
+                "index": 38,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-composer-quote]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:36.158Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 60,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:39",
+                "index": 39,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:36.182Z",
+                "durationMs": 351,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 61,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:40",
+                "index": 40,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"准备回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:36.534Z",
+                "durationMs": 389,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 62,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[contenteditable=\\\"true\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:36.924Z",
+                "durationMs": 173,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 63,
+                  "column": 55
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:42",
+                "index": 42,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:37.098Z",
+                "durationMs": 460,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 64,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:37.560Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 65,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:44",
+                "index": 44,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:37.630Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 66,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:45",
+                "index": 45,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-composer-quote]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:37.675Z",
+                "durationMs": 111,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 67,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:46",
+                "index": 46,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"切换主题\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:37.786Z",
+                "durationMs": 542,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 69,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:47",
+                "index": 47,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:38.331Z",
+                "durationMs": 195,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 70,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:48",
+                "index": 48,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-dark-390",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:38.529Z",
+                "durationMs": 342,
+                "events": [],
+                "artifacts": [
+                  "01a161ba-45f1-78bd-8b57-a12337871f5b:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 71,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:49",
+                "index": 49,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/quote-preview/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:38.874Z",
+                "durationMs": 4865,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 75,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a161ba-45f1-78bd-8b57-a12337871f5b:50",
+                "index": 50,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T03:49:43.742Z",
+                "durationMs": 529,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/quote-preview/browser.e2e.ts",
+                  "line": 76,
+                  "column": 80
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 25643875,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
