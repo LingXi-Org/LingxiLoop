@@ -230,11 +230,13 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    check(equal(receipt,{sha:plan.target.sha,schema:plan.target.schema,product:plan.target.productVersion}),'Migration marker mismatch')
   },
   async deploy(stack,service){check(APPS.includes(stack)&&['lingxiloop','worker'].includes(service)&&phases.get(stack)===(restoringSource?'source':'target'),'Only qualified app services may deploy');await guard([stack]);if(plan.format===SAME54_FORMAT)await onProgress({phase:'service-action',action:'DeployStack',stack,service});return t.execute('DeployStack',{stack,services:[service]})},
-  async verifyHealthy(stack,service){
+  async verifyHealthy(stack,service,observedIdentity){
+   check(plan.format!==SAME54_FORMAT||hex.test(observedIdentity?.id??'')&&/^sha256:[a-f0-9]{64}$/.test(observedIdentity.imageId??''),'Observed same54 container identity required')
    const deadline=Date.now()+180000
    while(Date.now()<deadline){
     const r=(await inspect()).find(r=>r.stack===stack&&r.service===service)
-    check(r?.source===plan[restoringSource?'source':'target'].sha&&r.imageId===images.get(imageKey(restoringSource?'source':'target',r.server)),'Deployed service is not qualified target')
+    check(r?.source===plan[restoringSource?'source':'target'].sha&&r.imageId===images.get(imageKey(restoringSource?'source':'target',r.server))
+     &&(!observedIdentity||r.id===observedIdentity.id&&r.imageId===observedIdentity.imageId),'Deployed service identity changed')
     if(r.running&&!r.restarting&&r.healthy&&r.restartCount===0)return
     await wait(2000,undefined,{signal})
    }

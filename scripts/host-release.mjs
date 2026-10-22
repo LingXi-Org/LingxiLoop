@@ -190,14 +190,16 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
    if(![...deployed.keys()].some(k=>k.endsWith(':worker')))await barrier()
    assertInventory(await ops.inspect(),plan,original,stopped,deployed)
    await ops.deploy(stack,service)
+   let observedIdentity
    if(plan.format===SAME54_FORMAT){
     const actual=(await ops.inspect()).find(r=>r.stack===stack&&r.service===service)
     check(actual?.source===plan.target.sha&&hex.test(actual.id??'')&&digest.test(actual.imageId??''),'Deployed target identity unavailable')
+    observedIdentity={id:actual.id,imageId:actual.imageId}
     await record({phase:'rollout',status:'observed',stack,service,containerId:actual.id,imageId:actual.imageId})
    }
-   await ops.verifyHealthy(stack,service)
+   await ops.verifyHealthy(stack,service,observedIdentity)
    const rows=await ops.inspect(),healthy=rows.find(r=>r.stack===stack&&r.service===service)
-   check(healthy,'Healthy target identity unavailable');deployed.set(stack+':'+service,{id:healthy.id,imageId:healthy.imageId})
+   check(healthy&&(!observedIdentity||equal(select(healthy,['id','imageId']),observedIdentity)),'Healthy target identity changed');deployed.set(stack+':'+service,observedIdentity??{id:healthy.id,imageId:healthy.imageId})
    assertInventory(rows,plan,original,stopped,deployed)
    assertCompatibleState(await ops.state(),plan.target)
    await record({phase:'rollout',status:'healthy',stack,service,containerId:healthy.id,imageId:healthy.imageId})

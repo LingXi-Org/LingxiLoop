@@ -145,6 +145,27 @@ test('same54 accepted source config proof is required before staging',async()=>{
  const f=fixture({image54:true}),ops=createHostReleaseOperations({plan:f.plan,files:f.files,transport:f.transport})
  await assert.rejects(runHostRelease({plan:f.plan,ops}));assert.equal(f.calls.some(c=>['StopStack','DeployStack','WriteStackFileContents','UpdateStack'].includes(c.op)),false)
 })
+test('same54 health wait rejects another container with the same audited image',async()=>{
+ const f=fixture({image54:true}),read=f.transport.read
+ f.transport.read=async(op,p)=>{
+  if(op==='ListStackServices'&&f.events.some(e=>e.phase==='rollout'&&e.status==='observed')){
+   const c=f.containers.find(c=>c.stack===APPS[0]&&c.service==='lingxiloop'&&c.Config.Image===IMAGE+f.plan.target.sha)
+   if(c)c.Id='9'.repeat(64)
+  }
+  return read(op,p)
+ }
+ await assert.rejects(f.run());assert.equal(f.calls.filter(c=>c.op==='DeployStack').length,1)
+})
+test('same54 source restoration also binds the observed new source id through health wait',async()=>{
+ const f=await failedImageRelease(true),ops=createHostReleaseOperations({plan:f.plan,files:f.files,sourceConfigurationProof:f.sourceConfigurationProof,transport:f.transport,wait:async()=>{}}),verify=ops.verifyHealthy
+ ops.verifyHealthy=async(stack,service,identity)=>{if(stack===APPS[0]&&service==='lingxiloop'){const c=f.containers.find(c=>c.stack===stack&&c.service===service);c.Id='9'.repeat(64)}return verify(stack,service,identity)}
+ await assert.rejects(restoreImageSource({plan:f.plan,receipt:f.receipt,ops}))
+})
+test('same54 source restoration refuses a replacement after health and before final registration',async()=>{
+ const f=await failedImageRelease(true),ops=createHostReleaseOperations({plan:f.plan,files:f.files,sourceConfigurationProof:f.sourceConfigurationProof,transport:f.transport,wait:async()=>{}}),verify=ops.verifyHealthy
+ ops.verifyHealthy=async(stack,service,identity)=>{await verify(stack,service,identity);if(stack===APPS[0]&&service==='lingxiloop')f.containers.find(c=>c.stack===stack&&c.service===service).Id='9'.repeat(64)}
+ await assert.rejects(restoreImageSource({plan:f.plan,receipt:f.receipt,ops}))
+})
 test('product54 image-only adapter forbids migration and backup, preserves complete config and reader contracts',async()=>{
  const f=fixture({image54:true}),original=structuredClone(f.configs)
  await f.run()

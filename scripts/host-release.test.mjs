@@ -122,6 +122,12 @@ test('product54 refuses changed accepted containers, drift, live leases and unce
   await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);assert.equal(f.trace.includes('migrate'),false)
  }
 })
+test('product54 health observation identity must survive final deployment registration',async()=>{
+ const f=fixture({image54:true}),inspect=f.ops.inspect;let replaced=false
+ f.ops.verifyHealthy=async()=>{replaced=true}
+ f.ops.inspect=async()=>{const rows=await inspect();if(replaced)for(const r of rows)if(r.source===f.plan.target.sha&&r.stack===apps[0]&&r.service==='lingxiloop')r.id='9'.repeat(64);return rows}
+ await assert.rejects(f.run());assert.equal(f.trace.filter(x=>x.startsWith('deploy:')).length,1)
+})
 test('same formal package and all48 checksums required; native13 alone is insufficient',()=>{
  assert.doesNotThrow(()=>assertSameSchema(source,target))
  for(const key of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations']){

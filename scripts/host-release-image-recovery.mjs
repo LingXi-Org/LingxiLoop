@@ -85,9 +85,14 @@ export async function restoreImageSource({plan,receipt,ops,onProgress=async()=>{
   for(const service of ['lingxiloop','worker'])for(const stack of APPS){
    await ops.assertIdle();await state();await inventory();await ops.verifyImages('source')
    if(![...restored.keys()].some(k=>k.endsWith(':worker')))await barrier()
-   await ops.deploy(stack,service);await ops.verifyHealthy(stack,service)
+   await ops.deploy(stack,service)
+   const first=(await ops.inspect()).find(r=>r.stack===stack&&r.service===service),old=boundary.original.find(r=>r.stack===stack&&r.service===service)
+   check(first?.source===plan.source.sha&&hex.test(first.id??'')&&first.imageId===old.imageId,'Restoration source identity unavailable')
+   const observedIdentity={id:first.id,imageId:first.imageId}
+   await record({phase:'source-restoration',status:'observed',stack,service,containerId:first.id,imageId:first.imageId})
+   await ops.verifyHealthy(stack,service,observedIdentity)
    const rows=await ops.inspect(),r=rows.find(r=>r.stack===stack&&r.service===service)
-   check(r?.source===plan.source.sha,'Source restoration deployment differs');restored.set(key(r),r.id)
+   check(r?.source===plan.source.sha&&r.id===observedIdentity.id&&r.imageId===observedIdentity.imageId,'Source restoration deployment identity changed');restored.set(key(r),observedIdentity.id)
    assertImageRecoveryInventory(rows,plan,boundary,{observed,stopped,restored});await state()
    await record({phase:'rollout',status:'healthy',stack,service,containerId:r.id,imageId:r.imageId})
   }
