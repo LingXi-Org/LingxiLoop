@@ -21,6 +21,14 @@
     "e2e@0.21.2",
     "@e2e-dev/web@0.15.2"
   ],
-  "freshViteCacheForAcceptance": "/workspace/review-pr315/.e2e/exact-lock-vite-cache",
-  "freshViteCacheAbsentBeforeRun": true
+  "freshViteCacheForAcceptance": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache",
+  "freshViteCacheAbsentBeforeRun": true,
+  "cacheSelection": "Vite config resolves cache directly inside this worktree; no parent environment variable required",
+  "preCacheIsolationRun": {
+    "id": "01a164b0-ad85-72ee-a970-fea999db88f8",
+    "passed": 25,
+    "failed": 0,
+    "acceptedAsFinal": false,
+    "reason": "custom cache environment was filtered by runner; preserved separately before the direct per-worktree cache correction"
+  }
 }
