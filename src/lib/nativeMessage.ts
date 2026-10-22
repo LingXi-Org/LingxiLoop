@@ -126,7 +126,13 @@ export function deserializeMessage(value: unknown): ThreadMessage {
   // Old IM records and browser caches may still contain private memory projections.
   const { memory: _memory, ...custom } = parsed.metadata.custom
   return { ...parsed, metadata: { ...parsed.metadata, custom }, createdAt: new Date(parsed.createdAt),
-    content: parsed.content.map(part => {
+    // Old snapshots may contain system-generated waiting/delivery diagnostics.
+    // Remove only their recorded identity from the display projection; real
+    // prose and persisted messages remain untouched, including quoted wording.
+    content: parsed.content.filter(part => {
+      const activity = parsed.role === 'assistant' ? activityAnnotation(part) : undefined
+      return activity?.kind !== 'commentary' || !/^observed-progress:\d+:\d+$/.test(activity.id)
+    }).map(part => {
       if (part.type !== 'tool-call') return part
       if (/^memory(?:\.|__)/.test(part.toolName)) {
         const result = z.object({ status: z.enum(['completed', 'failed', 'unknown', 'cancelled', 'awaiting-approval']).optional(),

@@ -53,7 +53,7 @@ test('native state operations stream text once, retract it, and end with canonic
     states.push(tracker.state as unknown as AgentRunSnapshot)
   }
   assert.ok(states.some(state => state.message.content[0]?.type === 'text' && state.message.content[0].text === '第一段\n\n第二段😀'))
-  assert.ok(states.some((state, index) => index > 1 && state.message.content.some(part => part.type === 'text' && part.text === '任务已开始，尚未收到模型可显示的正文。')))
+  assert.ok(states.some((state, index) => index > 1 && state.message.content.length === 0))
   assert.deepEqual(states.at(-1)!.message.content, [{ type: 'text', text: '最终正文', providerMetadata: {
     lingxiloop: { activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' } },
   } }])
@@ -134,7 +134,7 @@ test('commit handoff and tool activity preserve the live answer part', () => {
   stale.apply({ type: 'event', event: { runId: 'run', seq: 1, kind: 'model.delta', stage: 'delta', visibility: 'user',
     data: { partType: 'text', delta: '已过期', requestVersion: 0 } } })
   const resetText = stale.apply({ type: 'reset', runId: 'run', reason: 'superseded' }).message.content
-  assert.ok(resetText.some(part => part.type === 'text' && part.text === '任务已开始，尚未收到模型可显示的正文。'))
+  assert.deepEqual(resetText, [])
   assert.doesNotMatch(JSON.stringify(resetText), /未确认的草稿|已过期/)
   const projection = new RunStreamProjection('run', true)
   projection.apply({ type: 'state', state: runState() })

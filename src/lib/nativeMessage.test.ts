@@ -1,10 +1,33 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { ThreadMessage } from '@assistant-ui/react'
-import { deserializeMessage, serializeMessage, nativeMessageSchema, userMessageSchema } from './nativeMessage'
+import { createNativeMessage, deserializeMessage, serializeMessage, nativeMessageSchema, userMessageSchema } from './nativeMessage'
 
 // Failure cases: lost fields/order, nested dates, executable UI props, unknown parts,
 // legacy payload acceptance, forged assistant input, duplicate/too many attachments.
+test('historical system placeholders are filtered in every language and nested replay without rewriting storage or real prose', () => {
+  const prose = '任务已开始，尚未收到模型可显示的正文。'
+  const activity = (id: string) => ({lingxiloop: {activity: {version: 1,id,kind: 'commentary',label: '任务状态'}}})
+  const child = createNativeMessage({id: 'child',role: 'assistant',content: [
+    {type: 'text',text: 'internal status in any language',providerMetadata: activity('observed-progress:1:2')},
+    {type: 'text',text: '有用的子任务答案'},
+  ]})
+  const stored = createNativeMessage({id: 'legacy',role: 'assistant',content: [
+    {type: 'text',text: prose,providerMetadata: activity('observed-progress:1:1')},
+    {type: 'text',text: prose},
+    {type: 'text',text: '公开解释',providerMetadata: activity('public-report:real')},
+    {type: 'tool-call',toolName: 'documents.edit',toolCallId: 'tool',args: {},argsText: '',approval: {id: 'approval'},messages: [child]},
+  ]})
+  const before = JSON.stringify(stored),replay = deserializeMessage(stored)
+  assert.equal(JSON.stringify(stored),before)
+  assert.equal(replay.content.length,3)
+  assert.equal(replay.content[0].type === 'text' && replay.content[0].text,prose)
+  const tool = replay.content[2]
+  assert.equal(tool.type === 'tool-call' && tool.approval?.id,'approval')
+  assert.equal(tool.type === 'tool-call' && tool.messages?.[0].content.length,1)
+  const human = createNativeMessage({id: 'human',role: 'user',content: [{type: 'text',text: prose}]})
+  assert.deepEqual(deserializeMessage(human).content,human.content)
+})
 test('native messages survive JSON and nested-message replay without losing content or metadata', () => {
   const child: ThreadMessage = { id: 'child', role: 'user', createdAt: new Date(0), content: [{ type: 'text', text: 'child' }], attachments: [], metadata: { custom: {} } }
   const message: ThreadMessage = { id: 'reply', role: 'assistant', createdAt: new Date('2026-10-02T00:00:00Z'),

@@ -2,9 +2,17 @@ import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import test from 'node:test'
-import { toolDisplay } from './runActivity'
+import { resolveToolDisplay, toolDisplay } from './runActivity'
 
 // Failure inventory: docs/evidence/issue-215-218/README.md, written before fix.
+test('tool receipts and old synthesized summaries avoid delivery implementation commentary', () => {
+  for (const action of ['visualize.save','visualize.chart','visualize.diagram','visualize.sliding_window']) {
+    assert.equal(toolDisplay(action,'completed').summary,'可视化内容已保存。')
+    assert.match(toolDisplay(action,'failed').summary!,/重试/)
+    assert.equal(resolveToolDisplay(action,'completed',{...toolDisplay(action),summary: '可视化内容已保存；展示引用是否交付会在答复中确认。'}).summary,'可视化内容已保存。')
+  }
+  assert.equal(resolveToolDisplay('visualize.save','completed',{...toolDisplay('visualize.save'),summary: '已经保存三组数据的对比图。'}).summary,'已经保存三组数据的对比图。')
+})
 function sources(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap(entry => entry.isDirectory()
     ? sources(path.join(root, entry.name)) : entry.name.endsWith('.ts') ? [path.join(root, entry.name)] : [])
