@@ -29,6 +29,13 @@ Compose bytes, full stack configuration and exact audited new probe image;
 require `pull_policy: never` and native oneoff `pull: false`. The original
 stopped KB container stays stopped. The probe does not migrate or activate data.
 
+Docker's containerd image store can report the audited OCI index or platform
+manifest as `Image.Id`; the legacy image store can report the OCI config digest.
+Accept only one of those three separately audited identities, retaining the
+exact index RepoDigest, ordered layer diff IDs, Linux/amd64 and Descriptor checks.
+Reject foreign IDs and an ID which changes across the status read, even if both
+values belong to the same audited image. Never relabel an index as config digest.
+
 Drain Worker A/B then Web A/B, allow at most150 seconds for natural lease
 expiry, and require two visible zero barriers. Do not edit lease rows. Only
 then update each app's two environment values and verify the entire updated
