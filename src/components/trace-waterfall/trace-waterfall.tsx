@@ -113,14 +113,13 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
           <div><dt className="inline">输入 tokens </dt><dd className="inline">{tokens(selected.tokensIn)}</dd></div><div><dt className="inline">输出 tokens </dt><dd className="inline">{tokens(selected.tokensOut)}</dd></div>
           <div><dt className="inline">耗时 </dt><dd className="inline">{ms(selected.durationMs)}</dd></div><div><dt className="sr-only">费用</dt><dd>{cost(selected)}</dd></div>
         </dl>
-        {selected.detail && <p className="text-muted-foreground break-words">{selected.detail}</p>}
-        <div className="grid gap-2 pt-1 sm:grid-cols-2">
-          <div><h5 className="mb-1 font-medium">公开输入</h5>{selected.input?.length ? <dl className="grid gap-1">{selected.input.map((field,index) => <div key={index}><dt className="text-muted-foreground">{field.label}</dt><dd className="whitespace-pre-wrap break-words">{field.value}</dd></div>)}</dl> : <p className="text-muted-foreground">未提供可展示的输入</p>}</div>
-          <div><h5 className="mb-1 font-medium">公开输出</h5><p className="text-muted-foreground whitespace-pre-wrap break-words">{selected.output ?? '未提供可展示的输出'}</p></div>
-        </div>
-      </div> : <p className="text-muted-foreground">选择步骤查看耗时、用量与公开详情。</p>}
+        {selected.kind === 'tool' && selected.detail && <p className="text-muted-foreground break-words">{selected.detail}</p>}
+        {!!(selected.input?.length || selected.output) && <div className="grid gap-2 pt-1 sm:grid-cols-2">
+          {!!selected.input?.length && <div><h5 className="mb-1 font-medium">输入</h5><dl className="grid gap-1">{selected.input.map((field,index) => <div key={index}><dt className="text-muted-foreground">{field.label}</dt><dd className="whitespace-pre-wrap break-words">{field.value}</dd></div>)}</dl></div>}
+          {selected.output && <div><h5 className="mb-1 font-medium">结果</h5><p className="text-muted-foreground whitespace-pre-wrap break-words">{selected.output}</p></div>}
+        </div>}
+      </div> : <p className="text-muted-foreground">选择步骤查看耗时、用量与详情。</p>}
     </div>
-    <p className="text-muted-foreground border-t border-border/40 px-3 py-2 text-[10px] leading-relaxed">{trace.timingBasis === 'execution' ? '时间相对运行实际开始时刻；模型区间包含准入与用量结算。' : '时间相对运行创建时刻。'}记录未提供的起止时间、子任务或定价显示未知。{trace.limitations.includes('presentation-unavailable') && '用量记录暂不可用。'}</p>
-    {trace.truncated && <p className="px-3 pb-2 text-[10px] text-muted-foreground">仅显示部分步骤；合计未知。</p>}
+    {trace.truncated && <p className="px-3 pb-2 text-[10px] text-muted-foreground">仅显示部分步骤。</p>}
   </section>
 }

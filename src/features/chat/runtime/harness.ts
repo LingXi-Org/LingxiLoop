@@ -30,23 +30,16 @@ export function harnessLabel(view: RunDisplayState): string {
     case 'awaiting_input': return '等待补充信息'
     case 'awaiting_approval': return '等待审批'
     case 'delegated': return '等待协作任务'
-    default: return view.lifecycle === 'succeeded' ? '结果状态缺失' : '正在读取状态'
+    default: return view.lifecycle === 'succeeded' ? '未完成' : '处理中'
   }
 }
 
 export function harnessFailure(reason: string): string {
   const messages: Record<string, string> = {
-    'Model call, token, cost or execution-time budget exhausted': '本次执行的模型调用、字数、费用或时间预算已耗尽。',
-    'Content acceptance correction budget exhausted': '答复仍有未满足的要求，内容修正次数已用尽。',
-    'Final assessment protocol correction exhausted': '模型未能按要求生成有效的答复格式，修正次数已用尽。',
-    'Final response assessment is invalid': '答复的完成情况检查格式无效，尚未验证全部要求。',
-    'Tool protocol correction exhausted': '模型未能生成有效的工具调用，修正次数已用尽。',
-    'Tool execution failed after bounded correction': '工具执行失败，修正次数已用尽。',
-    'Tool execution timed out': '工具执行超时。',
+    'Model call, token, cost or execution-time budget exhausted': '本次请求超出处理限制，请缩小范围后重试。',
+    'Tool execution timed out': '操作超时，请重试。',
     'The operation was aborted due to timeout': '回复生成超时，请重试。',
-    'No valid answer was produced for the current request': '本次请求没有生成可交付的有效答复。',
-    'Model returned an invalid response format': '模型返回了无效的答复格式。',
   }
-  if (reason.startsWith('Model provider request failed')) return `模型服务请求失败${reason.match(/\(HTTP \d+\)/)?.[0] ?? ''}。`
+  if (reason.startsWith('Model provider request failed')) return '服务暂时不可用，请稍后重试。'
   return messages[reason] ?? '消息生成失败，请稍后重试。'
 }

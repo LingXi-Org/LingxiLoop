@@ -8,6 +8,7 @@ import { harnessApi } from '../src/features/chat/runtime/harness-api'
 import { applyRunSnapshot } from '../src/features/chat/runtime/run-updates'
 import { EMPTY_CONVERSATION_CHAT_STATE } from '../src/features/chat/runtime/store'
 import { NativeMessageContent } from '../src/features/chat/components/NativeMessageContent'
+import { ConversationMessage } from '../src/features/chat/components/ConversationMessage'
 import { useAuth } from '../src/stores/auth'
 import type { AgentRunSnapshot, RunDisplayState } from '../src/lib/agentRunSnapshot'
 import '../src/styles/globals.css'
@@ -53,7 +54,7 @@ function App() {
   const runtime = useExternalStoreRuntime({ messages: state.messages, isRunning: Object.keys(state.activeRuns).length > 0, onNew: async () => {} })
   return <main style={{ maxWidth: 900, margin: '24px auto', padding: 24 }}>
     <input aria-label="响应检查" />{error && <p role="alert">{error}</p>}
-    <div id="body"><AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ AssistantMessage: NativeMessageContent }} /></AssistantRuntimeProvider></div>
+    <div id="body"><AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ AssistantMessage: new URLSearchParams(location.search).has('full') ? ConversationMessage : NativeMessageContent }} /></AssistantRuntimeProvider></div>
   </main>
 }
 createRoot(document.getElementById('root')!).render(<App />)
