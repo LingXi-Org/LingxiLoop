@@ -65,7 +65,7 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
             arguments: JSON.stringify({ id: attachment.id, sourceVersion: attachment.sourceVersion, offset: 0, limit: 16000 }) }], usage }
         }
         assert.deepEqual(request.tools!.filter(tool => tool.name.startsWith('memory__')).map(tool => tool.name.slice(8)).sort(),
-          ['apply','doctor','forget','history','list','read','reflect','restore','search'], 'custom specialists retain all native memory tools during public collaboration')
+          ['apply','doctor','forget','history','list','read','reflect','restore','search','summary'], 'custom specialists retain all native memory tools during public collaboration')
         const context = JSON.stringify(request.items)
         assert.match(context, /Unique recorded value: 7391/)
         const text = context.includes('FOLLOW_UP') ? 'Clarification recorded. The task is complete.'
@@ -107,9 +107,10 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
   }
   assert.equal(sharedCourseScopes.size, 1, 'the same authorized project has one shared course scope')
   assert.equal(new Set(agentRoleScopes.values()).size,3,'each collaborating Agent retains its own role scope')
-  const bindings = (await pool.query('SELECT run_id,principal_id,internal FROM agent_run_bindings ORDER BY created_at,run_id')).rows
+  const bindings = (await pool.query('SELECT run_id,principal_id,internal,presentation_version FROM agent_run_bindings ORDER BY created_at,run_id')).rows
   assert.equal(bindings.length, 4)
   assert.ok(bindings.every(row => row.principal_id === 'test-owner' && !row.internal))
+  assert.ok(bindings.every(row => row.presentation_version === 1), 'new native public handoffs retain host presentation provenance')
   assert.equal((await pool.query('SELECT 1 FROM lingxios.agent_work_waits')).rows.length, 0)
   assert.equal((await pool.query('SELECT 1 FROM agent_handoffs')).rows.length, 0)
   assert.ok([...claimed.values()].every(work => !work.meta?.parentWorkId))

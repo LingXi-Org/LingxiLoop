@@ -2,13 +2,16 @@ import { useAuiState, type TextMessagePartComponent, type TextMessagePartProps }
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { getActiveCompanyId } from '@/stores/auth'
 import { activityAnnotation } from '@/lib/runActivity'
+import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { GenUiMessageResponse } from './zcode/gen-ui/components/GenUiMessageResponse'
 import { StreamingPart } from '@/components/assistant-ui/streaming-tail'
 export function VisualizeText({part,Text,readOnly}: {part:TextMessagePartProps;Text:TextMessagePartComponent;readOnly:boolean}) {
   const message = useAuiState(state=>state.message)
   const partKey = useAuiState(state=>JSON.stringify([state.message.id,
+    (state.message.metadata.custom.harness as RunDisplayState | undefined)?.requestVersion ?? null,
+    state.message.metadata.custom.conversationId,
     activityAnnotation(state.part)?.id ?? state.message.parts.indexOf(state.part)]))
-  const textOffset = useAuiState(state=>state.message.parts.slice(0,state.message.parts.indexOf(state.part)).reduce((offset,item)=>offset+(item.type==='text' && activityAnnotation(item)?.kind!=='commentary' ? item.text.length+1 : 0),0))
+  const textOffset = useAuiState(state=>state.message.parts.slice(0,state.message.parts.indexOf(state.part)).reduce((offset,item)=>offset+(item.type==='text' && activityAnnotation(item)?.kind!=='commentary' && activityAnnotation(item)?.purpose!=='process' ? item.text.length+1 : 0),0))
   if(message.role!=='assistant' || !/::|/.test(part.text)) return <Text {...part}/>
   const workspace = getWorkspaceSession()
   const conversationId = message.metadata.custom.conversationId

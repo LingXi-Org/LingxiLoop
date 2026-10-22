@@ -1,0 +1,241 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a16223-feb0-7619-86bd-3b1e27827e95",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-22T05:44:49.547Z",
+    "finishedAt": "2026-10-22T05:45:26.183Z",
+    "project": {
+      "id": "lingxiloop-answer-first",
+      "configDigest": "3e40931c3e11211f5b71a2417f0143403c628cdd32c6585d383ee1b605c7a884"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "d5481cd258058784e7004169b5ef1235460384f1",
+      "branch": "fix/304-browser-regressions",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "desktop",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53124",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "b222d331f8c536bf41f14f7bd17a5cd61010532323fc0f8ba689aa60ea0af542",
+        "testId": "e2e/answer-first/attention.e2e.ts::native%20interrupt%20and%20awaiting_input%20have%20one%20actionable%20continuation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "native interrupt and awaiting_input have one actionable continuation"
+        ],
+        "file": "e2e/answer-first/attention.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/attention.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a16224-13da-7a78-aa18-640ea67f09fb",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-22T05:44:53.978Z",
+            "durationMs": 31995,
+            "artifacts": [
+              {
+                "id": "01a16224-13da-7a78-aa18-640ea67f09fb:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_attention.e2e.ts__native_20interrupt_20and_20awaiting_input_20have_20one_20actionable_20contin-c9fd5258/default/attempt-0/failure/screen.txt",
+                "size": 1050,
+                "sha256": "c2344af05883db6bb3035ddb13dae3cd04b90f310cee1c5587366157ee51ced6"
+              },
+              {
+                "id": "01a16224-13da-7a78-aa18-640ea67f09fb:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_attention.e2e.ts__native_20interrupt_20and_20awaiting_input_20have_20one_20actionable_20contin-c9fd5258/default/attempt-0/screenshots/001-failure.png",
+                "size": 36403,
+                "sha256": "232ea746eea237aa8b70c15c897a42502dfdaa82ce0a681542fd5a7162915da1"
+              },
+              {
+                "id": "01a16224-13da-7a78-aa18-640ea67f09fb:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_attention.e2e.ts__native_20interrupt_20and_20awaiting_input_20have_20one_20actionable_20contin-c9fd5258/default/attempt-0/trace/trace.zip",
+                "size": 291013,
+                "sha256": "61423d294cbf36b23238df6afea61441eebace23661276b9c6e71d2c1563a1ef"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expect.toHaveCount failed\nlocator: getByRole(\"textbox\", name: \"补充信息\")\nexpected: count 1\nobserved: count 2 (match count 2)",
+              "retryable": false,
+              "phase": "body",
+              "details": {
+                "locator": "getByRole(\"textbox\", name: \"补充信息\")",
+                "expected": "count 1",
+                "observed": "count 2",
+                "matches": 2
+              },
+              "source": {
+                "file": "e2e/answer-first/attention.e2e.ts",
+                "line": 8,
+                "column": 3
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:53124/e2e/questionnaire.html?mode=native-unbound",
+              "screen": "01a16224-13da-7a78-aa18-640ea67f09fb:artifact:0",
+              "screenshot": "01a16224-13da-7a78-aa18-640ea67f09fb:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a16224-13da-7a78-aa18-640ea67f09fb:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/questionnaire.html?mode=native-unbound",
+                "status": "passed",
+                "startedAt": "2026-10-22T05:44:54.668Z",
+                "durationMs": 20937,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 7,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16224-13da-7a78-aa18-640ea67f09fb:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "failed",
+                "startedAt": "2026-10-22T05:45:15.610Z",
+                "durationMs": 10050,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 8,
+                  "column": 70
+                },
+                "error": {
+                  "category": "test",
+                  "code": "ASSERTION_FAILED",
+                  "message": "expect.toHaveCount failed\nlocator: getByRole(\"textbox\", name: \"补充信息\")\nexpected: count 1\nobserved: count 2 (match count 2)",
+                  "retryable": false,
+                  "details": {
+                    "locator": "getByRole(\"textbox\", name: \"补充信息\")",
+                    "expected": "count 1",
+                    "observed": "count 2",
+                    "matches": 2
+                  },
+                  "source": {
+                    "file": "e2e/answer-first/attention.e2e.ts",
+                    "line": 8,
+                    "column": 3
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 328466,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

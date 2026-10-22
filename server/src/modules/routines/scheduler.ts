@@ -1,4 +1,4 @@
-import { productConversationId } from '../../agent-runtime/identity.js'
+import { bindProductRun, productConversationId } from '../../agent-runtime/identity.js'
 import { createHash } from 'node:crypto'
 import { NoEffectError, type WorkItem } from '@lyyzka/lingxios'
 import type { Queryable } from '../../db/queryable.js'
@@ -58,10 +58,12 @@ export async function scheduleRoutines(transaction: <T>(run: (db: Queryable) => 
       if (!pending.rows.length) {
         const scheduledAt = new Date(row.next_run_at!).toISOString()
         const id = 'routine-run-' + createHash('sha256').update(JSON.stringify([row.id,row.version,scheduledAt])).digest('hex')
-        await api.enqueueJob({ id, tenantId: row.company_id, agentId: row.agent_id, sessionId: id, principalId: row.created_by,
+        const admission = await api.enqueueJob({ id, tenantId: row.company_id, agentId: row.agent_id, sessionId: id, principalId: row.created_by,
           ...(row.thread_id ? { threadId: row.thread_id } : {}), kind: 'routine',
           lane: 'background', sourceRef: id, text: row.instructions, authorName: row.title,
           meta: { conversationId: row.channel_id, routineId: row.id, routineVersion: row.version, scheduledAt } }, db)
+        await bindProductRun(db,{ runId: admission.id,tenantId: row.company_id,agentId: row.agent_id,sessionId: id,principalId: row.created_by,
+          ...(row.thread_id ? { threadId: row.thread_id } : {}) },row.channel_id,false,undefined,admission.deduplicated ? undefined : 1)
         await db.query(`INSERT INTO agent_routine_runs(id,routine_id,routine_version,scheduled_at,work_id,company_id,agent_id,channel_id,principal_id,thread_id)
           VALUES($4,$1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
           [row.id,row.version,scheduledAt,id,row.company_id,row.agent_id,row.channel_id,row.created_by,row.thread_id])

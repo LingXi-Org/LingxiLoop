@@ -11,6 +11,7 @@ import { useAuth } from '@/stores/auth'
 import { useChatThreadStore } from '@/features/chat/runtime/store'
 import { NativeMessageContent } from '@/features/chat/components/NativeMessageContent'
 import { HarnessDetails } from '@/features/chat/components/HarnessDetails'
+import { chatTransport } from '@/features/chat/runtime/transport'
 import type { LingxiMessageMetadata } from '@/features/chat/runtime/model'
 import '@/styles/globals.css'
 
@@ -22,6 +23,10 @@ let refresh = () => {}
 useAuth.setState({ user: { id: 'fixture-human' } as NonNullable<ReturnType<typeof useAuth.getState>['user']>, activeCompanyId: 'fixture-company' })
 const question = { title: '补充学习目标', interactionId: 'fixture-question', items: [{ name: 'goal', prompt: '学习目标', required: true, input: { label: '学习目标' } }] }
 const native = mode.startsWith('native-')
+let nativeSends = 0, nativeResumes = 0
+// Explicit synthetic IM boundary; the real continueRun owner/idempotency logic
+// and HTTP continuation call still execute. No real account or IM is contacted.
+if (native) chatTransport.send = async () => { nativeSends++; refresh(); return true }
 const messages = [deserializeMessage(createNativeMessage(native ? { id: 'run-fixture', role: 'assistant',
   status: { type: 'requires-action', reason: 'tool-calls' },
   content: [{ type: 'tool-call', toolCallId: 'host:history', toolName: 'chat.history', args: {}, argsText: '', result: { status: 'completed' } },
@@ -34,6 +39,10 @@ const messages = [deserializeMessage(createNativeMessage(native ? { id: 'run-fix
   custom: { conversationId: 'fixture-room', delivery: 'sent' } }))]
 const originalFetch = window.fetch.bind(window)
 window.fetch = async (input, init) => {
+  if (native && String(input).endsWith('/runs/fixture/input') && init?.method === 'POST') {
+    nativeResumes++; refresh()
+    return Response.json({ accepted: true })
+  }
   if (!String(input).includes('/api/im/channels/fixture-room/questionnaires/fixture-question')) return originalFetch(input, init)
   if (init?.method === 'POST') {
     posts++; sessionStorage.setItem(`${key}:posts`, String(posts)); refresh()
@@ -65,7 +74,7 @@ function Fixture() {
   const echoes = useChatThreadStore(state => state.conversations['fixture-room']?.messages.length ?? 0)
   refresh = () => update(value => value + 1)
   const runtime = useExternalStoreRuntime({ messages, isRunning: false, onNew: async () => {} })
-  return <main className="mx-auto max-w-xl p-6"><p>问卷验收：合成状态接口，历史中没有答案消息</p><div data-posts={posts} data-reads={reads} data-echoes={echoes} />
+  return <main className="mx-auto max-w-xl p-6"><p>问卷验收：合成状态接口，历史中没有答案消息</p><div data-posts={posts} data-reads={reads} data-echoes={echoes} data-native-sends={nativeSends} data-native-resumes={nativeResumes} />
     <AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Root><ThreadPrimitive.Messages components={{ Message: Card }} /></ThreadPrimitive.Root></AssistantRuntimeProvider>
   </main>
 }

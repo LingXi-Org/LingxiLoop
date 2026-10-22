@@ -26,3 +26,12 @@ test('anchored intervals keep their timeline while duration-only calls remain un
   assert.match(html,/data-trace-duration-only/)
   assert.match(html,/40,000 ms/)
 })
+
+test('a task can select only a span already present in the authorized trace', () => {
+  const selected = renderToStaticMarkup(<TraceWaterfall trace={trace} selectedSpanId="embedding" onSelectedSpanChange={() => {}} />)
+  assert.match(selected,/aria-label="查看 向量检索 详情"[^>]*aria-pressed="true"/)
+  assert.match(selected,/BAAI\/bge-m3/)
+  assert.match(selected,/data-trace-span-id="embedding"/)
+  const absent = renderToStaticMarkup(<TraceWaterfall trace={trace} selectedSpanId="private-unavailable" onSelectedSpanChange={() => {}} />)
+  assert.doesNotMatch(absent,/aria-pressed="true"|private-unavailable/)
+})

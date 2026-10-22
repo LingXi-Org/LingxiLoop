@@ -25,9 +25,39 @@ export type PublicActivity = z.infer<typeof publicActivitySchema>
 
 export const activityAnnotationSchema = z.object({
   version: z.literal(1), id: z.string().min(1).max(2000),
-  kind: z.enum(['commentary', 'tool', 'answer', 'attention']), label: z.string().max(160),
+  kind: z.enum(['commentary', 'tool', 'answer', 'attention', 'result']), label: z.string().max(160),
+  purpose: z.enum(['process', 'result']).optional(),
+  requestVersion: z.number().int().positive().safe().optional(),
+  order: z.number().int().nonnegative().safe().optional(),
+  revision: z.number().int().nonnegative().safe().optional(),
+  taskId: z.string().min(1).max(160).optional(),
 }).strict()
 export type ActivityAnnotation = z.infer<typeof activityAnnotationSchema>
+
+/** Explicit, authorized delegated runs. A model span is not a business task. */
+export const activityTasksSchema = z.object({ version: z.literal(1), tasks: z.array(z.object({
+  id: z.string().min(1).max(160), parentId: z.string().min(1).max(160).optional(),
+  label: publicText.pipe(z.string().max(160)),
+  status: z.enum(['running', 'waiting', 'complete', 'partial', 'blocked', 'cancelled', 'error', 'unknown']),
+}).strict()).max(100) }).strict().superRefine(({ tasks }, context) => {
+  const byId = new Map(tasks.map(task => [task.id, task]))
+  if (byId.size !== tasks.length) context.addIssue({ code: 'custom', message: 'Task identities must be unique' })
+  for (const task of tasks) {
+    const seen = new Set<string>([task.id])
+    for (let parent = task.parentId; parent; parent = byId.get(parent)?.parentId) {
+      if (!byId.has(parent) || seen.has(parent)) {
+        context.addIssue({ code: 'custom', message: 'Task ancestry must be complete and acyclic' })
+        break
+      }
+      seen.add(parent)
+    }
+  }
+})
+export type ActivityTasks = z.infer<typeof activityTasksSchema>
+export function readActivityTasks(value: unknown): ActivityTasks | undefined {
+  const parsed = activityTasksSchema.safeParse(value)
+  return parsed.success ? parsed.data : undefined
+}
 
 /** Presentation only; the native part remains the single content/status owner. */
 export function activityAnnotation(part: unknown): ActivityAnnotation | undefined {
@@ -122,6 +152,7 @@ const labels: Record<string, readonly [string, string]> = {
   'routines.pause': ['暂停定时任务', '暂停当前获授权的定时任务。'],
   'memory.list': ['查看记忆', '查看当前对话可用的记忆。'],
   'memory.read': ['读取记忆', '阅读与当前任务有关的记忆。'],
+  'memory.summary': ['查看记忆', '读取这条记忆的公开摘要。'],
   'memory.search': ['搜索记忆', '查找与当前问题相关的记忆。'],
   'memory.apply': ['保存记忆', '保存本次请求中的记忆变更。'],
   'memory.history': ['查看记忆历史', '查看这条记忆的历史版本。'],
@@ -180,6 +211,7 @@ export function toolDisplay(action: string, status?: unknown): ToolDisplay {
   if (status === 'completed' && ['visualize.save','visualize.chart','visualize.diagram','visualize.sliding_window'].includes(action)) {
     return { title,purpose,summary: '可视化内容已保存。' }
   }
+  if (status === 'completed' && action === 'memory.summary') return { title,purpose,summary: '已读取记忆摘要。' }
   if (status === 'failed' && action.startsWith('visualize.')) return { title,purpose,summary: `${title}未完成，请重试。` }
   if (status === 'failed' && action === 'ipython') return { title,purpose,summary: '脚本执行未完成，请重试。' }
   return { title, purpose, ...(typeof status === 'string' && summaries[status] ? { summary: summaries[status] } : {}) }

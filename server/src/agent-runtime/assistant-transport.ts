@@ -1,3 +1,4 @@
+import { readRunPresentationVersion } from './identity.js'
 import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk, type AssistantTransportStateOperation } from 'assistant-stream'
 import type { ReadonlyJSONValue } from 'assistant-stream/utils'
 import { consumeAssistantMessage, consumeRunStreamEvent, consumePublicTextAttempts, createRunView, type AssistantMessage, type RunStreamEvent, type PublicTextAttempt } from '@lyyzka/lingxios/ui'
@@ -13,6 +14,7 @@ import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import type { Queryable } from '../db/queryable.js'
 import { readQuestionnaireWait } from './questionnaire-projection.js'
+import { projectActivityTasks } from './activity-tasks.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
 export class RunStreamProjection {
@@ -33,7 +35,8 @@ export class RunStreamProjection {
   needsResync = false
 
   constructor(runId: string, private readonly canControl: boolean,
-    private readonly identity?: { agentId: string; principalId?: string; threadId?: string }) {
+    private readonly identity?: { agentId: string; principalId?: string; threadId?: string },
+    private readonly presentationVersion?: 1) {
     this.view = createRunView(runId)
   }
 
@@ -76,7 +79,7 @@ export class RunStreamProjection {
     }
     if (item.type === 'event' && item.event.visibility === 'user') {
       const action = this.tools.find(tool => tool.toolCallId === item.event.data.toolCallId)?.toolName
-      const event = publicRunEvent(item.event, action)
+      const event = publicRunEvent(item.event, action, this.presentationVersion)
       this.tools = harnessToolParts(this.view.runId, [event], this.tools)
       if (this.view !== before && event.kind === 'run.failed' && typeof event.data.error === 'string') this.error = event.data.error
       if (event.kind === 'run.started' && typeof event.data.sourceRef === 'string') this.sourceRef = event.data.sourceRef
@@ -151,7 +154,7 @@ export class RunStreamProjection {
 
   activityPage(offset: number, attentionOnly = false) {
     if (!Number.isSafeInteger(offset) || offset < 0) throw new Error('invalid activity offset')
-    const parts = runMessageParts(this.view, this.tools,{ activityHistory: true }).filter(part => {
+    const parts = runMessageParts(this.view, this.activityContext().tools,{ activityHistory: true }).filter(part => {
       const kind = activityAnnotation(part)?.kind
       return attentionOnly ? kind === 'attention' : kind === 'tool' || kind === 'commentary' || kind === 'attention'
     })
@@ -178,7 +181,8 @@ export class RunStreamProjection {
     // Ephemeral cleanup must not retract validated model.delta text before its committed state arrives.
     // A committed answer explicitly names its streamed source part. Keep that
     // immutable prefix in activityPage, but do not repeat it above the answer.
-    const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, this.tools,{ includeAcceptedPublicText: false })
+    const activityContext = this.activityContext()
+    const parts = runMessageParts(this.durableDraft ? { ...this.view, draft: this.durableDraft } : this.view, activityContext.tools,{ includeAcceptedPublicText: false })
     const acceptedPublicParts = (this.view.publicTextParts ?? []).filter(archivedPublicText).length
     const activity = parts.filter(part => ['tool', 'commentary', 'attention'].includes(activityAnnotation(part)?.kind ?? ''))
     const attention = activity.filter(part => activityAnnotation(part)?.kind === 'attention')
@@ -190,6 +194,7 @@ export class RunStreamProjection {
     const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
       content: parts, status: runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
+        ...(activityContext.tasks ? { activityTasks: activityContext.tasks } : {}),
         runTrace: this.traceSnapshot(),
         ...(acceptedPublicParts ? { activityHistory: { total: activity.length+acceptedPublicParts,attention: attention.length } } : {}),
         ...(this.questionnaireWait?.requestVersion === this.view.requestVersion && this.view.goalOutcome?.status === 'awaiting_input'
@@ -216,6 +221,14 @@ export class RunStreamProjection {
     return { message: createNativeMessage(compact) }
   }
 
+  private activityContext() {
+    if (!this.nativeTrace || !this.nativeTraceAvailable || !nativeTraceMatchesState(this.nativeTrace, this.view)) return { tools: this.tools }
+    const visible = new Set<string>()
+    const visit = (span: import('../../../src/lib/runTrace.js').TraceSpan) => { visible.add(span.id); span.children.forEach(visit) }
+    visit(this.traceSnapshot().root)
+    return projectActivityTasks(this.nativeTrace, this.tools, visible)
+  }
+
   private traceSnapshot() {
     if (this.nativeTrace === undefined) return buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt!,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable })
     if (!this.nativeTrace) return buildRunTrace({ runId: this.view.runId,createdAt: this.createdAt!,lifecycle: this.view.lifecycle,tools: this.tools,llm: this.llm,presentationAvailable: this.presentationAvailable })
@@ -233,7 +246,7 @@ export class RunStreamProjection {
 export async function readRunProjection(api: Awaited<ReturnType<typeof createLingxiOS>>, identity: RunIdentity, canControl: boolean, presentationSignal?: AbortSignal, database?: Queryable, operation?: RuntimeOperationContext, includeTrace = false) {
   const state = await api.readRunState(identity,operation)
   if (!state) throw new Error('run not found')
-  const projection = new RunStreamProjection(identity.runId,canControl,identity)
+  const projection = new RunStreamProjection(identity.runId,canControl,identity,await readRunPresentationVersion(identity,database))
   projection.apply({ type: 'state',state })
   const signal = AbortSignal.timeout(30_000)
   let cursor = 0

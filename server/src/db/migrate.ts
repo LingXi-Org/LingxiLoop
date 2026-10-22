@@ -246,6 +246,9 @@ export async function migrateDatabase(
         if (migration.version===53 && migration.name==='conversation_repair_provenance') {
           await assertRuntimeCurrent(client,14,'3.8.0')
         }
+        if (migration.version===54 && migration.name==='run_presentation_contract') {
+          await assertRuntimeCurrent(client,14,'3.8.2')
+        }
         await client.query(migration.sql)
         if (installsRuntime && migration.version === NATIVE_INSTALL_VERSION) {
           const schema = await runtimeSchema(LEGACY_RUNTIME_SCHEMA)

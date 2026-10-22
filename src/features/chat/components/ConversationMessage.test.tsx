@@ -66,14 +66,14 @@ test('tool terminal and approval states are visible without requiring a result',
   }
 })
 
-test('adjacent ordinary tools group in place while retired records stay visible', () => {
+test('unclassified legacy tools and retired records stay visible', () => {
   const tool = (id: string) => ({ type: 'tool-call' as const, toolCallId: id, toolName: 'fixture.tool', args: {}, argsText: '{}', result: { ok: true } })
   const reply = { ...message('1'), content: [{ type: 'text', text: '开始正文' }, tool('one'), tool('two'),
     { type: 'tool-call', toolCallId: 'calendar', toolName: 'calendar.list', args: {}, argsText: '{}', result: { status: 'completed', value: { events: [], truncated: false } } },
     { type: 'text', text: '最后正文' }] } as ThreadMessage
   const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
-  assert.equal($('[data-slot="tool-group-root"]').length, 1)
-  assert.match($.text(), /2 项操作/)
+  assert.equal($('[data-slot="tool-group-root"]').length, 0)
+  assert.equal($('[data-native-part="tool-call"]').length, 3)
   assert.match($.text(), /此记录仅供查看/)
   assert.equal($('time').length, 0)
   assert.match($('[data-agent-body]').last().text(), /最后正文/)
@@ -81,7 +81,7 @@ test('adjacent ordinary tools group in place while retired records stay visible'
 
 // Failure cases: a run's tools appear twice or in multiple disclosures; answers or
 // decisions get hidden; failed/cancelled runs are presented as successful.
-test('native run parts keep tools, answers and decisions outside the process disclosure', () => {
+test('native run parts have one process disclosure while answers and current decisions stay outside', () => {
   const tool = (id: string) => ({ type: 'tool-call' as const, toolCallId: id, toolName: `fixture.${id}`, args: {}, argsText: '{}', result: { ok: true }, providerMetadata: { lingxiloop: { activity: { version: 1,id,kind: 'tool',label: '处理任务' } } } })
   const reply = { ...message('1'), status: { type: 'requires-action', reason: 'tool-calls' }, content: [
     { type: 'text',text: 'Synthetic public process.',providerMetadata: { lingxiloop: { activity: { version: 1,id: 'process',kind: 'commentary',label: '公开过程' } } } },
@@ -97,7 +97,9 @@ test('native run parts keep tools, answers and decisions outside the process dis
   assert.equal($.text().split('公开答复').length - 1, 1)
   for (const label of ['等待有权限的成员审批。', '这一步未完成，请重试。']) assert.ok($.text().includes(label), label)
   assert.doesNotMatch($('[data-slot="run-activity"]').text(), /公开答复|等待有权限的成员审批|这一步未完成/)
-  assert.equal($('[data-native-part="tool-call"]').length, 4)
+  assert.equal($('[data-native-part="tool-call"]').length, 2, 'ordinary tools are inside the initially collapsed process')
+  assert.equal($('[data-message-region="body"]').text(), '公开答复')
+  assert.equal($('[data-message-region="attention"] [data-native-part="tool-call"]').length, 2)
 })
 
 test('run activity retains cancelled, error and incomplete outcomes', () => {
@@ -275,4 +277,62 @@ test('RunActivity contains process on both sides of a streaming answer without h
   assert.equal($('[data-agent-body]').text(),'Synthetic answer still streaming.')
   assert.doesNotMatch($('[data-agent-body]').text(),/process before|process after/)
   assert.doesNotMatch($.text(),/查看全部活动|查看需要注意的记录|显示更多活动/)
+})
+
+// #304: the supported native-unbound shape has one current input owner.
+test('interrupt and awaiting_input share one form and read-only history has none', () => {
+  const base = message('1')
+  const content = [{ type: 'tool-call' as const, toolCallId: 'ask', toolName: 'chat.ask', args: {}, argsText: '',
+    interrupt: { type: 'human' as const, payload: { prompt: '请补充信息' } } }]
+  const custom = { ...getLingxiMessageMetadata(base), runId: 'run', harnessControl: true,
+    harness: { ...createRunView('run'), lifecycle: 'waiting', requestVersion: 1,
+      goalOutcome: { status: 'awaiting_input', question: '请补充信息' }, artifacts: [] } }
+  const waiting = { ...base, status: { type: 'requires-action', reason: 'interrupt' }, content, metadata: { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], custom } } as ThreadMessage
+  let $ = load(renderToStaticMarkup(<Preview messages={[waiting]} />))
+  assert.equal($('input').length, 1, 'only the owning tool has a generic input')
+  assert.equal($('button').filter((_, node) => /提交/.test($(node).text())).length, 1)
+  const settled = { ...waiting, status: { type: 'complete', reason: 'stop' }, metadata: { custom: { ...custom,
+    harness: { ...custom.harness, lifecycle: 'succeeded' } } } } as ThreadMessage
+  $ = load(renderToStaticMarkup(<Preview messages={[settled]} />))
+  assert.equal($('input').length, 0, 'settled replay never restores an input')
+})
+
+test('legacy unclassified content stays visible and the answer region is stable across ordering', () => {
+  const answer = { type: 'text', text: '首字', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'accepted-logical-id', kind: 'answer', label: '答复' } } } }
+  const tool = { type: 'tool-call', toolCallId: 'ordinary', toolName: 'fixture.tool', args: {}, argsText: '', result: { status: 'completed' },
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'ordinary', kind: 'tool', label: '执行步骤' } } } }
+  const legacy = { type: 'text', text: '历史可见正文' }
+  for (const content of [[tool, answer, legacy], [answer, tool, legacy]]) {
+    const reply = { ...message('1'), status: { type: 'running' }, content } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+    assert.equal($('[data-message-region="body"]').text(), '首字历史可见正文')
+    assert.equal($('[data-slot="run-activity"]').length, 1)
+    assert.equal($('[data-message-region="body"] [data-native-part="tool-call"]').length, 0)
+  }
+})
+
+// #304 review: strict data parts cannot carry activity annotations. A delivered
+// artifact is still a result; citation metadata/process alone is not one.
+test('partial and blocked replies recognize data-only or persisted artifact delivery', () => {
+  for (const outcome of ['partial', 'blocked'] as const) {
+    for (const delivered of ['presentation', 'artifact', 'citations', 'process'] as const) {
+      const base = message('1')
+      const content = delivered === 'presentation'
+        ? [{ type: 'data', name: 'presentation-artifact', data: { artifactId: 'deck-304', artifactKind: 'lecture_deck_html', title: '已交付的演示稿' } }]
+        : delivered === 'citations' ? [{ type: 'data', name: 'citation-claims', data: { claims: [] } }]
+        : delivered === 'process' ? [{ type: 'text', text: '公开过程', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-304', kind: 'commentary', label: '公开过程' } } } }]
+        : []
+      const harness = { ...createRunView('run'), lifecycle: 'succeeded', requestVersion: 1,
+        goalOutcome: { status: outcome, requestVersion: 1 },
+        artifacts: delivered === 'artifact' ? [{ path: '/workspace/已交付.pdf', mime: 'application/pdf', size: 100, sha256: 'a'.repeat(64) }] : [] }
+      const reply = { ...base, content: [...content, { type: 'text', text: '过程记录', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-status-304', kind: 'commentary', label: '过程记录' } } } }], status: { type: 'incomplete', reason: 'other' },
+        metadata: { ...base.metadata, custom: { ...getLingxiMessageMetadata(base), runId: 'run', harness } } } as ThreadMessage
+      const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+      if (delivered === 'presentation' || delivered === 'artifact') {
+        assert.doesNotMatch($.text(), /本次请求未能生成答复/, `${outcome}/${delivered}`)
+        assert.match($.text(), /已交付/, `${outcome}/${delivered}`)
+      } else assert.match($.text(), /本次请求未能生成答复/, `${outcome}/${delivered}`)
+      assert.match($.text(), /未完成/, 'a delivered result does not turn partial/blocked into success')
+    }
+  }
 })

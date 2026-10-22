@@ -1,5 +1,16 @@
 # Third-Party Notices
 
+## assistant-ui Elements
+
+The RunActivity and TaskCard components adapt the official assistant-ui registry
+source at commit `1de233d61b09f25f7f14df8a9211edb347559902`:
+https://github.com/assistant-ui/assistant-ui/tree/1de233d61b09f25f7f14df8a9211edb347559902/packages/ui/src/components/react/assistant-ui/elements
+
+MIT License, Copyright (c) 2026 AgentbaseAI Inc. Unmodified source snapshots,
+the complete license and adaptation notes are retained in
+`third_party/assistant-ui-elements/`. The existing Langfuse waterfall remains a
+separate source adaptation; it is not attributed to assistant-ui.
+
 ## Shadcn Dashboard
 
 The admin workspace layout, metric cards and resource directory composition

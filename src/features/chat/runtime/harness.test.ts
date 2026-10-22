@@ -33,8 +33,9 @@ test('native response text and presentation cards retain segment order and stabl
   const second = { ...first, reference: 'second', fields: { title: '第二张' }, hash: 'second' }
   view.message!.envelope.presentations = [first, second]
   const parts = harnessParts(view)
-  assert.deepEqual(parts.filter(part => part.type === 'generative-ui'), [first, second].map(component => ({
+  assert.deepEqual(parts.filter(part => part.type === 'generative-ui'), [first, second].map((component, index) => ({
     type: 'generative-ui', id: component.hash, spec: { root: { component: component.type, props: component.fields } },
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: `result:1:${index + 1}`, kind: 'result', label: '结果' } } },
   })))
 })
 
@@ -44,7 +45,7 @@ test('public native tool events retain complete assistant-ui history and survive
   const completed = { ...started,seq: 2,kind: 'tool.completed',stage: 'completed' as const,
     data: { toolCallId: 'host:call',result: { status: 'completed',value: { body: 'Do not duplicate this payload' } },isError: false } }
   const tools = harnessToolParts('run',[started,completed,{ ...started,visibility: 'internal',data: { toolCallId: 'host:private',name: 'internal' } }])
-  assert.deepEqual(tools,[{ type: 'tool-call',toolCallId: 'host:call',toolName: 'documents.read',args: {},argsText: '{}',result: { status: 'completed' },isError: false,eventSeq: 2,startedSeq: 1 }])
+  assert.deepEqual(tools,[{ type: 'tool-call',toolCallId: 'host:call',toolName: 'documents.read',args: {},argsText: '{}',result: { status: 'completed' },isError: false,eventSeq: 2,startedSeq: 1,purpose: undefined }])
   assert.deepEqual(harnessToolParts('run',[started,completed],tools),tools)
   assert.deepEqual(harnessToolParts('another-run',[started,completed]),[])
   const message = convertEnvelope(envelope(1,1),{ participants,meId: 'human' })

@@ -21,6 +21,8 @@
 !tailwind.config.ts
 !third_party/zcode/**
 !third_party/assistant-ui/streaming-text/**
+!third_party/assistant-ui-elements/LICENSE
+!third_party/react-chat-elements/reply-message/LICENSE
 !scripts/verify-zcode-visualize.mjs
 !scripts/build-visualize-runtime.mjs
 !scripts/prune-pdfjs-server-runtime.mjs

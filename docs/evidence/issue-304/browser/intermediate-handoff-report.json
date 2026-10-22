@@ -1,0 +1,1011 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a16235-85d2-7d47-854e-f36792dfd3e3",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-22T06:03:58.746Z",
+    "finishedAt": "2026-10-22T06:04:41.354Z",
+    "project": {
+      "id": "lingxiloop-answer-first",
+      "configDigest": "6f99e53d96440e0259e79a6b109b1ca7df0136916d9c86bbe80fc87bc93c36aa"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "05e18e6112bc06af50ee1fb9e7dfe581ab8125ff",
+      "branch": "fix/304-browser-regressions",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "desktop",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53124",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "b222d331f8c536bf41f14f7bd17a5cd61010532323fc0f8ba689aa60ea0af542",
+        "testId": "e2e/answer-first/attention.e2e.ts::native%20interrupt%20and%20awaiting_input%20have%20one%20actionable%20continuation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "native interrupt and awaiting_input have one actionable continuation"
+        ],
+        "file": "e2e/answer-first/attention.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/attention.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c95ab0acc0020435680e64b5b8e215a0c93b7391425212909813aaf4475a0dc2",
+        "testId": "e2e/answer-first/history.e2e.ts::bounded%20history%20retries%20in%20one%20process%20entry%20without%20replacing%20live%20answer%20or%20repeating%20entries",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "bounded history retries in one process entry without replacing live answer or repeating entries"
+        ],
+        "file": "e2e/answer-first/history.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/history.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "bcc0691e7de1044fd145391f7a1f159a7d42ba5efb42d0575524ecdf96e1c476",
+        "testId": "e2e/answer-first/history.e2e.ts::late%20history%20page%20cannot%20replace%20newer%20live%20data%20or%20new-request%20content",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "late history page cannot replace newer live data or new-request content"
+        ],
+        "file": "e2e/answer-first/history.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/history.e2e.ts",
+          "line": 33,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6d9dbfee67f82edf5f6669b6c30e2b122a3eb00da2cd30075ce4befdc835a7ae",
+        "testId": "e2e/answer-first/layout.e2e.ts::one%20process%20disclosure%20contains%20ordinary%20rich%20tools%20while%20answer%20and%20results%20stay%20outside",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "one process disclosure contains ordinary rich tools while answer and results stay outside"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "4ca34939a034374ccd65e5d2463744ccb9d87d9ac7a96f53b21a21f93cde83c3",
+        "testId": "e2e/answer-first/layout.e2e.ts::copy%20while%20the%20process%20is%20expanded%20contains%20only%20the%20current%20answer",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "copy while the process is expanded contains only the current answer"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 41,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e6369d48d8fcbbacfa50d572c7b346056ebf335868afc3c7f0c283bd10a66789",
+        "testId": "e2e/answer-first/layout.e2e.ts::390px%20light%20and%20dark%20keep%20the%20answer%20readable%20and%20process%20keyboard%20accessible",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "390px light and dark keep the answer readable and process keyboard accessible"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 59,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2668af4fdcbad320ea79a77e60a60048274192d1e3490669f7efec49e87094f2",
+        "testId": "e2e/answer-first/v2-stream.e2e.ts::real%20v2%20first%20character%2C%20pending%20acceptance%20and%20final%20handoff%20preserve%20answer%20DOM%20and%20selection",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "real v2 first character, pending acceptance and final handoff preserve answer DOM and selection"
+        ],
+        "file": "e2e/answer-first/v2-stream.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/v2-stream.e2e.ts",
+          "line": 14,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-22T06:04:03.696Z",
+            "durationMs": 13597,
+            "artifacts": [
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20v2_20first_20character_2C_20pending_20acceptance_20and_20final_20hand-cd5c2c8e/default/attempt-0/failure/screen.txt",
+                "size": 1004,
+                "sha256": "9d170066164c7c50b54adb42509e64e4f2dc5f6a14e462903807a47736a8408e"
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20v2_20first_20character_2C_20pending_20acceptance_20and_20final_20hand-cd5c2c8e/default/attempt-0/screenshots/001-failure.png",
+                "size": 23206,
+                "sha256": "5f33429945994034d883ac10b2aec9e7a7854a74d95083e6a8945f87cbeddeb6"
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20v2_20first_20character_2C_20pending_20acceptance_20and_20final_20hand-cd5c2c8e/default/attempt-0/trace/trace.zip",
+                "size": 490365,
+                "sha256": "c4212637703ef1f5095b4ff852df3d1d3a32f928169d8e9ddd63dc6bddb2b18c"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expected {\"body\":true,\"part\":true,\"markdown\":true,\"selection\":\"交换机\",\"deltaY\":20} to equal {\"body\":true,\"part\":true,\"markdown\":true,\"selection\":\"交换机\",\"deltaY\":0}",
+              "retryable": false,
+              "phase": "body",
+              "source": {
+                "file": "e2e/answer-first/v2-stream.e2e.ts",
+                "line": 47,
+                "column": 22
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:53124/e2e/answer-first.html",
+              "screen": "01a16235-9eef-753a-ac0d-44f2c4a389ec:artifact:0",
+              "screenshot": "01a16235-9eef-753a-ac0d-44f2c4a389ec:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:04.775Z",
+                "durationMs": 9752,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 17,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:14.530Z",
+                "durationMs": 470,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 19,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:15.002Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 20,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:15.035Z",
+                "durationMs": 488,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 22,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:15.523Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 23,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:15.546Z",
+                "durationMs": 220,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 39,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:15.767Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 40,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:15.790Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 41,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:15.870Z",
+                "durationMs": 155,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 39,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:16.025Z",
+                "durationMs": 68,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 40,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16235-9eef-753a-ac0d-44f2c4a389ec:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:16.093Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 41,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b53e581797cfbc9f1e7441d12f954347c4c88e6dfdc216975f56813193e0e9cf",
+        "testId": "e2e/answer-first/v2-stream.e2e.ts::real%20superseded%20candidate%20leaves%20the%20main%20answer%20and%20correction%20receives%20a%20new%20identity",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "real superseded candidate leaves the main answer and correction receives a new identity"
+        ],
+        "file": "e2e/answer-first/v2-stream.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/v2-stream.e2e.ts",
+          "line": 55,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16235-d418-7ed0-8c66-28fb7a675e38",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:04:17.304Z",
+            "durationMs": 11836,
+            "artifacts": [
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16235-d418-7ed0-8c66-28fb7a675e38:8"
+                },
+                "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20superseded_20candidate_20leaves_20the_20main_20answer_20and_20correct-a1608533/default/attempt-0/screenshots/001-answer-first-real-v2-corrected-candidate.png",
+                "size": 34041,
+                "sha256": "01aa0f2867eb13086c02563e19bcae950d0e2532e10954808fde2a3002771ce4"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:17.321Z",
+                "durationMs": 7291,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 58,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:24.613Z",
+                "durationMs": 489,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 59,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:25.105Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 60,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:25.120Z",
+                "durationMs": 429,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 62,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:25.550Z",
+                "durationMs": 37,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 63,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:25.589Z",
+                "durationMs": 1143,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 64,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:26.733Z",
+                "durationMs": 1239,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 65,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:27.974Z",
+                "durationMs": 202,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 66,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a16235-d418-7ed0-8c66-28fb7a675e38:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-real-v2-corrected-candidate",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:28.176Z",
+                "durationMs": 613,
+                "events": [],
+                "artifacts": [
+                  "01a16235-d418-7ed0-8c66-28fb7a675e38:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 67,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "40cd3158006a65c3186b2d9c587dd5a6860db4a0b1414c4bbee2ef3602b5ec73",
+        "testId": "e2e/answer-first/visualize.e2e.ts::completed%20replay%20preserves%20the%20visualization%20and%20owner%20change%20rebinds%20acquisition",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "completed replay preserves the visualization and owner change rebinds acquisition"
+        ],
+        "file": "e2e/answer-first/visualize.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/visualize.e2e.ts",
+          "line": 8,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16236-0c9b-7a16-8129-963ef606b269",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:04:31.771Z",
+            "durationMs": 9426,
+            "artifacts": [
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16236-0c9b-7a16-8129-963ef606b269:12"
+                },
+                "path": "desktop/e2e_answer-first_visualize.e2e.ts__completed_20replay_20preserves_20the_20visualization_20and_20owner_20change_-f4b71c31/default/attempt-0/screenshots/001-answer-first-visualize-owner-rebound.png",
+                "size": 45002,
+                "sha256": "65fea0e860abe633f92f616b8a9f6df596080f638c77b65d3b65fca4e91f27f2"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:32.087Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 15,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:32.092Z",
+                "durationMs": 3824,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 28,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"][data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:35.919Z",
+                "durationMs": 1787,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 29,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:37.707Z",
+                "durationMs": 37,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 30,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:37.772Z",
+                "durationMs": 209,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 32,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:37.982Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 33,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:38.025Z",
+                "durationMs": 257,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 35,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"html\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:38.282Z",
+                "durationMs": 94,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 36,
+                  "column": 41
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"][data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:38.377Z",
+                "durationMs": 1295,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 37,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:39.674Z",
+                "durationMs": 36,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 38,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"] iframe[data-visualize-guest]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:39.710Z",
+                "durationMs": 256,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 39,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:39.967Z",
+                "durationMs": 39,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 40,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16236-0c9b-7a16-8129-963ef606b269:12",
+                "index": 12,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-visualize-owner-rebound",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:04:40.006Z",
+                "durationMs": 643,
+                "events": [],
+                "artifacts": [
+                  "01a16236-0c9b-7a16-8129-963ef606b269:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 44,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 9,
+      "selected": 3,
+      "executed": 3,
+      "passed": 2,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 9,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 593618,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a1623f-8368-7c4b-92c8-d811dfc8b28d",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-22T06:14:53.246Z",
+    "finishedAt": "2026-10-22T06:15:09.229Z",
+    "project": {
+      "id": "lingxiloop-answer-first-reduced-motion",
+      "configDigest": "3f4332a92c71d7aa446da3ff1998f7835bdfdd474a81e1dd19969fed93d53ab4"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "53779b0229ec088d082bd92440512344b7b08db8",
+      "branch": "fix/304-browser-regressions",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "reduced-motion",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53124",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": false
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "5718b5810cc178b92328cacd0b71170ba16bf38d0bacb1185802a7f99b3ebfa1",
+        "testId": "e2e/answer-first/reduced/interaction.e2e.ts::actual%20reduced%20motion%20preserves%20keyboard%20disclosure%20and%20narrow-screen%20answer%20in%20both%20themes",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "actual reduced motion preserves keyboard disclosure and narrow-screen answer in both themes"
+        ],
+        "file": "e2e/answer-first/reduced/interaction.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/reduced/interaction.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a1623f-9311-7be7-90a4-2a67f6e5f3eb",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-22T06:14:56.017Z",
+            "durationMs": 12999,
+            "artifacts": [
+              {
+                "id": "01a1623f-9311-7be7-90a4-2a67f6e5f3eb:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "reduced-motion/e2e_answer-first_reduced_interaction.e2e.ts__actual_20reduced_20motion_20preserves_20keyboard_20disclosure_20an-a93b18db/default/attempt-0/failure/screen.txt",
+                "size": 2170,
+                "sha256": "1515396d788aa77169f466421e1c5b874552cb3d2e947e20e5ebc8663121f6d9"
+              },
+              {
+                "id": "01a1623f-9311-7be7-90a4-2a67f6e5f3eb:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "reduced-motion/e2e_answer-first_reduced_interaction.e2e.ts__actual_20reduced_20motion_20preserves_20keyboard_20disclosure_20an-a93b18db/default/attempt-0/screenshots/001-failure.png",
+                "size": 49985,
+                "sha256": "48064db3752e37a393e1834287ac666baca281d02992dc989594045dfab1ebb1"
+              },
+              {
+                "id": "01a1623f-9311-7be7-90a4-2a67f6e5f3eb:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "reduced-motion/e2e_answer-first_reduced_interaction.e2e.ts__actual_20reduced_20motion_20preserves_20keyboard_20disclosure_20an-a93b18db/default/attempt-0/trace/trace.zip",
+                "size": 956115,
+                "sha256": "5b3e3c16c07a3dabeea47c8933411c41c6a7eb4e32267416001bc0fd75883447"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expected false to be true",
+              "retryable": false,
+              "phase": "body",
+              "source": {
+                "file": "e2e/answer-first/reduced/interaction.e2e.ts",
+                "line": 8,
+                "column": 96
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:53124/e2e/answer-first.html",
+              "screen": "01a1623f-9311-7be7-90a4-2a67f6e5f3eb:artifact:0",
+              "screenshot": "01a1623f-9311-7be7-90a4-2a67f6e5f3eb:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a1623f-9311-7be7-90a4-2a67f6e5f3eb:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:14:56.306Z",
+                "durationMs": 11177,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/reduced/interaction.e2e.ts",
+                  "line": 7,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1623f-9311-7be7-90a4-2a67f6e5f3eb:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:15:07.484Z",
+                "durationMs": 95,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/reduced/interaction.e2e.ts",
+                  "line": 8,
+                  "column": 24
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 1008270,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

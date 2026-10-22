@@ -68,8 +68,10 @@ test('wire pages preserve more than 512 calls, attention and final answer withou
     availableAt: '', heartbeatAt: null, lastProgressAt: null, goalOutcome: null, error: null }, message: null, delivery: null } })
   projection.apply({ type: 'preview', preview: { kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'a', seq: 1, draft: '结论不可丢失。' } })
   for (let index = 0; index < 1100; index++) {
-    projection.apply({ type: 'event', event: start(String(index), index * 2 + 1) })
-    projection.apply({ type: 'event', event: { ...finish(String(index), index * 2 + 2), data: { toolCallId: `host:${index}`,
+    // This boundary case checks the complete bounded snapshot and every page;
+    // incremental stream rendering has its own v2 transport regression.
+    projection.advance({ type: 'event', event: start(String(index), index * 2 + 1) })
+    projection.advance({ type: 'event', event: { ...finish(String(index), index * 2 + 2), data: { toolCallId: `host:${index}`,
       result: { status: index % 10 === 0 ? 'failed' : 'completed' }, isError: index % 10 === 0 } } })
   }
   const snapshot = projection.snapshot.message

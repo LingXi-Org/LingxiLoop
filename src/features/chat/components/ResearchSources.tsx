@@ -6,6 +6,12 @@ import { LinkPreview } from '@/components/tool-ui/link-preview'
 import type { HarnessToolPart } from '../runtime/model'
 import type { ResearchSource } from '@/lib/researchSources'
 
+function sourceLocation(source: ResearchSource) {
+  return [source.sourceVersion ? `版本 ${source.sourceVersion}` : undefined,
+    source.page ? `第 ${source.page} 页` : source.pageNumbers?.length ? `第 ${source.pageNumbers.join('、')} 页` : undefined]
+    .filter(Boolean).join(' · ')
+}
+
 export function ResearchSources({ calls, lifecycle }: { calls: readonly HarnessToolPart[]; lifecycle: RunView['lifecycle'] }) {
   return <>{calls.filter(call => call.toolName === 'research.search').map(call => {
     const fields = toolDisplaySchema.shape.input.safeParse(call.args.fields)
@@ -15,13 +21,15 @@ export function ResearchSources({ calls, lifecycle }: { calls: readonly HarnessT
       if (!result.sources.length) return null
       const source = result.sources[0]!
       return <section key={call.toolCallId} aria-label="联网搜索来源" className="grid min-w-0 gap-2">
-        <WebSearch query={query ?? '公开资料'} results={result.sources.map(source => ({ title: source.title, domain: new URL(source.url).hostname, url: source.url }))} visibleResults={result.sources.length} searching={false} cycle={0} />
-        {result.sources.length === 1 ? <LinkPreview id={`${call.toolCallId}:source:0`}
+        <WebSearch query={query ?? '公开资料'} results={result.sources.map(source => ({ title: source.title, domain: new URL(source.url).hostname, url: source.url }))} visibleResults={0} summaryOnly searching={false} cycle={0} />
+        {result.sources.length === 1 ? <div className="grid min-w-0 gap-1"><LinkPreview id={`${call.toolCallId}:source:0`}
           href={source.url} title={source.title} description={source.snippet} domain={new URL(source.url).hostname.replace(/^www\./, '')}
           image={source.image} locale="zh-CN" className="min-w-0 max-w-none break-words" />
-          : result.sources.map((source, index) => <Citation key={source.url} id={`${call.toolCallId}:source:${index}`}
+          {sourceLocation(source) && <p className="text-xs text-muted-foreground">{sourceLocation(source)}</p>}</div>
+          : result.sources.map((source, index) => <div key={`${call.toolCallId}:source:${index}`} className="grid min-w-0 gap-1"><Citation id={`${call.toolCallId}:source:${index}`}
           href={source.url} title={source.title} snippet={source.snippet} locale="zh-CN" type="webpage"
-          className="min-w-0 max-w-none break-words" />)}
+          className="min-w-0 max-w-none break-words" />
+          {sourceLocation(source) && <p className="text-xs text-muted-foreground">{sourceLocation(source)}</p>}</div>)}
       </section>
     }
     if (!result && ['queued', 'leased'].includes(lifecycle ?? '')) return <WebSearch key={call.toolCallId} query={query ?? '公开资料'} results={[]} visibleResults={0} searching cycle={0} />

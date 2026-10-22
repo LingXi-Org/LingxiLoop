@@ -8,7 +8,8 @@ import { readResearch, searchResearch } from './index.js'
 import { researchUrl } from './address.js'
 
 export const researchSchemas = {
-  search: z.object({ query: z.string().trim().min(1).max(2000), limit: z.number().int().min(1).max(20).default(8) }).strict(),
+  search: z.object({ query: z.string().trim().min(1).max(2000), limit: z.number().int().min(1).max(20).default(8),
+    displayPurpose: z.enum(['process', 'result']).default('process').describe('Use result only when the user explicitly requests a source list as a deliverable. Use process for research that supports an answer.') }).strict(),
   read: z.object({ url: z.string().min(1).max(2048).refine(value => { try { researchUrl(value); return true } catch { return false } }, 'research URL is blocked or invalid') }).strict(),
 }
 async function authorize(context: ActionContext) {
@@ -17,7 +18,8 @@ async function authorize(context: ActionContext) {
 }
 export const researchTools: ToolDefinition[] = [
   nativeTool('research.search', researchSchemas.search, { description: 'Search public web sources using the free Chinese 360 search engine. Results include titles, original URLs and snippets; snippets are not full source text. Source links are displayed as cards.', effect: 'read', approval: false, authorize,
-    async execute(context, input) { return { ok: true, value: await searchResearch(input.query, input.limit, context.signal) } } }),
+    async execute(context, input) { return { ok: true, value: { ...await searchResearch(input.query, input.limit, context.signal),
+      presentation: { purpose: input.displayPurpose } } } } }),
   nativeTool('research.read', researchSchemas.read, { description: 'Read a public source with DNS, redirect, byte and time limits.', effect: 'read', approval: false, authorize,
     async execute(context, input) { return { ok: true, value: await readResearch(input.url, context.signal) } } }),
 ]

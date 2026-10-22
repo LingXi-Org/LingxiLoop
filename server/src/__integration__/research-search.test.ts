@@ -35,7 +35,7 @@ test('authorized research.search returns domestic-engine cards and denies unauth
   await tool.authorize(context, input)
   assert.deepEqual(await tool.execute(context, input), { ok: true, value: { provider: '360搜索', query: '教育', results: [
     { title: '教育资料', url: 'https://www.gov.cn/education', snippet: '公开的教育资料摘要', source: '360搜索' },
-  ] } })
+  ], presentation: { purpose: 'process' } } })
   await assert.rejects(tool.authorize({ ...context, work: { ...context.work, tenantId: 'foreign' } }, input))
   await pool.query(`UPDATE participants SET capabilities='[]'::jsonb WHERE id=$1`, [agentId])
   await assert.rejects(tool.authorize(context, input))

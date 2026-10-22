@@ -35,8 +35,10 @@ test('selected authorized skill enables substantive SSE before tools without pag
   await ensureSchemaOnce(); await resetAllTables(); const im = await installRecordingWukong()
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   // Match the scoped visualization fixture: unrelated optional product tools do
-  // not belong to this request. The 128k context limit is paired with an explicit
-  // 4096 output reservation for this small fixture, not the driver's default8192.
+  // not belong to this request. Use the same bounded synthetic 256k context for
+  // all modes. Formal 3.8.2 reaches 111921 input bytes in the direct path; with
+  // 4096 output + 512 protocol reservation that exceeds the 128k hard limit.
+  // This fixture checks delivery, not compaction or a real provider's capacity.
   await pool.query("UPDATE participants SET capabilities='[]'::jsonb WHERE company_id=$1 AND id=$2", [companyId, agentId])
   const principalId = 'test-owner'; await seedUserMembership(principalId, companyId)
   const api = await lingxiOSControl()
@@ -54,6 +56,7 @@ test('selected authorized skill enables substantive SSE before tools without pag
       const releasePrefix = deferred(), releaseFinal = deferred(), prefixVisible = deferred(), finalVisible = deferred(), providerFailed = deferred()
       const errors: unknown[] = [], frames: AgentRunSnapshot[] = [], actions: string[] = []
       let calls = 0, contextBytes = 0, firstSubstantiveMs: number | undefined, completionMs = 0, path = '', phase = 'initial'
+      let maxContextBytes = 0
       let ref: { actionKey: string; sha256: string; characters: number } | undefined
       let rangeText = '', firstRange = '', cursor = 0, rangeCalls = 0, oversizedTruncated = false, repeatedRangeEqual = false, eofEmpty = false, pastEofFailed = false
       let redundantLoadTruncated = false, referenceReadFailed = false
@@ -139,7 +142,8 @@ test('selected authorized skill enables substantive SSE before tools without pag
       const address = provider.address(); assert.ok(address && typeof address === 'object')
       const worker = createWorker({ controlPlane: api, policy: new ProductRuntimePolicy(), worker: { id: `skill-loading-${mode}`, shutdownGraceMs: 1000 },
         model: { id: 'gpt-4o-mini', apiKey: 'synthetic-local-provider', baseUrl: `http://127.0.0.1:${address.port}/v1`, requestTimeoutMs: 20000, firstByteTimeoutMs: 5000, streamIdleTimeoutMs: 15000, maxOutputTokens: 4096,
-          ...(mode === 'pagination-compatibility' ? { contextWindowTokens: 256000 } : {}) } })
+          countTokens(text) { const bytes = Buffer.byteLength(text); maxContextBytes = Math.max(maxContextBytes, bytes); return bytes },
+          contextWindowTokens: 256000 } })
       const cancellation = new AbortController(), signal = AbortSignal.any([cancellation.signal, AbortSignal.timeout(mode === 'pagination-compatibility' ? 60000 : 25000)])
       let running: Promise<boolean> | undefined, reading: Promise<void> | undefined
       try {
@@ -175,9 +179,10 @@ test('selected authorized skill enables substantive SSE before tools without pag
         if (mode === 'direct') { assert.equal(calls, 4); assert.equal(rangeCalls, 0); assert.equal(actions.filter(action => action === 'skills__load').length, 1) }
         if (mode === 'redundant-load-failure') { assert.equal(calls, 5); assert.equal(rangeCalls, 0); assert.ok(redundantLoadTruncated && referenceReadFailed) }
         if (mode === 'pagination-compatibility') assert.ok(oversizedTruncated && repeatedRangeEqual && eofEmpty && pastEofFailed)
+        assert.ok(maxContextBytes + 4096 + 512 <= Math.floor(256000 * 0.9), 'all model inputs retain the conservative byte-based context guard')
         metrics.push({ mode, modelCalls: calls, readCalls: actions.filter(action => ['skills__load', 'observations__read', 'visualize__read_reference'].includes(action)).length,
           observationRangeCalls: rangeCalls, firstRequestBytes: contextBytes, firstSubstantiveMs, completionMs, frames: frames.length,
-          contextWindowTokens: mode === 'pagination-compatibility' ? 256000 : 128000, maxOutputTokens: 4096,
+          contextWindowTokens: 256000, maxOutputTokens: 4096, maxContextBytes,
           redundantLoadTruncated, referenceReadFailed, oversizedTruncated, repeatedRangeEqual, eofEmpty, pastEofFailed,
           substantiveBeforeSkillLoad: true, substantiveBeforeSave: true, streamedBeforeFinalCompletion: true, delivered: true })
         await mkdir('artifacts/feedback272', { recursive: true })

@@ -4,8 +4,10 @@ export { productSkills } from './system-skills.js'
 import { presentationCard } from '../modules/presentations/agent-tools.js'
 import { activityTool } from './activity-tool.js'
 import { beginPublicToolActivity, finishPublicToolActivity } from './tool-activity.js'
+import { createMemorySummaryPresentation, type MemoryPresentationControl } from '../modules/memory/presentation.js'
 
-export function createProductHarness(productTools: ToolDefinition[]): HarnessProfile {
+export function createProductHarness(productTools: ToolDefinition[], memoryControl?: MemoryPresentationControl): HarnessProfile {
+  if (productTools.some(tool => tool.action === 'memory.summary') && !memoryControl) throw new Error('memory-summary requires its authorized reader')
   const implementations: ToolDefinition[] = [...productTools, activityTool]
   const tools: ToolDefinition[] = implementations.map(tool => ({ ...tool,
     async execute(context, input) {
@@ -25,6 +27,6 @@ export function createProductHarness(productTools: ToolDefinition[]): HarnessPro
     capabilities: [...new Set(tools.map(tool => tool.action.split('.')[0]))].map(id => ({ id,
       tools: tools.filter(tool => tool.action.startsWith(`${id}.`)),
       skills: productSkills.filter(skill => skill.actions[0].startsWith(`${id}.`)),
-      presentations: id === 'presentations' ? [presentationCard] : [],
+      presentations: id === 'presentations' ? [presentationCard] : id === 'memory' && memoryControl ? [createMemorySummaryPresentation(memoryControl)] : [],
     })) }
 }

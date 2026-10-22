@@ -119,7 +119,7 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
             causedBy: { resultId: context.commit.resultId }, replyTo: context.im.source },
           { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation' },scope)
           const source = (await database.query<{ source_client_msg_no: string | null }>('SELECT source_client_msg_no FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2', [work.id,work.tenantId])).rows[0]?.source_client_msg_no
-          for (const run of accepted.runs) await bindProductRun(database, run, conversationId, false, source ?? undefined)
+          for (const run of accepted.runs) await bindProductRun(database, run, conversationId, false, source ?? undefined, accepted.deduplicated ? undefined : 1)
           if (accepted.reason === 'mention_limit') {
             const id = `${clientNonce}-mention-limit`
             const notice = await sendSystemChannelMessage({ companyId: work.tenantId, actorId: work.agentId, channelId: conversationId,
