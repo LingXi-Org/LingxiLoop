@@ -233,6 +233,14 @@ A `complete` driver receipt establishes the ordered transaction's actual source/
 
 ## Recovery and permanent integration
 
+For the52-to53 and53-to54 profiles, the first post-stop barrier may observe natural
+lease expiry for at most150 seconds of waiting, with at most31 observations.
+Each observation rechecks the four original stopped identities and exact source
+DB provenance. Invalid visibility/counts, a prepared transaction or uncertain read
+fails immediately. No lease is edited, no mutation is retried, and two separate
+zero-lease observations are still required before migration. Later barriers remain
+immediate, so this wait does not mask a new lease appearing during rollout.
+
 There is no automatic rollback/resume command. Unknown submission, failed source readback or acknowledgement without exact config proof stops all further requests. Known failures may perform one fresh read-only state check to classify whether same-schema recovery remains reviewable; that classification never starts a service.
 
 For48→49, a known failed action with fresh exact48 inventory is classified as

@@ -86,6 +86,13 @@ test('stopped52 continuation never reads or replays after uncertain migration',a
  const f=await stoppedFixture({migrationUnknown:true});await assert.rejects(f.run())
  assert.equal(f.trace.at(-1),'migrate');assert.equal(f.events.at(-1).status,'uncertain')
 })
+test('presentation release waits for a naturally expiring post-stop lease before the two zero barriers',async()=>{
+ const f=fixture({presentation:true}),state=f.ops.state;let liveReads=0
+ f.ops.state=async()=>{const s=await state();if(f.trace.filter(x=>x.startsWith('stop:')).length===4&&!f.trace.includes('migrate')&&liveReads++<2)return {...s,liveWork:1,liveSession:1,liveAttempts:1};return s}
+ await f.run();assert.equal(f.events.filter(e=>e.status==='waiting-for-lease-expiry').length,2)
+ const migration=f.events.findIndex(e=>e.phase==='migration');assert.equal(f.events.slice(0,migration).filter(e=>e.status==='zero-leases').length,2)
+ assert.equal(f.trace.filter(x=>x==='migrate').length,1)
+})
 test('same formal package and all48 checksums required; native13 alone is insufficient',()=>{
  assert.doesNotThrow(()=>assertSameSchema(source,target))
  for(const key of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations']){

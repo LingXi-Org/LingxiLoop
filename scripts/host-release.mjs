@@ -10,6 +10,7 @@ import {validateMemoryBackupPlan} from './verify-memory-backup.mjs'
 import {READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,isPublicTextPlan,assertPublicTextPlan,assertReaderInventory,assertTraceInventory,assertConversationRepairInventory,assertRunPresentationInventory,assertPublicTextMetadata,assertAcceptedPublicTextSource,DEPLOYMENT_PATH} from './public-text-release.mjs'
 import {assertSeedDefinitions} from './public-text-seed.mjs'
 import {assertHostComposeChange} from './host-release-compose.mjs'
+import {waitForWorkerLeaseExpiry} from './host-release-lease-wait.mjs'
 
 export const APPS=['lingxiloop-app-a','lingxiloop-app-b'],CORE='lingxiloop-core-state'
 export const RELEASE_ARGS=['--no-deps','--pull','never']
@@ -161,8 +162,13 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
   const stopped=new Set(),deployed=new Map()
   let installed=plan.source
   for(const service of native||provenanceUpgrade?['worker','lingxiloop']:['worker'])for(const stack of APPS){await ops.assertIdle();await ops.stop(stack,service);stopped.add(stack+':'+service);assertInventory(await ops.inspect(),plan,original,stopped);await record({phase:'drain',status:'stopped',stack,service})}
-  const barrier=async()=>{assertInventory(await ops.inspect(),plan,original,stopped,deployed);const state=await ops.state();assertCompatibleState(state,installed);if(native&&installed===plan.source)assertBarrier(state);else assertWorkerBarrier(state);await record({phase:'drain',status:'zero-leases',state})}
-  await barrier();await ops.wait(2000);await barrier()
+  const barrier=async(waitForExpiry=false)=>{
+   const read=async()=>{assertInventory(await ops.inspect(),plan,original,stopped,deployed);const state=await ops.state();assertCompatibleState(state,installed);return state}
+   const state=waitForExpiry?await waitForWorkerLeaseExpiry({read,wait:ops.wait,onProgress:record}):await read()
+   if(native&&installed===plan.source)assertBarrier(state);else assertWorkerBarrier(state)
+   await record({phase:'drain',status:'zero-leases',state})
+  }
+  await barrier([CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format));await ops.wait(2000);await barrier()
   if(native){
    await ops.assertIdle();const receipt=await ops.backup();assertNativeBackupReceipt(plan,receipt)
    await record({phase:'backup',status:'verified',receipt})
