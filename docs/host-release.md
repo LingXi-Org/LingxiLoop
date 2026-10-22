@@ -1,5 +1,11 @@
 # Explicit host release
 
+For image-only releases on the already accepted formal3.8.2/native14/full54
+profile, use `product54-image-host-release/v1` and the preparation/recovery
+instructions in [Product54 image release](product54-image-release.md). This is
+separate from53-to54 and never invokes the migrator. Existing historical
+same-schema profiles below are unchanged.
+
 Use `scripts/host-release.mjs` only after the preceding production release has a sealed successful acceptance. This path keeps Komodo's native host-file source, leaves core-state and app B's gateway unchanged, and does not call the legacy rollout procedure. The normal trigger still rejects unexplained host/pinned state.
 
 The same-schema format supports native13/product48 or product49, and the explicit formal3.6.0/native14/product50 profile. Source and target must have identical runtime version, published package tarball/integrity, protocol, native schema/hash and every product migration name/checksum (all50 rows for native14). It never imports the application migrator or performs a backup. Both old Workers stop; Web A, Web B, Worker A, Worker B are the only deploy targets. Native14 same-schema releases retain the ordinary8 preparation plus26 release native actions, without seed or migration actions.

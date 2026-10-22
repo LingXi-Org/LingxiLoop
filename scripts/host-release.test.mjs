@@ -25,7 +25,7 @@ const targetRef={commit:next,branch:'release/target',sha256:'d'.repeat(64),autoP
 const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:hash,qualification:{commit:next,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/123'},stacks:[...apps,core].map((stack,i)=>({stack,server:i===1?'shanghai-b':'shanghai-a',source:sourceRef,target:i===2?sourceRef:targetRef,...(i!==2?{preparation:{commit:next,sha256:'e'.repeat(64)}}:{})}))})
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
- fault={...fault,repair:fault.repair||fault.presentation,trace:fault.trace||fault.repair||fault.presentation}
+ fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
  let releasePlan=sealHostPlan({...plan,...(fault.native14?{format:'native-schema-host-release/v1',backup:nativeBackup()} : fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
   source:{...source,...(fault.sameNative14?formal50:fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.sameNative14||fault.native14?formal50:fault.upgrade||fault.product49?formal49:formal)}})
  if(fault.reader||fault.producer||fault.trace){
@@ -38,6 +38,7 @@ function fixture(fault={}){
   if(fault.presentation){Object.assign(source,{runtime:target.runtime,productVersion:target.productVersion,tarball:target.tarball,migrations:structuredClone(target.migrations)});Object.assign(target,{productVersion:54,migrations:[...structuredClone(source.migrations),presentationMigration]});}
   releasePlan=sealHostPlan({...releasePlan,format:fault.presentation?presentationFormat:fault.repair?CONVERSATION_FORMAT:fault.trace?traceFormat:fault.reader?READER_FORMAT:PRODUCER_FORMAT,source,target,imageConfigs,publicText:{source:fault.reader?null:{reader:2,producer:fault.trace?'purpose-json-v1':'disabled'},target:{reader:2,producer:fault.reader?'disabled':'purpose-json-v1'},sourceConfigurationSha256:fault.reader?null:hash,targetConfigurationSha256:hash,sourceContainers:fault.producer||fault.trace?['lingxiloop-app-a','lingxiloop-app-b'].flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,service,id:String(i*2+j+1).repeat(64),imageId:'sha256:'+'c'.repeat(64)}))):null}});
  }
+ if(fault.image54){const p=JSON.parse(JSON.stringify(releasePlan));p.format='product54-image-host-release/v1';for(const k of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations'])p.source[k]=structuredClone(p.target[k]);for(const row of p.stacks.slice(0,2)){row.source.autoPull=false;row.source.extraArgs=['--no-deps','--pull','never']}releasePlan=sealHostPlan(p)}
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
  let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0,migrated=false
  const ops={
@@ -92,6 +93,40 @@ test('presentation release waits for a naturally expiring post-stop lease before
  await f.run();assert.equal(f.events.filter(e=>e.status==='waiting-for-lease-expiry').length,2)
  const migration=f.events.findIndex(e=>e.phase==='migration');assert.equal(f.events.slice(0,migration).filter(e=>e.status==='zero-leases').length,2)
  assert.equal(f.trace.filter(x=>x==='migrate').length,1)
+})
+test('product54 image-only profile drains all writers, waits naturally, never migrates, and deploys Web before Worker',async()=>{
+ const f=fixture({image54:true}),read=f.ops.state;let leases=0
+ f.ops.state=async()=>{const s=await read();if(f.trace.filter(x=>x.startsWith('stop:')).length===4&&leases++<2)return {...s,liveWork:1};return s}
+ const result=await f.run();assert.equal(result.state.product,54);assert.equal(result.runTrace,1)
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)))
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)))
+ assert.equal(f.events.filter(e=>e.status==='waiting-for-lease-expiry').length,2)
+ assert.equal(f.trace.some(x=>['migrate','backup','seed'].includes(x)),false)
+})
+test('product54 image-only rejects changed package, full inventory, reader, source identity and policy',()=>{
+ const p=fixture({image54:true}).plan
+ assert.doesNotThrow(()=>validateHostPlanShape(p))
+ for(const change of [q=>q.source.productVersion=53,q=>q.target.productVersion=55,q=>q.target.runtime='3.8.3',q=>q.target.schema=13,
+  q=>q.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64'),q=>q.target.tarball+='changed',q=>q.target.migrations[0].checksum='0'.repeat(64),
+  q=>q.target.migrations[53].checksum='0'.repeat(64),q=>q.publicText.source.producer='disabled',q=>q.publicText.target.producer='disabled',
+  q=>q.publicText.targetConfigurationSha256='0'.repeat(64),q=>q.publicText.sourceContainers.pop(),q=>q.stacks[0].source.autoPull=true,
+  q=>q.format='same-schema-host-release/v1']){
+  const bad=structuredClone(p);change(bad);assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)))
+ }
+})
+test('product54 refuses changed accepted containers, drift, live leases and uncertain actions',async()=>{
+ for(const fault of ['identity','schema','leases','metadata','unknown']){
+  const f=fixture({image54:true,metadata:fault==='metadata',stopUnknown:fault==='unknown'})
+  if(fault==='identity'){const read=f.ops.inspect;f.ops.inspect=async()=>{const rows=await read();rows[0].id='e'.repeat(64);return rows}}
+  if(fault==='schema'||fault==='leases'){const read=f.ops.state;f.ops.state=async()=>({...await read(),...(fault==='schema'?{product:53}:{liveWork:1})})}
+  await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);assert.equal(f.trace.includes('migrate'),false)
+ }
+})
+test('product54 health observation identity must survive final deployment registration',async()=>{
+ const f=fixture({image54:true}),inspect=f.ops.inspect;let replaced=false
+ f.ops.verifyHealthy=async()=>{replaced=true}
+ f.ops.inspect=async()=>{const rows=await inspect();if(replaced)for(const r of rows)if(r.source===f.plan.target.sha&&r.stack===apps[0]&&r.service==='lingxiloop')r.id='9'.repeat(64);return rows}
+ await assert.rejects(f.run());assert.equal(f.trace.filter(x=>x.startsWith('deploy:')).length,1)
 })
 test('same formal package and all48 checksums required; native13 alone is insufficient',()=>{
  assert.doesNotThrow(()=>assertSameSchema(source,target))

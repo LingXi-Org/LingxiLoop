@@ -1,16 +1,17 @@
 const presentationFormat='run-presentation-contract-host-release/v1',presentationMigration={version:54,name:'run_presentation_contract',checksum:'f58aafed796cabcb481bd381b4df298024d5effd0a576dae5e9638430aed38e2'};
 const traceFormat='run-trace-provenance-host-release/v1',traceMigration={version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'};
 import test from 'node:test'
+import {assertImageFailure,restoreImageSource} from './host-release-image-recovery.mjs'
 import {READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION53,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
 import {createHostReleaseOperations} from './host-release-komodo.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,hash,sealHostPlan,runHostRelease,runImagePreparation} from './host-release.mjs'
 function fixture(fault={}){
- fault={...fault,repair:fault.repair||fault.presentation,trace:fault.trace||fault.repair||fault.presentation}
+ fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
  const a='a'.repeat(40),b='b'.repeat(40),h='c'.repeat(64),d='sha256:'+h
  const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:h,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations:Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(i+1),checksum:h}))}
  const image={indexDigest:d,configDigest:'sha256:'+'d'.repeat(64),manifestDigest:'sha256:'+'e'.repeat(64),diffIds:[d],auditSha256:h}
- const source={sha:a,...formal,image},target={sha:b,...formal,image},files=new Map(),configs=new Map(),actualFiles=new Map(),events=[],calls=[]
+ const source={sha:a,...formal,image},target={sha:b,...formal,image},files=new Map(),configs=new Map(),actualFiles=new Map(),events=[],calls=[],updates=new Map()
  if(fault.native14||fault.sameNative14||fault.reader||fault.producer||fault.trace){
   const m49={version:49,name:'conversation_list_removals',checksum:'d7d52a20d4b093910083524ae324d3e865012d791c7eecd2340d82b51528e15d'}
   Object.assign(source,{productVersion:49,migrations:[...formal.migrations,m49]});Object.assign(target,{runtime:'3.6.0',schema:14,productVersion:50,tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.6.0/fixture',migrations:[...source.migrations,{version:50,name:'native_skill_delivery',checksum:h}]})
@@ -28,7 +29,7 @@ function fixture(fault={}){
   if(fault.presentation){Object.assign(source,{runtime:target.runtime,productVersion:target.productVersion,tarball:target.tarball,migrations:structuredClone(target.migrations)});Object.assign(target,{productVersion:54,migrations:[...structuredClone(source.migrations),presentationMigration]});}
   source.image={...image,configDigest:'sha256:'+hash(imageConfigs.source)};target.image={...image,configDigest:'sha256:'+hash(imageConfigs.target)};
  }
- const plan=sealHostPlan({format:fault.presentation?presentationFormat:fault.repair?CONVERSATION_FORMAT:fault.trace?traceFormat:fault.reader?READER_FORMAT:fault.producer?PRODUCER_FORMAT:fault.native14?'native-schema-host-release/v1':fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',...(fault.native14?{backup}:{}),...((fault.reader||fault.producer||fault.trace)?{publicText,imageConfigs}:{}),createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
+ let plan=sealHostPlan({format:fault.presentation?presentationFormat:fault.repair?CONVERSATION_FORMAT:fault.trace?traceFormat:fault.reader?READER_FORMAT:fault.producer?PRODUCER_FORMAT:fault.native14?'native-schema-host-release/v1':fault.upgrade?'product-schema-host-release/v1':'same-schema-host-release/v1',...(fault.native14?{backup}:{}),...((fault.reader||fault.producer||fault.trace)?{publicText,imageConfigs}:{}),createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:h,qualification:{commit:b,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/1'},stacks:[...APPS,CORE].map((stack,i)=>{
   const source='public source '+stack,target=i===2?source:'public target '+stack,preparation='public pull '+stack
   files.set(stack,{source,target,preparation});actualFiles.set(stack,source)
   const s={commit:a,branch:'release/source',sha256:hash(source),autoPull:true,extraArgs:[]}
@@ -41,6 +42,7 @@ function fixture(fault={}){
   auto_pull:true,run_build:false,destroy_before_deploy:false,project_name:'',compose_cmd_wrapper:'',extra_args:[],build_extra_args:[],pre_deploy:{path:'',command:'',shell_mode:false},post_deploy:{path:'',command:'',shell_mode:false},
   ignore_services:row.stack===CORE?[]:['db-migrate'],environment:'private fixture never persist',
  }})
+ if(fault.image54){const p=structuredClone(plan);p.format='product54-image-host-release/v1';for(const k of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations'])p.source[k]=structuredClone(p.target[k]);for(const row of p.stacks.slice(0,2)){row.source.autoPull=false;row.source.extraArgs=RELEASE_ARGS;const c=configs.get(row.stack).config;c.auto_pull=false;c.extra_args=RELEASE_ARGS}plan=sealHostPlan(p);Object.assign(source,p.source)}
  const containers=APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({
   stack,service,Id:String(i*2+j+1).repeat(64),Image:'sha256:'+(fault.sourceImageMismatch?'0':'f').repeat(64),
   Config:{Image:IMAGE+a,Env:['LINGXILOOP_COMMIT_SHA='+a,...((fault.reader||fault.producer||fault.trace)?['NODE_VERSION=22.23.4']:[]),'NODE_ENV=production','SECRET=private fixture never persist'],User:'node',Cmd:['npm','run',service==='worker'?'worker:start':'server:start']},
@@ -52,6 +54,7 @@ function fixture(fault={}){
  const t={
   async read(op,p){
    calls.push({op,...p})
+   if(op==='GetUpdate')return structuredClone(updates.get(p.id))
    if(op==='GetProcedureActionState')return {running:false}
    if(op==='ListServers')return ['manager','shanghai-a','shanghai-b'].map((name,i)=>({name,id:(i===2?'b':'a').repeat(24),info:{state:fault.hostDown&&name==='shanghai-b'?'Offline':'Ok'}}))
    if(op==='GetStackActionState')return Object.fromEntries(['pulling','deploying','starting','restarting','pausing','unpausing','stopping','destroying'].map(k=>[k,false]))
@@ -78,20 +81,101 @@ function fixture(fault={}){
      return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_MIGRATED='+JSON.stringify({sha:b,schema:target.schema,product:target.productVersion})}]}
     }
     if(fault.native14)state.otherClients=containers.every(c=>!c.State.Running)?0:4;
-    const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:{...target,...((fault.reader||fault.producer||fault.trace)?{publicText:2,deployment:publicText.target,configurationSha256:h,modelOptions:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:fault.traceMetadataWrong?0:1}:{})}:{})}
+    const candidate=actualFiles.get(p.stack)===files.get(p.stack)?.source?source:target
+    const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:{...candidate,...((fault.reader||fault.producer||fault.trace)?{publicText:2,deployment:publicText.target,configurationSha256:h,modelOptions:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:fault.traceMetadataWrong?0:1}:{})}:{})}
     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_'+marker+'='+JSON.stringify(value)}]}
    }
    if(op==='PullStack'){assert.deepEqual(p.services,['db-migrate']);return}
    const c=containers.find(c=>c.stack===p.stack&&c.service===p.services[0])
-   if(op==='StopStack'){c.State.Running=false;c.State.Pid=0;return}
+   if(op==='StopStack'){c.State.Running=false;c.State.Restarting=false;c.State.Pid=0;return}
    assert.equal(op,'DeployStack');assert.deepEqual(configs.get(p.stack).config.extra_args,RELEASE_ARGS);assert.equal(configs.get(p.stack).config.auto_pull,false)
-   c.Id='e'+c.Id.slice(1);c.Config.Image=IMAGE+b;c.Config.Env[0]='LINGXILOOP_COMMIT_SHA='+b;if(fault.reader||fault.producer||fault.trace)c.Config.Env=c.Config.Env.map(x=>x.startsWith('NODE_VERSION=')?'NODE_VERSION=22.23.5':x);c.State.Running=true;c.State.Pid=2
+   const oldSource=actualFiles.get(p.stack)===files.get(p.stack).source;c.Id=(oldSource?'e':'f')+c.Id.slice(1);c.Config.Image=IMAGE+(oldSource?a:b);c.Config.Env=c.Config.Env.map(x=>x.startsWith('LINGXILOOP_COMMIT_SHA=')?'LINGXILOOP_COMMIT_SHA='+(oldSource?a:b):x.startsWith('NODE_VERSION=')?'NODE_VERSION='+(oldSource?'22.23.4':'22.23.5'):x);c.State.Running=true;c.State.Pid=2;c.RestartCount=0;c.State.Restarting=false;c.State.Health.Status='healthy'
    if(fault.containerImage)c.Image='sha256:'+'0'.repeat(64)
   },
  }
- const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
- return {plan,ops,calls,events,configs,actualFiles,files,run:()=>runHostRelease({plan,ops,onProgress})}
+ if(fault.image54){
+  let seq=0
+  for(const name of ['execute','writeHostFile']){
+   const perform=t[name].bind(t)
+   t[name]=async(...args)=>{
+    const op=name==='execute'?args[0]:'WriteStackFileContents',stack=name==='execute'?args[1].stack:args[0],updateId=(++seq).toString(16).padStart(24,'0')
+    events.push({phase:'komodo',status:'submitting',operation:op,stack},{phase:'komodo',status:'pending',operation:op,stack,updateId})
+    const operation={StopStack:'StopStackService',DeployStack:'DeployStackService',WriteStackFileContents:'WriteStackContents'}[op]??op
+    try{const result=await perform(...args);updates.set(updateId,{_id:{$oid:updateId},operation,target:{type:'Stack',id:configs.get(stack)._id.$oid},status:'Complete',success:true});events.push({phase:'komodo',status:'complete',operation:op,stack,updateId});return result}
+    catch(error){updates.set(updateId,{_id:{$oid:updateId},operation,target:{type:'Stack',id:configs.get(stack)._id.$oid},status:'Complete',success:false});events.push({phase:'komodo',status:'failed',operation:op,stack,updateId});throw error}
+   }
+  }
+ }
+ const sourceConfigurationProof=[...configs].map(([stack,d])=>({stack,id:d._id.$oid,configSha256:hash(JSON.stringify(d.config))}))
+ const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,sourceConfigurationProof,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
+ return {plan,ops,calls,events,configs,actualFiles,files,containers,transport:t,sourceConfigurationProof,updates,run:()=>runHostRelease({plan,ops,onProgress})}
 }
+async function failedImageRelease(partial=false){
+ const f=fixture({image54:true})
+ if(partial)f.ops.verifyHealthy=async()=>{throw Error('synthetic target readiness failure')}
+ else {const state=f.ops.state;f.ops.state=async()=>{const s=await state();return f.containers.every(c=>!c.State.Running)?{...s,liveWork:1}:s}}
+ await assert.rejects(f.run())
+ const receipt={mode:f.plan.format,planHash:f.plan.planHash,complete:false,events:structuredClone(f.events)}
+ const restore=()=>restoreImageSource({plan:f.plan,receipt,ops:createHostReleaseOperations({plan:f.plan,files:f.files,sourceConfigurationProof:f.sourceConfigurationProof,transport:f.transport,wait:async()=>{}})})
+ return {...f,receipt,restore}
+}
+for(const partial of [false,true])test(`same54 source restoration handles ${partial?'partial target rollout':'all-stopped lease expiry'} with no migration or repeated stop`,async()=>{
+ const f=await failedImageRelease(partial),offset=f.calls.length
+ if(partial){const target=f.containers.find(c=>c.Config.Image===IMAGE+f.plan.target.sha);target.RestartCount=2;target.State.Restarting=true;target.State.Health.Status='unhealthy'}
+ const result=await f.restore();assert.equal(result.status,'complete');assert.equal(result.restoredSource,f.plan.source.sha)
+ const calls=f.calls.slice(offset)
+ assert.equal(calls.filter(c=>c.op==='StopStack').length,partial?1:0)
+ assert.deepEqual(calls.filter(c=>c.op==='DeployStack').map(c=>c.stack+':'+c.services[0]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>a+':'+s)))
+ assert.equal(calls.some(c=>c.op==='PullStack'||c.op==='SnapshotRestore'||c.op==='RunStackService'&&JSON.stringify(c.command).includes('migrate-bin')),false)
+ assert.ok(APPS.every(s=>f.actualFiles.get(s)===f.files.get(s).source&&f.configs.get(s).config.commit===f.plan.stacks[0].source.commit))
+ assert.ok(result.containers.every(c=>c.source===f.plan.source.sha&&c.healthy))
+ const after=f.calls.length;await assert.rejects(f.restore());assert.equal(f.calls.slice(after).some(c=>['StopStack','DeployStack','WriteStackFileContents','UpdateStack'].includes(c.op)),false)
+})
+test('source restoration refuses changed full config, native identity/status, or policy before any writes',async()=>{
+ for(const fault of ['config','operation','target','status','success','policy','container']){
+  const f=await failedImageRelease(true)
+  if(fault==='config')f.configs.get(APPS[0]).config.environment='changed'
+  else if(fault==='policy')f.containers[0].HostConfig.Privileged=true
+  else if(fault==='container')f.containers[1].Id='d'.repeat(64)
+  else {const u=f.updates.values().next().value;if(fault==='operation')u.operation='Wrong';if(fault==='target')u.target.id='d'.repeat(24);if(fault==='status')u.status='InProgress';if(fault==='success')u.success=false}
+  const offset=f.calls.length;await assert.rejects(f.restore());assert.equal(f.calls.slice(offset).some(c=>['StopStack','DeployStack','WriteStackFileContents','UpdateStack'].includes(c.op)),false)
+ }
+})
+test('same54 accepted source config proof is required before staging',async()=>{
+ const f=fixture({image54:true}),ops=createHostReleaseOperations({plan:f.plan,files:f.files,transport:f.transport})
+ await assert.rejects(runHostRelease({plan:f.plan,ops}));assert.equal(f.calls.some(c=>['StopStack','DeployStack','WriteStackFileContents','UpdateStack'].includes(c.op)),false)
+})
+test('same54 health wait rejects another container with the same audited image',async()=>{
+ const f=fixture({image54:true}),read=f.transport.read
+ f.transport.read=async(op,p)=>{
+  if(op==='ListStackServices'&&f.events.some(e=>e.phase==='rollout'&&e.status==='observed')){
+   const c=f.containers.find(c=>c.stack===APPS[0]&&c.service==='lingxiloop'&&c.Config.Image===IMAGE+f.plan.target.sha)
+   if(c)c.Id='9'.repeat(64)
+  }
+  return read(op,p)
+ }
+ await assert.rejects(f.run());assert.equal(f.calls.filter(c=>c.op==='DeployStack').length,1)
+})
+test('same54 source restoration also binds the observed new source id through health wait',async()=>{
+ const f=await failedImageRelease(true),ops=createHostReleaseOperations({plan:f.plan,files:f.files,sourceConfigurationProof:f.sourceConfigurationProof,transport:f.transport,wait:async()=>{}}),verify=ops.verifyHealthy
+ ops.verifyHealthy=async(stack,service,identity)=>{if(stack===APPS[0]&&service==='lingxiloop'){const c=f.containers.find(c=>c.stack===stack&&c.service===service);c.Id='9'.repeat(64)}return verify(stack,service,identity)}
+ await assert.rejects(restoreImageSource({plan:f.plan,receipt:f.receipt,ops}))
+})
+test('same54 source restoration refuses a replacement after health and before final registration',async()=>{
+ const f=await failedImageRelease(true),ops=createHostReleaseOperations({plan:f.plan,files:f.files,sourceConfigurationProof:f.sourceConfigurationProof,transport:f.transport,wait:async()=>{}}),verify=ops.verifyHealthy
+ ops.verifyHealthy=async(stack,service,identity)=>{await verify(stack,service,identity);if(stack===APPS[0]&&service==='lingxiloop')f.containers.find(c=>c.stack===stack&&c.service===service).Id='9'.repeat(64)}
+ await assert.rejects(restoreImageSource({plan:f.plan,receipt:f.receipt,ops}))
+})
+test('product54 image-only adapter forbids migration and backup, preserves complete config and reader contracts',async()=>{
+ const f=fixture({image54:true}),original=structuredClone(f.configs)
+ await f.run()
+ assert.equal(f.calls.some(c=>c.op==='SnapshotRestore'||c.op==='RunStackService'&&(JSON.stringify(c.command??[]).includes('migrate-bin')||Object.hasOwn(c,'env'))),false)
+ assert.deepEqual(f.calls.filter(c=>c.op==='StopStack').map(c=>c.stack+':'+c.services[0]),['worker','lingxiloop'].flatMap(s=>APPS.map(a=>a+':'+s)))
+ assert.deepEqual(f.calls.filter(c=>c.op==='DeployStack').map(c=>c.stack+':'+c.services[0]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>a+':'+s)))
+ const before=f.calls.length;await assert.rejects(f.ops.migrate());await assert.rejects(f.ops.backup());assert.equal(f.calls.length,before)
+ assert.ok(APPS.every(s=>f.configs.get(s).config.environment===original.get(s).config.environment))
+ assert.equal(JSON.stringify(f.events).includes('private fixture'),false)
+})
 test('real adapter/engine contract stages public host files, preserves core and full secret config, no pull/migration',async()=>{
  const f=fixture();await f.run()
  assert.deepEqual(f.calls.filter(c=>c.op==='WriteStackFileContents').map(c=>c.stack),APPS)
