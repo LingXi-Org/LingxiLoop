@@ -17,6 +17,9 @@ and production manifest/lock bytes remain those of main58c1a214 including PR315.
 - Substitute only the separately locked official `e2e` and `@e2e-dev/web` tools.
   All127 application dependencies must still match the production lock, resolve
   within this worktree and remain unchanged before and after browser execution.
+- Use an empty cache directory owned by this worktree for the corrective Vite
+  bundle. Do not let an unchanged root lock hash justify reusing an optimizer
+  cache that was previously populated under a different installed graph.
 - Rerun only the owning25 official browser cases and8 projection checks. A
   fixture or product failure must be reported on this qualified dependency graph;
   do not reuse a previous green report to fill a new failure.

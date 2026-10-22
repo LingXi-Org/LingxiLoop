@@ -20,5 +20,7 @@
   "intentionalToolOverrides": [
     "e2e@0.21.2",
     "@e2e-dev/web@0.15.2"
-  ]
+  ],
+  "freshViteCacheForAcceptance": "/workspace/review-pr315/.e2e/exact-lock-vite-cache",
+  "freshViteCacheAbsentBeforeRun": true
 }
