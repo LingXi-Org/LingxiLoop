@@ -25,12 +25,12 @@ export const forumApi = {
     http(`${itemPath(courseId,item)}/comments/${encodeURIComponent(commentId)}`, {method:'PUT',body:JSON.stringify(input)}),
   deleteComment: (courseId: string, item: ForumItem, commentId: string) => http(`${itemPath(courseId,item)}/comments/${encodeURIComponent(commentId)}`, {method:'DELETE'}),
   react: (courseId: string, item: ForumItem, emoji: string, active: boolean) => http<ForumItem>(`${itemPath(courseId,item)}/reactions`, {method:'PUT',body:JSON.stringify({emoji,active})}),
-  submissions: (courseId: string, assignmentId: string, offset = 0) =>
-    http<ForumPage<SubmissionVersion>>(`${base(courseId)}/forum/post/${encodeURIComponent(assignmentId)}/submissions?offset=${offset}`),
+  submissions: (courseId: string, assignmentId: string, offset = 0, signal?: AbortSignal) =>
+    http<ForumPage<SubmissionVersion>>(`${base(courseId)}/forum/post/${encodeURIComponent(assignmentId)}/submissions?offset=${offset}`, { signal }),
   students:(courseId:string,id:string,offset=0,search='')=>http<ForumPage<SubmissionStudent>>(`${base(courseId)}/forum/post/${encodeURIComponent(id)}/students?${new URLSearchParams({offset:String(offset),search})}`),
   studentVersions:(courseId:string,id:string,learnerId:string,offset=0)=>http<ForumPage<SubmissionVersion>>(`${base(courseId)}/forum/post/${encodeURIComponent(id)}/students/${encodeURIComponent(learnerId)}/submissions?offset=${offset}`),
-  conversations:(courseId:string,offset=0)=>http<ForumPage<{channelId:string;title:string}>>(`${base(courseId)}/submission-conversations?offset=${offset}`),
-  conversation:(courseId:string,channelId:string,offset=0)=>http<{messages:EvidenceMessage[];nextBefore:number|null}>(`${base(courseId)}/submission-conversations/${encodeURIComponent(channelId)}?offset=${offset}`),
+  conversations:(courseId:string,offset=0,signal?:AbortSignal)=>http<ForumPage<{channelId:string;title:string}>>(`${base(courseId)}/submission-conversations?offset=${offset}`, { signal }),
+  conversation:(courseId:string,channelId:string,offset=0,signal?:AbortSignal)=>http<{messages:EvidenceMessage[];nextBefore:number|null}>(`${base(courseId)}/submission-conversations/${encodeURIComponent(channelId)}?offset=${offset}`, { signal }),
   submit: (courseId: string, assignmentId: string, input: { answer: string; editorDocument?: ContentDocument | null; links: string[]; attachments: ForumAttachment[]; idempotencyKey: string; conversationReferences:ConversationReference[] }) =>
     http<{ attemptId: string }>(`${base(courseId)}/forum/post/${encodeURIComponent(assignmentId)}/submit`, { method: 'POST',body: JSON.stringify(input) }),
 }

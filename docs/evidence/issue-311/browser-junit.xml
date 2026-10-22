@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="12" failures="0" errors="0" skipped="0" time="26.434">
+  <testsuite name="e2e/forum-submission/submission.e2e.ts" tests="12" failures="0" errors="0" skipped="0" time="26.434">
+    <testcase name="missing reference explains the blocker without submitting [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="4.577"/>
+    <testcase name="history loading does not disable editing or valid submission [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.310"/>
+    <testcase name="rooms-retry recovers without losing the answer [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.114"/>
+    <testcase name="messages-retry recovers without losing the answer [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.239"/>
+    <testcase name="submit failure retains content, attachment, reference and retry key [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.625"/>
+    <testcase name="upload retry keeps the draft [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.727"/>
+    <testcase name="late room list from another course is ignored [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.233"/>
+    <testcase name="empty offers refresh after a real completed turn [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.183"/>
+    <testcase name="incomplete offers refresh after a real completed turn [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.335"/>
+    <testcase name="fixed homework conversation still loads without the course room list [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.186"/>
+    <testcase name="pending upload explains why submission is disabled [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="1.843"/>
+    <testcase name="entering the course conversation and returning retains the draft [desktop]" classname="e2e/forum-submission/submission.e2e.ts" time="2.062"/>
+  </testsuite>
+</testsuites>

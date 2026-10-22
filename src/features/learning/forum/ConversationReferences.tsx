@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { SelectField } from '@/components/ui/select-field'
 import { userFacingError } from '@/lib/userFacingError'
@@ -6,26 +6,42 @@ import { forumApi } from './api'
 import type { ConversationEvidence, ConversationReference, EvidenceMessage } from './contracts'
 import { MemoContent } from './memos/MemoContent'
 
-export function ConversationReferencePicker({courseId,channelId,value,onChange,disabled}:{courseId:string;channelId?:string|null;value:ConversationReference[];onChange(value:ConversationReference[]):void;disabled:boolean}) {
+type PickerProps = {courseId:string;channelId?:string|null;value:ConversationReference[];onChange(value:ConversationReference[]):void;disabled:boolean}
+export function ConversationReferencePicker(props:PickerProps) {
+  return <ReferencePicker key={`${props.courseId}:${props.channelId??''}`} {...props}/>
+}
+
+function ReferencePicker({courseId,channelId,value,onChange,disabled}:PickerProps) {
   const [rooms,setRooms]=useState<{channelId:string;title:string}[]>([]),[nextRoom,setNextRoom]=useState<number|null>(null)
   const [selected,setSelected]=useState(channelId??''),[messages,setMessages]=useState<EvidenceMessage[]>([]),[before,setBefore]=useState<number|null>(null)
-  const [busy,setBusy]=useState(false),[error,setError]=useState('')
-  const epoch=useRef(0)
-  const loadRooms=async(offset=0)=>{
-    try {const page=await forumApi.conversations(courseId,offset);setRooms(old=>offset?[...old,...page.items]:page.items);setNextRoom(page.nextOffset)}
-    catch(reason){setError(userFacingError(reason,'对话列表加载失败。'))}
-  }
-  useEffect(()=>{void loadRooms()},[courseId])
-  useEffect(()=>{if(channelId)setSelected(channelId)},[channelId])
-  useEffect(()=>{
-    const request=++epoch.current
-    setMessages([]);setBefore(null);setError('')
+  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[retryBefore,setRetryBefore]=useState(0)
+  const [roomsBusy,setRoomsBusy]=useState(false),[roomsError,setRoomsError]=useState(''),[retryOffset,setRetryOffset]=useState(0)
+  const roomRequest=useRef<AbortController|null>(null),messageRequest=useRef<AbortController|null>(null)
+  const loadRooms=useCallback(async(offset=0)=>{
+    roomRequest.current?.abort()
+    const request=new AbortController();roomRequest.current=request
+    setRoomsBusy(true);setRoomsError('');setRetryOffset(offset)
+    try {
+      const page=await forumApi.conversations(courseId,offset,AbortSignal.any([request.signal,AbortSignal.timeout(30_000)]))
+      if(!request.signal.aborted){setRooms(old=>offset?[...old,...page.items]:page.items);setNextRoom(page.nextOffset)}
+    } catch(reason){if(!request.signal.aborted)setRoomsError(userFacingError(reason,'对话列表加载失败，请重试。'))}
+    finally{if(!request.signal.aborted)setRoomsBusy(false)}
+  },[courseId])
+  useEffect(()=>{if(!channelId)void loadRooms();return()=>roomRequest.current?.abort()},[channelId,loadRooms])
+  const loadMessages=useCallback(async(offset=0)=>{
+    messageRequest.current?.abort()
+    const request=new AbortController();messageRequest.current=request
+    setBusy(false);setError('');setRetryBefore(offset)
+    if(!offset){setMessages([]);setBefore(null)}
     if(!selected)return
     setBusy(true)
-    void forumApi.conversation(courseId,selected).then(page=>{if(request===epoch.current){setMessages(page.messages);setBefore(page.nextBefore)}})
-      .catch(reason=>{if(request===epoch.current)setError(userFacingError(reason,'对话读取失败。'))}).finally(()=>{if(request===epoch.current)setBusy(false)})
-    return ()=>{epoch.current++}
+    try {
+      const page=await forumApi.conversation(courseId,selected,offset,AbortSignal.any([request.signal,AbortSignal.timeout(30_000)]))
+      if(!request.signal.aborted){setMessages(old=>offset?[...page.messages,...old]:page.messages);setBefore(page.nextBefore)}
+    } catch(reason){if(!request.signal.aborted)setError(userFacingError(reason,'对话读取失败，请重试。'))}
+    finally{if(!request.signal.aborted)setBusy(false)}
   },[courseId,selected])
+  useEffect(()=>{void loadMessages();return()=>messageRequest.current?.abort()},[loadMessages])
   const turns=messages.flatMap((message,index)=>{
     if(message.role!=='user')return []
     let end=index+1
@@ -35,10 +51,15 @@ export function ConversationReferencePicker({courseId,channelId,value,onChange,d
   return <fieldset disabled={disabled} className="min-w-0 space-y-3">
     <legend className="text-sm font-medium">引用学习对话（必选）</legend>
     <p className="text-xs text-muted-foreground">选择与这份作业相关的本人作答和助手回复。所选文字片段将随本次提交提供给课程教师查看，之后的对话不会共享。</p>
-    {!channelId && <SelectField ariaLabel="选择学习对话" value={selected} onValueChange={next=>{setSelected(next);onChange([])}} options={[{value:'',label:'选择本人的课程对话'},...rooms.map(room=>({value:room.channelId,label:room.title}))]}/>}
-    {nextRoom!==null && !channelId && <Button type="button" variant="link" onClick={()=>void loadRooms(nextRoom)}>更多对话</Button>}
+    {!channelId && <SelectField ariaLabel="选择学习对话" value={selected} disabled={disabled} onValueChange={next=>{setSelected(next);onChange([])}} options={[{value:'',label:'选择本人的课程对话'},...rooms.map(room=>({value:room.channelId,label:room.title}))]}/>}
+    {!channelId && <Button type="button" variant="link" disabled={roomsBusy} onClick={()=>void loadRooms()}>刷新对话列表</Button>}
+    {roomsBusy && <p role="status" className="text-sm">正在加载对话列表…</p>}
+    {roomsError && <p role="alert" className="text-sm text-destructive">{roomsError}<Button type="button" variant="link" disabled={roomsBusy} onClick={()=>void loadRooms(retryOffset)}>重试对话列表</Button></p>}
+    {nextRoom!==null && !channelId && <Button type="button" variant="link" disabled={roomsBusy} onClick={()=>void loadRooms(nextRoom)}>更多对话</Button>}
     {busy && <p role="status" className="text-sm">正在读取对话…</p>}
-    {!busy && !turns.length && <p className="text-sm text-muted-foreground">请先与助手完成至少一轮文字对话，再选择引用。</p>}
+    {!selected && !roomsBusy && !roomsError && <p className="text-sm text-muted-foreground">{rooms.length?'请先选择学习对话，再展开并勾选要引用的片段。':'暂无可引用的课程对话。请从课程总览进入学习对话，完成一轮作答和助手回复后，返回刷新对话列表。'}</p>}
+    {selected && !busy && !error && !turns.length && <p className="text-sm text-muted-foreground">这段对话尚无完整的本人作答和助手回复。请继续学习对话，完成后刷新对话。</p>}
+    {selected && <Button type="button" variant="link" disabled={busy} onClick={()=>void loadMessages()}>刷新对话</Button>}
     {turns.map(turn=>{
       const ids=turn.map(m=>m.id),checked=value.some(ref=>ref.channelId===selected && ref.messageIds[0]===ids[0])
       return <details key={ids[0]} data-conversation-reference className="py-2">
@@ -48,12 +69,8 @@ export function ConversationReferencePicker({courseId,channelId,value,onChange,d
         </div>
       </details>
     })}
-    {before!==null && <Button type="button" variant="outline" disabled={busy} onClick={async()=>{
-      const request=epoch.current;setBusy(true)
-      try {const page=await forumApi.conversation(courseId,selected,before);if(request===epoch.current){setMessages(old=>[...page.messages,...old]);setBefore(page.nextBefore)}}
-      catch(reason){setError(userFacingError(reason,'较早对话加载失败。'))}finally{if(request===epoch.current)setBusy(false)}
-    }}>较早的对话</Button>}
-    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    {before!==null && <Button type="button" variant="outline" disabled={busy} onClick={()=>void loadMessages(before)}>较早的对话</Button>}
+    {error && <p role="alert" className="text-sm text-destructive">{error}<Button type="button" variant="link" disabled={busy} onClick={()=>void loadMessages(retryBefore)}>重试读取对话</Button></p>}
     <p role="status" className="text-xs text-muted-foreground">已选择 {value.length} 段对话（最多 20 段）</p>
   </fieldset>
 }

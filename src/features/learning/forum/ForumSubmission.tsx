@@ -12,6 +12,9 @@ import { contentLinks, ForumContentFields, ForumFiles } from './ForumContentFiel
 import { MemoCard } from './memos/MemoCard'
 import { MemoContent } from './memos/MemoContent'
 import { contentDraftSchema, emptyContent, useForumDraft } from './useForumDraft'
+import { useAuth } from '@/stores/auth'
+import { useApp } from '@/stores/app'
+import { useConversations } from '@/features/conversations/store'
 
 const sourceLabels = { STUDENT_ORIGINAL: '学生原创',AGENT_RELAY: 'Agent 代交',AGENT_GENERATED: 'Agent 生成' }
 export function Version({ submission, framed = true }: { submission: SubmissionVersion; framed?: boolean }) {
@@ -36,47 +39,62 @@ export function assessmentLabel(assessment:SubmissionAssessment|null) {
   return assessment.mastery==='MASTERED'?'已掌握':assessment.mastery==='DEVELOPING'?'尚需巩固':'证据不足 / 无法判断'
 }
 
-export function ForumSubmission({ space, item }: { space: LearningSpace; item: ForumItem }) {
+export function ForumSubmission(props: { space: LearningSpace; item: ForumItem }) {
+  const identity=useAuth(state=>`${state.activeCompanyId}:${state.user?.id}`)
+  return <StudentSubmission key={`${identity}:${props.space.courseId}:${props.item.id}`} {...props}/>
+}
+
+function StudentSubmission({ space, item }: { space: LearningSpace; item: ForumItem }) {
   const [versions,setVersions]=useState<SubmissionVersion[]>([]),[nextOffset,setNextOffset]=useState<number|null>(null)
   const {draft,setDraft,discard,storageError}=useForumDraft(`submission:${space.courseId}:${item.id}`,contentDraftSchema,emptyContent,space.canSubmit&&item.status!=='CLOSED')
   const {body:answer,links,attachments}=draft
   const [references,setReferences]=useState<ConversationReference[]>([])
   const [busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false)
+  const [loading,setLoading]=useState(false),[historyError,setHistoryError]=useState('')
+  const historyRequest=useRef<AbortController|null>(null),submitting=useRef(false),mounted=useRef(true)
+  const conversationId=useConversations(state=>state.projectId===space.projectId?(state.list.find(room=>room.id===space.studyRoomId)?.id??state.list[0]?.id):undefined)
   const pending=useRef<{fingerprint:string;key:string}|null>(null)
   const load=useCallback(async(offset=0)=>{
     if(space.canReview)return
-    setBusy(true)
-    try {const page=await forumApi.submissions(space.courseId!,item.id,offset);setVersions(old=>offset?[...old,...page.items]:page.items);setNextOffset(page.nextOffset)}
-    catch(reason){setError(userFacingError(reason,'提交记录加载失败。'))}finally{setBusy(false)}
+    historyRequest.current?.abort()
+    const request=new AbortController();historyRequest.current=request
+    setLoading(true);setHistoryError('')
+    try {const page=await forumApi.submissions(space.courseId!,item.id,offset,AbortSignal.any([request.signal,AbortSignal.timeout(30_000)]));if(!request.signal.aborted){setVersions(old=>offset?[...old,...page.items]:page.items);setNextOffset(page.nextOffset)}}
+    catch(reason){if(!request.signal.aborted)setHistoryError(userFacingError(reason,'提交记录加载失败。'))}finally{if(!request.signal.aborted)setLoading(false)}
   },[space.courseId,space.canReview,item.id])
-  useEffect(()=>{void load()},[load])
+  useEffect(()=>{mounted.current=true;void load();return()=>{mounted.current=false;historyRequest.current?.abort()}},[load])
   useEffect(()=>{
     if(!versions.some(v=>v.assessment?.status==='PENDING'||v.assessment?.status==='FAILED'))return
     const timer=setInterval(()=>void load(),5000);return ()=>clearInterval(timer)
   },[versions,load])
   const disabled=busy||uploading
+  const blocker=uploading?'附件正在上传，请等待上传完成。':!answer.trim()&&!links.trim()&&!attachments.length?'请填写作业内容，或添加链接、附件。':!references.length?'请先选择学习对话，并勾选至少一段本人作答和助手回复。':''
   return <section aria-label="作业提交" className="space-y-4 pt-6">
     {item.dueAt && <p className="text-xs text-muted-foreground">截止：{new Date(item.dueAt).toLocaleString()}；截止后提交将标记为迟交。</p>}
     {item.status==='CLOSED'?<p role="status" className="text-sm">作业已关闭，停止接收提交。</p>:space.canSubmit&&<form className="space-y-4" onSubmit={async event=>{
-      event.preventDefault();if(disabled||!references.length)return
+      event.preventDefault();if(disabled||submitting.current||blocker)return
       const content={answer,editorDocument:draft.editorDocument,links:contentLinks(links),attachments,conversationReferences:references},fingerprint=JSON.stringify(content)
       if(pending.current?.fingerprint!==fingerprint)pending.current={fingerprint,key:crypto.randomUUID()}
-      setBusy(true);setError('');setSaved(false)
-      try {await forumApi.submit(space.courseId!,item.id,{...content,idempotencyKey:pending.current.key});pending.current=null;setDraft(emptyContent);discard();setReferences([]);setSaved(true);await load()}
-      catch(reason){setError(userFacingError(reason,'提交失败，请检查对话引用和作业状态后重试。'))}finally{setBusy(false)}
+      submitting.current=true;setBusy(true);setError('');setSaved(false)
+      try {await forumApi.submit(space.courseId!,item.id,{...content,idempotencyKey:pending.current.key});pending.current=null;setDraft(emptyContent);discard();if(mounted.current){setReferences([]);setSaved(true);void load()}}
+      catch(reason){if(mounted.current)setError(userFacingError(reason,'提交失败，请检查对话引用和作业状态后重试。'))}finally{submitting.current=false;if(mounted.current)setBusy(false)}
     }}>
       <ForumContentFields body={answer} editorDocument={draft.editorDocument} setBody={(body,editorDocument)=>setDraft(old=>({...old,body,editorDocument}))} label="作业内容" links={links} setLinks={links=>setDraft(old=>({...old,links}))} attachments={attachments} setAttachments={attachments=>setDraft(old=>({...old,attachments}))} disabled={disabled} onUploading={setUploading}/>
       <ConversationReferencePicker courseId={space.courseId!} value={references} onChange={setReferences} disabled={disabled}/>
       {storageError&&<p role="status">无法保存本地草稿，请先复制内容。</p>}
-      <Button type="submit" disabled={disabled||!references.length||!answer.trim()&&!links.trim()&&!attachments.length}>{busy?'提交中…':'提交作业'}</Button>
+      {blocker&&<p id="forum-submission-blocker" role="status" className="text-sm text-muted-foreground">{blocker}</p>}
+      {!references.length&&conversationId&&<Button type="button" variant="link" disabled={disabled} onClick={()=>useApp.getState().selectConversation(conversationId)}>进入课程对话</Button>}
+      <Button type="submit" aria-describedby={blocker?'forum-submission-blocker':undefined} disabled={disabled||Boolean(blocker)}>{busy?'提交中…':'提交作业'}</Button>
     </form>}
     {saved&&<p role="status" className="text-sm">作业已提交，正在生成学习评价。</p>}
-    {error&&<p role="alert" className="text-sm text-destructive">{error}<Button variant="link" onClick={()=>void load()}>重新加载记录</Button></p>}
+    {error&&<p role="alert" className="text-sm text-destructive">{error}</p>}
     {space.canReview?<SubmissionStudents space={space} item={item}/>:<section aria-label="提交记录" className="space-y-3">
       <h3 className="text-sm font-medium">我的提交记录</h3>
+      {loading&&<p role="status" className="text-sm">正在加载提交记录…</p>}
+      {historyError&&<p role="alert" className="text-sm text-destructive">{historyError}<Button type="button" variant="link" disabled={loading} onClick={()=>void load()}>重新加载记录</Button></p>}
       {versions.map(version=><details key={version.id}><summary className="cursor-pointer text-sm focus-visible:outline-2">第 {version.version} 版 · {new Date(version.submittedAt).toLocaleString()} · {assessmentLabel(version.assessment)}</summary><Version submission={version}/></details>)}
-      {!versions.length&&!busy&&<p className="text-sm text-muted-foreground">还没有提交记录。</p>}
-      {nextOffset!==null&&<Button variant="outline" onClick={()=>void load(nextOffset)}>更多提交记录</Button>}
+      {!versions.length&&!loading&&!historyError&&<p className="text-sm text-muted-foreground">还没有提交记录。</p>}
+      {nextOffset!==null&&<Button variant="outline" disabled={loading} onClick={()=>void load(nextOffset)}>更多提交记录</Button>}
     </section>}
   </section>
 }
