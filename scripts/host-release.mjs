@@ -7,7 +7,7 @@ import {isAbsolute,resolve} from 'node:path'
 import {fileURLToPath,pathToFileURL} from 'node:url'
 import {releaseDescriptor,assertInstalledTarget,assertBarrier} from './schema-upgrade-maintenance.mjs'
 import {validateMemoryBackupPlan} from './verify-memory-backup.mjs'
-import {READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,isPublicTextPlan,assertPublicTextPlan,assertReaderInventory,assertTraceInventory,assertPublicTextMetadata,assertAcceptedPublicTextSource,DEPLOYMENT_PATH} from './public-text-release.mjs'
+import {READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,isPublicTextPlan,assertPublicTextPlan,assertReaderInventory,assertTraceInventory,assertConversationRepairInventory,assertPublicTextMetadata,assertAcceptedPublicTextSource,DEPLOYMENT_PATH} from './public-text-release.mjs'
 import {assertSeedDefinitions} from './public-text-seed.mjs'
 import {assertHostComposeChange} from './host-release-compose.mjs'
 
@@ -28,7 +28,7 @@ const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.i
 export function sealHostPlan(value){const {planHash:_,...body}=value;return {...body,planHash:hash(stable(body))}}
 const exactKeys=(v,keys)=>v&&equal(Object.keys(v).sort(),keys.toSorted())
 function assertMigrationInventory(descriptor){
- if(['3.7.0','3.8.0'].includes(descriptor?.runtime)){if(descriptor.runtime==='3.8.0')assertTraceInventory(descriptor);else assertReaderInventory(descriptor);check(equal(descriptor.migrations[48],migration49),'Historical49 changed');return}
+ if(['3.7.0','3.8.0','3.8.1'].includes(descriptor?.runtime)){if(descriptor.runtime==='3.8.1')assertConversationRepairInventory(descriptor);else if(descriptor.runtime==='3.8.0')assertTraceInventory(descriptor);else assertReaderInventory(descriptor);check(equal(descriptor.migrations[48],migration49),'Historical49 changed');return}
  check((descriptor.schema===13&&[48,49].includes(descriptor.productVersion)||descriptor.schema===14&&descriptor.productVersion===50)&&Array.isArray(descriptor.migrations)
   &&descriptor.migrations.length===descriptor.productVersion
   &&descriptor.migrations.every((m,i)=>exactKeys(m,['version','name','checksum'])&&m.version===i+1&&/^[a-z0-9_]+$/.test(m.name??'')&&hex.test(m.checksum??'')),'Exact reviewed native/product inventory required')
@@ -60,7 +60,7 @@ export function assertNativeBackupReceipt(plan,receipt){
 }
 export function validateHostPlanShape(plan){
  check(exactKeys(plan,['format','createdAt','source','target','sourceAcceptanceSha256','qualification','stacks','planHash',...(plan?.format===NATIVE_SCHEMA_FORMAT?['backup']:[]),...(isPublicTextPlan(plan)?['publicText','imageConfigs']:[])])
-  &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
+  &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
  if(plan.format===NATIVE_SCHEMA_FORMAT){
   assertNativeSchemaUpgrade(plan.source,plan.target)
   check(plan.backup?.format===2&&plan.backup.profile==='native13-product49'&&equal(plan.backup.source,backupSource(plan.source))
@@ -128,10 +128,10 @@ async function failed({error,ops,plan,record}){
  let recovery='unknown',uncertain=error?.uncertain===true
  if(!uncertain)try{
   const state=await ops.state()
-  try{assertCompatibleState(state,plan.source);recovery=[PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT].includes(plan.format)?'source-unchanged-recovery-requires-review':'same-schema-recovery-requires-review'}
+  try{assertCompatibleState(state,plan.source);recovery=[PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format)?'source-unchanged-recovery-requires-review':'same-schema-recovery-requires-review'}
   catch{
    if(plan.format===NATIVE_SCHEMA_FORMAT&&(state.schema===14||state.installedSchema===14||state.product===50))recovery='fix-forward'
-   else if([PRODUCT_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT].includes(plan.format)){assertCompatibleState(state,plan.target);recovery='fix-forward'}
+   else if([PRODUCT_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format)){assertCompatibleState(state,plan.target);recovery='fix-forward'}
   }
  }catch(classificationError){uncertain=classificationError?.uncertain===true}
  await record({phase:'stopped',status:uncertain?'uncertain':'failed',recovery,noAutomaticRetry:true}).catch(()=>{})
@@ -139,10 +139,10 @@ async function failed({error,ops,plan,record}){
 }
 export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
  validateHostPlanShape(plan)
- const record=e=>onProgress({planHash:plan.planHash,...e}),native=plan.format===NATIVE_SCHEMA_FORMAT,provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan)
+ const record=e=>onProgress({planHash:plan.planHash,...e}),native=plan.format===NATIVE_SCHEMA_FORMAT,provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan)
  try{
   await ops.assertIdle();const original=await ops.inspect();assertInventory(original,plan)
-  if([PRODUCER_FORMAT,TRACE_FORMAT].includes(plan.format))for(const c of plan.publicText.sourceContainers){const actual=original.find(r=>r.stack===c.stack&&r.service===c.service);check(actual?.id===c.id&&actual.imageId===c.imageId,'Accepted reader container replaced before producer phase')}
+  if([PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format))for(const c of plan.publicText.sourceContainers){const actual=original.find(r=>r.stack===c.stack&&r.service===c.service);check(actual?.id===c.id&&actual.imageId===c.imageId,'Accepted reader container replaced before producer phase')}
   assertCompatibleState(await ops.state(),plan.source)
   await ops.verifyImages('source');await ops.verifyImages('target')
   assertInventory(await ops.inspect(),plan,original)
@@ -165,7 +165,7 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
    for(const stack of APPS)check(equal(select(await ops.metadata(stack),metadataKeys),select(plan.target,metadataKeys)),'Post-backup target metadata mismatch')
    await barrier()
   }
-  if([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT].includes(plan.format)){
+  if([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format)){
    await ops.assertIdle();await ops.verifyImages('target')
    await record({phase:'migration',status:'submitting'})
    await ops.migrate()
@@ -187,7 +187,7 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
   }
   await ops.assertIdle();await ops.verifyImages('target');const state=await ops.state();assertCompatibleState(state,plan.target)
   const containers=await ops.inspect();assertInventory(containers,plan,original,stopped,deployed)
-  const result={phase:'complete',status:'complete',planHash:plan.planHash,state,containers,...(publicText?{publicText:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,readerContainers:containers.map(({stack,service,id,imageId})=>({stack,service,id,imageId})),...(plan.format===TRACE_FORMAT?{runTrace:1}:{})}:{})}
+  const result={phase:'complete',status:'complete',planHash:plan.planHash,state,containers,...(publicText?{publicText:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,readerContainers:containers.map(({stack,service,id,imageId})=>({stack,service,id,imageId})),...([TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format)?{runTrace:1}:{})}:{})}
   await record(result);return result
  }catch(error){return failed({error,ops,plan,record})}
 }
@@ -220,7 +220,7 @@ export async function validateHostPlan(plan,{acceptance,sourceAudit,targetAudit}
  if(isPublicTextPlan(plan)){
   assertAcceptedPublicTextSource(accepted,plan)
   check(hash(await git(['show',`${plan.target.sha}:${DEPLOYMENT_PATH}`]))===plan.publicText.targetConfigurationSha256,'Target deployment leaf changed')
-  if([READER_FORMAT,TRACE_FORMAT].includes(plan.format))await assertSeedDefinitions(plan.source.sha,plan.target.sha,git)
+  if([READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format))await assertSeedDefinitions(plan.source.sha,plan.target.sha,git)
   if(plan.format!==READER_FORMAT){
    check(hash(await git(['show',`${plan.source.sha}:${DEPLOYMENT_PATH}`]))===plan.publicText.sourceConfigurationSha256,'Source deployment leaf changed')
   }
@@ -253,7 +253,7 @@ export async function validateHostPlan(plan,{acceptance,sourceAudit,targetAudit}
 }
 async function main(){
  const args=process.argv.slice(2),values={},allowed=['--execute','--prepare-images','--input','--output','--acceptance','--source-audit','--target-audit']
- if(args.length===1&&args[0]==='--help'){console.log('Offline by default. --input <descriptor.json> --output <exclusive plan/receipt.json> --acceptance <accepted source.json> --source-audit <audit.json> --target-audit <audit.json>. All paths absolute. --execute follows an explicit same-schema, product48→49, native13/product49→native14/product50, reader-provenance, purpose-producer or exact enabled3.7/full51 to3.8/full52 trace-provenance plan format; --prepare-images only prepares images online and restores source files. No automatic retry/recovery.');return}
+ if(args.length===1&&args[0]==='--help'){console.log('Offline by default. --input <descriptor.json> --output <exclusive plan/receipt.json> --acceptance <accepted source.json> --source-audit <audit.json> --target-audit <audit.json>. All paths absolute. --execute follows an explicit same-schema, product48→49, native13/product49→native14/product50, reader-provenance, purpose-producer or exact enabled3.7/full51 to3.8/full52 trace-provenance, or exact enabled3.8/full52 to3.8.1/full53 conversation-repair plan format; --prepare-images only prepares images online and restores source files. No automatic retry/recovery.');return}
  for(let i=0;i<args.length;i++){const k=args[i];check(allowed.includes(k)&&!(k in values),'Unknown or repeated argument');values[k]=['--execute','--prepare-images'].includes(k)?true:args[++i]}
  check(!(values['--execute']&&values['--prepare-images']),'Choose release or explicit online image preparation')
  for(const k of allowed.slice(2))check(isAbsolute(values[k]??''),'Absolute input/evidence/output paths required')

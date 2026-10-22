@@ -120,7 +120,7 @@ export async function assertInstalledTarget(target) {
  const {releaseVersions,packageResources}=await import('@lyyzka/lingxios')
  requireThat(releaseVersions.runtime===target.runtime&&releaseVersions.schema===target.schema
   &&releaseVersions.controlPlane===target.protocol&&digest(await readFile(packageResources().schema))===target.schemaHash,'Installed formal package metadata does not match target')
- if(target.runtime==='3.8.0')requireThat(releaseVersions.publicText===2&&releaseVersions.runTrace===1,'Installed formal trace package lacks required public capabilities')
+ if(['3.8.0','3.8.1'].includes(target.runtime))requireThat(releaseVersions.publicText===2&&releaseVersions.runTrace===1,'Installed formal trace package lacks required public capabilities')
  const installed=JSON.parse(await readFile(new URL('../node_modules/@lyyzka/lingxios/package.json',import.meta.url),'utf8'))
  requireThat(installed.version===target.runtime,'Installed formal package version mismatch')
 }

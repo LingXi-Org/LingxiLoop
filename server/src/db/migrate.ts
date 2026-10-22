@@ -196,7 +196,8 @@ export async function migrateDatabase(
   const hasDeliveryUpgrade = migrations.some(migration => migration.version===50 && migration.name==='skill_delivery')
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
-  assertMigrationRuntime(hasDeliveryUpgrade,hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined,hasRunTrace)
+  const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
+  assertMigrationRuntime(hasDeliveryUpgrade,hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined,hasRunTrace,hasConversationRepair)
   const client = await database.connect()
   const appliedNow: string[] = []
   try {
@@ -224,7 +225,7 @@ export async function migrateDatabase(
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
     const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
     const targetSchema = hasDeliveryUpgrade ? 14 : hasContinuityUpgrade ? 13 : hasReliabilityUpgrade ? 12 : LEGACY_RUNTIME_SCHEMA
-    const targetRuntime = hasRunTrace ? '3.8.0' : hasPurposeReader ? '3.7.0' : hasDeliveryUpgrade ? '3.6.0' : hasContinuityUpgrade ? '3.5.8' : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
+    const targetRuntime = hasConversationRepair ? '3.8.1' : hasRunTrace ? '3.8.0' : hasPurposeReader ? '3.7.0' : hasDeliveryUpgrade ? '3.6.0' : hasContinuityUpgrade ? '3.5.8' : hasReliabilityUpgrade ? '3.5.6' : LEGACY_RUNTIME_RELEASE
     const cutover = installsRuntime && applied.length < NATIVE_INSTALL_VERSION
     if (cutover) {
       await client.query('BEGIN')
@@ -241,6 +242,9 @@ export async function migrateDatabase(
         }
         if (migration.version===52 && migration.name==='run_trace_provenance') {
           await assertRuntimeCurrent(client,14,'3.7.0')
+        }
+        if (migration.version===53 && migration.name==='conversation_repair_provenance') {
+          await assertRuntimeCurrent(client,14,'3.8.0')
         }
         await client.query(migration.sql)
         if (installsRuntime && migration.version === NATIVE_INSTALL_VERSION) {
@@ -279,7 +283,7 @@ export async function migrateDatabase(
     }
     if (cutover) await client.query('COMMIT')
     if (installsRuntime) {
-      //0051/0052 own their provenance writes in the ledger transaction. Repeats must
+      //0051/0052/0053 own their provenance writes in the ledger transaction. Repeats must
       // reject a mismatched target instead of silently repairing/stamping it.
       if (!hasPurposeReader) {
         await client.query('BEGIN')
@@ -313,8 +317,9 @@ export async function assertMigrationsCurrent(
   const migrations = await loadMigrations(migrationsUrl)
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
+  const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   assertMigrationRuntime(migrations.some(migration => migration.version===50 && migration.name==='skill_delivery'),
-    hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined,hasRunTrace)
+    hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined,hasRunTrace,hasConversationRepair)
   const client = await database.connect()
   try {
     if (!(await migrationTableExists(client))) {
@@ -330,7 +335,7 @@ export async function assertMigrationsCurrent(
       const hasContinuity = migrations.some(migration => migration.version===47 && migration.name==='memory_continuity')
       const hasReliability = migrations.some(migration => migration.version===RELIABILITY_UPGRADE_VERSION && migration.name==='lingxios_3_5_0')
       await assertRuntimeCurrent(client,hasDelivery ? 14 : hasContinuity ? 13 : hasReliability ? 12 : LEGACY_RUNTIME_SCHEMA,
-        hasRunTrace ? '3.8.0' : hasPurposeReader ? '3.7.0' : hasDelivery ? '3.6.0' : hasContinuity ? '3.5.8' : hasReliability ? '3.5.6' : LEGACY_RUNTIME_RELEASE)
+        hasConversationRepair ? '3.8.1' : hasRunTrace ? '3.8.0' : hasPurposeReader ? '3.7.0' : hasDelivery ? '3.6.0' : hasContinuity ? '3.5.8' : hasReliability ? '3.5.6' : LEGACY_RUNTIME_RELEASE)
     }
   } finally {
     client.release()

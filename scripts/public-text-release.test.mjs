@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createHash}from'node:crypto';
-import {READER_FORMAT,PRODUCER_FORMAT,MIGRATION51,SCHEMA14,assertPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality,assertAcceptedPublicTextSource,assertPublicTextMetadata}from'./public-text-release.mjs';
+import {READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION52,MIGRATION53,MIGRATION51,SCHEMA14,assertPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality,assertAcceptedPublicTextSource,assertPublicTextMetadata}from'./public-text-release.mjs';
 const digest=b=>'sha256:'+createHash('sha256').update(b).digest('hex'),sha='a'.repeat(40),next='b'.repeat(40),hex='c'.repeat(64);
 export function fixture(producer=false){
  const m=Array.from({length:50},(_,i)=>({version:i+1,name:'m_'+i,checksum:hex}));
@@ -50,4 +50,16 @@ test('trace source acceptance must be actual enabled reader identities; actual t
  for(const change of [a=>a.publicText.producer='disabled',a=>a.readerContainers.pop(),a=>a.format='web-same-schema-acceptance/v1',a=>a.configurationSha256='0'.repeat(64)]){const bad=structuredClone(accepted);change(bad);assert.throws(()=>assertAcceptedPublicTextSource(bad,p));}
  const metadata={publicText:2,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'}};assert.doesNotThrow(()=>assertPublicTextMetadata(metadata,p));
  for(const value of [undefined,0,2])assert.throws(()=>assertPublicTextMetadata({...metadata,runTrace:value},p));
+});
+
+function repairFixture(){
+ const p=fixture(true);p.format=CONVERSATION_FORMAT;p.publicText.source.producer='purpose-json-v1';
+ Object.assign(p.source,{runtime:'3.8.0',productVersion:52,migrations:[...p.source.migrations,MIGRATION52]});
+ Object.assign(p.target,{runtime:'3.8.1',productVersion:53,migrations:[...p.target.migrations,MIGRATION52,MIGRATION53]});return p;
+}
+test('conversation repair exact profile binds full52 source and reviewed53 without relaxing trace capability',()=>{
+ const p=repairFixture();assert.doesNotThrow(()=>assertPublicTextPlan(p));
+ for(const change of [p=>p.source.runtime='3.7.0',p=>p.target.runtime='3.8.0',p=>p.target.migrations[52].checksum='0'.repeat(64),p=>p.target.migrations[51].checksum='0'.repeat(64),p=>p.target.migrations[0].checksum='0'.repeat(64),p=>p.publicText.sourceContainers.pop(),p=>p.format='run-trace-provenance-host-release/v1']){const bad=structuredClone(p);change(bad);assert.throws(()=>assertPublicTextPlan(bad));}
+ const good={publicText:2,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'}};
+ assert.doesNotThrow(()=>assertPublicTextMetadata(good,p));assert.throws(()=>assertPublicTextMetadata({...good,runTrace:undefined},p));
 });

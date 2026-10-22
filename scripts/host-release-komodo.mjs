@@ -1,6 +1,6 @@
 // Native Komodo2.3.3 calls. Only explicit reviewed product/native plans may migrate.
 // No Git/private API, secret or env writes.
-import {READER_FORMAT,TRACE_FORMAT,isPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality} from './public-text-release.mjs'
+import {READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,isPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality} from './public-text-release.mjs'
 import {seedCommand} from './public-text-seed.mjs'
 import {isDeepStrictEqual as equal} from 'node:util'
 import {setTimeout as delay} from 'node:timers/promises'
@@ -14,7 +14,7 @@ const TRACE_METADATA_CODE=`Object.assign(metadata,{runTrace:releaseVersions.runT
 const oneOff=(stack,service,extra)=>({stack,service,no_tty:true,no_deps:true,detach:false,service_ports:false,pull:false,...extra})
 export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,onProgress=async()=>{},transport,wait=delay,backupExecutor=executeMemoryBackup}){
  validateHostPlanShape(plan)
- const native=plan.format===NATIVE_SCHEMA_FORMAT,trace=plan.format===TRACE_FORMAT,provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan),nodeEnvironments=publicText?qualifyImageEnvironments(plan):null
+ const native=plan.format===NATIVE_SCHEMA_FORMAT,trace=[TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format),provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan),nodeEnvironments=publicText?qualifyImageEnvironments(plan):null
  const t=transport??createTransport({apiKey,apiSecret,signal,onProgress,confirmTerminal:native||publicText})
  const phases=new Map(plan.stacks.map(r=>[r.stack,'source'])),configs=new Map(),identities=new Map(),images=new Map(),containerPolicies=new Map()
  const stoppedWriters=new Set()
@@ -159,7 +159,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    return {...value,native:{id:u._id?.$oid,operation:u.operation,target:u.target,status:u.status,success:u.success,startTs:u.start_ts,endTs:u.end_ts}};
   },
   async migrate(){
-   check([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT].includes(plan.format)&&!migrationSubmitted&&(!native||backupVerified)&&(!provenanceUpgrade||seedVerified)
+   check([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT].includes(plan.format)&&!migrationSubmitted&&(!native||backupVerified)&&(!provenanceUpgrade||seedVerified)
     &&APPS.every(stack=>phases.get(stack)==='target'&&(native||provenanceUpgrade?['worker','lingxiloop']:['worker']).every(service=>stoppedWriters.has(stack+':'+service))),'Only one staged, drained and backup-qualified migration may submit')
    await guard()
    const rows=await inspect()
