@@ -29,10 +29,14 @@ test('partial and blocked delivered artifacts remain visible without being calle
     { status: { type: 'incomplete', reason: 'other' }, view: { lifecycle: 'succeeded', goalOutcome: { status: outcome, requestVersion: 1 } } }) })
     await app.open('/e2e/answer-first.html')
     await expect(browser.locator('[data-slot="run-activity"]')).toHaveAttribute('data-status', 'incomplete')
-    await expect(screen.getByText('已交付的演示稿', { exact: true })).toBeVisible()
+    // One card has both a preview placeholder title and a caption. Its actual
+    // open control and stable artifact identity establish card uniqueness.
+    await expect(browser.locator('[data-presentation-open-trigger="deck-304"]')).toHaveCount(1)
+    await expect(screen.getByRole('button', '打开演示文稿：已交付的演示稿', { exact: true })).toBeVisible()
     await expect(screen.getByText('本次请求未能生成答复，请补充信息后重试。', { exact: true })).toHaveCount(0)
     await browser.reload()
-    await expect(screen.getByText('已交付的演示稿', { exact: true })).toBeVisible()
+    await expect(browser.locator('[data-presentation-open-trigger="deck-304"]')).toHaveCount(1)
+    await expect(screen.getByRole('button', '打开演示文稿：已交付的演示稿', { exact: true })).toBeVisible()
     await app.screenshot(`answer-first-delivered-${outcome}`)
   }
 })
