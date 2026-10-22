@@ -17,7 +17,8 @@ are separately tracked in #296; this change does not make missing values known.
 - Failure model and regression assertions written before implementation. Initial
   focused run failed on synthesized waiting prose and legacy replay filtering.
 - Focused owning tests: 42/42 passed (projection, assistant transport, shared decoder,
-  RunActivity, harness, stream updates and ConversationMessage).
+  RunActivity, harness and stream updates). Independent review separately ran 30/30
+  decoder/activity/harness/ConversationMessage checks, including 16 renderer checks.
 - Official `@e2e-dev/web` browser regression: 1/1 passed, covering first-token wait,
   real answer streaming, old Chinese/English commentary, expanded genuine activity,
   refresh/replay, empty partial completion and retryable error. Synthetic data only.
