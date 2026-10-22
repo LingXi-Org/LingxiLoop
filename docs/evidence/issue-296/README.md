@@ -2,6 +2,8 @@
 
 This evidence uses synthetic local records and the user's redacted three-call example. It contains no production conversations, original visualization HTML, credentials or raw model input. Production access was not retried, and no production change or acceptance is claimed.
 
+`ended.png` records an execution that has ended with a genuine `partial` lifecycle and `inconclusive` goal outcome; it does not establish a satisfied goal. The formal 3.8.0 trace reader maps this state to `unknown`, so the screenshot's trace label is `结果未知` while the message is `未完成`. The separate issue 298 upgrade and its product status patch preserve `partial`/`blocked` after the formal 3.8.1 package is available. These captures establish real recorded intervals, not a successful outcome for this fixture.
+
 ## Findings and correction
 
 - The product SSE bootstrap explicitly omitted the native trace, while optional enrichment only refreshed usage-ledger fallback. Bootstrap now reads the published `readRunTrace`; asynchronous enrichment refreshes it independently of answer frames. Native stream trace frames, including authorized child updates, remain enabled.
@@ -16,11 +18,12 @@ This evidence uses synthetic local records and the user's redacted three-call ex
 
 - Focused regressions were written before implementation. The initial run reproduced six data-path failures; follow-up review regressions reproduced the old DTO copy and creation-anchor issues before their corrections.
 - The final focused set passes 37/37 with no skips, including nested child embedding budget-price rejection, partial sums, stale reads, streamed text preservation, actual per-attempt time capture, and historical DTO projections.
-- The real local PostgreSQL/Worker/control/SSE test now pauses the first model invocation. It verifies true run/model starts with absent live end/duration, then confirms the identical start survives completion and the recorded end is filled. Completed bootstrap, SSE replay and reload have identical native endpoints; revoked/other-tenant reads remain denied.
+- The real local PostgreSQL/Worker/control/SSE test now pauses the first model invocation. It verifies true run/model starts with absent live end/duration, then confirms the identical start survives termination and the recorded end is filled. Terminal bootstrap, SSE replay and reload have identical native endpoints; revoked/other-tenant reads remain denied.
 - A real loopback HTTP embedding response crosses capture, PostgreSQL ledger persistence and scoped trace reading. Ten Pro input tokens at CNY 0.000070/K with the fixture's explicit CNY 7/USD rate produce USD 0.0000001. Historical ordinary BAAI remains unchanged and unpriced when its original record lacks a price.
 - The two owning integration cases pass, with no skips. A first teardown failed because `DROP DATABASE ... FORCE` raced closed client sockets; the fixture now waits for its own sessions to leave and drops normally. The final run is 2/2 passed; the earlier failure is not represented as a pass.
 - Official `e2e` 0.17.0 / `@e2e-dev/web` 0.12.0 selected browser flows pass 2/2: running/first load/replay/reload endpoint and timestamp equality; duration-only historical embedding with partial fees and no fabricated axis. All other browser flows were filtered, not run. Native selected results and report digest are in `browser-results.json`; exact tested source hashes are in `source-sha256.json`.
 - Local server lint, server typecheck and Web typecheck pass using the same root dependency layout as CI and the formally published 3.8.0 package. The earlier standalone-server install introduced incompatible duplicate Zod/Node types; restoring the CI dependency layout removed those environment errors without unrelated source edits.
+- After issues 295 and 297 merged, this branch was rebased onto main `671d72fb`. Their duplicate dependency commits were removed. All eight recorded trace source hashes remain identical to the independently reviewed candidate, and the integration retains main's existing fixture-session drain before ordinary database removal.
 
 ## Reproduce
 
