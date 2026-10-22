@@ -39,7 +39,7 @@ test('host judgments price measured primary-model tokens with the configured run
 })
 
 test('SiliconFlow work cost uses measured tokens and cache hits at fixed CNY rates',()=>{
-  const pricing=siliconFlowPricing(7)
+  const pricing=siliconFlowPricing(7,'deepseek-ai/DeepSeek-V4-Flash')
   const cost=siliconFlowCost({ available: true,inputTokens: 1_000_000,outputTokens: 1_000_000,cachedInputTokens: 500_000 },pricing)
   assert.equal(cost.costCny,10.65)
   assert.equal(cost.costUsd,10.65/7)

@@ -10,7 +10,7 @@ assert.ok(output && Number.isSafeInteger(count) && count >= 1 && count <= 1000)
 const base = new URL(process.env.OPENAI_BASE_URL ?? 'https://api.siliconflow.cn/v1')
 assert.equal(base.hostname, 'api.siliconflow.cn', 'this benchmark is pinned to SiliconFlow')
 assert.ok(process.env.OPENAI_API_KEY, 'OPENAI_API_KEY is required')
-const model = 'deepseek-ai/DeepSeek-V4-Flash'
+const model = process.env.OPENAI_MODEL?.trim() || 'deepseek-ai/DeepSeek-V4.1-Flash'
 const prompts = ['用一句话解释什么是缓存。', '请把“Good morning”翻译成中文。', '用一句话介绍太阳系。',
   '给我一句鼓励学习的话。', '“简洁”的反义词是什么？', '写一句礼貌的道谢。', '解释“循序渐进”的意思，一句话即可。',
   '给读书小组起一个简短的名字。', '用一句话区分比喻与拟人。', '请把“我们明天见”翻译成英文。']
