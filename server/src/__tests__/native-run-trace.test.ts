@@ -67,3 +67,29 @@ test('new events downgrade coverage until a full current replacement; truncation
   assert.equal(incomplete.root.start,null); assert.equal(incomplete.root.tokensIn,null); assert.equal(incomplete.root.cost,null)
   assert.equal(incomplete.root.children[0]!.start,null)
 })
+test('scoped ledger costs and embedding identities overlay exact native calls without duplicate spans', () => {
+  const current = snapshot()
+  current.spans = current.spans.filter(item=>item.runId === 'run')
+  current.spans.push(span({ spanId: 'embedding',parentSpanId: 'root',kind: 'llm',startedAt: 1050,completedAt: 1184,
+    state: 'complete',callId: 'embedding-call',model: 'Pro/BAAI/bge-m3',usageAvailable: true,inputTokens: 10,outputTokens: 0,costMicros: 0 }))
+  const value = buildNativeRunTrace(current,[],[{ id: 'ledger',callId: 'embedding-call',model: 'Pro/BAAI/bge-m3',apiKind: 'embedding',
+    status: 'complete',durationMs: 134,tokensIn: 10,tokensOut: 0,cost: 0.0000001,costEstimated: true }])
+  assert.equal(value.root.children.filter(item=>item.kind === 'embedding').length,1)
+  const embedding = value.root.children.find(item=>item.kind === 'embedding')!
+  assert.deepEqual([embedding.start,embedding.end,embedding.durationMs],[50,184,134])
+  assert.equal(embedding.cost,0.0000001); assert.equal(embedding.costEstimated,true)
+  assert.equal(value.root.cost,0.0000001)
+  assert.doesNotMatch(JSON.stringify(value),/embedding-call|ledger/)
+})
+test('a registered child embedding never inherits the chat model budget price',()=>{
+  for(const model of ['Pro/BAAI/bge-m3','BAAI/bge-m3','Qwen/Qwen3-Embedding-8B']) {
+    const current = snapshot()
+    const call = current.spans.find(item=>item.kind === 'llm')!
+    call.model = model;call.costMicros = 99000000
+    const trace = buildNativeRunTrace(current)
+    const child = trace.root.children.find(item=>item.kind === 'agent')!
+    assert.equal(child.children[0]!.kind,'embedding')
+    assert.equal(child.children[0]!.cost,null)
+    assert.equal(trace.root.cost,null)
+  }
+})

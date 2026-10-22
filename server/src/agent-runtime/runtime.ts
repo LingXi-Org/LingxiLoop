@@ -148,6 +148,9 @@ export async function recordModelCall(observation: ModelCallObservation, context
     const binding = (await database.query<{ conversation_id: string }>('SELECT conversation_id FROM agent_run_bindings WHERE company_id=$1 AND run_id=$2',
       [observation.tenantId,observation.workId])).rows[0]
     const usage = observation.usage?.available ? observation.usage : undefined
+    // The public observation exposes settlement time but no provider issue time.
+    // Do not derive a tariff from callback time or completedAt minus latency;
+    // the model pricing helper records its conservative standard-peak estimate.
     const pricing=providerPricing(observation.model), billing=usage && pricing ? siliconFlowCost(usage,pricing) : undefined
     const record = {
       context: {
@@ -157,7 +160,8 @@ export async function recordModelCall(observation: ModelCallObservation, context
         runId: observation.workId,
         ...(binding ? { conversationId: binding.conversation_id } : {}),
         source: 'agent-os' as const,
-        extras: { callId: observation.callId, pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+        extras: { callId: observation.callId,apiKind: observation.purpose === 'embedding' ? 'embedding' : 'chat', pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+          ...(observation.executionTiming ? { completedAt: observation.executionTiming.completedAt } : {}),
           ...(observation.logicalCallId ? { logicalCallId: observation.logicalCallId } : {}),
           ...(observation.attempt !== undefined ? { attempt: observation.attempt } : {}),
           ...(observation.elapsedMs !== undefined ? { elapsedMs: observation.elapsedMs } : {}),

@@ -49,8 +49,8 @@ async function tracked<T>(
   operation: (client: OpenAI, options: OpenAI.RequestOptions) => Promise<T>,
   usageOf: (value: T) => LlmUsage | null = () => null,
   options: OpenAI.RequestOptions = {},
+  apiKind: 'chat'|'embedding'|'image' = 'chat',
 ): Promise<T> {
-  const pricing = siliconFlowPricingForModel(env.OPENAI_BASE_URL, model, env.NODE_ENV === 'production')
   const rates = model === env.OPENAI_MODEL ? [
     'AGENT_OS_INPUT_COST_MICROS_PER_MILLION', 'AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION',
   ].map(name => {
@@ -68,7 +68,8 @@ async function tracked<T>(
   try {
     for (let attempt = 1; attempt <= policy.maxAttempts; attempt++) {
       signal.throwIfAborted()
-      const callId = `${logicalCallId}:${attempt}`, startedAt = performance.now()
+      const callId = `${logicalCallId}:${attempt}`, startedAt = performance.now(),issuedAt = Date.now()
+      const pricing = siliconFlowPricingForModel(env.OPENAI_BASE_URL, model, env.NODE_ENV === 'production',issuedAt)
       const requestOptions = { ...options,maxRetries: 0,signal,
         timeout: Math.max(1,Math.min(30_000,policy.totalTimeoutMs-(performance.now()-began))) }
       let value: T | undefined, failure: unknown, succeeded = false
@@ -77,8 +78,10 @@ async function tracked<T>(
         value = await abortable(providerClient().then(client => operation(client,requestOptions)),signal)
         succeeded = true
       } catch (error) { failure = error }
+      const completedAt = Date.now()
       latestFailure = succeeded ? undefined : modelFailure(failure,options.signal?.aborted)
       const trackedContext = { ...context,extras: { ...context.extras,callId,logicalCallId,attempt,
+        startedAt: issuedAt,completedAt,apiKind,
         elapsedMs: performance.now()-began,...(latestFailure ? { failure: latestFailure } : {}) } }
       let usage = succeeded ? usageOf(value!) : null
       if (pricing && usage) {
@@ -138,14 +141,16 @@ export async function createEmbedding(
   context: LlmCallContext,
   request: OpenAI.Embeddings.EmbeddingCreateParams,
 ): Promise<OpenAI.Embeddings.CreateEmbeddingResponse> {
-  return tracked(context, request.model, async (provider, options) => provider.embeddings.create(request,options), (response) => response.usage)
+  return tracked(context, request.model, async (provider, options) => provider.embeddings.create(request,options), (response) => ({
+    prompt_tokens: response.usage.prompt_tokens,completion_tokens: 0,
+  }),{},'embedding')
 }
 
 export async function createImage(
   context: LlmCallContext,
   request: OpenAI.Images.ImageGenerateParamsNonStreaming & { model: string },
 ): Promise<OpenAI.Images.ImagesResponse> {
-  return tracked(context, request.model, async (provider, options) => provider.images.generate(request,options))
+  return tracked(context, request.model, async (provider, options) => provider.images.generate(request,options),()=>null,{},'image')
 }
 
 export function invalidateLlmClient(): void {
