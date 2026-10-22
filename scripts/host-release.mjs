@@ -116,7 +116,7 @@ export function assertImageIdentity(actual,audit){
  if(actual.Descriptor)check(actual.Descriptor.digest===audit.indexDigest||actual.Descriptor.digest===audit.manifestDigest,'Image descriptor differs from qualified index/platform')
  return actual.Id
 }
-function assertInventory(rows,plan,original,stopped=new Set(),deployed=new Map()){
+export function assertInventory(rows,plan,original,stopped=new Set(),deployed=new Map()){
  check(Array.isArray(rows)&&rows.length===4&&new Set(rows.map(x=>x.id)).size===4,'Four distinct application containers required')
  for(const stack of APPS)for(const service of ['lingxiloop','worker']){
   const key=stack+':'+service,matches=rows.filter(x=>x.stack===stack&&x.service===service),r=matches[0],old=original?.find(x=>x.stack===stack&&x.service===service)

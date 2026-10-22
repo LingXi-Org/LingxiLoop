@@ -1,6 +1,7 @@
 const presentationFormat='run-presentation-contract-host-release/v1',presentationMigration={version:54,name:'run_presentation_contract',checksum:'f58aafed796cabcb481bd381b4df298024d5effd0a576dae5e9638430aed38e2'};
 const traceFormat='run-trace-provenance-host-release/v1',traceMigration={version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'};
 import test from 'node:test'
+import {continueStoppedRelease} from './host-release-stopped-recovery.mjs'
 import {READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION53,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
@@ -59,6 +60,32 @@ function fixture(fault={}){
  }
  return {ops,trace,events,plan:releasePlan,run:()=>runHostRelease({plan:releasePlan,ops,onProgress:async e=>events.push(e)}),prepare:()=>runImagePreparation({plan:releasePlan,ops,onProgress:async e=>events.push(e)})}
 }
+async function stoppedFixture(fault={}){
+ const f=fixture({repair:true,...fault}),original=await f.ops.inspect()
+ for(const stack of apps)for(const service of ['lingxiloop','worker'])await f.ops.stop(stack,service)
+ f.trace.length=0
+ const receipt={planHash:f.plan.planHash,mode:f.plan.format,complete:false,events:[{phase:'preflight',status:'verified',original},...apps.map(stack=>({phase:'host-config',status:'verified',stack,fullConfigReadback:true})),...original.map(({stack,service})=>({phase:'drain',status:'stopped',stack,service})),{phase:'stopped',status:'failed',recovery:'source-unchanged-recovery-requires-review',noAutomaticRetry:true}]}
+ f.ops.resumeStoppedBoundary=async()=>f.trace.push('resume-boundary')
+ return {...f,run:()=>continueStoppedRelease({plan:f.plan,receipt,ops:f.ops,onProgress:async e=>f.events.push(e)})}
+}
+test('stopped52 continuation repeats neither staging nor stopping and migrates once before Web then Workers',async()=>{
+ const f=await stoppedFixture(),r=await f.run();assert.equal(r.status,'complete')
+ assert.equal(f.trace.filter(x=>x==='migrate').length,1)
+ assert.equal(f.trace.some(x=>/^(stage|stop|pull|restore):/.test(x)),false)
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(service=>apps.map(stack=>'deploy:'+stack+':'+service)))
+ assert.equal(f.events.filter(e=>e.status==='zero-leases').slice(0,2).length,2)
+})
+test('stopped52 continuation refuses live leases, changed provenance and target metadata before migration',async()=>{
+ for(const fault of ['leases','provenance','metadata']){
+  const f=await stoppedFixture({metadata:fault==='metadata'}),state=f.ops.state
+  f.ops.state=async()=>({...await state(),...(fault==='leases'?{liveWork:1}:fault==='provenance'?{runtime:'9.9.9'}:{})})
+  await assert.rejects(f.run());assert.equal(f.trace.includes('migrate'),false);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false)
+ }
+})
+test('stopped52 continuation never reads or replays after uncertain migration',async()=>{
+ const f=await stoppedFixture({migrationUnknown:true});await assert.rejects(f.run())
+ assert.equal(f.trace.at(-1),'migrate');assert.equal(f.events.at(-1).status,'uncertain')
+})
 test('same formal package and all48 checksums required; native13 alone is insufficient',()=>{
  assert.doesNotThrow(()=>assertSameSchema(source,target))
  for(const key of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations']){
