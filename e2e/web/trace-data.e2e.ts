@@ -10,9 +10,9 @@ test.describe('Trace execution data', { ...(process.env.ISSUE296_SNAPSHOTS ? {} 
     const send = (name: string) => browser.evaluate(snapshot=>{
       window.dispatchEvent(new CustomEvent('native-streaming-snapshot',{ detail: snapshot }));return true
     },snapshots[name])
-    const expected = snapshots.initial.message.metadata.custom.runTrace
-    const spans = [expected.root,...expected.root.children]
-    for (const name of ['initial','replay','reload']) {
+    for (const name of ['running','initial','replay','reload']) {
+      const expected = snapshots[name].message.metadata.custom.runTrace
+      const spans = [expected.root,...expected.root.children]
       await app.open('/e2e/native-streaming.html')
       await send(name)
       await browser.locator('[data-slot="run-activity"] button').first().tap()
@@ -22,6 +22,9 @@ test.describe('Trace execution data', { ...(process.env.ISSUE296_SNAPSHOTS ? {} 
       })))
       expect(actual).toEqual(spans.map((span: { start: number|null;end: number|null })=>({ start: span.start,end: span.end })))
       await screen.getByRole('button','查看 运行 详情').tap()
+      expect(await browser.locator('[data-trace-time="start"]').getAttribute('datetime')).toBe(new Date(expected.startedAt+expected.root.start).toISOString())
+      if (expected.root.end === null) await expect(browser.locator('[data-trace-time="end"]')).toHaveCount(0)
+      else expect(await browser.locator('[data-trace-time="end"]').getAttribute('datetime')).toBe(new Date(expected.startedAt+expected.root.end).toISOString())
       await expect(browser.locator('[data-trace-axis]')).toBeVisible()
       expect(await browser.evaluate(()=>document.querySelector('[data-slot="trace-waterfall"]')?.textContent ?? '')).not.toMatch(/起点未知|时间未知|耗时未知/)
       await app.screenshot(`trace-real-times-${name}`)
@@ -47,6 +50,8 @@ test.describe('Trace execution data', { ...(process.env.ISSUE296_SNAPSHOTS ? {} 
     await expect(screen.getByText('134 ms',{exact: true})).toBeVisible()
     await expect(screen.getByText('33,730 ms',{exact: true})).toBeVisible()
     expect(await browser.evaluate(()=>document.querySelector('[data-slot="trace-waterfall"]')?.textContent ?? '')).toContain('已计约 $0.00850644')
+    await screen.getByRole('button','查看 运行 详情').tap()
+    await expect(browser.locator('[data-trace-time="start"]')).toHaveCount(0)
     await screen.getByRole('button','查看 向量编码 详情').tap()
     await expect(screen.getByText('BAAI/bge-m3',{exact: true})).toBeVisible()
     await app.screenshot('trace-historical-duration-and-partial-cost')

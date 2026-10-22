@@ -81,3 +81,15 @@ test('scoped ledger costs and embedding identities overlay exact native calls wi
   assert.equal(value.root.cost,0.0000001)
   assert.doesNotMatch(JSON.stringify(value),/embedding-call|ledger/)
 })
+test('a registered child embedding never inherits the chat model budget price',()=>{
+  for(const model of ['Pro/BAAI/bge-m3','BAAI/bge-m3','Qwen/Qwen3-Embedding-8B']) {
+    const current = snapshot()
+    const call = current.spans.find(item=>item.kind === 'llm')!
+    call.model = model;call.costMicros = 99000000
+    const trace = buildNativeRunTrace(current)
+    const child = trace.root.children.find(item=>item.kind === 'agent')!
+    assert.equal(child.children[0]!.kind,'embedding')
+    assert.equal(child.children[0]!.cost,null)
+    assert.equal(trace.root.cost,null)
+  }
+})

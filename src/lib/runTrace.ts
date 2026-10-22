@@ -5,6 +5,8 @@ const metric = z.number().finite().nonnegative().nullable()
 const label = publicText.pipe(z.string().max(160))
 export const traceStatusSchema = z.enum(['running','waiting','complete','cancelled','error','unknown'])
 export type TraceStatus = z.infer<typeof traceStatusSchema>
+/** Exact provider model registrations, never a guess from an arbitrary label. */
+export const isEmbeddingTraceModel = (model: unknown) => model === 'BAAI/bge-m3' || model === 'Pro/BAAI/bge-m3' || model === 'Qwen/Qwen3-Embedding-8B'
 export interface TraceSpan {
   id: string; name: string; kind: 'agent'|'llm'|'embedding'|'tool'; status: TraceStatus
   start: number|null; end: number|null; durationMs: number|null
@@ -31,5 +33,22 @@ export type RunTrace = z.infer<typeof runTraceSchema>
 /** Treat metadata from older clients/history as optional, never infer a trace. */
 export function readRunTrace(value: unknown): RunTrace|undefined {
   const parsed = runTraceSchema.safeParse(value)
-  return parsed.success ? parsed.data : undefined
+  if (!parsed.success) return undefined
+  const project = (span: TraceSpan): TraceSpan => {
+    let output = span.output
+    if (span.kind === 'tool') {
+      if (output === '可视化内容已保存；展示引用是否交付会在答复中确认。') output = '可视化内容已保存。'
+      else if (output === `${span.name}未完成；本次工具调用没有确认交付结果。`) output = `${span.name}未完成，请重试。`
+      else if (output === '本次脚本执行未完成，请以已确认的工具结果为准。') output = '脚本执行未完成，请重试。'
+    }
+    const embedding = span.kind === 'llm' && isEmbeddingTraceModel(span.model)
+    return { ...span,...(embedding ? { kind: 'embedding' as const,...(span.name === '模型调用' ? { name: '向量编码' } : {}) } : {}),
+      ...(output === undefined ? {} : { output }),children: span.children.map(project) }
+  }
+  const root = project(parsed.data.root)
+  // Before execution traces, usage fallback used run creation as its anchor.
+  // Preserve that anchor for recorded call offsets without claiming it is the
+  // missing root execution start.
+  if (parsed.data.timingBasis !== 'execution' && root.start === 0 && root.end === null && root.durationMs === null) root.start = null
+  return { ...parsed.data,root }
 }

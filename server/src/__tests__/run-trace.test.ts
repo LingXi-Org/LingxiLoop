@@ -14,7 +14,7 @@ test('relative timing, measured usage, unknown cost and safe public details surv
   const trace = buildRunTrace({ runId: 'run',createdAt: new Date(origin).toISOString(),lifecycle: 'succeeded',tools: [tool],llm: [
     { id: 'llm-a',model: 'model-a',status: 'complete',durationMs: 900,tokensIn: 100,tokensOut: 20,cost: null,costEstimated: false },
   ] })
-  assert.equal(trace.root.start,0)
+  assert.equal(trace.root.start,null,'creation time cannot stand in for execution start')
   assert.equal(trace.root.end,null,'terminal timestamp is unavailable')
   const call = trace.root.children.find(span => span.kind === 'tool')!
   assert.equal(call.start,100); assert.equal(call.end,600)

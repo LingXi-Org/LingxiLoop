@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import type { RunView } from '@lyyzka/lingxios/ui'
 import { publicText,toolDisplay,toolDisplaySchema,resolveToolDisplay } from '../../../src/lib/runActivity.js'
 import type { RunTrace,TraceSpan,TraceStatus } from '../../../src/lib/runTrace.js'
+import { isEmbeddingTraceModel } from '../../../src/lib/runTrace.js'
 import type { HarnessToolPart } from './message-projection.js'
 
 export interface PublicLlmTrace {
@@ -69,9 +70,9 @@ export function buildRunTrace(input: { runId: string; createdAt: string; lifecyc
   const truncated = children.length > 100
   // Known offsets first, then calls with measured duration but unknown offsets.
   children.sort((a,b) => (a.start ?? Infinity)-(b.start ?? Infinity))
-  return { version: 1,startedAt,timingBasis: 'creation',truncated,limitations: [...calls.some(call=>call.startedAt == null) ? ['llm-offsets' as const] : [],'terminal-time','child-discovery',
+  return { version: 1,startedAt,timingBasis: 'creation',queuedAt: startedAt,truncated,limitations: [...calls.some(call=>call.startedAt == null) ? ['llm-offsets' as const] : [],'terminal-time','child-discovery',
     ...(input.presentationAvailable === false ? ['presentation-unavailable' as const] : [])],
-    root: { id: `run-${opaque(input.runId)}`,name: '运行',kind: 'agent',status: rootStatus,start: startedAt === null ? null : 0,end: null,durationMs: null,
+    root: { id: `run-${opaque(input.runId)}`,name: '运行',kind: 'agent',status: rootStatus,start: null,end: null,durationMs: null,
       tokensIn: truncated ? null : sum('tokensIn'),tokensOut: truncated ? null : sum('tokensOut'),
       ...costTotals(children.filter(span=>span.kind === 'llm' || span.kind === 'embedding'),!truncated && input.presentationAvailable !== false),children: children.slice(-100) } }
 }
@@ -89,18 +90,19 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
     const parsed = toolDisplaySchema.safeParse(tool?.display)
     const display = resolveToolDisplay(tool?.toolName ?? item.name ?? '',item.state === 'complete' ? 'completed' : item.state,parsed.success ? parsed.data : undefined)
     const recorded = item.callId ? ledger.get(item.callId) : undefined
+    const embedding = item.kind === 'llm' && (recorded?.apiKind === 'embedding' || isEmbeddingTraceModel(item.model))
     const detail = item.kind === 'llm' ? '模型调用：包含准入、请求与用量结算。' : item.kind === 'agent'
       ? '实际执行区间；排队时间单独记录。' : safe(display.purpose)
     const durationMs = item.startedAt !== null && item.completedAt !== null && item.completedAt >= item.startedAt
       ? item.completedAt-item.startedAt : null
-    spans.set(item.spanId,{ id: item.spanId,name: item.kind === 'agent' ? item.childRunId ? '子任务' : '运行' : item.kind === 'llm' ? recorded?.apiKind === 'embedding' ? '向量编码' : '模型调用' : safe(display.title)?.slice(0,160) ?? '工具调用',
-      kind: item.kind === 'llm' && recorded?.apiKind === 'embedding' ? 'embedding' : item.kind,status: item.state === 'failed' ? 'error' : item.state,start: relative(item.startedAt),end: relative(item.completedAt),durationMs,
+    spans.set(item.spanId,{ id: item.spanId,name: item.kind === 'agent' ? item.childRunId ? '子任务' : '运行' : item.kind === 'llm' ? embedding ? '向量编码' : '模型调用' : safe(display.title)?.slice(0,160) ?? '工具调用',
+      kind: embedding ? 'embedding' : item.kind,status: item.state === 'failed' ? 'error' : item.state,start: relative(item.startedAt),end: relative(item.completedAt),durationMs,
       ...(item.kind === 'llm' ? { model: safe(item.model)?.slice(0,160) ?? '未知模型' } : {}),detail,
       ...(item.kind === 'tool' && parsed.success ? { input: display.input,output: safe(display.summary) } : {}),
       tokensIn: item.kind === 'llm' && item.usageAvailable ? number(item.inputTokens) : null,
       tokensOut: item.kind === 'llm' && item.usageAvailable ? number(item.outputTokens) : null,
       cost: item.kind === 'llm' && item.usageAvailable ? recorded ? recorded.cost
-        : item.costMicros != null && (item.costMicros > 0 || item.inputTokens === 0 && item.outputTokens === 0) ? number(item.costMicros/1_000_000) : null : null,
+        : !embedding && item.costMicros != null && (item.costMicros > 0 || item.inputTokens === 0 && item.outputTokens === 0) ? number(item.costMicros/1_000_000) : null : null,
       costEstimated: item.kind === 'llm' ? recorded?.costEstimated ?? true : false,children: [] })
   }
   const root = spans.get(snapshot.rootSpanId)

@@ -34,12 +34,16 @@ test('native persisted execution trace crosses product history/SSE with exact re
     { id: 'trace-human',kind: 'human',capabilities: ['read','execute'] },{ id: 'trace-agent',kind: 'agent',capabilities: ['read','execute','speak'] },
   ] }
   let calls = 0
+  let entered!: () => void,release!: () => void
+  const enteredModel = new Promise<void>(resolve=>{ entered=resolve })
+  const modelGate = new Promise<void>(resolve=>{ release=resolve })
   const usage = { available: true,inputTokens: 11,outputTokens: 7 }
   const worker = createWorker({ controlPlane: app,kernel: { homesRoot: directory },worker: { id: 'trace-bridge-worker',healthPort: 0 },model: {
     modelId: 'synthetic-trace-model',previewFormat: 'user-text',publicTextProtocol: 'purpose-json-v1',contextWindowTokens: 200000,
     async run(request) {
       const first = ++calls === 1
       await request.onTextDelta?.(first ? '检查合成记录。' : '合成结果是42。',{ purpose: first ? 'commentary' : 'answer' })
+      if(first) { entered();await modelGate }
       return { text: first ? '' : '合成结果是42。',output: first ? [{ type: 'function_call' as const,callId: 'trace-probe',name: 'probe__read',arguments: '{}' }]
         : [{ role: 'assistant' as const,content: '合成结果是42。' }],usage }
     },
@@ -50,7 +54,17 @@ test('native persisted execution trace crosses product history/SSE with exact re
     await app.conversations.sync(policy)
     const identity = (await app.conversations.ingest({ tenantId: policy.tenantId,conversationId: policy.conversationId,policyVersion: 1,messageId: 'trace-source',version: 1,
       author: { kind: 'human',id: 'trace-human' },text: 'Read the synthetic record and answer.' },{ mode: 'execute',codeExecution: 'disabled' })).runs[0]!
-    await worker.runNext()
+    const running = worker.runNext()
+    await enteredModel
+    const liveNative = await app.readRunTrace(identity)
+    assert.ok(liveNative?.origin)
+    const live = (await readRunProjection(app,identity,false,undefined,undefined,undefined,true)).snapshot
+    const liveTrace = runTraceSchema.parse(live.message.metadata.custom.runTrace)
+    const liveCall = liveTrace.root.children.find(span=>span.kind === 'llm')!
+    assert.ok(liveCall.start !== null)
+    assert.equal(liveTrace.root.end,null);assert.equal(liveTrace.root.durationMs,null);assert.equal(liveCall.end,null)
+    assert.equal(liveTrace.root.start,0)
+    release();await running
     assert.equal(calls,2)
     const native = await app.readRunTrace(identity)
     assert.ok(native?.origin)
@@ -65,6 +79,9 @@ test('native persisted execution trace crosses product history/SSE with exact re
     const history = (await readRunProjection(app,identity,false,undefined,undefined,undefined,true)).snapshot
     assert.equal(viewerReads,1)
     const trace = runTraceSchema.parse(history.message.metadata.custom.runTrace)
+    assert.equal(trace.startedAt,liveTrace.startedAt)
+    const completedCall = trace.root.children.find(span=>span.id === liveCall.id)!
+    assert.equal(completedCall.start,liveCall.start);assert.ok(completedCall.end !== null)
     assert.equal(trace.startedAt,native.origin); assert.equal(trace.revision,native.revision)
     assert.equal(trace.timingBasis,'execution'); assert.ok(trace.root.children.some(span=>span.kind === 'llm' && span.start !== null && span.end !== null))
     const nativeRoot = native.spans.find(span=>span.spanId === native.rootSpanId)!
@@ -88,7 +105,7 @@ test('native persisted execution trace crosses product history/SSE with exact re
     assert.deepEqual(replay.message.metadata.custom.runTrace,history.message.metadata.custom.runTrace)
     const reload = (await readRunProjection(app,identity,false,undefined,undefined,undefined,true)).snapshot
     assert.deepEqual(reload.message.metadata.custom.runTrace,history.message.metadata.custom.runTrace)
-    if (process.env.ISSUE296_SNAPSHOTS) await writeFile(process.env.ISSUE296_SNAPSHOTS,JSON.stringify({ initial: history,replay,reload }))
+    if (process.env.ISSUE296_SNAPSHOTS) await writeFile(process.env.ISSUE296_SNAPSHOTS,JSON.stringify({ running: live,initial: history,replay,reload }))
     assert.equal(nativeText(replay.message),'合成结果是42。')
     assert.doesNotMatch(JSON.stringify(replay),/PRIVATE_TOOL_RESULT|model\.request|leaseToken|instructionsSha256/)
     await assert.rejects(readRunProjection(app,{ ...identity,tenantId: 'other' },false),/not found/)
@@ -96,7 +113,7 @@ test('native persisted execution trace crosses product history/SSE with exact re
     await assert.rejects(readRunProjection(app,identity,false),/participant|forbidden|capability/)
     await assert.rejects(app.streamRun(identity,{ trace: true }),/participant|forbidden|capability/)
   } finally {
-    await worker.stop(); await app.stop(); await db.end()
+    release();await worker.stop(); await app.stop(); await db.end()
     // Pool.end resolves when client sockets have been closed locally; PostgreSQL
     // can still be consuming their final frames. Wait for this fixture's own
     // sessions to leave before dropping it, instead of killing open readers.

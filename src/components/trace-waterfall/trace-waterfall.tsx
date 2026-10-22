@@ -40,6 +40,13 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
   },[])
   const all = useMemo(() => flatten(trace.root),[trace.root])
   const selected = all.find(span => span.id === selectedId)
+  const endpoint = (offset: number|null,kind: 'start'|'end') => {
+    const date = offset !== null && trace.startedAt !== null ? new Date(trace.startedAt+offset) : null
+    return date && Number.isFinite(date.getTime())
+      ? <><time data-trace-time={kind} dateTime={date.toISOString()}>{date.toLocaleString('zh-CN',{
+        year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',second: '2-digit',fractionalSecondDigits: 3,hour12: false,
+      })}</time><span className="ms-1 whitespace-nowrap text-[10px]">(+{ms(offset)})</span></> : ms(offset)
+  }
   const elapsed = running && trace.timingBasis === 'execution' && trace.startedAt !== null ? Math.max(0,now-trace.startedAt) : null
   // Include all descendants even when collapsed; starts can extend beyond the
   // current clock. Axis headroom is display space, never an invented event time.
@@ -77,7 +84,7 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
           </button>
         </div>
         <button type="button" onClick={() => setSelectedId(span.id)} aria-label={`${span.name} 时间 ${ms(duration)}，${cost(span)}`}
-          data-trace-lane data-trace-start={span.start ?? ''} data-trace-end={end ?? ''}
+          data-trace-lane data-trace-start={span.start ?? ''} data-trace-end={span.end ?? ''}
           data-trace-duration-only={!known ? '' : undefined}
           className="relative h-8 min-w-0 overflow-hidden rounded-sm text-start outline-none focus-visible:ring-2 focus-visible:ring-ring">
           {hasTimeline && <span className="absolute inset-0 border-s border-border/30 bg-[linear-gradient(to_right,transparent_calc(50%-1px),var(--border)_50%,transparent_calc(50%+1px))] opacity-40" aria-hidden="true" />}
@@ -112,7 +119,7 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
         <div className="flex flex-wrap justify-between gap-1"><h4 className="font-medium">{selected.name}</h4><span className="text-muted-foreground">{kindLabels[selected.kind]} · {labels[selected.status]}</span></div>
         {selected.model && <p className="text-muted-foreground break-all">{selected.model}</p>}
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground tabular-nums">
-          <div><dt className="inline">开始 </dt><dd className="inline">{ms(selected.start)}</dd></div><div><dt className="inline">结束 </dt><dd className="inline">{ms(selected.end)}</dd></div>
+          <div><dt className="block">开始</dt><dd>{endpoint(selected.start,'start')}</dd></div><div><dt className="block">结束</dt><dd>{endpoint(selected.end,'end')}</dd></div>
           <div><dt className="inline">输入 tokens </dt><dd className="inline">{tokens(selected.tokensIn)}</dd></div><div><dt className="inline">输出 tokens </dt><dd className="inline">{tokens(selected.tokensOut)}</dd></div>
           <div><dt className="inline">耗时 </dt><dd className="inline">{ms(selected.durationMs)}</dd></div><div><dt className="sr-only">费用</dt><dd>{cost(selected)}</dd></div>
         </dl>
