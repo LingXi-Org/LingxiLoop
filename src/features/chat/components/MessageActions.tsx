@@ -74,10 +74,11 @@ export function useMessageCopyText(bodyRef: RefObject<HTMLElement | null>) {
     return Array.isArray(claims) ? claims as MarkdownConfidenceClaim[] : undefined
   })
   const getText = () => {
-    const body = bodyRef.current?.closest('.native-message-content')
+    const messageContent = bodyRef.current?.closest('.native-message-content')
       ?? bodyRef.current?.closest('[data-msg-id]')?.querySelector('.native-message-content')
+    const body = messageContent?.querySelector('[data-message-region="body"]') ?? messageContent
     if (inlineCitations) {
-      const ranges = Array.from(body?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).filter(node => node.closest('.native-message-content') === body).flatMap(node => {
+      const ranges = Array.from(body?.querySelectorAll<HTMLElement>('[data-citation-start]') ?? []).filter(node => node.closest('.native-message-content') === messageContent).flatMap(node => {
         const start = Number(node.dataset.citationStart), end = Number(node.dataset.citationEnd)
         const link = /^\[([\s\S]+)\]\(#cite-[^)]*\)$/.exec(rawText.slice(start, end))
         return link && Number.isSafeInteger(start) && Number.isSafeInteger(end) && end <= rawText.length
@@ -86,7 +87,7 @@ export function useMessageCopyText(bodyRef: RefObject<HTMLElement | null>) {
       return confidenceCopyText(rawText, ranges)
     }
     const renderedIds = new Set(Array.from(body?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [])
-      .filter(node => node.closest('.native-message-content') === body).map(node => node.dataset.confidenceId))
+      .filter(node => node.closest('.native-message-content') === messageContent).map(node => node.dataset.confidenceId))
     return confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id)))
   }
   return { rawText, confidenceClaims, getText }

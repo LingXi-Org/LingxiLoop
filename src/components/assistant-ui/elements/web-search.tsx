@@ -19,6 +19,7 @@ export function WebSearch({
   searching,
   cycle,
   className,
+  summaryOnly = false,
   ...props
 }: Omit<
   ComponentProps<"div">,
@@ -29,6 +30,8 @@ export function WebSearch({
   visibleResults: number;
   searching: boolean;
   cycle: number;
+  /** The caller owns one detailed source list; show only search status here. */
+  summaryOnly?: boolean;
 }) {
   return (
     <div
@@ -52,16 +55,16 @@ export function WebSearch({
             正在搜索资料
           </ShimmerLabel>
         ) : (
-          <span className="fade-in animate-in duration-300">
+          <span className="fade-in animate-in duration-300 motion-reduce:animate-none">
             找到 {results.length} 条来源
           </span>
         )}
       </div>
-      <div className="flex min-h-[5.75rem] flex-col">
+      {!summaryOnly && <div className="flex min-h-[5.75rem] flex-col">
         {take(results, visibleResults).map((result) => (
           <div
             key={`${cycle}-${result.url ?? result.domain}`}
-            className="fade-in slide-in-from-bottom-1 animate-in fill-mode-both hover:bg-foreground/[0.03] -mx-2.5 flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors duration-300"
+            className="fade-in slide-in-from-bottom-1 animate-in fill-mode-both hover:bg-foreground/[0.03] -mx-2.5 flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 transition-colors duration-300 motion-reduce:animate-none motion-reduce:transition-none"
           >
             <span className="bg-foreground/[0.06] text-muted-foreground flex size-4 shrink-0 items-center justify-center rounded text-[9px] font-medium">
               {result.domain.charAt(0).toUpperCase()}
@@ -74,7 +77,7 @@ export function WebSearch({
             </span>
           </div>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { RunEvent } from '@lyyzka/lingxios/ui'
 import { harnessToolParts } from '../../../../server/src/agent-runtime/message-projection'
 import { ResearchSources } from './ResearchSources'
+import { researchSources } from '@/lib/researchSources'
+import { load } from 'cheerio'
 
 // Failure cases: lost/replayed results, foreign runs, unsafe URLs, leaked query/full
 // text, a finished run showing an eternal spinner, and empty-result noise.
@@ -52,6 +54,38 @@ test('multiple sources use Citation while a deduplicated single source uses Link
     assert.doesNotMatch(html, new RegExp(`data-slot="${slot === 'citation' ? 'link-preview' : 'citation'}"`))
     assert.match(html, /摘要甲/)
   }
+})
+
+test('successful search has one detailed source list and keeps every uncited hit', () => {
+  const results = [
+    { title: '来源甲', url: 'https://www.gov.cn/a', snippet: '片段甲' },
+    { title: '未引用来源乙', url: 'https://www.gov.cn/b', snippet: '片段乙' },
+  ]
+  const calls = harnessToolParts('run', [events[0], { ...events[1], data: { toolCallId: 'host:search', result: { status: 'completed', value: { results } } } }])
+  const $ = load(renderToStaticMarkup(<ResearchSources calls={calls} lifecycle="succeeded" />))
+  for (const source of results) assert.equal($(`a[href="${source.url}"]`).length, 1)
+  assert.equal($('[data-slot="citation"]').length, 2)
+  assert.match($.text(), /找到 2 条来源/)
+  assert.match($.text(), /未引用来源乙/)
+})
+
+test('search identities retain source versions, page fragments and distinct excerpts', () => {
+  const base = { title: '版本化资料', url: 'https://docs.example.test/report#page=2', snippet: '第二页', sourceId: 'report', sourceVersion: 'v1', page: 2 }
+  const results = [base, { ...base }, { ...base, sourceVersion: 'v2' }, { ...base, url: 'https://docs.example.test/report#page=3', page: 3, snippet: '第三页' }, { ...base, snippet: '第二页另一个片段' }]
+  const projected = researchSources({ results })!
+  assert.equal(projected.length, 4)
+  assert.equal(projected[0]?.url, base.url)
+  assert.equal(Reflect.get(projected[0]!, 'sourceVersion'), 'v1')
+  assert.equal(Reflect.get(projected[1]!, 'sourceVersion'), 'v2')
+  assert.equal(Reflect.get(projected[2]!, 'page'), 3)
+  const calls = harnessToolParts('run', [events[0], { ...events[1], data: { toolCallId: 'host:search', result: { status: 'completed', value: { results } } } }])
+  assert.deepEqual(harnessToolParts('run', [...events.slice(0, 1), { ...events[1], data: { toolCallId: 'host:search', result: { status: 'completed', value: { results } } } }], calls), calls)
+  const html = renderToStaticMarkup(<ResearchSources calls={calls} lifecycle="succeeded" />)
+  assert.match(html, /report#page=2/)
+  assert.match(html, /report#page=3/)
+  assert.match(html, /v1/)
+  assert.match(html, /v2/)
+  assert.match(html, /第二页另一个片段/)
 })
 
 test('empty results are silent while failures, malformed results and cancellation stay visible', () => {

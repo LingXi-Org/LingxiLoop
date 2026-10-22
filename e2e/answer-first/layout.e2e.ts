@@ -1,0 +1,108 @@
+import { test } from '@e2e-dev/web'
+import { expect } from 'e2e'
+import { annotation, command, commentary, mixed, snapshot } from './data'
+
+test('one process disclosure contains ordinary rich tools while answer and results stay outside', async ({ app, browser, screen }) => {
+  await command('reset', { snapshot: mixed() })
+  await app.open('/e2e/answer-first.html')
+  await expect(browser.locator('[data-slot="run-activity"]')).toHaveCount(1)
+  await expect(screen.getByText('这是始终可读的实质答复。', { exact: true })).toBeVisible()
+  await expect(screen.getByText('明确请求的查询成果', { exact: true })).toBeVisible()
+  await expect(screen.getByText('历史未分类成果', { exact: true })).toBeVisible()
+  await expect(screen.getByText('合成最终成果.pdf', { exact: true })).toBeVisible()
+  await expect(screen.getByText('正文最终引用', { exact: true })).toBeVisible()
+  await expect(screen.getByText('用户请求的资料', { exact: true })).toBeVisible()
+  await expect(screen.getByText('用户请求的记忆摘要', { exact: true })).toBeVisible()
+  for (const text of ['普通资料查询', '过程学习偏好', '检索知识资料', '资料甲（第一版）', '合成执行计划']) {
+    await expect(screen.getByText(text, { exact: true })).not.toBeVisible()
+  }
+  const disclosure = browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > button')
+  await disclosure.focus(); await disclosure.press('Enter')
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'true')
+  await expect(screen.getByText('合成执行计划', { exact: true })).toBeVisible()
+  await expect(browser.locator('[data-slot="run-activity"] a[href="https://example.com/reference?v=1"]')).toHaveCount(1)
+  await expect(browser.locator('[data-slot="run-activity"] a[href="https://example.com/reference?v=2"]')).toHaveCount(1)
+  await expect(browser.locator('[data-slot="task-card"][data-task-id="task-parent"]')).toBeVisible()
+  await browser.locator('[data-slot="task-card"][data-task-id="task-parent"] > button').tap()
+  await expect(browser.locator('[data-slot="task-card"][data-task-id="task-child"]')).toBeVisible()
+  await browser.locator('[data-slot="task-card"][data-task-id="task-child"] > button').tap()
+  await expect(browser.locator('[data-slot="task-card"][data-task-id="task-child"] a')).toHaveCount(1)
+  await browser.locator('[data-slot="task-card"][data-task-id="task-child"] a').focus()
+  await browser.locator('[data-slot="task-card"][data-task-id="task-child"] a').press('Enter')
+  expect(await browser.evaluate(() => document.activeElement === document.querySelector('li[data-activity-kind][data-task-id="task-child"]'))).toBe(true)
+  await expect(browser.locator('[data-slot="run-activity-details"]')).not.toHaveAttribute('open', '')
+  await browser.locator('[data-slot="run-activity-details"] > summary').tap()
+  await expect(browser.locator('[data-slot="run-activity-details"]')).toHaveAttribute('open', '')
+  await app.screenshot('answer-first-single-process-expanded')
+  await disclosure.press('Enter')
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'false')
+  expect(await browser.evaluate(() => document.activeElement?.matches('[data-slot="run-activity"] > [data-slot="collapsible"] > button') ?? false)).toBe(true)
+  await app.screenshot('answer-first-single-process-collapsed')
+})
+
+test('manual reading position is not pulled to the bottom by new stream frames or process disclosure', async ({ app, browser }) => {
+  const text = Array.from({ length: 100 }, (_, index) => `第${index + 1}段：这是用于实际滚动检查的合成正文，阅读位置应保持。`).join('\n\n')
+  const current = (tail = '', seq = 1) => snapshot([commentary(1), { type: 'text', text: text + tail, ...annotation('long-answer', 'answer') }], { seq })
+  await command('reset', { snapshot: current() })
+  await app.open('/e2e/answer-first.html')
+  await expect(browser.locator('[data-message-region="body"]')).toContainText('第100段')
+  await browser.evaluate(() => {
+    const viewport = document.querySelector<HTMLElement>('[data-chat-viewport]')!
+    viewport.scrollTop = 1000; viewport.dispatchEvent(new Event('scroll'))
+    return true
+  })
+  await expect(browser.locator('[data-chat-scroll-bottom]')).toBeVisible()
+  const before = await browser.evaluate(() => document.querySelector('[data-chat-viewport]')!.scrollTop)
+  await command('publish', current('\n\n新增正文不应强制滚动。', 2))
+  await expect(browser.locator('[data-fixture-received]')).toHaveAttribute('data-fixture-received', '2')
+  expect(Math.abs(await browser.evaluate(() => document.querySelector('[data-chat-viewport]')!.scrollTop) - before)).toBeLessThan(2)
+  await browser.evaluate(() => { const viewport = document.querySelector('[data-chat-viewport]')!; viewport.scrollTop = 0; viewport.dispatchEvent(new Event('scroll')); return true })
+  const trigger = browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > button')
+  await trigger.focus(); await trigger.press('Enter')
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  expect(await browser.evaluate(() => document.querySelector('[data-chat-viewport]')!.scrollTop)).toBeLessThan(100)
+  await command('publish', current('\n\n新增正文不应强制滚动。\n\n仍然保持手动阅读位置。', 3))
+  await expect(browser.locator('[data-fixture-received]')).toHaveAttribute('data-fixture-received', '3')
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  expect(await browser.evaluate(() => document.querySelector('[data-chat-viewport]')!.scrollTop)).toBeLessThan(100)
+  await app.screenshot('answer-first-manual-scroll-preserved')
+})
+
+test('copy while the process is expanded contains only the current answer', async ({ app, browser, screen }) => {
+  const current = mixed()
+  current.message.content.unshift({ type: 'text', text: '已归档的过程引用 [旧资料](#cite-history)', ...annotation('archived-copy', 'commentary', { purpose: 'process' }) })
+  current.message.content.unshift({ type: 'text', text: '显式过程不得复制', ...annotation('purpose-copy', 'answer', { purpose: 'process' }) })
+  await command('reset', { snapshot: current })
+  await browser.addInitScript(() => {
+    // Isolate the OS clipboard boundary; exercise the real visible copy action.
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text: string) => { Object.assign(window, { __copied: text }) } } })
+  })
+  await app.open('/e2e/answer-first.html')
+  await expect(screen.getByText('这是始终可读的实质答复。', { exact: true })).toBeVisible()
+  await browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > button').tap()
+  await screen.getByRole('button', '复制回复', { exact: true }).focus()
+  await screen.getByRole('button', '复制回复', { exact: true }).press('Enter')
+  await expect(screen.getByRole('button', '已复制回复', { exact: true })).toBeVisible()
+  expect(await browser.evaluate(() => Reflect.get(window, '__copied'))).toBe('这是始终可读的实质答复。')
+})
+
+test('390px light and dark keep the answer readable and process keyboard accessible', async ({ app, browser, screen }) => {
+  await browser.setViewport({ width: 390, height: 844 })
+  await command('reset', { snapshot: mixed() })
+  await app.open('/e2e/answer-first.html')
+  await expect(screen.getByText('这是始终可读的实质答复。', { exact: true })).toBeVisible()
+  for (const theme of ['light', 'dark']) {
+    await browser.evaluate(theme => { document.documentElement.classList.toggle('dark', theme === 'dark'); return true }, theme)
+    const disclosure = browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > button')
+    await disclosure.focus(); await disclosure.press('Space')
+    await expect(disclosure).toHaveAttribute('aria-expanded', 'true')
+    expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await browser.evaluate(() => { const viewport = document.querySelector('[data-chat-viewport]')!; viewport.scrollTop = 0; viewport.dispatchEvent(new Event('scroll')); return true })
+    await app.screenshot(`answer-first-390-${theme}`)
+    await disclosure.press('Space')
+    await expect(disclosure).toHaveAttribute('aria-expanded', 'false')
+    await expect(screen.getByText('这是始终可读的实质答复。', { exact: true })).toBeVisible()
+    await browser.evaluate(() => { const viewport = document.querySelector('[data-chat-viewport]')!; viewport.scrollTop = 0; viewport.dispatchEvent(new Event('scroll')); return true })
+    await app.screenshot(`answer-first-390-${theme}-body`)
+  }
+})

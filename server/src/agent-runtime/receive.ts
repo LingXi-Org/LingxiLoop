@@ -86,6 +86,6 @@ export async function receiveAgentRequest(input: AgentRequest) {
   const accepted = await api.conversations.ingest({ tenantId: input.companyId, conversationId: input.channelId,
     policyVersion: policy.version, messageId: input.clientMsgNo, version: 1, author: { id: message.fromUid, kind: 'human' },
     text, mentions, attachments: files, ...(threadId ? { threadId } : {}) }, { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation' })
-  for (const run of accepted.runs) await bindProductRun(pool,run,input.channelId,false,input.clientMsgNo)
+  for (const run of accepted.runs) await bindProductRun(pool,run,input.channelId,false,input.clientMsgNo,accepted.deduplicated ? undefined : 1)
   return accepted
 }

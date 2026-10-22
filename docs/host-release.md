@@ -18,6 +18,76 @@ fresh snapshot/isolated restore and migration sequence in
 [Native14 maintenance](native14-host-maintenance.md). The old numeric format2
 maintenance plan remains limited to its historical12→13 transition.
 
+## Product 53 → 54 presentation contract
+
+`run-presentation-contract-host-release/v1` permits only the full product 53
+inventory to the full product 54 inventory. Both sides must use the same formally
+published LingxiOS 3.8.2 package tarball and integrity, native schema 14, protocol
+11 and native hash
+`c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f`.
+The complete first 53 migration names/checksums must match. The only addition is
+`0054_run_presentation_contract.sql`, SHA256
+`f58aafed796cabcb481bd381b4df298024d5effd0a576dae5e9638430aed38e2`.
+The previous `0053_conversation_repair_provenance.sql` checksum remains
+`733e035ba5de5aa5a9142c516e0364f83fe24e6dc0937e6045a89078371529dd`.
+No older release format accepts this transition.
+
+Migration 54 adds nullable `agent_run_bindings.presentation_version`, with no
+non-null default and only NULL or 1 allowed. Only newly created runs receive the
+trusted product marker; historical rows are not backfilled or rewritten. Native
+schema, durable memory, authorization and actual vector indexes are unchanged.
+The target retains public-text reader 2, `purpose-json-v1` production and
+`runTrace: 1`; actual target-image metadata must prove those capabilities.
+
+If the verified production inventory is still product 52, use two distinct
+qualified candidates and two sealed release plans:
+
+1. Use `conversation-repair-provenance-host-release/v1` with its exact
+   runtime 3.8.0/native 14/full 52 source and runtime 3.8.2/native 14/full 53
+   target. The previously published product 53 candidate is commit
+   `d5481cd258058784e7004169b5ef1235460384f1`, image
+   `ghcr.io/lingxi-org/lingxiloop-server@sha256:4fbe7f7445e0aee452a22c463b1b5d64f01b7c09b1dca45008af6916c1bee0b1`.
+   Its [publication workflow](https://github.com/LingXi-Org/LingxiLoop/actions/runs/39726402502)
+   completed successfully with deployment, rollout and manifest updates skipped.
+   This is publication provenance, not a fresh production acceptance.
+2. Obtain a new successful acceptance for the actual full 53 inventory, image,
+   deployment configuration and all four healthy reader container identities.
+   Then prepare a separate `run-presentation-contract-host-release/v1` plan
+   using that exact accepted source and a separately qualified product 54 image.
+   Product 54 currently has local source only; it has no published image or
+   successful production acceptance in this change.
+
+Never put a product 54 image in the 52→53 plan: `db:migrate` would continue through
+54, while the plan's postcheck requires exactly 53. Do not skip the intermediate
+inventory or reuse the old product 52 acceptance/drain receipt for 53→54.
+The repository's recorded product 52 production receipt is historical and must
+not be treated as a live inventory check.
+
+For 53→54, qualify immutable image audits and verify unchanged seeds before
+stopping any service. Bind the four source identities from the fresh 53
+acceptance; then stop Worker A, Worker B, Web A and Web B. Require the two
+zero-lease checks separated by the existing barrier wait before submitting one
+product migration. There is no native migration override. After exact 54
+provenance is confirmed, start Web A, Web B, Worker A and Worker B, checking the
+actual image and service health at each step. This retains the ordinary image
+preparation and all existing source/configuration safeguards.
+
+Although the SQL is additive, an old product 53 reader rejects the complete 54
+migration ledger. After 54 commits, never restart a 53 binary or remove the new
+column/ledger row as rollback. A known failure with exact committed 54 is
+classified as `fix-forward`; that is a stop-and-review classification, not a
+recovery executor. This change adds no 54→54 release or automatic recovery format.
+Recovery requires an independently reviewed 54-aware fix-forward candidate and a
+supported recovery procedure. Do not replay the 53→54 plan against 54. Unknown
+submission/readback stops further calls without retry; preserve the update ID and
+failed receipt before resolving the outcome.
+
+This change validates local release artifacts and offline preflight behavior.
+It does not execute migration, image preparation, deployment or production
+acceptance. The existing GitHub authentication denial and production MCP/health
+HTTP 403 / Cloudflare 1010 denials remain unresolved; no retry or alternate route
+is part of this work.
+
 ## Qualification and plan
 
 All input paths below are absolute. A plan is sealed from a descriptor by the offline default mode. The CLI independently checks the accepted source receipt, image audit bytes, Git objects, four package manifests/locks, migration files, effective Compose and locally installed formal package. Use the already qualified dependency installation; no installation, image build, credential discovery or remote request is performed by plan mode.
@@ -26,7 +96,7 @@ Descriptor fields:
 
 | Field | Contract |
 | --- | --- |
-| `format` | `same-schema-host-release/v1` for an unchanged supported profile, or explicit `product-schema-host-release/v1` for the reviewed48→49 transition only. The native13→14 transition uses `native-schema-host-release/v1` with the extra `backup` field described in its runbook; native14/product50→50 uses the same-schema format. |
+| `format` | `same-schema-host-release/v1` for an unchanged supported profile, or explicit `product-schema-host-release/v1` for the reviewed48→49 transition only. The native13→14 transition uses `native-schema-host-release/v1` with the extra `backup` field described in its runbook; native14/product50→50 uses the same-schema format. The exact 52→53 and 53→54 transitions use the separate formats and candidates above. |
 | `createdAt` | ISO timestamp. |
 | `source`, `target` | `releaseDescriptor(commit, formalRelease)` output plus `image` below. |
 | `sourceAcceptanceSha256` | SHA256 of the previous successful acceptance JSON bytes. It must have `passed:true`, exact source `candidate`, and every named check true. |
@@ -158,7 +228,7 @@ Do not reenable the legacy ordinary pipeline after using this path. Its existing
 ## Owning checks
 
 ```sh
-node --test scripts/host-release.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs
+node --test scripts/public-text-release.test.mjs scripts/host-release.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs
 node --test --test-name-pattern 'effective candidate' scripts/host-release.local.test.mjs
 ```
 

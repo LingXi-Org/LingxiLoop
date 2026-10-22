@@ -1,0 +1,12 @@
+# #304 browser failure model (before implementation)
+
+Base: `d5481cd258058784e7004169b5ef1235460384f1`. Browser runner: tester-army/e2e 0.17.0 with official `@e2e-dev/web` 0.12.0. All records are synthetic and local; no production/private records or paid model calls.
+
+1. A v2 answer follows a tool in the live event order, then moves before it on acceptance. The visible answer can disappear between `response.committed` and the final message, lose its DOM/selection, or remount a visualization. Observe the actual product projection/AssistantTransport output through the production decoder and store, starting at the first answer character. Superseded/replaced answers and new request/owner identities must still reset.
+2. Folding one RunActivity leaves ordinary tools and rich process cards in the main reading area, or folds explicit deliverables/unknown legacy results/current attention incorrectly. Verify mutually exclusive regions and retained final citations.
+3. The supported `native-unbound` shape has an interrupt and `awaiting_input`; both NativeTool and HarnessDetails can render a form. Require exactly one actionable input and one continuation request, including double submission and replay. Approval remains directly actionable once.
+4. History pagination can duplicate, reorder, resurrect archived answers, replace newer live tool/approval state, retain an old run response or lose a new load's loading indicator. Exercise >80 entries, error/retry, concurrent live update, delayed stale response and request changes through the ordinary local HTTP interface. Pages remain bounded and never become the primary answer.
+5. Task relationships or source identities may be guessed. Explicit parent/task fixtures must nest; missing relationships remain flat. Different source versions/pages remain distinct and each same source appears once in process details.
+6. Expand/collapse may steal keyboard focus or scroll, erase user open state, overflow at 390px or ignore reduced-motion preferences. Check light/dark, keyboard activation, focus, narrow width and manual scroll away from the bottom with new stream data.
+
+Evidence separates (a) synthetic fixtures, (b) synthetic v2 events processed by real product projection/transport/decoder/store, and (c) actual browser execution. Local success is not production acceptance. Final execution must use the integrator's combined candidate, not this baseline worktree.

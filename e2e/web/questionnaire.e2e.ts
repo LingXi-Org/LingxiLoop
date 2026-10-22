@@ -9,7 +9,8 @@ test.describe('durable questionnaire', { tags: ['web', 'questionnaire'] }, () =>
     await expect(screen.getByText('请在问卷卡片中提交回答。', { exact: true }).first()).toBeVisible()
     await app.screenshot('questionnaire-single-submit-entry')
     await app.open('/e2e/questionnaire.html?mode=native-unbound')
-    await expect(screen.getByRole('textbox', '补充信息', { exact: true }).first()).toBeVisible()
+    await expect(screen.getByRole('textbox', '补充信息', { exact: true })).toHaveCount(1)
+    await expect(screen.getByRole('textbox', '补充信息', { exact: true })).toBeVisible()
   })
   test('unread status blocks submission; waiting stays idle until explicit submit', async ({ app, browser, screen }) => {
     await app.open('/e2e/questionnaire.html?mode=loading')

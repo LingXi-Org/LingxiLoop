@@ -78,6 +78,8 @@ jobs:
             web:
               - 'third_party/zcode/**'
               - 'third_party/assistant-ui/streaming-text/**'
+              - 'third_party/assistant-ui-elements/**'
+              - 'third_party/react-chat-elements/reply-message/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
               - 'src/**'

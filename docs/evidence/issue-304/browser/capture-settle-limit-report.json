@@ -1,0 +1,640 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a16253-041d-7c1b-a966-8d5a2cece96e",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-22T06:36:11.077Z",
+    "finishedAt": "2026-10-22T06:36:48.683Z",
+    "project": {
+      "id": "lingxiloop-answer-first",
+      "configDigest": "6f99e53d96440e0259e79a6b109b1ca7df0136916d9c86bbe80fc87bc93c36aa"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "cae0804451fc644b7a7666ea21e5a61de5ddcb95",
+      "branch": "fix/304-browser-final-evidence",
+      "dirty": false
+    },
+    "targets": [
+      {
+        "id": "desktop",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53124",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "b222d331f8c536bf41f14f7bd17a5cd61010532323fc0f8ba689aa60ea0af542",
+        "testId": "e2e/answer-first/attention.e2e.ts::native%20interrupt%20and%20awaiting_input%20have%20one%20actionable%20continuation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "native interrupt and awaiting_input have one actionable continuation"
+        ],
+        "file": "e2e/answer-first/attention.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/attention.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e655b875d4047dff99b95e80b275606ab4fc8582af6f468249bddd4cdf8d4f4b",
+        "testId": "e2e/answer-first/attention.e2e.ts::current%20approval%20has%20one%20external%20action%20and%20replay%20cannot%20submit%20it%20again",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "current approval has one external action and replay cannot submit it again"
+        ],
+        "file": "e2e/answer-first/attention.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/attention.e2e.ts",
+          "line": 23,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "c95ab0acc0020435680e64b5b8e215a0c93b7391425212909813aaf4475a0dc2",
+        "testId": "e2e/answer-first/history.e2e.ts::bounded%20history%20retries%20in%20one%20process%20entry%20without%20replacing%20live%20answer%20or%20repeating%20entries",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "bounded history retries in one process entry without replacing live answer or repeating entries"
+        ],
+        "file": "e2e/answer-first/history.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/history.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "bcc0691e7de1044fd145391f7a1f159a7d42ba5efb42d0575524ecdf96e1c476",
+        "testId": "e2e/answer-first/history.e2e.ts::late%20history%20page%20cannot%20replace%20newer%20live%20data%20or%20new-request%20content",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "late history page cannot replace newer live data or new-request content"
+        ],
+        "file": "e2e/answer-first/history.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/history.e2e.ts",
+          "line": 33,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6d9dbfee67f82edf5f6669b6c30e2b122a3eb00da2cd30075ce4befdc835a7ae",
+        "testId": "e2e/answer-first/layout.e2e.ts::one%20process%20disclosure%20contains%20ordinary%20rich%20tools%20while%20answer%20and%20results%20stay%20outside",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "one process disclosure contains ordinary rich tools while answer and results stay outside"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2a5ebbeed51ac3a6c90b8983213a87849022bfaca5efb0ab0a178d2a9e10f436",
+        "testId": "e2e/answer-first/layout.e2e.ts::manual%20reading%20position%20is%20not%20pulled%20to%20the%20bottom%20by%20new%20stream%20frames%20or%20process%20disclosure",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "manual reading position is not pulled to the bottom by new stream frames or process disclosure"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 43,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "4ca34939a034374ccd65e5d2463744ccb9d87d9ac7a96f53b21a21f93cde83c3",
+        "testId": "e2e/answer-first/layout.e2e.ts::copy%20while%20the%20process%20is%20expanded%20contains%20only%20the%20current%20answer",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "copy while the process is expanded contains only the current answer"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 71,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e6369d48d8fcbbacfa50d572c7b346056ebf335868afc3c7f0c283bd10a66789",
+        "testId": "e2e/answer-first/layout.e2e.ts::390px%20light%20and%20dark%20keep%20the%20answer%20readable%20and%20process%20keyboard%20accessible",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "390px light and dark keep the answer readable and process keyboard accessible"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 89,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-22T06:36:13.467Z",
+            "durationMs": 35134,
+            "artifacts": [
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__390px_20light_20and_20dark_20keep_20the_20answer_20readable_20and_20process_20k-bbb8a084/default/attempt-0/failure/screen.txt",
+                "size": 4819,
+                "sha256": "a640f25171a1ee99e0bb45edd34b8e8b9908526a6e6634dcea26cec2d36855e1"
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__390px_20light_20and_20dark_20keep_20the_20answer_20readable_20and_20process_20k-bbb8a084/default/attempt-0/screenshots/001-failure.png",
+                "size": 47762,
+                "sha256": "53e43a29a801de9a8374b6c3079c56f76fa8629edaafa819e0465fa3d5dad64c"
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:artifact:2",
+                "kind": "trace",
+                "mediaType": "application/zip",
+                "redaction": "not-required",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__390px_20light_20and_20dark_20keep_20the_20answer_20readable_20and_20process_20k-bbb8a084/default/attempt-0/trace/trace.zip",
+                "size": 935136,
+                "sha256": "ff7f9b615be828734f94dd1b02f57706058416981a35f8247a237ec6def1777f"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ACTION_FAILED",
+              "message": "browser.evaluate exceeded its timeout of 30000ms",
+              "retryable": false,
+              "phase": "body"
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:53124/e2e/answer-first.html",
+              "screen": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:artifact:0",
+              "screenshot": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:36:13.677Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 844,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 90,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:36:13.725Z",
+                "durationMs": 3421,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 92,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"这是始终可读的实质答复。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:36:17.150Z",
+                "durationMs": 298,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 93,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:36:17.449Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 105,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:36:17.467Z",
+                "durationMs": 178,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 107,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:36:17.646Z",
+                "durationMs": 399,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 107,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:36:18.046Z",
+                "durationMs": 40,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 108,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:36:18.087Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 109,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a16253-111b-78d1-9c4a-3b9cf3e0108f:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "failed",
+                "startedAt": "2026-10-22T06:36:18.104Z",
+                "durationMs": 30002,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 94,
+                  "column": 40
+                },
+                "error": {
+                  "category": "test",
+                  "code": "ACTION_FAILED",
+                  "message": "browser.evaluate exceeded its timeout of 30000ms",
+                  "retryable": false
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2668af4fdcbad320ea79a77e60a60048274192d1e3490669f7efec49e87094f2",
+        "testId": "e2e/answer-first/v2-stream.e2e.ts::real%20v2%20first%20character%2C%20pending%20acceptance%20and%20final%20handoff%20preserve%20answer%20DOM%20and%20selection",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "real v2 first character, pending acceptance and final handoff preserve answer DOM and selection"
+        ],
+        "file": "e2e/answer-first/v2-stream.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/v2-stream.e2e.ts",
+          "line": 14,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "b53e581797cfbc9f1e7441d12f954347c4c88e6dfdc216975f56813193e0e9cf",
+        "testId": "e2e/answer-first/v2-stream.e2e.ts::real%20superseded%20candidate%20leaves%20the%20main%20answer%20and%20correction%20receives%20a%20new%20identity",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "real superseded candidate leaves the main answer and correction receives a new identity"
+        ],
+        "file": "e2e/answer-first/v2-stream.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/v2-stream.e2e.ts",
+          "line": 55,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "40cd3158006a65c3186b2d9c587dd5a6860db4a0b1414c4bbee2ef3602b5ec73",
+        "testId": "e2e/answer-first/visualize.e2e.ts::completed%20replay%20preserves%20the%20visualization%20and%20owner%20change%20rebinds%20acquisition",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "completed replay preserves the visualization and owner change rebinds acquisition"
+        ],
+        "file": "e2e/answer-first/visualize.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/visualize.e2e.ts",
+          "line": 8,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      },
+      {
+        "id": "76588bf5c2f4fa1f468ca89ce8bb1ee22742c19cde24443889c166b070ac2e44",
+        "testId": "e2e/answer-first/visualize.e2e.ts::a%20late%20old-owner%20acquisition%20cannot%20activate%20inside%20the%20new%20owner%20card",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "a late old-owner acquisition cannot activate inside the new owner card"
+        ],
+        "file": "e2e/answer-first/visualize.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/visualize.e2e.ts",
+          "line": 47,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "file not selected by a positional argument"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 12,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 12,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 987717,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

@@ -118,6 +118,8 @@ COPY --from=spa-build /app/server/assets/visualize-runtime ./server/assets/visua
 # back to a JSON `/` response.
 COPY --from=spa-build /app/dist ./dist
 COPY third_party/assistant-ui/streaming-text/LICENSE ./dist/licenses/assistant-ui-streaming-text.txt
+COPY third_party/assistant-ui-elements/LICENSE ./dist/licenses/assistant-ui-elements.txt
+COPY third_party/react-chat-elements/reply-message/LICENSE ./dist/licenses/react-chat-elements-reply-message.txt
 
 ENV NODE_ENV=production \
     LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \

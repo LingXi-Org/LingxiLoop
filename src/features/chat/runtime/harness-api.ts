@@ -9,6 +9,7 @@ import { getWorkspaceSession } from '@/lib/workspaceSession'
 import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { memoryActivitySchema } from '@/lib/memoryActivity'
 import { z } from 'zod'
+import { parseActivityPage } from './runActivityHistory'
 
 export interface AgentRunTarget { conversationId: string; agentId: string; runId: string; threadId?: string }
 export interface RunHistoryAnchors { sourceClientMsgNos: string[]; runIds: string[] }
@@ -27,11 +28,9 @@ export const harnessApi = {
     method: 'DELETE', body: JSON.stringify({ ...thread(target), expectedVersion }),
   }),
   async activity(target: AgentRunTarget, offset: number, attentionOnly: boolean, signal?: AbortSignal) {
-    const value = await http<{ message: unknown; total: number; nextOffset: number | null }>(`${path(target)}?${new URLSearchParams({ ...thread(target), activityOffset: String(offset), ...(attentionOnly ? { attentionOnly: '1' } : {}) })}`, { signal })
-    const message = nativeMessageSchema.parse(value.message)
-    if (message.metadata.custom.runId !== target.runId || !Number.isSafeInteger(value.total) || value.total < 0
-      || value.nextOffset !== null && (!Number.isSafeInteger(value.nextOffset) || value.nextOffset <= offset)) throw new Error('活动记录身份或分页信息不正确')
-    return { ...value, message }
+    const bounded = AbortSignal.any([AbortSignal.timeout(30_000), ...(signal ? [signal] : [])])
+    const value = await http<{ message: unknown; total: number; nextOffset: number | null }>(`${path(target)}?${new URLSearchParams({ ...thread(target), activityOffset: String(offset), ...(attentionOnly ? { attentionOnly: '1' } : {}) })}`, { signal: bounded })
+    return parseActivityPage(value,target,offset)
   },
   readApproval: (id: string, signal?: AbortSignal) => http<unknown>(`/im/approvals/${encodeURIComponent(id)}`, { signal }),
   list: (conversationId: string, signal?: AbortSignal) => http<(AgentRunTarget & Pick<RunState['run'], 'requestVersion' | 'fence' | 'status'>)[]>(`/im/channels/${encodeURIComponent(conversationId)}/runs`,{ signal }),

@@ -8,7 +8,7 @@ import { assertVisualizeCitationSpans, projectVisualizeText } from './visualize-
 import { publicActivitySchema, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
 export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; display?: ToolDisplay;
-  activityIdentity?: { requestVersion: number; fence: number; attemptId: string } }
+  purpose?: 'process' | 'result'; taskId?: string; activityIdentity?: { requestVersion: number; fence: number; attemptId: string } }
 export interface MarkdownConfidenceClaim {
   id: string
   text: string
@@ -33,11 +33,13 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
         && typeof fence === 'number' && Number.isSafeInteger(fence) && fence > 0 && typeof attemptId === 'string' && attemptId.length > 0 && attemptId.length <= 2000
         ? { requestVersion,fence,attemptId } : undefined
       calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: canonicalToolName(event.data.name),args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq,
+        ...(event.data.presentation && typeof event.data.presentation === 'object' && Reflect.get(event.data.presentation,'purpose') === 'process' ? { purpose: 'process' as const } : {}),
         ...(activityIdentity ? { activityIdentity } : {}) })
     }
     const previous = calls.get(id)
     if (event.kind === 'tool.completed' && previous && event.seq > (previous.eventSeq ?? 0) && event.data.result && typeof event.data.result === 'object') {
       const result = event.data.result, value = Reflect.get(result,'value')
+      const purpose = Reflect.get(result,'presentation')
       // Retain status and bounded search cards, never complete source text or prompts.
       calls.set(id,{ ...previous,eventSeq: event.seq,result: { status: Reflect.get(result,'status'),
         ...(toolCardResult(previous.toolName, value) ? { value: toolCardResult(previous.toolName, value) } : {}),
@@ -46,23 +48,37 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
         ...(previous.toolName.startsWith('memory.') && Reflect.get(result, 'status') === 'completed' && memoryActivitySchema.safeParse(value).success ? { memory: memoryActivitySchema.parse(value) } : {}),
         ...(previous.toolName === 'chat.report_progress' && publicActivitySchema.safeParse(value).success ? { activity: publicActivitySchema.parse(value) } : {}),
       },isError: event.data.isError === true,
+        purpose: purpose && typeof purpose === 'object' && ['process','result'].includes(String(Reflect.get(purpose,'purpose')))
+          ? Reflect.get(purpose,'purpose') as 'process'|'result' : undefined,
         ...(typeof Reflect.get(result,'approvalId') === 'string' ? { approval: { id: String(Reflect.get(result,'approvalId')) } } : {}) })
     }
   }
   return [...calls.values()].sort((a, b) => (a.startedSeq ?? a.eventSeq ?? 0) - (b.startedSeq ?? b.eventSeq ?? 0))
 }
-function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Omit<ActivityAnnotation, 'version'>): T {
+type AnnotatedPart<T = ThreadAssistantMessagePart> = T & { providerMetadata: { lingxiloop: { activity: ActivityAnnotation } } }
+function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Omit<ActivityAnnotation, 'version'>): AnnotatedPart<T> {
+  const activity: ActivityAnnotation = { version: 1, ...annotation }
   return { ...part, providerMetadata: { ...('providerMetadata' in part ? part.providerMetadata : {}),
-    lingxiloop: { activity: { version: 1, ...annotation } } } }
+    lingxiloop: { activity } } }
 }
 /** Only an explicit accepted source is replaced by the final answer. Other
  * attempts remain available as process, never deduplicated by their text. */
 export function archivedPublicText(part: PublicTextPart): boolean {
   return !!part.acceptedResultId
 }
+const stableId = (prefix: string, identity: unknown[]) => `${prefix}:${createHash('sha256').update(JSON.stringify(identity)).digest('hex')}`
+const publicTextId = (part: PublicTextPart) => stableId('public-text', [part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
+/** Acceptance can arrive before the committed message read. Keep the explicit
+ * current source visible until its replacement is actually present. */
+function pendingAcceptedSource(part: PublicTextPart, view: RunView): boolean {
+  return !!part.acceptedResultId && part.purpose !== 'commentary' && part.reason !== 'superseded'
+    && part.requestVersion === view.requestVersion && part.fence === view.fence
+    && (!view.message || view.message.publicTextPartId !== part.partId || view.resultId !== part.acceptedResultId)
+}
 function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): 'answer' | 'commentary' {
+  if (pendingAcceptedSource(part,view)) return 'answer'
   if (part.acceptedResultId || part.requestVersion !== view.requestVersion || part.fence !== view.fence
-    || part.reason === 'superseded' || view.message && view.message.envelope.requestVersion >= part.requestVersion) return 'commentary'
+    || part.reason === 'superseded' || view.message && view.messageFence >= part.fence && view.message.envelope.requestVersion >= part.requestVersion) return 'commentary'
   const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
     || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
   if (replaced) return 'commentary'
@@ -83,21 +99,29 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
     ...(view.publicTextParts ?? []).map(part => ({ requestVersion: part.requestVersion,fence: part.fence,attemptId: part.attemptId,seq: part.firstSeq })),
   ].filter(attempt => attempt.requestVersion === view.requestVersion && attempt.fence === view.fence)
   const latestAttempt = attempts.sort((a,b) => a.seq-b.seq).at(-1)?.attemptId
-  const put = (id: string,seq: number,part: ThreadAssistantMessagePart) => parts.set(id,{ seq: parts.get(id)?.seq ?? seq,part })
-  const stableId = (prefix: string,identity: unknown[]) => `${prefix}:${createHash('sha256').update(JSON.stringify(identity)).digest('hex')}`
+  const put = (id: string,seq: number,part: AnnotatedPart,revision = seq,requestVersion = view.requestVersion) => {
+    const order = parts.get(id)?.seq ?? seq
+    // Every caller below has just produced this annotation; do not repeatedly
+    // parse trusted projection objects while rebuilding a long event history.
+    const annotation = part.providerMetadata.lingxiloop.activity
+    parts.set(id,{ seq: order,part: annotated(part,{ ...annotation,order,revision: Math.max(revision,view.lastSeq),
+      ...(requestVersion > 0 ? { requestVersion } : {}) }) })
+  }
   for (const part of view.publicTextParts ?? []) {
-    if (!includeAcceptedPublicText && archivedPublicText(part)) continue
-    const id = stableId('public-text',[part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
+    const pendingAccepted = pendingAcceptedSource(part,view)
+    if (!includeAcceptedPublicText && archivedPublicText(part) && !pendingAccepted) continue
+    const id = archivedPublicText(part) && (history || !pendingAccepted) ? `archive:${publicTextId(part)}` : publicTextId(part)
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
     // Public text is an unverified archive, including candidates superseded by
     // repair. Only the delivered answer may activate a renderer reference.
     const kind = history ? 'commentary' : publicTextPurpose(part,view,tools)
     for (const text of projectVisualizeText(part.text, true)) {
-      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind,label: kind === 'answer' ? '答复' : part.acceptedResultId ? '答复片段' : '公开说明' }))
+      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind,label: kind === 'answer' ? '答复' : part.acceptedResultId ? '答复片段' : '公开说明',
+        purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }
   }
-  for (const { eventSeq, startedSeq, activityIdentity, display: recordedDisplay, ...tool } of tools) {
+  for (const { eventSeq, startedSeq, activityIdentity, taskId, purpose, display: recordedDisplay, ...tool } of tools) {
     const seq = startedSeq ?? eventSeq ?? 0
     const result = tool.result && typeof tool.result === 'object' ? tool.result : undefined
     const explanation = publicActivitySchema.safeParse(result && Reflect.get(result, 'activity'))
@@ -106,7 +130,7 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
         activityIdentity?.fence ?? null,activityIdentity?.attemptId ?? null,entry.id])
       if (entry.kind === 'plan' && entry.plan) {
         put(id,seq, annotated({ type: 'generative-ui', id, spec: { root: { component: 'agent-plan', props: { title: entry.label, ...entry.plan } } } },
-          { id, kind: 'commentary', label: entry.label }))
+          { id, kind: 'commentary', label: entry.label, purpose: 'process', ...(taskId ? { taskId } : {}) }),eventSeq,activityIdentity?.requestVersion)
         continue
       }
       const status = entry.state === 'complete' ? { type: 'complete' as const }
@@ -118,7 +142,7 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
       const text = projectVisualizeText(entry.text, true).flatMap(part => part.type === 'text' ? [part.text] : []).join('')
       if (!text) continue
       put(id,seq, annotated({ type: entry.kind === 'reasoning' ? 'reasoning' : 'text', text, status,
-        ...(entry.kind === 'reasoning' ? { unstable_summary: entry.label } : {}) }, { id, kind: 'commentary', label: entry.label }))
+        ...(entry.kind === 'reasoning' ? { unstable_summary: entry.label } : {}) }, { id, kind: 'commentary', label: entry.label, purpose: 'process', ...(taskId ? { taskId } : {}) }),eventSeq,activityIdentity?.requestVersion)
       continue
     }
     // A completed progress report is represented by its explicit explanation,
@@ -128,16 +152,34 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
     const status = projected.result && typeof projected.result === 'object' ? Reflect.get(projected.result, 'status') : undefined
     const display = resolveToolDisplay(tool.toolName, status, recordedDisplay)
     if (status !== 'completed') display.summary = toolDisplay(tool.toolName, status).summary
-    const attention = !!tool.approval || !!tool.interrupt || projected.isError || ['failed', 'cancelled', 'unknown'].includes(String(status))
+    const current = !activityIdentity || activityIdentity.requestVersion === view.requestVersion && activityIdentity.fence === view.fence
+    const unresolvedApproval = !!tool.approval && tool.approval.approved === undefined && !tool.approval.resolution
+    const resolvedApproval = !!tool.approval && !unresolvedApproval
+    const attention = current && (unresolvedApproval || !!tool.interrupt && view.goalOutcome?.status === 'awaiting_input'
+      || status === 'unknown' || !resolvedApproval && view.goalOutcome?.status !== 'satisfied' && (projected.isError || ['failed', 'cancelled'].includes(String(status))))
+    const delivered = status === 'completed' && (purpose === 'result' || !!toolCardResult(tool.toolName,result && Reflect.get(result,'value')))
     put(tool.toolCallId,seq, annotated({ ...projected, args: { fields: display.input ?? [] }, argsText: '',
       ...(projected.result !== undefined ? { result: { ...(projected.result as object), display } } : {}),
-    }, { id: tool.toolCallId, kind: attention ? 'attention' : 'tool', label: display.title }))
+    }, { id: tool.toolCallId, kind: attention ? 'attention' : delivered ? 'result' : 'tool', label: display.title,
+      ...(delivered ? { purpose: 'result' } : purpose ? { purpose: 'process' } : {}),
+      ...(taskId ? { taskId } : {}) }),eventSeq,activityIdentity?.requestVersion)
   }
   return [...parts.values()].sort((a,b) => a.seq-b.seq).map(value => value.part)
 }
 function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]): ThreadAssistantMessagePart[] {
-  return parts.map((part, index) => part.type === 'text'
-    ? annotated(part, { id: `answer:${view.requestVersion}:${index}`, kind: 'answer', label: '答复' }) : part)
+  const accepted = view.message && view.message.envelope.requestVersion === view.requestVersion && view.messageFence === view.fence
+    && (view.publicTextParts ?? []).find(part => part.partId === view.message!.publicTextPartId
+    && part.acceptedResultId === view.resultId && part.requestVersion === view.message!.envelope.requestVersion && part.fence <= view.messageFence)
+  let firstText = true
+  return parts.map((part, index) => {
+    // Registered data results (including citation claims and artifact cards)
+    // already belong to the body. Their strict wire shape has no metadata slot.
+    if (part.type === 'data') return part
+    if (part.type !== 'text') return annotated(part,{ id: `result:${view.requestVersion}:${index}`,kind: 'result',label: '结果' })
+    const id = firstText && accepted ? publicTextId(accepted) : `answer:${view.requestVersion}:${index}`
+    firstText = false
+    return annotated(part, { id,kind: 'answer',label: '答复' })
+  })
 }
 export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = [], options: { includeAcceptedPublicText?: boolean; activityHistory?: boolean } = {}): ThreadAssistantMessagePart[] {
   const cards = activityParts(view, tools, options.includeAcceptedPublicText !== false, options.activityHistory === true)
@@ -151,7 +193,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       && part.fence === view.fence && part.reason === 'completed' && part.purpose !== 'commentary' && !part.acceptedResultId)
     return publicCandidate ? cards : [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]
   }
-  if (!view.message) return cards
+  if (!view.message || view.message.envelope.requestVersion !== view.requestVersion || view.messageFence !== view.fence) return cards
   assertVisualizeCitationSpans(view.message.envelope.body, view.message.envelope.citations)
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence
@@ -186,9 +228,13 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
   if (claims.length) parts.push({ type: 'data', name: 'citation-claims', data: { claims } })
   const sources = new Map<string, ThreadAssistantMessagePart>()
   for (const citation of view.message.envelope.citations) for (const source of citation.sources) {
-    sources.set(source.sourceId, { type: 'source', sourceType: 'document', id: source.sourceId,
+    const identity = JSON.stringify([source.sourceId,source.sourceVersion])
+    const previous = sources.get(identity)
+    const previousChunks = previous && 'providerMetadata' in previous ? previous.providerMetadata?.lingxiloop?.chunkIds : undefined
+    sources.set(identity, { type: 'source', sourceType: 'document', id: stableId('source',[source.sourceId,source.sourceVersion]),
       title: evidence?.find(item => citation.markers.includes(item.marker))?.title ?? source.sourceId, mediaType: 'text/plain',
-      providerMetadata: { lingxiloop: { sourceVersion: source.sourceVersion, chunkIds: source.chunkIds } } })
+      providerMetadata: { lingxiloop: { sourceId: source.sourceId,sourceVersion: source.sourceVersion,
+        chunkIds: [...new Set([...(Array.isArray(previousChunks) ? previousChunks.filter((chunk): chunk is string => typeof chunk === 'string') : []),...source.chunkIds])] } } })
   }
   return [...answerParts(view, parts.flatMap(part => part.type === 'text' ? projectVisualizeText(part.text, view.delivery !== 'delivered') : [part])), ...cards, ...sources.values()]
 

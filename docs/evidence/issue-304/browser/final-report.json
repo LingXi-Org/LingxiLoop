@@ -1,0 +1,3878 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a1624f-05c3-743c-afe2-a5e4185f1cae",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-22T06:31:49.653Z",
+    "finishedAt": "2026-10-22T06:33:15.764Z",
+    "project": {
+      "id": "lingxiloop-answer-first",
+      "configDigest": "6f99e53d96440e0259e79a6b109b1ca7df0136916d9c86bbe80fc87bc93c36aa"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "0960df6da0c83cff2d8461886f7ad42ec66ccfa1",
+      "branch": "fix/304-browser-final-evidence",
+      "dirty": false
+    },
+    "targets": [
+      {
+        "id": "desktop",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53124",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "b222d331f8c536bf41f14f7bd17a5cd61010532323fc0f8ba689aa60ea0af542",
+        "testId": "e2e/answer-first/attention.e2e.ts::native%20interrupt%20and%20awaiting_input%20have%20one%20actionable%20continuation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "native interrupt and awaiting_input have one actionable continuation"
+        ],
+        "file": "e2e/answer-first/attention.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/attention.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1624f-1650-7c68-ae94-25836a2bf440",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:31:52.657Z",
+            "durationMs": 5275,
+            "artifacts": [
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1624f-1650-7c68-ae94-25836a2bf440:8"
+                },
+                "path": "desktop/e2e_answer-first_attention.e2e.ts__native_20interrupt_20and_20awaiting_input_20have_20one_20actionable_20contin-c9fd5258/default/attempt-0/screenshots/001-native-unbound-single-attention.png",
+                "size": 32146,
+                "sha256": "b8468a258a8454b2697b5090d22ae10912d31e6e3dcca72debdf68b41656715a"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/questionnaire.html?mode=native-unbound",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:53.035Z",
+                "durationMs": 4390,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 8,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:57.428Z",
+                "durationMs": 129,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 9,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:57.558Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 10,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:57.573Z",
+                "durationMs": 109,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 11,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:57.684Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 12,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-native-resumes]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:57.707Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 17,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-native-sends]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:57.724Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 18,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:57.732Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 19,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a1624f-1650-7c68-ae94-25836a2bf440:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "native-unbound-single-attention",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:57.745Z",
+                "durationMs": 91,
+                "events": [],
+                "artifacts": [
+                  "01a1624f-1650-7c68-ae94-25836a2bf440:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 20,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e655b875d4047dff99b95e80b275606ab4fc8582af6f468249bddd4cdf8d4f4b",
+        "testId": "e2e/answer-first/attention.e2e.ts::current%20approval%20has%20one%20external%20action%20and%20replay%20cannot%20submit%20it%20again",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "current approval has one external action and replay cannot submit it again"
+        ],
+        "file": "e2e/answer-first/attention.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/attention.e2e.ts",
+          "line": 23,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:31:57.934Z",
+            "durationMs": 6855,
+            "artifacts": [
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:10"
+                },
+                "path": "desktop/e2e_answer-first_attention.e2e.ts__current_20approval_20has_20one_20external_20action_20and_20replay_20cannot_2-2df4736c/default/attempt-0/screenshots/001-answer-first-approval-single-receipt.png",
+                "size": 17773,
+                "sha256": "bd628a537f5ccd5798fa9b0f957706cc8c3bcf31c9783460e2edaee28aa16a3a"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:31:58.000Z",
+                "durationMs": 3075,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 27,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:01.077Z",
+                "durationMs": 320,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 28,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-message-region=\\\"attention\\\"]\") >> getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:01.397Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 29,
+                  "column": 116
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:01.410Z",
+                "durationMs": 327,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 30,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:01.737Z",
+                "durationMs": 111,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 31,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:01.861Z",
+                "durationMs": 36,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 33,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:01.897Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 34,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:01.918Z",
+                "durationMs": 103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 39,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:02.022Z",
+                "durationMs": 2246,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 40,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:04.268Z",
+                "durationMs": 132,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 41,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:10",
+                "index": 10,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-approval-single-receipt",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:04.405Z",
+                "durationMs": 195,
+                "events": [],
+                "artifacts": [
+                  "01a1624f-2aee-7e53-9ecc-f857a7f3b1e1:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 43,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "c95ab0acc0020435680e64b5b8e215a0c93b7391425212909813aaf4475a0dc2",
+        "testId": "e2e/answer-first/history.e2e.ts::bounded%20history%20retries%20in%20one%20process%20entry%20without%20replacing%20live%20answer%20or%20repeating%20entries",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "bounded history retries in one process entry without replacing live answer or repeating entries"
+        ],
+        "file": "e2e/answer-first/history.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/history.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:32:04.803Z",
+            "durationMs": 8963,
+            "artifacts": [
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:14"
+                },
+                "path": "desktop/e2e_answer-first_history.e2e.ts__bounded_20history_20retries_20in_20one_20process_20entry_20without_20replacing-3c3bdca8/default/attempt-0/screenshots/001-answer-first-complete-paged-history.png",
+                "size": 54950,
+                "sha256": "3cd5622242ee3636c3e7a20731d5bcf2a12814254f0db0bc102083d75b4d5b53"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:04.834Z",
+                "durationMs": 2910,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 8,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"当前有效答案不会被历史替换。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:07.745Z",
+                "durationMs": 271,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 9,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:08.016Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 10,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:08.032Z",
+                "durationMs": 498,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 11,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"]\") >> getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:08.530Z",
+                "durationMs": 50,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 13,
+                  "column": 44
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"]\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:08.581Z",
+                "durationMs": 460,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 14,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"公开过程 000\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:09.041Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 15,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"]\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:09.058Z",
+                "durationMs": 409,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 16,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"]\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:09.467Z",
+                "durationMs": 375,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"]\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:09.842Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 18,
+                  "column": 45
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] li[data-activity-kind]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:09.862Z",
+                "durationMs": 89,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 19,
+                  "column": 86
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:09.951Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 20,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:09.965Z",
+                "durationMs": 1079,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 25,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:11.044Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 26,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:14",
+                "index": 14,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-complete-paged-history",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:11.065Z",
+                "durationMs": 99,
+                "events": [],
+                "artifacts": [
+                  "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 27,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:11.164Z",
+                "durationMs": 2018,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 28,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"当前有效答案不会被历史替换。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:13.183Z",
+                "durationMs": 291,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 29,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a1624f-45c3-7e85-8c3c-6f2215fe7e77:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:13.475Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 30,
+                  "column": 100
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "bcc0691e7de1044fd145391f7a1f159a7d42ba5efb42d0575524ecdf96e1c476",
+        "testId": "e2e/answer-first/history.e2e.ts::late%20history%20page%20cannot%20replace%20newer%20live%20data%20or%20new-request%20content",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "late history page cannot replace newer live data or new-request content"
+        ],
+        "file": "e2e/answer-first/history.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/history.e2e.ts",
+          "line": 33,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:32:13.766Z",
+            "durationMs": 7409,
+            "artifacts": [
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:14"
+                },
+                "path": "desktop/e2e_answer-first_history.e2e.ts__late_20history_20page_20cannot_20replace_20newer_20live_20data_20or_20new-requ-5d2cbdaa/default/attempt-0/screenshots/001-answer-first-stale-page-rejected.png",
+                "size": 23360,
+                "sha256": "a218cd4ebabbfe322944d1ba6f9a3a245e62af2837f78029df1eff1305a07578"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:13.801Z",
+                "durationMs": 2386,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 36,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"当前有效答案不会被历史替换。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:16.187Z",
+                "durationMs": 259,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 37,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:2",
+                "index": 2,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:16.447Z",
+                "durationMs": 721,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 38,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"]\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:17.170Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 40,
+                  "column": 45
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"公开过程 096\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:17.206Z",
+                "durationMs": 368,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 43,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:17.579Z",
+                "durationMs": 385,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 45,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"公开过程 000\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:17.965Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 48,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"公开过程 096\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:17.983Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 49,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:17.998Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 50,
+                  "column": 100
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"]\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:18.017Z",
+                "durationMs": 311,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 51,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"]\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:18.329Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 52,
+                  "column": 45
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"新的请求拥有新的答案。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:18.351Z",
+                "durationMs": 326,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 54,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByText(\"公开过程 000\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:18.680Z",
+                "durationMs": 1059,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 56,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByText(\"当前有效答案不会被历史替换。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:19.741Z",
+                "durationMs": 1059,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 57,
+                  "column": 73
+                }
+              },
+              {
+                "id": "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:14",
+                "index": 14,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-stale-page-rejected",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:20.800Z",
+                "durationMs": 109,
+                "events": [],
+                "artifacts": [
+                  "01a1624f-68c6-7ab2-9f18-e3f39a76d7f6:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/history.e2e.ts",
+                  "line": 58,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6d9dbfee67f82edf5f6669b6c30e2b122a3eb00da2cd30075ce4befdc835a7ae",
+        "testId": "e2e/answer-first/layout.e2e.ts::one%20process%20disclosure%20contains%20ordinary%20rich%20tools%20while%20answer%20and%20results%20stay%20outside",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "one process disclosure contains ordinary rich tools while answer and results stay outside"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:32:21.186Z",
+            "durationMs": 13824,
+            "artifacts": [
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1624f-85c2-744a-a4b5-4de95429ca1b:31"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__one_20process_20disclosure_20contains_20ordinary_20rich_20tools_20while_20answe-2bdd6274/default/attempt-0/screenshots/001-answer-first-single-process-expanded.png",
+                "size": 61934,
+                "sha256": "1924eb34bfbfd8f8a85213af3f5c5a29393f0a8046282dab58afc9a0352bf89d"
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1624f-85c2-744a-a4b5-4de95429ca1b:35"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__one_20process_20disclosure_20contains_20ordinary_20rich_20tools_20while_20answe-2bdd6274/default/attempt-0/screenshots/002-answer-first-single-process-collapsed.png",
+                "size": 63601,
+                "sha256": "e74b43f0f1c9eda6d9205e93633b317eebe879196429f984f5084e4f0adcd094"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:21.216Z",
+                "durationMs": 2737,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 7,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:23.953Z",
+                "durationMs": 1386,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 8,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"这是始终可读的实质答复。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:25.339Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 9,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"明确请求的查询成果\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:25.366Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 10,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"历史未分类成果\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:25.395Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 11,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"合成最终成果.pdf\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:25.422Z",
+                "durationMs": 83,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 12,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"正文最终引用\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:25.506Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 13,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"用户请求的资料\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:25.518Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 14,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"用户请求的记忆摘要\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:25.535Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 15,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByText(\"普通资料查询\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:25.580Z",
+                "durationMs": 1120,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 17,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByText(\"过程学习偏好\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:26.701Z",
+                "durationMs": 1082,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 17,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByText(\"检索知识资料\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:27.783Z",
+                "durationMs": 1088,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 17,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByText(\"资料甲（第一版）\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:28.871Z",
+                "durationMs": 1013,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 17,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "getByText(\"合成执行计划\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:29.884Z",
+                "durationMs": 1023,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 17,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:30.907Z",
+                "durationMs": 269,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 20,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:15",
+                "index": 15,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:31.185Z",
+                "durationMs": 805,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 20,
+                  "column": 46
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:31.990Z",
+                "durationMs": 140,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 21,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"合成执行计划\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.131Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 22,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:18",
+                "index": 18,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] a[href=\\\"https://example.com/reference?v=1\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.164Z",
+                "durationMs": 59,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 23,
+                  "column": 107
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] a[href=\\\"https://example.com/reference?v=2\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.223Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 24,
+                  "column": 107
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-slot=\\\"task-card\\\"][data-task-id=\\\"task-parent\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.241Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 25,
+                  "column": 88
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:21",
+                "index": 21,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"task-card\\\"][data-task-id=\\\"task-parent\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.267Z",
+                "durationMs": 138,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 26,
+                  "column": 89
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-slot=\\\"task-card\\\"][data-task-id=\\\"task-child\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.405Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 27,
+                  "column": 87
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"task-card\\\"][data-task-id=\\\"task-child\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.429Z",
+                "durationMs": 128,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 28,
+                  "column": 88
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"task-card\\\"][data-task-id=\\\"task-child\\\"] a\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.557Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 29,
+                  "column": 89
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:25",
+                "index": 25,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"task-card\\\"][data-task-id=\\\"task-child\\\"] a\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.589Z",
+                "durationMs": 42,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 30,
+                  "column": 81
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:26",
+                "index": 26,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"task-card\\\"][data-task-id=\\\"task-child\\\"] a\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.632Z",
+                "durationMs": 74,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 31,
+                  "column": 81
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.706Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 32,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.not.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity-details\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:32.725Z",
+                "durationMs": 1067,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 33,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity-details\\\"] > summary\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:33.794Z",
+                "durationMs": 95,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 34,
+                  "column": 73
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity-details\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:33.889Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 35,
+                  "column": 71
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:31",
+                "index": 31,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-single-process-expanded",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:33.899Z",
+                "durationMs": 146,
+                "events": [],
+                "artifacts": [
+                  "01a1624f-85c2-744a-a4b5-4de95429ca1b:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 36,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:32",
+                "index": 32,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:34.046Z",
+                "durationMs": 136,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 37,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:33",
+                "index": 33,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:34.183Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 38,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:34",
+                "index": 34,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:34.202Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 39,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a1624f-85c2-744a-a4b5-4de95429ca1b:35",
+                "index": 35,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-single-process-collapsed",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:34.210Z",
+                "durationMs": 232,
+                "events": [],
+                "artifacts": [
+                  "01a1624f-85c2-744a-a4b5-4de95429ca1b:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 40,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2a5ebbeed51ac3a6c90b8983213a87849022bfaca5efb0ab0a178d2a9e10f436",
+        "testId": "e2e/answer-first/layout.e2e.ts::manual%20reading%20position%20is%20not%20pulled%20to%20the%20bottom%20by%20new%20stream%20frames%20or%20process%20disclosure",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "manual reading position is not pulled to the bottom by new stream frames or process disclosure"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 43,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:32:35.010Z",
+            "durationMs": 13810,
+            "artifacts": [
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1624f-bbc2-7ea5-8476-16d7828484d2:15"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__manual_20reading_20position_20is_20not_20pulled_20to_20the_20bottom_20by_20new_-237049cf/default/attempt-0/screenshots/001-answer-first-manual-scroll-preserved.png",
+                "size": 201460,
+                "sha256": "27b5d9ce8673125e7fbc1a3cc6739559806269e1424cab9f30d2993f24ac79df"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:35.028Z",
+                "durationMs": 3217,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 47,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:38.245Z",
+                "durationMs": 2781,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 48,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:41.028Z",
+                "durationMs": 515,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 49,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-chat-scroll-bottom]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:41.544Z",
+                "durationMs": 138,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 54,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:41.683Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 55,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:41.808Z",
+                "durationMs": 1649,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 57,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:43.457Z",
+                "durationMs": 177,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 58,
+                  "column": 33
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:43.634Z",
+                "durationMs": 158,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 59,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:43.793Z",
+                "durationMs": 1256,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 61,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:45.049Z",
+                "durationMs": 1244,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 61,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:46.293Z",
+                "durationMs": 146,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 62,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:46.441Z",
+                "durationMs": 59,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 63,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:46.507Z",
+                "durationMs": 900,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 65,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:47.407Z",
+                "durationMs": 178,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 66,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:47.586Z",
+                "durationMs": 153,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 67,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a1624f-bbc2-7ea5-8476-16d7828484d2:15",
+                "index": 15,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-manual-scroll-preserved",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:47.740Z",
+                "durationMs": 429,
+                "events": [],
+                "artifacts": [
+                  "01a1624f-bbc2-7ea5-8476-16d7828484d2:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 68,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "4ca34939a034374ccd65e5d2463744ccb9d87d9ac7a96f53b21a21f93cde83c3",
+        "testId": "e2e/answer-first/layout.e2e.ts::copy%20while%20the%20process%20is%20expanded%20contains%20only%20the%20current%20answer",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "copy while the process is expanded contains only the current answer"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 71,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:32:48.821Z",
+            "durationMs": 4025,
+            "artifacts": [],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:48.877Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 76,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:48.879Z",
+                "durationMs": 2807,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 80,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"这是始终可读的实质答复。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:51.687Z",
+                "durationMs": 304,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 81,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:51.991Z",
+                "durationMs": 538,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 82,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "getByRole(\"button\", name: \"复制回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:52.529Z",
+                "durationMs": 79,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 83,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"button\", name: \"复制回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:52.610Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 84,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"已复制回复\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:52.688Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 85,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a1624f-f1b5-7195-8ee2-7616876c86e5:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:52.704Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 86,
+                  "column": 24
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e6369d48d8fcbbacfa50d572c7b346056ebf335868afc3c7f0c283bd10a66789",
+        "testId": "e2e/answer-first/layout.e2e.ts::390px%20light%20and%20dark%20keep%20the%20answer%20readable%20and%20process%20keyboard%20accessible",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "390px light and dark keep the answer readable and process keyboard accessible"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 89,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16250-016e-7fc0-b55a-75657e30fad3",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:32:52.847Z",
+            "durationMs": 4431,
+            "artifacts": [
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16250-016e-7fc0-b55a-75657e30fad3:8"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__390px_20light_20and_20dark_20keep_20the_20answer_20readable_20and_20process_20k-bbb8a084/default/attempt-0/screenshots/001-answer-first-390-light.png",
+                "size": 47762,
+                "sha256": "53e43a29a801de9a8374b6c3079c56f76fa8629edaafa819e0465fa3d5dad64c"
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16250-016e-7fc0-b55a-75657e30fad3:12"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__390px_20light_20and_20dark_20keep_20the_20answer_20readable_20and_20process_20k-bbb8a084/default/attempt-0/screenshots/002-answer-first-390-light-body.png",
+                "size": 41290,
+                "sha256": "0ac2d2111ca247bf6bb44fee9a26f27787ed0235a4a00b324ffe5b9e91c725f0"
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16250-016e-7fc0-b55a-75657e30fad3:18"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__390px_20light_20and_20dark_20keep_20the_20answer_20readable_20and_20process_20k-bbb8a084/default/attempt-0/screenshots/003-answer-first-390-dark.png",
+                "size": 48638,
+                "sha256": "acbf64172276f3eadb9b3fe446996cf506c70a217eb94f33eae69c4ae4a52d2e"
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:artifact:3",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16250-016e-7fc0-b55a-75657e30fad3:22"
+                },
+                "path": "desktop/e2e_answer-first_layout.e2e.ts__390px_20light_20and_20dark_20keep_20the_20answer_20readable_20and_20process_20k-bbb8a084/default/attempt-0/screenshots/004-answer-first-390-dark-body.png",
+                "size": 44400,
+                "sha256": "9542efe4a8f99a0e73917c0cea787ddeb055dc89f6d1daafc9179374884b481e"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:52.863Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 844,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 90,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:52.879Z",
+                "durationMs": 2367,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 92,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"这是始终可读的实质答复。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:55.248Z",
+                "durationMs": 307,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 93,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:55.557Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 95,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:55.571Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 97,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:55.653Z",
+                "durationMs": 276,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 97,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:55.929Z",
+                "durationMs": 36,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 98,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:55.965Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 99,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-390-light",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:55.978Z",
+                "durationMs": 78,
+                "events": [],
+                "artifacts": [
+                  "01a16250-016e-7fc0-b55a-75657e30fad3:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 100,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.058Z",
+                "durationMs": 105,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 101,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.164Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 102,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"这是始终可读的实质答复。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.181Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 103,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:12",
+                "index": 12,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-390-light-body",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.213Z",
+                "durationMs": 93,
+                "events": [],
+                "artifacts": [
+                  "01a16250-016e-7fc0-b55a-75657e30fad3:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 104,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.307Z",
+                "durationMs": 47,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 95,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.355Z",
+                "durationMs": 85,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 97,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:15",
+                "index": 15,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.441Z",
+                "durationMs": 250,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 97,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.691Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 98,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.716Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 99,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:18",
+                "index": 18,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-390-dark",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.727Z",
+                "durationMs": 135,
+                "events": [],
+                "artifacts": [
+                  "01a16250-016e-7fc0-b55a-75657e30fad3:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 100,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:19",
+                "index": 19,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.862Z",
+                "durationMs": 97,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 101,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.959Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 102,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"这是始终可读的实质答复。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.976Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 103,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a16250-016e-7fc0-b55a-75657e30fad3:22",
+                "index": 22,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-390-dark-body",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:56.994Z",
+                "durationMs": 95,
+                "events": [],
+                "artifacts": [
+                  "01a16250-016e-7fc0-b55a-75657e30fad3:artifact:3"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/layout.e2e.ts",
+                  "line": 104,
+                  "column": 15
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "2668af4fdcbad320ea79a77e60a60048274192d1e3490669f7efec49e87094f2",
+        "testId": "e2e/answer-first/v2-stream.e2e.ts::real%20v2%20first%20character%2C%20pending%20acceptance%20and%20final%20handoff%20preserve%20answer%20DOM%20and%20selection",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "real v2 first character, pending acceptance and final handoff preserve answer DOM and selection"
+        ],
+        "file": "e2e/answer-first/v2-stream.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/v2-stream.e2e.ts",
+          "line": 14,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16250-12cf-7698-8b54-c3bde19ecc67",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:32:57.296Z",
+            "durationMs": 3406,
+            "artifacts": [
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16250-12cf-7698-8b54-c3bde19ecc67:11"
+                },
+                "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20v2_20first_20character_2C_20pending_20acceptance_20and_20final_20hand-cd5c2c8e/default/attempt-0/screenshots/001-answer-first-real-v2-accepted-handoff.png",
+                "size": 23431,
+                "sha256": "332cd204e20c4c8fff396573bfc2121e3e37d2051ba6c39421e6c3eed9966d7f"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:57.316Z",
+                "durationMs": 2230,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 17,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:59.547Z",
+                "durationMs": 221,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 19,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:59.768Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 20,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:59.781Z",
+                "durationMs": 183,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 22,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:59.964Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 23,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:32:59.975Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 39,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.055Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 40,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.079Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 41,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.091Z",
+                "durationMs": 84,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 39,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.175Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 40,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.185Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 41,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:11",
+                "index": 11,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-real-v2-accepted-handoff",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.203Z",
+                "durationMs": 152,
+                "events": [],
+                "artifacts": [
+                  "01a16250-12cf-7698-8b54-c3bde19ecc67:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 49,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.359Z",
+                "durationMs": 205,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 51,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a16250-12cf-7698-8b54-c3bde19ecc67:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.564Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 52,
+                  "column": 24
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "b53e581797cfbc9f1e7441d12f954347c4c88e6dfdc216975f56813193e0e9cf",
+        "testId": "e2e/answer-first/v2-stream.e2e.ts::real%20superseded%20candidate%20leaves%20the%20main%20answer%20and%20correction%20receives%20a%20new%20identity",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "real superseded candidate leaves the main answer and correction receives a new identity"
+        ],
+        "file": "e2e/answer-first/v2-stream.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/v2-stream.e2e.ts",
+          "line": 55,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16250-201f-7c12-be94-58699bfb9edb",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:33:00.703Z",
+            "durationMs": 4451,
+            "artifacts": [
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16250-201f-7c12-be94-58699bfb9edb:8"
+                },
+                "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20superseded_20candidate_20leaves_20the_20main_20answer_20and_20correct-a1608533/default/attempt-0/screenshots/001-answer-first-real-v2-corrected-candidate.png",
+                "size": 32594,
+                "sha256": "8dd357c686bdd8c383d654bbc000f649cd8abc490fa1489b6f6e10af5b165b82"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:00.730Z",
+                "durationMs": 2305,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 58,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:03.035Z",
+                "durationMs": 255,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 59,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:03.291Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 60,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:03.304Z",
+                "durationMs": 217,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 62,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:03.521Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 63,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:03.527Z",
+                "durationMs": 1063,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 64,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:04.590Z",
+                "durationMs": 247,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 65,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:04.839Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 66,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a16250-201f-7c12-be94-58699bfb9edb:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-real-v2-corrected-candidate",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:04.856Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [
+                  "01a16250-201f-7c12-be94-58699bfb9edb:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/v2-stream.e2e.ts",
+                  "line": 67,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "40cd3158006a65c3186b2d9c587dd5a6860db4a0b1414c4bbee2ef3602b5ec73",
+        "testId": "e2e/answer-first/visualize.e2e.ts::completed%20replay%20preserves%20the%20visualization%20and%20owner%20change%20rebinds%20acquisition",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "completed replay preserves the visualization and owner change rebinds acquisition"
+        ],
+        "file": "e2e/answer-first/visualize.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/visualize.e2e.ts",
+          "line": 8,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16250-3199-7fab-8377-b96b79c3e778",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:33:05.177Z",
+            "durationMs": 5140,
+            "artifacts": [
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16250-3199-7fab-8377-b96b79c3e778:12"
+                },
+                "path": "desktop/e2e_answer-first_visualize.e2e.ts__completed_20replay_20preserves_20the_20visualization_20and_20owner_20change_-f4b71c31/default/attempt-0/screenshots/001-answer-first-visualize-owner-rebound.png",
+                "size": 45068,
+                "sha256": "da1cdbc14f368e15e9a11df5d5e5c3e14c90e642cbae9c9ae478b344721fcbce"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:05.200Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 15,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:05.202Z",
+                "durationMs": 2393,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 28,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"][data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:07.595Z",
+                "durationMs": 911,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 29,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:08.508Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 30,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:08.539Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 32,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:08.637Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 33,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:08.664Z",
+                "durationMs": 93,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 35,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"html\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:08.758Z",
+                "durationMs": 41,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 36,
+                  "column": 41
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"][data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:08.801Z",
+                "durationMs": 564,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 37,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:09.366Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 38,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"] iframe[data-visualize-guest]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:09.385Z",
+                "durationMs": 167,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 39,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:09.552Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 40,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16250-3199-7fab-8377-b96b79c3e778:12",
+                "index": 12,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-visualize-owner-rebound",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:09.570Z",
+                "durationMs": 377,
+                "events": [],
+                "artifacts": [
+                  "01a16250-3199-7fab-8377-b96b79c3e778:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 44,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "76588bf5c2f4fa1f468ca89ce8bb1ee22742c19cde24443889c166b070ac2e44",
+        "testId": "e2e/answer-first/visualize.e2e.ts::a%20late%20old-owner%20acquisition%20cannot%20activate%20inside%20the%20new%20owner%20card",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "a late old-owner acquisition cannot activate inside the new owner card"
+        ],
+        "file": "e2e/answer-first/visualize.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/visualize.e2e.ts",
+          "line": 47,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16250-45ae-73fe-8143-5c65872a98cd",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T06:33:10.320Z",
+            "durationMs": 5271,
+            "artifacts": [
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16250-45ae-73fe-8143-5c65872a98cd:10"
+                },
+                "path": "desktop/e2e_answer-first_visualize.e2e.ts__a_20late_20old-owner_20acquisition_20cannot_20activate_20inside_20the_20new_-e5782698/default/attempt-0/screenshots/001-answer-first-late-owner-response-isolated.png",
+                "size": 41951,
+                "sha256": "ffedc88b20aba3a38b49c5159b203ef3204f6fb19f15f82cdde9fc6f77b36210"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:10.370Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 55,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:10.373Z",
+                "durationMs": 2539,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 67,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:12.912Z",
+                "durationMs": 288,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 68,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-fixture-received]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:13.209Z",
+                "durationMs": 179,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 80,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"][data-gen-ui-phase=\\\"ready\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:13.389Z",
+                "durationMs": 720,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 81,
+                  "column": 91
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"html\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:14.111Z",
+                "durationMs": 30,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 82,
+                  "column": 41
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:14.141Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 83,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"html\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:14.162Z",
+                "durationMs": 39,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 85,
+                  "column": 41
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"] iframe[data-visualize-guest]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:14.202Z",
+                "durationMs": 421,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 86,
+                  "column": 93
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:14.623Z",
+                "durationMs": 186,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 87,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a16250-45ae-73fe-8143-5c65872a98cd:10",
+                "index": 10,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-late-owner-response-isolated",
+                "status": "passed",
+                "startedAt": "2026-10-22T06:33:14.809Z",
+                "durationMs": 471,
+                "events": [],
+                "artifacts": [
+                  "01a16250-45ae-73fe-8143-5c65872a98cd:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/visualize.e2e.ts",
+                  "line": 88,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 12,
+      "selected": 12,
+      "executed": 12,
+      "passed": 12,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 12,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 780358,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

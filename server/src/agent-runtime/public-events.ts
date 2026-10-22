@@ -4,6 +4,19 @@ import { publicActivitySchema, canonicalToolName } from '../../../src/lib/runAct
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { userFacingError } from '../../../src/lib/userFacingError.js'
 import { memoryActivity } from '../../../src/lib/memoryActivity.js'
+import { z } from 'zod'
+
+const presentation = z.object({ purpose: z.enum(['process', 'result']) }).strict()
+function displayPurpose(action: string, value: unknown, presentationVersion?: 1) {
+  if (action === 'research.search' && value !== undefined) {
+    const parsed = value && typeof value === 'object' ? presentation.safeParse(Reflect.get(value, 'presentation')) : null
+    return parsed?.success ? parsed.data : undefined
+  }
+  // Native memory receipts predate the display contract. Replaying an old
+  // receipt cannot establish whether its chips were an explicitly requested result.
+  if (action.startsWith('memory.') && value !== undefined && presentationVersion !== 1) return undefined
+  return { purpose: 'process' as const }
+}
 
 /** User transport allowlist; full results remain private to the native runtime. */
 export function publicToolValue(action: string, value: unknown): unknown {
@@ -14,7 +27,10 @@ export function publicToolValue(action: string, value: unknown): unknown {
     const parsed = publicActivitySchema.safeParse(value)
     return parsed.success ? parsed.data : undefined
   }
-  if (action === 'research.search') { const results = researchSources(value); return results === null ? undefined : { results } }
+  if (action === 'research.search') {
+    const results = researchSources(value), purpose = displayPurpose(action, value)
+    return results === null ? undefined : { results,...(purpose ? { presentation: purpose } : {}) }
+  }
   if (action.startsWith('knowledge.') && value && typeof value === 'object') {
     const status = Reflect.get(value, 'status')
     if (typeof status === 'string' && status.length <= 80) return { status }
@@ -22,7 +38,7 @@ export function publicToolValue(action: string, value: unknown): unknown {
   return undefined
 }
 
-export function publicRunEvent(event: RunEvent, action = ''): RunEvent {
+export function publicRunEvent(event: RunEvent, action = '', presentationVersion?: 1): RunEvent {
   action = canonicalToolName(action)
   if (event.visibility !== 'user') return { ...event, data: {} }
   if (event.kind === 'run.failed' || event.kind === 'run.cancelled') return { ...event, data: {
@@ -31,14 +47,17 @@ export function publicRunEvent(event: RunEvent, action = ''): RunEvent {
   const identity = { requestVersion: event.data.requestVersion,fence: event.data.fence,attemptId: event.data.attemptId }
   if (event.kind === 'public.text.delta' || event.kind === 'public.text.ended') return { ...event,data: {
     version: event.data.version,...identity,partId: event.data.partId,partIndex: event.data.partIndex,
+    ...(event.data.version === 2 && (event.data.purpose === 'commentary' || event.data.purpose === 'answer') ? { purpose: event.data.purpose } : {}),
     ...(event.kind === 'public.text.delta' ? { chunkIndex: event.data.chunkIndex,text: event.data.text } : { chunkCount: event.data.chunkCount,reason: event.data.reason }),
   } }
-  if (event.kind === 'tool.started') return { ...event, data: { ...identity,toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, name: event.data.name } }
+  if (event.kind === 'tool.started') return { ...event, data: { ...identity,toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, name: event.data.name,
+    presentation: { purpose: 'process' } } }
   if (event.kind !== 'tool.completed') return event
   const raw = event.data.result && typeof event.data.result === 'object' ? event.data.result : {}
   const value = action.startsWith('memory.') && Reflect.get(raw, 'status') !== 'completed' ? undefined : publicToolValue(action, Reflect.get(raw, 'value'))
+  const purpose = displayPurpose(action, value, presentationVersion)
   return { ...event, data: { ...identity,toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, isError: event.data.isError === true,
-    result: { status: Reflect.get(raw, 'status'), ...(value === undefined ? {} : { value }),
+    result: { status: Reflect.get(raw, 'status'), ...(purpose ? { presentation: purpose } : {}), ...(value === undefined ? {} : { value }),
       ...(typeof Reflect.get(raw, 'approvalId') === 'string' ? { approvalId: Reflect.get(raw, 'approvalId') } : {}) } } }
 }
 

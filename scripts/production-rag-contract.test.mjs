@@ -151,6 +151,14 @@ test('SPA image includes the transitive source graph and pinned vendor license',
   const finalStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1)
   assert.match(finalStage, /^COPY third_party\/assistant-ui\/streaming-text\/LICENSE \.\/dist\/licenses\/assistant-ui-streaming-text\.txt$/m,
     'The shipped SPA must retain the upstream MIT notice')
+  for (const [source, target] of [
+    ['third_party/assistant-ui-elements/LICENSE', 'assistant-ui-elements.txt'],
+    ['third_party/react-chat-elements/reply-message/LICENSE', 'react-chat-elements-reply-message.txt'],
+  ]) {
+    assert.ok(inContext(source), `Distributed component license missing from build context: ${source}`)
+    assert.ok(finalStage.includes(`COPY ${source} ./dist/licenses/${target}`), `Distributed component license missing from final image: ${source}`)
+    assert.match(read(source), /Permission is hereby granted/)
+  }
 })
 
 test('production Open Notebook receives only the explicit RAG environment', () => {
@@ -493,6 +501,8 @@ test('workflow path filters route real changed paths to their owning checks', ()
     ['third_party/assistant-ui/streaming-text/upstream/utils/range.ts', 'web', 'server'],
     ['third_party/assistant-ui/streaming-text/LICENSE', 'web', 'server'],
     ['third_party/assistant-ui/streaming-text/SHA256SUMS', 'web', 'server'],
+    ['third_party/assistant-ui-elements/LICENSE', 'web', 'server'],
+    ['third_party/react-chat-elements/reply-message/LICENSE', 'web', 'server'],
     ['package-lock.json', 'integration', 'server'],
     ['.github/workflows/ci.yml', 'deploy_contract', ''],
     ['scripts/release-smoke.mjs', 'deploy_contract', ''],

@@ -12,9 +12,10 @@ import { createMessageTools } from '../im/public.js'
 import { knowledgeTools } from '../modules/knowledge/public.js'
 import { presentationTools } from '../modules/presentations/public.js'
 import { createRoutineTools } from '../modules/routines/public.js'
+import { createMemorySummaryTool } from '../modules/memory/presentation.js'
 
 export function createProductTools(control: () => ReturnType<typeof createLingxiOS>): ToolDefinition[] {
   return [...visualizeTools, ...fileTools, ...documentTools, ...createCanvasTools(control), ...learningTools, ...teacherTools,
     ...directoryTools, ...researchTools, ...pollTools, ...conversationTools, ...createMessageTools(control),
-    ...knowledgeTools, ...presentationTools, ...createRoutineTools(control)]
+    ...knowledgeTools, ...presentationTools, ...createRoutineTools(control), createMemorySummaryTool(control)]
 }

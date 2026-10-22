@@ -63,3 +63,19 @@ test('conversation repair exact profile binds full52 source and reviewed53 witho
  const good={publicText:2,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'}};
  assert.doesNotThrow(()=>assertPublicTextMetadata(good,p));assert.throws(()=>assertPublicTextMetadata({...good,runTrace:undefined},p));
 });
+
+const presentationFormat='run-presentation-contract-host-release/v1',presentationMigration={version:54,name:'run_presentation_contract',checksum:'f58aafed796cabcb481bd381b4df298024d5effd0a576dae5e9638430aed38e2'};
+
+function presentationFixture(){
+ const p=repairFixture();p.format=presentationFormat;
+ Object.assign(p.source,{runtime:p.target.runtime,productVersion:p.target.productVersion,migrations:structuredClone(p.target.migrations)});
+ Object.assign(p.target,{productVersion:54,migrations:[...p.target.migrations,presentationMigration]});return p;
+}
+test('presentation release requires exact unchanged formal3.8.2/full53 to reviewed full54',()=>{
+ const p=presentationFixture();assert.doesNotThrow(()=>assertPublicTextPlan(p));
+ for(const change of [p=>p.source.productVersion=52,p=>p.source.migrations.pop(),p=>p.target.runtime='3.8.3',p=>p.target.schema=15,p=>p.target.integrity='another-package',p=>p.target.tarball='another-tarball',p=>p.target.migrations[52].checksum='0'.repeat(64),p=>p.target.migrations[53].checksum='0'.repeat(64),p=>p.target.migrations[53].name='another',p=>p.target.migrations[0].checksum='0'.repeat(64),p=>p.publicText.source.producer='disabled',p=>p.publicText.target.producer='disabled',p=>p.publicText.sourceContainers.pop(),p=>p.format=CONVERSATION_FORMAT,p=>p.format=PRODUCER_FORMAT]){
+  const bad=structuredClone(p);change(bad);assert.throws(()=>assertPublicTextPlan(bad));
+ }
+ const good={publicText:2,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'}};
+ assert.doesNotThrow(()=>assertPublicTextMetadata(good,p));assert.throws(()=>assertPublicTextMetadata({...good,runTrace:undefined},p));
+});

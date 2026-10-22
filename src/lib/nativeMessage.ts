@@ -36,6 +36,7 @@ const textSize = z.enum(['sm', 'md', 'lg', 'xl', '2xl', '3xl']).optional()
 const gap = z.number().min(0).max(8).optional()
 const align = z.enum(['start', 'center', 'end']).optional()
 export const generativeComponentSchemas: Record<string, z.ZodType> = {
+  'memory-summary': memoryActivitySchema,
   'agent-plan': z.object({ title: z.string().max(120), steps: z.array(z.object({ id, label: z.string().max(160), description: z.string().max(500).optional() }).strict()).min(1).max(50), activeIndex: z.number().int().nonnegative().max(50) }).strict(),
   Text: z.object({ value: z.string(), size: textSize, weight: z.enum(['normal', 'medium', 'semibold', 'bold']).optional(),
     color: z.enum(['emphasis', 'secondary', 'alpha-70', 'white', 'white-70', 'white-50']).optional() }).strict(),
@@ -150,7 +151,10 @@ export function createNativeMessage(input: { id: string; role: ThreadMessage['ro
     metadata: { ...(input.role === 'assistant' ? { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [] } : {}), custom: input.custom ?? {} } })))
 }
 export function nativeText(message: Pick<NativeMessage, 'content'> | Pick<ThreadMessage, 'content'>): string {
-  return message.content.flatMap(part => part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary' ? [part.text] : []).join('\n')
+  return message.content.flatMap(part => {
+    const annotation = activityAnnotation(part)
+    return part.type === 'text' && annotation?.kind !== 'commentary' && annotation?.purpose !== 'process' ? [part.text] : []
+  }).join('\n')
 }
 export function nativeData<T = Record<string, unknown>>(message: Pick<NativeMessage, 'content'>, name: string): T | undefined {
   const part = message.content.find(part => part.type === 'data' && part.name === name)

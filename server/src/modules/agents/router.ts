@@ -51,7 +51,7 @@ agentsRouter.delete('/agents/:id/avatar', safe(async (req, res) => {
 
 agentsRouter.get('/agents/harness', safe(async (req, res) => {
   await requireCompanyArtifactContext(req,'agent:read')
-  res.json(assembleHarness(createProductHarness(createProductTools(lingxiOSControl))).context)
+  res.json(assembleHarness(createProductHarness(createProductTools(lingxiOSControl), lingxiOSControl)).context)
 }))
 
 agentsRouter.post('/agents', safe(async (req, res) => {

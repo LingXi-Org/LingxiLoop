@@ -16,6 +16,7 @@ import { ResearchSources } from './ResearchSources'
 import { MemoryTool } from './MemoryTool'
 import { memoryActivitySchema } from '@/lib/memoryActivity'
 import { hasQuestionnaireWait } from '../runtime/questionnaire-wait'
+import { inputOwner, ownsApproval } from './message-presentation'
 
 const richTool = (name: string) => Object.hasOwn(TOOL_DETAILS,name) || /^(email|calendar)\./.test(name) || name === 'research.search'
   || /^memory(?:\.|__)/.test(name)
@@ -42,6 +43,9 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   const memory = memoryActivitySchema.safeParse(result && typeof result === 'object' ? Reflect.get(result, 'memory') : undefined)
   const ended = message.status?.type === 'complete' || message.status?.type === 'incomplete'
   const pending = approval && approval.approved === undefined && !approval.resolution && !ended
+  const owner = inputOwner(message)
+  const ownsInput = !readOnly && owner.type === 'tool' && owner.toolCallId === toolCallId
+  const ownsGate = !readOnly && !!approval && ownsApproval(message, toolCallId, approval.id)
   const permitted = !readOnly && custom.harnessControl === true && typeof custom.runId === 'string'
   const cancelled = approval?.resolution === 'cancelled' || resultStatus === 'cancelled' || status.type === 'incomplete' && status.reason === 'cancelled'
   const unknown = resultStatus === 'unknown'
@@ -71,14 +75,15 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   }
   const approve = (approved: boolean) => act(async current => {
     const part = current.content.find(part => part.type === 'tool-call' && part.toolCallId === toolCallId)
-    if (part?.type !== 'tool-call' || !part.approval || part.approval.id !== approval?.id || part.approval.approved !== undefined
+    if (!approval || !ownsApproval(current, toolCallId, approval.id) || part?.type !== 'tool-call' || !part.approval || part.approval.id !== approval?.id || part.approval.approved !== undefined
       || part.approval.resolution || part.approval.options?.length) throw new Error('409')
     await chatTransport.resolveApproval(part.approval.id, approved ? 'approved' : 'denied')
   })
   const resume = () => act(async current => {
     const meta = current.metadata.custom, view = meta.harness as RunDisplayState | undefined
     const part = current.content.find(part => part.type === 'tool-call' && part.toolCallId === toolCallId)
-    if (part?.type !== 'tool-call' || !part.interrupt || hasQuestionnaireWait(meta) || !answer.trim() || !view || view.runId !== meta.runId
+    const currentOwner = inputOwner(current)
+    if (currentOwner.type !== 'tool' || currentOwner.toolCallId !== toolCallId || part?.type !== 'tool-call' || !part.interrupt || hasQuestionnaireWait(meta) || !answer.trim() || !view || view.runId !== meta.runId
       || view.requestVersion !== (custom.harness as RunDisplayState | undefined)?.requestVersion
       || typeof meta.conversationId !== 'string' || typeof meta.senderId !== 'string') throw new Error('409')
     await chatTransport.continueRun({ conversationId: meta.conversationId, agentId: meta.senderId, runId: view.runId,
@@ -114,17 +119,18 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
             {option.description && <p className="mt-1 text-xs text-muted-foreground">{option.description}</p>}
             {option.grants?.length ? <p className="mt-1 break-words text-xs text-muted-foreground">权限范围：{option.grants.join('、')}</p> : null}
           </div>)}
-        </div> : pending && permitted && <ApprovalRequestCard approvalId={approval.id} sender={String(custom.senderName ?? '助手')} busy={busy || accepted}
+        </div> : pending && ownsGate && permitted && <ApprovalRequestCard approvalId={approval.id} sender={String(custom.senderName ?? '助手')} busy={busy || accepted}
           onApprove={() => approve(true)} onDeny={() => approve(false)} />}
-        {pending && !permitted && <p className="text-xs text-muted-foreground">等待有权限的成员审批。</p>}
+        {pending && ownsGate && !permitted && <p className="text-xs text-muted-foreground">等待有权限的成员审批。</p>}
       </div>}
-      {interrupt && !ended && !questionnaireWait && <fieldset disabled={!permitted || busy || accepted} className="min-w-0">
+      {interrupt && ownsInput && !ended && !questionnaireWait && <fieldset disabled={!permitted || busy || accepted} className="min-w-0">
         <ElicitationForm server="补充信息" message={typeof interrupt.payload === 'object' && interrupt.payload && 'prompt' in interrupt.payload
           && typeof interrupt.payload.prompt === 'string' ? interrupt.payload.prompt : '请补充信息以继续任务。'}
           fields={[{ name: 'answer', label: '补充信息', kind: 'text', value: answer, required: true }]}
           state={accepted ? 'accepted' : 'request'} acceptDisabled={!permitted || busy || !answer.trim()} acceptLabel={busy ? '正在提交…' : '提交'}
           onFieldChange={(_, value) => setAnswer(String(value))} onAccept={() => void resume()} />
       </fieldset>}
+      {interrupt && ownsInput && !permitted && <p className="text-xs text-muted-foreground">等待有权限的成员补充信息。</p>}
       {accepted && (pending || interrupt) && <p role="status" className="text-xs text-muted-foreground">已提交，正在同步任务状态…</p>}
       {children}
       {error && <p role="alert" className="text-xs text-destructive">{error}</p>}

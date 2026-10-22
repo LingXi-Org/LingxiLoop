@@ -60,14 +60,15 @@ export async function authorizeAgent(context: ActionContext) {
   if (namespace === 'visualize' && (work.kind !== 'turn' || work.conversation?.internal)) throw new NoEffectError('visualize requires an ordinary conversation turn', 'forbidden')
   const teacherChat = ['chat.send', 'chat.report_progress'].includes(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   const teacherVisualize = namespace === 'visualize' && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
+  const teacherMemoryRead = context.action.action === 'memory.summary' && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
   const teacherKnowledge = TEACHER_KNOWLEDGE_ACTIONS.has(context.action.action) && work.kind === 'turn' && work.lane === 'interactive' && !work.conversation?.internal
-  if (!agent || (agent.teacher_managed ? namespace !== 'teacher' && !teacherChat && !teacherKnowledge && !teacherVisualize : namespace === 'teacher')
+  if (!agent || (agent.teacher_managed ? namespace !== 'teacher' && !teacherChat && !teacherKnowledge && !teacherVisualize && !teacherMemoryRead : namespace === 'teacher')
     || !['teacher', 'memory', 'chat', 'polls', 'directory', 'visualize'].includes(namespace) && !agent.capabilities.includes(capability)) {
     throw new NoEffectError('agent capability or membership was revoked', 'forbidden')
   }
   await createPermissionService(db, { lockDependencies: true }).assertCan({ actorUserId: work.principalId,
     companyId: work.tenantId, action: 'conversation:read', resource: { type: 'conversation', id: productConversationId(work) } })
-  if (agent.teacher_managed && (teacherChat || teacherKnowledge || teacherVisualize)) {
+  if (agent.teacher_managed && (teacherChat || teacherKnowledge || teacherVisualize || teacherMemoryRead)) {
     const scope = await resolveTeacherScope(nativeContext(context),db)
     await authorizeAudienceRead(context,{ projectId: scope.projectId,action: 'learning:manage',resource: { type: 'project',id: scope.projectId } })
   }

@@ -105,7 +105,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     if (previewUrl === env.REDIS_URL) throw new Error('realtime Redis must be separate from business Redis')
     objectStore = bucket ? createRuntimeObjectStore(bucket) : undefined
     previewStore = previewUrl ? createRealtimeStore(previewUrl) : undefined
-    const harness = createProductHarness(createProductTools(lingxiOSControl))
+    const harness = createProductHarness(createProductTools(lingxiOSControl), lingxiOSControl)
     const { tools } = assembleHarness(harness)
     control = createLingxiOS({ ...common(), harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
       background: { role: backgroundRole },

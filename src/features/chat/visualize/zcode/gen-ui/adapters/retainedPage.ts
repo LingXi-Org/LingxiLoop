@@ -15,7 +15,10 @@ export function acquireGenUiPage(
   },
 ): Promise<RetainedGenUiPage> {
   const task = buildGenUiScopeKey(input.target);
-  const key = `gen-ui:${JSON.stringify([task, input.target.path, input.target.instanceKey])}`;
+  // Retention may reuse the iframe only for the same authorized source owner.
+  // A message handoff can keep its logical UI identity while changing the source
+  // that must authorize the next page acquisition.
+  const key = `gen-ui:${JSON.stringify([task, input.target.path, input.target.instanceKey, input.target.sourceMessageId ?? null])}`;
   const existing = sandboxPages.get(key);
   if (existing?.kind === "gen-ui") return Promise.resolve(existing as RetainedGenUiPage);
   const pending = creating.get(key);

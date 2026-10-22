@@ -16,12 +16,19 @@ function flatten(span: TraceSpan): TraceSpan[] { return [span,...span.children.f
 const rowColumns = 'grid grid-cols-[minmax(0,40%)_minmax(0,1fr)_4.5rem]'
 
 /** Local composition around Langfuse's MIT bar metrics. No external requests. */
-export function TraceWaterfall({ trace }: { trace: RunTrace }) {
+export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selectionVersion = 0 }: {
+  trace: RunTrace; selectedSpanId?: string|null; onSelectedSpanChange?: (id: string|null) => void; selectionVersion?: number;
+}) {
   const titleId = useId(),detailId = useId()
   const [collapsed,setCollapsed] = useState<ReadonlySet<string>>(() => new Set())
-  const [selectedId,setSelectedId] = useState<string|null>(null)
+  const [localSelectedId,setLocalSelectedId] = useState<string|null>(null)
+  const selectedId = selectedSpanId === undefined ? localSelectedId : selectedSpanId
+  const setSelectedId = (id: string) => onSelectedSpanChange ? onSelectedSpanChange(id) : setLocalSelectedId(id)
   const [now,setNow] = useState(() => Date.now())
   const rail = useRef<HTMLDivElement>(null)
+  const viewport = useRef<HTMLDivElement>(null)
+  const latestRoot = useRef(trace.root)
+  latestRoot.current = trace.root
   const [laneWidth,setLaneWidth] = useState(240)
   const running = trace.root.status === 'running'
   useEffect(() => {
@@ -40,6 +47,25 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
   },[])
   const all = useMemo(() => flatten(trace.root),[trace.root])
   const selected = all.find(span => span.id === selectedId)
+  // Only an explicit task inspection changes expansion/focus. Normal trace
+  // refreshes keep the user's open state and scroll position.
+  useEffect(() => {
+    if (!selectedSpanId || !selectionVersion) return
+    const ancestors: string[] = []
+    const visit = (span: TraceSpan): boolean => {
+      if (span.id === selectedSpanId) return true
+      if (span.children.some(visit)) { ancestors.push(span.id); return true }
+      return false
+    }
+    if (!visit(latestRoot.current)) return
+    setCollapsed(previous => new Set([...previous].filter(id => !ancestors.includes(id))))
+    const timer = setTimeout(() => {
+      const button = viewport.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
+      button?.focus({preventScroll: true})
+      button?.scrollIntoView({block: 'nearest'})
+    },0)
+    return () => clearTimeout(timer)
+  },[selectedSpanId,selectionVersion])
   const endpoint = (offset: number|null,kind: 'start'|'end') => {
     const date = offset !== null && trace.startedAt !== null ? new Date(trace.startedAt+offset) : null
     return date && Number.isFinite(date.getTime())
@@ -63,7 +89,7 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
     const x = known ? Math.min(laneWidth,Math.max(0,span.start!/maxEnd*laneWidth)) : 0
     const width = known ? Math.min(laneWidth-x,Math.max(1,(end!-span.start!)/maxEnd*laneWidth)) : 0
     const duration = span.durationMs ?? (known ? end!-span.start! : null)
-    return <li key={span.id} data-trace-kind={span.kind} data-trace-status={span.status}>
+    return <li key={span.id} data-trace-span-id={span.id} data-trace-kind={span.kind} data-trace-status={span.status}>
       <div data-trace-row className={cn(rowColumns,'items-center rounded-sm transition-colors duration-150 motion-reduce:transition-none hover:bg-muted/50',
         selected?.id === span.id && 'bg-muted/70')}>
         <div className="relative flex min-w-0 items-center gap-1 py-2 pe-2" style={{paddingInlineStart: Math.min(depth,6)*12+4}}>
@@ -107,7 +133,7 @@ export function TraceWaterfall({ trace }: { trace: RunTrace }) {
       <span>输入 {tokens(trace.root.tokensIn)}</span><span>输出 {tokens(trace.root.tokensOut)}</span><span>{cost(trace.root)}</span>
       <span className="ms-auto">{all.length} 个步骤</span>
     </div>
-    <div data-trace-viewport className="max-h-80 overflow-y-auto [scrollbar-gutter:stable]">
+    <div ref={viewport} data-trace-viewport className="max-h-80 overflow-y-auto [scrollbar-gutter:stable]">
       <div className={cn(rowColumns,'bg-background text-muted-foreground sticky top-0 z-10 border-y border-border/40 px-2 py-1 text-[10px]')}>
         <span className="ps-1">步骤</span><div ref={rail} data-trace-axis={hasTimeline ? '' : undefined} data-trace-axis-end={hasTimeline ? maxEnd : undefined} className="relative flex min-w-0 justify-between whitespace-nowrap font-mono tabular-nums">{hasTimeline && <><span>0 ms</span><span>{ms(maxEnd)}</span></>}</div>
         <span className="pe-1 text-end">耗时 / 费用</span>
