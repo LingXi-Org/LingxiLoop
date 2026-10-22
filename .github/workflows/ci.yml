@@ -337,7 +337,7 @@ jobs:
       - if: matrix.component == 'deploy-contract'
         run: node --test scripts/compose-offline.test.mjs
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-stopped-recovery.test.mjs scripts/public-text-release.test.mjs scripts/current-source52-acceptance.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
+        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-stopped-recovery.test.mjs scripts/host-release-lease-wait.test.mjs scripts/public-text-release.test.mjs scripts/current-source52-acceptance.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test --test-name-pattern 'effective candidate' scripts/host-release.local.test.mjs
       - if: matrix.component == 'release'
