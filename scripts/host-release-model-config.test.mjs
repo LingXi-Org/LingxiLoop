@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {patchModelEnvironment,MODEL_TARGET,sealModelConfigPlan,validateModelConfigPlan,runModelConfigRelease,modelConfigBoundary} from './host-release-model-config.mjs'
 import {createModelConfigOperations,modelContainerPolicyHash} from './host-release-model-config-komodo.mjs'
+import {validateModelKnowledgeEvidence} from './host-release-model-config-evidence.mjs'
 import {createHash} from 'node:crypto'
 const h='a'.repeat(64),id='b'.repeat(24),sha='c'.repeat(40),apps=['lingxiloop-app-a','lingxiloop-app-b'],core='lingxiloop-core-state'
 const sourceModels={OPENAI_MODEL:'zai-org/GLM-5.3-Flash',OPENAI_EMBEDDING_MODEL:'BAAI/bge-m3'}
@@ -100,4 +101,11 @@ test('knowledge probe accepts audited containerd index/manifest or legacy config
 })
 test('model-only preflight refuses stale explicit price overrides and unsupported BGE dimensions',async()=>{
  for(const row of ['AGENT_OS_EMBEDDING_INPUT_COST_MICROS_PER_MILLION=0','AGENT_OS_INPUT_COST_MICROS_PER_MILLION=1','AGENT_OS_EMBEDDING_DIMENSIONS=256']){const f=liveFixture([row]);await assert.rejects(f.ops.assertBoundary({stopped:new Set(),configured:new Set(),deployed:new Map()}));assert.equal(f.writes.length,0)}
+})
+test('knowledge audit requires the minimal RAG httpx runtime without requiring the optional OpenAI SDK',()=>{
+ const f=liveFixture(),p=structuredClone(f.plan),image=p.knowledge.probe.image,hash=b=>createHash('sha256').update(b).digest('hex'),bytes=v=>Buffer.from(JSON.stringify(v))
+ const audit={format:'cloud-knowledge-oci-full-audit/v1',passed:true,sourceCommit:sha,indexDigest:image.indexDigest,configDigest:image.configDigest,linuxAmd64ManifestDigest:image.manifestDigest,layers:image.diffIds.map(diffId=>({digest:'sha256:'+h,diffId,compressedBytes:1,expandedBytes:1,entries:1})),inventorySha256:h,dockerfileSha256:h,uvLockSha256:h,sourceComparisons:[{path:'third_party/open-notebook/open_notebook/rag/shadow.py',target:'app/open_notebook/rag/shadow.py',sha256:h,matches:true}],pythonDistributions:[...['surrealdb','fastapi','surreal-commands','httpx','pydantic','uvicorn'],...Array.from({length:16},(_,i)=>'synthetic-'+i)].map(name=>({name,version:'0.0.0',metadataSha256:h}))}
+ const files={knowledgePlan:Buffer.from(f.knowledgePlan),knowledgeFence:bytes({complete:true,action:'fence',result:f.freshFence}),knowledgeImageAudit:bytes(audit)};p.knowledge.fenceSha256=hash(files.knowledgeFence);image.auditSha256=hash(files.knowledgeImageAudit)
+ assert.equal(audit.pythonDistributions.some(r=>r.name==='openai'),false);assert.equal(validateModelKnowledgeEvidence(p,files).sourceRevision,1)
+ audit.pythonDistributions=audit.pythonDistributions.filter(r=>r.name!=='httpx');files.knowledgeImageAudit=bytes(audit);image.auditSha256=hash(files.knowledgeImageAudit);assert.throws(()=>validateModelKnowledgeEvidence(p,files))
 })

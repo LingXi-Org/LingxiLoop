@@ -96,6 +96,11 @@ and `bindings.json`; the oneoff reads them without printing corpus IDs or text.
 `rag/shadow.py`), every expanded OCI layer, locked Python runtime inventory,
 Dockerfile and uv lock hashes. A caller-supplied image expectation alone is
 insufficient. Stage and audit that probe source before preparing this plan.
+The minimal RAG runtime uses `httpx` for embedding and shadow requests. Require
+that installed distribution with the other RAG dependencies; the optional full
+application's OpenAI SDK is not part of this runtime profile. Keep validating
+all source comparisons, every installed distribution's frozen-lock metadata,
+and the complete OCI audit; do not install an unused package to satisfy a gate.
 
 The knowledge evidence is the shadow CLI's completed `plan` envelope with
 `result.format=rag-shadow-plan/v1`, and completed `fence` envelope with
