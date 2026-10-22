@@ -6,7 +6,8 @@
 - License: MIT, copyright (c) 2017 Detaysoft; full license beside this file.
 - These TSX/CSS files are the unmodified upstream snapshot. The application
   directly adapts the component at `src/components/vendor/react-chat-elements/ReplyMessage.tsx`
-  and imports a byte-identical copy of the upstream CSS. No chat framework or new
+  and loads a byte-identical copy of the upstream CSS through `src/styles/globals.css`.
+  The component stays importable by the existing Node renderer tests. No chat framework or new
   runtime dependency is installed in LingxiLoop.
 
 Adaptations: reuse existing `clsx` instead of `classnames`; narrow the props to

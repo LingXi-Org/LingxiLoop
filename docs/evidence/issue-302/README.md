@@ -51,7 +51,8 @@ package, SDK or chat framework was added. See the full upstream snapshot,
 
 ## Validation and reproduction
 
-Run `npm ci --ignore-scripts` and `npm ci --prefix server --ignore-scripts` first.
+Run `npm ci --ignore-scripts` at the repository root, matching CI. A separate
+server install is not needed for frontend checks.
 This environment initially had a missing MCP UI dependency and stale **installed**
 server runtime 3.5.2 despite both locks requiring 3.8.0; reinstalling from existing
 locks fixed those local setup failures. No manifests or locks changed.
@@ -116,3 +117,28 @@ both existing lockfiles are installed (root OpenAI 6.37.0/Zod 4.4.3 versus serve
 OpenAI 6.49.0/Zod 4.5.4). The quote tests/configs and fixture pass their scoped
 TypeScript checks. No package manifest, lock or runtime version was changed to
 work around this unrelated gate.
+
+## Integrator regression correction
+
+Independent review of `7ac5f406` found that importing the two CSS files directly
+from `ReplyMessage.tsx` breaks the existing Node/tsx `ConversationMessage.test.tsx`
+suite with `ERR_UNKNOWN_FILE_EXTENSION`. The prior green Web smoke selection did
+not include this unchanged renderer suite. The failure was reproduced before the
+correction.
+
+Both stylesheets now load, in the same upstream-then-adaptation order, from the
+existing global CSS entry. Their bytes and the MIT source snapshot are unchanged.
+The existing 16-test renderer suite is now part of ordinary Web smoke selection;
+no renderer is mocked away and no test loader or test assertion is weakened.
+
+The corrected renderer suite passes 16/16, ordinary Web tests pass 82/82, and the
+official desktop/mobile quote browser cases pass 2/2 after the CSS entry change.
+These include real quote geometry, keyboard interaction, cancellation, send and
+replay, alongside renderer coverage for answers, RunActivity and actionable
+errors. Local integration report: `integration-browser-report.json`.
+
+The integrator's production build (including Web typechecks) and full
+`npm run test:e2e:typecheck` pass with the root-only dependency layout used by CI.
+This is a new successful check in the selected environment; it does not rewrite
+the earlier worker's duplicate-dependency failure. No lock or package manifest
+was changed to obtain this result.

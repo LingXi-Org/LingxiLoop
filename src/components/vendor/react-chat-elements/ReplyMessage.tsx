@@ -2,8 +2,6 @@
 // Upstream snapshot, commit and adaptation list: third_party/react-chat-elements/reply-message.
 import type { ReactNode } from 'react'
 import classNames from 'clsx'
-import './ReplyMessage.css'
-import './lingxi-reply-message.css'
 
 interface ReplyMessageProps {
   title: string
