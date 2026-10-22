@@ -178,10 +178,10 @@ export function toolDisplay(action: string, status?: unknown): ToolDisplay {
     'awaiting-approval': '需要你确认后才能继续。',
   }
   if (status === 'completed' && ['visualize.save','visualize.chart','visualize.diagram','visualize.sliding_window'].includes(action)) {
-    return { title,purpose,summary: '可视化内容已保存；展示引用是否交付会在答复中确认。' }
+    return { title,purpose,summary: '可视化内容已保存。' }
   }
-  if (status === 'failed' && action.startsWith('visualize.')) return { title,purpose,summary: `${title}未完成；本次工具调用没有确认交付结果。` }
-  if (status === 'failed' && action === 'ipython') return { title,purpose,summary: '本次脚本执行未完成，请以已确认的工具结果为准。' }
+  if (status === 'failed' && action.startsWith('visualize.')) return { title,purpose,summary: `${title}未完成，请重试。` }
+  if (status === 'failed' && action === 'ipython') return { title,purpose,summary: '脚本执行未完成，请重试。' }
   return { title, purpose, ...(typeof status === 'string' && summaries[status] ? { summary: summaries[status] } : {}) }
 }
 
@@ -191,5 +191,6 @@ export function resolveToolDisplay(action: string, status: unknown, recorded?: u
   if (!parsed.success) return base
   const generic = parsed.data.title === '处理任务' || Object.values(groups).some(([title]) => title === parsed.data.title)
   return { ...base, ...parsed.data, ...(generic && base.title !== '处理任务' ? { title: base.title, purpose: base.purpose } : {}),
-    ...(typeof status === 'string' && status !== 'completed' && base.summary ? { summary: base.summary } : {}) }
+    ...(base.summary && (typeof status === 'string' && status !== 'completed'
+      || parsed.data.summary === '可视化内容已保存；展示引用是否交付会在答复中确认。') ? { summary: base.summary } : {}) }
 }

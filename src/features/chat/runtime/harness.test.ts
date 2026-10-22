@@ -8,9 +8,24 @@ import { convertEnvelope } from './converter'
 import { runMessageParts as harnessParts, runMessageStatus as harnessStatus, harnessToolParts } from '../../../../server/src/agent-runtime/message-projection'
 import { getLingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages } from './store'
+import { harnessFailure } from './harness'
 import type { MarkdownConfidenceClaim } from '@/components/assistant-ui/markdown-text'
 
 const participants = { agent: { id: 'agent', kind: 'agent', name: '助手' } as Participant }
+
+// #295: recovery instructions stay visible, internal protocol/budget details do not.
+test('failure copy is actionable without protocol diagnostics or raw provider details', () => {
+  for (const reason of ['Content acceptance correction budget exhausted','Final assessment protocol correction exhausted',
+    'Final response assessment is invalid','Tool protocol correction exhausted','Tool execution failed after bounded correction',
+    'No valid answer was produced for the current request','Model returned an invalid response format','synthetic private detail']) {
+    const copy = harnessFailure(reason)
+    assert.match(copy,/重试/)
+    assert.doesNotMatch(copy,/协议|格式|修正次数|模型|synthetic|private/)
+  }
+  assert.match(harnessFailure('The operation was aborted due to timeout'),/超时.*重试/)
+  assert.match(harnessFailure('Model call, token, cost or execution-time budget exhausted'),/缩小范围.*重试/)
+  assert.equal(harnessFailure('Model provider request failed (HTTP 502) private payload'),'服务暂时不可用，请稍后重试。')
+})
 
 test('native response text and presentation cards retain segment order and stable identities', () => {
   const view = runView(1, 1)
@@ -116,8 +131,7 @@ test('native citations keep occurrence identities, all source versions and trunc
   assert.deepEqual((legacy.data as { claims: MarkdownConfidenceClaim[] }).claims[0].evidence,
     [view.message!.envelope.citationEvidence[0], legacyChunk])
   view.lifecycle = 'queued'
-  assert.deepEqual(harnessParts(view), [{ type: 'text', text: '请求已接收，正在等待处理。',
-    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'observed-progress:1:1', kind: 'commentary', label: '任务状态' } } } }])
+  assert.deepEqual(harnessParts(view), [])
   view.draft = '新的草稿'
   assert.deepEqual(harnessParts(view), [])
   view.lifecycle = 'leased'
