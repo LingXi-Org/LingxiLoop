@@ -3,7 +3,7 @@ import { publicText } from './runActivity.js'
 
 const metric = z.number().finite().nonnegative().nullable()
 const label = publicText.pipe(z.string().max(160))
-export const traceStatusSchema = z.enum(['running','waiting','complete','cancelled','error','unknown'])
+export const traceStatusSchema = z.enum(['running','waiting','complete','partial','blocked','cancelled','error','unknown'])
 export type TraceStatus = z.infer<typeof traceStatusSchema>
 /** Exact provider model registrations, never a guess from an arbitrary label. */
 export const isEmbeddingTraceModel = (model: unknown) => model === 'BAAI/bge-m3' || model === 'Pro/BAAI/bge-m3' || model === 'Qwen/Qwen3-Embedding-8B'

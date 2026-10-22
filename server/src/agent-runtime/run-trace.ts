@@ -29,7 +29,8 @@ function ledgerSpan(call: PublicLlmTrace,relative: (value: unknown)=>number|null
 }
 function status(lifecycle: RunView['lifecycle']): TraceStatus {
   return lifecycle === 'leased' || lifecycle === 'queued' ? 'running' : lifecycle === 'waiting' ? 'waiting'
-    : lifecycle === 'succeeded' ? 'complete' : lifecycle === 'cancelled' ? 'cancelled' : lifecycle === 'failed' ? 'error' : 'unknown'
+    : lifecycle === 'succeeded' ? 'complete' : lifecycle === 'partial' ? 'partial' : lifecycle === 'blocked' ? 'blocked'
+    : lifecycle === 'cancelled' ? 'cancelled' : lifecycle === 'failed' ? 'error' : 'unknown'
 }
 
 export function nativeTraceMatchesState(snapshot: import('@lyyzka/lingxios').RunTraceSnapshot,view: Pick<RunView,'runId'|'fence'|'requestVersion'|'lifecycle'>): boolean {
@@ -51,7 +52,7 @@ export function buildRunTrace(input: { runId: string; createdAt: string; lifecyc
     const raw = tool.result && typeof tool.result === 'object' ? Reflect.get(tool.result,'status') : undefined
     const state: TraceStatus = raw === 'completed' ? 'complete' : raw === 'failed' || tool.isError ? 'error'
       : raw === 'cancelled' ? 'cancelled' : raw === 'unknown' ? 'unknown' : tool.approval || tool.interrupt ? 'waiting'
-      : rootStatus === 'complete' ? 'unknown' : rootStatus
+      : rootStatus === 'complete' || rootStatus === 'partial' || rootStatus === 'blocked' ? 'unknown' : rootStatus
     const display = toolDisplaySchema.safeParse(tool.display)
     const label = toolDisplay(tool.toolName,raw)
     const info = resolveToolDisplay(tool.toolName,raw,display.success ? display.data : undefined)

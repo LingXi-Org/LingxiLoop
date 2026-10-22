@@ -8,7 +8,7 @@ const ms = (value: number|null) => value === null ? '—' : `${Math.round(value)
 const tokens = (value: number|null) => value === null ? '—' : value.toLocaleString('zh-CN')
 const cost = (span: TraceSpan) => span.cost === null && span.knownCost === undefined ? '—'
   : `${span.cost === null ? '已计' : ''}${span.costEstimated ? '约 ' : ''}$${(span.cost ?? span.knownCost)!.toLocaleString('en-US',{maximumFractionDigits: 8})}`
-const labels = { running: '运行中',waiting: '等待处理',complete: '已完成',cancelled: '已取消',error: '失败',unknown: '结果未知' }
+const labels = { running: '运行中',waiting: '等待处理',complete: '已完成',partial: '未完成',blocked: '受阻',cancelled: '已取消',error: '失败',unknown: '结果未知' }
 const kindLabels = { agent: 'Agent',llm: 'LLM',embedding: 'Embedding',tool: 'Tool' }
 const icons = { agent: BotIcon,llm: SparklesIcon,embedding: DatabaseIcon,tool: WrenchIcon }
 const hues = { agent: 'bg-indigo-400 dark:bg-indigo-400',llm: 'bg-sky-400 dark:bg-sky-400',embedding: 'bg-violet-400 dark:bg-violet-400',tool: 'bg-teal-400 dark:bg-teal-400' }
