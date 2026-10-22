@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ConversationThread } from '@/features/chat/components/ConversationThread'
 import { ConversationRuntimeProvider } from '@/features/chat/runtime/runtime'
-import { convertEnvelopeBatch } from '@/features/chat/runtime/converter'
+import { convertEnvelopeBatch, projectMessageGroups } from '@/features/chat/runtime/converter'
 import { EMPTY_CONVERSATION_CHAT_STATE, useChatThreadStore } from '@/features/chat/runtime/store'
 import { harnessApi } from '@/features/chat/runtime/harness-api'
 import { messagesApi } from '@/features/chat/api'
@@ -37,11 +37,16 @@ const rows = [
   ['multi-reply', 'me', '第一段回复。', 'original'],
   ['snapshot-reply', 'agent', '历史回复。', 'unloaded-source'],
   ['incoming-reply', 'colleague', '收到你的回复。', 'mine'],
+  ['citation-source', 'agent', '[已净化引用](#cite-source)'],
+  ['empty-source', 'agent', ''],
+  ['tool-source', 'agent', ''],
+  ['empty-reply', 'me', '等待原文。', 'empty-source'],
+  ['tool-reply', 'me', '等待工具后的正文。', 'tool-source'],
 ] as const
 const envelopes: ImEnvelope[] = rows.map(([id, fromUid, text, reply, file], index) => ({
   channelId: 'quote-preview', channelType: 2, fromUid, clientMsgNo: id, messageId: id, messageSeq: index + 1, timestamp: 1790899200 + index * 120,
   payload: createNativeMessage({ id, role: fromUid === 'agent' ? 'assistant' : 'user',
-    content: id === 'multi-reply' ? [{type:'text',text}, {type:'text',text:'第二段正文保留。'}] : file ? [{type:'file', filename:'缓存设计.pdf', mimeType:'application/pdf', data:'https://example.com/design.pdf', sourceType:'url'}] : [{type:'text',text}],
+    content: id === 'empty-source' ? [] : id === 'tool-source' ? [{type:'tool-call',toolCallId:'fixture-call',toolName:'fixture.lookup',args:{},argsText:'{}',result:{ok:true}}] : id === 'multi-reply' ? [{type:'text',text}, {type:'text',text:'第二段正文保留。'}] : file ? [{type:'file', filename:'缓存设计.pdf', mimeType:'application/pdf', data:'https://example.com/design.pdf', sourceType:'url'}] : [{type:'text',text}],
     custom: reply ? {replyToClientMsgNo:reply, ...(id === 'snapshot-reply' ? {quoted:{id:reply,authorId:'history-author',authorName:'历史作者',body:'保留的历史引用摘要。'}} : {})} : {} }),
 }))
 const seed = () => useChatThreadStore.setState({ conversations: { 'quote-preview': { ...EMPTY_CONVERSATION_CHAT_STATE, loaded: true, hasMoreOlder: false, messages: convertEnvelopeBatch(envelopes, { participants, meId:'me' }) } } })
@@ -58,9 +63,16 @@ chatTransport.send = async (_conversationId, _text, _attachments, reply, id, pay
 }
 function Controls() {
   const aui = useAui()
-  return <nav aria-label="测试控制" style={{display:'flex',gap:16,padding:8}}>
+  return <nav aria-label="测试控制" style={{display:'flex',flexWrap:'wrap',gap:12,padding:8}}>
     <button onClick={() => aui.thread.composer().setQuote({messageId:'original',text:'使用可视化为我讲解 KV 缓存。'})}>准备回复</button>
     <button onClick={() => aui.thread.composer().setQuote({messageId:'file-source',text:''})}>回复附件</button>
+    <button onClick={() => aui.thread.composer().setQuote({messageId:'citation-source',text:'已净化引用'})}>回复净化文本</button>
+    <button onClick={() => aui.thread.composer().setQuote({messageId:'citation-source',text:''})}>回复隐藏文本</button>
+    <button onClick={() => {
+      const state = useChatThreadStore.getState().conversations['quote-preview']!
+      const messages = projectMessageGroups(state.messages.map(message => ['empty-source','tool-source'].includes(message.id) ? {...message,content:[{type:'text' as const,text:'后续正文已到达'}]} : message))
+      useChatThreadStore.setState({conversations:{'quote-preview':{...state,messages}}})
+    }}>补全原文</button>
     <button onClick={() => { document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.classList.toggle('dark') }}>切换主题</button>
   </nav>
 }

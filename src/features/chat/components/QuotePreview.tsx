@@ -1,6 +1,7 @@
 import { ComposerPrimitive, useAuiState } from '@assistant-ui/react'
 import { X } from 'lucide-react'
 import ReplyMessage from '@/components/vendor/react-chat-elements/ReplyMessage'
+import { nativeText } from '@/lib/nativeMessage'
 import { Button } from '@/components/ui/button'
 import { useParticipants } from '@/features/agents/state'
 import { useConversationUi } from '@/stores/conversationUi'
@@ -21,8 +22,12 @@ export function ComposerQuotePreview({ onDismiss }: { onDismiss: () => void }) {
     [message.id, message.metadata.custom.clientMessageId, message.metadata.custom.imMessageId].includes(quote.messageId)))
   const metadata = original?.metadata.custom as LingxiMessageMetadata | undefined
   const authorName = useParticipants(state => metadata ? state.byId[metadata.senderId]?.name : undefined) ?? metadata?.senderName ?? '引用消息'
+  // Reply actions sanitize citations. Even an intentionally empty body must not
+  // be replaced with raw source text; derive only an attachment-only preview.
+  const text = quote?.text ?? ''
+  const preview = original && !text.trim() && !nativeText(original).trim() ? quotePreviewText(original) : text
   return <ComposerPrimitive.Quote data-composer-quote="" className="mx-1 mb-2 flex min-w-0 items-center gap-1" aria-label="正在回复">
-    <ReplyMessage title={authorName} message={original ? quotePreviewText(original) : quote?.text} />
+    <ReplyMessage title={authorName} message={preview} />
     <ComposerPrimitive.QuoteDismiss asChild>
       <Button type="button" variant="ghost" size="icon-sm" className="size-11 shrink-0" aria-label="取消回复" onClick={onDismiss}>
         <X aria-hidden="true" />

@@ -142,11 +142,11 @@ export function projectMessageGroups(messages: readonly ThreadMessage[]): Thread
     const original = custom.quotedMessageId && !custom.quote?.text ? byId.get(custom.quotedMessageId) : null
     const originalMetadata = original?.metadata.custom as LingxiMessageMetadata | undefined
     const originalText = original ? quotePreviewText(original) : undefined
-    const resolvedQuote = original && originalMetadata && originalText ? {
+    const resolvedQuote = original && originalMetadata ? {
       messageId: original.id,
       authorId: originalMetadata.senderId,
       authorName: originalMetadata.senderName,
-      text: originalText,
+      text: originalText ?? '',
       sequence: originalMetadata.sequence,
     } : custom.quote
     if (

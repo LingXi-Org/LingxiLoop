@@ -9,5 +9,7 @@ export function quotePreviewText(message: ThreadMessage): string {
   const media = parts.find(part => part.type === 'file' || part.type === 'image')
   if (media?.type === 'file') return `附件 · ${media.filename || '文件'}`
   if (media?.type === 'image') return media.filename ? `图片 · ${media.filename}` : '图片'
-  return parts.length ? '消息卡片' : '原消息不可用'
+  // Keep transient placeholders in the view; an empty preview can resolve again
+  // when a loaded original receives its text after a tool/empty state.
+  return ''
 }

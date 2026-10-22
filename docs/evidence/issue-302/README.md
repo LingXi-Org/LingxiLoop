@@ -99,3 +99,20 @@ runtime logic. The only history change is attachment quote summary enrichment.
 
 The original browser report is [browser-report.json](browser-report.json).
 The report records 2 passed, 0 failed, 0 skipped viewport cases.
+
+## Independent review follow-up
+
+Read-only review found and verified two corrections: composer text supplied by
+reply actions remains authoritative even when intentionally empty (hidden
+citations must not reappear); unavailable/tool-only placeholders stay in the
+view rather than cached quote metadata, allowing later source text to resolve.
+Both have explicit E2E cases; the refreshed report includes them. The original
+scroll/mention suite also passes 3/3 after the scroll-button move.
+
+Additional attempted gate: repository-wide `npm run test:e2e:typecheck` exposes
+existing OpenAI/Zod incompatibilities in untouched `e2e/forum/api.ts`,
+`server/src/agent-runtime/activity-tool.ts` and `server/src/im/router.ts` when
+both existing lockfiles are installed (root OpenAI 6.37.0/Zod 4.4.3 versus server
+OpenAI 6.49.0/Zod 4.5.4). The quote tests/configs and fixture pass their scoped
+TypeScript checks. No package manifest, lock or runtime version was changed to
+work around this unrelated gate.
