@@ -10,6 +10,7 @@ import type { AgentRunSnapshot } from '@/lib/agentRunSnapshot'
 import { memoryActivitySchema } from '@/lib/memoryActivity'
 import { z } from 'zod'
 import { parseActivityPage } from './runActivityHistory'
+import { RUN_RECOVERY } from './recovery'
 
 export interface AgentRunTarget { conversationId: string; agentId: string; runId: string; threadId?: string }
 export interface RunHistoryAnchors { sourceClientMsgNos: string[]; runIds: string[] }
@@ -67,28 +68,41 @@ export const harnessApi = {
     const headers = new Headers({ 'x-company-id': company, Accept: 'text/event-stream' })
     if (workspace?.companyId === company) headers.set('x-project-id', workspace.projectId)
     const url = `${API}/im/companies/${encodeURIComponent(company)}${path(target).slice(3)}/stream?${new URLSearchParams(thread(target))}`
-    const response = await lingxiApiFetch(url, { credentials: 'include', headers, signal })
-    if (!response.ok) throw new Error(`任务进度暂不可用（${response.status}）`)
-    if (!response.body || !response.headers.get('content-type')?.startsWith('text/event-stream')) throw new Error('运行流协议不正确')
-    const reader = AssistantStream.fromResponse(response, new AssistantTransportDecoder()).getReader()
-    const state = new AssistantTransportDeltaTracker()
+    const connection = new AbortController()
+    const bounded = AbortSignal.any([signal, connection.signal])
+    const timer = setTimeout(() => connection.abort(new DOMException('Run stream handshake timed out', 'TimeoutError')), RUN_RECOVERY.requestMs)
     try {
-      while (true) {
-        signal.throwIfAborted()
-        const { value, done } = await reader.read()
-        if (done) break
-        if (value.type === 'error') throw new Error('运行流中断，请重新连接')
-        if (value.type !== 'update-state') throw new Error('运行流包含不支持的消息')
-        if (!value.operations.length) continue
-        state.append(value.operations)
-        const snapshot = state.state as unknown as AgentRunSnapshot
-        const message = nativeMessageSchema.parse(snapshot?.message)
-        const view = message.metadata.custom.harness as RunDisplayState
-        if (message.id !== `run-${target.runId}` || message.metadata.custom.runId !== target.runId || view?.runId !== target.runId
-          || ![view.requestVersion,view.fence,view.messageFence,view.lastSeq].every(value => Number.isSafeInteger(value) && value >= 0)) throw new Error('运行流消息身份或内容不正确')
-        receive(snapshot)
+      const response = await lingxiApiFetch(url, { credentials: 'include', headers, signal: bounded })
+      if (!response.ok) throw new Error(`任务进度暂不可用（${response.status}）`)
+      if (!response.body || !response.headers.get('content-type')?.startsWith('text/event-stream')) throw new Error('运行流协议不正确')
+      const streamReader = AssistantStream.fromResponse(response, new AssistantTransportDecoder()).getReader()
+      const state = new AssistantTransportDeltaTracker()
+      const cancel = () => { void streamReader.cancel().catch(() => {}) }
+      bounded.addEventListener('abort', cancel, { once: true })
+      try {
+        while (true) {
+          bounded.throwIfAborted()
+          const { value, done } = await streamReader.read()
+          bounded.throwIfAborted()
+          if (done) break
+          if (value.type === 'error') throw new Error('运行流中断，请重新连接')
+          if (value.type !== 'update-state') throw new Error('运行流包含不支持的消息')
+          if (!value.operations.length) continue
+          state.append(value.operations)
+          const snapshot = state.state as unknown as AgentRunSnapshot
+          const message = nativeMessageSchema.parse(snapshot?.message)
+          const view = message.metadata.custom.harness as RunDisplayState
+          if (message.id !== `run-${target.runId}` || message.metadata.custom.runId !== target.runId || view?.runId !== target.runId
+            || ![view.requestVersion,view.fence,view.messageFence,view.lastSeq].every(value => Number.isSafeInteger(value) && value >= 0)) throw new Error('运行流消息身份或内容不正确')
+          clearTimeout(timer)
+          receive(snapshot)
+        }
+      } finally {
+        bounded.removeEventListener('abort', cancel)
+        await streamReader.cancel().catch(() => {})
+        streamReader.releaseLock()
       }
-    } finally { await reader.cancel(); reader.releaseLock() }
+    } finally { clearTimeout(timer) }
   },
   read(target: AgentRunTarget, signal?: AbortSignal): Promise<AgentRunSnapshot> {
     return http(`${path(target)}?${new URLSearchParams(thread(target))}`, {

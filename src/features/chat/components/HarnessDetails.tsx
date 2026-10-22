@@ -60,11 +60,12 @@ function HarnessDetailsContent({ metadata }: { metadata: LingxiMessageMetadata }
   })
 
   return <section aria-label="答复附件与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
-    {metadata.runConnection && <div role="status" className="rounded-lg border p-3 text-sm">
-      <p>{metadata.runConnection === 'inaccessible' ? '任务状态无法读取，权限可能已变化。' : '连接中断，状态待确认。'}</p>
-      {metadata.runConnection === 'released' && <p>已停止本地等待，连接恢复后会继续核对结果。你可以继续发送消息。</p>}
-      <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => void perform(async () => {})}>核对任务状态</Button>
-    </div>}
+    {metadata.runConnection === 'released' && <p role="status">暂时无法更新回复。
+      <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => void perform(async () => {})}>重新连接</Button>
+    </p>}
+    {metadata.runConnection === 'unauthenticated' && <p role="status">登录已失效，请重新登录。</p>}
+    {metadata.runConnection === 'inaccessible' && <p role="status">你已无法访问此回复。</p>}
+    {metadata.runConnection === 'missing' && <p role="status">此回复已不可用，请重新发送消息。</p>}
     {view.lifecycle === 'cancelled' && <p role="status">已取消</p>}
     {view.lifecycle === 'succeeded' && !hasAnswer && (outcome?.status === 'partial' || outcome?.status === 'blocked') && <ErrorPrimitive.Root className="text-destructive">本次请求未能生成答复，请补充信息后重试。</ErrorPrimitive.Root>}
     {view.delivery === 'failed' && <ErrorPrimitive.Root className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">

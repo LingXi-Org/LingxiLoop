@@ -39,6 +39,18 @@ function Preview({ messages }: { messages: ThreadMessage[] }) {
   return <AssistantRuntimeProvider runtime={runtime}><ThreadPrimitive.Messages components={{ Message: ConversationMessage }} /></AssistantRuntimeProvider>
 }
 
+test('connection recovery keeps reply text and exposes no diagnostic card', () => {
+  for (const connection of ['checking', 'released', 'inaccessible'] as const) {
+    const original = message('1')
+    const reply = { ...original, metadata: { ...original.metadata, custom: { ...getLingxiMessageMetadata(original), runId: 'run', runConnection: connection,
+      harness: { ...createRunView('run'), lifecycle: 'leased' as const, artifacts: [] } } } } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+    assert.match($.text(), /正文1/)
+    assert.doesNotMatch($.text(), /连接任务失败|核对任务状态|状态待确认|已停止本地等待|权限可能已变化/)
+    assert.equal($('button').filter((_, el) => $(el).text().includes('重新连接')).length, connection === 'released' ? 1 : 0)
+  }
+})
+
 // Failure cases: the real thread filters out v2 messages; settled tools spin forever;
 // approvals disappear in collapsed groups; mixed content loses order or repeats its footer.
 test('the real conversation thread displays native v2 messages', () => {
