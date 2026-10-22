@@ -1,6 +1,6 @@
 # 仓库级模板会覆盖 LingXi-Org/.github 的默认模板。
 # 同目录 feature_request.yml、join-lingxi.yml 原样保留组织模板，避免入口丢失。
-# 无需 config.yml；保留 GitHub 默认的空白 Issue 入口。
+# config.yml 原样保留组织默认的 Issue 入口配置。
 name: 🐛 Bug 反馈
 description: 遇到问题了？按提示简单填写，不懂技术也能反馈。
 title: "[Bug] "
