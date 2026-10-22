@@ -1,24 +1,44 @@
 {
   "format": "model-config-cli-functional-verification/v1",
-  "performedAt": "2026-10-22T17:27:28.163Z",
+  "performedAt": "2026-10-22T17:59:11.896Z",
   "synthetic": true,
   "productionRead": false,
   "productionWrite": false,
   "credentialsAbsent": true,
   "proxyUnreachable": true,
+  "sourceAcceptance": {
+    "candidate": "58c1a214590e56d35caf328553df5ee1f2c6c0f1",
+    "rawSha256": "018ee6d7370513632096f03c78c9f824ddec99a3616ef566f57638a0793a8858"
+  },
+  "sourceAuditSha256": "73cf824874164418162eb7ff4ad2ad6d4b8abcab61fd8e42a8d7c5739fc4b3c1",
+  "fixtureDirectory": "/tmp/model-config-cli-final-jWySCJ",
   "results": [
     {
-      "scenario": "offline CLI validates exact source with synthetic shadow/fence",
+      "scenario": "offline exact latest source plus synthetic knowledge plan-fence-audit",
       "exit": 0,
       "output": {
         "mode": "offline-verification",
-        "planHash": "89201e4966c65f8bbd121aacaa38a6aed6b9704aa9e5b0b5e2e3a626ab4223d9",
+        "planHash": "698ab1ba1e60af34089d8b259d9d6606aa7c84a296025397535470a01ce9b42f",
         "passed": true
       }
     },
     {
-      "scenario": "wrong fence revision rejected despite resealed hashes",
+      "scenario": "wrong fence revision rejects despite resealed hashes",
       "exit": 1
+    },
+    {
+      "scenario": "failed knowledge source audit rejects despite resealed hashes",
+      "exit": 1
+    },
+    {
+      "scenario": "terminal failed native ID is freshly read and nonterminal-contradictory-outcome-wrong-target refuse",
+      "passed": true,
+      "readbacks": 4
+    },
+    {
+      "scenario": "read HTTP403 preserved in execution receipt and continuation refused",
+      "passed": true,
+      "httpStatus": 403
     }
   ]
 }

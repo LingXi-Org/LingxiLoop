@@ -1,52 +1,57 @@
 {
   "format": "model-config-release-validation/v1",
-  "recordedAt": "2026-10-22T17:33:07.993Z",
+  "recordedAt": "2026-10-22T17:59:30.460Z",
   "productionWrites": false,
-  "productionReads": "GetStack metadata only; raw environment never persisted",
+  "productionReads": "Sanitized Komodo stack/model/override metadata only; raw environment never persisted",
   "testedSourceFiles": [
     {
       "path": "scripts/host-release-model-config.mjs",
-      "bytes": 12841,
-      "sha256": "58cea058430266f9b1eeb56535f6c0fe0f4ab37be2a1cbb2b4d7529eda72434d"
+      "bytes": 15458,
+      "sha256": "cf6782782673ddbfe853864d717290c92fad51eb4cf0cd24960575efc16cecdc"
     },
     {
       "path": "scripts/host-release-model-config-komodo.mjs",
-      "bytes": 12900,
-      "sha256": "d4c575fb28a4f95e78df23c8bd169271b627ecdf2fae71d48ed84687c9c38be5"
+      "bytes": 20826,
+      "sha256": "f8540d8d5310788eae8f2064b432fd0a3ce127bad4f11a09b1df0b413ea1943e"
     },
     {
       "path": "scripts/host-release-model-config-evidence.mjs",
-      "bytes": 8904,
-      "sha256": "a2178a0be617137eca940af54d19ce3cb8dac5d338247c5dbbcb5a1ae77f9654"
+      "bytes": 11076,
+      "sha256": "c912e9377a96d9f914d8417cde4f6aeaea680e5114c9c67834f102d68ce8a5bb"
     },
     {
       "path": "scripts/host-release-model-config-cli.mjs",
-      "bytes": 5519,
-      "sha256": "ad0a516321f3a65504c59f4812b13df32666368dd0d43ec2c95666fb4c017c97"
+      "bytes": 5809,
+      "sha256": "1aa61a25dde0f3803021bd9230216e19a80b02a4910c74b6cf400999b227ace9"
     },
     {
       "path": "scripts/host-release-model-config.test.mjs",
-      "bytes": 14690,
-      "sha256": "97b5ecba5a96b9948e2b571870193181d5d7c51385f3e03f29b6920d0845861f"
+      "bytes": 19538,
+      "sha256": "ec9f3a967725802cf3ad44130ea8a1919bb90f9fad62238ea5cdb32ca705cf47"
     },
     {
       "path": ".github/workflows/ci.yml",
       "bytes": 26953,
       "sha256": "11241f1b26a5e9c2708b15aafa9a6b893ca8ae42e0777956fe58678a92064f75"
+    },
+    {
+      "path": "docs/evidence/issue-297/model-config-release/verify-cli.mjs",
+      "bytes": 8909,
+      "sha256": "1610d33225e376c42208a71617baa9317dc8d7e1add8013949bd6063cbdd3661"
     }
   ],
   "focused": {
     "command": "node --test scripts/host-release-model-config.test.mjs",
-    "passed": 9,
+    "passed": 13,
     "failed": 0,
     "skipped": 0
   },
   "owningDeploymentContracts": {
     "command": "node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-model-config.test.mjs scripts/host-release-stopped-recovery.test.mjs scripts/host-release-image-recovery.test.mjs scripts/host-release-lease-wait.test.mjs scripts/public-text-release.test.mjs scripts/current-source52-acceptance.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs",
-    "passed": 215,
+    "passed": 219,
     "failed": 0,
     "skipped": 0,
-    "rawLogSha256": "f6ecd2d414935c38612d43f231ae9ee3769ef018f83fb3f4c20050f453d41d17"
+    "rawLogSha256": "fff6be4880f11392e6a1d61eae675efd71319dcf327d010d655ad56cb4470cd6"
   },
   "cliFunctionalEvidence": "cli-functional.json",
   "initialRed": "Focused core and adapter contracts failed with missing modules before implementation; not a claimed production defect reproduction",
@@ -60,6 +65,12 @@
   "additionalRedGreen": {
     "scenario": "same-image container NODE_VERSION drift",
     "red": "Missing expected rejection before explicit audited baked Node22 binding",
-    "green": "Full 215 owning checks passed after minimal adapter guard"
-  }
+    "green": "Full 215 owning checks passed after minimal adapter guard",
+    "review": {
+      "negativeBeforeFix": "Quoted multiline =/: secret content, failed-native operation retention and read HTTP403 preservation",
+      "green": "13 focused and 219 owning checks plus 5 offline/synthetic functional groups passed",
+      "freshFence": "Requires actual shadow.status result on exact audited pull-never KB image; historical receipts alone reject"
+    }
+  },
+  "cliFunctionalEvidenceSha256": "77fcd776a2c4de8c5e65175ceb78ded3413d040d41a4694d2204f0a6208ddf4d"
 }

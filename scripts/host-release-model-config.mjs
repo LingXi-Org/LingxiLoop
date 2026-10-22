@@ -18,6 +18,15 @@ export function patchModelEnvironment(source,target=MODEL_TARGET){
  check(typeof source==='string'&&Buffer.byteLength(source)<=512*1024&&equal(target,MODEL_TARGET),'Only the exact two-model environment patch is permitted')
  const lines=source.split(/(?<=\n)/),seen=new Set()
  const output=lines.map(line=>{
+  // Compose dotenv supports multiline quoted values. Refuse that unsupported
+  // syntax before recognizing model-looking lines inside an unrelated secret.
+  const assignment=/^[ \t]*(?:export[ \t]+)?[A-Za-z_][A-Za-z0-9_]*[ \t]*[=:][ \t]*([^\r\n]*)(?:\r?\n)?$/.exec(line)
+  check(assignment||/^[ \t]*(?:#[^\r\n]*)?(?:\r?\n)?$/.test(line),'Unsupported environment syntax')
+  if(assignment&&['"',"'"].includes(assignment[1][0])){
+   const value=assignment[1],quote=value[0];let close=-1,escaped=false
+   for(let i=1;i<value.length;i++){if(!escaped&&value[i]===quote){close=i;break}escaped=!escaped&&value[i]==='\\'}
+   check(close>0&&(!value.slice(close+1).trim()||value.slice(close+1).trim().startsWith('#')),'Multiline or malformed quoted environment values are unsupported')
+  }
   const candidate=/^[ \t]*(?:export[ \t]+)?(OPENAI_MODEL|OPENAI_EMBEDDING_MODEL)\b/.exec(line)
   if(!candidate)return line
   const match=/^([ \t]*)(OPENAI_MODEL|OPENAI_EMBEDDING_MODEL)([ \t]*=[ \t]*)([^\r\n]*)(\r?\n)?$/.exec(line)
@@ -38,13 +47,16 @@ export function validateModelConfigPlan(plan){
  check(plan.stacks?.length===3&&plan.stacks.every((r,i)=>exact(r,['stack','server','id','sourceConfigSha256','targetConfigSha256','composeSha256'])&&r.stack===[...MODEL_APPS,MODEL_CORE][i]&&r.server===(i===1?'shanghai-b':'shanghai-a')&&id.test(r.id??'')&&[r.sourceConfigSha256,r.targetConfigSha256,r.composeSha256].every(x=>hex.test(x??''))&&(i===2?r.sourceConfigSha256===r.targetConfigSha256:r.sourceConfigSha256!==r.targetConfigSha256)),'Three exact full stack configurations required')
  check(plan.containers?.length===4&&new Set(plan.containers.map(r=>r.id)).size===4&&equal(plan.containers.map(key).sort(),MODEL_APPS.flatMap(stack=>['lingxiloop','worker'].map(service=>stack+':'+service)).sort())&&plan.containers.every(r=>exact(r,['stack','service','id','imageId','sourcePolicySha256','targetPolicySha256'])&&hex.test(r.id??'')&&digest.test(r.imageId??'')&&[r.sourcePolicySha256,r.targetPolicySha256].every(x=>hex.test(x??''))&&r.sourcePolicySha256!==r.targetPolicySha256),'Four accepted configuration identities required')
  const k=plan.knowledge
- check(exact(k,['mode','stack','server','id','configSha256','containerId','imageId','manifestSha256','fenceSha256'])&&k.mode==='stopped'&&k.stack==='lingxiloop-knowledge-agent'&&k.server==='shanghai-b'&&id.test(k.id??'')&&hex.test(k.containerId??'')&&digest.test(k.imageId??'')&&[k.configSha256,k.manifestSha256,k.fenceSha256].every(x=>hex.test(x??'')),'Exact stopped knowledge and finite shadow plan/fence boundary required')
+ check(exact(k,['mode','stack','server','id','configSha256','containerId','imageId','manifestSha256','fenceSha256','probe'])&&k.mode==='stopped'&&k.stack==='lingxiloop-knowledge-agent'&&k.server==='shanghai-b'&&id.test(k.id??'')&&hex.test(k.containerId??'')&&digest.test(k.imageId??'')&&[k.configSha256,k.manifestSha256,k.fenceSha256].every(x=>hex.test(x??'')),'Exact stopped knowledge and finite shadow plan/fence boundary required')
+ const p=k.probe,pi=p?.image
+ check(exact(p,['composeSha256','scopePath','bindingsPath','image'])&&hex.test(p.composeSha256??'')&&/^\/app\/data\/rag-shadow\/[a-z0-9][a-z0-9._-]{0,95}\/scope\.json$/.test(p.scopePath??'')&&p.bindingsPath===p.scopePath.replace(/scope\.json$/,'bindings.json')&&exact(pi,['reference','indexDigest','configDigest','manifestDigest','diffIds','auditSha256'])&&/^accel\.way2api\.fun\/ghcr\.io\/lingxi-org\/lingxiloop-open-notebook:[a-f0-9]{40}$/.test(pi.reference??'')&&[pi.indexDigest,pi.configDigest,pi.manifestDigest].every(x=>digest.test(x??''))&&hex.test(pi.auditSha256??'')&&pi.diffIds?.length>0&&pi.diffIds.every(x=>digest.test(x)),'Exact audited pull-never knowledge status probe required')
  return plan
 }
 
-function nativeProof(plan,stack,operation,u){
+function nativeProof(plan,stack,operation,u,success=true){
  const value={id:u?._id?.$oid,operation:u?.operation,target:u?.target,status:u?.status,success:u?.success,startTs:u?.start_ts,endTs:u?.end_ts}
- check(id.test(value.id??'')&&value.operation===operation&&value.target?.type==='Stack'&&value.target.id===plan.stacks.find(r=>r.stack===stack)?.id&&value.status==='Complete'&&value.success===true&&Number.isFinite(value.startTs)&&Number.isFinite(value.endTs)&&value.endTs>=value.startTs,'Matching terminal native update required')
+ const stackId=stack===plan.knowledge.stack&&operation==='RunStackService'?plan.knowledge.id:plan.stacks.find(r=>r.stack===stack)?.id
+ check(id.test(value.id??'')&&value.operation===operation&&value.target?.type==='Stack'&&value.target.id===stackId&&value.status==='Complete'&&typeof success==='boolean'&&value.success===success&&Number.isFinite(value.startTs)&&Number.isFinite(value.endTs)&&value.endTs>=value.startTs,'Matching terminal native update required')
  return value
 }
 
@@ -53,29 +65,33 @@ export function modelConfigBoundary(plan,receipt){
  check(receipt?.planHash===plan.planHash&&receipt.mode===plan.format&&receipt.complete===false&&Array.isArray(receipt.events)&&receipt.events.length>0,'Exact incomplete model release receipt required')
  const events=receipt.events,last=events.at(-1)
  check(last.phase==='model-config-stopped'&&last.status==='failed'&&last.noAutomaticRetry===true&&![401,403].includes(last.httpStatus)&&!events.some(e=>e.status==='uncertain'||e.phase==='complete'),'Only a known terminal failure without authorization denial may continue')
- const stopped=new Set(),configured=new Set(),deployed=new Map(),healthy=new Set(),operations=[];let pending=null
+ const stopped=new Set(),configured=new Set(),deployed=new Map(),healthy=new Set(),operations=[],terminal=new Map(),checkpoints=new Set();let pending=null
  const stopOrder=['worker','lingxiloop'].flatMap(service=>MODEL_APPS.map(stack=>stack+':'+service)),deployOrder=['lingxiloop','worker'].flatMap(service=>MODEL_APPS.map(stack=>stack+':'+service))
  for(const e of events){
   if(e.phase==='komodo'){
    if(e.status==='submitting'){check(!pending,'Overlapping native operation');pending={operation:e.operation,stack:e.stack,service:e.service}}
-   else if(e.status==='pending'){check(pending&&e.operation===pending.operation&&e.stack===pending.stack&&id.test(e.updateId??''),'Unmatched native pending update');pending.id=e.updateId}
-   else if(['complete','failed'].includes(e.status)){check(pending?.id===e.updateId&&pending.operation===e.operation&&pending.stack===e.stack,'Unmatched native terminal update');pending=null}
+   else if(e.status==='pending'){check(pending&&e.operation===pending.operation&&e.stack===pending.stack&&e.service===pending.service&&id.test(e.updateId??''),'Unmatched native pending update');pending.id=e.updateId}
+   else if(['complete','failed'].includes(e.status)){
+    check(pending?.id===e.updateId&&pending.operation===e.operation&&pending.stack===e.stack&&pending.service===e.service&&!terminal.has(e.updateId),'Unmatched native terminal update')
+    const n=e.native,op={StopStack:'StopStackService',DeployStack:'DeployStackService',RunStackService:'RunStackService'}[e.operation];check(op&&n?.id===e.updateId,'Terminal native outcome is missing its identity/provenance')
+    nativeProof(plan,e.stack,op,{_id:{$oid:n.id},operation:n.operation,target:n.target,status:n.status,success:n.success,start_ts:n.startTs,end_ts:n.endTs},e.status==='complete');operations.push(n);terminal.set(n.id,n);pending=null
+   }
    else throw Error('Unresolved native receipt')
   }
   if(e.phase==='drain'&&e.status==='stopped'){
    check(key(e)===stopOrder[stopped.size]&&!configured.size&&!deployed.size,'Invalid stop checkpoint')
-   const n=e.native;nativeProof(plan,e.stack,'StopStackService',{_id:{$oid:n?.id},operation:n?.operation,target:n?.target,status:n?.status,success:n?.success,start_ts:n?.startTs,end_ts:n?.endTs});operations.push(n);stopped.add(key(e))
+   const n=e.native;nativeProof(plan,e.stack,'StopStackService',{_id:{$oid:n?.id},operation:n?.operation,target:n?.target,status:n?.status,success:n?.success,start_ts:n?.startTs,end_ts:n?.endTs});check(equal(terminal.get(n.id),n),'Stop checkpoint lacks its same terminal native event');checkpoints.add(n.id);stopped.add(key(e))
   }
   if(e.phase==='configuration'&&e.status==='verified'){
    check(stopped.size===4&&!deployed.size&&e.stack===MODEL_APPS[configured.size]&&e.responseAcknowledged===true&&e.fullConfigReadback===true&&e.targetConfigSha256===plan.stacks.find(r=>r.stack===e.stack).targetConfigSha256,'Invalid configuration checkpoint');configured.add(e.stack)
   }
   if(e.phase==='rollout'&&e.status==='observed'){
    check(configured.size===2&&stopped.size===4&&key(e)===deployOrder[deployed.size]&&healthy.size===deployed.size&&hex.test(e.containerId??'')&&e.containerId!==plan.containers.find(c=>key(c)===key(e)).id&&e.imageId===plan.containers.find(c=>key(c)===key(e)).imageId,'Invalid target observation checkpoint')
-   const n=e.native;nativeProof(plan,e.stack,'DeployStackService',{_id:{$oid:n?.id},operation:n?.operation,target:n?.target,status:n?.status,success:n?.success,start_ts:n?.startTs,end_ts:n?.endTs});operations.push(n);deployed.set(key(e),{id:e.containerId,imageId:e.imageId})
+   const n=e.native;nativeProof(plan,e.stack,'DeployStackService',{_id:{$oid:n?.id},operation:n?.operation,target:n?.target,status:n?.status,success:n?.success,start_ts:n?.startTs,end_ts:n?.endTs});check(equal(terminal.get(n.id),n),'Deployment checkpoint lacks its same terminal native event');checkpoints.add(n.id);deployed.set(key(e),{id:e.containerId,imageId:e.imageId})
   }
   if(e.phase==='rollout'&&e.status==='healthy'){const c=deployed.get(key(e));check(c?.id===e.containerId&&c.imageId===e.imageId,'Healthy target checkpoint identity changed');healthy.add(key(e))}
  }
- check(!pending&&new Set(operations.map(r=>r.id)).size===operations.length,'Missing or reused native action checkpoint')
+ check(!pending&&operations.filter(n=>n.success&&['StopStackService','DeployStackService'].includes(n.operation)).every(n=>checkpoints.has(n.id)),'Missing or reused successful native action checkpoint')
  return {stopped,configured,deployed,healthy,operations}
 }
 
@@ -89,7 +105,7 @@ export async function runModelConfigRelease({plan,ops,receipt,onProgress=async()
  try{
   if(receipt)await ops.verifyPriorOperations(b.operations)
   const pending=[...b.deployed.keys()].filter(k=>!b.healthy.has(k));check(pending.length<=1,'Multiple unconfirmed target health observations')
-  await ops.assertBoundary({...context(),...(pending.length?{allowUnhealthy:pending[0]}:{})});await state();await record({phase:'preflight',status:'verified',continuation:Boolean(receipt)})
+  await ops.assertBoundary({...context(),...(pending.length?{allowUnhealthy:pending[0]}:{})});await state();await ops.verifyKnowledgeFence();await record({phase:'preflight',status:'verified',continuation:Boolean(receipt)})
   for(const service of ['worker','lingxiloop'])for(const stack of MODEL_APPS){
    if(b.stopped.has(stack+':'+service))continue
    await boundary();await state();const u=await ops.stop(stack,service),native=nativeProof(plan,stack,'StopStackService',u)
@@ -113,7 +129,7 @@ export async function runModelConfigRelease({plan,ops,receipt,onProgress=async()
    }
    const identity=b.deployed.get(k);await ops.healthy(stack,service,identity,context());await boundary();await state();b.healthy.add(k);await record({phase:'rollout',status:'healthy',stack,service,containerId:identity.id,imageId:identity.imageId})
   }
-  const containers=await boundary(),observed=await state(),result={phase:'complete',status:'complete',planHash:plan.planHash,state:observed,containers,models:plan.targetModels,knowledge:'retained-stopped-for-shadow-cutover'}
+  const containers=await boundary(),observed=await state(),knowledge=await ops.verifyKnowledgeFence(),result={phase:'complete',status:'complete',planHash:plan.planHash,state:observed,containers,models:plan.targetModels,knowledge:{status:'retained-stopped-for-shadow-cutover',liveFence:knowledge}}
   await record(result);return result
  }catch(error){const detail={...(Number.isInteger(error?.httpStatus)?{httpStatus:error.httpStatus}:{}),...(typeof error?.operation==='string'?{operation:error.operation}:{})};await record({phase:'model-config-stopped',status:error?.uncertain===true?'uncertain':'failed',noAutomaticRetry:true,...detail}).catch(()=>{});throw Object.assign(Error('Model configuration release stopped; inspect the bound receipt before continuation'),{uncertain:error?.uncertain===true,...detail})}
 }
