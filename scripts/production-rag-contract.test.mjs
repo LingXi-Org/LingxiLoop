@@ -171,7 +171,7 @@ test('production Open Notebook receives only the explicit RAG environment', () =
   ]) assert.match(service, new RegExp(`${variable}:`))
   assert.match(service, /OPENAI_API_KEY: \$\{OPEN_NOTEBOOK_PASSWORD:\?/)
   assert.match(service, /OPENAI_BASE_URL: "\$\{LINGXILOOP_PUBLIC_ORIGIN:\?[^}]+}\/internal\/open-notebook\/v1"/)
-  assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{OPENAI_EMBEDDING_MODEL:\?/)
+  assert.match(service, /OPENAI_EMBEDDING_MODEL: \$\{OPENAI_EMBEDDING_MODEL:-Pro\/BAAI\/bge-m3\}/)
 
   assert.match(service, /supervisorctl .* status rag-api/)
   assert.match(service, /supervisorctl .* status rag-worker/)
