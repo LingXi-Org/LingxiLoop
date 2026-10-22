@@ -1,0 +1,131 @@
+# 仓库级模板会覆盖 LingXi-Org/.github 的默认模板。
+# 同目录 feature_request.yml、join-lingxi.yml 原样保留组织模板，避免入口丢失。
+# 无需 config.yml；保留 GitHub 默认的空白 Issue 入口。
+name: 🐛 Bug 反馈
+description: 遇到问题了？按提示简单填写，不懂技术也能反馈。
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        谢谢你反馈！不用懂技术或 Markdown，填写前 4 项即可，后面的都可以跳过。
+
+        上方标题请用一句话描述问题，例如：“点击发送后一直转圈，没有回复”。
+
+        这里的内容会公开。截图和视频请先打码，不要贴密码、API Key、Token 或个人敏感信息。
+        安全漏洞请到仓库的 [Security 页面](https://github.com/LingXi-Org/LingxiLoop/security)私下报告。
+
+  - type: dropdown
+    id: feature
+    attributes:
+      label: 发生在哪个功能？
+      description: 选最接近的一项，不清楚就选“不确定”。
+      options:
+        - 登录 / 账号
+        - 聊天 / AI 回复
+        - 课程 / 学习空间
+        - 知识库 / 文件上传
+        - 论坛 / 资源库
+        - 页面显示 / 设置
+        - 其他功能
+        - 不确定
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 出现了什么问题？
+      description: 说说你看到了什么，按平时说话的方式写就好。
+      placeholder: 例如：发出消息后一直转圈，等了几分钟还是没有回复。
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 出现问题前，你做了什么？
+      description: 记得多少写多少；不记得就填“不记得了”。
+      placeholder: |
+        例如：
+        1. 打开一个对话
+        2. 输入问题并点击发送
+        3. 页面一直转圈
+        不记得具体操作也没关系，写“不记得了”即可。
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 你希望正常情况下是什么样？
+      description: 简单说说你原本想完成什么。
+      placeholder: 例如：发送消息后能看到回复，等待时能看到进度。
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        **以下都可以跳过。** 知道的话可以补充，方便我们更快找到原因。
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: 使用的设备（选填）
+      options:
+        - Windows 电脑
+        - Mac 电脑
+        - Linux 电脑
+        - 安卓手机 / 平板
+        - iPhone / iPad
+        - 其他
+        - 不确定
+    validations:
+      required: false
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: 使用的浏览器（选填）
+      options:
+        - Chrome（谷歌浏览器）
+        - Edge（微软浏览器）
+        - Safari（苹果浏览器）
+        - Firefox（火狐浏览器）
+        - 微信 / QQ 内置浏览器
+        - 其他
+        - 不确定
+    validations:
+      required: false
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: 出现频率（选填）
+      options:
+        - 每次都会
+        - 偶尔出现
+        - 只遇到一次
+        - 不确定
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 截图或视频（选填）
+      description: 把截图或视频拖到这个输入框，也可以粘贴截图。上传前请遮住姓名、账号等私人信息。
+      placeholder: 没有也没关系，可以直接跳过。
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: 更多线索（选填）
+      description: 如果有，可以补充错误提示原文、大概发生时间、对话链接或任务编号（run ID）；不知道就留空。请先删除隐私和密钥。
+      placeholder: 例如：今天下午 3 点左右，页面提示“发送失败”。
+    validations:
+      required: false

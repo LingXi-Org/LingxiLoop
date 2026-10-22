@@ -1,0 +1,40 @@
+name: Feature request
+description: 提议一个有明确使用场景的改进
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: 你要解决的实际问题是什么？谁会遇到它？
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: 描述期望行为、边界和可能的 API 或交互
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: 目前有哪些替代方案，为什么不足？
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and operational impact
+      description: 是否影响现有 API、状态、部署、性能或安全边界？
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and pull requests.
+          required: true
+        - label: This request does not contain credentials or private data.
+          required: true
