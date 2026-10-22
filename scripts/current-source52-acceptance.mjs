@@ -54,4 +54,17 @@ export function assertCurrentSource52Acceptance(accepted,plan){
  check(assets.passed===true&&assets.candidate===s.sha&&assets.inventorySha256===a.inventorySha256&&hex.test(a.inventorySha256??'')&&assets.paths?.length>=3
   &&assets.paths[0].path==='/'&&new Set(assets.paths.map(x=>x.path)).size===assets.paths.length&&assets.paths.some(x=>x.path.endsWith('.js'))&&assets.paths.some(x=>x.path.endsWith('.css'))
   &&assets.paths.every(x=>x.status===200&&x.ok===true&&x.matchesAudit===true&&Number.isSafeInteger(x.bytes)&&x.bytes>0&&hex.test(x.sha256??'')&&(x.path==='/'||/^\/assets\/[A-Za-z0-9_.-]+\.(js|css)$/.test(x.path))),'Audited public HTML and referenced assets required');
+ // Verify the full inventory bytes here, not a caller's matchesAudit flag or
+ // an unattached inventory-hash string. The exact audit is already plan-bound.
+ check(typeof e.inventory==='string'&&Buffer.byteLength(e.inventory)<=32*1024*1024&&hash(e.inventory)===a.inventorySha256,'Full rootfs inventory bytes differ from the audited inventory');
+ const inventory=JSON.parse(e.inventory);
+ check(inventory&&typeof inventory==='object'&&!Array.isArray(inventory),'Invalid rootfs inventory');
+ for(const item of assets.paths){
+  const name=item.path==='/'?'app/dist/index.html':'app/dist'+item.path,expected=inventory[name];
+  check(Object.hasOwn(inventory,name)&&expected?.kind==='file'&&expected.bytes===item.bytes&&expected.sha256===item.sha256,'Public asset path/hash/length differs from audited rootfs');
+ }
+ check(typeof e.html==='string'&&Buffer.byteLength(e.html)<=1024*1024&&Buffer.byteLength(e.html)===assets.paths[0].bytes&&hash(e.html)===assets.paths[0].sha256,'HTML bytes differ from the audited public entrypoint');
+ const references=[...e.html.matchAll(/\b(?:src|href)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)].map(x=>x[1]??x[2]).filter(x=>/\.(?:js|css)(?:[?#]|$)/i.test(x));
+ check(references.every(x=>/^\/assets\/[A-Za-z0-9_.-]+\.(js|css)$/.test(x))
+  &&equal([...new Set(references)].sort(),assets.paths.slice(1).map(x=>x.path).sort()),'Public evidence does not cover the exact complete HTML JS/CSS reference set');
 }

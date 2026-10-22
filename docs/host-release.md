@@ -101,8 +101,11 @@ retain the current healthy control-plane servers, all three actual host sources,
 four healthy reader identities, both inspected image inventories and successful
 metadata updates, complete read-only database provenance, the exact full OCI
 audit bytes, all four public health/version responses and the audited HTML/JS/CSS
-comparison. The sealer must verify asset hashes/lengths against the complete
-rootfs inventory bound by the audit, and seal observations within one hour.
+comparison. The acceptance embeds the complete raw rootfs inventory and public
+HTML bytes. The reviewed consumer hashes the inventory against the plan-bound
+audit, checks each resource path/hash/length against that inventory, verifies the
+HTML bytes, and requires evidence for its exact complete JS/CSS reference set.
+The sealer must seal observations within one hour.
 
 The host driver revalidates this evidence and all ordinary online source,
 configuration, image, seed and drain safeguards. It does not claim that the
