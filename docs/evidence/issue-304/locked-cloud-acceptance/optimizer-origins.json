@@ -1,0 +1,427 @@
+{
+  "format": "issue304-isolated-vite-cache/v1",
+  "metadataPath": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/_metadata.json",
+  "metadataSha256": "d79ce00d22a34c995ccf285b27910ec340cf0a364a82fb32d39359e7b642031f",
+  "cacheDirectory": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache",
+  "originCount": 52,
+  "allOriginsInsideIsolatedNodeModules": true,
+  "sharedUnderlayOrigins": 0,
+  "origins": [
+    {
+      "name": "@assistant-ui/react",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@assistant-ui/react/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@assistant-ui_react.js",
+      "bytes": 8903,
+      "sha256": "161fbea098510e757699c99615cb3b6cab06b3c94565709112d60b278df5c9bc"
+    },
+    {
+      "name": "@assistant-ui/react-generative-ui",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@assistant-ui/react-generative-ui/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@assistant-ui_react-generative-ui.js",
+      "bytes": 121350,
+      "sha256": "8dc8eb21186c8d3015bb34831c828247749959be4f8656b8cc6a4140121e21f4"
+    },
+    {
+      "name": "@assistant-ui/react-lexical",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@assistant-ui/react-lexical/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@assistant-ui_react-lexical.js",
+      "bytes": 242035,
+      "sha256": "8569d6714e480989796795ea218d74df467f9d1319afcded914aadaa4682bb58"
+    },
+    {
+      "name": "@assistant-ui/react-streamdown",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@assistant-ui/react-streamdown/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@assistant-ui_react-streamdown.js",
+      "bytes": 18575,
+      "sha256": "dc0713d6cc59366d2fedd45bd66abfecf8237bee3e501cd221813b9d4caf3d93"
+    },
+    {
+      "name": "@base-ui/react/collapsible",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@base-ui/react/collapsible/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@base-ui_react_collapsible.js",
+      "bytes": 30608,
+      "sha256": "d61b5005682c8732855d4265fec12375cf252b10963db2bde125371b4a6e0d84"
+    },
+    {
+      "name": "@base-ui/react/input",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@base-ui/react/input/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@base-ui_react_input.js",
+      "bytes": 41545,
+      "sha256": "1615860c5242010e301faa0c700d8a7808ef591efe46160cb3abe79f1643f0ad"
+    },
+    {
+      "name": "@base-ui/react/preview-card",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@base-ui/react/preview-card/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@base-ui_react_preview-card.js",
+      "bytes": 208251,
+      "sha256": "2c82efd4387ed13cfd670ea5c65fd34e93e04a96844038c63a883723260bc75e"
+    },
+    {
+      "name": "@dicebear/core",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@dicebear/core/lib/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@dicebear_core.js",
+      "bytes": 347884,
+      "sha256": "6abaa90d7d0d71f479e94e48fcd0bad0c7d82f0d521e617c455660830be5b7a5"
+    },
+    {
+      "name": "@floating-ui/dom",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@floating-ui/dom/dist/floating-ui.dom.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@floating-ui_dom.js",
+      "bytes": 21618,
+      "sha256": "16951e805c6716dc7d85ba0c6894360ccf5a3e9dcacb492899507ec78ec817e7"
+    },
+    {
+      "name": "@hugeicons/core-free-icons",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@hugeicons/core-free-icons/dist/esm/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@hugeicons_core-free-icons.js",
+      "bytes": 7939601,
+      "sha256": "fac4608c0115cf14795b91e5f78c6a5c1fc9944d36a52de0def85d0bb41ac100"
+    },
+    {
+      "name": "@hugeicons/react",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@hugeicons/react/dist/esm/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@hugeicons_react.js",
+      "bytes": 2133,
+      "sha256": "58ab5e66a507e626985f68a7c5aec48bd94c13cf07d95b01b35d5e690492cac2"
+    },
+    {
+      "name": "@lexical/react/LexicalComposerContext",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@lexical/react/dist/LexicalComposerContext.dev.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@lexical_react_LexicalComposerContext.js",
+      "bytes": 349,
+      "sha256": "4e9e9d28918aee5d93f7469a0c4c35a4dc1fee2e4b8ac74b44af320acb39ba4d"
+    },
+    {
+      "name": "@lezer/markdown",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@lezer/markdown/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@lezer_markdown.js",
+      "bytes": 149304,
+      "sha256": "ea5fe989b1e205fd3500b97061b6b94f2527c29f494fa8d6603c8accfdc49f16"
+    },
+    {
+      "name": "@lyyzka/lingxios/ui",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@lyyzka/lingxios/dist/src/ui/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@lyyzka_lingxios_ui.js",
+      "bytes": 19438,
+      "sha256": "6b40a2d6f94cdb29878558618df096eca16037060aeadc35b8d2dee8b21a1c33"
+    },
+    {
+      "name": "@modelcontextprotocol/ext-apps",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@modelcontextprotocol/ext-apps/dist/src/app.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@modelcontextprotocol_ext-apps.js",
+      "bytes": 43713,
+      "sha256": "fa9f420b45c114adb5447a184194bac18ea30b3141d4a6a137858aa0f66d8545"
+    },
+    {
+      "name": "@modelcontextprotocol/ext-apps/app-bridge",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@modelcontextprotocol/ext-apps/dist/src/app-bridge.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@modelcontextprotocol_ext-apps_app-bridge.js",
+      "bytes": 44265,
+      "sha256": "2da28940ddf26df113dd581ace4e1cd92eb4c3be09576b3eb6a0bde21f5e8215"
+    },
+    {
+      "name": "@radix-ui/react-slot",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@radix-ui/react-slot/dist/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@radix-ui_react-slot.js",
+      "bytes": 282,
+      "sha256": "bbe744a2fdeae2a07c997456bbb342ac6687b4bbf704f79380b9485e24ab42bc"
+    },
+    {
+      "name": "@shadcn/react/questionnaire",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@shadcn/react/dist/questionnaire/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@shadcn_react_questionnaire.js",
+      "bytes": 29478,
+      "sha256": "015e8a30a142a32df57c5cdf3d1c852c12b5a18246367419b904da0fd1203d0e"
+    },
+    {
+      "name": "@streamdown/code",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@streamdown/code/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@streamdown_code.js",
+      "bytes": 133863,
+      "sha256": "761aba1f17141450dc123b20d213bb0645ee9da90b0ad481073cffedb0145df3"
+    },
+    {
+      "name": "@streamdown/math",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@streamdown/math/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@streamdown_math.js",
+      "bytes": 31935,
+      "sha256": "6eb4ee6504e0f44583f13c1a7d980ae1a86a79cdde0f32171f1be17564ad5435"
+    },
+    {
+      "name": "@streamdown/mermaid",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@streamdown/mermaid/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@streamdown_mermaid.js",
+      "bytes": 1344,
+      "sha256": "b032400970ff789d4d8f8c44b3cfe7cf92338ef78eff9b633c260e2c3228cdcd"
+    },
+    {
+      "name": "@tanstack/react-query",
+      "resolvedSource": "/workspace/review-pr315/node_modules/@tanstack/react-query/build/modern/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/@tanstack_react-query.js",
+      "bytes": 122696,
+      "sha256": "a66bc57dc8b0e5d6031e5aae175f8f06e5cd43f3ff4d01e77a0fc48a5f872599"
+    },
+    {
+      "name": "assistant-stream",
+      "resolvedSource": "/workspace/review-pr315/node_modules/assistant-stream/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/assistant-stream.js",
+      "bytes": 1504,
+      "sha256": "d1eafd3ee539243466b6b3247f6825540de5d7400f71cb07347f6de462ca5293"
+    },
+    {
+      "name": "class-variance-authority",
+      "resolvedSource": "/workspace/review-pr315/node_modules/class-variance-authority/dist/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/class-variance-authority.js",
+      "bytes": 2277,
+      "sha256": "2a3908e19529b9214f8a112f1ba908e04d059a1bf68fcb7028611f91895adc0c"
+    },
+    {
+      "name": "clsx",
+      "resolvedSource": "/workspace/review-pr315/node_modules/clsx/dist/clsx.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/clsx.js",
+      "bytes": 171,
+      "sha256": "6e95a5894d7d33d9e9af07fc9aeca415e612d3c3e4494e7c18a64bcbc5ea4d58"
+    },
+    {
+      "name": "lexical",
+      "resolvedSource": "/workspace/review-pr315/node_modules/lexical/dist/Lexical.dev.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/lexical.js",
+      "bytes": 13398,
+      "sha256": "6c4ee6b716b078e6bb560a6e689aac1a5120044746525cf6e37c66315a614d89"
+    },
+    {
+      "name": "lucide-react",
+      "resolvedSource": "/workspace/review-pr315/node_modules/lucide-react/dist/esm/lucide-react.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/lucide-react.js",
+      "bytes": 1448052,
+      "sha256": "5b1644019937b7370fa51ed3a2c9179a1332513c48a39d7c03f811218b1b6492"
+    },
+    {
+      "name": "mdast-util-from-markdown",
+      "resolvedSource": "/workspace/review-pr315/node_modules/mdast-util-from-markdown/dev/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/mdast-util-from-markdown.js",
+      "bytes": 434,
+      "sha256": "a9da57430864c3a7a2391b364faedfca165b2999f0615bb068e4496161fb621c"
+    },
+    {
+      "name": "mdast-util-gfm",
+      "resolvedSource": "/workspace/review-pr315/node_modules/mdast-util-gfm/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/mdast-util-gfm.js",
+      "bytes": 554,
+      "sha256": "1fa3d5b2babc2a0209d45f0aec0443db6b4ea65831b449a81ffdfe44110eb07f"
+    },
+    {
+      "name": "mermaid",
+      "resolvedSource": "/workspace/review-pr315/node_modules/mermaid/dist/mermaid.core.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/mermaid.js",
+      "bytes": 910,
+      "sha256": "74441cab47f72ea90ef0d78d79709909188f82cc03e4128ec92ee326feb9cad0"
+    },
+    {
+      "name": "micromark-extension-gfm",
+      "resolvedSource": "/workspace/review-pr315/node_modules/micromark-extension-gfm/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/micromark-extension-gfm.js",
+      "bytes": 377,
+      "sha256": "caa0bf07a6b82c034ffa5803381b916dafbf123bec327e6b111b6eb8b5ff517d"
+    },
+    {
+      "name": "micromark-util-decode-string",
+      "resolvedSource": "/workspace/review-pr315/node_modules/micromark-util-decode-string/dev/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/micromark-util-decode-string.js",
+      "bytes": 228,
+      "sha256": "71aede5f2b0228f18ec5af374fecc45f0053ff300c4d0a7f6450666b6771d3fb"
+    },
+    {
+      "name": "micromark-util-normalize-identifier",
+      "resolvedSource": "/workspace/review-pr315/node_modules/micromark-util-normalize-identifier/dev/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/micromark-util-normalize-identifier.js",
+      "bytes": 219,
+      "sha256": "07896fdddb8c6ba80dc58efb7e0f876cb489fce0926a4891cadbea35af527e8f"
+    },
+    {
+      "name": "next-themes",
+      "resolvedSource": "/workspace/review-pr315/node_modules/next-themes/dist/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/next-themes.js",
+      "bytes": 4535,
+      "sha256": "8c5df4e32ab04ec2d9f98adcdc59b35898f9fa693454cf908ffc3ee2ef379659"
+    },
+    {
+      "name": "radix-ui",
+      "resolvedSource": "/workspace/review-pr315/node_modules/radix-ui/dist/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/radix-ui.js",
+      "bytes": 2711,
+      "sha256": "db77cbef3176ad7cbe44e78f93506e1e5b3e50eeacfaebd5ae25da27dd51804d"
+    },
+    {
+      "name": "react",
+      "resolvedSource": "/workspace/review-pr315/node_modules/react/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/react.js",
+      "bytes": 151,
+      "sha256": "366039974322349b5bea1dfdf80bee5420700a026f8ba622f08d7d91e3b7d989"
+    },
+    {
+      "name": "react-dom",
+      "resolvedSource": "/workspace/review-pr315/node_modules/react-dom/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/react-dom.js",
+      "bytes": 193,
+      "sha256": "29ef851e0cdcec5cff8ebcbba43ded5efbcd245cc42b6e83370c08a19313141e"
+    },
+    {
+      "name": "react-dom/client",
+      "resolvedSource": "/workspace/review-pr315/node_modules/react-dom/client.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/react-dom_client.js",
+      "bytes": 1005503,
+      "sha256": "5648c51880368dd82dbf4ff944b5e7dab323706ab093a5d9bed502a09a02042b"
+    },
+    {
+      "name": "react-markdown",
+      "resolvedSource": "/workspace/review-pr315/node_modules/react-markdown/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/react-markdown.js",
+      "bytes": 7751,
+      "sha256": "6a31f0b8d88b173c1e2b4fb84e6c82162e6e9f746c75852893a38d2cc3b4661f"
+    },
+    {
+      "name": "react/jsx-dev-runtime",
+      "resolvedSource": "/workspace/review-pr315/node_modules/react/jsx-dev-runtime.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/react_jsx-dev-runtime.js",
+      "bytes": 12438,
+      "sha256": "adc4ccebcae3deb3c4c65de995bf3829573a8f5295062dc623cea2bd0b003511"
+    },
+    {
+      "name": "react/jsx-runtime",
+      "resolvedSource": "/workspace/review-pr315/node_modules/react/jsx-runtime.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/react_jsx-runtime.js",
+      "bytes": 205,
+      "sha256": "2f02b237de17b69447e915f2ff1a6fe29bb1fe6da087d5ef997de62dd280603e"
+    },
+    {
+      "name": "remark-breaks",
+      "resolvedSource": "/workspace/review-pr315/node_modules/remark-breaks/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/remark-breaks.js",
+      "bytes": 516,
+      "sha256": "4bc73c13b037298d0d14d94de5d2586c3b3c3ea29bf20543339b1c42f457f051"
+    },
+    {
+      "name": "remark-gfm",
+      "resolvedSource": "/workspace/review-pr315/node_modules/remark-gfm/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/remark-gfm.js",
+      "bytes": 635,
+      "sha256": "28d6163b6785b8b0a040b96b882ebf8d0aa15ec348f6b6545cd5ddcdb725d705"
+    },
+    {
+      "name": "shiki",
+      "resolvedSource": "/workspace/review-pr315/node_modules/shiki/dist/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/shiki.js",
+      "bytes": 137836,
+      "sha256": "6bb74f2a02a237d0b79984033ae7d69b285b6919bd21d06020d7aec6e836dc30"
+    },
+    {
+      "name": "sonner",
+      "resolvedSource": "/workspace/review-pr315/node_modules/sonner/dist/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/sonner.js",
+      "bytes": 60107,
+      "sha256": "4d8b761cff851a769d44a2d744ce53335de7ea43d395332eeb18fe3e52c2fc33"
+    },
+    {
+      "name": "streamdown",
+      "resolvedSource": "/workspace/review-pr315/node_modules/streamdown/dist/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/streamdown.js",
+      "bytes": 1867,
+      "sha256": "d08b4a2963f5ea42c86cc29f4381d7823e4abe5c7f2d071d1350acbfbfed8c8e"
+    },
+    {
+      "name": "tailwind-merge",
+      "resolvedSource": "/workspace/review-pr315/node_modules/tailwind-merge/dist/bundle-mjs.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/tailwind-merge.js",
+      "bytes": 72619,
+      "sha256": "339dc331299f09a27a364c4e43452d709b877b0297ad20eea7bafb60f5d3e150"
+    },
+    {
+      "name": "unist-util-visit",
+      "resolvedSource": "/workspace/review-pr315/node_modules/unist-util-visit/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/unist-util-visit.js",
+      "bytes": 236,
+      "sha256": "bc1fcc0c028a033950884e97cf24ab35c17c1ba7933ba3a579b93b563a5a594f"
+    },
+    {
+      "name": "vaul",
+      "resolvedSource": "/workspace/review-pr315/node_modules/vaul/dist/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/vaul.js",
+      "bytes": 61529,
+      "sha256": "757b80f95aed2fa04de7e62b75a5393bcb85b736a9f4be5b093b4c92c84916e4"
+    },
+    {
+      "name": "wukongimjssdk",
+      "resolvedSource": "/workspace/review-pr315/node_modules/wukongimjssdk/lib/wukongimjssdk.esm.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/wukongimjssdk.js",
+      "bytes": 471430,
+      "sha256": "9d7e19aa8d50444474b614df54700a89fd851bc38cce4ceeebd5797db75b83b3"
+    },
+    {
+      "name": "zod",
+      "resolvedSource": "/workspace/review-pr315/node_modules/zod/index.js",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/zod.js",
+      "bytes": 6589,
+      "sha256": "d0e5cb18b375ad249fd58f22b59af6dd7bb156758fab0e17e21f88d5835fd490"
+    },
+    {
+      "name": "zustand",
+      "resolvedSource": "/workspace/review-pr315/node_modules/zustand/esm/index.mjs",
+      "sourceInsideIsolatedWorktree": true,
+      "optimizedFile": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache/deps/zustand.js",
+      "bytes": 219,
+      "sha256": "e28e1900e753b6d908226a3be68e7127a67df3348f559b6514a26b796f1509fe"
+    }
+  ]
+}

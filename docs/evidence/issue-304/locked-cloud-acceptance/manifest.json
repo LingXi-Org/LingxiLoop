@@ -1,0 +1,414 @@
+{
+  "format": "issue304-locked-cloud-acceptance/v1",
+  "sourceBaseline": "58c1a214590e56d35caf328553df5ee1f2c6c0f1",
+  "reviewFixBaseline": "b30692a5b487810d98165cc322623dcaa0d06128",
+  "browserCandidate": "d4fcd82beda4e7f0f46f4ee86a36f47bf1c3871e",
+  "cleanCandidate": true,
+  "browserRunId": "01a164b3-ee47-7c82-9f37-a22d63280ded",
+  "browserSummary": {
+    "discovered": 25,
+    "selected": 25,
+    "executed": 25,
+    "passed": 25,
+    "failed": 0,
+    "interrupted": 0,
+    "flaky": 0,
+    "skipped": 0
+  },
+  "productionSourceAndLocksUnchanged": true,
+  "applicationDependencies": {
+    "count": 127,
+    "matchingBefore": 127,
+    "matchingAfter": 127,
+    "unchanged": true,
+    "allResolveInsideWorktree": true
+  },
+  "beforeToolOverlay": {
+    "count": 153,
+    "matching": 153
+  },
+  "toolOverrides": {
+    "e2e": "0.21.2",
+    "@e2e-dev/web": "0.15.2"
+  },
+  "toolLockUnchanged": true,
+  "installedNpmMetadataSha256": "943081cae267d19443ed4cbe0dd19ef6b611313e99bc24e1c58f6f2222f943c3",
+  "freshWorktreeCacheActuallyCreated": true,
+  "optimizedSourceOrigins": {
+    "count": 52,
+    "insideOwnNodeModules": 52,
+    "sharedUnderlay": 0
+  },
+  "projectionChecks": {
+    "passed": 8,
+    "failed": 0,
+    "exportSha256": "63baa4fce2b6003bb843a53321d643f305b28c499521871e37b82d5b3bcb16bb"
+  },
+  "syntheticOnly": true,
+  "productionOperations": false,
+  "originalPrivateCaseAcceptance": false,
+  "inputs": [
+    {
+      "path": "package.json",
+      "bytes": 10008,
+      "sha256": "1964804944030adff1787f81a5c3c625c0ea05b532556b4affab493fbd59c874"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 930639,
+      "sha256": "092b7466fa283aeec4d144b66d5df1b88b33ee89a5a2a3a3af32b734e30f0395"
+    },
+    {
+      "path": "server/package.json",
+      "bytes": 916,
+      "sha256": "19b9cf3612de7098869a350b8eba5771b900f1c0cfb84e65b145ab7bcf94c5e8"
+    },
+    {
+      "path": "server/package-lock.json",
+      "bytes": 177447,
+      "sha256": "f0f15b3e4c4f32fe1ee341fcc2b534d7a36d04f20bac571da2ee65e565ada9bc"
+    },
+    {
+      "path": "e2e.answer-first-cloud.config.ts",
+      "bytes": 898,
+      "sha256": "cef72747e363bf4482a0b8553a4d5847aa06be97800218be818779f755735524"
+    },
+    {
+      "path": "e2e/vite.answer-first.config.ts",
+      "bytes": 754,
+      "sha256": "4494b47360953f12cfdee0f8c117c1c4356b396ad2b9a889dda0bbcb12492faa"
+    },
+    {
+      "path": "e2e/questionnaire.tsx",
+      "bytes": 6736,
+      "sha256": "93a027a83b5ba67cb1f3f293c0f78eac5b8eb533d05364a6f7938c486e6962d8"
+    },
+    {
+      "path": "e2e/web/questionnaire.e2e.ts",
+      "bytes": 7017,
+      "sha256": "176d9c04d984ee0bad8dc927fd8207bd1299ead37fccd14435c967f2c3c1f2ea"
+    },
+    {
+      "path": "server/src/__tests__/answer-first-projection.test.ts",
+      "bytes": 13190,
+      "sha256": "283550c0911c72c446b8ae171894ab112f05bec131924e2258544c24783501ba"
+    },
+    {
+      "path": "docs/evidence/issue-304/cloud-tools/package.json",
+      "bytes": 78,
+      "sha256": "fed2b2b39e1aa94e48a10481f78c94fb99c9c15b34fcc7cb91858e498897b7df"
+    },
+    {
+      "path": "docs/evidence/issue-304/cloud-tools/package-lock.json",
+      "bytes": 40868,
+      "sha256": "22358f7ca5aa2864883df17e41b3b119816940a0d80c3a089114e3d53f1447c5"
+    },
+    {
+      "path": "e2e/answer-first/attention.e2e.ts",
+      "bytes": 3549,
+      "sha256": "d6183e7d237f5fdd61bccd5e28e1434eeefc161c748390ac4c94810a8cc056a9"
+    },
+    {
+      "path": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+      "bytes": 4362,
+      "sha256": "6b0cc7832bc1e36362f5baa51a2569a063ddd2d921e32eca08fe9c3a986ffac5"
+    },
+    {
+      "path": "e2e/answer-first/cloud-acceptance/reduced.e2e.ts",
+      "bytes": 2896,
+      "sha256": "190c6b69c46f95f9b7fa3e0504996af816c05c903b1d537ab279b31c7aac9eec"
+    },
+    {
+      "path": "e2e/answer-first/data.ts",
+      "bytes": 6378,
+      "sha256": "0107fdfdbe1270396a76d1081823f38aa687caf443df7992cab25010244eaacc"
+    },
+    {
+      "path": "e2e/answer-first/fixture.tsx",
+      "bytes": 3087,
+      "sha256": "d7783bee57151075217f51d5d6b939bc3f919dd3b56ba4372828cc218ceb288e"
+    },
+    {
+      "path": "e2e/answer-first/history.e2e.ts",
+      "bytes": 4355,
+      "sha256": "5a8e7fd8655308eae38a4f17a2e6438b29e374b5d8973a246949ac503898c11a"
+    },
+    {
+      "path": "e2e/answer-first/layout.e2e.ts",
+      "bytes": 8731,
+      "sha256": "5968d456a9aa1ab107805384bf502313e43c8fc4ca35ff3ada5cb35b8f3e4cad"
+    },
+    {
+      "path": "e2e/answer-first/narrow-acceptance.e2e.ts",
+      "bytes": 2919,
+      "sha256": "9ab47db879ad2f66928c7cd8150cb2d8f63f0dea6f1e6b20a2f7f7fff875e0c3"
+    },
+    {
+      "path": "e2e/answer-first/projection-snapshots.json",
+      "bytes": 36016,
+      "sha256": "63baa4fce2b6003bb843a53321d643f305b28c499521871e37b82d5b3bcb16bb"
+    },
+    {
+      "path": "e2e/answer-first/serve.mjs",
+      "bytes": 484,
+      "sha256": "0e8c0744606268598930c20135cf914e1c499b3f1d7539b9b7c3b820c82ba44d"
+    },
+    {
+      "path": "e2e/answer-first/server.ts",
+      "bytes": 5131,
+      "sha256": "b744fc9cbdda4c239c11dbc31ca106bcc8636a3fdd9bf7467607d2dc16a0a230"
+    },
+    {
+      "path": "e2e/answer-first/v2-stream.e2e.ts",
+      "bytes": 4689,
+      "sha256": "393046754e142704b351d5b3ef4ba3b98f7cbc4722ff56514d10c946c1cca053"
+    },
+    {
+      "path": "e2e/answer-first/visualize.e2e.ts",
+      "bytes": 6237,
+      "sha256": "d6d0c217899cde8758ed3617a61f4007cd09adfe656e42c16f7af5d3039b4cfb"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-junit.xml",
+      "bytes": 6066,
+      "sha256": "9dea63c951d81454da79c09abe5590bef0e8502668f3afec2f874eb368a980ab"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-report.json",
+      "bytes": 447278,
+      "sha256": "98772827fc1f47aae932580ef5d12e226fb4c255311cb1ca8af88b87ce752833"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/attention-current-approval-has-one-50f6b008268f4751/attempt-1/screenshots/001-answer-first-approval-single-receipt.png",
+      "bytes": 17416,
+      "sha256": "5175357865ee2efc96255ef9aaea7c7d282e9f99dbbd5988c9fb51336c25b416"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/attention-native-interrupt-and-awaiting-18877bcff759121a/attempt-1/screenshots/001-native-unbound-single-attention.png",
+      "bytes": 32239,
+      "sha256": "5378c51dc7b4bcd4156c0f98af94cfbf9f1e46fdb1151ae04461d9f2e15fcd42"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/history-bounded-history-retries-in-one-45bd503b366872ea/attempt-1/screenshots/001-answer-first-complete-paged-history.png",
+      "bytes": 54870,
+      "sha256": "bb444004909b8bcaca11eefd61652683e35e037a9802ee1bd0f64dca3b8e6318"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/history-late-history-page-cannot-replace-e8927baca5eeb6b1/attempt-1/screenshots/001-answer-first-stale-page-rejected.png",
+      "bytes": 22926,
+      "sha256": "275300a6a1f0a3bd18eae2de9aa1c242781b7b850a162b27ef6040a55b9ff64a"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/layout-390px-light-and-dark-keep-the-586305dc77e59835/attempt-1/screenshots/001-answer-first-390-light.png",
+      "bytes": 51609,
+      "sha256": "3e6d3f39a57a3923085d1996a927e440d749b3eaa55e7ef499f8b9cc36f24cb6"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/layout-390px-light-and-dark-keep-the-586305dc77e59835/attempt-1/screenshots/002-answer-first-390-light-body.png",
+      "bytes": 50278,
+      "sha256": "ca3eba61735396d7dbe5dbdd9f862f319f543cc06547aaaa5d68d3641e83dc78"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/layout-390px-light-and-dark-keep-the-586305dc77e59835/attempt-1/screenshots/003-answer-first-390-dark.png",
+      "bytes": 53974,
+      "sha256": "d3ae6795e57ab3a28d0db6b6aa45c6a5990a76e77c33c4275847289872b61b2b"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/layout-390px-light-and-dark-keep-the-586305dc77e59835/attempt-1/screenshots/004-answer-first-390-dark-body.png",
+      "bytes": 51128,
+      "sha256": "b367fc6c37386f6c0526ad672ef8dbe25b074c7046cbe76ad76d1e7655b2878d"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/layout-manual-reading-position-is-not-a8742762b3bc2cbb/attempt-1/screenshots/001-answer-first-manual-scroll-preserved.png",
+      "bytes": 201127,
+      "sha256": "2d96f3744143fe50cf9eba0560770e2d0a56ab5c633536589203d011f06fbae0"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/layout-one-process-disclosure-contains-5b75b24198d3db40/attempt-1/screenshots/001-answer-first-single-process-expanded.png",
+      "bytes": 61898,
+      "sha256": "abf9be24844ef69dfa25a060318a8844ecc53cc9e6f1a04939dd83eef3e71c1f"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/layout-one-process-disclosure-contains-5b75b24198d3db40/attempt-1/screenshots/002-answer-first-single-process-collapsed.png",
+      "bytes": 57420,
+      "sha256": "97c78c3f9c50a4d80f022ada725594ef9457d8dd0c6e41b1bee17ad696edd1d6"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/narrow-acceptance-390px-real-process-disclosure-d5418a75847bcea0/attempt-1/screenshots/001-answer-first-current-390-light-real-expanded.png",
+      "bytes": 51596,
+      "sha256": "6121094514c7544787a45a16423879f76da2f8e16a95ec7107ab0b5deaf300d4"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/narrow-acceptance-390px-real-process-disclosure-d5418a75847bcea0/attempt-1/screenshots/002-answer-first-current-390-light-body.png",
+      "bytes": 50278,
+      "sha256": "ca3eba61735396d7dbe5dbdd9f862f319f543cc06547aaaa5d68d3641e83dc78"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/narrow-acceptance-390px-real-process-disclosure-d5418a75847bcea0/attempt-1/screenshots/003-answer-first-current-390-dark-real-expanded.png",
+      "bytes": 53928,
+      "sha256": "d8a739af1b84e9c020fe1dea187e9231702f8b65facceb49c281bac1ae9b8b5a"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/narrow-acceptance-390px-real-process-disclosure-d5418a75847bcea0/attempt-1/screenshots/004-answer-first-current-390-dark-body.png",
+      "bytes": 51128,
+      "sha256": "b367fc6c37386f6c0526ad672ef8dbe25b074c7046cbe76ad76d1e7655b2878d"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/outcomes-approval-without-control-stays-e46f80bab8f786ff/attempt-1/screenshots/001-answer-first-approval-no-control.png",
+      "bytes": 23306,
+      "sha256": "16db3ae460b744310e05a43db2d0e72aacc0271f819528d23672322570b42ed4"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/outcomes-failed-cancelled-and-incomplete-253e0f64bf9fcb8d/attempt-1/screenshots/001-answer-first-outcome-error.png",
+      "bytes": 31935,
+      "sha256": "59981e4ddcb444f5ea32a05c78ccc441c4b4f6f60e2771ea30cf1fc1dd1adf9f"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/outcomes-failed-cancelled-and-incomplete-253e0f64bf9fcb8d/attempt-1/screenshots/002-answer-first-outcome-cancelled.png",
+      "bytes": 25386,
+      "sha256": "bed3ccf3d474d428946d5ffe25a6efe4d4100b9344aef781132edb65fa851f3d"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/outcomes-failed-cancelled-and-incomplete-253e0f64bf9fcb8d/attempt-1/screenshots/003-answer-first-outcome-incomplete.png",
+      "bytes": 24746,
+      "sha256": "b549c34ffd1fcebe687ec7d7421adb85466cf6719a5af8ac9fcef37625754aa1"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/outcomes-partial-and-blocked-delivered-f86e1e89712dc0bf/attempt-1/screenshots/001-answer-first-delivered-partial.png",
+      "bytes": 33936,
+      "sha256": "cd0f5929acfdd748e6d7f19cce6f72ea8ac40466bda753d50162604b115b08a3"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/outcomes-partial-and-blocked-delivered-f86e1e89712dc0bf/attempt-1/screenshots/002-answer-first-delivered-blocked.png",
+      "bytes": 33936,
+      "sha256": "cd0f5929acfdd748e6d7f19cce6f72ea8ac40466bda753d50162604b115b08a3"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/questionnaire-durable-questionnaire-17abfb008baf9f79/attempt-1/screenshots/001-questionnaire-state-retry.png",
+      "bytes": 23196,
+      "sha256": "f7fb6a2b43368a2f97ac5e84601211b56f6504c04982547fa68f9a0108f5c5b0"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/questionnaire-durable-questionnaire-a-lost-6669bf0a1d0e1f4b/attempt-1/screenshots/001-questionnaire-lost-receipt-canonical-answer.png",
+      "bytes": 25231,
+      "sha256": "056d45f1301443cf21f263b87d5a58ac68072776a68cd987e24a1baaeb493bb1"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/questionnaire-durable-questionnaire-an-ba77c31513e9decf/attempt-1/screenshots/001-questionnaire-resume-retry.png",
+      "bytes": 25387,
+      "sha256": "8641ac794f92264e24c1545e3c48f96b7fd31d027e1dcc3d64110eca757b832c"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/questionnaire-durable-questionnaire-double-798014b3619729b1/attempt-1/screenshots/001-questionnaire-retry-refresh.png",
+      "bytes": 24564,
+      "sha256": "d7bc03c5ffc1643daf0a9f96ee4f672cce9c4139f029d65cae35db0d7d9442c4"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/questionnaire-durable-questionnaire-durable-099a4b08aea07be0/attempt-1/screenshots/001-questionnaire-durable-submitted.png",
+      "bytes": 25666,
+      "sha256": "618e15fb99674458bba5c12703ac13f6cdd58ca2a62c0ed0c9df92f5b16f801a"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/questionnaire-durable-questionnaire-pending-0acc82edc3077878/attempt-1/screenshots/001-questionnaire-pending-recovery.png",
+      "bytes": 24913,
+      "sha256": "4cfd01868c90533f4d4f2d7d8ad537c134c56e2dbd6056d812d710d27433d1ce"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/questionnaire-durable-questionnaire-trusted-3173e9b355e0a5d3/attempt-1/screenshots/001-questionnaire-single-submit-entry.png",
+      "bytes": 21747,
+      "sha256": "8589739eaf6b28321d4df229457e728269ec3c6535c39636528921885cf82bcd"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/questionnaire-durable-questionnaire-unread-27eca446a3718d4a/attempt-1/screenshots/001-questionnaire-waiting.png",
+      "bytes": 23196,
+      "sha256": "f7fb6a2b43368a2f97ac5e84601211b56f6504c04982547fa68f9a0108f5c5b0"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/reduced-real-reduced-motion-disables-3273bd47136c2a11/attempt-1/screenshots/001-answer-first-real-reduced-motion-390.png",
+      "bytes": 50278,
+      "sha256": "ca3eba61735396d7dbe5dbdd9f862f319f543cc06547aaaa5d68d3641e83dc78"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/v2-stream-real-superseded-candidate-leaves-16631a05fac45362/attempt-1/screenshots/001-answer-first-real-v2-corrected-candidate.png",
+      "bytes": 33607,
+      "sha256": "898a8f7968f359307105fdcd699f807fbe654a9ce3baab6bea3bd460eee65788"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/v2-stream-real-v2-first-character-pending-353a444b470d47bd/attempt-1/screenshots/001-answer-first-real-v2-accepted-handoff.png",
+      "bytes": 22924,
+      "sha256": "726d6283605a86ebed4b80285ebcefe4dbc7ad43d76b35948a4800ca43994ba1"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/visualize-a-late-old-owner-acquisition-be08308cf1ab2ecd/attempt-1/screenshots/001-answer-first-late-owner-response-isolated.png",
+      "bytes": 41511,
+      "sha256": "92872fa1ec525757c449e28db0e3ca3cf2e15765f71cf0c6a2172036bb97a056"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-results/visualize-completed-replay-preserves-the-73d803436da69d85/attempt-1/screenshots/001-answer-first-visualize-owner-rebound.png",
+      "bytes": 44672,
+      "sha256": "58457f0fca9c2dc20c8f9359da7068a84f9268a71691cc2633991f297f12d733"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/accepted-summary.md",
+      "bytes": 3510,
+      "sha256": "40c5b5219e6d083a5304aefe504b09a8cb08a6cba9991f112d1910e3e956da2f"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/browser-output.txt",
+      "bytes": 1092,
+      "sha256": "e00b4e0af927687067a5b1475d2437ea08810093507044b6856410fb08e6e25c"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/cache-isolation-interrupted-report.json",
+      "bytes": 86361,
+      "sha256": "89d30853596ee645dec9d0784b9c13c2b1f3814a67ab97ab7f87326d18a6d06a"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/historical-underlay-inventory.json",
+      "bytes": 30521,
+      "sha256": "37b7d50bd94741d2f53d04ce92147fca85148ef71367256ed3ee62b7753ba838"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/installation-receipt.json",
+      "bytes": 1269,
+      "sha256": "8de66d8024a07f69fd4dd2cde01410dc3c28ef69588147237fe52eb5adf7fb07"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/installed-after-browser.json",
+      "bytes": 54554,
+      "sha256": "8066428467751443c871173bfc662c829cf64709a5417f5959ff35a316fa1289"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/installed-before-browser.json",
+      "bytes": 54536,
+      "sha256": "81532608871208974011474eaf8c31e317bb8b1d4ce240429bcadcb4da6e0323"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/installed-before-tools.json",
+      "bytes": 54503,
+      "sha256": "e2936a0d24e5f477783805e4efeb9e2570972087a397e494600a03c677ea835f"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/optimizer-metadata.json",
+      "bytes": 73101,
+      "sha256": "d79ce00d22a34c995ccf285b27910ec340cf0a364a82fb32d39359e7b642031f"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/optimizer-origins.json",
+      "bytes": 21540,
+      "sha256": "85bba7eaa62864693bc2fbb9f980cdfce48b201afff02ffc7bf1dca1016112f7"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/pre-cache-isolation-report.json",
+      "bytes": 452427,
+      "sha256": "edd335a43d013e740f8e2a3ab9f392f7a878e5979dc7b9e8799aab48990240ac"
+    },
+    {
+      "path": "docs/evidence/issue-304/locked-cloud-acceptance/projection-results.txt",
+      "bytes": 2141,
+      "sha256": "d94f405ae67cfdadc59391eb7562f52608d598272233ced10b938bbd210a1fcd"
+    }
+  ]
+}
