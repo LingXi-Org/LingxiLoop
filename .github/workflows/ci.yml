@@ -330,8 +330,28 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with: { enable-cache: true, cache-dependency-glob: third_party/open-notebook/uv.lock }
       - if: matrix.component == 'open-notebook'
+        name: Start isolated shadow-generation database
+        run: |
+          docker run -d --name rag-shadow-ci -p 127.0.0.1:18879:8000 \
+            accel.way2api.fun/docker.io/surrealdb/surrealdb@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011 \
+            start --user test --pass test memory
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:18879/health; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - if: matrix.component == 'open-notebook'
         working-directory: third_party/open-notebook
-        run: uv run --frozen --python 3.12 pytest -q
+        env:
+          RAG_SHADOW_TEST_URL: ws://127.0.0.1:18879/rpc
+        run: uv run --frozen --python 3.12 pytest -q --junitxml=shadow-generation-junit.xml
+      - if: always() && matrix.component == 'open-notebook'
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-generation-junit
+          path: third_party/open-notebook/shadow-generation-junit.xml
+      - if: always() && matrix.component == 'open-notebook'
+        run: docker rm -f rag-shadow-ci
       - if: matrix.component == 'deploy-contract'
         run: node --test scripts/checkout-bytes.test.mjs
       - if: matrix.component == 'deploy-contract'

@@ -1,5 +1,10 @@
 # Pro BGE knowledge migration assessment
 
+Implementation follow-up: see [SHADOW-OPERATIONS.md](SHADOW-OPERATIONS.md) for
+the implemented finite-scope protocol and two-phase PG-gated cutover. This
+document records the earlier repository-only assessment; it is not a current
+production execution receipt.
+
 Status: repository-only design, not an implemented or executed migration. The production model/index inventory is unknown because the existing production MCP entry is denied (403 / Cloudflare 1010). No retry, alternate production route, corpus enumeration or real-data copy was performed. The two private visualization-case investigation permissions do not authorize a general corpus inspection.
 
 PR #299 prepares defaults and prices. It does **not** complete the switch of an existing knowledge index to Pro BGE. Runtime 3.8.1 adoption is a separate formal dependency/release step owned by the integrator; these observations were checked against the installed, locked 3.8.0 public package. Recheck its public memory/index behavior against the formally published replacement before deployment.

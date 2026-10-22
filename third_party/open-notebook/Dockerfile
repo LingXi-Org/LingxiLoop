@@ -65,4 +65,4 @@ HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=4 \
     && supervisorctl -s unix:///tmp/supervisor.sock status rag-worker | grep -q RUNNING \
     && curl -fsS http://127.0.0.1:5055/readyz >/dev/null
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/app/.venv/bin/python", "-m", "open_notebook.rag.generation", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
