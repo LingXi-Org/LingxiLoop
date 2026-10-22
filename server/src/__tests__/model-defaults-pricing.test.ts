@@ -6,6 +6,7 @@ import { siliconFlowCost, siliconFlowPricing, siliconFlowPricingForModel } from 
 const chat = 'deepseek-ai/DeepSeek-V4.1-Flash'
 const embedding = 'Pro/BAAI/bge-m3'
 test('new chat model uses its own CNY tariff, with conservative admission and explicit charge-time snapshots', () => {
+  assert.equal(siliconFlowPricing(7).inputPerMillion, 2)
   const peak = siliconFlowPricing(7, chat)
   assert.equal(peak.inputPerMillion, 2)
   assert.equal(peak.cachedInputPerMillion, 0.04)

@@ -50,4 +50,5 @@ test('development, knowledge and production templates share the exact new defaul
   }
   assert.ok(readFileSync('eval/.env.example', 'utf8').includes(`EVAL_CANDIDATE_MODEL=${model}`))
   assert.ok(readFileSync('.github/workflows/available-capabilities.yml', 'utf8').includes(`OPENAI_MODEL: ${model}`))
+  assert.ok(readFileSync('scripts/benchmark-first-body.mjs', 'utf8').includes(`process.env.OPENAI_MODEL?.trim() || '${model}'`))
 })

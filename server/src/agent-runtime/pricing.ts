@@ -15,7 +15,7 @@ const rates = {
 export function isSiliconFlowModel(model: string): model is keyof typeof rates {
   return Object.hasOwn(rates, model)
 }
-export function siliconFlowPricing(usdCny: number, model: keyof typeof rates = 'deepseek-ai/DeepSeek-V4-Flash', billedAt?: number) {
+export function siliconFlowPricing(usdCny: number, model: keyof typeof rates = 'deepseek-ai/DeepSeek-V4.1-Flash', billedAt?: number) {
   if (!Number.isFinite(usdCny) || usdCny <= 0) throw new Error('SILICONFLOW_USD_CNY_RATE must be positive')
   if (billedAt !== undefined && (!Number.isFinite(billedAt) || billedAt < 0 || !Number.isFinite(new Date(billedAt).getTime()))) throw new Error('invalid billing timestamp')
   // Admission and native observations without an exact request timestamp use the
