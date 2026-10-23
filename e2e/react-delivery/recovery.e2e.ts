@@ -17,6 +17,18 @@ for (const width of [1280, 390]) {
     expect(evidence.provenance.commit).toMatch(/^[a-f0-9]{40}$/u)
     const observations: unknown[] = []
     await browser.setViewport({ width, height: 900 })
+    // Reuse the page between isolated fixture states. Repeated Vite module
+    // navigations exhausted Chromium resources; reset closes every stream and
+    // clears all message state/counters without relaxing any scenario assertion.
+    await app.open('/e2e/react-delivery/index.html')
+    await expect(browser.locator('input')).toHaveCount(1)
+    await browser.evaluate(async () => {
+      const deadline = performance.now() + 5000
+      while (!(window as Window & { reactDelivery?: ReactDeliveryHarness }).reactDelivery) {
+        if (performance.now() > deadline) throw new Error('Fixture was not ready')
+        await new Promise(resolve => setTimeout(resolve, 5))
+      }
+    })
 
     for (const name of scenarioNames) {
       const scenario = evidence.scenarios.find(item => item.name === name)
@@ -30,15 +42,7 @@ for (const width of [1280, 390]) {
         expect(indices.every((index, position) => index >= 0 && (position === 0 || index > indices[position - 1]!)),
           'The append scenario must include both projected held-tool states in order').toBe(true)
       }
-      await app.open('/e2e/react-delivery/index.html')
-      await expect(browser.locator('input')).toHaveCount(1)
-      await browser.evaluate(async () => {
-        const deadline = performance.now() + 5000
-        while (!(window as Window & { reactDelivery?: ReactDeliveryHarness }).reactDelivery) {
-          if (performance.now() > deadline) throw new Error('Fixture was not ready')
-          await new Promise(resolve => setTimeout(resolve, 5))
-        }
-      })
+      await browser.evaluate(async () => { await window.reactDelivery!.reset() })
 
       let sawA = false
       let sawB = false

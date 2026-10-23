@@ -110,7 +110,8 @@ function App() {
       async reset() {
         await Promise.all([...targets.values()].map(disconnect))
         targets.clear(); history.clear(); setState(EMPTY_CONVERSATION_CHAT_STATE); setError('')
-        await waitFor(() => connections.size === 0)
+        received = 0; mutations = 0; streamConnections = 0; setCount(0)
+        await waitFor(() => connections.size === 0 && rendered === 0)
       },
       evidence: () => ({ received, rendered, mutations, streamConnections }),
     }
