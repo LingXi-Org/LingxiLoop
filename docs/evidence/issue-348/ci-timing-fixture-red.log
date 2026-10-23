@@ -7,9 +7,9 @@ not ok 1 - published worker persists authorized public activity and measured too
   failureType: 'testCodeFailure'
   error: |-
     The expression evaluated to a falsy value:
-    
+
       assert.ok(legacy?.type === 'tool-call' && legacy.timing === undefined)
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: true
