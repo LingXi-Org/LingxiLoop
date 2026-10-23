@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { createServer } from 'node:http'
+import { createHash } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { isAbsolute, relative, resolve } from 'node:path'
@@ -32,12 +33,13 @@ test('real provider activates and delivers a synthetic interactive diagram witho
   assert.ok(process.env.ISSUE342_RUNTIME_VERSION, 'Require the exact candidate runtime version')
   assert.equal(releaseVersions.runtime, process.env.ISSUE342_RUNTIME_VERSION)
   const [major, minor, patch] = releaseVersions.runtime.split('.').map(Number)
-  assert.ok(major > 3 || major === 3 && (minor > 8 || minor === 8 && patch >= 5), 'Explicit same-generation outcomes require runtime 3.8.5 or newer')
+  assert.ok(major > 3 || major === 3 && (minor > 8 || minor === 8 && patch >= 7), 'Stable answer sources require runtime 3.8.7 or newer')
   const model = runtimeModelConfiguration({ id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL }, 30000)
   // This opt-in diagnostic runs once; preserve bounded runtime corrections but
   // do not silently retry a transport failure inside a logical provider call.
   model.recovery = { ...model.recovery, maxAttempts: 1 }
-  assert.equal(model.publicTextProtocol, 'purpose-json-v2', 'Require the explicit outcome producer before a provider call')
+  assert.equal(model.publicTextProtocol, 'purpose-json-v3', 'Require the sealed source producer before a provider call')
+  assert.equal(releaseVersions.publicText, 3)
   const pricing = siliconFlowPricingForModel(env.OPENAI_BASE_URL, env.OPENAI_MODEL, false)
   assert.ok(pricing, 'Require the existing product price snapshot for the actual provider/model')
   if (env.OPENAI_MODEL === 'deepseek-ai/DeepSeek-V4.1-Flash') {
@@ -49,7 +51,7 @@ test('real provider activates and delivers a synthetic interactive diagram witho
   assert.ok(outputRelative && outputRelative !== '..' && !outputRelative.startsWith('../') && !isAbsolute(outputRelative),
     'The official browser output must be inside this project; fail before provider execution')
   await mkdir(output, { recursive: true })
-  const report: Record<string, unknown> = { status: 'running', runtime: releaseVersions.runtime, syntheticRequest: true,
+  const report: Record<string, unknown> = { status: 'running', runtime: releaseVersions.runtime, publicText: releaseVersions.publicText, syntheticRequest: true,
     productionOperations: 0, realProvider: true, semanticReview: 'selective', originalCaseVerified: false }
   // Real model calls remain on their existing provider. Knowledge fixtures stay
   // local, with enabled sources so a zero-search result is not empty coverage.
@@ -83,12 +85,16 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation', codeExecution: 'disabled' })
     const identity = accepted.runs[0]; assert.ok(identity); await bindProductRun(pool, identity, channelId)
     const measureAnswer = async (runId: string, isUseful: (text: string) => boolean) => {
+      const finalState = await api.readRunState({ ...identity, runId })
+      const acceptedSources = finalState?.message?.publicTextSources
+      const acceptedIds = new Set(acceptedSources?.segments.map(source => source.partId) ?? [])
       const rows = (await pool.query<{ kind: string; data: Record<string, unknown>; elapsed_ms: number }>(`SELECT event.kind,event.data,
         EXTRACT(EPOCH FROM (event.recorded_at-work.created_at))*1000 AS elapsed_ms
         FROM lingxios.agent_run_events event JOIN lingxios.agent_work_items work ON work.id=event.run_id
-        WHERE event.tenant_id=$1 AND event.run_id=$2 AND event.kind IN ('public.text.delta','tool.started','tool.completed') ORDER BY event.seq`,
+        WHERE event.tenant_id=$1 AND event.run_id=$2 AND event.kind IN ('public.text.delta','public.text.sealed','tool.started','tool.completed') ORDER BY event.seq`,
       [companyId, runId])).rows
       const parts = new Map<string, string>()
+      const seals = new Map<string, string>()
       const saveCalls = new Set<string>()
       let firstAnswerMs: number | null = null, firstUsefulAnswerMs: number | null = null
       let firstSaveStartedMs: number | null = null, firstSaveCompletedMs: number | null = null
@@ -101,15 +107,30 @@ test('real provider activates and delivers a synthetic interactive diagram witho
         }
         if (event.kind === 'tool.completed' && saveCalls.has(String(event.data.toolCallId)) && event.data.isError === false
           && event.data.result && typeof event.data.result === 'object' && Reflect.get(event.data.result, 'status') === 'completed') firstSaveCompletedMs ??= elapsed
+        if (event.kind === 'public.text.sealed' && event.data.version === 3 && typeof event.data.bodyHash === 'string') {
+          seals.set(String(event.data.partId),event.data.bodyHash)
+        }
         if (event.kind !== 'public.text.delta' || event.data.purpose !== 'answer' || typeof event.data.text !== 'string') continue
         firstAnswerMs ??= elapsed
         const id = String(event.data.partId), text = (parts.get(id) ?? '') + event.data.text
         parts.set(id, text)
-        if (firstUsefulAnswerMs === null && isUseful(text)) { firstUsefulAnswerMs = elapsed; usefulAnswerExcerpt = text.slice(0, 600) }
+        // Only new deltas from sources retained by this request's committed
+        // answer can qualify. Failed/replaced drafts and copied history cannot.
+        const retainedText = acceptedSources?.segments.map(source=>parts.get(source.partId) ?? '').join('') ?? ''
+        if (acceptedIds.has(id) && firstUsefulAnswerMs === null && isUseful(retainedText)) {
+          firstUsefulAnswerMs = elapsed; usefulAnswerExcerpt = retainedText.trimStart().slice(0, 600)
+        }
       }
+      const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
+      const sourceProof = acceptedSources?.segments.map(source=>({ segmentId:source.segmentId,partId:source.partId,
+        sealed:seals.get(source.partId)===source.bodyHash,
+        exactRawHash:parts.has(source.partId) && sha256(parts.get(source.partId)!)===source.bodyHash })) ?? []
+      const exactBody = !!acceptedSources && acceptedSources.segments.map(source=>parts.get(source.partId) ?? '').join('').trim()===finalState?.message?.body
+        && sha256(finalState?.message?.body ?? '')===acceptedSources.bodyHash
       return { basis: 'durable-public-event-recorded-at', browserPaintMeasured: false,
         firstAnswerMs, firstUsefulCandidateMs: firstUsefulAnswerMs, firstSaveStartedMs, firstSaveCompletedMs,
         usefulAnswerExcerpt, semanticAcceptance: 'requires-independent-excerpt-review',
+        retainedSources: sourceProof, finalSourcesVerified:sourceProof.length>0 && sourceProof.every(source=>source.sealed && source.exactRawHash) && exactBody,
         usefulCandidateBeforeSave: firstUsefulAnswerMs !== null && firstSaveCompletedMs !== null && firstUsefulAnswerMs < firstSaveCompletedMs }
     }
     const options: WorkerOptions & { semanticReview: 'selective' } = { controlPlane: api, policy: new ProductRuntimePolicy(),
@@ -162,6 +183,8 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     report.calls = before
     assert.equal(actions.find(action => action.startsWith('skills.') || action.startsWith('visualize.')), 'skills.activate')
     assert.equal(state?.run.status, 'succeeded'); assert.equal(state.delivery, 'delivered')
+    assert.equal((report.timing as { finalSourcesVerified: boolean }).finalSourcesVerified, true,
+      'Useful text must be sealed, hash-matched and retained by the committed final source collection')
     const references = visualizeReferences(state.message?.body ?? '')
     assert.equal(references.length, 1)
     const path = references[0].reference.path
@@ -215,6 +238,7 @@ test('real provider activates and delivers a synthetic interactive diagram witho
       timing: await measureAnswer(questionIdentity.runId, text => text.trim() === '43') }
     assert.equal(questionState?.run.status, 'succeeded')
     assert.equal(questionState?.message?.body.trim(), '43')
+    assert.equal((report.directQuestion as { timing: { finalSourcesVerified: boolean } }).timing.finalSourcesVerified, true)
     assert.equal(questionCalls.length, 1, 'One useful answer generation, with no semantic judge or correction')
     assert.ok(questionCalls.every(row => row.operation !== 'content-review' && row.status === 'succeeded' && row.measured))
     const questionEvents = await api.readEvents(questionIdentity, 0)
