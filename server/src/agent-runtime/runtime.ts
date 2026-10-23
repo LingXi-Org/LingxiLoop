@@ -64,9 +64,13 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
   if (releaseVersions.publicText !== publicTextDeployment.reader) throw new Error('Public text requires the formally qualified runtime reader declared by this release')
   // The runtime patch starts both compatible Web readers before either Worker.
   const siliconFlow = new URL(model.baseUrl).hostname === 'api.siliconflow.cn'
+  const nativeDeepSeekTools = siliconFlow && model.id === 'deepseek-ai/DeepSeek-V4.1-Flash'
   return {
     ...model,
     ...publicTextModelOptions(),
+    // Only public v3 generation carries answer metadata in the native tool
+    // envelope. The formal driver keeps auxiliary calls and private v2 separate.
+    nativeToolPublicOutput: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3' ? 'envelope-v1' : undefined,
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
@@ -74,8 +78,7 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
       parallelTools: false,
       // This provider/model suppresses native tool calls when JSON mode is
       // combined with tools. Keep the strict public-purpose parser enabled.
-      ...(siliconFlow && model.id === 'deepseek-ai/DeepSeek-V4.1-Flash'
-        ? { jsonObjectWithTools: false } : {}),
+      ...(nativeDeepSeekTools ? { jsonObjectWithTools: false } : {}),
     },
     // Auxiliary review/compaction must retain streamed progress after the model
     // switch, under the same first-byte/idle/request and logical-call budgets.
