@@ -20,7 +20,8 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 // Failure cases: deep-context search blocks until the upstream's 90s timeout;
 // parent cancellation becomes "unavailable"; Redis blocks automatic receipts;
 // a failed outbox insert commits a cursor that can never be announced;
-// independent learning/Canvas reads wait behind history, roster or RAG.
+// independent learning/Canvas reads wait behind history, roster or RAG;
+// authorized search waits behind unrelated roster/visualization work.
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
 after(async () => { await teardownAll(); await im?.close() })
@@ -49,10 +50,11 @@ test('context bounds automatic search and persists Agent receipts before asynchr
   const work = await api.connectWorker({ workerId: 'context-latency', workKinds: ['turn'] }).claimWork()
   assert.ok(work)
   const provider = createProductContext([...learningTools, ...knowledgeTools, ...createCanvasTools(lingxiOSControl)]).contextProvider
-  let searches = 0, disconnected = 0, onSearch: (() => void) | undefined
+  let searches = 0, disconnected = 0, onSearch: (() => void) | undefined, firstSearchAt: number | undefined
   const upstream = createServer(async (req, res) => {
     for await (const _chunk of req) { /* consume the local fixture request */ }
     searches++
+    firstSearchAt ??= performance.now()
     res.once('close', () => { disconnected++ })
     res.writeHead(200, { 'content-type': 'application/json' })
     res.write('{"results":[')
@@ -82,6 +84,8 @@ test('context bounds automatic search and persists Agent receipts before asynchr
     }) as typeof pool.query)
     const began = performance.now()
     const loading = provider.loadContext(work, undefined, { responseProfile: 'deep' })
+    let settled = false
+    void loading.then(() => { settled = true }, () => { settled = true })
     let deep!: Awaited<typeof loading>
     try {
       await rosterStarted
@@ -89,11 +93,18 @@ test('context bounds automatic search and persists Agent receipts before asynchr
       const readDeadline = Date.now() + 2000
       while (!independentReads.has('learning') && Date.now() < readDeadline) await new Promise(resolve => setTimeout(resolve, 10))
       assert.deepEqual([...independentReads].sort(), ['canvas', 'learning'], 'authorized independent reads start while roster is held')
-      assert.equal(searches, 0, 'independent reads do not wait for automatic RAG')
+      const searchDeadline = Date.now() + 2000
+      while (searches < 2 && Date.now() < searchDeadline) await new Promise(resolve => setTimeout(resolve, 10))
+      assert.equal(searches, 2, 'authorized search starts without waiting for the unrelated roster')
+      assert.equal(settled, false, 'early search does not release incomplete context to the model')
     } finally {
+      const rosterReleasedAt = performance.now()
       releaseRoster()
       observer.mock.restore()
       deep = await loading
+      t.diagnostic(JSON.stringify({ contextStartedAt: began, firstSearchAt, rosterReleasedAt,
+        firstSearchAfterContextMs: firstSearchAt === undefined ? null : Math.round(firstSearchAt - began),
+        searchStartedBeforeRosterRelease: firstSearchAt !== undefined && firstSearchAt < rosterReleasedAt }))
     }
     const elapsedMs = Math.round(performance.now() - began)
     assert.deepEqual(deep.dynamic?.knowledgeRetrieval, { status: 'unavailable', matchedChunks: 0 })

@@ -143,8 +143,66 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const text = work.meta?.text
     if (typeof text !== 'string') throw new Error('persisted request text is missing')
     const capabilities = grants.map(grant => grant.name)
-    const [channelHistory, roster, learningContext, canvas, memorySnapshot] = await Promise.all([
-      getAgentChannelHistory({ companyId: work.tenantId, agentId: work.agentId, channelId: productConversationId(work), limit: work.conversation ? 8 : 80 }),
+    // Authorization above remains the admission barrier. After it succeeds,
+    // start each read at its real dependency instead of making knowledge search
+    // wait for unrelated roster, Canvas, memory and visualization preparation.
+    // These promises are scoped to this load only: permission and evidence reads
+    // must remain fresh on every request and recovery.
+    const historyReady = getAgentChannelHistory({ companyId: work.tenantId, agentId: work.agentId,
+      channelId: productConversationId(work), limit: work.conversation ? 8 : 80 }).then(history => history ?? [])
+    const visualizeReady = (async () => {
+      if (!capabilities.includes('visualize')) return { directory: undefined, state: [] }
+      signal?.throwIfAborted()
+      const scope = { companyId: work.tenantId, channelId: productConversationId(work), userId: work.principalId! }
+      const directory = await ensureVisualizeOutputDirectory(scope)
+      signal?.throwIfAborted()
+      return { directory, state: await listVisualizeModelState(scope) }
+    })()
+    const messagesReady = historyReady.then(async recentHistory => {
+      signal?.throwIfAborted()
+      const history = work.conversation ? [] : recentHistory
+      const actors = await pool.query<{ id: string; kind: 'agent' | 'human'; name: string }>('SELECT id,kind,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])',
+        [work.tenantId,[...new Set([...history.map(message => message.fromUid),...work.conversation?.audience.participantIds ?? []])]])
+      const byId = new Map(actors.rows.map(row => [row.id,row]))
+      const messages: ContextMessage[] = history.map(message => ({ ref: message.clientMsgNo, authorId: message.fromUid,
+        authorName: byId.get(message.fromUid)?.name ?? message.fromUid, authorKind: byId.get(message.fromUid)?.kind ?? 'system',
+        body: nativeText(message.payload),
+        createdAt: Number.isFinite(message.timestamp) ? new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString() : '',
+        ...(typeof message.payload.metadata.custom.replyToClientMsgNo === 'string' ? { replyToRef: message.payload.metadata.custom.replyToClientMsgNo } : {}) }))
+      if (!messages.some(message => message.ref === work.triggerRef)) {
+        const delegation = work.meta?.delegation as { instructionAuthorId?: string } | undefined
+        messages.push({ ref: work.triggerRef, authorId: delegation?.instructionAuthorId ?? work.principalId!,
+          authorName: String(work.meta?.authorName ?? 'User'), authorKind: delegation ? 'agent' : 'human', body: text, createdAt: work.createdAt ?? '' })
+      }
+      signal?.throwIfAborted()
+      const readThroughSeq = Math.max(0, ...recentHistory.map(message => message.messageSeq))
+      if (readThroughSeq) await advanceAgentReadReceipt({ companyId: work.tenantId, agentId: work.agentId,
+        channelId: productConversationId(work), workId: work.id, readThroughSeq })
+      return messages
+    })
+    const knowledgeReady = historyReady.then(async recentHistory => {
+      signal?.throwIfAborted()
+      const knowledgeRetrieval = capabilities.includes('knowledge') ? await retrieveKnowledgeState({ companyId: work.tenantId, conversationId: productConversationId(work),
+        authorizationUserId: work.principalId!, audienceUserIds: await audienceHumanIds({ work, database: pool }),
+        query: text, contextQuery: [...recentHistory.map(message => nativeText(message.payload)),text].join('\n').slice(-8000), limit: 8,
+        signal, searchTimeoutMs: 5_000 }).catch(error => {
+          signal?.throwIfAborted()
+          const failure = classifyToolFailure(error,'execution').diagnostics
+          if (!(error instanceof OpenNotebookError) && !(failure.category === 'dependency' && failure.retryable)
+            && !['quota','network','timeout','unavailable','rate_limit','circuit_open'].includes(modelFailure(error).category)) throw error
+          return { status: 'unavailable' as const, citations: [] }
+        }) : undefined
+      signal?.throwIfAborted()
+      const retrieval = knowledgeRetrieval?.citations ?? []
+      const versions = retrieval.length ? await pool.query<{ id: string; updated_at: Date }>(
+        'SELECT id,updated_at FROM knowledge_sources WHERE company_id=$1 AND id=ANY($2::text[])', [work.tenantId,retrieval.map(item => item.sourceId)]) : { rows: [] }
+      const versionBySource = new Map(versions.rows.map(row => [row.id, new Date(row.updated_at).toISOString()]))
+      const evidence = retrieval.map(item => ({ marker: item.marker, sourceId: item.sourceId, sourceVersion: item.sourceVersion ?? versionBySource.get(item.sourceId)!,
+        chunkId: item.chunkId, title: item.sourceTitle, excerpt: item.excerpt, truncated: true, ...(item.sourceUrl ? { url: item.sourceUrl } : {}) }))
+      return { knowledgeRetrieval, retrieval, evidence }
+    })
+    const [messages, visualize, knowledge, roster, learningContext, canvas, memorySnapshot] = await Promise.all([
+      messagesReady, visualizeReady, knowledgeReady,
       pool.query<{ id: string; name: string; role: string; capabilities: string[]; preset_key: string | null }>(
         `SELECT agent.id,agent.name,agent.role,agent.capabilities,agent.preset_key FROM participants agent
           JOIN im_channel_bindings channel ON channel.company_id=agent.company_id AND channel.channel_id=$2
@@ -153,8 +211,8 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       !homeworkContext && learningAudienceSafe && capabilities.includes('learning') ? loadLearningTurnContext(nativeContext({ work }), work.principalId!) : undefined,
       capabilities.includes('canvas') ? getConversationCanvas(work.tenantId, productConversationId(work), work.principalId!) : undefined,
       // Empty native snapshots contain no scope identifiers for the model's first write.
-      (await lingxiOSControl()).memory!.scopes({ tenantId: work.tenantId,principalId: work.principalId!,agentId: work.agentId,
-        sessionId: work.sessionId,workId: work.id,...(work.threadId ? { threadId: work.threadId } : {}) })
+      lingxiOSControl().then(control => control.memory!.scopes({ tenantId: work.tenantId,principalId: work.principalId!,agentId: work.agentId,
+        sessionId: work.sessionId,workId: work.id,...(work.threadId ? { threadId: work.threadId } : {}) }))
         .then(scopes => ({ scopes,status: 'available' as const })).catch(error => {
           signal?.throwIfAborted()
           const failure = classifyToolFailure(error,'authorization').diagnostics
@@ -163,42 +221,8 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
         }),
     ])
     signal?.throwIfAborted()
-    const recentHistory = channelHistory ?? [], history = work.conversation ? [] : recentHistory
-    const visualizeScope = { companyId: work.tenantId, channelId: productConversationId(work), userId: work.principalId! }
-    const visualizeDirectory = capabilities.includes('visualize') ? await ensureVisualizeOutputDirectory(visualizeScope) : undefined
-    const visualizeState = visualizeDirectory ? await listVisualizeModelState(visualizeScope) : []
-    const actors = await pool.query<{ id: string; kind: 'agent' | 'human'; name: string }>('SELECT id,kind,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])',
-      [work.tenantId,[...new Set([...history.map(message => message.fromUid),...work.conversation?.audience.participantIds ?? []])]])
-    const byId = new Map(actors.rows.map(row => [row.id,row]))
-    const messages: ContextMessage[] = history.map(message => ({ ref: message.clientMsgNo, authorId: message.fromUid,
-      authorName: byId.get(message.fromUid)?.name ?? message.fromUid, authorKind: byId.get(message.fromUid)?.kind ?? 'system',
-      body: nativeText(message.payload),
-      createdAt: Number.isFinite(message.timestamp) ? new Date(message.timestamp > 10_000_000_000 ? message.timestamp : message.timestamp * 1000).toISOString() : '',
-      ...(typeof message.payload.metadata.custom.replyToClientMsgNo === 'string' ? { replyToRef: message.payload.metadata.custom.replyToClientMsgNo } : {}) }))
-    if (!messages.some(message => message.ref === work.triggerRef)) {
-      const delegation = work.meta?.delegation as { instructionAuthorId?: string } | undefined
-      messages.push({ ref: work.triggerRef, authorId: delegation?.instructionAuthorId ?? work.principalId!,
-        authorName: String(work.meta?.authorName ?? 'User'), authorKind: delegation ? 'agent' : 'human', body: text, createdAt: work.createdAt ?? '' })
-    }
-    const readThroughSeq = Math.max(0, ...recentHistory.map(message => message.messageSeq))
-    if (readThroughSeq) await advanceAgentReadReceipt({ companyId: work.tenantId, agentId: work.agentId, channelId: productConversationId(work), workId: work.id, readThroughSeq })
-    const knowledgeRetrieval = capabilities.includes('knowledge') ? await retrieveKnowledgeState({ companyId: work.tenantId, conversationId: productConversationId(work),
-      authorizationUserId: work.principalId!, audienceUserIds: await audienceHumanIds({ work, database: pool }),
-      query: text, contextQuery: [...recentHistory.map(message => nativeText(message.payload)),text].join('\n').slice(-8000), limit: 8,
-      signal, searchTimeoutMs: 5_000 }).catch(error => {
-        signal?.throwIfAborted()
-        const failure = classifyToolFailure(error,'execution').diagnostics
-        if (!(error instanceof OpenNotebookError) && !(failure.category === 'dependency' && failure.retryable)
-          && !['quota','network','timeout','unavailable','rate_limit','circuit_open'].includes(modelFailure(error).category)) throw error
-        return { status: 'unavailable' as const, citations: [] }
-      }) : undefined
-    const retrieval = knowledgeRetrieval?.citations ?? []
-    const versions = retrieval.length ? await pool.query<{ id: string; updated_at: Date }>(
-      'SELECT id,updated_at FROM knowledge_sources WHERE company_id=$1 AND id=ANY($2::text[])', [work.tenantId,retrieval.map(item => item.sourceId)]) : { rows: [] }
-    const versionBySource = new Map(versions.rows.map(row => [row.id, new Date(row.updated_at).toISOString()]))
-    const evidence = retrieval.map(item => ({ marker: item.marker, sourceId: item.sourceId, sourceVersion: item.sourceVersion ?? versionBySource.get(item.sourceId)!,
-      chunkId: item.chunkId, title: item.sourceTitle, excerpt: item.excerpt, truncated: true, ...(item.sourceUrl ? { url: item.sourceUrl } : {}) }))
-    signal?.throwIfAborted()
+    const { directory: visualizeDirectory, state: visualizeState } = visualize
+    const { knowledgeRetrieval, retrieval, evidence } = knowledge
     return { responseProfile: 'deep' as const,
       ...(work.conversation ? { audience: work.conversation.audience } : {}), persona: { name: profile.name, role: profile.role, instructions: profile.system_prompt ?? '' }, capabilities, grants, messages, evidence,
       productRules: 'You act as an Agent for the authenticated human. Preserve the original request and revisions. '
