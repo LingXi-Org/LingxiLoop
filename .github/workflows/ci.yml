@@ -144,6 +144,7 @@ jobs:
               - 'src/lib/participantDisplayName.ts'
               - 'src/lib/agentRunSnapshot.ts'
               - 'src/lib/nativeMessage.ts'
+              - 'src/lib/answerSegment.ts'
               - 'src/lib/userFacingError.ts'
               - 'src/lib/runActivity.ts'
               - 'src/lib/runTrace.ts'
