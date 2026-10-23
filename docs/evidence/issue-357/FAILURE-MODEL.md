@@ -32,3 +32,16 @@ The owning real PostgreSQL/local HTTP integration is extended before implementat
   resumes with its pinned deployment or is drained before rollout.
 - Revisions can add attachments to the durable request without changing original
   work metadata. A revised ordinary turn must retain required preparation.
+
+## Real-provider development qualification
+
+- Measure actual durable answer events, not commentary or placeholders, and
+  distinguish recorded event time from browser paint and provider first-token time.
+- A requested explanation of two invented stages must appear before saving their
+  interactive diagram; an attempted tool is not saved or authorized delivery.
+- Retain the official browser check of the real saved diagram and delivered
+  assistant reference. A standalone synthetic document is not this qualification.
+- The following ordinary arithmetic request must use one generation, no knowledge
+  search, no semantic judge and no inherited visual authoring obligation.
+- Record failed measurements honestly, use one fixture run with one provider
+  attempt per logical call, and never replay a failed original production request.

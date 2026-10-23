@@ -32,6 +32,9 @@ test('real provider activates and delivers a synthetic interactive diagram witho
   const [major, minor, patch] = releaseVersions.runtime.split('.').map(Number)
   assert.ok(major > 3 || major === 3 && (minor > 8 || minor === 8 && patch >= 5), 'Explicit same-generation outcomes require runtime 3.8.5 or newer')
   const model = runtimeModelConfiguration({ id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL }, 30000)
+  // This opt-in diagnostic runs once; preserve bounded runtime corrections but
+  // do not silently retry a transport failure inside a logical provider call.
+  model.recovery = { ...model.recovery, maxAttempts: 1 }
   assert.equal(model.publicTextProtocol, 'purpose-json-v2', 'Require the explicit outcome producer before a provider call')
   const pricing = siliconFlowPricingForModel(env.OPENAI_BASE_URL, env.OPENAI_MODEL, false)
   assert.ok(pricing, 'Require the existing product price snapshot for the actual provider/model')
@@ -57,9 +60,37 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const accepted = await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version,
       messageId: 'visualize-provider-342-source', version: 1, author: { id: principalId, kind: 'human' }, mentions: [agentId],
-      text: 'Create a small interactive diagram with two invented stages, Gather and Check. Show exactly one stage at a time, initially Gather. Use the current stage name as its visible heading. Under Gather show the exact description "Collect the items."; under Check show "Review the items." Include one button labeled Switch stage that toggles the visible stage and description in both directions.' },
+    text: 'The invented workflow has two stages: Gather collects items, and Check reviews those items. First explain in English what each stage contributes and how the two work together, using only these given facts. Then create a small interactive diagram of Gather and Check. Show exactly one stage at a time, initially Gather. Use the current stage name as its visible heading. Under Gather show the exact description "Collect the items."; under Check show "Review the items." Include one button labeled Switch stage that toggles the visible stage and description in both directions.' },
     { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation', codeExecution: 'disabled' })
     const identity = accepted.runs[0]; assert.ok(identity); await bindProductRun(pool, identity, channelId)
+    const measureAnswer = async (runId: string, isUseful: (text: string) => boolean) => {
+      const rows = (await pool.query<{ kind: string; data: Record<string, unknown>; elapsed_ms: number }>(`SELECT event.kind,event.data,
+        EXTRACT(EPOCH FROM (event.recorded_at-work.created_at))*1000 AS elapsed_ms
+        FROM lingxios.agent_run_events event JOIN lingxios.agent_work_items work ON work.id=event.run_id
+        WHERE event.tenant_id=$1 AND event.run_id=$2 AND event.kind IN ('public.text.delta','tool.started','tool.completed') ORDER BY event.seq`,
+      [companyId, runId])).rows
+      const parts = new Map<string, string>()
+      const saveCalls = new Set<string>()
+      let firstAnswerMs: number | null = null, firstUsefulAnswerMs: number | null = null
+      let firstSaveStartedMs: number | null = null, firstSaveCompletedMs: number | null = null
+      let usefulAnswerExcerpt: string | null = null
+      for (const event of rows) {
+        const elapsed = Number(event.elapsed_ms)
+        assert.ok(Number.isFinite(elapsed) && elapsed >= 0, 'Timing must come from recorded events')
+        if (event.kind === 'tool.started' && ['visualize.save','visualize.chart','visualize.diagram','visualize.sliding_window'].includes(String(event.data.name))) {
+          saveCalls.add(String(event.data.toolCallId)); firstSaveStartedMs ??= elapsed
+        }
+        if (event.kind === 'tool.completed' && saveCalls.has(String(event.data.toolCallId)) && event.data.isError === false) firstSaveCompletedMs ??= elapsed
+        if (event.kind !== 'public.text.delta' || event.data.purpose !== 'answer' || typeof event.data.text !== 'string') continue
+        firstAnswerMs ??= elapsed
+        const id = String(event.data.partId), text = (parts.get(id) ?? '') + event.data.text
+        parts.set(id, text)
+        if (firstUsefulAnswerMs === null && isUseful(text)) { firstUsefulAnswerMs = elapsed; usefulAnswerExcerpt = text.slice(0, 600) }
+      }
+      return { basis: 'durable-public-event-recorded-at', browserPaintMeasured: false,
+        firstAnswerMs, firstUsefulAnswerMs, firstSaveStartedMs, firstSaveCompletedMs, usefulAnswerExcerpt,
+        usefulBeforeSave: firstUsefulAnswerMs !== null && firstSaveCompletedMs !== null && firstUsefulAnswerMs < firstSaveCompletedMs }
+    }
     const options: WorkerOptions & { semanticReview: 'selective' } = { controlPlane: api, policy: new ProductRuntimePolicy(),
       worker: { id: 'visualize-provider-342', shutdownGraceMs: 1000 }, model, semanticReview: 'selective',
       modelBudget: { maxModelCalls: 12, maxTokens: 250000, maxCostMicros: 1_000_000, wallClockMs: 180000,
@@ -80,6 +111,25 @@ test('real provider activates and delivers a synthetic interactive diagram witho
       cursor = page.nextSeq
     }
     report.actions = actions
+    // Do not require a supplied answer verbatim. Retain the measured synthetic
+    // excerpt for review; both stage roles must be explained in answer text.
+    report.timing = await measureAnswer(identity.runId, text => /\bGather\b/i.test(text) && /\bCheck\b/i.test(text)
+      && /\bcollect(?:s|ed|ing|ion)?\b|\bbring(?:s|ing)?\s+together\b/i.test(text)
+      && /\breview(?:s|ed|ing)?\b|\bexamin(?:e|es|ing|ation)\b|\binspect(?:s|ed|ing|ion)?\b/i.test(text))
+    const settledLedger = async (runId: string) => {
+      const deadline = AbortSignal.timeout(3000)
+      for (;;) {
+        const rows = (await pool.query(`SELECT purpose,status,measured,extras->>'operation' AS operation,
+          latency_ms,extras->>'firstContentMs' AS provider_first_content_ms
+          FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at,id`, [companyId, runId])).rows
+        if (rows.length && rows.every(row => ['succeeded', 'failed'].includes(row.status))) return rows
+        deadline.throwIfAborted(); await delay(20)
+      }
+    }
+    const ledger = () => settledLedger(identity.runId)
+    const before = await ledger()
+    report.modelCalls = before.length
+    report.calls = before
     assert.equal(actions.find(action => action.startsWith('skills.') || action.startsWith('visualize.')), 'skills.activate')
     assert.equal(state?.run.status, 'succeeded'); assert.equal(state.delivery, 'delivered')
     const references = visualizeReferences(state.message?.body ?? '')
@@ -90,20 +140,9 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     assert.ok(actions.includes('visualize.read'))
     const stored = await readAuthorizedVisualizeSnapshot({ companyId, channelId, userId: principalId, path })
     report.resource = { count: 1, version: stored.version, sourceHash: stored.source_hash, literalReferencePresent: true }
-    const settledLedger = async (runId: string) => {
-      const deadline = AbortSignal.timeout(3000)
-      for (;;) {
-        const rows = (await pool.query("SELECT purpose,status,measured,extras->>'operation' AS operation FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at,id", [companyId, runId])).rows
-        if (rows.length && rows.every(row => ['succeeded', 'failed'].includes(row.status))) return rows
-        deadline.throwIfAborted(); await delay(20)
-      }
-    }
-    const ledger = () => settledLedger(identity.runId)
-    const before = await ledger()
     assert.ok(before.length > 0)
     assert.ok(before.every(row => row.operation !== 'content-review'), 'No semantic review call in the measured operation ledger')
     assert.ok(before.every(row => row.status !== 'succeeded' || row.measured), 'Every successful generation must retain measured usage')
-    report.modelCalls = before.length
     const source = im.messages.find(message => message.channelId === channelId && message.fromUid === agentId)
     assert.ok(source)
     const app = await buildApiTestApp(principalId)
@@ -116,6 +155,8 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     assert.equal(exit, 0, 'Official browser resource/readback gate')
     assert.deepEqual(await ledger(), before, 'Browser interaction performs no extra model call')
     report.browser = JSON.parse(await readFile(`${output}/provider-browser.json`, 'utf8'))
+    assert.equal((report.timing as { usefulBeforeSave: boolean }).usefulBeforeSave, true,
+      'The requested substantive explanation must arrive before the diagram save completes; commentary does not count')
     // A new ordinary request must not inherit the previous visual workflow's
     // selective gate, add a judge, or revise an already correct short answer.
     const question = await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version,
@@ -130,12 +171,17 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     while (questionState?.delivery === 'pending') {
       questionDeadline.throwIfAborted(); await delay(20); questionState = await api.readRunState(questionIdentity)
     }
+    const questionCalls = await settledLedger(questionIdentity.runId)
+    report.directQuestion = { status: questionState?.run.status, delivery: questionState?.delivery, calls: questionCalls,
+      timing: await measureAnswer(questionIdentity.runId, text => text.trim() === '43') }
     assert.equal(questionState?.run.status, 'succeeded')
     assert.equal(questionState?.message?.body.trim(), '43')
-    const questionCalls = await settledLedger(questionIdentity.runId)
     assert.equal(questionCalls.length, 1, 'One useful answer generation, with no semantic judge or correction')
     assert.ok(questionCalls.every(row => row.operation !== 'content-review' && row.status === 'succeeded' && row.measured))
-    report.directQuestion = { status: 'passed', correct: true, measuredCalls: 1, semanticReviewCalls: 0 }
+    const questionEvents = await api.readEvents(questionIdentity, 0)
+    assert.equal(questionEvents.events.filter(event => event.kind === 'tool.started' && String(event.data.name).startsWith('knowledge.')).length, 0)
+    report.directQuestion = { status: 'passed', correct: true, measuredCalls: 1, semanticReviewCalls: 0,
+      knowledgeTools: 0, calls: questionCalls, timing: await measureAnswer(questionIdentity.runId, text => text.trim() === '43') }
     report.status = 'passed'
   } catch (error) { report.status = 'failed'; report.failure = 'required-live-delivery-check-failed'; throw error }
   finally {
