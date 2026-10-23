@@ -5,6 +5,14 @@ const metric = z.number().finite().nonnegative().nullable()
 const label = publicText.pipe(z.string().max(160))
 export const traceStatusSchema = z.enum(['running','waiting','complete','partial','blocked','cancelled','error','unknown'])
 export type TraceStatus = z.infer<typeof traceStatusSchema>
+export const modelOperationSchema = z.enum(['generation','correction','content-review','compaction','memory-synthesis','approval-explanation','embedding','structured'])
+export type ModelOperation = z.infer<typeof modelOperationSchema>
+export function readModelOperation(value: unknown): ModelOperation|undefined {
+  const parsed = modelOperationSchema.safeParse(value)
+  return parsed.success ? parsed.data : undefined
+}
+export const modelOperationLabel: Record<ModelOperation,string> = { generation: '生成回复',correction: '纠正回复','content-review': '内容验收',
+  compaction: '上下文摘要','memory-synthesis': '记忆整理','approval-explanation': '审批说明',embedding: '向量编码',structured: '模型辅助调用' }
 /** Exact provider model registrations, never a guess from an arbitrary label. */
 export const isEmbeddingTraceModel = (model: unknown) => model === 'BAAI/bge-m3' || model === 'Pro/BAAI/bge-m3' || model === 'Qwen/Qwen3-Embedding-8B'
 export interface TraceSpan {
