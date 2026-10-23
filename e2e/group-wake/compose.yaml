@@ -1,0 +1,29 @@
+name: issue347-qualification
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports: ["127.0.0.1:18546:5432"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: synthetic347-local
+      POSTGRES_DB: issue347_group_wake_test
+    tmpfs: [/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d issue347_group_wake_test"]
+      interval: 1s
+      timeout: 5s
+      retries: 40
+  redis:
+    image: redis:7-alpine
+    ports: ["127.0.0.1:18549:6379"]
+  wukongim:
+    image: ${E2E_WUKONG_IMAGE:-lingxiloop-cloud-wukongim:c7f663fa23a4}
+    ports: ["127.0.0.1:18551:5001", "127.0.0.1:18552:5200"]
+    environment:
+      WK_WEBHOOK_HTTP_ADDR: http://${GROUP_WAKE_CALLBACK_HOST:-host.docker.internal}:18547/webhooks/wukong?token=synthetic347-webhook
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      http_proxy: ""
+      https_proxy: ""
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    tmpfs: [/var/lib/wukongim]

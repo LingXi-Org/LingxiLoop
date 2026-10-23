@@ -1,0 +1,79 @@
+ Network issue347-qualification_default  Creating
+ Network issue347-qualification_default  Created
+ Container issue347-qualification-wukongim-1  Creating
+ Container issue347-qualification-redis-1  Creating
+ Container issue347-qualification-postgres-1  Creating
+ Container issue347-qualification-wukongim-1  Created
+ Container issue347-qualification-redis-1  Created
+ Container issue347-qualification-postgres-1  Created
+ Container issue347-qualification-postgres-1  Starting
+ Container issue347-qualification-redis-1  Starting
+ Container issue347-qualification-wukongim-1  Starting
+ Container issue347-qualification-postgres-1  Started
+ Container issue347-qualification-redis-1  Started
+ Container issue347-qualification-wukongim-1  Started
+ Container issue347-qualification-postgres-1  Waiting
+ Container issue347-qualification-redis-1  Waiting
+ Container issue347-qualification-wukongim-1  Waiting
+ Container issue347-qualification-redis-1  Healthy
+ Container issue347-qualification-wukongim-1  Healthy
+ Container issue347-qualification-postgres-1  Healthy
+[db:migrate] applied 0001_v1_baseline, 0002_remove_legacy_identity, 0003_agent_os_session_affinity, 0004_backfill_personal_owner_participants, 0005_lingxios_v2_reset, 0006_observable_live_eval, 0007_install_lingxios, 0008_agent_os_execution, 0009_native_agent_tools, 0010_lingxios_native_runtime, 0011_closed_education, 0012_lingxios_3_2, 0013_native_collaboration, 0014_profile_avatars, 0015_lingxios_3_2_6, 0016_lingxios_3_2_7, 0017_lingxios_3_2_8, 0018_lingxios_3_2_9, 0019_agent_read_receipts, 0020_lingxios_3_2_10, 0021_lingxios_3_2_11, 0022_lingxios_3_2_12, 0023_lingxios_3_2_13, 0024_lingxios_3_3_0, 0025_lingxios_3_3_1, 0026_lingxios_3_3_2, 0027_learning_collaboration, 0028_lingxios_3_3_4, 0029_lingxios_3_3_5, 0030_lingxios_3_3_6, 0031_agent_capabilities, 0032_native_message_attachments, 0033_interactive_ui, 0034_retire_email_calendar, 0035_course_forum, 0036_public_run_activity, 0037_forum_comment_attachments, 0038_learning_submission_sequence, 0039_native_memory_collaboration, 0040_forum_assignment_convergence, 0041_homework_mastery, 0042_forum_submission_evidence, 0043_lingxios_3_5_0, 0044_questionnaire_wait, 0045_organization_cases, 0046_visualize, 0047_memory_continuity, 0048_native_content_documents, 0049_conversation_list_removals, 0050_skill_delivery, 0051_public_text_reader, 0052_run_trace_provenance, 0053_conversation_repair_provenance, 0054_run_presentation_contract · 1312ms
+✖ a teacher group HTTP send routes and delivers (departed default in stale binding) (3427.327041ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9161.207318
+
+✖ failing tests:
+
+test at server/src/__integration__/group-wake.test.ts:1:5366
+✖ a teacher group HTTP send routes and delivers (departed default in stale binding) (3427.327041ms)
+  AssertionError [ERR_ASSERTION]: wake recipients must match the active canonical policy, including when a binding retains a departed Agent
+  + actual - expected
+  
+    [
+  +   'group-wake-a'
+  -   'group-wake-b'
+    ]
+  
+      at TestContext.<anonymous> (/workspace/issue347-group-wake/server/src/__integration__/group-wake.test.ts:145:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'group-wake-a' ],
+    expected: [ 'group-wake-b' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+ Container issue347-qualification-redis-1  Stopping
+ Container issue347-qualification-postgres-1  Stopping
+ Container issue347-qualification-wukongim-1  Stopping
+ Container issue347-qualification-postgres-1  Stopped
+ Container issue347-qualification-postgres-1  Removing
+ Container issue347-qualification-redis-1  Stopped
+ Container issue347-qualification-redis-1  Removing
+ Container issue347-qualification-redis-1  Removed
+ Container issue347-qualification-postgres-1  Removed
+ Container issue347-qualification-wukongim-1  Stopped
+ Container issue347-qualification-wukongim-1  Removing
+ Container issue347-qualification-wukongim-1  Removed
+ Network issue347-qualification_default  Removing
+ Network issue347-qualification_default  Removed
+file:///workspace/issue347-group-wake/e2e/server/group-wake.mjs:32
+  child.once('error', reject); child.once('exit', code => code === 0 ? done() : reject(new Error(`Local qualification exited ${code}`)))
+                                                                                       ^
+
+Error: Local qualification exited 1
+    at ChildProcess.<anonymous> (file:///workspace/issue347-group-wake/e2e/server/group-wake.mjs:32:88)
+    at Object.onceWrapper (node:events:631:26)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0

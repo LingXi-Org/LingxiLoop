@@ -54,11 +54,14 @@ export async function webhookBinding(db: Queryable, channelId: string): Promise<
 
 export async function webhookMembers(
   db: Queryable,
-  input: { companyId: string; memberIds: string[] },
+  input: { companyId: string; memberIds: string[]; channelId: string },
 ): Promise<WebhookMemberRow[]> {
   const { rows } = await db.query<WebhookMemberRow>(
-    `SELECT id,name,kind,preset_key FROM participants WHERE company_id=$1 AND id=ANY($2::text[])`,
-    [input.companyId, input.memberIds],
+    `SELECT member.id,member.name,member.kind,member.preset_key FROM participants member
+      JOIN conversations conversation ON conversation.company_id=member.company_id AND conversation.id=$3
+        AND conversation.members ? member.id
+      WHERE member.company_id=$1 AND member.id=ANY($2::text[]) AND member.departed_at IS NULL ORDER BY member.id`,
+    [input.companyId, input.memberIds, input.channelId],
   )
   return rows
 }

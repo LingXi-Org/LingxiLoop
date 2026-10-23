@@ -23,3 +23,11 @@ test('agent webhook echoes never create a second dispatch path', () => {
   assert.deepEqual(resolveLearningAgentRecipients({ authorId: 'nova', channelType: 2, members, mentionedIds: ['sage'] }), [])
   assert.deepEqual(resolveLearningAgentRecipients({ authorId: 'nova', channelType: 2, members, mentionAll: true }), [])
 })
+
+test('custom Agent default is stable across roster query order', () => {
+  const roster: RoutingParticipant[] = [{ id: 'teacher', kind: 'human' }, { id: 'b-specialist', kind: 'agent' }, { id: 'a-specialist', kind: 'agent' }]
+  const base = { authorId: 'teacher', channelType: 2, members: roster }
+  assert.deepEqual(resolveLearningAgentRecipients(base), ['a-specialist'])
+  assert.deepEqual(resolveLearningAgentRecipients({ ...base, members: [...roster].reverse() }), ['a-specialist'])
+  assert.deepEqual(resolveLearningAgentRecipients({ ...base, leaderAgentId: 'b-specialist' }), ['b-specialist'])
+})
