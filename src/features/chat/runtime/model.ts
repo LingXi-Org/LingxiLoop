@@ -71,6 +71,8 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   harness?: RunDisplayState
   harnessControl?: boolean
   harnessError?: string
+  /** Public durable terminal explanation, folded into the matching run for display. */
+  terminalNotice?: { id: string; text: string }
   runConnection?: 'checking' | 'released' | 'inaccessible' | 'missing' | 'unauthenticated'
   regenerateOfClientMsgNo?: string
   replyBranches?: { key: string; rootId: string; threadRootId: string | null; ids: string[]; clientIds: string[]; index: number }

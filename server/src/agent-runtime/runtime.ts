@@ -69,10 +69,13 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
     maxThinkingTokens: 0, capabilities: { parallelTools: false },
-    // Flash uses a reasoning tier even when enable_thinking is false. Keep
-    // auxiliary progress flowing within the same first-byte/idle budgets.
+    // Auxiliary review/compaction must retain streamed progress after the model
+    // switch, under the same first-byte/idle/request and logical-call budgets.
+    ...(siliconFlow && ['zai-org/GLM-5.3-Flash', 'deepseek-ai/DeepSeek-V4.1-Flash'].includes(model.id)
+      ? { auxiliaryStreaming: true } : {}),
+    // GLM Flash uses a reasoning tier even when enable_thinking is false.
     ...(model.id === 'zai-org/GLM-5.3-Flash' && siliconFlow
-      ? { reasoningEffort: 'low' as const, compactionReasoningEffort: 'low' as const, auxiliaryStreaming: true } : {}),
+      ? { reasoningEffort: 'low' as const, compactionReasoningEffort: 'low' as const } : {}),
     ...(isSiliconFlowModel(model.id) && siliconFlow ? { contextWindowTokens: 1_000_000 } : {}),
   } satisfies WorkerOptions['model']
 }

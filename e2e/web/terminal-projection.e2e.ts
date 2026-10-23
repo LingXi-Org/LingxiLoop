@@ -1,0 +1,30 @@
+import { test } from '@e2e-dev/web'
+import { expect } from 'e2e'
+
+// Synthetic IM/snapshot presentation only: this does not assert provider health.
+test('terminal identity survives replay and reload without hiding a later identical question', async ({ app, browser, screen }) => {
+  await app.open('/e2e/terminal-projection.html')
+  const errors = browser.locator('[data-slot="error-state"]')
+  await expect(errors).toContainText('合成服务故障，已完成的操作会保留。')
+  expect(await errors.count()).toBe(1)
+  expect(await browser.locator('[data-msg-id="terminal-feedback-one"]').count()).toBe(0)
+  expect(await screen.getByRole('button', '重试', { exact: true }).count()).toBe(1)
+  await screen.getByRole('button', '重放历史').tap()
+  expect(await errors.count()).toBe(1)
+  await screen.getByRole('button', '发送相同问题').tap()
+  await expect(screen.getByText('四是二加二的结果。', { exact: true })).toBeVisible()
+  expect(await screen.getByText('二加二等于几？', { exact: true }).count()).toBe(2)
+  expect(await errors.count()).toBe(1)
+  await screen.getByRole('button', '重放历史').tap()
+  expect(await errors.count()).toBe(1)
+  expect(await screen.getByText('二加二等于几？', { exact: true }).count()).toBe(2)
+  await app.screenshot('issue-326-independent-next-message')
+  await browser.reload()
+  await expect(screen.getByText('四是二加二的结果。', { exact: true })).toBeVisible()
+  expect(await errors.count()).toBe(1)
+  expect(await screen.getByText('二加二等于几？', { exact: true }).count()).toBe(2)
+  await screen.getByRole('button', '仅显示终态回执').tap()
+  await expect(browser.locator('[data-msg-id="terminal-feedback-one"]')).toContainText('合成服务故障，已完成的操作会保留。')
+  expect(await errors.count()).toBe(0)
+  await app.screenshot('issue-326-unavailable-run-fallback')
+})
