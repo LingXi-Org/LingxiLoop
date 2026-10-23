@@ -189,7 +189,8 @@ export class RunStreamProjection {
 
   get snapshot(): AgentRunSnapshot {
     if (!this.createdAt) throw new Error('run state must precede message updates')
-    const { message, draft: _draft, preview: _preview, publicTextParts: _publicTextParts, publicTextAttempts: _publicTextAttempts, ...control } = this.view
+    const { message, draft: _draft, preview: _preview, publicTextParts: _publicTextParts, publicTextAttempts: _publicTextAttempts,
+      publicTextCommit: _publicTextCommit, ...control } = this.view
     // Outcome gaps are internal verification diagnostics, not product copy.
     const { gaps: _gaps, ...outcome } = control.goalOutcome ?? {}
     const harness: RunDisplayState = { ...control,

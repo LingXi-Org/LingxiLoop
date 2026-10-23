@@ -3,7 +3,7 @@ import type { RunView, ResponseEnvelope } from '@lyyzka/lingxios/ui'
 import type { NativeMessage } from './nativeMessage.js'
 
 export type HarnessToolPart = ToolCallMessagePart
-export type RunDisplayState = Omit<RunView, 'message' | 'draft' | 'preview' | 'publicTextParts' | 'publicTextAttempts'> & {
+export type RunDisplayState = Omit<RunView, 'message' | 'draft' | 'preview' | 'publicTextParts' | 'publicTextAttempts' | 'publicTextCommit'> & {
   artifacts: ResponseEnvelope['artifacts']
 }
 /** Official Assistant Transport state. The native message also owns history replay. */
