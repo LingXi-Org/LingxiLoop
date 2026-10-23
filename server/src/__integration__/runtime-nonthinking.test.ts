@@ -116,7 +116,7 @@ test('production workers always expose full tools and disable thinking even with
       assert.equal((await api.readRunState(run))?.message?.body, body)
       assert.deepEqual(im.messages.filter(message => message.channelId === conversationId).map(message => nativeText(message.payload)), [body])
       assert.equal(requests.filter(request => request.stream).length, 2)
-      assert.ok(requests.some(request => !request.stream), 'auxiliary content check must also use the native driver')
+      assert.equal(requests.length, 2, 'the invalid-tool correction and answer must not trigger a default content review')
       for (const request of requests) {
         assert.equal(request.enable_thinking, false)
         assert.equal(request.thinking,undefined)

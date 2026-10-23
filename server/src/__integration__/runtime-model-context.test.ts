@@ -109,8 +109,8 @@ test('production GLM worker preserves conversation continuity across repeated co
     assert.ok(messages.slice(0, 2).every(message => /已收到/.test(nativeText(message.payload))))
     assert.ok(messages.slice(2).every(message => /蓝宝石47/.test(nativeText(message.payload))))
     assert.ok(requests.some(request => request.purpose === 'agent-turn' && request.bytes > 128000), 'must exercise the former hard context limit')
-    assert.ok(requests.every(request => request.stream), 'ordinary, structured and compaction calls must use the configured streaming transport')
-    assert.ok(requests.some(request => request.purpose === 'structured'))
+    assert.ok(requests.every(request => request.stream), 'ordinary and compaction calls must use the configured streaming transport')
+    assert.equal(requests.filter(request => request.purpose === 'structured').length, 0, 'default conversations must not add semantic review calls')
     assert.ok(requests.filter(request => request.purpose === 'compaction').length >= 2)
     const calls = (await pool.query(`SELECT purpose,status,measured,input_tokens,error FROM llm_calls WHERE company_id=$1 ORDER BY created_at`, [companyId])).rows
     assert.equal(calls.length, requests.length)

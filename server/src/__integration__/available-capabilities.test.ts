@@ -134,6 +134,12 @@ test('published runtime sends available-only context and preserves truthful prod
         'ordinary replies must not volunteer feature-specific absence; writing about a topic is allowed')
       const ledger = (await pool.query(`SELECT count(*)::int AS calls,COALESCE(bool_and(measured),false) AS measured,COALESCE(sum(cost_usd),0)::text AS cost FROM llm_calls WHERE company_id=$1 AND run_id=$2`, [companyId, identity.runId])).rows[0]
       assert.ok(ledger.calls > 0 && ledger.measured, `measured ledger required for ${scenario.id}: ${JSON.stringify(ledger)}`)
+      if (!live && !scenario.explicit) {
+        assert.deepEqual(checks.filter(check => check.case === scenario.id).map(check => check.stream), [true],
+          'a simple default conversation needs one generation and no semantic judge')
+        assert.equal(ledger.calls, 1, 'the single default generation must be the only billed call')
+        assert.equal((await pool.query("SELECT count(*)::int AS n FROM lingxios.agent_steps WHERE work_id=$1 AND kind='runtime.review'", [identity.runId])).rows[0].n, 0)
+      }
       if (live) assert.ok(Number(ledger.cost) <= 0.25)
       results.push({ case: scenario.id, runStatus: state.run.status, goalStatus: state.run.goalOutcome?.status,
         answerSha256: createHash('sha256').update(answer).digest('hex'), answer, measuredCalls: ledger.calls, costUSD: Number(ledger.cost) })
