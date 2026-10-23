@@ -12,6 +12,7 @@ import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 import { nativeText } from '../im/message-types.js'
+import { createProductTools } from '../agent-runtime/tools.js'
 
 // Failure model precedes implementation in docs/model-availability-failure-model.md.
 // Additional failure cases: missing streamed usage settles an estimate; failed tools
@@ -19,12 +20,13 @@ import { nativeText } from '../im/message-types.js'
 // a provider attempt from either ledger. Check actual HTTP attempts and receipts.
 // Cancellation/idle/total driver cases live in LingxiOS PR #30's
 // test/auxiliary-streaming.test.ts; this fixture does not claim product cancellation coverage.
-// Native-envelope failure model: the qualified DeepSeek tool turn requires
-// public_output:null around the unchanged directory.self business arguments.
+// Native business-schema failure model: docs/evidence/issue-366/NATIVE-BUSINESS-SCHEMA-FAILURE-MODEL.md.
+// DeepSeek and GLM both retain the complete current catalog parameters and {}.
 // Generation detection must recognize the native v3 header without classifying
 // structured review as generation. GLM keeps its unwrapped tool contract; all
 // actual attempts, measured usage, retries and durable receipts remain exact.
 let recording: Awaited<ReturnType<typeof installRecordingWukong>>
+const productSchemas = new Map(createProductTools(lingxiOSControl).map(tool => [tool.name, tool.parameters]))
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => { await stopLingxiOSControl(); await teardownAll(); await recording?.close() })
 
@@ -35,6 +37,11 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
   const provider = createServer(async (request, response) => {
     let raw = ''; for await (const chunk of request) raw += chunk
     const input = JSON.parse(raw)
+    for (const { function: tool } of input.tools ?? []) {
+      const expected = productSchemas.get(tool.name)
+      if (expected) assert.deepEqual(tool.parameters, expected, `${tool.name} must retain its entire business schema`)
+      assert.equal(tool.parameters.properties.public_output, undefined, 'native tools must not carry a public-output wrapper')
+    }
     // Only the qualified SiliconFlow DeepSeek profile omits JSON mode when
     // tools are advertised. Tool-free review and the GLM profile retain it.
     const jsonWithToolsUnsupported = model === 'deepseek-ai/DeepSeek-V4.1-Flash' && input.tools?.length > 0
@@ -55,9 +62,8 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
     const usage = { prompt_tokens: 20, completion_tokens: 8, completion_tokens_details: { reasoning_tokens: 4 } }
     if (requests.length === 1) {
       const parameters = input.tools.find((tool: { function: { name: string } }) => tool.function.name === 'directory__self').function.parameters
-      if (jsonWithToolsUnsupported) assert.deepEqual(parameters.required, ['public_output', 'arguments'])
-      else assert.equal(parameters.properties.public_output, undefined, 'GLM keeps the original business tool schema')
-      const argumentsText = jsonWithToolsUnsupported ? JSON.stringify({ public_output: null, arguments: {} }) : '{}'
+      assert.deepEqual(parameters, productSchemas.get('directory__self'))
+      const argumentsText = '{}'
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'fixture-identity', type: 'function', function: { name: 'directory__self', arguments: argumentsText } }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
       return

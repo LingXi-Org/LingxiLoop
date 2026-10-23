@@ -22,14 +22,12 @@ test('normal Worker model configuration consumes the same producer leaf without 
   assert.deepEqual(config.capabilities,{parallelTools:false})
 })
 
-// Failures: tool turns suppress public answer output; an unqualified provider or
-// model inherits the native envelope; enabling it changes the bounded transport
-// or combines JSON mode/parallel tools with an incompatible generation protocol.
-test('only the verified SiliconFlow DeepSeek generation configuration enables the native public envelope',async()=>{
+// Failure model: docs/evidence/issue-366/NATIVE-BUSINESS-SCHEMA-FAILURE-MODEL.md.
+test('SiliconFlow DeepSeek retains native business schemas and the bounded v3 public channel',async()=>{
   const { runtimeModelConfiguration }=await import('../agent-runtime/runtime.js')
   const configured=runtimeModelConfiguration({id:'deepseek-ai/DeepSeek-V4.1-Flash',apiKey:'synthetic-key',baseUrl:'https://api.siliconflow.cn/v1'},90000)
   assert.equal(Reflect.get(configured.capabilities,'jsonObjectWithTools'),false)
-  assert.equal(Reflect.get(configured,'nativeToolPublicOutput'),'envelope-v1')
+  assert.equal(Object.hasOwn(configured,'nativeToolPublicOutput'),false)
   assert.equal(configured.capabilities.parallelTools,false)
   assert.equal(configured.publicTextProtocol,'purpose-json-v3')
   assert.equal(configured.maxThinkingTokens,0)
@@ -45,6 +43,6 @@ test('only the verified SiliconFlow DeepSeek generation configuration enables th
   ]){
     const other=runtimeModelConfiguration({id:id!,apiKey:'synthetic-key',baseUrl:baseUrl!},90000)
     assert.equal(Reflect.get(other.capabilities,'jsonObjectWithTools'),undefined)
-    assert.equal(Reflect.get(other,'nativeToolPublicOutput'),undefined)
+    assert.equal(Object.hasOwn(other,'nativeToolPublicOutput'),false)
   }
 })

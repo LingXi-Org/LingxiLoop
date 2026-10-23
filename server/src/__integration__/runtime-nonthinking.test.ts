@@ -20,11 +20,13 @@ import { visualizeReferences } from '../agent-runtime/visualize-projection.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { answerSegment } from '../../../src/lib/answerSegment.js'
 import { installProductionModelTransport } from './_production-model-transport.js'
+import { createProductTools } from '../agent-runtime/tools.js'
 
-// Native-envelope failure model: the deliberately invalid chat.ask must have
-// valid transport framing and still fail the original business schema, then
-// recover with exactly one answer call. A malformed envelope is not equivalent
-// coverage. Private reasoning/arguments remain absent from previews and delivery.
+// Failure model: docs/evidence/issue-366/NATIVE-BUSINESS-SCHEMA-FAILURE-MODEL.md.
+// The deliberately invalid chat.ask remains an original business object, so
+// the strict pre-dispatch schema gate must reject it after measured generation.
+// Private reasoning/arguments remain absent from previews and delivery.
+const productSchemas = new Map(createProductTools(lingxiOSControl).map(tool => [tool.name, tool.parameters]))
 
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
@@ -42,6 +44,11 @@ test('production workers always expose full tools and disable thinking even with
       let raw = ''
       for await (const chunk of req) raw += chunk
       const request = JSON.parse(raw)
+      for (const { function: tool } of request.tools ?? []) {
+        const expected = productSchemas.get(tool.name)
+        if (expected) assert.deepEqual(tool.parameters, expected, `${tool.name} must retain its entire business schema`)
+        assert.equal(tool.parameters.properties.public_output, undefined, 'native tools must not carry a public-output wrapper')
+      }
       assert.equal(request.response_format, undefined, 'Actual DeepSeek tools profile omits incompatible JSON response mode')
       assert.equal(request.model, 'deepseek-ai/DeepSeek-V4.1-Flash')
       requests.push(request)
@@ -58,12 +65,13 @@ test('production workers always expose full tools and disable thinking even with
       assert.ok(!request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'response__upgrade'))
       if(requests.filter(item=>item.stream).length===1){
         const parameters = request.tools.find((tool: { function: { name: string } }) => tool.function.name === 'chat__ask').function.parameters
-        assert.deepEqual(parameters.required, ['public_output', 'arguments'])
-        send({role:'assistant',reasoning_content:privateText,tool_calls:[{index:0,id:'invalid-question',type:'function',function:{name:'chat__ask',arguments:'{"public_output":null,"arguments":{"title":'}}]})
-        send({tool_calls:[{index:0,function:{arguments:'"PRIVATE TOOL ARGUMENT"}}'}}]},'tool_calls')
+        assert.deepEqual(parameters, productSchemas.get('chat__ask'))
+        send({role:'assistant',reasoning_content:privateText,tool_calls:[{index:0,id:'invalid-question',type:'function',function:{name:'chat__ask',arguments:'{"title":'}}]})
+        send({tool_calls:[{index:0,function:{arguments:'"PRIVATE TOOL ARGUMENT"}'}}]},'tool_calls')
         res.end(`data: ${JSON.stringify({choices:[],usage})}\n\ndata: [DONE]\n\n`)
         return
       }
+        assert.match(JSON.stringify(request.messages), /tool arguments do not match the exposed schema/, 'the correction must come from the strict business schema gate')
         const framed = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: body, outcome: { status: 'satisfied', gaps: [] } })
         const split = framed.indexOf('第一段') + '第一段'.length
         send({ role: 'assistant', reasoning_content: privateText })
@@ -206,15 +214,12 @@ test('production workers always expose full tools and disable thinking even with
         calls = await callLedger()
       }
       assert.deepEqual(calls.rows, [
-        { status: 'failed', measured: true, inputTokens: 100, outputTokens: 10, category: 'protocol' },
         { status: 'succeeded', measured: true, inputTokens: 100, outputTokens: 10, category: null },
-      ], 'The native driver rejects invalid business arguments while retaining both complete measured responses')
+        { status: 'succeeded', measured: true, inputTokens: 100, outputTokens: 10, category: null },
+      ], 'Both native responses retain measured usage; the runtime rejects invalid business arguments before dispatch')
       const modelFailures = (await pool.query(`SELECT data->'modelDiagnostics' AS diagnostics
         FROM lingxios.agent_run_events WHERE tenant_id=$1 AND run_id=$2 AND kind='model.failed' ORDER BY seq`, [companyId, run.runId])).rows
-      assert.deepEqual(modelFailures.map(row => row.diagnostics), [{ kind: 'protocol', category: 'protocol',
-        protocolCode: 'tool_identity_invalid', finishReasons: ['tool_calls'],
-        usage: { available: true, inputTokens: 100, outputTokens: 10 },
-      }], 'Valid envelope framing must reach the business schema gate, not fail as public_text_invalid')
+      assert.deepEqual(modelFailures, [], 'The invalid business object must reach runtime validation, not fail provider framing')
       assert.equal((await pool.query(`SELECT count(*)::int AS count FROM lingxios.agent_run_events
         WHERE tenant_id=$1 AND run_id=$2 AND kind='tool.started'`, [companyId, run.runId])).rows[0].count, 0,
       'The complete invalid tool batch must be rejected before any tool dispatch')

@@ -68,9 +68,6 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
   return {
     ...model,
     ...publicTextModelOptions(),
-    // Only public v3 generation carries answer metadata in the native tool
-    // envelope. The formal driver keeps auxiliary calls and private v2 separate.
-    nativeToolPublicOutput: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3' ? 'envelope-v1' : undefined,
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
