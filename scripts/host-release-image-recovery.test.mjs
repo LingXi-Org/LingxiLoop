@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {assertImageFailure,assertImageRecoveryInventory,restoreImageSource} from './host-release-image-recovery.mjs'
-import {SAME54_FORMAT} from './public-text-release.mjs'
+import {SAME54_FORMAT,RUNTIME_PATCH_FORMAT} from './public-text-release.mjs'
 const apps=['lingxiloop-app-a','lingxiloop-app-b'],a='a'.repeat(40),b='b'.repeat(40),h='c'.repeat(64)
 const plan={format:'product54-image-host-release/v1',planHash:h,source:{sha:a,image:{indexDigest:'sha256:'+h,configDigest:'sha256:'+h}},target:{sha:b,image:{indexDigest:'sha256:'+'d'.repeat(64),configDigest:'sha256:'+'d'.repeat(64)}}}
 const original=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,service,id:String(i*2+j+1).repeat(64),source:a,imageId:'sha256:'+h,running:true,pid:1,healthy:true,restarting:false,restartCount:0,policy:{configurationSha256:h}})))
@@ -41,3 +41,12 @@ for(const [name,mutate] of [
  ['changed full policy',r=>r[0].policy.configurationSha256='0'.repeat(64)],['wrong image',r=>r[0].imageId='sha256:'+'0'.repeat(64)],
 ])test(name+' prevents stopping any reader',()=>{const rows=structuredClone(original);mutate(rows);assert.throws(()=>assertImageRecoveryInventory(rows,plan,assertImageFailure(plan,failed())))})
 test('recovery export exists only for the explicit same54 contract',()=>{assert.equal(SAME54_FORMAT,plan.format);assert.equal(typeof restoreImageSource,'function')})
+test('runtime patch source restoration requires known unchanged provenance and refuses committed/unknown CAS',()=>{
+ const p={...plan,format:RUNTIME_PATCH_FORMAT},receipt=failed();receipt.mode=p.format
+ receipt.events.at(-1).recovery='source-unchanged-recovery-requires-review'
+ assert.doesNotThrow(()=>assertImageFailure(p,receipt))
+ for(const change of [r=>r.events.at(-1).recovery='fix-forward',r=>r.events.at(-1).status='uncertain',
+  r=>r.events.splice(-1,0,{phase:'provenance',status:'updated'})]){
+  const r=structuredClone(receipt);change(r);assert.throws(()=>assertImageFailure(p,r))
+ }
+})
