@@ -68,6 +68,8 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
   return {
     ...model,
     ...publicTextModelOptions(),
+    publicTextContinuation: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
+      ? 'typed-message-v1' : undefined,
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
