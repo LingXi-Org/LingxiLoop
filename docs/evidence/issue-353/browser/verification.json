@@ -1,0 +1,47 @@
+{
+  "format": "issue353-browser-evidence/v1",
+  "engine": "e2e 0.17.0 / @e2e-dev/web 0.12.0",
+  "synthetic": true,
+  "checks": [
+    {
+      "run": "01a16919-c31c-7c85-a53c-18f96ceb49f9",
+      "passed": [
+        "light1440 compact row/details/reference/reload",
+        "dark390 compact row/details/reference/reload"
+      ],
+      "failed": [
+        "state test locator omitted existing error icon accessible name"
+      ]
+    },
+    {
+      "run": "01a1691b-8aa6-758a-bdd2-532e22ef2d19",
+      "passed": [
+        "source outcomes; failed/cancelled/unknown/approval; reply/reference retained"
+      ],
+      "failed": []
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "001-failure.png",
+      "sha256": "0866ce66920df23bc9257f59e24c4cca64d486c8c3d9b1076253a96253a87dc6"
+    },
+    {
+      "file": "001-reading-compact-dark-390.png",
+      "sha256": "1e4fa210b9cbb14ba020fa6d99172971cacb3eae684310c9abb5dac3e5e7cd24"
+    },
+    {
+      "file": "001-reading-compact-light-1440.png",
+      "sha256": "a7239fa5072865df5b5b045d688d20596e1c38564a19d2e0ff0aa39321c1fc55"
+    },
+    {
+      "file": "001-reading-approval-preserved.png",
+      "sha256": "d1a55d1ef364285a5277dbcd636278afd27d34ab9d972cc29023406232ffcbe3"
+    }
+  ],
+  "historicalFailures": [
+    "Initial browser preview esbuild process terminated during shared memory pressure",
+    "Next fixture incorrectly expected Markdown external reference to be an anchor; actual product uses a safety-confirmation button"
+  ],
+  "productionAccess": false
+}

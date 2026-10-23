@@ -4,11 +4,10 @@ import { ToolCall } from '@/components/assistant-ui/elements/tool-call'
 import { toolDisplaySchema, canonicalToolName, resolveToolDisplay } from '@/lib/runActivity'
 import { ElicitationForm } from '@/components/assistant-ui/elements/elicitation-form'
 import { MessageFooterContents } from '@/components/assistant-ui/message-footer'
-import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { userFacingError } from '@/lib/userFacingError'
 import { chatTransport } from '../runtime/transport'
-import { knowledgeProgress } from '../runtime/task-progress'
+import { knowledgeSourceState } from '../runtime/task-progress'
 import { ApprovalRequestCard } from './ApprovalRequestCard'
 import { MessagePartBoundary } from './MessagePartBoundary'
 import { TOOL_DETAILS } from './ToolRenderers'
@@ -20,7 +19,6 @@ import { inputOwner, ownsApproval } from './message-presentation'
 
 const richTool = (name: string) => Object.hasOwn(TOOL_DETAILS,name) || /^(email|calendar)\./.test(name) || name === 'research.search'
   || /^memory(?:\.|__)/.test(name)
-  || ['knowledge.search', 'knowledge.read_source', 'knowledge.list_sources'].includes(name)
 
 export const hasRichTool = (name: string) => richTool(canonicalToolName(name))
 
@@ -49,18 +47,18 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
   const permitted = !readOnly && custom.harnessControl === true && typeof custom.runId === 'string'
   const cancelled = approval?.resolution === 'cancelled' || resultStatus === 'cancelled' || status.type === 'incomplete' && status.reason === 'cancelled'
   const unknown = resultStatus === 'unknown'
-  const failed = !cancelled && !unknown && (isError || resultStatus === 'failed' || status.type === 'incomplete' && status.reason === 'error')
+  const sourceState = knowledgeSourceState(toolName, result)
+  const failed = !cancelled && !unknown && (isError || resultStatus === 'failed' || sourceState?.status === 'unavailable' || status.type === 'incomplete' && status.reason === 'error')
   const label = approval?.resolution === 'expired' ? '审批已过期'
-    : cancelled ? '已取消' : approval?.approved === false ? '已拒绝' : failed ? '执行失败'
+    : cancelled ? '已取消' : approval?.approved === false ? '已拒绝' : failed ? sourceState?.status === 'unavailable' ? sourceState.label : '执行失败'
     : pending ? '等待审批' : interrupt && !ended ? questionnaireWait ? '等待问卷回答' : '等待补充信息'
-    : unknown ? '结果待核对' : resultStatus === 'completed' ? '已完成' : status.type === 'running' ? '执行中'
+    : unknown ? '结果待核对' : resultStatus === 'completed' ? sourceState?.label ?? '已完成' : status.type === 'running' ? '执行中'
     : approval?.approved ? '已批准 · 等待执行' : '未完成'
   const displayStatus: ToolCallMessagePartStatus = failed ? { type: 'incomplete', reason: 'error' }
     : cancelled || approval?.resolution || approval?.approved === false ? { type: 'incomplete', reason: cancelled ? 'cancelled' : 'other' }
     : pending || interrupt && !ended ? { type: 'requires-action', reason: interrupt ? 'interrupt' : 'tool-calls' }
     : unknown ? { type: 'incomplete', reason: 'other' } : resultStatus === 'completed' ? { type: 'complete' } : status.type === 'running' ? status : { type: 'incomplete', reason: 'other' }
   const lifecycle = cancelled ? 'cancelled' : failed ? 'failed' : unknown ? 'waiting' : displayStatus.type === 'running' ? 'leased' : 'succeeded'
-  const retrieval = knowledgeProgress(toolCallId, [canonicalProps], lifecycle, String(custom.senderName ?? '助手'))
 
   async function act(work: (current: ReturnType<typeof aui.message.getState>) => Promise<void>) {
     if (inFlight.current || accepted) return
@@ -96,7 +94,7 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
     <MessageFooterContents inset={false}>
       <ToolCall label={label} activeLabel="正在处理" query={display.title} request={display.purpose}
         result={display.summary ?? (status.type === 'running' ? '正在执行这一步。' : '这一步尚未完成。')}
-        running={displayStatus.type === 'running'} outcome={displayStatus.type === 'complete' ? 'complete' : failed ? 'failed' : 'pending'}
+        running={displayStatus.type === 'running'} outcome={failed ? 'failed' : sourceState?.status === 'processing' || sourceState?.status === 'queued' ? 'pending' : displayStatus.type === 'complete' ? 'complete' : 'pending'}
         open={detailsOpen} onOpenChange={setDetailsOpen} />
       {detailsOpen && <div className="grid gap-2 ps-5 text-sm text-muted-foreground">
         {publicInput.success && publicInput.data?.map(field => <p key={field.label}><span className="font-medium">{field.label}：</span>{field.value}</p>)}
@@ -106,7 +104,6 @@ export function NativeTool(props: ToolCallMessagePartProps & { readOnly: boolean
         {Detail && <Detail {...canonicalProps} readOnly={readOnly} />}
         {/^memory(?:\.|__)/.test(toolName) && resultStatus === 'completed' && !isError && memory.success && <MemoryTool memory={memory.data} readOnly={readOnly} />}
         {toolName === 'research.search' && <ResearchSources calls={[canonicalProps]} lifecycle={lifecycle} />}
-        {retrieval && <ProgressTracker {...retrieval} className="min-w-0" />}
       </MessagePartBoundary>}
       {failed && <p role="alert" className="text-xs text-destructive">这一步未完成，请重试。</p>}
       {approval && <div className="space-y-2">

@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto'
 import type { RunView } from '@lyyzka/lingxios/ui'
 import { publicText,toolDisplay,toolDisplaySchema,resolveToolDisplay } from '../../../src/lib/runActivity.js'
-import type { RunTrace,TraceSpan,TraceStatus } from '../../../src/lib/runTrace.js'
+import type { RunTrace,TraceSpan,TraceStatus,TraceMoney,TracePricing } from '../../../src/lib/runTrace.js'
+import { traceCostTotals } from '../../../src/lib/traceCost.js'
 import { isEmbeddingTraceModel,readModelOperation,modelOperationLabel,toolWorkKind,type ModelOperation } from '../../../src/lib/runTrace.js'
 import type { HarnessToolPart } from './message-projection.js'
 
@@ -10,14 +11,17 @@ export interface PublicLlmTrace {
   tokensIn: number|null; tokensOut: number|null; cost: number|null; costEstimated: boolean
   callId?: string; apiKind?: 'chat'|'embedding'; startedAt?: number|null; completedAt?: number|null
   operation?: ModelOperation
+  costBreakdown?: TraceMoney[]; costPricing?: TracePricing
 }
 const opaque = (id: string) => createHash('sha256').update(id).digest('hex').slice(0,24)
 const number = (value: unknown): number|null => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
 const safe = (value: unknown): string|undefined => { const parsed = publicText.safeParse(value); return parsed.success ? parsed.data : undefined }
 function costTotals(calls: readonly TraceSpan[],complete: boolean) {
   const known = calls.filter(call=>call.cost !== null)
+  const costBreakdown = traceCostTotals(calls)
   return { cost: complete && calls.length > 0 && known.length === calls.length ? known.reduce((sum,call)=>sum+call.cost!,0) : null,
     ...(known.length ? { knownCost: known.reduce((sum,call)=>sum+call.cost!,0) } : {}),
+    ...(costBreakdown ? { costBreakdown } : {}),
     costIncomplete: !complete || known.length !== calls.length,
     costEstimated: known.some(call=>call.costEstimated) }
 }
@@ -27,7 +31,8 @@ function ledgerSpan(call: PublicLlmTrace,relative: (value: unknown)=>number|null
   const operation = readModelOperation(call.operation)
   return { id: `llm-${opaque(call.id)}`,name: call.apiKind === 'embedding' ? '向量编码' : operation ? modelOperationLabel[operation] : '模型调用',kind: call.apiKind === 'embedding' ? 'embedding' : 'llm',
     model: safe(call.model)?.slice(0,160) ?? '未知模型',status: call.status,start,end,durationMs: call.durationMs,
-    tokensIn: call.tokensIn,tokensOut: call.tokensOut,cost: call.cost,costEstimated: call.costEstimated,children: [] }
+    tokensIn: call.tokensIn,tokensOut: call.tokensOut,cost: call.cost,costEstimated: call.costEstimated,
+    ...(call.costBreakdown ? { costBreakdown: call.costBreakdown } : {}),...(call.costPricing ? { costPricing: call.costPricing } : {}),children: [] }
 }
 function status(lifecycle: RunView['lifecycle']): TraceStatus {
   return lifecycle === 'leased' || lifecycle === 'queued' ? 'running' : lifecycle === 'waiting' ? 'waiting'
@@ -108,7 +113,9 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
       tokensOut: item.kind === 'llm' && item.usageAvailable ? number(item.outputTokens) : null,
       cost: item.kind === 'llm' && item.usageAvailable ? recorded ? recorded.cost
         : !embedding && item.costMicros != null && (item.costMicros > 0 || item.inputTokens === 0 && item.outputTokens === 0) ? number(item.costMicros/1_000_000) : null : null,
-      costEstimated: item.kind === 'llm' ? recorded?.costEstimated ?? true : false,children: [] })
+      costEstimated: item.kind === 'llm' ? recorded?.costEstimated ?? true : false,
+      ...(item.kind === 'llm' && item.usageAvailable && recorded?.costBreakdown ? { costBreakdown: recorded.costBreakdown,
+        ...(recorded.costPricing ? { costPricing: recorded.costPricing } : {}) } : {}),children: [] })
   }
   const root = spans.get(snapshot.rootSpanId)
   if (!root) throw new Error('native trace root is missing')

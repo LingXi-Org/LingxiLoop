@@ -11,7 +11,8 @@ import { readVisualizeReference, visualizeSkill } from '../agent-runtime/visuali
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { nativeText } from '../im/message-types.js'
-import { readAuthorizedVisualizeDocument } from '../im/visualize.js'
+import { readAuthorizedVisualizeDocument, createVisualizePage } from '../im/visualize.js'
+import { readRunProjection } from '../agent-runtime/assistant-transport.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
@@ -106,6 +107,24 @@ test('published native worker loads unchanged skill, saves and reads a scoped fr
     await assert.rejects(readAuthorizedVisualizeDocument({ companyId, channelId: conversationId, userId: 'test-owner', path: '/etc/passwd' }))
     assert.match(nativeText(im.messages.at(-1)!.payload), /::visualize/)
     assert.equal(im.messages.at(-1)!.payload.metadata.custom.sourceMessageId, im.messages.at(-1)!.clientMsgNo)
+    // #356: a restored/SSE run must carry the real IM reference even when the
+    // browser never received that envelope. Its logical run ID is not an IM ID.
+    const restored = (await readRunProjection(api, first.run, true)).snapshot.message
+    assert.equal(restored.metadata.custom.sourceMessageId, im.messages.at(-1)!.clientMsgNo)
+    const admitted = await createVisualizePage({ companyId, channelId: conversationId, userId: 'test-owner',
+      request: { path, sourceMessageId: restored.metadata.custom.sourceMessageId, instanceKey: 'restored-reference' } })
+    assert.equal(admitted.path, path)
+    const receiptKey = im.messages.at(-1)!.clientMsgNo
+    const recorded = (await pool.query<{ echo: object }>('SELECT echo FROM im_send_acceptances WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3', [companyId, agentId, receiptKey])).rows[0]!
+    for (const patch of [{ channelId: 'wrong-room' }, { fromUid: 'wrong-agent' }, { clientMsgNo: 'wrong-alias' }, { messageSeq: 0 }]) {
+      await pool.query('UPDATE im_send_acceptances SET echo=$4::jsonb WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3', [companyId, agentId, receiptKey, JSON.stringify({ ...recorded.echo, ...patch })])
+      assert.equal((await readRunProjection(api, first.run, true)).snapshot.message.metadata.custom.sourceMessageId, undefined,
+        'invalid accepted echo cannot become a delivered visualization owner')
+    }
+    await pool.query('UPDATE im_send_acceptances SET echo=$4::jsonb,status=$5 WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3', [companyId, agentId, receiptKey, JSON.stringify(recorded.echo), 'pending'])
+    assert.equal((await readRunProjection(api, first.run, true)).snapshot.message.metadata.custom.sourceMessageId, undefined)
+    await pool.query("UPDATE im_send_acceptances SET status='accepted' WHERE company_id=$1 AND user_id=$2 AND client_nonce=$3", [companyId, agentId, receiptKey])
+    assert.equal((await readRunProjection(api, first.run, true)).snapshot.message.metadata.custom.sourceMessageId, receiptKey)
     exporting = true; phase = 0
     const second = await turn('visualize-export', '请导出刚才的可视化为独立HTML。')
     const exported = await api.readArtifact(second.run, 'visualize/native-fixture.html')

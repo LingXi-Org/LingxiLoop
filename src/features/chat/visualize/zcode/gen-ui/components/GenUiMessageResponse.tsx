@@ -6,8 +6,9 @@ import { GenUiCard } from "./GenUiCard.js";
 export const GenUiMessageResponse = memo(function GenUiMessageResponse({
   completed,
   messageKey,
+  awaitingDelivery = false,
   ...props
-}: MessageResponseProps & { completed: boolean; messageKey: string }) {
+}: MessageResponseProps & { completed: boolean; messageKey: string; awaitingDelivery?: boolean }) {
   const { intl } = useZCodeIntl();
   const parts = useMemo(
     () =>
@@ -17,7 +18,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
   const targets = useMemo(
     () =>
       parts.map((part) =>
-        part.kind === "ui" && props.workspacePath && props.sessionId
+        part.kind === "ui" && !awaitingDelivery && props.workspacePath && props.sessionId
           ? {
               workspacePath: props.workspacePath,
               workspaceIdentity: props.workspaceIdentity,
@@ -31,6 +32,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
       ),
     [
       parts,
+      awaitingDelivery,
       props.workspacePath,
       props.workspaceIdentity,
       props.workspaceRemoteSessionId,
@@ -64,7 +66,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
       >
         {intl.formatMessage({
           id:
-            part.kind === "pending"
+            part.kind === "ui" && awaitingDelivery ? "genUi.awaitingDelivery" : part.kind === "pending"
               ? props.streaming
                 ? "genUi.waiting"
                 : "genUi.incomplete"

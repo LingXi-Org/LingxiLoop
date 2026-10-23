@@ -74,7 +74,9 @@ export function mergeCanonicalMessages(
     } else if (previous && before?.harness && after.harness && message.role === 'assistant') {
       const old = before.harness, next = after.harness
       if (isOlderRun(old,next)) continue
-      const receipt = after.sequence !== null ? after : before
+      const sameResult = Boolean(next.resultId && old.resultId === next.resultId && old.requestVersion === next.requestVersion
+        && old.fence === next.fence && old.messageFence === next.messageFence)
+      const receipt = after.sequence !== null || !sameResult ? after : before
       // Failed runs keep visible prose; cancellation, supersession and new attempts still retract it.
       // shortcut: drafts survive only in this session; add durable recovery when they must survive a page reload.
       const content = next.lifecycle === 'failed' && !next.resultId
@@ -84,6 +86,7 @@ export function mergeCanonicalMessages(
       byId.set(key,{ ...message, content, metadata: { ...message.metadata, custom: { ...after,
         presentation: resolveMessagePresentation(content),
         sequence: receipt.sequence, clientMessageId: receipt.clientMessageId, imMessageId: receipt.imMessageId,
+        sourceMessageId: after.sourceMessageId ?? (sameResult ? before.sourceMessageId : undefined),
         harnessControl: after.harnessControl ?? before.harnessControl } } } as ThreadMessage)
     } else byId.set(key,message)
     const merged = byId.get(key)

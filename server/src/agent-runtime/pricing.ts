@@ -23,7 +23,7 @@ export function siliconFlowPricing(usdCny: number, model: keyof typeof rates = '
   // reading an old call never selects a tariff from the current wall clock.
   const hour = billedAt === undefined ? null : new Date(billedAt + 8 * 60 * 60 * 1000).getUTCHours()
   const offPeak = model === 'deepseek-ai/DeepSeek-V4.1-Flash' && hour !== null && hour >= 2 && hour < 8
-  return { currency: 'CNY' as const, ...rates[model],
+  return { currency: 'CNY' as const, version: 'siliconflow-cn-2026-10-22' as const, ...rates[model],
     ...(offPeak ? { inputPerMillion: 1, cachedInputPerMillion: 0.02, outputPerMillion: 4 } : {}), usdCny,
     ...(model === 'deepseek-ai/DeepSeek-V4.1-Flash' ? {
       tariff: billedAt === undefined ? 'standard-peak-estimate' : offPeak ? 'off-peak' : 'peak',

@@ -1,12 +1,17 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+import { mkdirSync,writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
+import { dirname } from 'node:path'
+import test from 'node:test'
+import { createRunView } from '@lyyzka/lingxios/ui'
 import { Pool } from 'pg'
-import { env } from '../env.js'
-import { createOpenAIClient } from '../llm-client.js'
-import { __setLlmClientOverrideForTesting,createEmbedding } from '../llm.js'
-import { __setLlmLedgerOverrideForTesting,recordLlmCall } from '../llm-ledger.js'
+import { createNativeMessage } from '../../../src/lib/nativeMessage.js'
+import { buildNativeRunTrace,buildRunTrace } from '../agent-runtime/run-trace.js'
 import { readPublicLlmTrace } from '../agent-runtime/trace-activity.js'
+import { env } from '../env.js'
+import { __setLlmClientOverrideForTesting,createEmbedding } from '../llm.js'
+import { createOpenAIClient } from '../llm-client.js'
+import { __setLlmLedgerOverrideForTesting,recordLlmCall } from '../llm-ledger.js'
 
 // Complete local HTTP provider -> captured invocation -> real PostgreSQL ledger
 // -> scoped public trace. Temporary tables and synthetic inputs only.
@@ -47,6 +52,13 @@ test('new Pro embedding records exact invocation endpoints and its captured curr
     assert.equal(row.tokensIn,10);assert.equal(row.tokensOut,0)
     assert.ok(Math.abs(row.cost!-0.0000001)<1e-15)
     assert.equal(row.costEstimated,true)
+    assert.ok(row.costBreakdown)
+    assert.equal(row.costBreakdown.length,1)
+    assert.equal(row.costBreakdown[0].currency,'CNY')
+    assert.ok(Math.abs(row.costBreakdown[0].amount-0.0000007)<1e-18)
+    assert.equal(row.costBreakdown[0].estimated,true)
+    assert.equal(row.costPricing?.inputPerMillion,0.07)
+    assert.equal(row.costPricing?.version,'siliconflow-cn-2026-10-22')
     const pricing = record.context.extras?.providerPricing as { billingItem: string }|undefined
     assert.ok(pricing)
     assert.equal(pricing.billingItem,'pro/baai/bge-m3.online.input-tokens')
@@ -55,6 +67,32 @@ test('new Pro embedding records exact invocation endpoints and its captured curr
       context: { ...record.context,extras: { callId: 'historical' } } },db,'historical-bge')
     const old = (await readPublicLlmTrace(identity,db)).find(call=>call.model === 'BAAI/bge-m3')!
     assert.equal(old.cost,null);assert.equal(old.startedAt,null);assert.equal(old.completedAt,null)
+    assert.equal(old.costBreakdown,undefined)
+    const ledgerBefore = (await db.query('SELECT id,model,cost_usd,extras FROM llm_calls ORDER BY id')).rows
+    const calls = await readPublicLlmTrace(identity,db)
+    const trace = buildRunTrace({ runId: 'run',createdAt: new Date(began).toISOString(),lifecycle: 'succeeded',tools: [],llm: calls })
+    assert.deepEqual(trace.root.costBreakdown,row.costBreakdown)
+    assert.equal(trace.root.cost,null)
+    const native = buildNativeRunTrace({ version: 1,runId: 'run',rootSpanId: 'root',requestVersion: 1,fence: 1,seq: 2,
+      revision: 'synthetic-cny',queuedAt: began,origin: began,truncated: false,spans: [
+        { spanId: 'root',parentSpanId: null,runId: 'run',kind: 'agent',state: 'complete',startedAt: began,completedAt: finished,
+          timingBasis: 'run-execution',seq: 2,revision: 'root',requestVersion: 1,fence: 1,attemptId: null },
+        { spanId: 'embedding',parentSpanId: 'root',runId: 'run',kind: 'llm',state: 'complete',startedAt: row.startedAt!,completedAt: row.completedAt!,
+          timingBasis: 'model-invocation',seq: 2,revision: 'call',requestVersion: 1,fence: 1,attemptId: 'attempt',callId: row.callId,
+          model: row.model,usageAvailable: true,inputTokens: row.tokensIn!,outputTokens: 0,costMicros: 0 },
+      ] },[],calls)
+    assert.equal(native.root.children.length,1)
+    assert.deepEqual(native.root.costBreakdown,row.costBreakdown)
+    assert.equal(native.root.cost,row.cost)
+    assert.deepEqual((await db.query('SELECT id,model,cost_usd,extras FROM llm_calls ORDER BY id')).rows,ledgerBefore,'presentation never rewrites historical model or settlement data')
+    if (process.env.ISSUE297_CNY_SNAPSHOTS) {
+      const snapshot = (runTrace: typeof trace) => ({ message: createNativeMessage({ id: 'run-run',role: 'assistant',createdAt: new Date(began).toISOString(),
+        content: [{ type: 'text',text: '合成计价验证完成。' }],status: { type: 'complete',reason: 'stop' },custom: { runId: 'run',runTrace,
+          activityPresentation: { version: 1 },harness: { ...createRunView('run'),requestVersion: 1,fence: 1,lifecycle: 'succeeded',delivery: 'delivered',artifacts: [] } } }) })
+      const destination = process.env.ISSUE297_CNY_SNAPSHOTS
+      mkdirSync(dirname(destination),{ recursive: true })
+      writeFileSync(destination,JSON.stringify({ live: snapshot(native),history: snapshot(trace),replay: snapshot(JSON.parse(JSON.stringify(trace))) }))
+    }
     assert.deepEqual(await readPublicLlmTrace({ ...identity,principalId: 'other' },db),[])
   } finally {
     __setLlmClientOverrideForTesting(null);__setLlmLedgerOverrideForTesting(null)
