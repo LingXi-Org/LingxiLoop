@@ -17,15 +17,14 @@ import { readAuthorizedVisualizeSnapshot } from '../im/visualize.js'
 import { siliconFlowPricingForModel } from '../agent-runtime/pricing.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
+import { assertLocalQualificationTarget } from './_local-qualification-target.js'
 
 // Opt-in only. Preparation/typechecking never executes a provider call.
 // Failure model: docs/evidence/issue-342/FAILURE-MODEL.md.
 test('real provider activates and delivers a synthetic interactive diagram without semantic review', {
   skip: process.env.LINGXIOS_LIVE_VISUALIZE_342 !== '1', timeout: 300000,
 }, async () => {
-  const database = new URL(env.DATABASE_URL)
-  assert.equal(database.hostname, '127.0.0.1')
-  assert.match(database.pathname, /^\/runtime342_[a-z0-9_]*test$/)
+  assertLocalQualificationTarget(env.DATABASE_URL)
   assert.equal(process.env.LINGXILOOP_DISABLE_EMBEDDINGS, '1', 'Keep unrelated embedding calls disabled in this narrow provider gate')
   assert.equal(new URL(env.OPENAI_BASE_URL).hostname, 'api.siliconflow.cn')
   assert.ok(process.env.ISSUE342_RUNTIME_VERSION, 'Require the exact candidate runtime version')
@@ -57,7 +56,7 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const accepted = await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version,
       messageId: 'visualize-provider-342-source', version: 1, author: { id: principalId, kind: 'human' }, mentions: [agentId],
-      text: 'Create a small interactive diagram comparing two invented stages, Gather and Check. Include one button labeled Switch stage that toggles between them and shows a short description.' },
+      text: 'Create a small interactive diagram with two invented stages, Gather and Check. Show exactly one stage at a time, initially Gather. Use the current stage name as its visible heading. Under Gather show the exact description "Collect the items."; under Check show "Review the items." Include one button labeled Switch stage that toggles the visible stage and description in both directions.' },
     { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation', codeExecution: 'disabled' })
     const identity = accepted.runs[0]; assert.ok(identity); await bindProductRun(pool, identity, channelId)
     const options: WorkerOptions & { semanticReview: 'selective' } = { controlPlane: api, policy: new ProductRuntimePolicy(),
