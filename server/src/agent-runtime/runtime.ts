@@ -26,6 +26,7 @@ import { verifyVisualizeCandidate } from './visualize-tools.js'
 import { runProductCallback } from './product-callbacks.js'
 import type { Queryable } from '../db/queryable.js'
 import { publicTextDeployment, publicTextModelOptions } from './public-text-deployment.js'
+import { readModelOperation } from '../../../src/lib/runTrace.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -151,6 +152,7 @@ export async function recordModelCall(observation: ModelCallObservation, context
     const binding = (await database.query<{ conversation_id: string }>('SELECT conversation_id FROM agent_run_bindings WHERE company_id=$1 AND run_id=$2',
       [observation.tenantId,observation.workId])).rows[0]
     const usage = observation.usage?.available ? observation.usage : undefined
+    const operation = readModelOperation(Reflect.get(observation, 'operation'))
     // The public observation exposes settlement time but no provider issue time.
     // Do not derive a tariff from callback time or completedAt minus latency;
     // the model pricing helper records its conservative standard-peak estimate.
@@ -164,6 +166,7 @@ export async function recordModelCall(observation: ModelCallObservation, context
         ...(binding ? { conversationId: binding.conversation_id } : {}),
         source: 'agent-os' as const,
         extras: { callId: observation.callId,apiKind: observation.purpose === 'embedding' ? 'embedding' : 'chat', pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+          ...(operation ? { operation } : {}),
           ...(observation.executionTiming ? { completedAt: observation.executionTiming.completedAt } : {}),
           ...(observation.logicalCallId ? { logicalCallId: observation.logicalCallId } : {}),
           ...(observation.attempt !== undefined ? { attempt: observation.attempt } : {}),
