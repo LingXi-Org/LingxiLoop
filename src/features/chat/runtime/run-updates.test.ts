@@ -53,6 +53,30 @@ const event = (draft: string): RunStreamEvent => ({ type: 'preview', preview: {
   kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', seq: 1, draft,
 } })
 
+test('delivery identities stay with their exact result across replay and revision', () => {
+  const original = project({ type: 'state', state: snapshot() })
+  if (original.message.role !== 'assistant') throw new Error('Expected assistant snapshot')
+  const envelope = sent('accepted-original', 7)
+  envelope.payload = { ...original.message, metadata: { ...original.message.metadata,
+    custom: { ...original.message.metadata.custom, sourceMessageId: 'accepted-original' } } }
+  const canonical = convertEnvelope(envelope, { participants, meId: 'human' })
+  const history = { ...EMPTY_CONVERSATION_CHAT_STATE, messages: [canonical] }
+  const replay = applyRunSnapshot(history, target, original)
+  assert.equal(metadata(replay.messages[0]).sourceMessageId, 'accepted-original')
+  assert.equal(metadata(replay.messages[0]).sequence, 7)
+
+  const next = snapshot('run', 'leased')
+  next.run.requestVersion = 2; next.run.fence = 2
+  const revised = project({ type: 'state', state: next })
+  const current = applyRunSnapshot(history, target, revised)
+  const record = metadata(current.messages[0])
+  assert.equal(record.sourceMessageId, undefined, 'the earlier visualization owner cannot authorize a later result')
+  assert.equal(record.imMessageId, undefined)
+  assert.equal(record.sequence, null)
+  assert.equal(record.clientMessageId, revised.message.id)
+  assert.equal(metadata(mergeCanonicalMessages([canonical], current.messages)[0]).sourceMessageId, undefined)
+})
+
 test('message updates require a recorded run timestamp and preserve it during previews', () => {
   assert.throws(() => project(event('preview')), /state must precede/)
   projections.clear()

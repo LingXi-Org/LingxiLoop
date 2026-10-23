@@ -15,9 +15,13 @@ export function VisualizeText({part,Text,readOnly}: {part:TextMessagePartProps;T
   if(message.role!=='assistant' || !/::|/.test(part.text)) return <Text {...part}/>
   const workspace = getWorkspaceSession()
   const conversationId = message.metadata.custom.conversationId
-  const source = message.metadata.custom.sourceMessageId
+  const custom = message.metadata.custom
+  const source = typeof custom.sourceMessageId === 'string' ? custom.sourceMessageId
+    : typeof custom.imMessageId === 'string' && typeof custom.sequence === 'number' && custom.sequence > 0 ? custom.imMessageId
+    : custom.harness ? undefined : message.id
   return <StreamingPart key={partKey}><GenUiMessageResponse completed={message.status?.type==='complete'} streaming={message.status?.type==='running'}
+    awaitingDelivery={message.status?.type==='complete' && !source}
     messageKey={message.id} workspacePath={readOnly ? undefined : workspace?.projectId} workspaceIdentity={getActiveCompanyId() ?? undefined}
-    sessionId={typeof conversationId==='string' ? conversationId : undefined} sourceMessageId={typeof source==='string' ? source : message.id}
+    sessionId={typeof conversationId==='string' ? conversationId : undefined} sourceMessageId={source}
     Text={Text} textOffset={textOffset}>{part.text}</GenUiMessageResponse></StreamingPart>
 }
