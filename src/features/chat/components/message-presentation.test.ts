@@ -61,3 +61,15 @@ test('known event order stays ordered while unknown legacy entries retain their 
   assert.deepEqual(orderActivityEntries(items).map(item => item.id), ['earlier', 'legacy', 'later', 'same-time'])
   assert.deepEqual(items.map(item => item.id), ['later', 'legacy', 'earlier', 'same-time'], 'ordering does not mutate live or page state')
 })
+
+// #353: knowledge source availability is meaningful even when the tool receipt succeeded.
+test('unavailable knowledge stays in attention until recovery without promoting cancelled or unrelated calls', () => {
+  const part = tool('reading', { toolName: 'knowledge__read_source', result: { status: 'completed', sourceStatus: 'unavailable' }, providerMetadata: annotation('reading', 'tool') })
+  assert.equal(messagePresentation(message([part]))[0]?.region, 'attention')
+  const recovered = message([part], { harness: { lifecycle: 'succeeded', goalOutcome: { status: 'satisfied' } } }, { type: 'complete', reason: 'stop' })
+  assert.equal(messagePresentation(recovered)[0]?.region, 'process')
+  for (const [toolName, status, expected] of [['knowledge.read_source', 'cancelled', 'process'], ['knowledge.read_source', 'unknown', 'attention'], ['fixture.tool', 'completed', 'process']]) {
+    const changed = { ...part, toolName, result: { status, sourceStatus: 'unavailable' } }
+    assert.equal(messagePresentation(message([changed]))[0]?.region, expected)
+  }
+})
