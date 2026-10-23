@@ -2,13 +2,14 @@ import { createHash } from 'node:crypto'
 import type { RunView } from '@lyyzka/lingxios/ui'
 import { publicText,toolDisplay,toolDisplaySchema,resolveToolDisplay } from '../../../src/lib/runActivity.js'
 import type { RunTrace,TraceSpan,TraceStatus } from '../../../src/lib/runTrace.js'
-import { isEmbeddingTraceModel } from '../../../src/lib/runTrace.js'
+import { isEmbeddingTraceModel,readModelOperation,modelOperationLabel,type ModelOperation } from '../../../src/lib/runTrace.js'
 import type { HarnessToolPart } from './message-projection.js'
 
 export interface PublicLlmTrace {
   id: string; model: string; status: 'complete'|'error'; durationMs: number|null
   tokensIn: number|null; tokensOut: number|null; cost: number|null; costEstimated: boolean
   callId?: string; apiKind?: 'chat'|'embedding'; startedAt?: number|null; completedAt?: number|null
+  operation?: ModelOperation
 }
 const opaque = (id: string) => createHash('sha256').update(id).digest('hex').slice(0,24)
 const number = (value: unknown): number|null => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
@@ -23,7 +24,9 @@ function costTotals(calls: readonly TraceSpan[],complete: boolean) {
 function ledgerSpan(call: PublicLlmTrace,relative: (value: unknown)=>number|null): TraceSpan {
   const start = relative(call.startedAt),candidate = relative(call.completedAt)
   const end = candidate !== null && (start === null || candidate >= start) ? candidate : null
-  return { id: `llm-${opaque(call.id)}`,name: call.apiKind === 'embedding' ? '向量编码' : '模型调用',kind: call.apiKind === 'embedding' ? 'embedding' : 'llm',
+  const operation = readModelOperation(call.operation)
+  return { id: `llm-${opaque(call.id)}`,name: call.apiKind === 'embedding' ? '向量编码' : operation ? modelOperationLabel[operation] : '模型调用',kind: call.apiKind === 'embedding' ? 'embedding' : 'llm',
+    ...(operation ? { operation } : {}),
     model: safe(call.model)?.slice(0,160) ?? '未知模型',status: call.status,start,end,durationMs: call.durationMs,
     tokensIn: call.tokensIn,tokensOut: call.tokensOut,cost: call.cost,costEstimated: call.costEstimated,children: [] }
 }
@@ -91,14 +94,15 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
     const parsed = toolDisplaySchema.safeParse(tool?.display)
     const display = resolveToolDisplay(tool?.toolName ?? item.name ?? '',item.state === 'complete' ? 'completed' : item.state,parsed.success ? parsed.data : undefined)
     const recorded = item.callId ? ledger.get(item.callId) : undefined
-    const embedding = item.kind === 'llm' && (recorded?.apiKind === 'embedding' || isEmbeddingTraceModel(item.model))
+    const operation = readModelOperation(Reflect.get(item,'operation')) ?? readModelOperation(recorded?.operation)
+    const embedding = item.kind === 'llm' && (operation === 'embedding' || recorded?.apiKind === 'embedding' || isEmbeddingTraceModel(item.model))
     const detail = item.kind === 'llm' ? '模型调用：包含准入、请求与用量结算。' : item.kind === 'agent'
       ? '实际执行区间；排队时间单独记录。' : safe(display.purpose)
     const durationMs = item.startedAt !== null && item.completedAt !== null && item.completedAt >= item.startedAt
       ? item.completedAt-item.startedAt : null
-    spans.set(item.spanId,{ id: item.spanId,name: item.kind === 'agent' ? item.childRunId ? '子任务' : '运行' : item.kind === 'llm' ? embedding ? '向量编码' : '模型调用' : safe(display.title)?.slice(0,160) ?? '工具调用',
+    spans.set(item.spanId,{ id: item.spanId,name: item.kind === 'agent' ? item.childRunId ? '子任务' : '运行' : item.kind === 'llm' ? embedding ? '向量编码' : operation ? modelOperationLabel[operation] : '模型调用' : safe(display.title)?.slice(0,160) ?? '工具调用',
       kind: embedding ? 'embedding' : item.kind,status: item.state === 'failed' ? 'error' : item.state,start: relative(item.startedAt),end: relative(item.completedAt),durationMs,
-      ...(item.kind === 'llm' ? { model: safe(item.model)?.slice(0,160) ?? '未知模型' } : {}),detail,
+      ...(item.kind === 'llm' ? { model: safe(item.model)?.slice(0,160) ?? '未知模型',...(operation ? { operation } : {}) } : {}),detail,
       ...(item.kind === 'tool' && parsed.success ? { input: display.input,output: safe(display.summary) } : {}),
       tokensIn: item.kind === 'llm' && item.usageAvailable ? number(item.inputTokens) : null,
       tokensOut: item.kind === 'llm' && item.usageAvailable ? number(item.outputTokens) : null,
