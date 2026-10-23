@@ -1,0 +1,88 @@
+{
+  "id": "01a1685c-c8f7-7fc7-8e2d-35d077706be9",
+  "runner": {
+    "name": "e2e",
+    "version": "0.17.0"
+  },
+  "status": "passed",
+  "exitCode": 0,
+  "startedAt": "2026-10-23T10:44:35.135Z",
+  "finishedAt": "2026-10-23T10:46:43.910Z",
+  "vcs": {
+    "commit": "77f857e0438d216b9b517c05d9d6c88caba12a8b",
+    "branch": "fix/346-course-teacher-membership",
+    "dirty": true
+  },
+  "syntheticOnly": true,
+  "originalCaseVerified": false,
+  "productionOperations": 0,
+  "modelCalls": 0,
+  "results": [
+    {
+      "title": [
+        "course administrator explicitly adds one company teacher and persists the readback"
+      ],
+      "status": "passed",
+      "artifacts": [
+        {
+          "path": "course-teacher-readback.png",
+          "sha256": "836c7ea1ffd4e65498dbef54a1a34dfaba2267409d6b360fbfd4a680f8094e60"
+        }
+      ]
+    },
+    {
+      "title": [
+        "teacher does not access the company directory or offer assignment"
+      ],
+      "status": "passed",
+      "artifacts": []
+    },
+    {
+      "title": [
+        "student does not access the company directory or offer assignment"
+      ],
+      "status": "passed",
+      "artifacts": []
+    },
+    {
+      "title": [
+        "directory failure can retry without a premature write"
+      ],
+      "status": "passed",
+      "artifacts": []
+    },
+    {
+      "title": [
+        "assign-failure preserves the selected teacher and retry key"
+      ],
+      "status": "passed",
+      "artifacts": []
+    },
+    {
+      "title": [
+        "readback-failure preserves the selected teacher and retry key"
+      ],
+      "status": "passed",
+      "artifacts": []
+    },
+    {
+      "title": [
+        "management shows organization scope and explicitly assigns the selected course"
+      ],
+      "status": "passed",
+      "artifacts": [
+        {
+          "path": "management-course-scope.png",
+          "sha256": "e4d84f0f089a9b595a94da3d98119c46599c4d8a797027fc1489d4865eced740"
+        }
+      ]
+    },
+    {
+      "title": [
+        "late assignment readback cannot overwrite another course or close its new dialog"
+      ],
+      "status": "passed",
+      "artifacts": []
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { Copy01Icon, Delete02Icon, UserAdd01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,7 @@ import { useAuth } from '@/stores/auth'
 import { companiesApi } from '@/features/companies/api'
 import { learningApi } from '../api'
 import type { ApiCourseMember, ApiProjectInvitation, LearningSpace } from '../contracts'
+import { CourseTeacherAssignmentDialog } from '../components/CourseTeacherAssignmentDialog'
 
 export function CourseMembersSection({ space }: { space: LearningSpace }) {
   const isCompanyAdmin = useAuth(state => state.companies.some(company => company.id === space.companyId && company.isAdmin))
@@ -25,6 +26,7 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
   const canRevoke = canView && space.canRevokeInvitations
   const canRemove = canView && space.canRemoveMembers
   const canPromote = canView && isCompanyAdmin && space.status === 'ACTIVE'
+  const canAddTeacher = canPromote && space.canUpdateMembers
   const canWrite = canInvite || canRevoke || canRemove || canPromote
   const [members, setMembers] = useState<ApiCourseMember[]>([])
   const [invitations, setInvitations] = useState<ApiProjectInvitation[]>([])
@@ -33,7 +35,12 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
   const [loaded, setLoaded] = useState(false)
   const [busy, setBusy] = useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [teacherOpen, setTeacherOpen] = useState(false)
   const [error, setError] = useState('')
+  const scope = `${space.companyId}:${space.courseId}`
+  const currentScope = useRef(scope), mounted = useRef(false)
+  currentScope.current = scope
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
 
   const load = useCallback(async () => {
     if (!canView || !space.courseId) return
@@ -58,6 +65,21 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
   useEffect(() => {
     if (!canInvite) setInviteOpen(false)
   }, [canInvite])
+  useEffect(() => { if (!canAddTeacher) setTeacherOpen(false) }, [canAddTeacher])
+  const loadTeachers = useCallback(async () => {
+    const rows = await companiesApi.listCompanyMembers(space.companyId)
+    return rows.filter(member => member.role === 'teacher' && !member.courses.some(course => course.courseId === space.courseId))
+      .map(member => ({ id: member.id, label: `${member.name} · ${member.email}` }))
+  }, [space.companyId, space.courseId])
+  const assignTeacher = async (userId: string, key: string) => {
+    if (!canAddTeacher || !space.courseId) throw new Error('当前课程不可授权')
+    await learningApi.addCourseTeacher(space.courseId, userId, key)
+    const nextMembers = await learningApi.listCourseMembers(space.courseId)
+    if (!nextMembers.some(member => member.id === userId && member.role === 'teacher')) throw new Error('课程教师资格尚未确认，请刷新后重试。')
+    if (!mounted.current || currentScope.current !== scope) return
+    setMembers(nextMembers)
+    notifyAction({ title: '课程教师已加入', description: space.title })
+  }
 
   if (!canView) {
     return <Alert><AlertDescription>你可以查看课程学习内容，但没有管理成员与分享邀请的权限。</AlertDescription></Alert>
@@ -100,13 +122,13 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
     if (busy || !canPromote) return
     if (!await confirmSensitiveAction({
       title: `将 ${member.name} 转为教师？`,
-      description: '将退出当前及其他已加入的课程，保留历史学习记录，成为可创建课程、邀请学生的普通教师。对方需要重新登录。',
+      description: '将退出当前及其他已加入的课程，保留历史学习记录，成为普通教师。转换后请使用“添加课程教师”明确加入指定课程，才能在该课程发布作业。对方需要重新登录。',
       confirmLabel: '转为教师', tone: 'warning',
     })) return
     setBusy(true)
     try {
       await toastAction(companiesApi.promoteStudent(space.companyId, member.id, space.projectId), {
-        loading: '正在转换教师身份', success: '已转为教师并退出原课程', error: '身份转换失败，请刷新后重试',
+        loading: '正在转换教师身份', success: '已转为组织教师，请通过“添加课程教师”授予指定课程权限', error: '身份转换失败，请刷新后重试',
       })
       await load()
     } catch { /* Toast owns the visible error state. */ }
@@ -162,7 +184,9 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
         <CardHeader>
           <CardTitle>课程成员</CardTitle>
           <CardDescription>查看课程成员及其课程角色。</CardDescription>
-          {canInvite && <div className="justify-self-end"><Button type="button" size="sm" onClick={() => setInviteOpen(true)}><HugeiconsIcon icon={UserAdd01Icon} strokeWidth={2} data-icon="inline-start" />创建邀请</Button></div>}
+          <p className="text-sm text-muted-foreground">组织教师身份不会自动加入课程。</p>
+          <div className="flex flex-wrap justify-self-end gap-2">{canAddTeacher && <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setTeacherOpen(true)}>添加课程教师</Button>}
+          {canInvite && <Button type="button" size="sm" onClick={() => setInviteOpen(true)}><HugeiconsIcon icon={UserAdd01Icon} strokeWidth={2} data-icon="inline-start" />创建邀请</Button>}</div>
         </CardHeader>
         <CardContent>
           {loading && !loaded ? <ResourceSkeleton variant="table" columns={4} count={5} label="正在加载课程成员" /> : (
@@ -185,6 +209,7 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
           {loaded && invitations.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">暂无课程邀请。</p>}
         </CardContent>
       </Card>
+      {canAddTeacher && teacherOpen && <CourseTeacherAssignmentDialog key={`${space.companyId}:${space.courseId}`} title="添加课程教师" description={`选择已加入本公司的教师，加入“${space.title}”。`} choiceLabel="公司教师" loadOptions={loadTeachers} assign={assignTeacher} onClose={() => setTeacherOpen(false)} />}
       <Dialog open={canInvite && inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>创建课程邀请</DialogTitle><DialogDescription>可限定邮箱、有效期与最多使用次数。提交前会再次确认。</DialogDescription></DialogHeader>

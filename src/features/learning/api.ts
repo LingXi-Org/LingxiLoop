@@ -7,6 +7,8 @@ export const learningApi = {
     http<{ ok: true; avatarUrl?: string; avatarSeed?: string | null }>(`/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),
   listCourseMembers: (courseId: string) =>
     http<ApiCourseMember[]>(`/courses/${encodeURIComponent(courseId)}/members`),
+  addCourseTeacher: (courseId: string, userId: string, idempotencyKey: string) =>
+    http<{ ok: true; userId: string; role: 'TEACHER' }>(`/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(userId)}`, { method: 'PUT', body: JSON.stringify({ role: 'TEACHER', idempotencyKey }) }),
   updateCourseMember: (courseId: string, userId: string, role: 'teacher' | 'learner') =>
     http<{ ok: true }>(`/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(userId)}`, { method: 'PATCH', body: JSON.stringify({ role }) }),
   removeCourseMember: (courseId: string, userId: string) =>
