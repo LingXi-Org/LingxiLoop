@@ -9,8 +9,7 @@ import { chatTransport } from '../runtime/transport'
 import { DeliveryCard } from './RunResultCards'
 import { ElicitationForm } from '@/components/assistant-ui/elements/elicitation-form'
 import { hasQuestionnaireWait } from '../runtime/questionnaire-wait'
-import { inputOwner, messagePresentation } from './message-presentation'
-import { parsePresentationArtifact } from '@/features/presentations/contracts'
+import { inputOwner } from './message-presentation'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const message = useAuiState(state => state.message)
@@ -39,9 +38,6 @@ function HarnessDetailsContent({ metadata }: { metadata: LingxiMessageMetadata }
   const [resolvedApproval, setResolvedApproval] = useState<string | null>(null)
   const inFlight = useRef(false)
   const active = view.lifecycle === 'queued' || view.lifecycle === 'leased' || view.lifecycle === 'waiting'
-  const hasAnswer = view.artifacts.length > 0 || messagePresentation(message).some(({ part, region, annotation }) => region === 'body' && (part.type === 'text' ? Boolean(part.text.trim())
-    : part.type === 'data' ? part.name === 'presentation-artifact' && Boolean(parsePresentationArtifact(part.data)?.artifactId.trim())
-    : ['image', 'file', 'generative-ui'].includes(part.type) || annotation?.kind === 'result' || annotation?.purpose === 'result'))
   async function perform(action: () => Promise<unknown>) {
     if (inFlight.current) return
     inFlight.current = true
@@ -67,7 +63,6 @@ function HarnessDetailsContent({ metadata }: { metadata: LingxiMessageMetadata }
     {metadata.runConnection === 'inaccessible' && <p role="status">你已无法访问此回复。</p>}
     {metadata.runConnection === 'missing' && <p role="status">此回复已不可用，请重新发送消息。</p>}
     {view.lifecycle === 'cancelled' && <p role="status">{metadata.terminalNotice?.text ?? '已取消'}</p>}
-    {view.lifecycle === 'succeeded' && !hasAnswer && (outcome?.status === 'partial' || outcome?.status === 'blocked') && <ErrorPrimitive.Root className="text-destructive">本次请求未能生成答复，请补充信息后重试。</ErrorPrimitive.Root>}
     {view.delivery === 'failed' && <ErrorPrimitive.Root className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
       <p>答复投递失败，请重试。</p>
       {metadata.harnessControl && <Button type="button" size="sm" className="mt-2" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button>}
