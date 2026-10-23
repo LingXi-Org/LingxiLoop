@@ -26,6 +26,13 @@ export function toolWorkKind(action: string): WorkKind {
   return 'tool'
 }
 export const workKindLabels = { tool: '工具',skill: '技能',retrieval: '检索与阅读',subtask: '子任务' } as const
+export const traceMoneySchema = z.object({ currency: z.enum(['CNY','USD']),amount: z.number().finite().nonnegative(),estimated: z.boolean() }).strict()
+export type TraceMoney = z.infer<typeof traceMoneySchema>
+export const tracePricingSchema = z.object({ currency: z.literal('CNY'),inputPerMillion: z.number().finite().nonnegative(),
+  cachedInputPerMillion: z.number().finite().nonnegative(),outputPerMillion: z.number().finite().nonnegative(),
+  version: z.literal('siliconflow-cn-2026-10-22').optional(),billingItem: z.literal('pro/baai/bge-m3.online.input-tokens').optional(),
+}).strict()
+export type TracePricing = z.infer<typeof tracePricingSchema>
 export interface TraceSpan {
   id: string; name: string; kind: 'agent'|'llm'|'embedding'|'tool'; status: TraceStatus
   start: number|null; end: number|null; durationMs: number|null
@@ -34,6 +41,8 @@ export interface TraceSpan {
   input?: { label: string; value: string }[]; output?: string
   tokensIn: number|null; tokensOut: number|null; cost: number|null; costEstimated: boolean
   knownCost?: number; costIncomplete?: boolean
+  /** Original recorded currencies; legacy cost/knownCost retain their USD budget basis. */
+  costBreakdown?: TraceMoney[]; costPricing?: TracePricing
   children: TraceSpan[]
 }
 const span: z.ZodType<TraceSpan> = z.lazy(() => z.object({
@@ -42,6 +51,8 @@ const span: z.ZodType<TraceSpan> = z.lazy(() => z.object({
   input: z.array(z.object({ label,value: publicText.pipe(z.string().max(500)) }).strict()).max(8).optional(),
   output: publicText.optional(),tokensIn: metric,tokensOut: metric,cost: metric,costEstimated: z.boolean(),
   knownCost: z.number().finite().nonnegative().optional(),costIncomplete: z.boolean().optional(),
+  costBreakdown: z.array(traceMoneySchema).min(1).max(2).refine(items=>new Set(items.map(item=>item.currency)).size === items.length).optional(),
+  costPricing: tracePricingSchema.optional(),
   children: z.array(span).max(100),
 }).strict())
 export const runTraceSchema = z.object({ version: z.literal(1),startedAt: metric,root: span,
