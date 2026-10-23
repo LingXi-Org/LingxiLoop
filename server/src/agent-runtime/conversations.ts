@@ -6,6 +6,7 @@ import { wukongClient } from '../im/wukong.js'
 import type { ImChannelProfile } from '../im/types.js'
 
 import type { Queryable } from '../db/queryable.js'
+import { defaultLearningAgentId } from '../im/routing.js'
 
 type Control = Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'conversations'>
 
@@ -50,9 +51,8 @@ export async function syncConversationPolicy(control: Control, companyId: string
         ...control ? ['control' as const] : []] })
     }
     const agents = participants.filter(member => member.kind === 'agent' && member.capabilities.includes('speak'))
-    const defaultAgentId = agents.find(agent => agent.id === binding.leader_agent_id)?.id
-      ?? agents.find(agent => members.find(member => member.id === agent.id)?.preset_key === 'nova')?.id
-      ?? agents.find(agent => members.find(member => member.id === agent.id)?.preset_key === 'forge')?.id ?? agents[0]?.id
+    const defaultAgentId = defaultLearningAgentId(agents.map(agent => ({ id: agent.id, kind: agent.kind,
+      presetKey: members.find(member => member.id === agent.id)?.preset_key })), binding.leader_agent_id ?? undefined)
     const value = { tenantId: companyId, conversationId, kind: binding.kind,
       ...(binding.kind === 'group' ? { agentMentions: { maxDepth: 8, maxRuns: 32 } } : {}),
       owner: { kind: 'organization' as const, id: companyId }, participants, ...defaultAgentId ? { defaultAgentId } : {} }

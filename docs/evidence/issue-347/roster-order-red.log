@@ -1,0 +1,38 @@
+✔ human routing is deterministic for mentions, replies and the default leader (2.766255ms)
+✔ agent webhook echoes never create a second dispatch path (0.260231ms)
+✖ custom Agent default is stable across roster query order (3.889422ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 2
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 431.639801
+
+✖ failing tests:
+
+test at server/src/__tests__/im-routing.test.ts:1:1272
+✖ custom Agent default is stable across roster query order (3.889422ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    [
+  +   'b-specialist'
+  -   'a-specialist'
+    ]
+  
+      at TestContext.<anonymous> (/workspace/issue347-group-wake/server/src/__tests__/im-routing.test.ts:30:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'b-specialist' ],
+    expected: [ 'a-specialist' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
