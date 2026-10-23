@@ -8,8 +8,6 @@
 @import "./experience.css";
 @import "shadcn/tailwind.css";
 @import "../features/chat/visualize/zcode.css";
-@import "../components/vendor/react-chat-elements/ReplyMessage.css";
-@import "../components/vendor/react-chat-elements/lingxi-reply-message.css";
 @source "../../node_modules/streamdown/dist/*.js";
 @source "../../node_modules/@streamdown/code/dist/*.js";
 @source "../../node_modules/@streamdown/math/dist/*.js";
