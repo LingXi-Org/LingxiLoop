@@ -19,16 +19,16 @@ import { installRecordingWukong } from './_recording-wukong.js'
 import { visualizeReferences } from '../agent-runtime/visualize-projection.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { answerSegment } from '../../../src/lib/answerSegment.js'
+import { installProductionModelTransport } from './_production-model-transport.js'
 
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
 after(async () => { await teardownAll(); await im?.close() })
 
-test('production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion', { timeout: 180000 }, async () => {
+test('production workers always expose full tools and disable thinking even with legacy auto configuration and stream only body text before completion', { timeout: 180000 }, async t => {
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const body = '第一段\n\n第二段 **正文**', privateText = 'private-reasoning-fixture'
-  const originalBaseUrl = env.OPENAI_BASE_URL
   for (const mode of ['auto', 'deep']) {
     const requests: Record<string, unknown>[] = []
     let release!: () => void
@@ -37,7 +37,8 @@ test('production workers always expose full tools and disable thinking even with
       let raw = ''
       for await (const chunk of req) raw += chunk
       const request = JSON.parse(raw)
-      assert.equal(request.response_format?.type, 'json_object')
+      assert.equal(request.response_format, undefined, 'Actual DeepSeek tools profile omits incompatible JSON response mode')
+      assert.equal(request.model, 'deepseek-ai/DeepSeek-V4.1-Flash')
       requests.push(request)
       const usage = { prompt_tokens: 100, completion_tokens: 10 }
       if (!request.stream) {
@@ -66,7 +67,9 @@ test('production workers always expose full tools and disable thinking even with
     })
     await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
-    env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
+    const transport = installProductionModelTransport(env, `http://127.0.0.1:${address.port}/v1`)
+    t.after(() => transport.restore())
+    assert.equal(runtimeModelConfiguration({ id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL }, 90000).contextWindowTokens, 1_000_000)
     process.env.AGENT_OS_RESPONSE_POLICY = mode === 'deep' ? 'deep' : 'auto'
     process.env.LINGXIOS_SERVICE_TOKEN = 'nonthinking-integration-service-token'
     // Keep health listeners outside the ephemeral ports used by the fixture servers.
@@ -111,7 +114,19 @@ test('production workers always expose full tools and disable thinking even with
     let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
     try {
       worker = await startLingxiOSWorker()
-      while (!wire.includes('第一段')) { timeout.throwIfAborted(); await delay(20) }
+      while (!wire.includes('第一段')) {
+        timeout.throwIfAborted()
+        const state = await api.readRunState(run)
+        if (state && ['failed', 'cancelled', 'succeeded'].includes(state.run.status)) {
+          const events = await api.readEvents(run, 0)
+          const diagnostics = events.events.find(event => event.kind === 'run.failed')?.data.compactionDiagnostics as { reason?: unknown; contextWindowTokens?: unknown; hardLimitTokens?: unknown; estimatedTokens?: unknown } | undefined
+          assert.fail(JSON.stringify({ phase: 'before-first-preview', status: state.run.status, providerRequests: requests.length,
+            reason: diagnostics?.reason === 'irreducible_context' ? diagnostics.reason : 'unknown',
+            ...Object.fromEntries(Object.entries(diagnostics ?? {}).filter(([key, value]) =>
+              ['contextWindowTokens', 'hardLimitTokens', 'estimatedTokens'].includes(key) && typeof value === 'number')) }))
+        }
+        await delay(20)
+      }
       assert.doesNotMatch(wire, /private-reasoning-fixture/)
       assert.equal((await api.readRunState(run))?.message, null, 'body preview must arrive before provider completion')
       release()
@@ -119,11 +134,12 @@ test('production workers always expose full tools and disable thinking even with
       assert.equal((await api.readRunState(run))?.message?.body, body)
       assert.deepEqual(im.messages.filter(message => message.channelId === conversationId).map(message => nativeText(message.payload)), [body])
       assert.equal(requests.filter(request => request.stream).length, 2)
+      assert.equal(transport.requests, requests.length, 'Every model request went only to the local stub')
       assert.equal(requests.length, 2, 'the invalid-tool correction and answer must not trigger a default content review')
       for (const request of requests) {
         assert.equal(request.enable_thinking, false)
         assert.equal(request.thinking,undefined)
-        assert.equal((request.response_format as {type:string}|undefined)?.type,'json_object')
+        assert.equal(request.response_format, undefined)
         assert.equal(request.reasoning_effort, undefined)
         assert.equal(request.thinking_budget, undefined)
       }
@@ -195,7 +211,7 @@ test('production workers always expose full tools and disable thinking even with
       await worker?.stop(); await stopLingxiOSControl()
       provider.closeAllConnections()
       await new Promise<void>(resolve => provider.close(() => resolve()))
-      env.OPENAI_BASE_URL = originalBaseUrl
+      transport.restore()
     }
     if (streamError) throw streamError
   }
