@@ -50,6 +50,27 @@ test('context bounds automatic search and persists Agent receipts before asynchr
   const work = await api.connectWorker({ workerId: 'context-latency', workKinds: ['turn'] }).claimWork()
   assert.ok(work)
   const provider = createProductContext([...learningTools, ...knowledgeTools, ...createCanvasTools(lingxiOSControl)]).contextProvider
+  const beforeSearch = openNotebookClient.search, beforeEnabled = process.env.OPEN_NOTEBOOK_ENABLED
+  let unsolicitedSearches = 0
+  openNotebookClient.search = async () => { unsolicitedSearches++; return [] }
+  process.env.OPEN_NOTEBOOK_ENABLED = 'true'
+  try {
+    const ordinary = await provider.loadContext({ ...work, meta: { ...work.meta, text: 'What is 2 + 2?' } })
+    assert.equal(unsolicitedSearches, 0, 'an ordinary answer must not wait for unrequested text/vector retrieval')
+    assert.deepEqual(ordinary.dynamic?.knowledgeRetrieval, { status: 'on_demand' })
+    assert.ok(ordinary.capabilities.includes('knowledge'), 'on-demand preserves authorized evidence tools')
+    assert.deepEqual(ordinary.evidence, [])
+    const attached = await provider.loadContext({ ...work, meta: { ...work.meta,
+      attachments: [{ id: JSON.stringify(['input','fixture-attachment']), text: 'A supplied source that requires grounding.' }] } })
+    assert.equal(unsolicitedSearches, 2, 'a supplied attachment retains required source preparation')
+    assert.deepEqual(attached.dynamic?.knowledgeRetrieval, { status: 'no_matches', matchedChunks: 0, processingSources: 0 })
+  } finally {
+    openNotebookClient.search = beforeSearch
+    if (beforeEnabled === undefined) delete process.env.OPEN_NOTEBOOK_ENABLED; else process.env.OPEN_NOTEBOOK_ENABLED = beforeEnabled
+  }
+  // This registered learning workflow keeps its source-dependent preparation.
+  await pool.query(`INSERT INTO context_threads(id,company_id,project_id,context_type,context_id,channel_id,created_by)
+    VALUES('latency-learning-context',$1,$2,'LEARNING','required-learning-sources',$3,'test-owner')`, [companyId, projectId, conversationId])
   let searches = 0, disconnected = 0, onSearch: (() => void) | undefined, firstSearchAt: number | undefined
   const upstream = createServer(async (req, res) => {
     for await (const _chunk of req) { /* consume the local fixture request */ }

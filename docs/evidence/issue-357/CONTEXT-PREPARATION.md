@@ -40,6 +40,33 @@ synthetic model/tool scenario against 3.8.5 and the candidate used 8 versus 3 mo
 calls, retaining one save, one read-back and a truthful final outcome, with no
 auxiliary review. These counts do not establish a production latency improvement.
 
+## First-turn retrieval on demand
+
+The third stage changes the product harness policy. An ordinary interactive turn
+with no attachment or registered source-dependent workflow no longer starts
+text/vector retrieval before the model. `on_demand` means retrieval has not run;
+it is not an empty result or an unavailable service. Authorized knowledge tools
+remain present, and the instructions require their use before asserting facts
+that depend on course or case sources. There is no additional model router,
+fast-model path or language-keyword authority decision.
+
+Supplied attachments, homework/Canvas/delegated work, non-interactive work and
+registered learning, homework, case, takeover or intervention context retain
+automatic source preparation. Workflow classification is read from the current
+authorized database scope, not cached permissions. Ordinary teacher operations
+do not acquire a source obligation merely because the room belongs to a course.
+The changed harness version and course-evidence skill version participate in the
+runtime binding; release must drain old work or preserve its original runtime,
+not bypass a binding mismatch or reset its budget.
+
+The prior behavior failed a regression requiring zero unsolicited searches
+(`2 !== 0`). Owning PostgreSQL tests preserve supplied-attachment retrieval,
+registered case source-version checks, source/audience revocation, real
+`unavailable` results from explicit tools, frozen evidence, cancellation and
+durable read-receipt recovery. This eliminates an avoidable first-turn dependency
+for ordinary questions. It does not prove that a long multi-source production
+request now reaches its first useful answer within a specific time.
+
 ## Timing interpretation
 
 The existing runtime `input.loaded` diagnostic measures initial context duration. Provider `providerFirstContentMs` can include process text, so it is not equivalent to first useful answer. Public answer events can identify the first answer segment, but unavailable event timestamps or browser paint times must remain unknown. No missing historical timestamp is reconstructed from duration or sequence numbers.
