@@ -82,6 +82,17 @@ test('revoked tools remove preloaded skill even when a stale prompt is supplied'
   assert.equal(buildPromptContext({ ...current, work: { ...current.work, meta: { mode: 'chat' } } }, policy, 1).systemInstructions.includes(visualizeSkill.body), false)
 })
 
+test('duplicate literal readback is conditional on visible current original and matched host proof', () => {
+  const instructions = visualizeHostInstructions('/authorized/output')
+  assert.match(instructions, /complete literal original.*current request.*current context/i)
+  assert.match(instructions, /readback\.status.*matched.*version.*sourceHash/i)
+  for (const condition of ['restored', 'truncated', 'missing', 'changed', 'known']) assert.ok(instructions.includes(condition))
+  assert.match(instructions, /otherwise.*visualize\.read/i)
+  assert.match(instructions, /not.*semantic.*browser/i)
+  assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411')
+  assert.notEqual(createProductHarness(tools).version, '3.8.6-on-demand-evidence-1')
+})
+
 test('body and version independently invalidate the compiled full-skill identity', () => {
   const before = buildPromptContext(context(), policy, 0)
   for (const next of [{ ...visualizeSkill, version: 'next' }, { ...visualizeSkill, body: visualizeSkill.body + '\nChanged fixture constraint.' }]) {

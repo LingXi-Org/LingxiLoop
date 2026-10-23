@@ -52,6 +52,24 @@ test('full HTML gets actionable native input failure and never writes a document
   assert.equal(saved.ok, true)
   assert.equal((await pool.query('SELECT count(*)::int AS count FROM im_visualize_documents')).rows[0].count, 1)
 })
+test('literal save proves the exact readback before return and rejects stale version, hash and request', async () => {
+  const tool = visualizeTools.find(tool => tool.action === 'visualize.save')!
+  const ctx = withVisualizeAuthoringFixture({ ...context(''), action: { action: tool.action } } as unknown as ActionContext)
+  const input = tool.parse({ name: 'exact-readback', html: '<div>Gather collects items. Check reviews those items.</div>' })
+  await tool.authorize(ctx, input)
+  const saved = await tool.execute(ctx, input)
+  assert.equal(saved.ok, true)
+  const value = saved.value as { path: string; version: number; sourceHash: string; readback?: unknown }
+  assert.deepEqual(value.readback, { status: 'matched', requestVersion: 1, version: value.version,
+    sourceHash: value.sourceHash, completeLiteralInput: true, semanticValidation: false, browserValidation: false })
+  assert.equal((await tool.verify!(ctx, input, value)).status, 'passed')
+  assert.equal((await tool.verify!(ctx, input, { ...value, version: value.version + 1 })).status, 'failed')
+  assert.equal((await tool.verify!(ctx, input, { ...value, sourceHash: '0'.repeat(64) })).status, 'failed')
+  assert.equal((await tool.verify!({ ...ctx, requestVersion: 2 }, input, value)).status, 'failed')
+  await assert.rejects(tool.verify!(ctx, input, { ...value, path: '/another-conversation/not-authorized.html' }))
+  await pool.query('UPDATE im_visualize_documents SET version=version+1 WHERE company_id=$1 AND path=$2', [companyId, value.path])
+  assert.equal((await tool.verify!(ctx, input, value)).status, 'failed', 'same bytes in a newer version are not this save receipt')
+})
 test('code-only own-save references request repair; exports, fallbacks and examples remain valid', async () => {
   const doc = await saveVisualizeDocument({ companyId, channelId, userId, agentId, runId, name: 'numerical-check', html: '<div>Complete chart fixture</div>' })
   const reference = `::visualize${JSON.stringify({ path: doc.path })}`

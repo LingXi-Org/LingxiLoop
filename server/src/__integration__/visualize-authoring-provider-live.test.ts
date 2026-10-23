@@ -3,6 +3,7 @@ import { test } from 'node:test'
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { isAbsolute, relative, resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { releaseVersions } from '@lyyzka/lingxios'
 import { createWorker, type WorkerOptions } from '@lyyzka/lingxios/worker'
@@ -44,6 +45,9 @@ test('real provider activates and delivers a synthetic interactive diagram witho
   }
   await ensureSchemaOnce(); await resetAllTables()
   const output = process.env.E2E_VISUALIZE_LIVE_OUTPUT ?? '.e2e/visualize-provider-342'
+  const outputRelative = relative(process.cwd(), resolve(output))
+  assert.ok(outputRelative && outputRelative !== '..' && !outputRelative.startsWith('../') && !isAbsolute(outputRelative),
+    'The official browser output must be inside this project; fail before provider execution')
   await mkdir(output, { recursive: true })
   const report: Record<string, unknown> = { status: 'running', runtime: releaseVersions.runtime, syntheticRequest: true,
     productionOperations: 0, realProvider: true, semanticReview: 'selective', originalCaseVerified: false }
@@ -120,14 +124,23 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     while (state?.delivery === 'pending') { signal.throwIfAborted(); await delay(20); state = await api.readRunState(identity) }
     report.execution = state?.run.status; report.delivery = state?.delivery
     const actions: string[] = []
+    const saveCalls = new Set<string>(), saveReceipts: Array<Record<string, unknown>> = []
     let cursor = 0
     while (true) {
       const page = await api.readEvents(identity, cursor)
       actions.push(...page.events.flatMap(event => event.kind === 'tool.started' && typeof event.data.name === 'string' ? [event.data.name] : []))
+      for (const event of page.events) {
+        if (event.kind === 'tool.started' && event.data.name === 'visualize.save') saveCalls.add(String(event.data.toolCallId))
+        if (event.kind === 'tool.completed' && saveCalls.has(String(event.data.toolCallId)) && event.data.isError === false) {
+          const result = event.data.result as { status?: string; value?: Record<string, unknown> } | undefined
+          if (result?.status === 'completed' && result.value) saveReceipts.push(result.value)
+        }
+      }
       if (!page.events.length || page.nextSeq === cursor) break
       cursor = page.nextSeq
     }
     report.actions = actions
+    report.modelReadCalled = actions.includes('visualize.read')
     // This filter locates a candidate, not semantic proof. Retain the actual
     // synthetic excerpt for independent review of role attribution and tense.
     report.timing = await measureAnswer(identity.runId, text => /\bGather\b/i.test(text) && /\bCheck\b/i.test(text)
@@ -154,9 +167,17 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     const path = references[0].reference.path
     const documents = await pool.query('SELECT version FROM im_visualize_documents WHERE run_id=$1', [identity.runId])
     assert.equal(documents.rowCount, 1)
-    assert.ok(actions.includes('visualize.read'))
     const stored = await readAuthorizedVisualizeSnapshot({ companyId, channelId, userId: principalId, path })
+    assert.equal(saveReceipts.length, 1, 'One successful literal save, without repeating the side effect for a reference')
+    const saved = saveReceipts[0]
+    assert.equal(saved.path, path)
+    assert.equal(saved.version, stored.version)
+    assert.equal(saved.sourceHash, stored.source_hash)
+    assert.deepEqual(saved.readback, { status: 'matched', requestVersion: 1, version: stored.version,
+      sourceHash: stored.source_hash, completeLiteralInput: true, semanticValidation: false, browserValidation: false },
+    'The public save result must prove its exact synchronous storage readback; it is not a semantic pass')
     report.resource = { count: 1, version: stored.version, sourceHash: stored.source_hash, literalReferencePresent: true }
+    report.storageReadback = saved.readback
     assert.ok(before.length > 0)
     assert.ok(before.every(row => row.operation !== 'content-review'), 'No semantic review call in the measured operation ledger')
     assert.ok(before.every(row => row.status !== 'succeeded' || row.measured), 'Every successful generation must retain measured usage')

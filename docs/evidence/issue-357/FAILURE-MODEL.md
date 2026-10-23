@@ -49,3 +49,22 @@ The owning real PostgreSQL/local HTTP integration is extended before implementat
   timing. Approval waiting is not a successful save completion.
 - Record failed measurements honestly, use one fixture run with one provider
   attempt per logical call, and never replay a failed original production request.
+
+## Conditional duplicate readback
+
+- A successful save is not semantic or browser validation. Only a current-request
+  literal save with the complete original still in context and a host-confirmed
+  exact stored version/hash may avoid a redundant model read of identical bytes.
+- That confirmation must be checked before returning it, not inferred from a
+  future candidate verifier. The existing transaction already reads the saved row.
+- Missing/truncated original content, recovery without it, absent proof, changed
+  content/version or known content/calculation errors require readback and repair.
+- Final verification must reject a stale version even when HTML is unchanged,
+  forged hash, different request/run/author, or revoked conversation access.
+- Generated templates lack a complete literal HTML input in model context and
+  keep their existing readback rule. No private runtime receipt is consulted.
+- The live test must verify successful save proof against the authorized current
+  snapshot, actual interactive browser transitions, and honest model-read status;
+  removing one model-action assertion alone cannot establish this contract.
+- Changed guidance, tool verification and harness policy receive new identities.
+  The original failed live report remains immutable evidence.

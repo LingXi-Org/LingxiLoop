@@ -23,7 +23,7 @@ export function createProductHarness(productTools: ToolDefinition[], memoryContr
       }
     },
   }))
-  return { id: 'lingxiloop', version: '3.8.6-on-demand-evidence-1', mode: 'execute',
+  return { id: 'lingxiloop', version: '3.8.6-conditional-readback-2', mode: 'execute',
     rules: 'For an applicable built-in workflow, select its exact current index once with the native skills.load tool for reference-only use. For requested creation or a commitment to author under a skill delivery contract, select it with native skills.activate instead, before loading references or promising delivery. Both actions supply the complete registered body directly in subsequent prompts; activation needs no additional skills.load. Do not paginate or reload that skill, including after compaction. Select only skills needed for this request; selection grants no permissions. Only skills.activate or an authoring tool creates a delivery obligation; loading alone does not. A brief substantive public explanation may precede selection. Keep substantive answers streaming in ordinary response text, and publish process or status updates through chat.report_progress when available without repeating them in answer text; do not narrate document loading instead of helping the user.'
       + `\nTrusted selected-workflow review policy ${visualizeWorkflowReviewPolicy.id}: ${visualizeWorkflowReviewPolicy.rubric}`,
     // Full trusted rubric bytes participate in the immutable harness identity.
