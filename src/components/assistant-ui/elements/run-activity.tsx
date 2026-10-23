@@ -31,6 +31,7 @@ export type RunActivityEntry = {
   /** Only a validated public task association; never inferred from a label. */
   taskId?: string;
   history?: boolean;
+  revision?: boolean;
 };
 
 export type RunActivityProps = {
@@ -75,7 +76,7 @@ export function RunActivity({
   const entryAnchor = (id: string) => `${anchorPrefix}-${encodeURIComponent(id)}`;
   const latestActivity =
     status === "running"
-      ? entries.findLast((entry) => !entry.history && entry.label.trim())?.label
+      ? entries.findLast((entry) => !entry.history && !entry.revision && entry.label.trim())?.label
       : undefined;
 
   const summary = (

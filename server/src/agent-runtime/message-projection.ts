@@ -61,8 +61,8 @@ function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Om
   return { ...part, providerMetadata: { ...('providerMetadata' in part ? part.providerMetadata : {}),
     lingxiloop: { activity } } }
 }
-/** Only an explicit accepted source is replaced by the final answer. Other
- * attempts remain available as process, never deduplicated by their text. */
+/** The committed answer replaces its explicit accepted source. Keep the source
+ * in the read-only transcript, never deduplicated by its text. */
 export function archivedPublicText(part: PublicTextPart): boolean {
   return !!part.acceptedResultId
 }
@@ -75,23 +75,23 @@ function pendingAcceptedSource(part: PublicTextPart, view: RunView): boolean {
     && part.requestVersion === view.requestVersion && part.fence === view.fence
     && (!view.message || view.message.publicTextPartId !== part.partId || view.resultId !== part.acceptedResultId)
 }
-function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): 'answer' | 'commentary' {
-  if (pendingAcceptedSource(part,view)) return 'answer'
-  if (part.acceptedResultId || part.requestVersion !== view.requestVersion || part.fence !== view.fence
-    || part.reason === 'superseded' || view.message && view.messageFence >= part.fence && view.message.envelope.requestVersion >= part.requestVersion) return 'commentary'
-  const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
-    || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
-  if (replaced) return 'commentary'
-  // Native v2 declares public purpose before its first text character. This is
-  // producer metadata, not a classification of arbitrary prose.
-  if (part.version === 2 && part.purpose) return part.purpose
+function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): 'answer' | 'commentary' | 'revision' {
+  // Declared commentary remains genuine progress even when a later attempt or
+  // request replaces an answer. Never infer a revision from the wording.
   const hasTool = tools.some(tool => tool.activityIdentity?.requestVersion === part.requestVersion
     && tool.activityIdentity.fence === part.fence && tool.activityIdentity.attemptId === part.attemptId)
-  if (part.reason === 'tool' || hasTool) return 'commentary'
-  // 3.6.0 has no per-delta purpose: keep the current unresolved candidate live
-  // until public tool/result evidence establishes its role, including failures.
+  if (part.purpose === 'commentary' || part.version !== 2 && (part.reason === 'tool' || hasTool)) return 'commentary'
+  if (pendingAcceptedSource(part,view)) return 'answer'
+  if (part.acceptedResultId || part.requestVersion !== view.requestVersion || part.fence !== view.fence
+    || part.reason === 'superseded' || view.message && view.messageFence >= part.fence && view.message.envelope.requestVersion >= part.requestVersion) return 'revision'
+  const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
+    || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
+  if (replaced) return 'revision'
+  // Native v2 declares public purpose before its first text character. Older
+  // unresolved candidates remain live, including failed/cancelled partial text.
   return 'answer'
 }
+
 function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean, history: boolean): ThreadAssistantMessagePart[] {
   const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
   const attempts = [
@@ -110,14 +110,21 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   for (const part of view.publicTextParts ?? []) {
     const pendingAccepted = pendingAcceptedSource(part,view)
     if (!includeAcceptedPublicText && archivedPublicText(part) && !pendingAccepted) continue
-    const id = archivedPublicText(part) && (history || !pendingAccepted) ? `archive:${publicTextId(part)}` : publicTextId(part)
+    const kind = publicTextPurpose(part,view,tools)
+    if (history && kind === 'answer') continue
+    // Existing v1 readers accept these commentary records during rollout. The
+    // explicit producer-owned namespace marks a revision for new renderers;
+    // neither an extra wire field nor text-based classification is required.
+    const id = archivedPublicText(part) && (history || !pendingAccepted) ? `archive:${publicTextId(part)}`
+      : kind === 'revision' ? `revision:${publicTextId(part)}` : publicTextId(part)
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
     // Public text is an unverified archive, including candidates superseded by
     // repair. Only the delivered answer may activate a renderer reference.
-    const kind = history ? 'commentary' : publicTextPurpose(part,view,tools)
     for (const text of projectVisualizeText(part.text, true)) {
-      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind,label: kind === 'answer' ? '答复' : part.acceptedResultId ? '答复片段' : '公开说明',
+      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind: kind === 'revision' ? 'commentary' : kind,
+        label: kind === 'answer' ? '答复' : kind !== 'revision' ? '公开说明' : part.acceptedResultId ? '已交付答复的原始片段'
+          : part.reason === 'failed' ? '未完成的答复草稿（已替换）' : part.reason === 'cancelled' ? '已取消的答复草稿（已替换）' : '已替换的答复草稿',
         purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }
   }

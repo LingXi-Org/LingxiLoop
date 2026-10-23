@@ -1,0 +1,12 @@
+# Answer revision projection failure model
+
+Written before implementation; all test text and identities are synthetic.
+
+- A superseded answer is reclassified as ordinary progress, repeating draft text in both the expanded activity and latest progress summary.
+- A committed answer's accepted source repeats the delivered body when its history page is loaded.
+- Revision treatment accidentally swallows actual commentary, repeated wording in another message, or real failed tool calls.
+- The first streamed answer disappears during the accepted-event/committed-message gap, or a partial/cancelled/failed answer is hidden as an obsolete draft.
+- Replay or reconnect creates duplicate revision identities, reopens collapsed transcripts, or loses a revision from a bounded history page.
+- Copy answer includes an archived revision; archived renderer references become live.
+
+Checks: real RunStreamProjection transitions, strict native wire/history parsing, and the official @e2e-dev/web browser using the existing isolated AssistantTransport/store/conversation fixture. Preserve full revision text behind an explicit labelled disclosure; keep real failure/call entries and public commentary in their existing locations.

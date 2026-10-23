@@ -68,6 +68,13 @@ export function activityAnnotation(part: unknown): ActivityAnnotation | undefine
   return result.success ? result.data : undefined
 }
 
+/** Product-owned transcript identities keep v1 wire compatibility. Do not
+ * classify ordinary commentary by its label or by repeated answer text. */
+export function isAnswerRevision(part: unknown): boolean {
+  const annotation = activityAnnotation(part)
+  return annotation?.kind === 'commentary' && /^(?:revision|archive):public-text:/.test(annotation.id)
+}
+
 export const toolDisplaySchema = z.object({
   title: z.string().max(160), purpose: z.string().max(500), summary: z.string().max(1000).optional(),
   input: z.array(z.object({ label: z.string().max(80), value: publicText.pipe(z.string().max(500)) }).strict()).max(8).optional(),
