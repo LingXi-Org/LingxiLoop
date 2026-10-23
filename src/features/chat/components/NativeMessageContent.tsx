@@ -7,7 +7,7 @@ import { DocumentReference } from '@/components/assistant-ui/elements/document-r
 import { Reasoning } from '@/components/assistant-ui/elements/reasoning'
 import { AgentPlan, type AgentPlanStep } from '@/components/assistant-ui/elements/agent-plan'
 import { Button } from '@/components/ui/button'
-import { activityAnnotation, readActivityTasks } from '@/lib/runActivity'
+import { activityAnnotation, isAnswerRevision, readActivityTasks } from '@/lib/runActivity'
 import { useRunActivityHistory } from '../runtime/useRunActivityHistory'
 import { HistoryActivityScope } from '../runtime/HistoryActivityScope'
 import { MemoryTool } from './MemoryTool'
@@ -104,7 +104,12 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: {
     // Deprecated audio is rejected by the wire schema; never silently hide a new part.
     default: content = <p role="alert" className="text-sm text-destructive">这类消息暂时无法显示。</p>
   }
-  return <PartFrame footer={footer} mediaFooter={mediaFooter}>{content}</PartFrame>
+  return <PartFrame footer={footer} mediaFooter={mediaFooter}>{isAnswerRevision(part) ? <details data-slot="answer-revision" className="min-w-0">
+    <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring cursor-pointer rounded py-1 text-sm outline-none focus-visible:ring-2">
+      {activityAnnotation(part)!.label}
+    </summary>
+    <div className="border-border mt-2 border-s ps-3">{content}</div>
+  </details> : content}</PartFrame>
 }
 
 function IndexedPart() { return <NativePart {...useContext(PartPresentation)} /> }
@@ -141,12 +146,13 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   const presentation = messagePresentation(message)
   const liveEntries = presentation.flatMap(item => item.region === 'process' && item.annotation ? [{
     id: item.annotation.id, order: item.annotation.order, taskId: item.annotation.taskId, kind: item.part.type === 'tool-call' ? 'tool' as const : 'commentary' as const,
-    label: item.part.type === 'text' ? item.part.text.slice(0,500).replace(/\s+/gu,' ').trim().slice(0,160) || item.annotation.label : item.annotation.label,
+    revision: isAnswerRevision(item.part),
+    label: item.part.type === 'text' && !isAnswerRevision(item.part) ? item.part.text.slice(0,500).replace(/\s+/gu,' ').trim().slice(0,160) || item.annotation.label : item.annotation.label,
     content: <PartPresentation.Provider value={activityDisplay}><GroupOwnsFooter.Provider value={true}><MessagePrimitive.PartByIndex index={item.index} components={indexedComponents} /></GroupOwnsFooter.Provider></PartPresentation.Provider>,
   }] : [])
   const archivedEntries = history.entries.map(entry => {
     const annotation = activityAnnotation(entry.part)!
-    return { id: entry.id, order: entry.order, taskId: annotation.taskId, history: true,
+    return { id: entry.id, order: entry.order, taskId: annotation.taskId, history: true, revision: isAnswerRevision(entry.part),
       kind: entry.part.type === 'tool-call' ? 'tool' as const : 'commentary' as const, label: annotation.label,
       content: <HistoryActivityScope entry={entry}><ReadOnlyMessage.Provider value={true}><GroupOwnsFooter.Provider value={true}>
         <NativePart />
