@@ -2,13 +2,12 @@ import { useEffect,useId,useMemo,useRef,useState } from 'react'
 import { BotIcon,ChevronRightIcon,Clock3Icon,DatabaseIcon,GitBranchIcon,SparklesIcon,WrenchIcon } from 'lucide-react'
 import type { RunTrace,TraceSpan } from '@/lib/runTrace'
 import { workKindLabels } from '@/lib/runTrace'
+import { formatTraceCost as cost,formatTracePricing } from '@/lib/traceCost'
 import { cn } from '@/lib/utils'
 import { TimelineRowMetrics } from './TimelineRowMetrics'
 
 const ms = (value: number|null) => value === null ? '—' : `${Math.round(value).toLocaleString('zh-CN')} ms`
 const tokens = (value: number|null) => value === null ? '—' : value.toLocaleString('zh-CN')
-const cost = (span: TraceSpan) => span.cost === null && span.knownCost === undefined ? '—'
-  : `${span.cost === null ? '已计' : ''}${span.costEstimated ? '约 ' : ''}$${(span.cost ?? span.knownCost)!.toLocaleString('en-US',{maximumFractionDigits: 8})}`
 const labels = { running: '运行中',waiting: '等待处理',complete: '已完成',partial: '未完成',blocked: '受阻',cancelled: '已取消',error: '失败',unknown: '结果未知' }
 const kindLabels = { agent: 'Agent',llm: 'LLM',embedding: 'Embedding',tool: 'Tool' }
 const icons = { agent: BotIcon,llm: SparklesIcon,embedding: DatabaseIcon,tool: WrenchIcon }
@@ -168,6 +167,7 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
       {selected ? <div className="grid gap-2">
         <div className="flex flex-wrap justify-between gap-1"><h4 className="font-medium">{selected.name}</h4><span className="text-muted-foreground">{selected.workKind ? workKindLabels[selected.workKind] : kindLabels[selected.kind]} · {labels[selected.status]}</span></div>
         {selected.model && <p className="text-muted-foreground break-all">{selected.model}</p>}
+        {formatTracePricing(selected) && <p className="text-muted-foreground break-words">{formatTracePricing(selected)}</p>}
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground tabular-nums">
           <div><dt className="block">开始</dt><dd>{endpoint(selected.start,'start')}</dd></div><div><dt className="block">结束</dt><dd>{endpoint(selected.end,'end')}</dd></div>
           <div><dt className="inline">输入 tokens </dt><dd className="inline">{tokens(selected.tokensIn)}</dd></div><div><dt className="inline">输出 tokens </dt><dd className="inline">{tokens(selected.tokensOut)}</dd></div>
