@@ -61,8 +61,8 @@ function providerPricing(model = env.OPENAI_MODEL) {
 
 /** Build the product Worker's bounded provider configuration. */
 export function runtimeModelConfiguration(model: { id: string; apiKey: string; baseUrl: string }, requestTimeoutMs: number) {
-  if (releaseVersions.publicText !== publicTextDeployment.reader) throw new Error('Public purpose requires a formally qualified v2 runtime reader')
-  // Reader-first release: omit publicTextProtocol until every active reader is upgraded.
+  if (releaseVersions.publicText !== publicTextDeployment.reader) throw new Error('Public text requires the formally qualified runtime reader declared by this release')
+  // The runtime patch starts both compatible Web readers before either Worker.
   const siliconFlow = new URL(model.baseUrl).hostname === 'api.siliconflow.cn'
   return {
     ...model,
