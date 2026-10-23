@@ -139,14 +139,26 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
         purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }
   }
-  for (const { eventSeq, startedSeq, activityIdentity, taskId, purpose, display: recordedDisplay, ...tool } of tools) {
+  const planVersions = new Map<string, { fence: number; revision: number }>()
+  // Completion order may differ from start order; retain the original public
+  // position while selecting a plan's latest recorded version below.
+  const orderedTools = [...tools].sort((a,b) => (a.startedSeq ?? a.eventSeq ?? 0) - (b.startedSeq ?? b.eventSeq ?? 0))
+  for (const { eventSeq, startedSeq, activityIdentity, taskId, purpose, display: recordedDisplay, ...tool } of orderedTools) {
     const seq = startedSeq ?? eventSeq ?? 0
     const result = tool.result && typeof tool.result === 'object' ? tool.result : undefined
     const explanation = publicActivitySchema.safeParse(result && Reflect.get(result, 'activity'))
-    if (tool.toolName === 'chat.report_progress' && explanation.success) {
-      const entry = explanation.data, id = stableId('public-report',[view.runId,activityIdentity?.requestVersion ?? null,
-        activityIdentity?.fence ?? null,activityIdentity?.attemptId ?? null,entry.id])
+    if (tool.toolName === 'chat.report_progress' && explanation.success && result && Reflect.get(result,'status') === 'completed' && !tool.isError) {
+      const entry = explanation.data, id = entry.kind === 'plan'
+        ? stableId('public-plan',[view.runId,activityIdentity?.requestVersion ?? null,entry.id])
+        : stableId('public-report',[view.runId,activityIdentity?.requestVersion ?? null,
+          activityIdentity?.fence ?? null,activityIdentity?.attemptId ?? null,entry.id])
       if (entry.kind === 'plan' && entry.plan) {
+        // The explicit plan id belongs to the task request, not a model call.
+        // Recovery keeps that identity; an older lease or replay cannot win.
+        const version = { fence: activityIdentity?.fence ?? 0,revision: eventSeq ?? seq }
+        const previous = planVersions.get(id)
+        if (previous && (previous.fence > version.fence || previous.fence === version.fence && previous.revision >= version.revision)) continue
+        planVersions.set(id,version)
         put(id,seq, annotated({ type: 'generative-ui', id, spec: { root: { component: 'agent-plan', props: { title: entry.label, ...entry.plan } } } },
           { id, kind: 'commentary', label: entry.label, purpose: 'process', ...(taskId ? { taskId } : {}) }),eventSeq,activityIdentity?.requestVersion)
         continue
