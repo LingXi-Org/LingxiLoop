@@ -35,3 +35,27 @@ test('a task can select only a span already present in the authorized trace', ()
   const absent = renderToStaticMarkup(<TraceWaterfall trace={trace} selectedSpanId="private-unavailable" onSelectedSpanChange={() => {}} />)
   assert.doesNotMatch(absent,/aria-label="查看[^"]*详情"[^>]*aria-pressed="true"|private-unavailable/)
 })
+
+test('real work types have separate sections without a collapsible catch-all run or synthetic spans', () => {
+  const item = (id: string,kind: TraceSpan['kind'],workKind?: TraceSpan['workKind']): TraceSpan => ({
+    id,name: id,kind,workKind,status: 'complete',start: 100,end: 300,durationMs: 200,
+    tokensIn: null,tokensOut: null,cost: null,costEstimated: false,children: [],
+  })
+  const child = { ...item('child','agent','subtask'),children: [{ ...item('nested-failed','tool','tool'),status: 'error' as const }] }
+  const grouped = { ...trace,root: { ...root,end: 500,durationMs: 500,children: [
+    item('model','llm'),item('skill','tool','skill'),item('read','tool','retrieval'),item('tool','tool','tool'),child,
+    { ...item('unknown-clock','tool'),start: null,end: null,durationMs: 134 },item('other-agent','agent'),
+  ] } }
+  const original = JSON.stringify(grouped)
+  const html = renderToStaticMarkup(<TraceWaterfall trace={grouped} />)
+  for (const kind of ['model','skill','retrieval','tool','subtask','agent']) assert.match(html,new RegExp(`data-trace-group="${kind}"`))
+  assert.doesNotMatch(html,/aria-label="(?:展开|收起) 运行"/)
+  assert.match(html,/aria-label="查看 运行 详情"/)
+  assert.match(html,/data-trace-span-id="nested-failed"[^>]*data-trace-parent-id="child"/)
+  assert.match(html,/data-trace-span-id="nested-failed"[^>]*data-trace-status="error"/)
+  for (const id of ['run','model','skill','read','tool','child','nested-failed','unknown-clock','other-agent']) {
+    assert.equal(html.split(`data-trace-span-id="${id}"`).length-1,1,`${id} stays one real row`)
+  }
+  assert.match(html,/data-trace-start="" data-trace-end="" data-trace-duration-only=""/)
+  assert.equal(JSON.stringify(grouped),original,'presentation never mutates trace facts or accounting')
+})

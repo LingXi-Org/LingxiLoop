@@ -16,7 +16,8 @@ const hues = { agent: 'bg-indigo-400 dark:bg-indigo-400',llm: 'bg-sky-400 dark:b
 function flatten(span: TraceSpan): TraceSpan[] { return [span,...span.children.flatMap(flatten)] }
 type WorkFilter = 'all'|'model'|'tool'|'skill'|'retrieval'|'subtask'
 const workGroup = (span: TraceSpan) => span.kind === 'llm' || span.kind === 'embedding' ? 'model'
-  : span.workKind ?? (span.kind === 'tool' ? 'tool' : 'run')
+  : span.workKind ?? (span.kind === 'tool' ? 'tool' : 'agent')
+const groupLabels = { model: '模型',...workKindLabels,agent: 'Agent' }
 function filterTree(span: TraceSpan,filter: WorkFilter): TraceSpan|null {
   if (filter === 'all' || workGroup(span) === filter) return span
   const children = span.children.flatMap(child=>{ const visible = filterTree(child,filter);return visible ? [visible] : [] })
@@ -56,7 +57,18 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
     return () => observer.disconnect()
   },[])
   const all = useMemo(() => flatten(trace.root),[trace.root])
-  const visibleRoot = useMemo(()=>filterTree(trace.root,workFilter),[trace.root,workFilter])
+  // Categories are view headings, never invented spans. Group only the real
+  // root's direct children; each child's actual subtree stays intact.
+  const groups = useMemo(() => {
+    const grouped = new Map<keyof typeof groupLabels,TraceSpan[]>()
+    for (const child of trace.root.children) {
+      const visible = filterTree(child,workFilter)
+      if (!visible) continue
+      const kind = workGroup(child),items = grouped.get(kind) ?? []
+      items.push(visible);grouped.set(kind,items)
+    }
+    return [...grouped].map(([kind,spans])=>({ kind,label: groupLabels[kind],spans }))
+  },[trace.root,workFilter])
   const filters: { id: WorkFilter; label: string; count: number }[] = [
     { id: 'all',label: '全部',count: all.length },{ id: 'model',label: '模型',count: all.filter(span=>workGroup(span) === 'model').length },
     ...(['tool','skill','retrieval','subtask'] as const).map(id=>({ id,label: workKindLabels[id],count: all.filter(span=>workGroup(span) === id).length })),
@@ -73,6 +85,7 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
       return false
     }
     if (!visit(latestRoot.current)) return
+    setWorkFilter('all')
     setCollapsed(previous => new Set([...previous].filter(id => !ancestors.includes(id))))
     const timer = setTimeout(() => {
       const button = viewport.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
@@ -97,20 +110,20 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
   const slowest = all.filter(span => span.kind !== 'agent' && span.durationMs !== null)
     .reduce<TraceSpan|undefined>((largest,span) => !largest || span.durationMs! > largest.durationMs! ? span : largest,undefined)
   const toggle = (id: string) => setCollapsed(previous => { const next = new Set(previous); if (next.has(id)) next.delete(id); else next.add(id); return next })
-  const row = (span: TraceSpan,depth: number) => {
+  const row = (span: TraceSpan,depth: number,parentId?: string,children = span.children) => {
     const Icon = icons[span.kind],isCollapsed = collapsed.has(span.id)
     const end = span.end ?? (span.status === 'running' ? elapsed : null)
     const known = hasTimeline && span.start !== null && end !== null && end >= span.start
     const x = known ? Math.min(laneWidth,Math.max(0,span.start!/maxEnd*laneWidth)) : 0
     const width = known ? Math.min(laneWidth-x,Math.max(1,(end!-span.start!)/maxEnd*laneWidth)) : 0
     const duration = span.durationMs ?? (known ? end!-span.start! : null)
-    return <li key={span.id} data-trace-span-id={span.id} data-trace-kind={span.kind} data-trace-status={span.status} data-trace-work-kind={span.workKind}>
+    return <li key={span.id} data-trace-span-id={span.id} data-trace-parent-id={parentId} data-trace-kind={span.kind} data-trace-status={span.status} data-trace-work-kind={span.workKind}>
       <div data-trace-row className={cn(rowColumns,'items-center rounded-sm transition-colors duration-150 motion-reduce:transition-none hover:bg-muted/50',
         selected?.id === span.id && 'bg-muted/70')}>
         <div className="relative flex min-w-0 items-center gap-1 py-2 pe-2" style={{paddingInlineStart: Math.min(depth,6)*12+4}}>
           {Array.from({length: Math.min(depth,6)},(_,level) => <span key={level} aria-hidden="true" className="pointer-events-none absolute inset-y-0 border-s border-border/50" style={{left: level*12+9}} />)}
           {depth > 0 && <span aria-hidden="true" className="pointer-events-none absolute top-1/2 h-px w-2 bg-border/50" style={{left: (Math.min(depth,6)-1)*12+9}} />}
-          {span.children.length ? <button type="button" onClick={() => toggle(span.id)} aria-label={`${isCollapsed ? '展开' : '收起'} ${span.name}`} aria-expanded={!isCollapsed}
+          {children.length ? <button type="button" onClick={() => toggle(span.id)} aria-label={`${isCollapsed ? '展开' : '收起'} ${span.name}`} aria-expanded={!isCollapsed}
             className="rounded-sm p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <ChevronRightIcon className={cn('size-3 transition-transform duration-200 motion-reduce:transition-none',!isCollapsed && 'rotate-90')} />
           </button> : <span className="w-4 shrink-0" />}
@@ -134,8 +147,8 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
         </button>
         <TimelineRowMetrics durationText={ms(duration)} costText={span.cost === null && span.knownCost === undefined ? undefined : cost(span)} />
       </div>
-      {span.children.length > 0 && <div className={cn('grid transition-[grid-template-rows,visibility] duration-200 ease-out motion-reduce:transition-none',isCollapsed ? 'invisible grid-rows-[0fr]' : 'visible grid-rows-[1fr]')} inert={isCollapsed} aria-hidden={isCollapsed}>
-        <div className="min-h-0 overflow-hidden"><ol className="m-0 p-0">{span.children.map(child => row(child,depth+1))}</ol></div>
+      {children.length > 0 && <div className={cn('grid transition-[grid-template-rows,visibility] duration-200 ease-out motion-reduce:transition-none',isCollapsed ? 'invisible grid-rows-[0fr]' : 'visible grid-rows-[1fr]')} inert={isCollapsed} aria-hidden={isCollapsed}>
+        <div className="min-h-0 overflow-hidden"><ol className="m-0 p-0">{children.map(child => row(child,depth+1,span.id))}</ol></div>
       </div>}
     </li>
   }
@@ -161,8 +174,12 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
         <span className="ps-1">步骤</span><div ref={rail} data-trace-axis={hasTimeline ? '' : undefined} data-trace-axis-end={hasTimeline ? maxEnd : undefined} className="relative flex min-w-0 justify-between whitespace-nowrap font-mono tabular-nums">{hasTimeline && <><span>0 ms</span><span>{ms(maxEnd)}</span></>}</div>
         <span className="pe-1 text-end">耗时 / 费用</span>
       </div>
-      <ol className="m-0 px-2 py-1">{visibleRoot && row(visibleRoot,0)}</ol>
-      {!visibleRoot && <p className="text-muted-foreground px-3 py-2 text-xs">当前没有这类工作记录。</p>}
+      <ol aria-label="本次运行" className="m-0 px-2 py-1">{row(trace.root,0,undefined,[])}</ol>
+      {groups.map(group=><section key={group.kind} data-trace-group={group.kind} aria-label={group.label} className="min-w-0 border-t border-border/40 px-2 pb-1">
+        <h4 className="text-muted-foreground px-1 pt-2 pb-1 text-[11px] font-medium">{group.label}</h4>
+        <ol className="m-0 p-0">{group.spans.map(span=>row(span,0,trace.root.id))}</ol>
+      </section>)}
+      {!groups.length && <p className="text-muted-foreground px-3 py-2 text-xs">当前没有这类工作记录。</p>}
     </div>
     <div id={detailId} className="border-t border-border/50 px-3 py-3 text-xs">
       {selected ? <div className="grid gap-2">
