@@ -15,6 +15,31 @@ Admission authorization remains before all preparation. Audience, current source
 
 These timings are from a controlled local fixture, not a production first-token or browser-paint measurement. There is no user-facing UI change in this stage. The larger issue remains open pending the separately investigated evidence/tool round trips and actual first useful answer behavior; this preparation improvement alone does not establish that a long production wait is resolved.
 
+## Frozen evidence across tool turns
+
+The second stage consumes the public `ContextProvider` preparation hint proposed
+by [LingxiOS PR 56](https://github.com/LingXi-Org/LingxiOS/pull/56). The control
+plane reauthorizes the durable session before creating this hint. Only nonempty
+evidence for the same work's first request version qualifies; no hint is read
+from user or tool metadata. The product still executes current scope/audience
+checks and all other context preparation, but skips automatic retrieval whose
+replacement evidence the runtime would otherwise discard. A new request,
+revised requirements or empty evidence follows the ordinary retrieval path.
+
+The added PostgreSQL regression first failed with two redundant searches instead
+of zero, then passed after implementation. It also proves that current independent
+context still loads, the product does not fabricate copied evidence, and old-work
+or revised hints do not suppress search. The runtime regression covers forged
+metadata, current source revocation, a new work and an empty snapshot. The public
+type and end-to-end hint propagation require formal runtime 3.8.6; the staged
+product code must not be released against 3.8.5.
+
+Runtime evidence preparation keeps whole short excerpts in a bounded large
+catalogue and preserves range metadata when read results are bounded. A matching
+synthetic model/tool scenario against 3.8.5 and the candidate used 8 versus 3 model
+calls, retaining one save, one read-back and a truthful final outcome, with no
+auxiliary review. These counts do not establish a production latency improvement.
+
 ## Timing interpretation
 
 The existing runtime `input.loaded` diagnostic measures initial context duration. Provider `providerFirstContentMs` can include process text, so it is not equivalent to first useful answer. Public answer events can identify the first answer segment, but unavailable event timestamps or browser paint times must remain unknown. No missing historical timestamp is reconstructed from duration or sequence numbers.

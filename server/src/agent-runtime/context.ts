@@ -137,12 +137,18 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
       AND source_id=ANY($2::text[]) AND user_id=ANY($3::text[]) LIMIT 1`,[productConversationId(work),sourceIds,readers])).rows.length) {
       throw new NoEffectError('request knowledge source selection was revoked','forbidden')
     }
-  }, async loadContext(work, signal) {
+  }, async loadContext(work, signal, options) {
     signal?.throwIfAborted()
     const { profile, grants, canvasRun, teacherContext, homeworkContext, learningAudienceSafe } = await scoped(work)
     const text = work.meta?.text
     if (typeof text !== 'string') throw new Error('persisted request text is missing')
     const capabilities = grants.map(grant => grant.name)
+    // Supplied only by the control plane after current source authorization.
+    // The runtime already owns these exact bytes; repeated RAG would be
+    // discarded by its frozen request. Never derive this from work metadata.
+    const frozenEvidence = options?.frozenEvidence
+    const hasFrozenEvidence = frozenEvidence?.workId === work.id && frozenEvidence.requestVersion === 1
+      && options?.requestVersion === 1 && !!frozenEvidence.snapshotId
     // Authorization above remains the admission barrier. After it succeeds,
     // start each read at its real dependency instead of making knowledge search
     // wait for unrelated roster, Canvas, memory and visualization preparation.
@@ -182,6 +188,9 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     })
     const knowledgeReady = historyReady.then(async recentHistory => {
       signal?.throwIfAborted()
+      if (capabilities.includes('knowledge') && hasFrozenEvidence) {
+        return { knowledgeRetrieval: { status: 'frozen' as const, citations: [] }, retrieval: [], evidence: [] }
+      }
       const knowledgeRetrieval = capabilities.includes('knowledge') ? await retrieveKnowledgeState({ companyId: work.tenantId, conversationId: productConversationId(work),
         authorizationUserId: work.principalId!, audienceUserIds: await audienceHumanIds({ work, database: pool }),
         query: text, contextQuery: [...recentHistory.map(message => nativeText(message.payload)),text].join('\n').slice(-8000), limit: 8,
@@ -245,7 +254,8 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
         visualizeWidgetContext: visualizeModelContext(visualizeState),
         roster: roster.rows.map(({ preset_key: _preset, ...member }) => ({ ...member, capabilities: member.capabilities.filter(capability => capability !== 'email' && capability !== 'calendar') })),
         missingSpecialists: STARTER_TEAM.filter(agent => !roster.rows.some(member => member.preset_key === agent.presetKey)).map(({ name, role }) => ({ name, role })),
-        knowledgeRetrieval: knowledgeRetrieval ? { status: knowledgeRetrieval.status, matchedChunks: retrieval.length,
+        knowledgeRetrieval: knowledgeRetrieval ? { status: knowledgeRetrieval.status,
+          ...(knowledgeRetrieval.status === 'frozen' ? {} : { matchedChunks: retrieval.length }),
           ...('processingSources' in knowledgeRetrieval ? { processingSources: knowledgeRetrieval.processingSources } : {}) } : undefined } }
   } }
   return { contextProvider, capabilityResolver: { resolve: async (work: Work, context?: CapabilityResolutionContext) => (await scoped(work, context?.database as Queryable | undefined)).grants } }

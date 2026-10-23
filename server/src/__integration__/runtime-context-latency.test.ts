@@ -110,6 +110,25 @@ test('context bounds automatic search and persists Agent receipts before asynchr
     assert.deepEqual(deep.dynamic?.knowledgeRetrieval, { status: 'unavailable', matchedChunks: 0 })
     assert.equal(searches, 2)
     assert.ok(elapsedMs >= 4500 && elapsedMs < 12000, `automatic search took ${elapsedMs}ms`)
+    // The public runtime contract derives this hint only after authorizing the
+    // durable request. It skips retrieval, never admission or live context.
+    const stalledSearch = openNotebookClient.search
+    let repeatedSearches = 0
+    openNotebookClient.search = async () => { repeatedSearches++; return [] }
+    try {
+      const frozen = await provider.loadContext(work, undefined, { responseProfile: 'deep', requestVersion: 1,
+        frozenEvidence: { workId: work.id, requestVersion: 1, snapshotId: `${work.id}:evidence:1` } })
+      assert.equal(repeatedSearches, 0, 'the worker already owns authorized frozen evidence; a discarded replacement must not delay its next hop')
+      assert.equal(frozen.dynamic?.knowledgeRetrieval && (frozen.dynamic.knowledgeRetrieval as { status: string }).status, 'frozen')
+      assert.ok(frozen.dynamic?.memoryScopes, 'current independent context still loads')
+      assert.deepEqual(frozen.evidence, [], 'the product neither fabricates nor copies the frozen evidence')
+      for (const options of [
+        { responseProfile: 'deep' as const, requestVersion: 1 },
+        { responseProfile: 'deep' as const, requestVersion: 1, frozenEvidence: { workId: 'previous-work', requestVersion: 1 as const, snapshotId: 'old' } },
+        { responseProfile: 'deep' as const, requestVersion: 2, frozenEvidence: { workId: work.id, requestVersion: 1 as const, snapshotId: 'old' } },
+      ]) await provider.loadContext(work, undefined, options)
+      assert.equal(repeatedSearches, 6, 'new or revised requests still search both authorized channels')
+    } finally { openNotebookClient.search = stalledSearch }
     const parent = new AbortController(), reason = new Error('fixture worker disconnected')
     onSearch = () => parent.abort(reason)
     await assert.rejects(provider.loadContext(work, parent.signal, { responseProfile: 'deep' }), error => error === reason)
