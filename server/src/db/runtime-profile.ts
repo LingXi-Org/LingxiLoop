@@ -33,11 +33,15 @@ export function assertFull54InstallBoundary(appliedCount:number,runtime:string=r
 }
 
 /** Full54 current execution uses the exact installed/locked package, not a historical migration version. */
+export function currentPublicTextVersion(runtime:string):2|3 {
+  const patch=/^3\.8\.(0|[1-9]\d*)$/.exec(runtime)
+  if(!patch||!Number.isSafeInteger(Number(patch[1]))||Number(patch[1])<2)throw new Error('full54 requires the reviewed3.8 runtime patch family')
+  return Number(patch[1])>=7?3:2
+}
 export function assertCurrentRuntimeProfile(versions:RuntimeVersions=releaseVersions,schemaHash?:string,lockedRuntime:string=releaseVersions.runtime):void {
-  const patch=/^3\.8\.(0|[1-9]\d*)$/.exec(versions.runtime)
-  if(!patch||!Number.isSafeInteger(Number(patch[1]))||Number(patch[1])<2||versions.runtime!==lockedRuntime
-    ||versions.schema!==14||versions.controlPlane!==11||versions.publicText!==2||versions.runTrace!==1||schemaHash!==PUBLIC_PURPOSE_SCHEMA_HASH){
-    throw new Error('full54 requires the exact current formal package with unchanged native14/protocol11/publicText2/runTrace1')
+  if(versions.runtime!==lockedRuntime||versions.schema!==14||versions.controlPlane!==11
+    ||versions.publicText!==currentPublicTextVersion(versions.runtime)||versions.runTrace!==1||schemaHash!==PUBLIC_PURPOSE_SCHEMA_HASH){
+    throw new Error('full54 requires the exact current formal package with unchanged native14/protocol11/runTrace1 and matching publicText capability')
   }
 }
 
