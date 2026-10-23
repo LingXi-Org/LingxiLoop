@@ -13,6 +13,10 @@ visualization was saved or that only its reference was omitted.
   `skills.activate` action before reference loading. Prompt-contract checks and a
   published Worker integration exercise this route; a synthetic model cannot
   establish real-provider instruction adherence.
+- A model may ignore that first-turn contract and return an unactivated promise.
+  Without trusted action or semantic review there is no machine obligation to
+  check. A negative Worker fixture records message success with zero activation
+  and zero visualization; this is a documented limit, not delivery success.
 - Activation currently does not select the complete skill body, so the model
   must perform another load before it can author. The same exact current skill
   selection through `skills.activate` must supply the complete registered body

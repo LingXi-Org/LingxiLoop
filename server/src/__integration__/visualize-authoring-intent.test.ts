@@ -27,7 +27,7 @@ test('explicit authoring loads guidance in one action, repairs real delivery and
     const principalId = 'intent-test-owner'
     await seedUserMembership(principalId, companyId)
     const api = await lingxiOSControl(), { name, version, hash } = skillIndex(visualizeSkill)
-    for (const scenario of ['read-only', 'authoring', 'cancelled'] as const) {
+    for (const scenario of ['read-only', 'authoring', 'cancelled', 'unactivated-promise'] as const) {
       const room = `visualize-intent-${scenario}`, members = [principalId, agentId]
       await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group',$1,$4::jsonb)", [room, companyId, projectId, JSON.stringify(members)])
       await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)', [room, companyId, JSON.stringify({ channelType: 2, members })])
@@ -52,6 +52,10 @@ test('explicit authoring loads guidance in one action, repairs real delivery and
               const answer = (text: string) => ({ text, output: [{ role: 'assistant' as const, content: text }], usage })
               if (!phase) {
                 assert.match(request.instructions, /explicitly requests.*skills\.activate/i)
+                // Deliberately disobey the first-turn contract. A model promise
+                // is not trusted intent, and this product must not invent an
+                // obligation by matching the answer or human request text.
+                if (scenario === 'unactivated-promise') return answer('I will create the interactive comparison.')
                 return call(scenario === 'read-only' ? 'skills__load' : 'skills__activate', { name, version, hash })
               }
               assert.ok(request.instructions.includes(visualizeSkill.body), 'activation selects complete trusted guidance without another load')
@@ -120,13 +124,15 @@ test('explicit authoring loads guidance in one action, repairs real delivery and
         assert.equal(calls, before, 'refresh performs no model or tool effects')
       } else {
         assert.equal(documents.rowCount, 0)
-        assert.equal(activations.rowCount, scenario === 'read-only' ? 0 : 1)
-        assert.equal(calls, 2)
-        if (scenario === 'read-only') assert.equal(state?.run.status, 'succeeded')
+        assert.equal(activations.rowCount, scenario === 'cancelled' ? 1 : 0)
+        assert.equal(calls, scenario === 'unactivated-promise' ? 1 : 2)
+        if (scenario !== 'cancelled') assert.equal(state?.run.status, 'succeeded')
         else { assert.equal(state?.run.status, 'cancelled'); assert.notEqual(state?.delivery, 'delivered') }
       }
       receipts.push({ scenario, calls, saves, reads, repairs, savedDocuments: documents.rowCount,
-        activationCount: activations.rowCount, execution: state?.run.status, delivery: state?.delivery })
+        activationCount: activations.rowCount, execution: state?.run.status, delivery: state?.delivery,
+        visualizationDelivered: scenario === 'authoring',
+        ...(scenario === 'unactivated-promise' ? { knownLimit: 'No trusted authoring action; message success is not visualization delivery.' } : {}) })
       await worker.stop(); worker = undefined
     }
     await mkdir('artifacts/issue-342', { recursive: true })

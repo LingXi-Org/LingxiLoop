@@ -44,3 +44,15 @@ names, counts and statuses. These checks establish the product tool handoff and
 delivery boundaries. They do not reproduce the reported private conversation,
 prove real-provider instruction adherence, or identify the original wire-level
 protocol failure. No private conversation, screenshot or raw trace is published.
+
+The negative `unactivated-promise` scenario deliberately ignores the first-turn
+contract. With the synthetic semantic reviewer returning no missing work, the
+runtime reports message success while no activation or visualization exists.
+This records the boundary honestly: deterministic verification starts at trusted
+activation, and cannot infer every natural-language authoring request. The
+combined provider/tool-mode path still needs a clean first-turn provider check.
+
+The small local-transport browser smoke passes (one test, real product host and
+observed button update). The broader existing packet-window regression timed
+out at its 180-second limit; it is not reported as passed. Those browser checks
+do not establish real-provider adherence.
