@@ -33,6 +33,7 @@ const rows = [
   ['file-source', 'colleague', '', undefined, true],
   ['file-reply', 'agent', '附件信息已收到。', 'file-source'],
   ['unavailable', 'me', '继续讨论。', 'deleted-source'],
+  ['foreign-reply', 'me', '不可跨会话解析原文。', 'foreign-source'],
   ['file-only-reply', 'me', '', 'original', true],
   ['multi-reply', 'me', '第一段回复。', 'original'],
   ['snapshot-reply', 'agent', '历史回复。', 'unloaded-source'],
@@ -49,7 +50,13 @@ const envelopes: ImEnvelope[] = rows.map(([id, fromUid, text, reply, file], inde
     content: id === 'empty-source' ? [] : id === 'tool-source' ? [{type:'tool-call',toolCallId:'fixture-call',toolName:'fixture.lookup',args:{},argsText:'{}',result:{ok:true}}] : id === 'multi-reply' ? [{type:'text',text}, {type:'text',text:'第二段正文保留。'}] : file ? [{type:'file', filename:'缓存设计.pdf', mimeType:'application/pdf', data:'https://example.com/design.pdf', sourceType:'url'}] : [{type:'text',text}],
     custom: reply ? {replyToClientMsgNo:reply, ...(id === 'snapshot-reply' ? {quoted:{id:reply,authorId:'history-author',authorName:'历史作者',body:'保留的历史引用摘要。'}} : {})} : {} }),
 }))
-const seed = () => useChatThreadStore.setState({ conversations: { 'quote-preview': { ...EMPTY_CONVERSATION_CHAT_STATE, loaded: true, hasMoreOlder: false, messages: convertEnvelopeBatch(envelopes, { participants, meId:'me' }) } } })
+const seed = () => useChatThreadStore.setState({ conversations: {
+  'quote-preview': { ...EMPTY_CONVERSATION_CHAT_STATE, loaded: true, hasMoreOlder: false, messages: convertEnvelopeBatch(envelopes, { participants, meId:'me' }) },
+  'other-conversation': { ...EMPTY_CONVERSATION_CHAT_STATE, loaded: true, hasMoreOlder: false, messages: convertEnvelopeBatch([{
+    ...envelopes[0], channelId: 'other-conversation', clientMsgNo: 'foreign-source', messageId: 'foreign-source',
+    payload: createNativeMessage({ id:'foreign-source',role:'user',content:[{type:'text',text:'OTHER_CONVERSATION_FIXTURE_ONLY'}] }),
+  }], {participants,meId:'me'}) },
+} })
 seed()
 harnessApi.list = async () => []
 messagesApi.markRead = async () => ({ ok:true, latestSeq:envelopes.length })
@@ -68,6 +75,7 @@ function Controls() {
     <button onClick={() => aui.thread.composer().setQuote({messageId:'file-source',text:''})}>回复附件</button>
     <button onClick={() => aui.thread.composer().setQuote({messageId:'citation-source',text:'已净化引用'})}>回复净化文本</button>
     <button onClick={() => aui.thread.composer().setQuote({messageId:'citation-source',text:''})}>回复隐藏文本</button>
+    <button onClick={() => aui.thread.composer().setQuote({messageId:'foreign-source',text:''})}>回复不可用原文</button>
     <button onClick={() => {
       const state = useChatThreadStore.getState().conversations['quote-preview']!
       const messages = projectMessageGroups(state.messages.map(message => ['empty-source','tool-source'].includes(message.id) ? {...message,content:[{type:'text' as const,text:'后续正文已到达'}]} : message))
