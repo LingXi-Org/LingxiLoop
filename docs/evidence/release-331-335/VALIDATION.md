@@ -26,9 +26,15 @@ Combination checks:
   transaction/unfinished-binding boundaries.
 - The historical migration fixture runs 44 existing checks with the actual
   integrity-verified formal 3.8.2 archive and current source. This isolated fixture
-  passed all 44 checks before integration; the final combined invocation and
-  affected product runtime integration are running and remain merge gates.
-  The exact candidate CI and final independent review remain merge gates.
+  passed all 44 checks in the final invocation alongside current 3.8.3 checks
+  (5/5 current, 44/44 historical, zero skips/failures in both groups).
+- Six affected product runtime files exercise 12 checks. Eleven initially passed;
+  the remaining scenario correctly made one joint review but retained the old
+  two-review assertion. Only that count and explanatory comments changed. Its
+  full seven-scenario owning test then passed with the real published Worker,
+  HTTP provider, PostgreSQL and IM projection. Call/repair limits, partial/gaps,
+  single delivery and replay-no-effects assertions remain unchanged.
+- Exact candidate CI and final frozen-head independent review remain merge gates.
 - #337's independent browser evidence covers desktop/mobile, light/dark and quote
   behavior. Its seven unrelated full E2E typecheck errors were reproduced on the
   untouched base; this release does not claim a clean full E2E typecheck.

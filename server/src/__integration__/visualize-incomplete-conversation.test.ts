@@ -21,7 +21,7 @@ import { installRecordingWukong } from './_recording-wukong.js'
 
 // Failure model: docs/evidence/issue-298/FAILURE-MODEL.md. Uses the published
 // Worker and OpenAI HTTP driver, real local PostgreSQL, and synthetic responses.
-// Pre-fix receipt is preserved separately; these assertions require formal3.8.2.
+// Pre-fix receipts are preserved separately; use the current formal runtime.
 test('ordinary and activated conversations repair missing delivery; exhausted repair remains partial', { timeout: 60000 }, async () => {
   await ensureSchemaOnce(); await resetAllTables()
   const im = await installRecordingWukong()
@@ -145,8 +145,10 @@ test('ordinary and activated conversations repair missing delivery; exhausted re
         if (promiseOnly) {
           // Issue 331: preserve the existing shared correction ceiling. A valid
           // envelope is not goal satisfaction, even if its body is non-empty.
+          // The current runtime makes one joint content/scope review; this
+          // fixture retains the default zero additional content allowance.
           // Failure model: docs/evidence/issue-331/FAILURE-MODEL.md.
-          assert.equal(calls,3); assert.equal(reviews,2); assert.equal(repairs,0)
+          assert.equal(calls,3); assert.equal(reviews,1); assert.equal(repairs,0)
           assert.equal(state?.run.goalOutcome?.verification,'inconclusive')
           assert.ok(state?.run.goalOutcome?.gaps?.length)
           const delivered = () => im.messages.filter(row => row.channelId === room && row.fromUid === agentId)
