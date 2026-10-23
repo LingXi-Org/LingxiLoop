@@ -15,6 +15,7 @@
     "docs/evidence/issue-348/browser/002-agent-work-trace-real-authorized-child.png": "9fb1272e6995a28e93bd7039105bc6f331a91c4740652ad5a60d6de701c52b44",
     "docs/evidence/issue-348/browser/001-agent-work-trace-public-tools-and-child.png": "d6feff4e0f8764d748ff0d9b550022678b931f8e649922e615f8af2181a9963c",
     "docs/evidence/issue-348/browser/001-agent-work-trace-real-worker-receipts.png": "2036c65560f2be4560793b873a5468fdf1b8f7dc336e78f9d6c95f3245b1bef4",
-    "docs/evidence/issue-348/browser/002-agent-work-trace-child-filter-reload.png": "6f18a7ebc0f6358ad94a0d347a4bc2541ffededd5bfdda15cc7c95ba3fa79e7a"
+    "docs/evidence/issue-348/browser/002-agent-work-trace-child-filter-reload.png": "6f18a7ebc0f6358ad94a0d347a4bc2541ffededd5bfdda15cc7c95ba3fa79e7a",
+    "server/src/__integration__/public-run-activity.test.ts": "23b1fb2e2017a2476ef6f84948b43675bc1fe56b4b2494455a17620d6e88cdb0"
   }
 }

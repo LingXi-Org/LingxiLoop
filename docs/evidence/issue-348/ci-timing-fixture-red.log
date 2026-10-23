@@ -1,0 +1,44 @@
+# Subtest: published worker persists authorized public activity and measured tool boundaries without private data
+not ok 1 - published worker persists authorized public activity and measured tool boundaries without private data
+  ---
+  duration_ms: 10683.603895
+  type: 'test'
+  location: '/workspace/issue348-waterfall/server/src/__integration__/public-run-activity.test.ts:1:1157'
+  failureType: 'testCodeFailure'
+  error: |-
+    The expression evaluated to a falsy value:
+    
+      assert.ok(legacy?.type === 'tool-call' && legacy.timing === undefined)
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/workspace/issue348-waterfall/server/src/__integration__/public-run-activity.test.ts:96:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 22749.825509
+[integration groups] current=failed historical=not requested
+file:///tmp/issue348-ci-qualification.mjs:15
+  child.once('error',reject); child.once('exit',code=>code === 0 ? resolve() : reject(new Error(`Owning check exited ${code}`)))
+                                                                                      ^
+
+Error: Owning check exited 1
+    at ChildProcess.<anonymous> (file:///tmp/issue348-ci-qualification.mjs:15:87)
+    at Object.onceWrapper (node:events:631:26)
+    at ChildProcess.emit (node:events:509:28)
+    at ChildProcess._handle.onexit (node:internal/child_process:295:12)
+
+Node.js v24.19.0

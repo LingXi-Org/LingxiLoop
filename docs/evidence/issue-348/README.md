@@ -25,6 +25,12 @@ Tool summaries and public input fields still use the existing authorized display
 
 The first local SQL attempt failed because the workspace disk was full; only this task's temporary resources were cleaned. The successful integration uses a dedicated loopback PostgreSQL container with an in-memory data directory. Earlier browser attempts exposed fixture setup issues (the nested details disclosure and an empty queued-parent message), which were corrected before final verification; no failed run is represented as passed.
 
+### CI timing fixture correction
+
+CI run `39944352449` on `ce4ad98030a3c100a846c8baffa396300ec899a6` failed one existing integration assertion: deleting optional tool presentation rows was assumed to remove all timing. The retained native CP event clocks now correctly survive that deletion. The unchanged test reproduced the same failure against formal 3.8.3 in a dedicated local test database before this correction.
+
+The fixture now verifies that presentation-free timing exactly equals the captured CP event boundaries, then removes those clock fields from this synthetic run to represent genuinely old history. Its original `legacy.timing === undefined` assertion remains unchanged. No product source changed. The owning `public-run-activity.test.ts` and `agent-work-trace.test.ts` passed **2/2**, with server typecheck and file lint passing. An initial post-correction local attempt hit the existing 100ms optional-presentation timeout during its earlier full-content equality assertion; after the concurrent compiler finished, the same two files passed without changing that assertion. The local red/green evidence is retained alongside this report. Exact new-head CI remains required.
+
 ## Remaining collection work
 
 This product phase does **not** close #348. The separate upstream phase collects existing Python lifecycle events and runtime-owned host actions such as `task.inspect` / resource refresh through a formal public trace. Those events previously lacked the required public timing/identity collection. That work does not modify the frozen 3.8.4 release and requires its own upstream review, CI and formal release before product integration. No historical missing timestamp can be reconstructed by this patch.

@@ -92,6 +92,20 @@ test('published worker persists authorized public activity and measured tool bou
     assert.ok(rows.length >= 4)
     assert.doesNotMatch(JSON.stringify(rows), /arguments|scratchpad|provider|system_prompt|PRIVATE_SECRET/)
     await pool.query('DELETE FROM agent_public_tool_activity WHERE company_id=$1 AND run_id=$2', [companyId, identity.runId])
+    // Presentation retention and native execution clocks are independent. A
+    // missing display row must not erase actual, identity-bound CP boundaries.
+    const boundaries = (await pool.query<{ kind: string; at: number }>(`SELECT kind,data->'_executionTrace'->'at' AS at
+      FROM lingxios.agent_run_events WHERE run_id=$1 AND tenant_id=$2 AND data->>'toolCallId'=$3
+        AND kind IN ('tool.started','tool.completed') ORDER BY seq`, [identity.runId, companyId, call.toolCallId])).rows
+    assert.equal(boundaries.length, 2)
+    const cpOnly = (await readRunProjection(api, identity, true)).snapshot.message.content.find(part => part.type === 'tool-call')
+    assert.ok(cpOnly?.type === 'tool-call')
+    assert.deepEqual(cpOnly.timing, { startedAt: boundaries.find(event => event.kind === 'tool.started')!.at,
+      completedAt: boundaries.find(event => event.kind === 'tool.completed')!.at })
+    // A genuinely old run has neither presentation timing nor native clock
+    // metadata. Preserve the original no-fabricated-times assertion for it.
+    await pool.query(`UPDATE lingxios.agent_run_events SET data=data-'_executionTrace'
+      WHERE run_id=$1 AND tenant_id=$2 AND kind IN ('tool.started','tool.completed')`, [identity.runId, companyId])
     const legacy = (await readRunProjection(api, identity, true)).snapshot.message.content.find(part => part.type === 'tool-call')
     assert.ok(legacy?.type === 'tool-call' && legacy.timing === undefined)
     await mkdir('artifacts/run-activity', { recursive: true })
