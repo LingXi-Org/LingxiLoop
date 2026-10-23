@@ -1,17 +1,17 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
-import { createServer } from 'node:http'
-import { Pool } from 'pg'
-import { env } from '../env.js'
-import { createOpenAIClient } from '../llm-client.js'
-import { __setLlmClientOverrideForTesting,createEmbedding } from '../llm.js'
-import { __setLlmLedgerOverrideForTesting,recordLlmCall } from '../llm-ledger.js'
-import { readPublicLlmTrace } from '../agent-runtime/trace-activity.js'
-import { buildNativeRunTrace,buildRunTrace } from '../agent-runtime/run-trace.js'
-import { createNativeMessage } from '../../../src/lib/nativeMessage.js'
-import { createRunView } from '@lyyzka/lingxios/ui'
 import { mkdirSync,writeFileSync } from 'node:fs'
+import { createServer } from 'node:http'
 import { dirname } from 'node:path'
+import test from 'node:test'
+import { createRunView } from '@lyyzka/lingxios/ui'
+import { Pool } from 'pg'
+import { createNativeMessage } from '../../../src/lib/nativeMessage.js'
+import { buildNativeRunTrace,buildRunTrace } from '../agent-runtime/run-trace.js'
+import { readPublicLlmTrace } from '../agent-runtime/trace-activity.js'
+import { env } from '../env.js'
+import { __setLlmClientOverrideForTesting,createEmbedding } from '../llm.js'
+import { createOpenAIClient } from '../llm-client.js'
+import { __setLlmLedgerOverrideForTesting,recordLlmCall } from '../llm-ledger.js'
 
 // Complete local HTTP provider -> captured invocation -> real PostgreSQL ledger
 // -> scoped public trace. Temporary tables and synthetic inputs only.
@@ -52,7 +52,8 @@ test('new Pro embedding records exact invocation endpoints and its captured curr
     assert.equal(row.tokensIn,10);assert.equal(row.tokensOut,0)
     assert.ok(Math.abs(row.cost!-0.0000001)<1e-15)
     assert.equal(row.costEstimated,true)
-    assert.equal(row.costBreakdown?.length,1)
+    assert.ok(row.costBreakdown)
+    assert.equal(row.costBreakdown.length,1)
     assert.equal(row.costBreakdown[0].currency,'CNY')
     assert.ok(Math.abs(row.costBreakdown[0].amount-0.0000007)<1e-18)
     assert.equal(row.costBreakdown[0].estimated,true)
