@@ -234,6 +234,7 @@ export async function startLingxiOSWorker() {
   // tool continuations exceed the former 90s limit; retain bounded attempts.
   const requestTimeoutMs = positiveInteger('AGENT_OS_MODEL_REQUEST_TIMEOUT_MS', env.OPENAI_MODEL === 'zai-org/GLM-5.3-Flash' ? 180_000 : 90_000)
   const options = {
+    additionalContentCorrections: 3,
     modelBudget: common().modelBudget,
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),
