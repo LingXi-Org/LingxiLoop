@@ -121,6 +121,23 @@ test('unavailable native contract accepts only the explicit non-delivery explana
   assert.equal(records[0].status, 'inconclusive', 'honest non-delivery must not become a satisfied authoring envelope')
   checks.push('honest-unavailable')
 })
+// Issue 342 failure model: docs/evidence/issue-342/FAILURE-MODEL.md.
+test('revoked audience and cancellation cannot deliver or expose saved repair candidates', async () => {
+  const doc = await saveVisualizeDocument({ ...actor(),runId,agentId,name: 'revocation',html,requestVersion: 1 })
+  await withTransaction(pool, async database => {
+    await database.query(`UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1`, [channelId,JSON.stringify([agentId])])
+    const c = { ...context(reference(doc.path)),database }
+    assert.equal((await verifyVisualizeDelivery(c))[0].outcome, 'pending')
+    const records = await verifyVisualizeAuthoringCandidate({ ...c,candidate: { ...c.candidate,body: 'I will create the view.' } })
+    assert.equal(records[0].status, 'failed')
+    assert.equal(records[0].evidence.savedCandidates, undefined)
+    await database.query(`UPDATE im_channel_bindings SET profile=jsonb_set(profile,'{members}',$2::jsonb) WHERE channel_id=$1`, [channelId,JSON.stringify([userId,agentId])])
+  })
+  const cancelled = { ...context(reference(doc.path)),signal: AbortSignal.abort(new Error('synthetic-cancellation')) }
+  await assert.rejects(verifyVisualizeDelivery(cancelled), /synthetic-cancellation/)
+  await assert.rejects(verifyVisualizeAuthoringCandidate(cancelled), /synthetic-cancellation/)
+  checks.push('revocation-and-cancellation')
+})
 test('capability resolver and both final visualize checks never reacquire the product pool', async () => {
   const doc = await saveVisualizeDocument({ ...actor(),runId,agentId,name: 'borrowed',html,requestVersion: 1 })
   await withTransaction(pool, async database => {
