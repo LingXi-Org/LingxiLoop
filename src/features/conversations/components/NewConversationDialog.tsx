@@ -1,6 +1,7 @@
 import { PlusSignIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
+import { ApiError } from '@/api/core/http'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Avatar } from '@/components/Avatar'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,7 @@ import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { userFacingError } from '@/lib/userFacingError'
 import { useAuth } from '@/stores/auth'
 import { conversationsApi } from '../api'
-import { useConversations } from '../store'
+import { captureConversationScope, useConversations } from '../store'
 
 export function NewConversationDialog({ companyId, projectId, isMobile, onCreated, trigger }: {
   companyId: string
@@ -32,6 +33,7 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [createdId, setCreatedId] = useState<string | null>(null)
+  const creationIntent = useRef<{ fingerprint: string; requestId: string } | null>(null)
   const submitting = useRef(false)
   const mounted = useRef(false)
   const formId = useId()
@@ -50,34 +52,39 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
   const isCurrentWorkspace = () => {
     const workspace = getWorkspaceSession()
     return mounted.current && workspace?.companyId === companyId && workspace.projectId === projectId
-      && useAuth.getState().user?.id === meId
+      && useAuth.getState().user?.id === meId && useAuth.getState().activeCompanyId === companyId
   }
 
   const changeOpen = (next: boolean) => {
     if (submitting.current) return
     setOpen(next)
     if (next) {
+      creationIntent.current = null
       setQuery(''); setSelectedIds([]); setTitle(''); setError(null); setCreatedId(null)
     }
   }
 
   const submit = async () => {
     if (submitting.current || (!createdId && !selectionValid) || !isCurrentWorkspace()) return
+    const scopeIsCurrent = captureConversationScope()
     submitting.current = true
     setBusy(true); setError(null)
     let conversationId = createdId
     try {
       if (!conversationId) {
-        const result = await conversationsApi.create(projectId, {
-          participantIds: selectedIds,
-          ...(selectedIds.length > 1 && title.trim() ? { title: title.trim() } : {}),
-        })
-        if (!isCurrentWorkspace()) return
+        const input = { participantIds: selectedIds,
+          ...(selectedIds.length > 1 && title.trim() ? { title: title.trim() } : {}) }
+        const fingerprint = JSON.stringify([[...selectedIds].sort(), input.title ?? ''])
+        if (creationIntent.current?.fingerprint !== fingerprint) {
+          creationIntent.current = { fingerprint, requestId: crypto.randomUUID() }
+        }
+        const result = await conversationsApi.create(projectId, { ...input, requestId: creationIntent.current.requestId })
+        if (!isCurrentWorkspace() || !scopeIsCurrent()) return
         conversationId = result.id
         setCreatedId(conversationId)
       }
       await useConversations.getState().reload()
-      if (!isCurrentWorkspace()) return
+      if (!isCurrentWorkspace() || !scopeIsCurrent()) return
       const refreshed = useConversations.getState()
       if (refreshed.error || !refreshed.loaded || refreshed.loading || refreshed.projectId !== projectId || !refreshed.list.some((item) => item.id === conversationId)) {
         setError('对话已就绪，但列表刷新失败，请重试刷新。')
@@ -86,9 +93,13 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
       setOpen(false)
       onCreated(conversationId)
     } catch (reason) {
-      if (isCurrentWorkspace()) setError(conversationId
+      if (isCurrentWorkspace() && scopeIsCurrent()) setError(conversationId
         ? '对话已就绪，但列表刷新失败，请重试刷新。'
-        : userFacingError(reason, '暂时无法创建对话，请稍后重试。'))
+        : reason instanceof ApiError && (reason.code === 'invalid_members' || reason.code === 'invalid_selection')
+          ? '所选参与者已不可用或不属于当前项目，请重新选择。'
+          : reason instanceof ApiError && reason.code === 'creation_conflict'
+            ? '本次创建请求的选择已发生变化，请关闭后重新创建。'
+            : userFacingError(reason, '暂时无法创建对话，请稍后重试。'))
     } finally {
       submitting.current = false
       if (mounted.current) setBusy(false)
@@ -131,6 +142,7 @@ export function NewConversationDialog({ companyId, projectId, isMobile, onCreate
             <Label htmlFor={titleId}>群聊名称（可选）</Label>
             <Input id={titleId} value={title} onChange={(event) => setTitle(event.target.value)} maxLength={80} placeholder="默认使用参与者姓名" disabled={busy || Boolean(createdId)} />
           </div>}
+          {selectedIds.length > 0 && !selectionValid && <p role="alert" className="shrink-0 text-sm text-destructive">所选参与者已不可用或不属于当前项目，请重新选择。</p>}
           {error && <p role="alert" className="shrink-0 text-sm text-destructive">{error}</p>}
         </form>
         <DialogFooter className="shrink-0">

@@ -47,7 +47,7 @@ interface BindingRow {
 
 export async function listEligibleConversationParticipants(
   db: Queryable,
-  args: { companyId: string; projectId: string; ids: string[] },
+  args: { companyId: string; projectId: string; userId: string; ids: string[] },
 ): Promise<ParticipantRow[]> {
   const { rows } = await db.query<ParticipantRow>(
     `SELECT participant.id,participant.kind,participant.name,participant.departed_at
@@ -57,14 +57,14 @@ export async function listEligibleConversationParticipants(
         AND NOT EXISTS (SELECT 1 FROM learning_project_teacher_agents managed
           WHERE managed.company_id=$1 AND managed.agent_id=participant.id)
         AND (participant.kind='agent' OR EXISTS (
-          SELECT 1 FROM project_memberships member
-          JOIN company_memberships company_member
-            ON company_member.company_id=member.company_id AND company_member.user_id=member.user_id
-           AND company_member.status='ACTIVE' AND company_member.ended_at IS NULL
-           AND company_member.period_id=member.company_period_id
-          WHERE member.company_id=$1 AND member.project_id=$2 AND member.user_id=participant.id
-            AND member.status='ACTIVE'))`,
-    [args.companyId, args.projectId, args.ids],
+          SELECT 1 FROM company_memberships company_member
+          WHERE company_member.company_id=$1 AND company_member.user_id=participant.id
+            AND company_member.status='ACTIVE' AND company_member.ended_at IS NULL
+            AND ((participant.id=$4 AND company_member.is_admin) OR EXISTS (
+              SELECT 1 FROM project_memberships member
+              WHERE member.company_id=$1 AND member.project_id=$2 AND member.user_id=participant.id
+                AND member.status='ACTIVE' AND member.company_period_id=company_member.period_id))))`,
+    [args.companyId, args.projectId, args.ids, args.userId],
   )
   return rows
 }
