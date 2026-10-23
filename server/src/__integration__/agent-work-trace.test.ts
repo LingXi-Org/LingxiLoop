@@ -3,7 +3,7 @@ import test from 'node:test'
 import { readFile,mkdtemp,rm,writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { randomUUID } from 'node:crypto'
+import { createHash,randomUUID } from 'node:crypto'
 import { Pool } from 'pg'
 import { createLingxiOS,packageResources,skillIndex,type ConversationPolicy } from '@lyyzka/lingxios'
 import { createWorker } from '@lyyzka/lingxios/worker'
@@ -52,22 +52,51 @@ test('real skill/retrieval calls and authorized graph children survive history a
     const native = await app.readRunTrace(identity)
     assert.ok(native)
     const nativeTools = native.spans.filter(span=>span.kind === 'tool')
-    assert.equal(nativeTools.length,2)
+    assert.deepEqual(nativeTools.map(span=>span.name).sort(),['research.search','skills.load','task.inspect'])
     assert.ok(nativeTools.every(span=>span.startedAt !== null && span.completedAt !== null && span.completedAt >= span.startedAt))
+    assert.ok(nativeTools.every(span=>span.requestVersion === native.requestVersion && span.fence === native.fence && span.toolCallId?.startsWith('host:')))
+    const publicTools = (await app.readEvents(identity)).events.filter(event=>event.visibility === 'user' && ['tool.started','tool.completed'].includes(event.kind))
+    const starts = publicTools.filter(event=>event.kind === 'tool.started')
+    assert.equal(starts.length,2)
+    const boundaries = starts.map(start=>{
+      const ends = publicTools.filter(event=>event.kind === 'tool.completed' && event.data.toolCallId === start.data.toolCallId)
+      assert.equal(ends.length,1)
+      const end = ends[0]!
+      for (const event of [start,end]) {
+        assert.equal(event.runId,identity.runId);assert.equal(event.data.requestVersion,native.requestVersion);assert.equal(event.data.fence,native.fence)
+        assert.equal(event.data.attemptId,start.data.attemptId);assert.ok(event.seq <= native.seq)
+      }
+      assert.ok(end.seq > start.seq);assert.equal(typeof start.data.toolCallId,'string')
+      const timing = (event: typeof start) => {
+        const value = event.data._executionTrace as { version: number;at: number;requestVersion: number;fence: number }
+        assert.ok(value);assert.equal(value.version,1);assert.equal(value.requestVersion,event.data.requestVersion);assert.equal(value.fence,event.data.fence)
+        assert.ok(Number.isFinite(value.at));return value.at
+      }
+      return { toolCallId: String(start.data.toolCallId),startedAt: timing(start),completedAt: timing(end) }
+    })
     const readNative = app.readRunTrace.bind(app)
     app.readRunTrace = async (...args)=>{ const trace = await readNative(...args);return trace ? { ...trace,revision: 'fixture-model-only',spans: trace.spans.filter(span=>span.kind !== 'tool') } : null }
     const rescued = (await readRunProjection(app,identity,false,undefined,undefined,undefined,true)).snapshot
     const rescuedTools = runTraceSchema.parse(rescued.message.metadata.custom.runTrace).root.children.filter(span=>span.kind === 'tool')
     assert.equal(rescuedTools.length,2,'public real tool events survive a model-only native collector')
+    assert.deepEqual(rescuedTools.map(span=>span.id).sort(),boundaries.map(item=>`tool-${createHash('sha256').update(item.toolCallId).digest('hex').slice(0,24)}`).sort())
     for (const span of rescuedTools) {
-      const original = nativeTools.find(item=>item.name === (span.workKind === 'skill' ? 'skills.load' : 'research.search'))!
-      assert.equal(span.start,original.startedAt!-native.origin!);assert.equal(span.end,original.completedAt!-native.origin!)
+      const source = boundaries.find(item=>`tool-${createHash('sha256').update(item.toolCallId).digest('hex').slice(0,24)}` === span.id)
+      assert.ok(source);assert.ok(source.completedAt >= source.startedAt)
+      assert.equal(span.start,source.startedAt-native.origin!);assert.equal(span.end,source.completedAt-native.origin!)
+      assert.equal(span.durationMs,source.completedAt-source.startedAt)
     }
     app.readRunTrace = readNative
     const projection = await readRunProjection(app,identity,false,undefined,undefined,undefined,true)
     const history = projection.snapshot
     const work = runTraceSchema.parse(history.message.metadata.custom.runTrace).root.children.filter(span=>span.kind === 'tool')
-    assert.deepEqual(new Set(work.map(span=>span.workKind)),new Set(['skill','retrieval']))
+    assert.deepEqual(work.map(span=>span.id).sort(),nativeTools.map(span=>span.spanId).sort())
+    for (const source of nativeTools) {
+      const span = work.find(item=>item.id === source.spanId)!
+      assert.equal(span.start,source.startedAt!-native.origin!);assert.equal(span.end,source.completedAt!-native.origin!)
+      assert.equal(span.durationMs,source.completedAt!-source.startedAt!);assert.equal(span.status,'complete')
+    }
+    assert.deepEqual(new Set(work.map(span=>span.workKind)),new Set(['skill','retrieval','tool']))
     assert.ok(work.every(span=>span.cost === null && span.tokensIn === null))
     const upstream = await app.streamRun(identity,{ trace: true })
     const response = assistantRunResponse(upstream.body!,projection),tracker = new AssistantTransportDeltaTracker()
