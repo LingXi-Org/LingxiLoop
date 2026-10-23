@@ -12,6 +12,9 @@ Failure cases before implementation:
   raw prompts, reasoning, arguments, credentials or private trace are needed.
 - Native trace and usage fallback must agree on labels; older runtime records
   and clients without the optional field retain generic model-call labels.
+- The final product v1 TraceSpan schema is strict in existing browser clients.
+  Keep operation in internal/native metadata and map it to the existing name;
+  never add an unnegotiated public key that makes the entire waterfall unreadable.
 - Tenant/project/principal authorization in scoped usage reads stays unchanged.
 
 The performance mechanism and provider protocol changes belong to the upstream

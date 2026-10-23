@@ -26,7 +26,6 @@ function ledgerSpan(call: PublicLlmTrace,relative: (value: unknown)=>number|null
   const end = candidate !== null && (start === null || candidate >= start) ? candidate : null
   const operation = readModelOperation(call.operation)
   return { id: `llm-${opaque(call.id)}`,name: call.apiKind === 'embedding' ? '向量编码' : operation ? modelOperationLabel[operation] : '模型调用',kind: call.apiKind === 'embedding' ? 'embedding' : 'llm',
-    ...(operation ? { operation } : {}),
     model: safe(call.model)?.slice(0,160) ?? '未知模型',status: call.status,start,end,durationMs: call.durationMs,
     tokensIn: call.tokensIn,tokensOut: call.tokensOut,cost: call.cost,costEstimated: call.costEstimated,children: [] }
 }
@@ -102,7 +101,7 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
       ? item.completedAt-item.startedAt : null
     spans.set(item.spanId,{ id: item.spanId,name: item.kind === 'agent' ? item.childRunId ? '子任务' : '运行' : item.kind === 'llm' ? embedding ? '向量编码' : operation ? modelOperationLabel[operation] : '模型调用' : safe(display.title)?.slice(0,160) ?? '工具调用',
       kind: embedding ? 'embedding' : item.kind,status: item.state === 'failed' ? 'error' : item.state,start: relative(item.startedAt),end: relative(item.completedAt),durationMs,
-      ...(item.kind === 'llm' ? { model: safe(item.model)?.slice(0,160) ?? '未知模型',...(operation ? { operation } : {}) } : {}),detail,
+      ...(item.kind === 'llm' ? { model: safe(item.model)?.slice(0,160) ?? '未知模型' } : {}),detail,
       ...(item.kind === 'tool' && parsed.success ? { input: display.input,output: safe(display.summary) } : {}),
       tokensIn: item.kind === 'llm' && item.usageAvailable ? number(item.inputTokens) : null,
       tokensOut: item.kind === 'llm' && item.usageAvailable ? number(item.outputTokens) : null,

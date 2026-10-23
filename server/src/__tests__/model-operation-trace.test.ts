@@ -24,6 +24,7 @@ test('scoped usage propagates only safe invocation operations; labels preserve e
   assert.equal(trace.root.tokensIn, 50)
   assert.equal(trace.root.tokensOut, 10)
   assert.equal(trace.root.cost, 0.05)
+  assert.ok(trace.root.children.every(call => !Object.hasOwn(call, 'operation')), 'strict v1 clients must retain the waterfall')
   assert.ok(runTraceSchema.safeParse(trace).success)
 })
 
@@ -39,7 +40,7 @@ test('native operation metadata survives projection without guessing or changing
   assert.equal(trace.root.children.length, 2)
   assert.equal(trace.root.children[0]!.name, '内容验收')
   assert.equal(trace.root.children[1]!.name, '模型调用')
-  assert.equal(Reflect.get(trace.root.children[0]!, 'operation'), 'content-review')
+  assert.equal(Reflect.get(trace.root.children[0]!, 'operation'), undefined, 'the v1 product wire shape stays compatible')
   assert.equal(Reflect.get(trace.root.children[1]!, 'operation'), undefined)
   assert.doesNotMatch(JSON.stringify(trace), /PRIVATE_REASONING/)
   assert.ok(runTraceSchema.safeParse(trace).success)
