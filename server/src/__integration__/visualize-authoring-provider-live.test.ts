@@ -20,6 +20,7 @@ import { siliconFlowPricingForModel } from '../agent-runtime/pricing.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 import { assertLocalQualificationTarget } from './_local-qualification-target.js'
+import { retainedAppendText } from './_retained-answer-measurement.js'
 import { openNotebookClient } from '../modules/knowledge/provider.js'
 
 // Opt-in only. Preparation/typechecking never executes a provider call.
@@ -93,7 +94,7 @@ test('real provider activates and delivers a synthetic interactive diagram witho
         FROM lingxios.agent_run_events event JOIN lingxios.agent_work_items work ON work.id=event.run_id
         WHERE event.tenant_id=$1 AND event.run_id=$2 AND event.kind IN ('public.text.delta','public.text.sealed','tool.started','tool.completed') ORDER BY event.seq`,
       [companyId, runId])).rows
-      const parts = new Map<string, string>()
+      const parts = new Map<string, {text:string;operation:string}>()
       const seals = new Map<string, string>()
       const saveCalls = new Set<string>()
       let firstAnswerMs: number | null = null, firstUsefulAnswerMs: number | null = null
@@ -112,20 +113,20 @@ test('real provider activates and delivers a synthetic interactive diagram witho
         }
         if (event.kind !== 'public.text.delta' || event.data.purpose !== 'answer' || typeof event.data.text !== 'string') continue
         firstAnswerMs ??= elapsed
-        const id = String(event.data.partId), text = (parts.get(id) ?? '') + event.data.text
-        parts.set(id, text)
+        const id = String(event.data.partId), text = (parts.get(id)?.text ?? '') + event.data.text
+        parts.set(id, {text,operation:String(event.data.operation)})
         // Only new deltas from sources retained by this request's committed
         // answer can qualify. Failed/replaced drafts and copied history cannot.
-        const retainedText = acceptedSources?.segments.map(source=>parts.get(source.partId) ?? '').join('') ?? ''
-        if (acceptedIds.has(id) && firstUsefulAnswerMs === null && isUseful(retainedText)) {
+        const retainedText = retainedAppendText(acceptedSources?.segments ?? [],parts)
+        if (acceptedIds.has(id) && event.data.operation==='append' && firstUsefulAnswerMs === null && isUseful(retainedText)) {
           firstUsefulAnswerMs = elapsed; usefulAnswerExcerpt = retainedText.trimStart().slice(0, 600)
         }
       }
       const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
       const sourceProof = acceptedSources?.segments.map(source=>({ segmentId:source.segmentId,partId:source.partId,
         sealed:seals.get(source.partId)===source.bodyHash,
-        exactRawHash:parts.has(source.partId) && sha256(parts.get(source.partId)!)===source.bodyHash })) ?? []
-      const exactBody = !!acceptedSources && acceptedSources.segments.map(source=>parts.get(source.partId) ?? '').join('').trim()===finalState?.message?.body
+        exactRawHash:parts.has(source.partId) && sha256(parts.get(source.partId)!.text)===source.bodyHash })) ?? []
+      const exactBody = !!acceptedSources && acceptedSources.segments.map(source=>parts.get(source.partId)?.text ?? '').join('').trim()===finalState?.message?.body
         && sha256(finalState?.message?.body ?? '')===acceptedSources.bodyHash
       return { basis: 'durable-public-event-recorded-at', browserPaintMeasured: false,
         firstAnswerMs, firstUsefulCandidateMs: firstUsefulAnswerMs, firstSaveStartedMs, firstSaveCompletedMs,
