@@ -22,6 +22,8 @@ partial old histories; historical upgrade coverage must still execute in full.
 - CI uses the existing integration command and existing selector-test check. No
   second production runtime dependency, new workflow, credential or schema write
   outside local/CI disposable test databases is introduced.
+  The existing integration step receives the same package-read token already used
+  by its npm install step; no token is persisted or new permission requested.
 
 Local verification on 2026-10-23: selector/boundary tests 4/4; server lint and
 typecheck passed. The verified physical 3.8.2 fixture passed 43 tests in the four

@@ -411,6 +411,7 @@ jobs:
       - run: npm run test:integration
         env:
           INTEGRATION_TEST_FILES: ${{ needs.changes.outputs.integration_files }}
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - if: needs.changes.outputs.deep_integration == 'true'
         name: Distributed SSE with a real Redis restart
         run: node --import tsx scripts/test-distributed-realtime.mjs
