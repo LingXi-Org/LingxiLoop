@@ -1,5 +1,5 @@
 import { useCustom, useInvalidate } from '@refinedev/core'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +12,9 @@ import { AdminMetricsSkeleton } from './loading'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { ErrorPanel } from './pages'
 import { userFacingError } from '@/lib/userFacingError'
+import { CourseTeacherAssignmentDialog } from '@/features/learning/components/CourseTeacherAssignmentDialog'
+import type { ApiCourse } from '@/features/learning/contracts'
+import { notifyAction } from '@/lib/actionToast'
 
 export function CompanyDashboard() {
   const session = useManagementSession()
@@ -46,6 +49,8 @@ export function CompanyMembers() {
   const result = useCustom<ApiCompanyMember[]>({ url: `/api/companies/${encodeURIComponent(companyId ?? '')}/members`, method: 'get', queryOptions: { enabled: !!companyId } })
   const invalidate = useInvalidate()
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [invitation, setInvitation] = useState('')
+  const [assigning, setAssigning] = useState<ApiCompanyMember | null>(null)
+  useEffect(() => { setAssigning(null) }, [companyId])
   if (!companyId || session?.mode !== 'company') return <Navigate to="/" replace />
   const run = async (work: () => Promise<unknown>) => {
     setBusy(true); setError('')
@@ -54,6 +59,7 @@ export function CompanyMembers() {
     finally { setBusy(false) }
   }
   return <section className="ui-enter space-y-6" aria-busy={result.query.isFetching}><h1 className="text-2xl font-semibold">公司成员</h1>
+    <p className="text-sm text-muted-foreground">组织教师身份不代表课程成员资格；普通教师须明确加入指定课程。公司管理权限与课程成员分别显示，不会自动建立课程成员资格。</p>
     {session.capabilities.invite && <form className="flex flex-wrap items-end gap-3" onSubmit={event => {
       event.preventDefault(); const email = new FormData(event.currentTarget).get('email')
       void run(async () => { const invite = await adminFetch<{ url: string }>(`/companies/${encodeURIComponent(companyId)}/invitations`, { method: 'POST', body: JSON.stringify({ email, isAdmin: false, sendEmail: false }) }); setInvitation(invite.url) })
@@ -61,7 +67,10 @@ export function CompanyMembers() {
     {invitation && <label className="block">邀请链接<Input readOnly value={invitation} onFocus={event => event.target.select()} /></label>}
     {error && <p role="alert">{error}</p>}
     {result.query.isError && <ErrorPanel message="成员刷新失败" retry={() => void result.query.refetch()} />}{!result.query.data ? (result.query.isError ? null : <ResourceSkeleton count={6} label="正在加载公司成员" />) : <ul className="ui-stagger space-y-3">{result.query.data.data.map(member => <li key={member.id} className="flex flex-wrap items-center gap-3 rounded-xl border p-4">
-      <div className="min-w-0 flex-1"><Link to={recordPath('users', member.id)} className="font-semibold underline">{member.name}</Link><p className="break-all text-sm">{member.email} · {member.role === 'teacher' ? '教师' : '学生'}{member.isAdmin ? ' · 管理员' : ''}</p></div>
+      <div className="min-w-0 flex-1"><Link to={recordPath('users', member.id)} className="font-semibold underline">{member.name}</Link><p className="break-all text-sm">{member.email} · {member.role === 'teacher' ? '组织教师' : '学生'}{member.isAdmin ? ' · 管理员' : ''}</p>
+        {member.courses.length ? <ul aria-label={`${member.name} 的课程授权`} className="mt-2 text-sm text-muted-foreground">{member.courses.map(course => <li key={course.courseId}>{course.name} · {course.role === 'teacher' ? '课程教师' : '学习者'}</li>)}</ul> : member.role === 'teacher' && <p className="mt-2 text-sm text-muted-foreground">尚未加入课程</p>}
+      </div>
+      {member.role === 'teacher' && session.capabilities.updateMember && <Button variant="outline" disabled={busy} onClick={() => setAssigning(member)}>添加课程授权</Button>}
       {member.role === 'teacher' && session.capabilities.updateMember && <Button variant="outline" disabled={busy} onClick={() => void run(async () => {
         if (await confirmSensitiveAction({ title: member.isAdmin ? '撤销管理权限？' : '授予管理权限？', description: `此操作将立即更改 ${member.name} 的公司管理权限。最后一位管理员须先交接。`, confirmLabel: '确认' })) await adminFetch(`/companies/${encodeURIComponent(companyId)}/members/${encodeURIComponent(member.id)}`, { method: 'PATCH', body: JSON.stringify({ isAdmin: !member.isAdmin }) })
       })}>{member.isAdmin ? '撤销管理权限' : '授予管理权限'}</Button>}
@@ -69,5 +78,31 @@ export function CompanyMembers() {
         if (await confirmSensitiveAction({ title: `移除 ${member.name}？`, description: '账号将停用，所有访问权限立即撤销，公司历史记录保留。', confirmLabel: '移除成员', tone: 'destructive' })) await adminFetch(`/companies/${encodeURIComponent(companyId)}/members/${encodeURIComponent(member.id)}`, { method: 'DELETE' })
       })}>移除成员</Button>}
     </li>)}</ul>}
+    {assigning && session.capabilities.updateMember && <CompanyTeacherAssignment key={`${companyId}:${assigning.id}`} member={assigning}
+      refresh={async () => { const refreshed = await result.query.refetch(); if (refreshed.isError || !refreshed.data) throw new Error('成员读回失败，请重试。'); return refreshed.data.data }} onClose={() => setAssigning(null)} />}
   </section>
+}
+
+function CompanyTeacherAssignment({ member, refresh, onClose }: {
+  member: ApiCompanyMember; refresh: () => Promise<ApiCompanyMember[]>; onClose: () => void
+}) {
+  const mounted = useRef(false)
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false } }, [])
+  const loadOptions = useCallback(async () => {
+    const courses = await adminFetch<ApiCourse[]>('/control/company/courses')
+    return courses.filter(course => !member.courses.some(joined => joined.courseId === course.id))
+      .map(course => ({ id: course.id, label: course.name }))
+  }, [member.courses])
+  const assign = async (courseId: string, idempotencyKey: string) => {
+    await adminFetch(`/control/company/courses/${encodeURIComponent(courseId)}/members/${encodeURIComponent(member.id)}`, {
+      method: 'PUT', body: JSON.stringify({ role: 'TEACHER', idempotencyKey }),
+    })
+    const members = await refresh()
+    if (!members.find(row => row.id === member.id)?.courses.some(course => course.courseId === courseId && course.role === 'teacher')) {
+      throw new Error('课程教师资格尚未确认，请重试。')
+    }
+    if (!mounted.current) return
+    notifyAction({ title: '课程授权已确认', description: member.name })
+  }
+  return <CourseTeacherAssignmentDialog title={`为 ${member.name} 添加课程授权`} description="选择一门当前可管理的课程。保存后将核对该教师的课程成员资格。" choiceLabel="指定课程" loadOptions={loadOptions} assign={assign} onClose={onClose} />
 }
