@@ -21,6 +21,11 @@ import { activityAnnotation } from '../../../src/lib/runActivity.js'
 import { answerSegment } from '../../../src/lib/answerSegment.js'
 import { installProductionModelTransport } from './_production-model-transport.js'
 
+// Native-envelope failure model: the deliberately invalid chat.ask must have
+// valid transport framing and still fail the original business schema, then
+// recover with exactly one answer call. A malformed envelope is not equivalent
+// coverage. Private reasoning/arguments remain absent from previews and delivery.
+
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
 after(async () => { await teardownAll(); await im?.close() })
@@ -52,8 +57,10 @@ test('production workers always expose full tools and disable thinking even with
         res.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason }] })}\n\n`)
       assert.ok(!request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'response__upgrade'))
       if(requests.filter(item=>item.stream).length===1){
-        send({role:'assistant',reasoning_content:privateText,tool_calls:[{index:0,id:'invalid-question',type:'function',function:{name:'chat__ask',arguments:'{"title":'}}]})
-        send({tool_calls:[{index:0,function:{arguments:'"PRIVATE TOOL ARGUMENT"}'}}]},'tool_calls')
+        const parameters = request.tools.find((tool: { function: { name: string } }) => tool.function.name === 'chat__ask').function.parameters
+        assert.deepEqual(parameters.required, ['public_output', 'arguments'])
+        send({role:'assistant',reasoning_content:privateText,tool_calls:[{index:0,id:'invalid-question',type:'function',function:{name:'chat__ask',arguments:'{"public_output":null,"arguments":{"title":'}}]})
+        send({tool_calls:[{index:0,function:{arguments:'"PRIVATE TOOL ARGUMENT"}}'}}]},'tool_calls')
         res.end(`data: ${JSON.stringify({choices:[],usage})}\n\ndata: [DONE]\n\n`)
         return
       }
@@ -191,7 +198,7 @@ test('production workers always expose full tools and disable thinking even with
         protocol: 'assistant-transport', runtime: 'published worker', snapshots, final,
         streamedBeforeCompletion: true, deliveredOnce: true, tenantAndThreadIsolation: true,
       }, null, 2))
-      const callLedger = () => pool.query(`SELECT status,measured,extras->'failure'->>'category' AS category
+      const callLedger = () => pool.query(`SELECT status,measured,input_tokens::int AS "inputTokens",output_tokens::int AS "outputTokens",extras->'failure'->>'category' AS category
         FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at,id`, [companyId, run.runId])
       let calls = await callLedger()
       while (calls.rows.length < requests.length) {
@@ -199,9 +206,15 @@ test('production workers always expose full tools and disable thinking even with
         calls = await callLedger()
       }
       assert.deepEqual(calls.rows, [
-        { status: 'succeeded', measured: true, category: null },
-        { status: 'succeeded', measured: true, category: null },
-      ], 'Both provider responses are measured; the runtime rejects the invalid batch after provider settlement')
+        { status: 'failed', measured: true, inputTokens: 100, outputTokens: 10, category: 'protocol' },
+        { status: 'succeeded', measured: true, inputTokens: 100, outputTokens: 10, category: null },
+      ], 'The native driver rejects invalid business arguments while retaining both complete measured responses')
+      const modelFailures = (await pool.query(`SELECT data->'modelDiagnostics' AS diagnostics
+        FROM lingxios.agent_run_events WHERE tenant_id=$1 AND run_id=$2 AND kind='model.failed' ORDER BY seq`, [companyId, run.runId])).rows
+      assert.deepEqual(modelFailures.map(row => row.diagnostics), [{ kind: 'protocol', category: 'protocol',
+        protocolCode: 'tool_identity_invalid', finishReasons: ['tool_calls'],
+        usage: { available: true, inputTokens: 100, outputTokens: 10 },
+      }], 'Valid envelope framing must reach the business schema gate, not fail as public_text_invalid')
       assert.equal((await pool.query(`SELECT count(*)::int AS count FROM lingxios.agent_run_events
         WHERE tenant_id=$1 AND run_id=$2 AND kind='tool.started'`, [companyId, run.runId])).rows[0].count, 0,
       'The complete invalid tool batch must be rejected before any tool dispatch')

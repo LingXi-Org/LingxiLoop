@@ -19,6 +19,11 @@ import { nativeText } from '../im/message-types.js'
 // a provider attempt from either ledger. Check actual HTTP attempts and receipts.
 // Cancellation/idle/total driver cases live in LingxiOS PR #30's
 // test/auxiliary-streaming.test.ts; this fixture does not claim product cancellation coverage.
+// Native-envelope failure model: the qualified DeepSeek tool turn requires
+// public_output:null around the unchanged directory.self business arguments.
+// Generation detection must recognize the native v3 header without classifying
+// structured review as generation. GLM keeps its unwrapped tool contract; all
+// actual attempts, measured usage, retries and durable receipts remain exact.
 let recording: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => { await stopLingxiOSControl(); await teardownAll(); await recording?.close() })
@@ -38,7 +43,7 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
     // Main turns retain the public-purpose wire contract even without native
     // JSON mode; auxiliary review keeps its own schema.
     const structured = !input.messages.some((message: { role: string; content: string }) =>
-      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v3):'))
+      message.role === 'system' && /Public output wire contract \(purpose-json-v[23]\)/.test(message.content))
     const fail = retryAuxiliary && structured && !injectedFailure
     requests.push({ structured, stream: input.stream === true, effort: input.reasoning_effort, thinking: input.enable_thinking, status: fail ? 503 : 200 })
     if (fail) {
@@ -49,8 +54,12 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
     }
     const usage = { prompt_tokens: 20, completion_tokens: 8, completion_tokens_details: { reasoning_tokens: 4 } }
     if (requests.length === 1) {
+      const parameters = input.tools.find((tool: { function: { name: string } }) => tool.function.name === 'directory__self').function.parameters
+      if (jsonWithToolsUnsupported) assert.deepEqual(parameters.required, ['public_output', 'arguments'])
+      else assert.equal(parameters.properties.public_output, undefined, 'GLM keeps the original business tool schema')
+      const argumentsText = jsonWithToolsUnsupported ? JSON.stringify({ public_output: null, arguments: {} }) : '{}'
       response.writeHead(200, { 'content-type': 'text/event-stream' })
-      response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'fixture-identity', type: 'function', function: { name: 'directory__self', arguments: '{}' } }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
+      response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'fixture-identity', type: 'function', function: { name: 'directory__self', arguments: argumentsText } }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
       return
     }
     const content = structured ? '{"missing":[]}' : JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: 'Fixture completed.', outcome: { status: 'satisfied', gaps: [] } })
