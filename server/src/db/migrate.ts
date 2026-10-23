@@ -256,7 +256,7 @@ export async function migrateDatabase(
         // Only the atomic empty-database cutover may stamp the current package.
         // Partial existing history was rejected above, before executing SQL.
         // Existing full54 databases require the separate provenance-only CAS.
-        if(migration.version===54&&full54&&releaseVersions.runtime!=='3.8.2'){
+        if(migration.version===54&&full54&&String(releaseVersions.runtime)!=='3.8.2'){
           if(!cutover)throw new Error('current package initialization requires an empty native cutover')
           const updated=await client.query(`UPDATE public.lingxios_installation SET runtime_version=$1,installed_at=NOW()
             WHERE singleton AND runtime_version='3.8.2' AND schema_version=14 AND protocol_version=$2 AND schema_sha256=$3`,

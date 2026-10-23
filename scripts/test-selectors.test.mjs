@@ -1,6 +1,32 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import test from 'node:test'
+import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact } from '../server/run-historical-migration-tests.mjs'
+import { createHash } from 'node:crypto'
+
+test('historical migration routing retains every requested file and adds current-package owning checks',()=>{
+ const historical=['migration.test.ts','conversation-repair-provenance-migration.test.ts','public-purpose-reader-migration.test.ts','run-trace-provenance-migration.test.ts','run-presentation-contract.test.ts']
+ const result=partitionMigrationTests([...historical,'closed-education.test.ts'])
+ assert.deepEqual(result.historical,historical)
+ assert.deepEqual(result.current,['closed-education.test.ts','runtime-patch-provenance.test.ts'])
+ assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:['runtime-patch-provenance.test.ts'],historical:[]})
+})
+test('historical fixture rejects nonlocal/non-test targets, arbitrary files and altered pinned package bytes',()=>{
+ const env={NODE_ENV:'test',INTEGRATION_DATABASE_URL:'postgres://postgres:fixture@127.0.0.1:5432/runtime_test'}
+ assert.doesNotThrow(()=>assertHistoricalFixtureTarget(['migration.test.ts'],env))
+ for(const value of [{...env,NODE_ENV:'production'},{...env,INTEGRATION_DATABASE_URL:'postgres://localhost/main'},
+  {...env,INTEGRATION_DATABASE_URL:'postgres://external.test/runtime_test'}, {...env,INTEGRATION_DATABASE_URL:env.INTEGRATION_DATABASE_URL+'?host=remote.test'},
+  {...env,INTEGRATION_DATABASE_URL:env.INTEGRATION_DATABASE_URL+'?hostaddr=203.0.113.10'}]){
+  assert.throws(()=>assertHistoricalFixtureTarget(['migration.test.ts'],value))
+ }
+ assert.throws(()=>assertHistoricalFixtureTarget(['../migration.test.ts'],env))
+ assert.throws(()=>assertHistoricalFixtureTarget(['runtime-patch-provenance.test.ts'],env))
+ const bytes=Buffer.from('synthetic archive'),record={version:'3.8.2',resolved:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.2/fixture',integrity:'sha512-'+createHash('sha512').update(bytes).digest('base64')}
+ assert.doesNotThrow(()=>assertHistoricalArtifact(bytes,record))
+ assert.throws(()=>assertHistoricalArtifact(Buffer.from('changed'),record))
+ assert.throws(()=>assertHistoricalArtifact(bytes,{...record,version:'3.8.3'}))
+ assert.throws(()=>assertHistoricalArtifact(bytes,{...record,resolved:'https://other.test/package'}))
+})
 
 test('test selectors reject malformed and cross-scope paths before starting tests', () => {
   const run = (script, args, env) => spawnSync(process.execPath, [script, ...args], {
