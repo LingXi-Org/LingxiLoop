@@ -7,9 +7,11 @@ import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTrac
 import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
 import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
+import { createWorker } from '@lyyzka/lingxios/worker'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
-import { lingxiOSControl, startLingxiOSWorker, stopLingxiOSControl } from '../agent-runtime/runtime.js'
+import { lingxiOSControl, runtimeModelConfiguration, startLingxiOSWorker, stopLingxiOSControl } from '../agent-runtime/runtime.js'
+import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
@@ -201,7 +203,10 @@ test('production workers always expose full tools and disable thinking even with
 
 // Failures: an invented executor path is delivered, native repair leaks a
 // reference before authorization, or a v2-style rewrite appends the bad source
-// instead of explicitly replacing the current sealed revision.
+// instead of explicitly replacing the current sealed revision. The full-tool
+// repair request must use the provider's real 1M context capability: localhost
+// cannot trigger the production hostname-based profile and otherwise defaults
+// to 128K, rejecting the repair before a second provider request is admitted.
 test('unavailable visualization references are repaired before durable delivery', { timeout: 180000 }, async () => {
   await resetAllTables()
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
@@ -242,8 +247,7 @@ test('unavailable visualization references are repaired before durable delivery'
   const address = provider.address(); assert.ok(address && typeof address !== 'string')
   env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
   process.env.LINGXIOS_SERVICE_TOKEN = 'interactive-repair-integration-service-token'
-  process.env.AGENT_OS_WORKER_PORT = '29094'
-  let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
+  let worker: ReturnType<typeof createWorker> | undefined
   try {
     const api = await lingxiOSControl()
     const port = await api.listenControlPlane({ serviceToken: process.env.LINGXIOS_SERVICE_TOKEN, port: 0 })
@@ -258,11 +262,19 @@ test('unavailable visualization references are repaired before durable delivery'
       messageId: 'question', version: 1, author: { id: 'test-owner', kind: 'human' }, text: '请给出可以填写预测的交互讲解。', mentions: [agentId] },
     { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation', codeExecution: 'disabled' })
     const run = accepted.runs[0]; assert.ok(run); await bindProductRun(pool, run, conversationId)
-    worker = await startLingxiOSWorker()
+    worker = createWorker({
+      controlPlane: { url: process.env.LINGXIOS_CONTROL_URL, serviceToken: process.env.LINGXIOS_SERVICE_TOKEN },
+      policy: new ProductRuntimePolicy(), semanticReview: 'selective', additionalContentCorrections: 3,
+      worker: { id: 'unavailable-reference-repair', healthPort: 29094, shutdownGraceMs: 1000 },
+      model: { ...runtimeModelConfiguration({ id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL }, 180_000),
+        contextWindowTokens: 1_000_000 },
+    })
+    await worker.start()
     const timeout = AbortSignal.timeout(120000)
     while ((await api.readRunState(run))?.delivery !== 'delivered') { timeout.throwIfAborted(); await delay(50) }
     assert.equal(calls, 2)
     assert.equal(correction, true)
+    assert.equal((await api.readRunState(run))?.run.status, 'succeeded', 'a partial fallback is not a successful reference repair')
     const answers = im.messages.filter(message => message.channelId === conversationId)
     assert.equal(answers.length, 1)
     assert.deepEqual(visualizeReferences(nativeText(answers[0].payload)), [])
