@@ -21,6 +21,7 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 import { installRecordingWukong } from './_recording-wukong.js'
 import { assertLocalQualificationTarget } from './_local-qualification-target.js'
 import { retainedAppendText } from './_retained-answer-measurement.js'
+import { qualificationModelDiagnostics } from './_qualification-model-diagnostics.js'
 import { openNotebookClient } from '../modules/knowledge/provider.js'
 
 // Opt-in only. Preparation/typechecking never executes a provider call.
@@ -148,10 +149,13 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     const actions: string[] = []
     const saveCalls = new Set<string>(), saveReceipts: Array<Record<string, unknown>> = []
     let cursor = 0
+    const modelFailures: Array<Record<string, unknown>> = []
     while (true) {
       const page = await api.readEvents(identity, cursor)
       actions.push(...page.events.flatMap(event => event.kind === 'tool.started' && typeof event.data.name === 'string' ? [event.data.name] : []))
       for (const event of page.events) {
+        if (event.kind === 'run.failed') modelFailures.push({ stage: 'run.failed',
+          diagnostics: qualificationModelDiagnostics(event.data.modelDiagnostics) })
         if (event.kind === 'tool.started' && event.data.name === 'visualize.save') saveCalls.add(String(event.data.toolCallId))
         if (event.kind === 'tool.completed' && saveCalls.has(String(event.data.toolCallId)) && event.data.isError === false) {
           const result = event.data.result as { status?: string; value?: Record<string, unknown> } | undefined
@@ -162,6 +166,7 @@ test('real provider activates and delivers a synthetic interactive diagram witho
       cursor = page.nextSeq
     }
     report.actions = actions
+    report.modelFailures = modelFailures
     report.modelReadCalled = actions.includes('visualize.read')
     // This filter locates a candidate, not semantic proof. Retain the actual
     // synthetic excerpt for independent review of role attribution and tense.
@@ -235,14 +240,16 @@ test('real provider activates and delivers a synthetic interactive diagram witho
       questionDeadline.throwIfAborted(); await delay(20); questionState = await api.readRunState(questionIdentity)
     }
     const questionCalls = await settledLedger(questionIdentity.runId)
+    const questionEvents = await api.readEvents(questionIdentity, 0)
     report.directQuestion = { status: questionState?.run.status, delivery: questionState?.delivery, calls: questionCalls,
+      modelFailures: questionEvents.events.filter(event => event.kind === 'run.failed').map(event => ({ stage: 'run.failed',
+        diagnostics: qualificationModelDiagnostics(event.data.modelDiagnostics) })),
       timing: await measureAnswer(questionIdentity.runId, text => text.trim() === '43') }
     assert.equal(questionState?.run.status, 'succeeded')
     assert.equal(questionState?.message?.body.trim(), '43')
     assert.equal((report.directQuestion as { timing: { finalSourcesVerified: boolean } }).timing.finalSourcesVerified, true)
     assert.equal(questionCalls.length, 1, 'One useful answer generation, with no semantic judge or correction')
     assert.ok(questionCalls.every(row => row.operation !== 'content-review' && row.status === 'succeeded' && row.measured))
-    const questionEvents = await api.readEvents(questionIdentity, 0)
     assert.equal(questionEvents.events.filter(event => event.kind === 'tool.started' && String(event.data.name).startsWith('knowledge.')).length, 0)
     assert.equal(knowledgeSearches, priorKnowledgeSearches, 'Ordinary arithmetic does not run automatic text/vector retrieval despite authorized enabled sources')
     report.directQuestion = { status: 'passed', correct: true, measuredCalls: 1, semanticReviewCalls: 0,
