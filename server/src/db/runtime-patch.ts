@@ -4,7 +4,7 @@ import {readFile,readdir} from 'node:fs/promises'
 import {isDeepStrictEqual as equal} from 'node:util'
 import type {Pool,PoolClient} from 'pg'
 import {packageResources,releaseVersions} from '@lyyzka/lingxios'
-import {assertCurrentRuntimeProfile,loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH} from './runtime-profile.js'
+import {assertCurrentRuntimeProfile,currentPublicTextVersion,loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH} from './runtime-profile.js'
 
 const LOCK_KEY=1_282_006_534
 interface Migration {version:number;name:string;checksum:string}
@@ -22,7 +22,7 @@ export async function loadRuntimePatchInventory():Promise<Migration[]>{
 }
 export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,target:RuntimePatchDescriptor):void{
  for(const d of [source,target]){
-  assertCurrentRuntimeProfile({runtime:d.runtime,schema:d.schema,controlPlane:d.protocol,publicText:2,runTrace:1},d.schemaHash,d.runtime)
+  assertCurrentRuntimeProfile({runtime:d.runtime,schema:d.schema,controlPlane:d.protocol,publicText:currentPublicTextVersion(d.runtime),runTrace:1},d.schemaHash,d.runtime)
   check(d.productVersion===54&&d.migrations?.length===54,'Runtime patch requires complete product54')
  }
  check(Number(target.runtime.split('.')[2])>Number(source.runtime.split('.')[2]),'Runtime patch must advance within the same reviewed major/minor')

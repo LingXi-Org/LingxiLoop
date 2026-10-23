@@ -125,3 +125,38 @@ test('source restoration metadata binds original v1 options and leaf independent
  for(const change of [x=>x.deployment=p.publicText.target,x=>x.configurationSha256=p.publicText.targetConfigurationSha256,x=>x.modelOptions.publicTextProtocol='purpose-json-v2']){const bad=structuredClone(source);change(bad);assert.throws(()=>assertPublicTextMetadata(bad,p,'source'));}
  assert.throws(()=>assertPublicTextMetadata(source,p,'unknown'));
 });
+
+function v3Fixture(){
+ const p=full54Fixture({sourceProducer:'purpose-json-v2',targetProducer:'purpose-json-v3'});
+ p.target.runtime='3.8.7';p.publicText.target.reader=3;return p;
+}
+test('v3 requires an advancing formal runtime patch and new reader/producer leaf',()=>{
+ assert.doesNotThrow(()=>assertPublicTextPlan(v3Fixture()));
+ for(const patch of [false,true]){
+  const p=v3Fixture();p.source.runtime='3.8.7';p.target.runtime=patch?'3.8.8':'3.8.7';
+  p.publicText.source={reader:3,producer:'purpose-json-v3'};p.publicText.targetConfigurationSha256=p.publicText.sourceConfigurationSha256;
+  if(!patch)p.format='product54-image-host-release/v1';assert.doesNotThrow(()=>assertPublicTextPlan(p));
+ }
+});
+test('v3 cannot counterfeit old package capability, skip producer generations or downgrade readers',()=>{
+ for(const change of [p=>p.target.runtime='3.8.6',p=>p.target.runtime='3.8.7-rc.1',p=>p.target.runtime='3.9.0',
+  p=>p.source.runtime='3.8.7',p=>p.publicText.source.producer='purpose-json-v1',p=>p.publicText.target.reader=2,
+  p=>p.publicText.target.reader=4,p=>p.publicText.source.reader=3,p=>p.publicText.target.producer='purpose-json-v4',
+  p=>p.publicText.targetConfigurationSha256=p.publicText.sourceConfigurationSha256,p=>p.format='product54-image-host-release/v1',
+  p=>p.target.migrations[0].checksum='0'.repeat(64),p=>p.target.schemaHash='0'.repeat(64),p=>p.publicText.sourceContainers.pop()]){
+  const p=v3Fixture();change(p);assert.throws(()=>assertPublicTextPlan(p));
+ }
+ const down=v3Fixture();down.source.runtime='3.8.7';down.target.runtime='3.8.8';
+ down.publicText.source={reader:3,producer:'purpose-json-v3'};down.publicText.target={reader:2,producer:'purpose-json-v2'};
+ assert.throws(()=>assertPublicTextPlan(down));
+});
+test('v3 actual capability and options are exact, while source restoration still requires reader2/v2',()=>{
+ const p=v3Fixture(),target={publicText:3,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v3'}};
+ assert.doesNotThrow(()=>assertPublicTextMetadata(target,p));
+ for(const change of [x=>x.publicText=2,x=>x.publicText=4,x=>x.deployment.reader=2,x=>x.modelOptions.publicTextProtocol='purpose-json-v2',x=>x.configurationSha256=hex,x=>x.runTrace=0]){
+  const bad=structuredClone(target);change(bad);assert.throws(()=>assertPublicTextMetadata(bad,p));
+ }
+ const source={publicText:2,runTrace:1,deployment:p.publicText.source,configurationSha256:p.publicText.sourceConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v2'}};
+ assert.doesNotThrow(()=>assertPublicTextMetadata(source,p,'source'));assert.throws(()=>assertPublicTextMetadata(source,p));
+ assert.throws(()=>assertPublicTextMetadata(target,p,'source'));
+});

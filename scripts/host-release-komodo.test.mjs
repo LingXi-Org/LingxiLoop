@@ -7,6 +7,7 @@ import assert from 'node:assert/strict'
 import {createHostReleaseOperations} from './host-release-komodo.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,hash,sealHostPlan,runHostRelease,runImagePreparation} from './host-release.mjs'
 function fixture(fault={}){
+ if(fault.producerV3)fault={...fault,producerV2:true};
  fault={...fault,image54:fault.image54||fault.runtimePatch||fault.producerV2}
  fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
  const a='a'.repeat(40),b='b'.repeat(40),h='c'.repeat(64),d='sha256:'+h
@@ -46,6 +47,7 @@ function fixture(fault={}){
  if(fault.image54){const p=structuredClone(plan);p.format='product54-image-host-release/v1';for(const k of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations'])p.source[k]=structuredClone(p.target[k]);for(const row of p.stacks.slice(0,2)){row.source.autoPull=false;row.source.extraArgs=RELEASE_ARGS;const c=configs.get(row.stack).config;c.auto_pull=false;c.extra_args=RELEASE_ARGS}plan=sealHostPlan(p);Object.assign(source,p.source)}
  if(fault.runtimePatch||fault.producerV2){const p=structuredClone(plan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');plan=sealHostPlan(p);Object.assign(target,p.target)}
  if(fault.producerV2){const p=structuredClone(plan);p.source.runtime='3.8.3';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.runtime='3.8.5';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.publicText.target.producer='purpose-json-v2';p.publicText.targetConfigurationSha256='d'.repeat(64);plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target)}
+ if(fault.producerV3){const p=structuredClone(plan);p.source.runtime='3.8.5';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.target.runtime='3.8.7';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.7/fixture';p.publicText.source.producer='purpose-json-v2';p.publicText.target={reader:3,producer:'purpose-json-v3'};plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target)}
  const containers=APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({
   stack,service,Id:String(i*2+j+1).repeat(64),Image:'sha256:'+(fault.sourceImageMismatch?'0':'f').repeat(64),
   Config:{Image:IMAGE+a,Env:['LINGXILOOP_COMMIT_SHA='+a,...((fault.reader||fault.producer||fault.trace)?['NODE_VERSION=22.23.4']:[]),'NODE_ENV=production','SECRET=private fixture never persist'],User:'node',Cmd:['npm','run',service==='worker'?'worker:start':'server:start']},
@@ -94,7 +96,7 @@ function fixture(fault={}){
     if(fault.native14)state.otherClients=containers.every(c=>!c.State.Running)?0:4;
     const candidate=actualFiles.get(p.stack)===files.get(p.stack)?.source?source:target
     const deployment=fault.producerV2&&candidate===source?plan.publicText.source:plan.publicText?.target,configurationSha256=fault.producerV2&&candidate===source?plan.publicText.sourceConfigurationSha256:plan.publicText?.targetConfigurationSha256;
-    const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:{...candidate,...((fault.reader||fault.producer||fault.trace)?{publicText:2,deployment,configurationSha256,modelOptions:fault.producerV2?{publicTextProtocol:fault.wrongV2Options?'purpose-json-v1':deployment.producer}:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:fault.traceMetadataWrong?0:1}:{})}:{})}
+    const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:{...candidate,...((fault.reader||fault.producer||fault.trace)?{publicText:fault.wrongV3Capability?2:deployment.reader,deployment,configurationSha256,modelOptions:fault.producerV2?{publicTextProtocol:fault.wrongV2Options?'purpose-json-v1':deployment.producer}:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:fault.traceMetadataWrong?0:1}:{})}:{})}
     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_'+marker+'='+JSON.stringify(value)}]}
    }
    if(op==='PullStack'){assert.deepEqual(p.services,['db-migrate']);return}
@@ -122,8 +124,8 @@ function fixture(fault={}){
  const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,sourceConfigurationProof,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
  return {plan,ops,calls,events,configs,actualFiles,files,containers,transport:t,sourceConfigurationProof,updates,run:()=>runHostRelease({plan,ops,onProgress})}
 }
-async function failedImageRelease(partial=false,runtimePatch=false,producerV2=false){
- const f=fixture({image54:true,runtimePatch,producerV2})
+async function failedImageRelease(partial=false,runtimePatch=false,producerV2=false,producerV3=false){
+ const f=fixture({image54:true,runtimePatch,producerV2,producerV3})
  if(partial)f.ops.verifyHealthy=async()=>{throw Error('synthetic target readiness failure')}
  else {const state=f.ops.state;f.ops.state=async()=>{const s=await state();return f.containers.every(c=>!c.State.Running)?{...s,liveWork:1}:s}}
  await assert.rejects(f.run())
@@ -345,4 +347,33 @@ test('v2 upgrade source restoration accepts only original v1 metadata before any
  const f=await failedImageRelease(false,true,true),before=f.calls.length,result=await f.restore();
  assert.equal(result.restoredSource,f.plan.source.sha);assert.equal(result.state.runtime,'3.8.3');assert.deepEqual(result.publicText,{reader:2,producer:'purpose-json-v1'});assert.equal(result.configurationSha256,f.plan.publicText.sourceConfigurationSha256);
  const calls=f.calls.slice(before);assert.equal(calls.filter(c=>c.op==='DeployStack').length,4);assert.equal(calls.some(c=>JSON.stringify(c).includes('applyPublishedRuntimePatch')||JSON.stringify(c).includes('migrate-bin')||c.op==='StopStack'),false);
+});
+test('v3 native adapter binds actual reader3 and writer3 to formal3.8.7 before its one non-DDL CAS',async()=>{
+ const f=fixture({producerV3:true});await f.run();
+ const patches=f.calls.filter(c=>c.op==='RunStackService'&&JSON.stringify(c).includes('applyPublishedRuntimePatch'));assert.equal(patches.length,1);
+ const literal=patches[0].command.at(-1).split('if(!isDeepStrictEqual(metadata,')[1].split("))throw Error('target drift')")[0],expected=JSON.parse(literal);
+ assert.equal(expected.runtime,'3.8.7');assert.equal(expected.publicText,3);assert.equal(expected.runTrace,1);
+ assert.deepEqual(expected.deployment,{reader:3,producer:'purpose-json-v3'});assert.deepEqual(expected.modelOptions,{publicTextProtocol:'purpose-json-v3'});
+ assert.equal(expected.configurationSha256,f.plan.publicText.targetConfigurationSha256);assert.equal(Object.hasOwn(patches[0],'env'),false);
+ assert.equal(f.calls.some(c=>JSON.stringify(c).includes('migrate-bin')),false);
+ assert.deepEqual(f.calls.filter(c=>c.op==='DeployStack').map(c=>c.stack+':'+c.services[0]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>a+':'+s)));
+});
+test('v3 native adapter preserves pre-stop capability, old binding, source identity and runtime config fences',async()=>{
+ for(const fault of [{wrongV3Capability:true},{wrongV2Options:true},{traceMetadataWrong:true},{bound:true}]){
+  const f=fixture({producerV3:true,...fault});await assert.rejects(f.run());assert.equal(f.calls.some(c=>c.op==='StopStack'||c.op==='DeployStack'),false);
+ }
+ const identity=fixture({producerV3:true});identity.containers[0].Id='0'.repeat(64);await assert.rejects(identity.run());assert.equal(identity.calls.some(c=>c.op==='StopStack'),false);
+ const env=fixture({producerV3:true}),execute=env.transport.execute;
+ env.transport.execute=async(op,p)=>{const result=await execute(op,p);if(op==='DeployStack')env.containers.find(c=>c.stack===p.stack&&c.service===p.services[0]).Config.Env.push('UNREVIEWED=1');return result};
+ await assert.rejects(env.run());assert.equal(env.calls.filter(c=>c.op==='DeployStack').length,1);
+});
+test('v3 pre-CAS source restoration requires the original v2 package, options and identities',async()=>{
+ const f=await failedImageRelease(false,true,false,true),before=f.calls.length,result=await f.restore();
+ assert.equal(result.state.runtime,'3.8.5');assert.deepEqual(result.publicText,{reader:2,producer:'purpose-json-v2'});
+ assert.equal(result.configurationSha256,f.plan.publicText.sourceConfigurationSha256);
+ const calls=f.calls.slice(before);assert.equal(calls.filter(c=>c.op==='DeployStack').length,4);
+ assert.equal(calls.some(c=>JSON.stringify(c).includes('applyPublishedRuntimePatch')||JSON.stringify(c).includes('migrate-bin')||c.op==='StopStack'),false);
+ const committed=await failedImageRelease(true,true,false,true),offset=committed.calls.length;
+ await assert.rejects(committed.restore(),/unchanged source provenance/);
+ assert.equal(committed.calls.slice(offset).some(c=>['DeployStack','StopStack','WriteStackFileContents','UpdateStack'].includes(c.op)),false);
 });
