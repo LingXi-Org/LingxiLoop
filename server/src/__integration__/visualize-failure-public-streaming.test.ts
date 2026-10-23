@@ -105,10 +105,15 @@ test('visualization failure retains real public content through provider, durabl
     assert.equal(commentary?.type === 'text' && commentary.text, first + second)
     assert.doesNotMatch(JSON.stringify(frames), /PRIVATE_REASONING_SENTINEL/)
     assert.deepEqual(providerErrors, [])
-    assert.ok(instructions.includes('publish concise process/status updates and intended checks in the user’s language through chat.report_progress'), 'assembled prompt must route process updates through the progress tool')
-    assert.ok(instructions.includes('Keep substantive explanations and answers streaming in ordinary assistant content as they become available'), 'substantive answers must remain live in ordinary response text')
-    assert.ok(instructions.includes('Publish process updates, intended checks and observed task transitions through chat.report_progress when available'), 'visualize authoring must use explicit process reports')
-    assert.ok(instructions.includes('If a call fails, report only the observed failure and next concrete action through chat.report_progress'), 'visualize failures must not be repeated in ordinary answer text')
+    // Prompt alignment must not turn an optional useful progress report into an
+    // extra call for every tool. The gated SSE assertions above still require
+    // actual public content, the failed receipt and a single final answer.
+    assert.ok(instructions.includes('Use the declared public `answer` field, never unframed prose'), 'substantive answers must use the declared public channel')
+    assert.ok(instructions.includes('same response as a necessary native tool call'), 'known explanations must not wait for every tool to finish')
+    assert.ok(instructions.includes('Native lifecycle events already show tool activity; do not report each tool separately'), 'ordinary tool activity must not require duplicate progress calls')
+    assert.ok(instructions.includes('Use chat.report_progress only for an independent useful plan, material progress or a failure needing attention, preserving task identity'), 'useful plans and failures retain the explicit progress path')
+    assert.ok(instructions.includes('If a call fails, report the observed failure only when user attention is needed; do not repeat a complete answer or claim the view is ready'), 'failures needing attention must remain visible and truthful')
+    assert.equal(calls, 2, 'the read and truthful failed-read answer need no extra process-report round')
     await mkdir('artifacts/feedback261', { recursive: true })
     await writeFile('artifacts/feedback261/visualize-failure-public-streaming.json', JSON.stringify({ passed: true, runtime: releaseVersions.runtime,
       realWorker: true, realPostgres: true, publishedOpenAIDriver: true, localProvider: true, productionRequests: 0,
