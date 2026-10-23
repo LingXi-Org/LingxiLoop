@@ -111,8 +111,9 @@ test('v3 substantive segments survive tools and commentary, append once and hydr
   const first = s.frames[0]!.snapshot, firstId = answerIds(first)[0]
   assert.equal(nativeText(first.message), A)
   for (const frame of s.frames) {
+    const firstAnswer = answers(frame.snapshot)[0]
     assert.equal(answerIds(frame.snapshot)[0], firstId, frame.checkpoint)
-    assert.equal(answers(frame.snapshot)[0]?.type === 'text' && answers(frame.snapshot)[0]?.text, A, frame.checkpoint)
+    assert.equal(firstAnswer?.type === 'text' && firstAnswer.text, A, frame.checkpoint)
     assert.equal(frame.snapshot.message.content.filter(isAnswerRevision).length, 0, 'later attempts do not demote sealed answers')
   }
   const beforeCommit = s.frames.find(frame => frame.checkpoint === 'answer-b')!.snapshot
