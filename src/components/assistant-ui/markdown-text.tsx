@@ -20,6 +20,7 @@ import { StreamingBlock, StreamingPart, useStreamingBlock } from './streaming-ta
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 import { activityAnnotation } from '@/lib/runActivity'
+import { answerTextOffset } from '@/lib/answerSegment'
 import { scanMentions, standaloneMention } from '@/lib/mentions'
 import type { Participant } from '@/types'
 import { MentionBadge } from '@/components/MentionBadge'
@@ -203,8 +204,7 @@ const MarkdownTextImpl = ({
   }
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const splitTextOffset = useContext(TextOffsetContext)
-  const nativeTextOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
-    .reduce((offset, part) => offset + (part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary' ? part.text.length + 1 : 0), 0))
+  const nativeTextOffset = useAuiState(state => answerTextOffset(state.message.parts,state.message.parts.indexOf(state.part)))
   const textOffset = splitTextOffset ?? nativeTextOffset
   const hasCitations = Boolean(confidenceClaims.length) || inlineCitations && text.includes('#cite-')
   // Complete block starts are identical in the raw text and its revealed prefix.

@@ -1,7 +1,10 @@
-import { useAuiState, type TextMessagePartComponent, type TextMessagePartProps } from '@assistant-ui/react'
+import { useAuiState, TextMessagePartProvider, type TextMessagePartComponent, type TextMessagePartProps } from '@assistant-ui/react'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { getActiveCompanyId } from '@/stores/auth'
 import { activityAnnotation } from '@/lib/runActivity'
+import { answerTextOffset } from '@/lib/answerSegment'
+import { answerDisplaySlice } from '@/lib/answerSegmentDisplay'
+import { TextOffsetContext } from './TextOffsetContext'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { GenUiMessageResponse } from './zcode/gen-ui/components/GenUiMessageResponse'
 import { StreamingPart } from '@/components/assistant-ui/streaming-tail'
@@ -11,8 +14,18 @@ export function VisualizeText({part,Text,readOnly}: {part:TextMessagePartProps;T
     (state.message.metadata.custom.harness as RunDisplayState | undefined)?.requestVersion ?? null,
     state.message.metadata.custom.conversationId,
     activityAnnotation(state.part)?.id ?? state.message.parts.indexOf(state.part)]))
-  const textOffset = useAuiState(state=>state.message.parts.slice(0,state.message.parts.indexOf(state.part)).reduce((offset,item)=>offset+(item.type==='text' && activityAnnotation(item)?.kind!=='commentary' && activityAnnotation(item)?.purpose!=='process' ? item.text.length+1 : 0),0))
-  if(message.role!=='assistant' || !/::|/.test(part.text)) return <Text {...part}/>
+  const textOffset = useAuiState(state=>answerTextOffset(state.message.parts,state.message.parts.indexOf(state.part)))
+  const slice = useAuiState(state=>{
+    const claims = state.message.content.find(item=>item.type==='data' && item.name==='citation-claims')
+    const ranges = claims?.type==='data' && claims.data && typeof claims.data==='object' && 'claims' in claims.data && Array.isArray(claims.data.claims)
+      ? claims.data.claims.filter((value): value is {start:number;end:number}=>!!value && typeof value==='object' && typeof Reflect.get(value,'start')==='number' && typeof Reflect.get(value,'end')==='number') : []
+    return answerDisplaySlice(state.message.parts,state.message.parts.indexOf(state.part),ranges)
+  })
+  const text = slice?.text ?? part.text, offset = slice?.offset ?? textOffset
+  if (!text) return null
+  if(message.role!=='assistant' || !/::|/.test(text)) return slice && (text!==part.text || offset!==textOffset)
+    ? <TextOffsetContext.Provider value={offset}><TextMessagePartProvider text={text} isRunning={part.status.type==='running'}><Text {...part} text={text}/></TextMessagePartProvider></TextOffsetContext.Provider>
+    : <Text {...part}/>
   const workspace = getWorkspaceSession()
   const conversationId = message.metadata.custom.conversationId
   const custom = message.metadata.custom
@@ -23,5 +36,5 @@ export function VisualizeText({part,Text,readOnly}: {part:TextMessagePartProps;T
     awaitingDelivery={message.status?.type==='complete' && !source}
     messageKey={message.id} workspacePath={readOnly ? undefined : workspace?.projectId} workspaceIdentity={getActiveCompanyId() ?? undefined}
     sessionId={typeof conversationId==='string' ? conversationId : undefined} sourceMessageId={source}
-    Text={Text} textOffset={textOffset}>{part.text}</GenUiMessageResponse></StreamingPart>
+    Text={Text} textOffset={offset}>{text}</GenUiMessageResponse></StreamingPart>
 }

@@ -50,10 +50,14 @@ export function publicRunEvent(event: RunEvent, action = '', presentationVersion
   const parsedTiming = executionTiming.safeParse(event.data._executionTrace)
   const timing = parsedTiming.success && parsedTiming.data.requestVersion === identity.requestVersion && parsedTiming.data.fence === identity.fence
     ? { _executionTrace: parsedTiming.data } : {}
-  if (event.kind === 'public.text.delta' || event.kind === 'public.text.ended') return { ...event,data: {
+  if (['public.text.operation','public.text.delta','public.text.ended','public.text.sealed'].includes(event.kind)) return { ...event,data: {
     version: event.data.version,...identity,partId: event.data.partId,partIndex: event.data.partIndex,
-    ...(event.data.version === 2 && (event.data.purpose === 'commentary' || event.data.purpose === 'answer') ? { purpose: event.data.purpose } : {}),
-    ...(event.kind === 'public.text.delta' ? { chunkIndex: event.data.chunkIndex,text: event.data.text } : { chunkCount: event.data.chunkCount,reason: event.data.reason }),
+    ...([2,3].includes(Number(event.data.version)) && (event.data.purpose === 'commentary' || event.data.purpose === 'answer') ? { purpose: event.data.purpose } : {}),
+    ...(event.data.version === 3 ? { messageId: event.data.messageId,segmentId: event.data.segmentId,
+      operation: event.data.operation,supersedes: event.data.supersedes } : {}),
+    ...(event.kind === 'public.text.delta' ? { chunkIndex: event.data.chunkIndex,text: event.data.text }
+      : event.kind === 'public.text.ended' ? { chunkCount: event.data.chunkCount,reason: event.data.reason }
+      : event.kind === 'public.text.sealed' ? { chunkCount: event.data.chunkCount,bodyHash: event.data.bodyHash } : {}),
   } }
   if (event.kind === 'tool.started') return { ...event, data: { ...identity,...timing,toolCallId: event.data.toolCallId, partIndex: event.data.partIndex, name: event.data.name,
     presentation: { purpose: 'process' } } }

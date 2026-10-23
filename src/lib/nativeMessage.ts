@@ -2,6 +2,7 @@ import type { CompleteAttachment, ThreadMessage } from '@assistant-ui/react'
 import { z } from 'zod'
 import { activityAnnotation, toolDisplaySchema } from './runActivity.js'
 import { memoryActivitySchema } from './memoryActivity.js'
+import { answerSegment } from './answerSegment.js'
 
 type Wire<T> = T extends Date ? string : T extends readonly (infer U)[] ? Wire<U>[] : T extends object ? { [K in keyof T]: Wire<T[K]> } : T
 export type NativeMessage = Wire<ThreadMessage>
@@ -151,10 +152,16 @@ export function createNativeMessage(input: { id: string; role: ThreadMessage['ro
     metadata: { ...(input.role === 'assistant' ? { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [] } : {}), custom: input.custom ?? {} } })))
 }
 export function nativeText(message: Pick<NativeMessage, 'content'> | Pick<ThreadMessage, 'content'>): string {
-  return message.content.flatMap(part => {
+  let text = '', previous: ReturnType<typeof answerSegment>, count = 0
+  for (const part of message.content) {
     const annotation = activityAnnotation(part)
-    return part.type === 'text' && annotation?.kind !== 'commentary' && annotation?.purpose !== 'process' ? [part.text] : []
-  }).join('\n')
+    if (part.type !== 'text' || annotation?.kind === 'commentary' || annotation?.purpose === 'process') continue
+    const source = answerSegment(part)
+    const contiguous = source && previous && source.messageId === previous.messageId && source.start === previous.end
+    text += (count && !contiguous ? '\n' : '') + part.text
+    previous = source; count++
+  }
+  return text
 }
 export function nativeData<T = Record<string, unknown>>(message: Pick<NativeMessage, 'content'>, name: string): T | undefined {
   const part = message.content.find(part => part.type === 'data' && part.name === name)

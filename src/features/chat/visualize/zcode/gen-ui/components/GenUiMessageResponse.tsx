@@ -25,7 +25,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
               remoteSessionId: props.workspaceRemoteSessionId,
               sessionId: props.sessionId,
               path: part.reference.path,
-              instanceKey: `${messageKey}:${part.offset}`,
+              instanceKey: `${messageKey}:${(props.textOffset ?? 0) + part.offset}`,
               sourceMessageId: props.sourceMessageId,
             }
           : null,
@@ -39,6 +39,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
       props.sessionId,
       messageKey,
       props.sourceMessageId,
+      props.textOffset,
     ],
   );
   let cursor = 0;
@@ -55,7 +56,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
       </MessageResponse>
     ) : part.kind === "ui" && targets[index] ? (
       <GenUiCard
-        key={`${messageKey}:${part.offset}`}
+        key={`${messageKey}:${(props.textOffset ?? 0) + part.offset}`}
         reference={part.reference}
         target={targets[index]!}
       />
