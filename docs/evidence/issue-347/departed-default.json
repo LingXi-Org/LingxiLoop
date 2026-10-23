@@ -1,0 +1,7 @@
+{
+  "syntheticOnly": true,
+  "admissionPassed": true,
+  "wakeAgentId": "group-wake-b",
+  "runAgentId": "group-wake-b",
+  "deliveryBlockedUntilAudienceReconciliation": true
+}

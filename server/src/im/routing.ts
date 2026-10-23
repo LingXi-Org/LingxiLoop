@@ -4,6 +4,16 @@ export interface RoutingParticipant {
   presetKey?: string | null
 }
 
+/** Shared with the native policy: SQL row order cannot choose a different default. */
+export function defaultLearningAgentId(members: RoutingParticipant[], leaderAgentId?: string): string | undefined {
+  const agents = members.filter(member => member.kind === 'agent')
+    .sort((left, right) => left.id < right.id ? -1 : left.id > right.id ? 1 : 0)
+  return agents.find(agent => agent.id === leaderAgentId)?.id
+    ?? agents.find(agent => agent.presetKey === 'nova')?.id
+    ?? agents.find(agent => agent.presetKey === 'forge')?.id
+    ?? agents[0]?.id
+}
+
 export function resolveLearningAgentRecipients(args: {
   authorId: string
   channelType: number
@@ -21,7 +31,6 @@ export function resolveLearningAgentRecipients(args: {
   if (mentioned.length > 0) return mentioned
   if (args.replyAuthorId && agents.some((agent) => agent.id === args.replyAuthorId)) return [args.replyAuthorId]
   if (args.channelType === 1) return agents.map((agent) => agent.id).slice(0, 1)
-  if (args.leaderAgentId && agents.some((agent) => agent.id === args.leaderAgentId)) return [args.leaderAgentId]
-  const defaultLeader = agents.find((agent) => agent.presetKey === 'nova') ?? agents.find((agent) => agent.presetKey === 'forge')
-  return defaultLeader ? [defaultLeader.id] : agents.slice(0, 1).map((agent) => agent.id)
+  const defaultAgentId = defaultLearningAgentId(agents, args.leaderAgentId)
+  return defaultAgentId ? [defaultAgentId] : []
 }
