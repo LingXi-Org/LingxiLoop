@@ -405,3 +405,25 @@ test('incomplete recovery honors lifecycle and version protections', () => {
     assert.equal($('[data-run-outcome]').length, 0, `${lifecycle}/${version}`)
   }
 })
+
+// #353 failure model: duplicate knowledge status card, lost source outcomes,
+// alias mismatch, stale ready overriding cancellation/unknown, or hidden reply.
+test('knowledge results use one compact tool row while preserving source and terminal states', () => {
+  for (const [sourceStatus, resultStatus, label] of [
+    ['ready', 'completed', '已读取原文'], ['no_matches', 'completed', '没有匹配资料'],
+    ['empty', 'completed', '资料没有可读正文'], ['processing', 'completed', '资料处理中'],
+    ['unavailable', 'completed', '检索服务不可用'], ['ready', 'failed', '执行失败'],
+    ['ready', 'cancelled', '已取消'], ['ready', 'unknown', '结果待核对'],
+  ]) {
+    const reply = { ...message('1'), content: [{ type: 'tool-call', toolCallId: 'reading', toolName: 'knowledge__read_source', args: {}, argsText: '',
+      result: { status: resultStatus, sourceStatus, secretSourceText: 'PRIVATE_SOURCE_CANARY' } },
+      { type: 'text', text: '正文及引用仍保留' }] } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+    assert.equal($('[data-slot="tool-call"]').length, 1)
+    assert.equal($('[data-slot="progress-tracker"]').length, 0)
+    assert.match($('[data-slot="tool-call"] button').text(), new RegExp(label))
+    assert.match($.text(), /正文及引用仍保留/)
+    assert.doesNotMatch($.text(), /PRIVATE_SOURCE_CANARY/)
+    if (sourceStatus === 'unavailable' || resultStatus === 'failed') assert.match($('[role="alert"]').text(), /这一步未完成/)
+  }
+})

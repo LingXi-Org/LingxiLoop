@@ -1,4 +1,3 @@
-import type { ToolCallMessagePart } from '@assistant-ui/react'
 import { parseSerializableProgressTracker, type ProgressStep } from '@/components/tool-ui/progress-tracker/schema'
 import type { ToolUIReceipt } from '@/components/tool-ui/shared/schema'
 
@@ -32,20 +31,17 @@ export function canvasProgress(data: Data, names: Names) {
   ], ...(receipt(status,data.updatedAt) ? { choice: receipt(status,data.updatedAt) } : {}) })
 }
 
-export function knowledgeProgress(id: string, calls: readonly ToolCallMessagePart[], lifecycle: string | null, owner: string) {
-  const selected = calls.filter(call => ['knowledge.search','knowledge.read_source','knowledge.list_sources'].includes(call.toolName))
-  if (!selected.length) return null
-  const sourceStates: Record<string, string> = { matched: '已找到证据', ready: '已读取原文', no_matches: '没有匹配资料',
-    no_sources: '暂无可检索资料', processing: '资料处理中', queued: '资料等待处理', unavailable: '检索服务不可用', empty: '资料没有可读正文' }
-  return parseSerializableProgressTracker({ id: `knowledge:${id}`, steps: selected.map(call => {
-    const result = call.result && typeof call.result === 'object' ? call.result as Data : undefined
-    const interrupted = !result && ['failed','cancelled'].includes(lifecycle ?? '')
-    const unconfirmed = result?.status === 'unknown', cancelled = result?.status === 'cancelled' || lifecycle === 'cancelled'
-    const failed = !unconfirmed && !cancelled && (call.isError || result?.status === 'failed' || result?.sourceStatus === 'unavailable')
-    const statusText = unconfirmed ? '结果待核对' : cancelled ? '已取消' : interrupted ? '执行中断'
-      : sourceStates[text(result?.sourceStatus)] ?? (failed ? '检索未完成' : result ? '已完成' : '检索中')
-    return { id: call.toolCallId, label: `${owner} · ${call.toolName === 'knowledge.search' ? '检索课程资料' : call.toolName === 'knowledge.read_source' ? '阅读资料原文' : '查看课程资料'} · ${statusText}`,
-      status: unconfirmed || cancelled ? 'pending' : failed || interrupted ? 'failed' : result ? 'completed' : 'in-progress',
-    }
-  }) })
+const knowledgeSourceLabels = {
+  matched: '已找到证据', ready: '已读取原文', no_matches: '没有匹配资料',
+  no_sources: '暂无可检索资料', processing: '资料处理中', queued: '资料等待处理',
+  unavailable: '检索服务不可用', empty: '资料没有可读正文',
+} as const
+
+/** Only public source-state vocabulary belongs in the shared tool status row. */
+export function knowledgeSourceState(toolName: string, result: unknown) {
+  if (!['knowledge.search', 'knowledge.read_source', 'knowledge.list_sources'].includes(toolName)
+    || !result || typeof result !== 'object') return undefined
+  const status = Reflect.get(result, 'sourceStatus')
+  if (typeof status !== 'string' || !Object.hasOwn(knowledgeSourceLabels, status)) return undefined
+  return { status, label: knowledgeSourceLabels[status as keyof typeof knowledgeSourceLabels] }
 }
