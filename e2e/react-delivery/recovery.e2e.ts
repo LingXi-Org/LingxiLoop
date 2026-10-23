@@ -24,6 +24,12 @@ for (const width of [1280, 390]) {
       if (!scenario) throw new Error(`Missing scenario ${name}`)
       expect(scenario.frames.length).toBeGreaterThan(1)
       expect(scenario.history.length).toBeGreaterThan(0)
+      if (name === 'append') {
+        const required = ['answer-a', 'first-tool-held', 'commentary', 'second-tool-held', 'answer-b', 'final']
+        const indices = required.map(checkpoint => scenario.frames.findIndex(frame => frame.checkpoint === checkpoint))
+        expect(indices.every((index, position) => index >= 0 && (position === 0 || index > indices[position - 1]!)),
+          'The append scenario must include both actual held-tool boundaries in order').toBe(true)
+      }
       await app.open('/e2e/react-delivery/index.html')
       await expect(browser.locator('input')).toHaveCount(1)
       await browser.evaluate(async () => {

@@ -58,3 +58,26 @@ runtime artifact, completed gates and any deliberately unexecuted gates. It must
 state whether ordinary-answer, visual-delivery, recovery and production checks
 each passed, failed or remain unmeasured. No task is declared complete solely
 because the answer stream contains useful text.
+
+## Upstream reuse and test responsibility
+
+The runtime uses the actual public `messagesStateReducer` from
+`@langchain/langgraph@1.5.2/web` and `AIMessageChunk.concat` from
+`@langchain/core@1.3.0`. Its source/commit/license/function map is maintained in
+LingxiOS `docs/react-harness-reuse.md`; the OS owner retains upstream
+append/update/remove/order and chunk/tool-delta regressions. The product browser
+fixture consumes the real authorized projections and does not implement another
+identity reducer. Its independent cases cover append retention, successful and
+failed replacement, cancellation, stale/reconnected streams and equal text in
+different runs. The OS recovery suite separately checks sealed provenance,
+native-step forgery, cancellation, transactional rollback and bounded pagination.
+
+Local commands after the owning integration creates its artifact:
+
+```sh
+E2E_REACT_DELIVERY_ARTIFACT=artifacts/react-delivery-366/snapshots.json \
+  E2E_TELEMETRY_DISABLED=1 node node_modules/e2e/dist/cli/bin.js run --config e2e.react-delivery.config.ts
+```
+
+The fixture does not skip missing scenarios or missing evidence. Its report labels replay-to-DOM
+observation timing as a synthetic browser measurement, not production TTFT.
