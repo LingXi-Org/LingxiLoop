@@ -27,12 +27,18 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
     if (event.runId !== runId || event.visibility !== 'user') continue
     const id = event.data.toolCallId
     if (typeof id !== 'string' || !id.startsWith('host:')) continue
+    const timing = event.data._executionTrace
+    const at = timing && typeof timing === 'object' && Reflect.get(timing,'version') === 1
+      && Reflect.get(timing,'requestVersion') === event.data.requestVersion && Reflect.get(timing,'fence') === event.data.fence
+      && typeof Reflect.get(timing,'at') === 'number' && Number.isFinite(Reflect.get(timing,'at')) && Number(Reflect.get(timing,'at')) >= 0
+      ? Number(Reflect.get(timing,'at')) : undefined
     if (event.kind === 'tool.started' && typeof event.data.name === 'string' && !calls.has(id)) {
       const { requestVersion,fence,attemptId } = event.data
       const activityIdentity = typeof requestVersion === 'number' && Number.isSafeInteger(requestVersion) && requestVersion > 0
         && typeof fence === 'number' && Number.isSafeInteger(fence) && fence > 0 && typeof attemptId === 'string' && attemptId.length > 0 && attemptId.length <= 2000
         ? { requestVersion,fence,attemptId } : undefined
       calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: canonicalToolName(event.data.name),args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq,
+        ...(at !== undefined && activityIdentity ? { timing: { startedAt: at } } : {}),
         ...(event.data.presentation && typeof event.data.presentation === 'object' && Reflect.get(event.data.presentation,'purpose') === 'process' ? { purpose: 'process' as const } : {}),
         ...(activityIdentity ? { activityIdentity } : {}) })
     }
@@ -48,6 +54,9 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
         ...(previous.toolName.startsWith('memory.') && Reflect.get(result, 'status') === 'completed' && memoryActivitySchema.safeParse(value).success ? { memory: memoryActivitySchema.parse(value) } : {}),
         ...(previous.toolName === 'chat.report_progress' && publicActivitySchema.safeParse(value).success ? { activity: publicActivitySchema.parse(value) } : {}),
       },isError: event.data.isError === true,
+        ...(at !== undefined && previous.timing && at >= previous.timing.startedAt
+          && previous.activityIdentity?.requestVersion === event.data.requestVersion && previous.activityIdentity?.fence === event.data.fence
+          ? { timing: { ...previous.timing,completedAt: at } } : {}),
         purpose: purpose && typeof purpose === 'object' && ['process','result'].includes(String(Reflect.get(purpose,'purpose')))
           ? Reflect.get(purpose,'purpose') as 'process'|'result' : undefined,
         ...(typeof Reflect.get(result,'approvalId') === 'string' ? { approval: { id: String(Reflect.get(result,'approvalId')) } } : {}) })

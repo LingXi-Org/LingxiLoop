@@ -1,0 +1,20 @@
+{
+  "base": "77f857e0438d216b9b517c05d9d6c88caba12a8b",
+  "source": {
+    "server/src/agent-runtime/assistant-transport.ts": "a509c604f10f66c77851daf4e06fcb09f61003463711724a9a761a1adbc8bf81",
+    "server/src/agent-runtime/message-projection.ts": "94ccbf1b78d006366071124abb8e2653bdaa1ef7aebd0d3c3c363a1b15194a04",
+    "server/src/agent-runtime/public-events.ts": "9f597960b0c434293eb354fe5f2809194d48552f011e2da75e3789170179312a",
+    "server/src/agent-runtime/run-trace.ts": "afe35259d4e96666f5be46bda76de5fff5e3022ec2a26e24645a6c6f28a71595",
+    "src/lib/runTrace.ts": "637c40b6319362b8e305be55f7548b6069b4bbbae5bda9f0675cec0c5dd732bf",
+    "src/components/trace-waterfall/trace-waterfall.tsx": "9cad0e1b32e357fa096188a2d8aca83da5cd432139cff55da8e294ff879c5b35",
+    "src/components/trace-waterfall/trace-waterfall.test.tsx": "758f8f458e5b7acc26804500d8f80263a86e8b4739f0a7c450f86da8f35c5857",
+    "server/src/__tests__/agent-work-trace.test.ts": "1c933cb3cc503e815c2d66bacd9d6d7a7bb2459e43eafad08f56adb282324ace",
+    "server/src/__integration__/agent-work-trace.test.ts": "f335597b2a1531a76840f6babe5e7674628071636c233e47010a6e3c4c9216cd",
+    "e2e/web/agent-work-trace.e2e.ts": "c177809239811d58bd678c58d371a43a6d8e53ca47d0ec64a689d9370c980641",
+    "docs/evidence/issue-348/browser/report.json": "73fbcf979db99379ba43c912440731371fb67645f7f0a49d970b071162f48bbe",
+    "docs/evidence/issue-348/browser/002-agent-work-trace-real-authorized-child.png": "9fb1272e6995a28e93bd7039105bc6f331a91c4740652ad5a60d6de701c52b44",
+    "docs/evidence/issue-348/browser/001-agent-work-trace-public-tools-and-child.png": "d6feff4e0f8764d748ff0d9b550022678b931f8e649922e615f8af2181a9963c",
+    "docs/evidence/issue-348/browser/001-agent-work-trace-real-worker-receipts.png": "2036c65560f2be4560793b873a5468fdf1b8f7dc336e78f9d6c95f3245b1bef4",
+    "docs/evidence/issue-348/browser/002-agent-work-trace-child-filter-reload.png": "6f18a7ebc0f6358ad94a0d347a4bc2541ffededd5bfdda15cc7c95ba3fa79e7a"
+  }
+}
