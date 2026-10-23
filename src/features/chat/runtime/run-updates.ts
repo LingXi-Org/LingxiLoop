@@ -31,12 +31,17 @@ export function applyRunSnapshot(state: ConversationChatState, target: AgentRunT
       && value.threadRootId === (target.threadId ?? null)
   }).at(-1)
   const custom: LingxiMessageMetadata = {
-    schema: 'lingxiloop.thread-message.v2', conversationId: target.conversationId, clientMessageId: native.id,
-    sequence: null, senderId: target.agentId, senderName: participant?.name ?? target.agentId, senderKind: 'agent',
+    schema: 'lingxiloop.thread-message.v2', conversationId: target.conversationId,
+    senderId: target.agentId, senderName: participant?.name ?? target.agentId, senderKind: 'agent',
     senderAvatarUrl: participant?.avatarUrl ?? null, isMine: false, delivery: 'sent', messageKind: 'text',
     quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
     threadRootId: target.threadId ?? null, groupStart: true, groupEnd: true, continuedFromPrevious: false,
     continuedToNext: false, clusterChromeAt: null, ...before, ...native.metadata.custom,
+    // A stable run UI key spans multiple results. Transport receipts do not.
+    sourceMessageId: native.metadata.custom.sourceMessageId ?? (sameResult ? before?.sourceMessageId : undefined),
+    sequence: sameResult ? before?.sequence ?? null : null,
+    clientMessageId: sameResult ? before?.clientMessageId ?? native.id : native.id,
+    imMessageId: sameResult ? before?.imMessageId : undefined,
     presentation: resolveMessagePresentation(content),
     positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,
