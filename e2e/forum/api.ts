@@ -50,6 +50,66 @@ await pool.query(`INSERT INTO homework_submissions(id,company_id,project_id,home
   VALUES('fixture-homework-submission','e2e-school','e2e-classroom','issue146-homework','forum-student',1,'fixture-key','fixture',$1::jsonb,$2::jsonb,1,0,false,$3::jsonb)`,[JSON.stringify(fixtureAnswer),JSON.stringify(fixtureReport),JSON.stringify(fixtureReferences)])
 // Synthetic auth and in-memory objects are confined to this loopback-only test server.
 const app = express()
+// #325 only: deterministic transport failures around the real room and publish
+// transactions. These routes exist only in this disposable loopback fixture.
+if (process.env.FORUM_ISSUE325 === '1') {
+  let mode = 'pass', requests = 0, completed = 0, failChannels = false, losePublish = false
+  const pending = new Set<() => void>()
+  app.get('/api/fixture-teacher-entry', async (_req,res) => {
+    const counts = (await pool.query(`SELECT
+      (SELECT COUNT(*)::int FROM learning_course_teacher_rooms WHERE course_id='e2e-course') AS rooms,
+      (SELECT COUNT(*)::int FROM homeworks WHERE course_id='e2e-course') AS homeworks,
+      (SELECT COUNT(*)::int FROM homeworks WHERE course_id='e2e-course' AND title='Issue325 教师发布回归' AND status='PUBLISHED') AS published`)).rows[0]
+    res.json({ ...counts, requests, completed, pending: pending.size })
+  })
+  app.post('/api/fixture-teacher-entry/:mode', (req,res) => {
+    if (!['hold','pass','lost','fail-list'].includes(req.params.mode)) { res.sendStatus(400); return }
+    if (req.params.mode === 'fail-list') failChannels = true
+    else mode = req.params.mode
+    if (mode === 'pass') { for (const release of pending) release(); pending.clear() }
+    res.sendStatus(200)
+  })
+  app.post('/api/fixture-teacher-publish/lost', (_req,res) => { losePublish = true; res.sendStatus(200) })
+  app.use((req,res,next) => {
+    if (req.method === 'GET' && req.path === '/api/im/channels' && failChannels) {
+      failChannels = false; res.status(503).json({ error: 'Synthetic list transport failure' }); return
+    }
+    if (req.method === 'POST' && req.path === '/api/courses/e2e-course/teacher-agent') {
+      requests++
+      const complete = res.json.bind(res)
+      res.json = value => { completed++; return complete(value) }
+      if (mode === 'hold') { pending.add(next); return }
+      if (mode === 'lost') {
+        mode = 'pass'
+        const json = res.json.bind(res)
+        res.json = value => {
+          if (res.statusCode === 200) { res.status(503); return json({ error: 'Synthetic committed response loss' }) }
+          return json(value)
+        }
+      }
+    }
+    if (req.method === 'POST' && req.path.endsWith('/publish') && losePublish) {
+      losePublish = false
+      const json = res.json.bind(res)
+      res.json = value => {
+        if (res.statusCode === 200) { res.status(503); return json({ error: 'Synthetic committed publication response loss' }) }
+        return json(value)
+      }
+    }
+    next()
+  })
+  const { HomeworkApplication } = await import('../../server/src/modules/learning/homework-application')
+  const { withTransaction } = await import('../../server/src/db/transaction')
+  const homework = new HomeworkApplication(pool, work => withTransaction(pool,work))
+  app.post('/api/fixture-teacher-homework', async (_req,res) => res.json(await homework.draft(
+    { companyId:'e2e-school',userId:'forum-teacher' },'e2e-course', {
+      title:'Issue325 教师发布回归',instructions:'说明观察与计算过程。',criteria:['独立说明计算步骤。'],links:[],attachments:[],dueAt:null,
+    })))
+  app.post('/api/fixture-teacher-homework/:id/ready', async (req,res) => {
+    await pool.query("UPDATE homeworks SET validation_status='READY',validated_revision=revision WHERE company_id='e2e-school' AND course_id='e2e-course' AND id=$1 AND status='DRAFT'",[req.params.id])
+    res.sendStatus(200)
+  })
+}
 let forumListMode: 'pass'|'hold'|'fail'='pass'
 const pendingLists=new Set<()=>void>()
 app.post('/api/fixture-forum-list/:mode',(req,res)=>{

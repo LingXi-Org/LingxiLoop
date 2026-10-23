@@ -6,6 +6,7 @@ import { safe } from '../../http/async-handler.js'
 import { requireCompany } from '../../http/request-context.js'
 import { requireLearningCourseRole } from './membership-application.js'
 import { findActiveTeacherRoom } from './teacher-provisioning-repository.js'
+import { prepareTeacherRoom } from './teacher-agent-application.js'
 import { LearningApplicationError } from './errors.js'
 import { HomeworkApplication } from './homework-application.js'
 import { homeworkDeadlineSchema, homeworkEditSchema, homeworkPublishSchema, homeworkReportSchema, homeworkReviewSchema,
@@ -15,6 +16,10 @@ import { parseLearningRequest as parse, respondWithLearning as respond } from '.
 
 export const homeworkRouter=Router()
 const homework=new HomeworkApplication(pool,work=>withTransaction(pool,work))
+homeworkRouter.post('/courses/:courseId/teacher-agent',safe(async(req,res)=>{
+  const scope=await requireCompany(req),courseId=String(req.params.courseId)
+  res.json(await respond(()=>prepareTeacherRoom(scope,courseId,work=>withTransaction(pool,work))))
+}))
 homeworkRouter.get('/courses/:courseId/teacher-agent',safe(async(req,res)=>{
   const scope=await requireCompany(req),courseId=String(req.params.courseId)
   res.json(await respond(async()=>{

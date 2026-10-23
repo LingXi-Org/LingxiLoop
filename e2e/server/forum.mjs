@@ -6,8 +6,8 @@ import { resolve, sep } from 'node:path'
 import pg from 'pg'
 
 const cwd = resolve(import.meta.dirname, '../..')
-assert.ok(process.argv.slice(2).every(arg => ['--browser','--browser-only','--resources-only','--core-only','--states-only','--issue146','--issue163','--issue184','--issue187','--issue219'].includes(arg)), 'Unknown forum validation option')
-const output = resolve(cwd, process.env.FORUM_ACCEPTANCE_OUTPUT ?? (process.argv.includes('--states-only')?'artifacts/forum/states':process.argv.includes('--core-only')?'artifacts/forum/core':process.argv.includes('--issue219')?'artifacts/forum/issue219':process.argv.includes('--issue187')?'artifacts/issue-187/forum':process.argv.includes('--issue184')?'artifacts/forum/issue184':process.argv.includes('--issue163')?'artifacts/forum/issue163':process.argv.includes('--issue146')?'artifacts/forum/issue146':'artifacts/forum'))
+assert.ok(process.argv.slice(2).every(arg => ['--browser','--browser-only','--resources-only','--core-only','--states-only','--issue146','--issue163','--issue184','--issue187','--issue219','--issue325'].includes(arg)), 'Unknown forum validation option')
+const output = resolve(cwd, process.env.FORUM_ACCEPTANCE_OUTPUT ?? (process.argv.includes('--issue325')?'artifacts/forum/issue325':process.argv.includes('--states-only')?'artifacts/forum/states':process.argv.includes('--core-only')?'artifacts/forum/core':process.argv.includes('--issue219')?'artifacts/forum/issue219':process.argv.includes('--issue187')?'artifacts/issue-187/forum':process.argv.includes('--issue184')?'artifacts/forum/issue184':process.argv.includes('--issue163')?'artifacts/forum/issue163':process.argv.includes('--issue146')?'artifacts/forum/issue146':'artifacts/forum'))
 assert.ok(output.startsWith(resolve(cwd, 'artifacts') + sep), 'Forum output must be inside this repository artifacts directory')
 await mkdir(output, { recursive: true })
 const env = Object.fromEntries(Object.entries(process.env).filter(([name]) =>
@@ -25,6 +25,7 @@ Object.assign(env, {
   LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:53098', E2E_TELEMETRY_DISABLED: '1',
 })
 assert.equal(new URL(env.DATABASE_URL).pathname, '/lingxiloop_forum_test')
+if(process.argv.includes('--issue325')) env.FORUM_ISSUE325='1'
 if(process.argv.includes('--states-only')) env.FORUM_STATES='1'
 if(process.argv.includes('--core-only')) env.FORUM_CORE='1'
 if(process.argv.includes('--issue219')) env.FORUM_ISSUE219='1'
