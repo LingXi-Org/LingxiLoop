@@ -44,8 +44,8 @@ for (const scenario of [
       return
     }
     const structured = !input.messages.some((message: { role: string; content: string }) =>
-      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v2):'))
-    const content = structured ? '{"missing":[]}' : JSON.stringify({ commentary: '', answer: 'Flow control protects a receiver; congestion control protects a network.', outcome: { status: 'satisfied', gaps: [] } })
+      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v3):'))
+    const content = structured ? '{"missing":[]}' : JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: 'Flow control protects a receiver; congestion control protects a network.', outcome: { status: 'satisfied', gaps: [] } })
     const usage = { prompt_tokens: 10, completion_tokens: 12 }
     response.writeHead(200, { 'content-type': input.stream ? 'text/event-stream' : 'application/json' })
     response.end(input.stream

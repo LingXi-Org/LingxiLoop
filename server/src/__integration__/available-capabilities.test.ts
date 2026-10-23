@@ -54,7 +54,7 @@ test('published runtime sends available-only context and preserves truthful prod
       assert.doesNotMatch(system, /(?:does not support|do not support|unsupported|retired|disabled|不支持|已退役)[^.。\n]{0,70}(?:email|calendar|日历|邮件)|(?:email|calendar|日历|邮件)[^.。\n]{0,70}(?:unsupported|retired|disabled|不支持|已退役)/i,
         'specialized product policy reached the model')
       if (request.stream) {
-        assert.match(system, /Public output wire contract \(purpose-json-v2\)/)
+        assert.match(system, /Public output wire contract \(purpose-json-v3\)/)
         assert.doesNotMatch(system, /email|calendar|日历|邮件/i, 'default assistant policy mentions absent capabilities')
       }
       assert.ok(!toolNames.some((name: string) => /^(email|calendar)__/.test(name)), 'absent tool schema reached the model')
@@ -82,7 +82,7 @@ test('published runtime sends available-only context and preserves truthful prod
       }
       const invented = current.id === 'invented-tool' && attempts++ === 0
       const delta = invented ? { role: 'assistant', tool_calls: [{ index: 0, id: 'invented-send', type: 'function', function: { name: 'email__send', arguments: '{}' } }] }
-        : { role: 'assistant', content: JSON.stringify({ commentary: '', answer: current.answer, outcome: current.explicit
+        : { role: 'assistant', content: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: current.answer, outcome: current.explicit
           ? { status: current.id === 'unavailable-actions' ? 'blocked' : 'partial', gaps: [current.answer] } : { status: 'satisfied', gaps: [] } }) }
       res.writeHead(200, { 'content-type': 'text/event-stream' })
       res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason: invented ? 'tool_calls' : 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)

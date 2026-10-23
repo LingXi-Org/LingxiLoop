@@ -16,6 +16,7 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 import { installRecordingWukong } from './_recording-wukong.js'
 import { visualizeReferences } from '../agent-runtime/visualize-projection.js'
 import { activityAnnotation } from '../../../src/lib/runActivity.js'
+import { answerSegment } from '../../../src/lib/answerSegment.js'
 
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
@@ -43,7 +44,7 @@ test('production workers always expose full tools and disable thinking even with
         return
       }
       res.writeHead(200, { 'content-type': 'text/event-stream' })
-      assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v2\)/)
+      assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v3\)/)
       const send = (delta: unknown, finish_reason: string | null = null) =>
         res.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason }] })}\n\n`)
       assert.ok(!request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'response__upgrade'))
@@ -53,7 +54,7 @@ test('production workers always expose full tools and disable thinking even with
         res.end(`data: ${JSON.stringify({choices:[],usage})}\n\ndata: [DONE]\n\n`)
         return
       }
-        const framed = JSON.stringify({ commentary: '', answer: body, outcome: { status: 'satisfied', gaps: [] } })
+        const framed = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: body, outcome: { status: 'satisfied', gaps: [] } })
         const split = framed.indexOf('第一段') + '第一段'.length
         send({ role: 'assistant', reasoning_content: privateText })
         send({ content: framed.slice(0, split) })
@@ -136,10 +137,19 @@ test('production workers always expose full tools and disable thinking even with
         .find(part => part !== undefined)
       assert.ok(previewPart)
       const previewActivity = activityAnnotation(previewPart)
+      const previewSource = answerSegment(previewPart)
       assert.equal(previewActivity?.kind, 'answer')
       assert.match(previewActivity!.id, /^public-text:[a-f0-9]{64}$/)
-      assert.deepEqual(final.message.content.filter(part => part.type === 'text'), [{ type: 'text', text: body,
-        providerMetadata: { lingxiloop: { activity: { version: 1, id: previewActivity!.id, kind: 'answer', label: '答复' } } } }])
+      assert.ok(previewSource, 'A v3 preview must expose its native stable segment identity')
+      assert.equal(previewSource.messageId, `answer:${run.runId}:v1`)
+      assert.equal(previewSource.start, 0)
+      assert.equal(previewSource.end, '第一段'.length)
+      assert.equal(previewSource.segmentId, previewSource.partId, 'The first append owns one immutable revision')
+      assert.deepEqual(final.message.content.filter(part => part.type === 'text'), [{ type: 'text', text: body, status: { type: 'complete' },
+        providerMetadata: { lingxiloop: {
+          activity: { version: 1, id: previewActivity!.id, kind: 'answer', label: '答复', purpose: 'result', requestVersion: 1 },
+          answerSegment: { ...previewSource, end: body.length },
+        } } }])
       assert.equal((final.message.metadata.custom.harness as RunDisplayState).delivery, 'delivered')
       assert.ok(snapshots.some(snapshot => snapshot.message.status?.type === 'running' && snapshot.message.content.some(part => part.type === 'text' && part.text === '第一段')))
       const snapshotResponse = await fetch(`${origin}/api/im/channels/${conversationId}/agents/${agentId}/runs/${run.runId}`, { headers, signal: timeout })
@@ -163,12 +173,20 @@ test('production workers always expose full tools and disable thinking even with
         protocol: 'assistant-transport', runtime: 'published worker', snapshots, final,
         streamedBeforeCompletion: true, deliveredOnce: true, tenantAndThreadIsolation: true,
       }, null, 2))
-      let calls = await pool.query('SELECT status FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, run.runId])
+      const callLedger = () => pool.query(`SELECT status,measured,extras->'failure'->>'category' AS category
+        FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at,id`, [companyId, run.runId])
+      let calls = await callLedger()
       while (calls.rows.length < requests.length) {
         timeout.throwIfAborted(); await delay(20)
-        calls = await pool.query('SELECT status FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, run.runId])
+        calls = await callLedger()
       }
-      assert.deepEqual(calls.rows.map(row => row.status), requests.map(() => 'succeeded'))
+      assert.deepEqual(calls.rows, [
+        { status: 'succeeded', measured: true, category: null },
+        { status: 'succeeded', measured: true, category: null },
+      ], 'Both provider responses are measured; the runtime rejects the invalid batch after provider settlement')
+      assert.equal((await pool.query(`SELECT count(*)::int AS count FROM lingxios.agent_run_events
+        WHERE tenant_id=$1 AND run_id=$2 AND kind='tool.started'`, [companyId, run.runId])).rows[0].count, 0,
+      'The complete invalid tool batch must be rejected before any tool dispatch')
     } finally {
       release(); cancellation.abort(); await reading
       web.closeAllConnections(); await new Promise<void>(resolve => web.close(() => resolve()))
@@ -181,7 +199,9 @@ test('production workers always expose full tools and disable thinking even with
   }
 })
 
-// Failures: an invented executor path is delivered, or native repair leaks a reference before authorization.
+// Failures: an invented executor path is delivered, native repair leaks a
+// reference before authorization, or a v2-style rewrite appends the bad source
+// instead of explicitly replacing the current sealed revision.
 test('unavailable visualization references are repaired before durable delivery', { timeout: 180000 }, async () => {
   await resetAllTables()
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
@@ -203,9 +223,18 @@ test('unavailable visualization references are repaired before durable delivery'
     if (calls === 0) {
       assert.match(JSON.stringify(request.messages), /Gen UI is available/)
     }
-    assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v2\)/)
+    assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v3\)/)
     correction ||= JSON.stringify(request.messages).includes('visualization path is unavailable')
-    const body = JSON.stringify({ commentary: '', answer: ++calls === 1 ? invalid : valid, outcome: { status: 'satisfied', gaps: [] } })
+    const replacing = calls > 0
+    const sourceContexts = request.messages.flatMap((message: { content?: unknown }) => {
+      if (typeof message.content !== 'string') return []
+      const match = /Native answer source context \(identities only; not a new task\): (\{[^\n]+\})/.exec(message.content)
+      return match ? [JSON.parse(match[1]) as { segmentIds: string[] }] : []
+    })
+    assert.equal(sourceContexts.length, 1, 'Use exactly the current native source context, never guessed revision IDs')
+    assert.equal(sourceContexts[0].segmentIds.length, replacing ? 1 : 0)
+    const operation = replacing ? { kind: 'replace', supersedes: sourceContexts[0].segmentIds } : { kind: 'append', supersedes: [] }
+    const body = JSON.stringify({ operation, commentary: '', answer: ++calls === 1 ? invalid : valid, outcome: { status: 'satisfied', gaps: [] } })
     res.writeHead(200, { 'content-type': 'text/event-stream' })
     res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content: body }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
   })

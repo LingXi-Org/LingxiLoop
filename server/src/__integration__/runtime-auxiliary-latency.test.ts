@@ -38,7 +38,7 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
     // Main turns retain the public-purpose wire contract even without native
     // JSON mode; auxiliary review keeps its own schema.
     const structured = !input.messages.some((message: { role: string; content: string }) =>
-      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v2):'))
+      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v3):'))
     const fail = retryAuxiliary && structured && !injectedFailure
     requests.push({ structured, stream: input.stream === true, effort: input.reasoning_effort, thinking: input.enable_thinking, status: fail ? 503 : 200 })
     if (fail) {
@@ -53,7 +53,7 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'fixture-identity', type: 'function', function: { name: 'directory__self', arguments: '{}' } }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
       return
     }
-    const content = structured ? '{"missing":[]}' : JSON.stringify({ commentary: '', answer: 'Fixture completed.', outcome: { status: 'satisfied', gaps: [] } })
+    const content = structured ? '{"missing":[]}' : JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: 'Fixture completed.', outcome: { status: 'satisfied', gaps: [] } })
     if (input.stream) {
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       const heartbeat = setInterval(() => response.write(`data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: 'PRIVATE_SYNTHETIC_REASONING' } }] })}\n\n`), 20)

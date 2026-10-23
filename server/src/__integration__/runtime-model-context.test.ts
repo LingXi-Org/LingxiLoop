@@ -48,7 +48,7 @@ test('production GLM worker preserves conversation continuity across repeated co
     assert.equal(request.response_format?.type, 'json_object')
     // JSON mode is also required for main public-purpose turns in runtime 3.7.
     const auxiliary = !request.messages.some((message: { role: string; content: string }) =>
-      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v2):'))
+      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v3):'))
     const instructions = String(request.messages[0]?.content)
     const compacting = auxiliary && instructions.includes('observedResults')
     const memoryProposal = auxiliary && instructions.includes('Consolidate durable cognitive memory across the supplied committed interactions.')
@@ -66,7 +66,7 @@ test('production GLM worker preserves conversation continuity across repeated co
         // This continuity fixture does not certify memory extraction coverage.
         // Reject the empty proposal truthfully through the bounded memory path.
         : { approved: false, complete: false, confidence: 0, feedback: 'Synthetic fixture does not approve durable memory extraction.' })
-      : JSON.stringify({ commentary: '', answer: '已收到，蓝宝石47。', outcome: { status: 'satisfied', gaps: [] } })
+      : JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: '已收到，蓝宝石47。', outcome: { status: 'satisfied', gaps: [] } })
     if (request.stream) {
       return new Response(`data: ${JSON.stringify({ choices: [{ index: 0,
         delta: { role: 'assistant', content }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`,
