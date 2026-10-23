@@ -110,8 +110,10 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   for (const part of view.publicTextParts ?? []) {
     const pendingAccepted = pendingAcceptedSource(part,view)
     if (!includeAcceptedPublicText && archivedPublicText(part) && !pendingAccepted) continue
-    const kind = publicTextPurpose(part,view,tools)
-    if (history && kind === 'answer') continue
+    const currentPurpose = publicTextPurpose(part,view,tools)
+    // The history endpoint keeps current partial/streamed sources auditable.
+    // Their original identity lets the live answer exclude a stale page copy.
+    const kind = history && currentPurpose === 'answer' ? 'revision' : currentPurpose
     // Preserve source identity across supersession so older history pages
     // reconcile with the live revision. Fixed lifecycle labels distinguish
     // transcripts within the existing v1 metadata shape.
@@ -123,7 +125,7 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
     // repair. Only the delivered answer may activate a renderer reference.
     for (const text of projectVisualizeText(part.text, true)) {
       put(id,part.firstSeq,annotated({ ...text,status },{ id,kind: kind === 'revision' ? 'commentary' : kind,
-        label: kind === 'answer' ? '答复' : kind !== 'revision' ? '公开说明' : part.acceptedResultId ? answerRevisionLabels.accepted
+        label: kind === 'answer' ? '答复' : kind !== 'revision' ? '公开说明' : currentPurpose === 'answer' ? answerRevisionLabels.current : part.acceptedResultId ? answerRevisionLabels.accepted
           : part.reason === 'failed' ? answerRevisionLabels.failed : part.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.superseded,
         purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }

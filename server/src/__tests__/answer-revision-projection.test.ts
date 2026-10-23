@@ -81,5 +81,10 @@ test('failure and cancellation retain the latest partial answer and factual stat
     assert.equal(answer(projection).length, 1)
     assert.equal(nativeText(projection.snapshot.message), '已确认的部分。')
     assert.deepEqual(projection.snapshot.message.status, { type: 'incomplete', reason: reason === 'failed' ? 'error' : 'cancelled' })
+    const history = projection.activityPage(0).message.content
+    assert.equal(history.length, 1, 'the current partial source remains auditable')
+    assert.equal(activityAnnotation(history[0])?.id, activityAnnotation(answer(projection)[0])?.id)
+    assert.equal(activityAnnotation(history[0])?.label, '当前答复的原始片段')
+    assert.ok(isAnswerRevision(history[0]))
   }
 })

@@ -70,6 +70,7 @@ export function activityAnnotation(part: unknown): ActivityAnnotation | undefine
 
 /** Fixed producer lifecycle labels use the existing v1 metadata shape. */
 export const answerRevisionLabels = {
+  current: '当前答复的原始片段',
   accepted: '已交付答复的原始片段',
   superseded: '已替换的答复草稿',
   failed: '未完成的答复草稿（已替换）',

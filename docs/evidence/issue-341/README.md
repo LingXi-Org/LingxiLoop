@@ -1,6 +1,6 @@
 # #341 answer revision projection
 
-Superseded answer candidates retain their public text under an explicit, collapsed transcript disclosure. They no longer supply normal progress prose or its compact summary. Real commentary and failed tools remain in their existing locations, and current streamed/accepted text remains in the answer through the commit-read gap. The transcript never activates archived visualization references.
+Superseded answer candidates retain their public text under an explicit, collapsed transcript disclosure. They no longer supply normal progress prose or its compact summary. Real commentary and failed tools remain in their existing locations, and current streamed/accepted text remains in the answer through the commit-read gap. Current partial sources remain available in history as a collapsed “当前答复的原始片段” transcript under the original source identity. The transcript never activates archived visualization references.
 
 The existing v1 annotation schema is unchanged. Superseded answer transcripts keep their existing `public-text:<hash>` source identity; closed, shared producer lifecycle labels distinguish them from genuine commentary. Accepted source history keeps its existing `archive:public-text:<hash>` identity. Lifecycle labels are fixed product copy. No text comparison, fuzzy deduplication, failure suppression, provider call changes, or production access is involved. Old base `29be24f5` native wire readers successfully parsed all six generated frames/pages.
 

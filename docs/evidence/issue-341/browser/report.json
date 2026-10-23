@@ -1,7 +1,7 @@
 {
   "schemaVersion": "report-1",
   "run": {
-    "id": "01a1682a-806b-721e-bde6-5cc7d7a83f31",
+    "id": "01a16832-392d-7499-b16c-7569eb5db549",
     "specVersion": "0.1",
     "runner": {
       "name": "e2e",
@@ -9,8 +9,8 @@
     },
     "status": "passed",
     "exitCode": 0,
-    "startedAt": "2026-10-23T09:49:41.661Z",
-    "finishedAt": "2026-10-23T09:51:19.923Z",
+    "startedAt": "2026-10-23T09:58:06.482Z",
+    "finishedAt": "2026-10-23T10:00:00.067Z",
     "project": {
       "id": "lingxiloop-answer-first",
       "configDigest": "a2a72288ee1ba06ad6589230678399ee6a02bc1db6fcae5f504ec6c993043d83"
@@ -23,7 +23,7 @@
       "runtime": "node v24.19.0"
     },
     "vcs": {
-      "commit": "0dd3f13eb3f357672fbbc2efae89a65e055f0a4d",
+      "commit": "0d6fa6b9ff1d213b5e94975dc8a16c47fb58e2e5",
       "branch": "fix/341-answer-revision-projection",
       "dirty": true
     },
@@ -325,51 +325,51 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a1682a-d52f-796d-bf21-e79377d3064c",
+            "id": "01a16832-619e-7158-9ec3-7398aeb75fa6",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:49:59.986Z",
-            "durationMs": 33554,
+            "startedAt": "2026-10-23T09:58:14.690Z",
+            "durationMs": 23341,
             "artifacts": [
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:artifact:0",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a1682a-d52f-796d-bf21-e79377d3064c:12"
+                  "stepId": "01a16832-619e-7158-9ec3-7398aeb75fa6:12"
                 },
                 "path": "desktop/e2e_answer-first_revisions.e2e.ts__answer_20replacement_20has_20a_20collapsed_20audit_20transcript_20while_20re-d04d6743/default/attempt-0/screenshots/001-answer-revision-collapsed-with-real-failure.png",
-                "size": 36203,
-                "sha256": "c6d8138e6fae3e0d56e0982ddeb03c74aac030320c9a05fe2969d2efef48d708"
+                "size": 36221,
+                "sha256": "d1bf995aab1a6b2308b3aa9d00de21986a80180fb6f5983cf6e090586744cbd7"
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:artifact:1",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:artifact:1",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a1682a-d52f-796d-bf21-e79377d3064c:29"
+                  "stepId": "01a16832-619e-7158-9ec3-7398aeb75fa6:29"
                 },
                 "path": "desktop/e2e_answer-first_revisions.e2e.ts__answer_20replacement_20has_20a_20collapsed_20audit_20transcript_20while_20re-d04d6743/default/attempt-0/screenshots/002-answer-revision-committed-reconnect.png",
-                "size": 41005,
-                "sha256": "13a15bb1bf3b64b6b73eabd30ee50e03a4a69c3a9a7c25f77ed832c46ab44adf"
+                "size": 41036,
+                "sha256": "2596eeb8e3fa1252b749d7149208f1aad38ffe725a4b74f225a692b5b93e0af6"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:0",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:00.909Z",
-                "durationMs": 7623,
+                "startedAt": "2026-10-23T09:58:16.025Z",
+                "durationMs": 6987,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -379,14 +379,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:1",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:1",
                 "index": 1,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:08.535Z",
-                "durationMs": 524,
+                "startedAt": "2026-10-23T09:58:23.026Z",
+                "durationMs": 582,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -396,14 +396,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:2",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:2",
                 "index": 2,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:09.075Z",
-                "durationMs": 553,
+                "startedAt": "2026-10-23T09:58:23.625Z",
+                "durationMs": 654,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -413,14 +413,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:3",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:3",
                 "index": 3,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:09.630Z",
-                "durationMs": 700,
+                "startedAt": "2026-10-23T09:58:24.282Z",
+                "durationMs": 730,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -430,14 +430,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:4",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:4",
                 "index": 4,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:10.332Z",
-                "durationMs": 124,
+                "startedAt": "2026-10-23T09:58:25.013Z",
+                "durationMs": 47,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -447,14 +447,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:5",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:5",
                 "index": 5,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] summary\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:10.459Z",
-                "durationMs": 185,
+                "startedAt": "2026-10-23T09:58:25.060Z",
+                "durationMs": 176,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -464,14 +464,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:6",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:6",
                 "index": 6,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:10.645Z",
-                "durationMs": 1169,
+                "startedAt": "2026-10-23T09:58:25.240Z",
+                "durationMs": 1035,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -481,14 +481,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:7",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:7",
                 "index": 7,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByText(\"正在核对公开资料。\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:11.816Z",
-                "durationMs": 55,
+                "startedAt": "2026-10-23T09:58:26.276Z",
+                "durationMs": 38,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -498,14 +498,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:8",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:8",
                 "index": 8,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-message-region=\\\"attention\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:11.871Z",
-                "durationMs": 101,
+                "startedAt": "2026-10-23T09:58:26.316Z",
+                "durationMs": 27,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -515,14 +515,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:9",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:9",
                 "index": 9,
                 "kind": "locator",
                 "api": "locator.press",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] summary\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:11.972Z",
-                "durationMs": 249,
+                "startedAt": "2026-10-23T09:58:26.344Z",
+                "durationMs": 136,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -532,14 +532,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:10",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:10",
                 "index": 10,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:12.222Z",
-                "durationMs": 50,
+                "startedAt": "2026-10-23T09:58:26.481Z",
+                "durationMs": 44,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -549,14 +549,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:11",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:11",
                 "index": 11,
                 "kind": "locator",
                 "api": "locator.press",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] summary\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:12.272Z",
-                "durationMs": 188,
+                "startedAt": "2026-10-23T09:58:26.527Z",
+                "durationMs": 95,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -566,17 +566,17 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:12",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:12",
                 "index": 12,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-revision-collapsed-with-real-failure",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:12.462Z",
-                "durationMs": 611,
+                "startedAt": "2026-10-23T09:58:26.622Z",
+                "durationMs": 243,
                 "events": [],
                 "artifacts": [
-                  "01a1682a-d52f-796d-bf21-e79377d3064c:artifact:0"
+                  "01a16832-619e-7158-9ec3-7398aeb75fa6:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/revisions.e2e.ts",
@@ -585,14 +585,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:13",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:13",
                 "index": 13,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:13.127Z",
-                "durationMs": 243,
+                "startedAt": "2026-10-23T09:58:26.884Z",
+                "durationMs": 304,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -602,14 +602,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:14",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:14",
                 "index": 14,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:13.382Z",
-                "durationMs": 138,
+                "startedAt": "2026-10-23T09:58:27.210Z",
+                "durationMs": 249,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -619,14 +619,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:15",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:15",
                 "index": 15,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:13.540Z",
-                "durationMs": 334,
+                "startedAt": "2026-10-23T09:58:27.469Z",
+                "durationMs": 126,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -636,14 +636,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:16",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:16",
                 "index": 16,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "getByRole(\"button\", name: \"加载更多过程\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:13.875Z",
-                "durationMs": 460,
+                "startedAt": "2026-10-23T09:58:27.596Z",
+                "durationMs": 296,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -653,14 +653,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:17",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:17",
                 "index": 17,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:14.336Z",
-                "durationMs": 20,
+                "startedAt": "2026-10-23T09:58:27.892Z",
+                "durationMs": 45,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -670,14 +670,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:18",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:18",
                 "index": 18,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:14.356Z",
-                "durationMs": 1026,
+                "startedAt": "2026-10-23T09:58:27.938Z",
+                "durationMs": 1100,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -687,14 +687,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:19",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:19",
                 "index": 19,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\").last()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:15.383Z",
-                "durationMs": 1082,
+                "startedAt": "2026-10-23T09:58:29.038Z",
+                "durationMs": 1074,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -704,14 +704,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:20",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:20",
                 "index": 20,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByText(\"正在核对公开资料。\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:16.466Z",
-                "durationMs": 72,
+                "startedAt": "2026-10-23T09:58:30.113Z",
+                "durationMs": 18,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -721,14 +721,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:21",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:21",
                 "index": 21,
                 "kind": "resource",
                 "api": "browser.reload",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:16.538Z",
-                "durationMs": 8190,
+                "startedAt": "2026-10-23T09:58:30.132Z",
+                "durationMs": 3177,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -738,14 +738,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:22",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:22",
                 "index": 22,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:24.730Z",
-                "durationMs": 785,
+                "startedAt": "2026-10-23T09:58:33.310Z",
+                "durationMs": 172,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -755,14 +755,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:23",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:23",
                 "index": 23,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:25.515Z",
-                "durationMs": 2319,
+                "startedAt": "2026-10-23T09:58:33.482Z",
+                "durationMs": 438,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -772,14 +772,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:24",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:24",
                 "index": 24,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:27.867Z",
-                "durationMs": 162,
+                "startedAt": "2026-10-23T09:58:33.921Z",
+                "durationMs": 115,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -789,14 +789,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:25",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:25",
                 "index": 25,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:28.030Z",
-                "durationMs": 1083,
+                "startedAt": "2026-10-23T09:58:34.037Z",
+                "durationMs": 1123,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -806,14 +806,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:26",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:26",
                 "index": 26,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\").last()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:29.113Z",
-                "durationMs": 1101,
+                "startedAt": "2026-10-23T09:58:35.160Z",
+                "durationMs": 1119,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -823,14 +823,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:27",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:27",
                 "index": 27,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-message-region=\\\"attention\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:30.243Z",
-                "durationMs": 104,
+                "startedAt": "2026-10-23T09:58:36.279Z",
+                "durationMs": 29,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -840,14 +840,14 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:28",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:28",
                 "index": 28,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:30.348Z",
-                "durationMs": 29,
+                "startedAt": "2026-10-23T09:58:36.308Z",
+                "durationMs": 38,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -857,17 +857,17 @@
                 }
               },
               {
-                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:29",
+                "id": "01a16832-619e-7158-9ec3-7398aeb75fa6:29",
                 "index": 29,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-revision-committed-reconnect",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:30.380Z",
-                "durationMs": 931,
+                "startedAt": "2026-10-23T09:58:36.346Z",
+                "durationMs": 394,
                 "events": [],
                 "artifacts": [
-                  "01a1682a-d52f-796d-bf21-e79377d3064c:artifact:1"
+                  "01a16832-619e-7158-9ec3-7398aeb75fa6:artifact:1"
                 ],
                 "source": {
                   "file": "e2e/answer-first/revisions.e2e.ts",
@@ -902,38 +902,38 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a1682b-5851-7597-92bd-c7c68b0c741e",
+            "id": "01a16832-bcd3-70cb-8491-789a8eaa599f",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:50:33.554Z",
-            "durationMs": 11733,
+            "startedAt": "2026-10-23T09:58:38.035Z",
+            "durationMs": 8710,
             "artifacts": [
               {
-                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:artifact:0",
+                "id": "01a16832-bcd3-70cb-8491-789a8eaa599f:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a1682b-5851-7597-92bd-c7c68b0c741e:5"
+                  "stepId": "01a16832-bcd3-70cb-8491-789a8eaa599f:5"
                 },
                 "path": "desktop/e2e_answer-first_revisions.e2e.ts__same_20answer_20text_20in_20distinct_20messages_20remains_20visible_20in_20e-d21889c0/default/attempt-0/screenshots/001-answer-revision-same-text-distinct-messages.png",
-                "size": 31069,
-                "sha256": "6eccaa4cc9899819ef36266539fb088534fae185a9f69441615fbd50fbcc20ae"
+                "size": 31129,
+                "sha256": "be3ee2b6f014dc30cef82446e6048e9a8f27a6d4cb0018e3460f1ebb61218c26"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:0",
+                "id": "01a16832-bcd3-70cb-8491-789a8eaa599f:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:33.769Z",
-                "durationMs": 9170,
+                "startedAt": "2026-10-23T09:58:38.082Z",
+                "durationMs": 5951,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -943,14 +943,14 @@
                 }
               },
               {
-                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:1",
+                "id": "01a16832-bcd3-70cb-8491-789a8eaa599f:1",
                 "index": 1,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:42.939Z",
-                "durationMs": 414,
+                "startedAt": "2026-10-23T09:58:44.034Z",
+                "durationMs": 1333,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -960,14 +960,14 @@
                 }
               },
               {
-                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:2",
+                "id": "01a16832-bcd3-70cb-8491-789a8eaa599f:2",
                 "index": 2,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:43.355Z",
-                "durationMs": 503,
+                "startedAt": "2026-10-23T09:58:45.368Z",
+                "durationMs": 305,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -977,14 +977,14 @@
                 }
               },
               {
-                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:3",
+                "id": "01a16832-bcd3-70cb-8491-789a8eaa599f:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:43.861Z",
-                "durationMs": 104,
+                "startedAt": "2026-10-23T09:58:45.673Z",
+                "durationMs": 83,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -994,14 +994,14 @@
                 }
               },
               {
-                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:4",
+                "id": "01a16832-bcd3-70cb-8491-789a8eaa599f:4",
                 "index": 4,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\").last()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:43.967Z",
-                "durationMs": 64,
+                "startedAt": "2026-10-23T09:58:45.758Z",
+                "durationMs": 24,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1011,17 +1011,17 @@
                 }
               },
               {
-                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:5",
+                "id": "01a16832-bcd3-70cb-8491-789a8eaa599f:5",
                 "index": 5,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-revision-same-text-distinct-messages",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:44.032Z",
-                "durationMs": 978,
+                "startedAt": "2026-10-23T09:58:45.782Z",
+                "durationMs": 779,
                 "events": [],
                 "artifacts": [
-                  "01a1682b-5851-7597-92bd-c7c68b0c741e:artifact:0"
+                  "01a16832-bcd3-70cb-8491-789a8eaa599f:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/revisions.e2e.ts",
@@ -1056,38 +1056,38 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9",
+            "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:50:45.288Z",
-            "durationMs": 12093,
+            "startedAt": "2026-10-23T09:58:46.745Z",
+            "durationMs": 21925,
             "artifacts": [
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:artifact:0",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:9"
+                  "stepId": "01a16832-ded9-7e44-97e8-043d7bb69eb0:9"
                 },
                 "path": "desktop/e2e_answer-first_revisions.e2e.ts__an_20in-flight_20older_20history_20page_20cannot_20resurrect_20ordinary_20dr-a01d97d3/default/attempt-0/screenshots/001-answer-revision-stale-page-does-not-resurrect-prose.png",
-                "size": 38305,
-                "sha256": "489f45566a0f3cc0235294298f80149dffbd853372150987f63ff3f2bc54afc9"
+                "size": 38268,
+                "sha256": "398b16d2fb3770ff29b45447cb5ddb7602bfe5976e863ac057c95eacacd69bba"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:0",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:45.390Z",
-                "durationMs": 7661,
+                "startedAt": "2026-10-23T09:58:46.844Z",
+                "durationMs": 12979,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1097,14 +1097,14 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:1",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:1",
                 "index": 1,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:53.069Z",
-                "durationMs": 1376,
+                "startedAt": "2026-10-23T09:58:59.825Z",
+                "durationMs": 1537,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1114,14 +1114,14 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:2",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:2",
                 "index": 2,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-slot=\\\"run-activity-history\\\"] button\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:54.446Z",
-                "durationMs": 78,
+                "startedAt": "2026-10-23T09:59:01.362Z",
+                "durationMs": 219,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1131,14 +1131,14 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:3",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:54.541Z",
-                "durationMs": 573,
+                "startedAt": "2026-10-23T09:59:01.688Z",
+                "durationMs": 2046,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1148,14 +1148,14 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:4",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:4",
                 "index": 4,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-slot=\\\"run-activity-history\\\"] button\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:55.120Z",
-                "durationMs": 346,
+                "startedAt": "2026-10-23T09:59:03.749Z",
+                "durationMs": 203,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1165,14 +1165,14 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:5",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:5",
                 "index": 5,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"] [data-native-part=\\\"text\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:55.467Z",
-                "durationMs": 16,
+                "startedAt": "2026-10-23T09:59:03.954Z",
+                "durationMs": 114,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1182,14 +1182,14 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:6",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:6",
                 "index": 6,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:55.483Z",
-                "durationMs": 1161,
+                "startedAt": "2026-10-23T09:59:04.069Z",
+                "durationMs": 1887,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1199,14 +1199,14 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:7",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:7",
                 "index": 7,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByText(\"正在核对公开资料。\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:56.645Z",
-                "durationMs": 36,
+                "startedAt": "2026-10-23T09:59:05.959Z",
+                "durationMs": 365,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1216,14 +1216,14 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:8",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:8",
                 "index": 8,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:56.684Z",
-                "durationMs": 66,
+                "startedAt": "2026-10-23T09:59:06.325Z",
+                "durationMs": 594,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1233,17 +1233,17 @@
                 }
               },
               {
-                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:9",
+                "id": "01a16832-ded9-7e44-97e8-043d7bb69eb0:9",
                 "index": 9,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-revision-stale-page-does-not-resurrect-prose",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:56.751Z",
-                "durationMs": 290,
+                "startedAt": "2026-10-23T09:59:06.920Z",
+                "durationMs": 1130,
                 "events": [],
                 "artifacts": [
-                  "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:artifact:0"
+                  "01a16832-ded9-7e44-97e8-043d7bb69eb0:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/revisions.e2e.ts",
@@ -1278,38 +1278,38 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a1682b-b596-7ec3-b02c-507c60799081",
+            "id": "01a16833-34c3-734c-af69-2879961e5fed",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:50:57.430Z",
-            "durationMs": 10904,
+            "startedAt": "2026-10-23T09:59:08.739Z",
+            "durationMs": 19719,
             "artifacts": [
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:artifact:0",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a1682b-b596-7ec3-b02c-507c60799081:11"
+                  "stepId": "01a16833-34c3-734c-af69-2879961e5fed:11"
                 },
                 "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20v2_20first_20character_2C_20pending_20acceptance_20and_20final_20hand-cd5c2c8e/default/attempt-0/screenshots/001-answer-first-real-v2-accepted-handoff.png",
-                "size": 23268,
-                "sha256": "6159512b48f6ef8ce166178f3d29091585d4a19e03f97b866146e93652fa509a"
+                "size": 23217,
+                "sha256": "5a01d9a67b6069e540e6bc466c89608b1e0363ce42f654de8e45d31746d8965c"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:0",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:50:57.461Z",
-                "durationMs": 7078,
+                "startedAt": "2026-10-23T09:59:08.814Z",
+                "durationMs": 6896,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1319,14 +1319,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:1",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:1",
                 "index": 1,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:04.539Z",
-                "durationMs": 968,
+                "startedAt": "2026-10-23T09:59:15.728Z",
+                "durationMs": 5113,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1336,14 +1336,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:2",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:2",
                 "index": 2,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:05.508Z",
-                "durationMs": 28,
+                "startedAt": "2026-10-23T09:59:20.842Z",
+                "durationMs": 109,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1353,14 +1353,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:3",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:05.559Z",
-                "durationMs": 583,
+                "startedAt": "2026-10-23T09:59:20.963Z",
+                "durationMs": 2980,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1370,14 +1370,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:4",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:4",
                 "index": 4,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:06.142Z",
-                "durationMs": 32,
+                "startedAt": "2026-10-23T09:59:23.943Z",
+                "durationMs": 67,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1387,14 +1387,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:5",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:5",
                 "index": 5,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-fixture-received]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:06.180Z",
-                "durationMs": 250,
+                "startedAt": "2026-10-23T09:59:24.017Z",
+                "durationMs": 295,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1404,14 +1404,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:6",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:6",
                 "index": 6,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:06.430Z",
-                "durationMs": 44,
+                "startedAt": "2026-10-23T09:59:24.312Z",
+                "durationMs": 58,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1421,14 +1421,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:7",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:7",
                 "index": 7,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:06.475Z",
-                "durationMs": 38,
+                "startedAt": "2026-10-23T09:59:24.370Z",
+                "durationMs": 66,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1438,14 +1438,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:8",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:8",
                 "index": 8,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-fixture-received]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:06.523Z",
-                "durationMs": 263,
+                "startedAt": "2026-10-23T09:59:24.454Z",
+                "durationMs": 162,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1455,14 +1455,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:9",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:9",
                 "index": 9,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:06.787Z",
-                "durationMs": 56,
+                "startedAt": "2026-10-23T09:59:24.617Z",
+                "durationMs": 22,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1472,14 +1472,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:10",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:10",
                 "index": 10,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:06.843Z",
-                "durationMs": 17,
+                "startedAt": "2026-10-23T09:59:24.640Z",
+                "durationMs": 44,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1489,17 +1489,17 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:11",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:11",
                 "index": 11,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-first-real-v2-accepted-handoff",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:06.861Z",
-                "durationMs": 485,
+                "startedAt": "2026-10-23T09:59:24.685Z",
+                "durationMs": 2350,
                 "events": [],
                 "artifacts": [
-                  "01a1682b-b596-7ec3-b02c-507c60799081:artifact:0"
+                  "01a16833-34c3-734c-af69-2879961e5fed:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/v2-stream.e2e.ts",
@@ -1508,14 +1508,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:12",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:12",
                 "index": 12,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:07.358Z",
-                "durationMs": 494,
+                "startedAt": "2026-10-23T09:59:27.050Z",
+                "durationMs": 1120,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1525,14 +1525,14 @@
                 }
               },
               {
-                "id": "01a1682b-b596-7ec3-b02c-507c60799081:13",
+                "id": "01a16833-34c3-734c-af69-2879961e5fed:13",
                 "index": 13,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:07.852Z",
-                "durationMs": 69,
+                "startedAt": "2026-10-23T09:59:28.171Z",
+                "durationMs": 52,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1568,38 +1568,38 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99",
+            "id": "01a16833-81cc-76d0-ac11-b173212e725e",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:51:08.335Z",
-            "durationMs": 11322,
+            "startedAt": "2026-10-23T09:59:28.460Z",
+            "durationMs": 31279,
             "artifacts": [
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:artifact:0",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:9"
+                  "stepId": "01a16833-81cc-76d0-ac11-b173212e725e:9"
                 },
                 "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20superseded_20candidate_20leaves_20the_20main_20answer_20and_20correct-a1608533/default/attempt-0/screenshots/001-answer-first-real-v2-corrected-candidate.png",
-                "size": 32577,
-                "sha256": "cf274f4c2978009fe48c10154e7277c8c10ac11b1c7d495c2513bb8154fa51e9"
+                "size": 32618,
+                "sha256": "772ae08015404296350f81d4952d3072e951cfd18eb4005d4d08cf558f4a95c7"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:0",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:08.378Z",
-                "durationMs": 5682,
+                "startedAt": "2026-10-23T09:59:28.556Z",
+                "durationMs": 22007,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1609,14 +1609,14 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:1",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:1",
                 "index": 1,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:14.061Z",
-                "durationMs": 700,
+                "startedAt": "2026-10-23T09:59:50.564Z",
+                "durationMs": 2097,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1626,14 +1626,14 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:2",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:2",
                 "index": 2,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:14.763Z",
-                "durationMs": 19,
+                "startedAt": "2026-10-23T09:59:52.663Z",
+                "durationMs": 414,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1643,14 +1643,14 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:3",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:14.791Z",
-                "durationMs": 540,
+                "startedAt": "2026-10-23T09:59:53.133Z",
+                "durationMs": 616,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1660,14 +1660,14 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:4",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:4",
                 "index": 4,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:15.333Z",
-                "durationMs": 15,
+                "startedAt": "2026-10-23T09:59:53.750Z",
+                "durationMs": 124,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1677,14 +1677,14 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:5",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:5",
                 "index": 5,
                 "kind": "assertion",
                 "api": "expect.not.toContainText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:15.348Z",
-                "durationMs": 1132,
+                "startedAt": "2026-10-23T09:59:53.875Z",
+                "durationMs": 1265,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1694,14 +1694,14 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:6",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:6",
                 "index": 6,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:16.482Z",
-                "durationMs": 1042,
+                "startedAt": "2026-10-23T09:59:55.141Z",
+                "durationMs": 2723,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1711,14 +1711,14 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:7",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:7",
                 "index": 7,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] summary\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:17.524Z",
-                "durationMs": 37,
+                "startedAt": "2026-10-23T09:59:57.869Z",
+                "durationMs": 109,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1728,14 +1728,14 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:8",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:8",
                 "index": 8,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:17.562Z",
-                "durationMs": 1053,
+                "startedAt": "2026-10-23T09:59:57.979Z",
+                "durationMs": 1159,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1745,17 +1745,17 @@
                 }
               },
               {
-                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:9",
+                "id": "01a16833-81cc-76d0-ac11-b173212e725e:9",
                 "index": 9,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-first-real-v2-corrected-candidate",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:51:18.615Z",
-                "durationMs": 454,
+                "startedAt": "2026-10-23T09:59:59.146Z",
+                "durationMs": 301,
                 "events": [],
                 "artifacts": [
-                  "01a1682b-e02e-7049-80c9-e6cb61eb6f99:artifact:0"
+                  "01a16833-81cc-76d0-ac11-b173212e725e:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/v2-stream.e2e.ts",
@@ -1845,7 +1845,7 @@
       "maxAgentContextBytes": 0,
       "maxLedgerBytes": 0,
       "maxObservationBytes": 0,
-      "artifactBytes": 202427,
+      "artifactBytes": 202489,
       "downloads": 0,
       "events": 0,
       "modelTokens": 0,
