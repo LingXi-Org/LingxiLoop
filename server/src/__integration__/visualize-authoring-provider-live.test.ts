@@ -30,8 +30,9 @@ test('real provider activates and delivers a synthetic interactive diagram witho
   assert.ok(process.env.ISSUE342_RUNTIME_VERSION, 'Require the exact candidate runtime version')
   assert.equal(releaseVersions.runtime, process.env.ISSUE342_RUNTIME_VERSION)
   const [major, minor, patch] = releaseVersions.runtime.split('.').map(Number)
-  assert.ok(major > 3 || major === 3 && (minor > 8 || minor === 8 && patch >= 4), 'Selective semantic review requires runtime 3.8.4 or newer')
+  assert.ok(major > 3 || major === 3 && (minor > 8 || minor === 8 && patch >= 5), 'Explicit same-generation outcomes require runtime 3.8.5 or newer')
   const model = runtimeModelConfiguration({ id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL }, 30000)
+  assert.equal(model.publicTextProtocol, 'purpose-json-v2', 'Require the explicit outcome producer before a provider call')
   const pricing = siliconFlowPricingForModel(env.OPENAI_BASE_URL, env.OPENAI_MODEL, false)
   assert.ok(pricing, 'Require the existing product price snapshot for the actual provider/model')
   if (env.OPENAI_MODEL === 'deepseek-ai/DeepSeek-V4.1-Flash') {
@@ -92,15 +93,16 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     const settledLedger = async (runId: string) => {
       const deadline = AbortSignal.timeout(3000)
       for (;;) {
-        const rows = (await pool.query('SELECT purpose,status FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at,id', [companyId, runId])).rows
-        if (rows.length) return rows
+        const rows = (await pool.query("SELECT purpose,status,measured,extras->>'operation' AS operation FROM llm_calls WHERE company_id=$1 AND run_id=$2 ORDER BY created_at,id", [companyId, runId])).rows
+        if (rows.length && rows.every(row => ['succeeded', 'failed'].includes(row.status))) return rows
         deadline.throwIfAborted(); await delay(20)
       }
     }
     const ledger = () => settledLedger(identity.runId)
     const before = await ledger()
     assert.ok(before.length > 0)
-    assert.ok(before.every(row => !/content|review/.test(row.purpose)), 'No semantic review call')
+    assert.ok(before.every(row => row.operation !== 'content-review'), 'No semantic review call in the measured operation ledger')
+    assert.ok(before.every(row => row.status !== 'succeeded' || row.measured), 'Every successful generation must retain measured usage')
     report.modelCalls = before.length
     const source = im.messages.find(message => message.channelId === channelId && message.fromUid === agentId)
     assert.ok(source)
@@ -117,7 +119,7 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     // A new ordinary request must not inherit the previous visual workflow's
     // selective gate, add a judge, or revise an already correct short answer.
     const question = await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version,
-      messageId: 'direct-question-384', version: 1, author: { id: principalId, kind: 'human' }, mentions: [agentId],
+      messageId: 'direct-question-385', version: 1, author: { id: principalId, kind: 'human' }, mentions: [agentId],
       text: 'Reply with only the numeric result of 17 + 26.' },
     { mode: 'execute', deliveryMode: 'text', executionClass: 'conversation', codeExecution: 'disabled' })
     const questionIdentity = question.runs[0]; assert.ok(questionIdentity)
@@ -132,7 +134,7 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     assert.equal(questionState?.message?.body.trim(), '43')
     const questionCalls = await settledLedger(questionIdentity.runId)
     assert.equal(questionCalls.length, 1, 'One useful answer generation, with no semantic judge or correction')
-    assert.ok(questionCalls.every(row => !/content|review/.test(row.purpose)))
+    assert.ok(questionCalls.every(row => row.operation !== 'content-review' && row.status === 'succeeded' && row.measured))
     report.directQuestion = { status: 'passed', correct: true, measuredCalls: 1, semanticReviewCalls: 0 }
     report.status = 'passed'
   } catch (error) { report.status = 'failed'; report.failure = 'required-live-delivery-check-failed'; throw error }

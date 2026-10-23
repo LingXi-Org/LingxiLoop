@@ -54,7 +54,7 @@ test('published runtime sends available-only context and preserves truthful prod
       assert.doesNotMatch(system, /(?:does not support|do not support|unsupported|retired|disabled|不支持|已退役)[^.。\n]{0,70}(?:email|calendar|日历|邮件)|(?:email|calendar|日历|邮件)[^.。\n]{0,70}(?:unsupported|retired|disabled|不支持|已退役)/i,
         'specialized product policy reached the model')
       if (request.stream) {
-        assert.match(system, /Public output wire contract \(purpose-json-v1\)/)
+        assert.match(system, /Public output wire contract \(purpose-json-v2\)/)
         assert.doesNotMatch(system, /email|calendar|日历|邮件/i, 'default assistant policy mentions absent capabilities')
       }
       assert.ok(!toolNames.some((name: string) => /^(email|calendar)__/.test(name)), 'absent tool schema reached the model')
@@ -82,7 +82,8 @@ test('published runtime sends available-only context and preserves truthful prod
       }
       const invented = current.id === 'invented-tool' && attempts++ === 0
       const delta = invented ? { role: 'assistant', tool_calls: [{ index: 0, id: 'invented-send', type: 'function', function: { name: 'email__send', arguments: '{}' } }] }
-        : { role: 'assistant', content: JSON.stringify({ commentary: '', answer: current.answer }) }
+        : { role: 'assistant', content: JSON.stringify({ commentary: '', answer: current.answer, outcome: current.explicit
+          ? { status: 'partial', gaps: [current.answer] } : { status: 'satisfied', gaps: [] } }) }
       res.writeHead(200, { 'content-type': 'text/event-stream' })
       res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason: invented ? 'tool_calls' : 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
     } catch (error) {
@@ -134,10 +135,11 @@ test('published runtime sends available-only context and preserves truthful prod
         'ordinary replies must not volunteer feature-specific absence; writing about a topic is allowed')
       const ledger = (await pool.query(`SELECT count(*)::int AS calls,COALESCE(bool_and(measured),false) AS measured,COALESCE(sum(cost_usd),0)::text AS cost FROM llm_calls WHERE company_id=$1 AND run_id=$2`, [companyId, identity.runId])).rows[0]
       assert.ok(ledger.calls > 0 && ledger.measured, `measured ledger required for ${scenario.id}: ${JSON.stringify(ledger)}`)
-      if (!live && !scenario.explicit) {
-        assert.deepEqual(checks.filter(check => check.case === scenario.id).map(check => check.stream), [true],
-          'a simple default conversation needs one generation and no semantic judge')
-        assert.equal(ledger.calls, 1, 'the single default generation must be the only billed call')
+      if (!live) {
+        const expectedGenerations = scenario.id === 'invented-tool' ? 2 : 1
+        assert.deepEqual(checks.filter(check => check.case === scenario.id).map(check => check.stream), Array(expectedGenerations).fill(true),
+          'ordinary answers and truthful unavailable-action replies must not add a semantic judge')
+        assert.equal(ledger.calls, expectedGenerations, 'only the explicitly scripted generation attempts may be billed')
         assert.equal((await pool.query("SELECT count(*)::int AS n FROM lingxios.agent_steps WHERE work_id=$1 AND kind='runtime.review'", [identity.runId])).rows[0].n, 0)
       }
       if (live) assert.ok(Number(ledger.cost) <= 0.25)
