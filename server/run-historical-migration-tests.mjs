@@ -9,6 +9,25 @@ import {promisify} from 'node:util'
 const execute=promisify(execFile)
 const HISTORICAL=new Set(['migration.test.ts','conversation-repair-provenance-migration.test.ts',
  'public-purpose-reader-migration.test.ts','run-trace-provenance-migration.test.ts','run-presentation-contract.test.ts'])
+// Historical presentation coverage needs the pre-v3 display leaves, not today's
+// new UI exports. These exact public source bytes are bundled for shallow CI
+// checkouts; migration, identity, tests and all other source remain current.
+const PROJECTION_SOURCE='7a255c3fe95d832e77fd29c6db9a506d111d3cf2'
+const PROJECTION_FILES=[
+ {path:'server/src/agent-runtime/message-projection.ts',sha256:'80f0e203665a6992e9017ff424aca79b361804d8406de7ea5579020afa15aac2'},
+ {path:'src/lib/nativeMessage.ts',sha256:'2e845e9763b1a1bccafc345f91a7c172cf25391f86a40d215dfed1c57b836178'},
+]
+export async function copyHistoricalFixtureSource(root,fixture){
+ const snapshots=await Promise.all(PROJECTION_FILES.map(async row=>{
+  const bytes=await readFile(join(root,'server/fixtures/historical-projection-3.8.2',row.path))
+  assert.equal(createHash('sha256').update(bytes).digest('hex'),row.sha256,'Historical projection source integrity changed')
+  return {...row,bytes}
+ }))
+ await cp(join(root,'server/src'),join(fixture,'server/src'),{recursive:true})
+ await cp(join(root,'src'),join(fixture,'src'),{recursive:true})
+ for(const row of snapshots)await writeFile(join(fixture,row.path),row.bytes)
+ return {sourceCommit:PROJECTION_SOURCE,files:PROJECTION_FILES.map(row=>({...row}))}
+}
 export function partitionMigrationTests(files){
  const historical=files.filter(f=>HISTORICAL.has(f)),current=files.filter(f=>!HISTORICAL.has(f))
  if(historical.length&&!current.includes('runtime-patch-provenance.test.ts'))current.push('runtime-patch-provenance.test.ts')
@@ -60,9 +79,8 @@ export async function runHistoricalMigrationTests(root,files,env=process.env){
   await execute('tar',['-xzf',join(fixture,archive),'-C',packageRoot,'--strip-components=1'],{timeout:30_000})
   const actual=JSON.parse(await readFile(join(packageRoot,'package.json'),'utf8'))
   assert.equal(actual.name,'@lyyzka/lingxios');assert.equal(actual.version,record.version)
-  // Copy current source, so the historical tests cover today's migration code.
-  await cp(join(root,'server/src'),join(fixture,'server/src'),{recursive:true})
-  await cp(join(root,'src'),join(fixture,'src'),{recursive:true})
+  const projection=await copyHistoricalFixtureSource(root,fixture)
+  console.log(`[integration historical] display fixture source ${projection.sourceCommit}; current migration code and tests retained`)
   const key='@lyyzka/lingxios',manifest={name:'historical-migration-fixture',private:true,type:'module',dependencies:{[key]:record.version}}
   const lock={name:manifest.name,lockfileVersion:3,packages:{'':manifest,['node_modules/'+key]:record}}
   for(const prefix of ['', 'server/']){
