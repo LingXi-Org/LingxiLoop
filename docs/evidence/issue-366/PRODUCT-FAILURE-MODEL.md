@@ -61,3 +61,10 @@ public native source reader; it does not copy those reducers or add either runti
 dependency to the browser. Citation, code and visualize tokens crossing source
 ranges are displayed atomically at their original starting source; copy text
 keeps the unchanged native source slices and UTF-16 coordinates.
+
+The public Worker configuration advertises v3. The runtime separately selects
+the same provider's v2 protocol only for a trusted native
+`conversation.internal === true` work item, before generation/binding, and binds
+the actual driver identity. A denied publication policy or revoked permission
+must never trigger that selection; resumed bound work must not switch protocols.
+This release does not claim internal delegated conversations use public v3.
