@@ -55,3 +55,11 @@ test('official Markdown blocks spanning sources retain links, tables and math wi
     assert.deepEqual(answerDisplaySlice(content,1,[]),{text:'',offset:body.length})
   }
 })
+test('parser newline normalization falls back to intact canonical code, never an isolated active directive',()=>{
+  const texts=['```text\r\n','::visualize{path="/visualize/example.html" title="Example"}\r\n```'],content=parts(texts),body=texts.join('')
+  const display=answerDisplaySlice(content,0,[])!
+  assert.deepEqual(display,{text:body,offset:0})
+  assert.deepEqual(answerDisplaySlice(content,1,[]),{text:'',offset:body.length})
+  assert.equal(projectGenUiReferences(display.text,true).some(part=>part.kind==='ui'),false)
+  assert.equal(content.map(part=>part.text).join(''),body,'no newline normalization in canonical copy')
+})

@@ -206,6 +206,8 @@ test('real assistant transport preserves every segment checkpoint without native
       frames:[...left.frames,...right.frames],history:[{target:target(left.runId),snapshot:leftFinal.history},{target:target(right.runId),snapshot:rightFinal.history}]})
     mkdirSync(dirname(process.env.ISSUE366_SNAPSHOTS), { recursive: true })
     writeFileSync(process.env.ISSUE366_SNAPSHOTS, JSON.stringify({ version: 1, provenance: { producer: 'native-event-projection-fixture',
+      qualification: process.env.ISSUE366_QUALIFICATION ?? 'installed-package',
+      ...(process.env.ISSUE366_UI_SOURCE_SHA256 ? { uiSourceSha256:process.env.ISSUE366_UI_SOURCE_SHA256 } : {}),
       commit: process.env.ISSUE366_COMMIT ?? 'working-tree' }, scenarios }, null, 2))
   }
 })

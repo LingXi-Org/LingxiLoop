@@ -19,7 +19,10 @@ export function answerDisplaySlice(parts: readonly unknown[], index: number, cit
   // Use the renderer's official block parser rather than another Markdown
   // grammar. Coordinates are safe only when it preserves every source unit.
   const blocks = parseMarkdownIntoBlocks(body)
-  if (blocks.join('') !== body) return
+  // Streamdown may normalize CRLF. Never reinterpret isolated source fragments
+  // then: a code fence in one source could otherwise expose a directive in the
+  // next. Keep exact bytes in one intact display block with the original owner.
+  if (blocks.join('') !== body) return source.start===0 ? {text:body,offset:0} : {text:'',offset:body.length}
   let blockOffset=0
   const blockRanges=blocks.map(block=>{const start=blockOffset;blockOffset+=block.length;return {start,end:blockOffset}})
   const code = findMarkdownCodeRanges(body)
