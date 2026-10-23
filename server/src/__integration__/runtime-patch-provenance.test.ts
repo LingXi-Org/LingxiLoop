@@ -28,7 +28,7 @@ async function setup(db:Pool){
 }
 const snapshot=async(db:Pool)=>(await db.query('SELECT * FROM lingxios_installation')).rows
 test('current patch refuses partial existing history before any DDL or provenance mutation',{
- skip:releaseVersions.runtime==='3.8.2'?'Requires the actual newer formal package; no version substitution':false,
+ skip:String(releaseVersions.runtime)==='3.8.2'?'Requires the actual newer formal package; no version substitution':false,
 },async()=>isolated(async db=>{
  await setup(db);await db.query('DELETE FROM schema_migrations WHERE version=54');const before=await snapshot(db)
  await db.query(`CREATE FUNCTION forbid_patch_ddl() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'unexpected DDL'; END $$;

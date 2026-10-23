@@ -22,7 +22,7 @@
  * exit 0 — so this script slots into CI / pre-commit hooks without
  * forcing every developer to maintain a test DB.
  */
-import { spawn } from 'node:child_process'
+import { partitionMigrationTests, runHistoricalMigrationTests, runTestChild } from './run-historical-migration-tests.mjs'
 import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -144,9 +144,17 @@ if (!process.env.AGENT_OS_RESPONSE_POLICY) process.env.AGENT_OS_RESPONSE_POLICY 
 // timer from hiding the actual assertion behind the workflow timeout.
 // We're not trying to optimize wall-time for this suite, so serializing is
 // the right trade.
-const child = spawn(
-  'node',
-  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-reporter=tap', '--test-concurrency=1', '--test-force-exit', ...testFiles],
-  { stdio: 'inherit', env: process.env },
-)
-child.on('exit', (code) => process.exit(code ?? 1))
+const groups=partitionMigrationTests(selectedFiles)
+console.log(`[integration current] ${groups.current.length} file(s) using the actual installed package`)
+const currentCode=groups.current.length?await runTestChild(
+  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-reporter=tap', '--test-concurrency=1', '--test-force-exit',
+    ...groups.current.map(name=>join(integrationDir,name))],{timeout:1_500_000},
+):0
+let historicalCode=0
+if(groups.historical.length){
+  console.log(`[integration historical] ${groups.historical.length} file(s) require the real formal 3.8.2 fixture`)
+  try{historicalCode=await runHistoricalMigrationTests(join(here,'..'),groups.historical)}
+  catch(error){console.error(`[integration historical] ${error instanceof Error?error.message:'fixture failed'}`);historicalCode=1}
+}
+console.log(`[integration groups] current=${currentCode===0?'passed':'failed'} historical=${groups.historical.length?(historicalCode===0?'passed':'failed'):'not requested'}`)
+process.exit(currentCode||historicalCode)
