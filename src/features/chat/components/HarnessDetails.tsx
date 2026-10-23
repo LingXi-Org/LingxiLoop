@@ -66,7 +66,7 @@ function HarnessDetailsContent({ metadata }: { metadata: LingxiMessageMetadata }
     {metadata.runConnection === 'unauthenticated' && <p role="status">登录已失效，请重新登录。</p>}
     {metadata.runConnection === 'inaccessible' && <p role="status">你已无法访问此回复。</p>}
     {metadata.runConnection === 'missing' && <p role="status">此回复已不可用，请重新发送消息。</p>}
-    {view.lifecycle === 'cancelled' && <p role="status">已取消</p>}
+    {view.lifecycle === 'cancelled' && <p role="status">{metadata.terminalNotice?.text ?? '已取消'}</p>}
     {view.lifecycle === 'succeeded' && !hasAnswer && (outcome?.status === 'partial' || outcome?.status === 'blocked') && <ErrorPrimitive.Root className="text-destructive">本次请求未能生成答复，请补充信息后重试。</ErrorPrimitive.Root>}
     {view.delivery === 'failed' && <ErrorPrimitive.Root className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
       <p>答复投递失败，请重试。</p>

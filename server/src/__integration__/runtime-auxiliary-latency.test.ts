@@ -23,7 +23,8 @@ let recording: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => { await stopLingxiOSControl(); await teardownAll(); await recording?.close() })
 
-for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=${retryAuxiliary})`, { timeout: 30000 }, async () => {
+for (const model of ['zai-org/GLM-5.3-Flash', 'deepseek-ai/DeepSeek-V4.1-Flash'])
+for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=${retryAuxiliary})`, { timeout: 30000 }, async () => {
   const requests: { structured: boolean; stream: boolean; effort: unknown; thinking: unknown; status: number }[] = []
   let injectedFailure = false
   const provider = createServer(async (request, response) => {
@@ -67,7 +68,8 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
   const began = performance.now()
   try {
     const { companyId, projectId, agentId } = await seedCompanyWithAgent()
-    const principalId = `auxiliary-human-${retryAuxiliary}`, room = `auxiliary-latency-${retryAuxiliary}`, members = [principalId, agentId]
+    const modelKey = model.startsWith('deepseek') ? 'deepseek' : 'glm'
+    const principalId = `auxiliary-human-${modelKey}-${retryAuxiliary}`, room = `auxiliary-latency-${modelKey}-${retryAuxiliary}`, members = [principalId, agentId]
     await seedUserMembership(principalId, companyId)
     await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER') ON CONFLICT DO NOTHING", [projectId, companyId, principalId])
     await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Fixture',$4::jsonb)", [room, companyId, projectId, JSON.stringify(members)])
@@ -75,7 +77,7 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, room)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     worker = createWorker({ controlPlane: api, worker: { id: `auxiliary-latency-${retryAuxiliary}`, concurrency: 1 }, model: {
-      ...runtimeModelConfiguration({ id: 'zai-org/GLM-5.3-Flash', apiKey: 'synthetic-key', baseUrl: 'https://api.siliconflow.cn/v1' }, 1500),
+      ...runtimeModelConfiguration({ id: model, apiKey: 'synthetic-key', baseUrl: 'https://api.siliconflow.cn/v1' }, 1500),
       baseUrl: `http://127.0.0.1:${address.port}/v1`,
       firstByteTimeoutMs: 100, streamIdleTimeoutMs: 100,
       recovery: { maxAttempts: 3, totalTimeoutMs: 3000 },
@@ -110,7 +112,7 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
       assert.equal(state?.run.status, 'succeeded')
       assert.equal(state?.message?.body, 'Fixture completed.')
       assert.equal(currentRequests.filter(row => row.structured).length, 1 + expectedFailed, 'exercise review and its exact retry count')
-      assert.ok(requests.every(row => row.stream && row.effort === 'low' && row.thinking === false))
+      assert.ok(requests.every(row => row.stream && row.effort === (modelKey === 'glm' ? 'low' : undefined) && row.thinking === false))
       const expectedTools = messageId === 'first' ? 1 : 0
       assert.equal(startedTools.length, expectedTools)
       assert.equal(completedTools.length, expectedTools, 'auxiliary retries and the next turn must not replay the completed tool')
@@ -176,8 +178,8 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
         calls: calls.map(row => ({ status: row.status, measured: row.measured, inputTokens: Number(row.input_tokens), outputTokens: Number(row.output_tokens),
           reasoningTokens: row.extras.reasoningTokens ?? null, costMeasurement: row.extras.costMeasurement, attempt: row.extras.attempt, failure: row.extras.failure ?? null })) })
       await mkdir('artifacts/model-availability', { recursive: true })
-      await writeFile(`artifacts/model-availability/auxiliary${retryAuxiliary ? '-retry' : ''}-candidate.json`, JSON.stringify({ passed: messageId === 'next',
-        runtime: releaseVersions.runtime, fixture: 'local HTTP; 100ms first byte/idle, 250ms generation, 1500ms request, 3000ms logical total', retryAuxiliary,
+      await writeFile(`artifacts/model-availability/auxiliary-${modelKey}${retryAuxiliary ? '-retry' : ''}-candidate.json`, JSON.stringify({ passed: messageId === 'next',
+        runtime: releaseVersions.runtime, model, fixture: 'local HTTP; 100ms first byte/idle, 250ms generation, 1500ms request, 3000ms logical total', retryAuxiliary,
         elapsedMs: Math.round(performance.now() - began), requests, outcomes }, null, 2) + '\n')
     }
     assert.equal(injectedFailure, retryAuxiliary)

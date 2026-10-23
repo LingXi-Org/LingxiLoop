@@ -6,6 +6,7 @@ import { createRunView } from '@lyyzka/lingxios/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { convertEnvelope, projectMessageGroups } from '../runtime/converter'
 import { getLingxiMessageMetadata } from '../runtime/model'
+import { projectReplyBranches } from '../runtime/reply-branches'
 import { create } from 'zustand'
 import type { Participant } from '@/types'
 import { load } from 'cheerio'
@@ -238,6 +239,31 @@ test('failed streamed replies retain prose and show the official error banner wi
   assert.match(error.text(), /回复生成失败.*超时/)
   assert.equal(error.find('button').text(), '重试')
   assert.match(error.attr('class') ?? '', /rounded-2xl.*bg-red-500/)
+})
+
+test('terminal feedback shares the run error or cancellation display and retains retry context', () => {
+  for (const lifecycle of ['failed', 'cancelled'] as const) {
+    const detail = lifecycle === 'failed' ? '模型服务暂时不可用，已完成的操作会保留。' : '这次任务已取消，已完成的操作会保留。'
+    const reply = { ...message('1'), id: 'run-run', status: { type: 'incomplete', reason: lifecycle === 'failed' ? 'error' : 'cancelled' }, metadata: { custom: {
+      ...getLingxiMessageMetadata(message('1')), sequence: null, sourceRef: 'original-question', runId: 'run',
+      harness: { ...createRunView('run'), lifecycle, requestVersion: 1, fence: 1, artifacts: [] },
+    } } } as ThreadMessage
+    const feedback = convertEnvelope({ channelId: 'room', channelType: 2, fromUid: 'agent', clientMsgNo: 'terminal-feedback',
+      messageId: 'terminal-feedback', messageSeq: 2, timestamp: 2,
+      payload: createNativeMessage({ id: 'terminal-feedback', role: 'system', content: [{ type: 'text', text: detail }],
+        custom: { runId: 'run', requestVersion: 1, terminalFeedbackId: 'feedback', terminalStatus: lifecycle } }),
+    }, { participants, meId: 'me' })
+    const projected = projectReplyBranches([reply, feedback], {})
+    const $ = load(renderToStaticMarkup(<Preview messages={projected} />))
+    assert.equal(projected.length, 1)
+    assert.equal($.text().split(detail).length - 1, 1, 'one readable terminal explanation')
+    assert.match($.text(), /正文1/)
+    assert.equal(getLingxiMessageMetadata(projected[0]).sourceRef, 'original-question')
+    if (lifecycle === 'failed') {
+      assert.equal($('[data-slot="error-state"]').length, 1)
+      assert.equal($('[data-slot="error-state"] button').text(), '重试')
+    } else assert.equal($('[data-slot="error-state"]').length, 0)
+  }
 })
 
 // Failure cases: incoming humans mistaken for agents; long replies center avatars;

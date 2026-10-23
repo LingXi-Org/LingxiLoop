@@ -79,7 +79,7 @@ export function AssistantMessageActions() {
   }
   return <>
     <MessagePrimitive.Error>
-      <ErrorState title="回复生成失败" detail={metadata.harnessError ? harnessFailure(metadata.harnessError) : '消息生成失败，请重试。'}
+      <ErrorState title="回复生成失败" detail={metadata.terminalNotice?.text ?? (metadata.harnessError ? harnessFailure(metadata.harnessError) : '消息生成失败，请重试。')}
         retrying={pending === 'regenerate'} onRetry={() => void regenerate()} disabled={retryDisabled} className="mt-2" />
     </MessagePrimitive.Error>
     {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="mt-1 flex flex-wrap items-center gap-1">
