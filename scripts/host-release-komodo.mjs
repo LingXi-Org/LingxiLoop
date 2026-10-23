@@ -1,6 +1,6 @@
 // Native Komodo2.3.3 calls. Only explicit reviewed product/native plans may migrate.
 // No Git/private API, secret or env writes.
-import {READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,isPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality} from './public-text-release.mjs'
+import {READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT,isPublicTextPlan,qualifyImageEnvironments,normalizeImageEnvironment,assertSeedEquality} from './public-text-release.mjs'
 import {seedCommand} from './public-text-seed.mjs'
 import {assertStoppedReceipt,assertStoppedContainers,assertRecoveryConfig} from './host-release-stopped-recovery.mjs'
 import {isDeepStrictEqual as equal} from 'node:util'
@@ -15,12 +15,12 @@ const TRACE_METADATA_CODE=`Object.assign(metadata,{runTrace:releaseVersions.runT
 const oneOff=(stack,service,extra)=>({stack,service,no_tty:true,no_deps:true,detach:false,service_ports:false,pull:false,...extra})
 export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,onProgress=async()=>{},transport,wait=delay,backupExecutor=executeMemoryBackup,sourceConfigurationProof}){
  validateHostPlanShape(plan)
- const native=plan.format===NATIVE_SCHEMA_FORMAT,trace=[TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format),provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan),nodeEnvironments=publicText?qualifyImageEnvironments(plan):null
+ const native=plan.format===NATIVE_SCHEMA_FORMAT,trace=[TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format),provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan),nodeEnvironments=publicText?qualifyImageEnvironments(plan):null
  const t=transport??createTransport({apiKey,apiSecret,signal,onProgress,confirmTerminal:native||publicText})
  const phases=new Map(plan.stacks.map(r=>[r.stack,'source'])),configs=new Map(),identities=new Map(),images=new Map(),containerPolicies=new Map()
  const stoppedWriters=new Set()
  let restoringSource=false
- let migrationSubmitted=false,backupSubmitted=false,backupVerified=false,seedSubmitted=false,seedVerified=false
+ let patchSubmitted=false,patchChecked=false,migrationSubmitted=false,backupSubmitted=false,backupVerified=false,seedSubmitted=false,seedVerified=false
  const rowFor=stack=>{const r=plan.stacks.find(r=>r.stack===stack);check(r,'Unexpected stack');return r}
  const imageKey=(which,server)=>which+':'+server
  async function hosts(){
@@ -38,7 +38,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    &&c.poll_for_updates===false&&c.auto_pull===ref.autoPull&&equal(c.extra_args,ref.extraArgs)&&c.run_build===false
    &&c.destroy_before_deploy===false&&c.project_name===''&&c.compose_cmd_wrapper===''&&equal(c.build_extra_args,[])
    &&equal(c.pre_deploy,emptyHook)&&equal(c.post_deploy,emptyHook)&&equal(c.ignore_services,row.stack===CORE?[]:['db-migrate']),'Frozen source/configuration drift')
-  if(plan.format===SAME54_FORMAT)assertRecoveryConfig(detail,row,sourceConfigurationProof?.find(r=>r.stack===row.stack))
+  if([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format))assertRecoveryConfig(detail,row,sourceConfigurationProof?.find(r=>r.stack===row.stack))
   if(identities.has(row.stack))check(identities.get(row.stack)===detail._id.$oid,'Stack identity changed')
   else identities.set(row.stack,detail._id.$oid)
   if(configs.has(row.stack))check(equal(c,configs.get(row.stack)),'Full stack configuration changed')
@@ -96,7 +96,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
     if(containerPolicies.has(key))check(equal(containerPolicies.get(key),protectedConfig),'Actual environment/security/volumes/startup policy changed')
     else containerPolicies.set(key,structuredClone(protectedConfig))
     result.push({stack,server:row.server,service,id:c.Id,source,imageId:c.Image,running:c.State.Running,restarting:c.State.Restarting,restartCount:c.RestartCount,pid:c.State.Pid,healthy:c.State.Health?.Status==='healthy',
-     policy:{readOnly:c.HostConfig?.ReadonlyRootfs,privileged:c.HostConfig?.Privileged,securityOpt:c.HostConfig?.SecurityOpt,capAdd:c.HostConfig?.CapAdd,capDrop:c.HostConfig?.CapDrop,pidsLimit:c.HostConfig?.PidsLimit,user:c.Config.User,productionMode:env.includes('NODE_ENV=production'),...(plan.format===SAME54_FORMAT?{configurationSha256:hash(JSON.stringify(protectedConfig))}:{})}})
+     policy:{readOnly:c.HostConfig?.ReadonlyRootfs,privileged:c.HostConfig?.Privileged,securityOpt:c.HostConfig?.SecurityOpt,capAdd:c.HostConfig?.CapAdd,capDrop:c.HostConfig?.CapDrop,pidsLimit:c.HostConfig?.PidsLimit,user:c.Config.User,productionMode:env.includes('NODE_ENV=production'),...([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)?{configurationSha256:hash(JSON.stringify(protectedConfig))}:{})}})
    }
   }
   return result
@@ -144,7 +144,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
  }
  return {assertIdle,inspect,verifyImages,stage,state,metadata,
   async prepareSourceRestoration(boundary){
-   check(plan.format===SAME54_FORMAT&&!restoringSource&&configs.size===0&&boundary.original?.length===4,'Source restoration may initialize only once')
+   check([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)&&!restoringSource&&configs.size===0&&boundary.original?.length===4,'Source restoration may initialize only once')
    const matches=(c,r)=>c.commit===r.commit&&c.branch===r.branch&&c.auto_pull===r.autoPull&&equal(c.extra_args,r.extraArgs)
    for(const row of plan.stacks){
     await t.refreshStackCache(row.stack);const detail=await t.read('GetStack',{stack:row.stack})
@@ -166,7 +166,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    await assertIdle()
   },
   async restoreAcceptedSource(stack){
-   check(restoringSource&&plan.format===SAME54_FORMAT&&APPS.includes(stack),'Only explicit same54 source restoration allowed')
+   check(restoringSource&&[SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)&&APPS.includes(stack),'Only explicit same54 source restoration allowed')
    await guard();const rows=await inspect()
    check(rows.length===4&&rows.every(r=>!r.running&&!r.restarting&&r.pid===0),'All four writers must remain stopped before source restoration')
    const phase=phases.get(stack)
@@ -195,8 +195,8 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    await onProgress({phase:'recovery',status:'old-updates-and-stopped-boundary-confirmed'})
   },
   async stop(stack,service){
-   check(APPS.includes(stack)&&(service==='worker'||(native||provenanceUpgrade||plan.format===SAME54_FORMAT)&&service==='lingxiloop')&&(phases.get(stack)==='target'||restoringSource),'Only reviewed old writers may be drained')
-   await guard([stack]);if(plan.format===SAME54_FORMAT)await onProgress({phase:'service-action',action:'StopStack',stack,service});const result=await t.execute('StopStack',{stack,services:[service],stop_time:150})
+   check(APPS.includes(stack)&&(service==='worker'||(native||provenanceUpgrade||[SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format))&&service==='lingxiloop')&&(phases.get(stack)==='target'||restoringSource),'Only reviewed old writers may be drained')
+   await guard([stack]);if([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format))await onProgress({phase:'service-action',action:'StopStack',stack,service});const result=await t.execute('StopStack',{stack,services:[service],stop_time:150})
    stoppedWriters.add(stack+':'+service);return result
   },
   async backup(){
@@ -212,6 +212,25 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    const u=await t.execute('RunStackService',oneOff(CORE,'postgres',{entrypoint:'sh',user:'postgres',command:['-ec',await seedCommand()]}));
    const value=parseMarker(u,'METADATA');assertSeedEquality(value);seedVerified=true;
    return {...value,native:{id:u._id?.$oid,operation:u.operation,target:u.target,status:u.status,success:u.success,startTs:u.start_ts,endTs:u.end_ts}};
+  },
+  async patchPrecheck(){
+   check(plan.format===RUNTIME_PATCH_FORMAT&&!patchChecked&&!patchSubmitted&&APPS.every(stack=>phases.get(stack)==='target'),'One qualified runtime patch precheck required');
+   await guard();await verifyImages('target');
+   const code=METADATA_CODE+PUBLIC_METADATA_CODE+TRACE_METADATA_CODE+`import{readRuntimePatchBarrier}from'./server/src/db/runtime-patch.ts';import{pool}from'./server/src/db/pool.ts';const c=await pool.connect();try{await c.query('BEGIN READ ONLY');await c.query("SET LOCAL statement_timeout='5s'; SET LOCAL lock_timeout='1s'");const b=await readRuntimePatchBarrier(c);await c.query('COMMIT');console.log('SCHEMA_UPGRADE_PATCH_READ='+JSON.stringify(b));}finally{c.release();await pool.end();}`;
+   const value=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{command:['timeout','-k','5','30','node','--import','tsx','--input-type=module','-e',code]})),'PATCH_READ');
+   check(value?.incompatibleRuns===0,'Unfinished bound/checkpoint runs must complete under their original runtime');patchChecked=true;return value;
+  },
+  async patchProvenance(){
+   check(plan.format===RUNTIME_PATCH_FORMAT&&patchChecked&&!patchSubmitted&&!migrationSubmitted
+    &&APPS.every(stack=>phases.get(stack)==='target'&&['worker','lingxiloop'].every(service=>stoppedWriters.has(stack+':'+service))),'Only one qualified and fully drained provenance CAS may submit');
+   await guard();await verifyImages('target');const rows=await inspect();
+   check(rows.every(row=>row.source===plan.source.sha&&!row.running&&!row.restarting&&row.pid===0&&row.restartCount===0
+    &&plan.publicText.sourceContainers.some(c=>c.stack===row.stack&&c.service===row.service&&c.id===row.id&&c.imageId===row.imageId)),'Original runtime patch writers changed');
+   const expected={...Object.fromEntries(metadataKeys.map(key=>[key,plan.target[key]])),publicText:2,deployment:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'},runTrace:1};
+   const code=METADATA_CODE+PUBLIC_METADATA_CODE+TRACE_METADATA_CODE+`import{isDeepStrictEqual}from'node:util';if(!isDeepStrictEqual(metadata,${JSON.stringify(expected)}))throw Error('target drift');const {applyPublishedRuntimePatch}=await import('./server/src/db/runtime-patch.ts');const {pool}=await import('./server/src/db/pool.ts');try{const r=await applyPublishedRuntimePatch(pool,${JSON.stringify(plan.source)},${JSON.stringify(plan.target)});console.log('SCHEMA_UPGRADE_PATCHED='+JSON.stringify(r));}finally{await pool.end();}`;
+   patchSubmitted=true;
+   const receipt=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{command:['timeout','-k','5','60','node','--import','tsx','--input-type=module','-e',code]})),'PATCHED');
+   check(equal(receipt,{source:plan.source.runtime,target:plan.target.runtime,schema:14,product:54,updated:1}),'Runtime patch receipt mismatch');
   },
   async migrate(){
    check([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format)&&!migrationSubmitted&&(!native||backupVerified)&&(!provenanceUpgrade||seedVerified)
@@ -229,9 +248,9 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    const receipt=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{...(native?{env:{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'}}:{}),command:['timeout','-k','30','300','node','--import','tsx','--input-type=module','-e',code]})),'MIGRATED')
    check(equal(receipt,{sha:plan.target.sha,schema:plan.target.schema,product:plan.target.productVersion}),'Migration marker mismatch')
   },
-  async deploy(stack,service){check(APPS.includes(stack)&&['lingxiloop','worker'].includes(service)&&phases.get(stack)===(restoringSource?'source':'target'),'Only qualified app services may deploy');await guard([stack]);if(plan.format===SAME54_FORMAT)await onProgress({phase:'service-action',action:'DeployStack',stack,service});return t.execute('DeployStack',{stack,services:[service]})},
+  async deploy(stack,service){check(APPS.includes(stack)&&['lingxiloop','worker'].includes(service)&&phases.get(stack)===(restoringSource?'source':'target'),'Only qualified app services may deploy');await guard([stack]);if([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format))await onProgress({phase:'service-action',action:'DeployStack',stack,service});return t.execute('DeployStack',{stack,services:[service]})},
   async verifyHealthy(stack,service,observedIdentity){
-   check(plan.format!==SAME54_FORMAT||hex.test(observedIdentity?.id??'')&&/^sha256:[a-f0-9]{64}$/.test(observedIdentity.imageId??''),'Observed same54 container identity required')
+   check(![SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)||hex.test(observedIdentity?.id??'')&&/^sha256:[a-f0-9]{64}$/.test(observedIdentity.imageId??''),'Observed same54 container identity required')
    const deadline=Date.now()+180000
    while(Date.now()<deadline){
     const r=(await inspect()).find(r=>r.stack===stack&&r.service===service)
