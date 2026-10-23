@@ -4,7 +4,8 @@ import { assembleHarness, buildPromptContext, skillIndex, type SkillDefinition, 
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { selectedSkillRules } from '../agent-runtime/skill-context.js'
 import { createProductHarness, productSkills } from '../agent-runtime/harness.js'
-import { visualizeSkill } from '../agent-runtime/visualize-skill.js'
+import { visualizeHostInstructions, visualizeSkill } from '../agent-runtime/visualize-skill.js'
+import { visualizeTools } from '../agent-runtime/visualize-tools.js'
 
 // Failure model: docs/evidence/feedback-272/FAILURE-MODEL.md (written first).
 const tools: ToolDefinition[] = visualizeSkill.actions.map(action => ({ action, name: action.replace('.', '__'), description: 'Synthetic authorized tool.',
@@ -37,6 +38,38 @@ test('only the requested system skill enters the next prompt completely without 
   assert.equal(rule.truncated, false)
   const restored = buildPromptContext({ ...current, promptContextCandidate: prompt }, policy, 2)
   assert.ok(restored.systemInstructions.includes(visualizeSkill.body), 'compaction/restart needs no observation cursor')
+})
+
+// Failure model: docs/evidence/issue-342/FAILURE-MODEL.md (written first).
+test('explicit authoring selects the complete current skill without a preceding load', () => {
+  const current = context()
+  current.grants = current.grants!.map(grant => grant.name === 'skills' ? { name: 'skills', methods: ['load', 'activate'] } : grant)
+  current.tools!.push({ ...tools[0], name: 'skills__activate', action: 'skills.activate' })
+  current.executionSteps![0].kind = 'skills__activate'
+  assert.ok(selectedSkillRules(current).includes(visualizeSkill.body))
+  const activateOnly = { ...current, tools: current.tools!.filter(tool => tool.action !== 'skills.load'),
+    grants: current.grants!.map(grant => grant.name === 'skills' ? { name: 'skills', methods: ['activate'] } : grant) }
+  assert.ok(selectedSkillRules(activateOnly).includes(visualizeSkill.body), 'activation selection must not require a redundant load permission')
+  assert.equal(selectedSkillRules({ ...current, snapshotVersion: { fence: 1, requestVersion: 2, sessionRevision: 2 } }), '')
+  assert.equal(selectedSkillRules({ ...current, grants: current.grants!.map(grant => grant.name === 'skills' ? { name: 'skills', methods: ['load'] } : grant) }), '')
+  const { name, version } = skillIndex(visualizeSkill)
+  current.executionSteps![0].input.arguments = JSON.stringify({ name, version, hash: 'stale' })
+  assert.equal(selectedSkillRules(current), '')
+})
+
+test('first-turn authoring route precedes documentation reads while load-only stays read-only', () => {
+  const instructions = visualizeHostInstructions('/authorized/output')
+  assert.match(instructions, /explicitly requests.*skills\.activate/i)
+  assert.match(instructions, /before.*(?:loading|reference)/i)
+  assert.match(instructions, /promise.*(?:delivery|completion)/i)
+  assert.match(instructions, /(?:read.only|Loading references).*do not activate/i)
+  assert.match(createProductHarness(tools).rules!, /skills\.activate/)
+  for (const action of ['visualize.save', 'visualize.read_reference']) {
+    assert.match(visualizeTools.find(tool => tool.action === action)!.description, /skills\.activate/)
+  }
+  const current = context()
+  assert.equal(current.executionSteps![0].kind, 'skills__load')
+  assert.ok(selectedSkillRules(current).includes(visualizeSkill.body), 'load still supplies guidance without declaring authoring')
 })
 
 test('revoked tools remove preloaded skill even when a stale prompt is supplied', () => {

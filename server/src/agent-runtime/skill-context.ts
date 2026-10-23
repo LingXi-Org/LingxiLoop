@@ -13,18 +13,23 @@ export function selectedSkillRules(context: TurnContext, skills: readonly SkillD
       const [name, method] = action.split('.')
       return grant.name === name && (!grant.methods || grant.methods.includes(method))
     })
-  if (!permitted('skills.load')) return ''
+  if (!permitted('skills.load') && !permitted('skills.activate')) return ''
   const available = current.filter(({ skill, index }) => skill.actions.every(permitted)
     && context.harness?.skills.some(entry => entry.name === index.name && entry.version === index.version && entry.hash === index.hash))
   const selected = new Set<string>()
   for (const step of context.executionSteps ?? []) {
     if (step.requestVersion !== context.snapshotVersion?.requestVersion || step.output === undefined) continue
-    if (step.kind !== 'skills__load' && step.kind !== 'visualize__read_reference') continue
+    if (!['skills__load', 'skills__activate', 'visualize__read_reference'].includes(step.kind)) continue
     let args: Record<string, unknown>
     try { args = JSON.parse(String(step.input.arguments)) } catch { continue }
     if (!args || typeof args !== 'object' || Array.isArray(args)) continue
-    const match = available.find(({ index }) => step.kind === 'skills__load'
-      ? Object.keys(args).sort().join(',') === 'hash,name,version' && args.name === index.name && args.version === index.version && args.hash === index.hash
+    // Activation is also an explicit selection of this exact authored contract.
+    // Supply its complete registered guidance next turn without a redundant
+    // load. This only selects rules: native activation owns the durable
+    // obligation, authorization, cancellation and request-version checks.
+    const match = available.find(({ skill, index }) => step.kind === 'skills__load' || step.kind === 'skills__activate'
+      ? (step.kind === 'skills__activate' ? !!skill.delivery && permitted('skills.activate') : permitted('skills.load'))
+        && Object.keys(args).sort().join(',') === 'hash,name,version' && args.name === index.name && args.version === index.version && args.hash === index.hash
       : permitted('visualize.read_reference') && index.name === 'visualize' && Object.keys(args).join(',') === 'path' && args.path === 'SKILL.md')
     if (match) selected.add(match.index.name)
   }
