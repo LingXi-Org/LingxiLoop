@@ -1,6 +1,6 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { createHash } from 'node:crypto'
-import { responseSegments, type PublicTextPart, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
+import { publicAnswerSegments, responseSegments, type PublicTextPart, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
@@ -73,7 +73,7 @@ function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Om
 /** The committed answer replaces its explicit accepted source. Keep the source
  * in the read-only transcript, never deduplicated by its text. */
 export function archivedPublicText(part: PublicTextPart): boolean {
-  return !!part.acceptedResultId
+  return part.version !== 3 && !!part.acceptedResultId
 }
 const stableId = (prefix: string, identity: unknown[]) => `${prefix}:${createHash('sha256').update(JSON.stringify(identity)).digest('hex')}`
 const publicTextId = (part: PublicTextPart) => stableId('public-text', [part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
@@ -117,6 +117,9 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
       ...(requestVersion > 0 ? { requestVersion } : {}) }) })
   }
   for (const part of view.publicTextParts ?? []) {
+    // v3 answer operations are resolved once by the native shared reader below.
+    // The legacy attempt heuristic must never reclassify these sources.
+    if (part.version === 3) continue
     const pendingAccepted = pendingAcceptedSource(part,view)
     if (!includeAcceptedPublicText && archivedPublicText(part) && !pendingAccepted) continue
     const currentPurpose = publicTextPurpose(part,view,tools)
@@ -138,6 +141,16 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
           : part.reason === 'failed' ? answerRevisionLabels.failed : part.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.superseded,
         purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }
+  }
+  for (const segment of publicAnswerSegments(view)) {
+    if (segment.status !== 'pending-replacement' && segment.status !== 'replaced') continue
+    const source = view.publicTextParts?.find(part=>part.partId===segment.partId)
+    const id = stableId('public-text',[view.runId,segment.requestVersion,segment.partId])
+    const label = segment.status === 'replaced' ? answerRevisionLabels.superseded
+      : source?.reason === 'failed' ? answerRevisionLabels.failed
+      : source?.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.pending
+    for (const text of projectVisualizeText(segment.text,true)) put(id,source?.firstSeq ?? view.lastSeq,
+      annotated(text,{id,kind:'commentary',label,purpose:'process'}),source?.lastSeq,segment.requestVersion)
   }
   const planVersions = new Map<string, { fence: number; revision: number }>()
   // Completion order may differ from start order; retain the original public
@@ -196,6 +209,21 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   }
   return [...parts.values()].sort((a,b) => a.seq-b.seq).map(value => value.part)
 }
+/** Display the native reader's ordered sources. No product-side reducer or
+ * attempt/text comparison is involved in append, replacement or acceptance. */
+function segmentedAnswerParts(view: RunView): ThreadAssistantMessagePart[] {
+  return publicAnswerSegments(view).flatMap(segment=>{
+    if (!segment.text || segment.status === 'pending-replacement' || segment.status === 'replaced') return []
+    const id = stableId('public-text',[view.runId,segment.requestVersion,segment.segmentId])
+    const status = segment.status === 'streaming' ? {type:'running' as const}
+      : segment.status === 'incomplete' ? {type:'incomplete' as const,reason:view.lifecycle==='cancelled'?'cancelled' as const:view.lifecycle==='failed'?'error' as const:'other' as const}
+      : {type:'complete' as const}
+    const part = annotated({type:'text',text:segment.text,status},{id,kind:'answer',label:'答复',purpose:'result',requestVersion:segment.requestVersion})
+    return [{...part,providerMetadata:{...part.providerMetadata,lingxiloop:{...part.providerMetadata.lingxiloop,
+      answerSegment:{version:3,messageId:segment.messageId,segmentId:segment.segmentId,partId:segment.partId,start:segment.start,end:segment.end},
+    }}}]
+  })
+}
 function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]): ThreadAssistantMessagePart[] {
   const accepted = view.message && view.message.envelope.requestVersion === view.requestVersion && view.messageFence === view.fence
     && (view.publicTextParts ?? []).find(part => part.partId === view.message!.publicTextPartId
@@ -213,9 +241,12 @@ function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]
 }
 export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = [], options: { includeAcceptedPublicText?: boolean; activityHistory?: boolean } = {}): ThreadAssistantMessagePart[] {
   const cards = activityParts(view, tools, options.includeAcceptedPublicText !== false, options.activityHistory === true)
+  const hasSegments = view.message?.publicTextSources?.version === 3 || view.publicTextParts?.some(part=>part.version===3)
+  const answer = hasSegments && !options.activityHistory ? segmentedAnswerParts(view) : []
   if (view.lifecycle === 'queued') return cards
   // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
   if (view.lifecycle === 'leased' && view.draft) {
+    if (hasSegments) return [...answer,...cards]
     // Native emits model.delta after ending the current public candidate. That
     // is an additional preview, not another answer. Acceptance still requires
     // the explicit committed source ID; no text comparison is involved.
@@ -223,7 +254,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       && part.fence === view.fence && part.reason === 'completed' && part.purpose !== 'commentary' && !part.acceptedResultId)
     return publicCandidate ? cards : [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]
   }
-  if (!view.message || view.message.envelope.requestVersion !== view.requestVersion || view.messageFence !== view.fence) return cards
+  if (!view.message || view.message.envelope.requestVersion !== view.requestVersion || view.messageFence !== view.fence) return [...answer,...cards]
   assertVisualizeCitationSpans(view.message.envelope.body, view.message.envelope.citations)
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence
@@ -266,6 +297,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       providerMetadata: { lingxiloop: { sourceId: source.sourceId,sourceVersion: source.sourceVersion,
         chunkIds: [...new Set([...(Array.isArray(previousChunks) ? previousChunks.filter((chunk): chunk is string => typeof chunk === 'string') : []),...source.chunkIds])] } } })
   }
+  if (hasSegments) return [...answer,...answerParts(view,parts.filter(part=>part.type!=='text')),...cards,...sources.values()]
   return [...answerParts(view, parts.flatMap(part => part.type === 'text' ? projectVisualizeText(part.text, view.delivery !== 'delivered') : [part])), ...cards, ...sources.values()]
 
 }

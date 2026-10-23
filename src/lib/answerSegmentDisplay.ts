@@ -15,10 +15,10 @@ export function answerDisplaySlice(parts: readonly unknown[], index: number, cit
     body += Reflect.get(part as object,'text'); offset = item.end
   }
   if (offset < source.end) return
-  const ranges = [...citations.filter(range => Number.isSafeInteger(range.start) && Number.isSafeInteger(range.end)
-    && range.start >= 0 && range.end > range.start && range.end <= body.length),
-    ...extractAssistantDirectives(body,'visualize').map(({start,end})=>({start,end}))]
   const code = findMarkdownCodeRanges(body)
+  const ranges = [...code.map(([start,end])=>({start,end})), ...citations.filter(range => Number.isSafeInteger(range.start) && Number.isSafeInteger(range.end)
+    && range.start >= 0 && range.end > range.start && range.end <= body.length),
+    ...extractAssistantDirectives(body,'visualize').filter(({start})=>!code.some(([from,to])=>start >= from && start < to)).map(({start,end})=>({start,end}))]
   for (const match of body.matchAll(/visualize/gu)) {
     const start = match.index,end = body.indexOf('',start + match[0].length)
     if (end >= 0 && !code.some(([from,to])=>start >= from && start < to)) ranges.push({start,end:end+1})

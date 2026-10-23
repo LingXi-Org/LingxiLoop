@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { answerDisplaySlice } from './answerSegmentDisplay'
+import { projectGenUiReferences } from '../features/chat/visualize/zcode/gen-ui/domain/references'
 
 // Failure model: canonical citation/directive tokens can cross a native source
 // boundary. Per-part parsing must not break a delivered reference or duplicate it.
@@ -31,6 +32,8 @@ test('normal segments remain independent and missing ranges never synthesize a c
 })
 test('literal visualize examples in Markdown code never acquire a cross-source renderer', () => {
   const body='```text\n::visualize{path="visualize/example.html" title="Example"}\n```',cut=body.indexOf('example'),content=parts([body.slice(0,cut),body.slice(cut)])
-  assert.deepEqual(answerDisplaySlice(content,0,[]),{text:body.slice(0,cut),offset:0})
-  assert.deepEqual(answerDisplaySlice(content,1,[]),{text:body.slice(cut),offset:cut})
+  const display=answerDisplaySlice(content,0,[])!
+  assert.deepEqual(display,{text:body,offset:0})
+  assert.deepEqual(answerDisplaySlice(content,1,[]),{text:'',offset:body.length})
+  assert.equal(projectGenUiReferences(display.text,true).some(part=>part.kind==='ui'),false)
 })

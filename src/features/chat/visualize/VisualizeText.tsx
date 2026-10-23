@@ -18,7 +18,7 @@ export function VisualizeText({part,Text,readOnly}: {part:TextMessagePartProps;T
   const slice = useAuiState(state=>{
     const claims = state.message.content.find(item=>item.type==='data' && item.name==='citation-claims')
     const ranges = claims?.type==='data' && claims.data && typeof claims.data==='object' && 'claims' in claims.data && Array.isArray(claims.data.claims)
-      ? claims.data.claims.filter((value): value is {start:number;end:number}=>!!value && typeof value==='object' && typeof Reflect.get(value,'start')==='number' && typeof Reflect.get(value,'end')==='number') : []
+      ? claims.data.claims.filter((value: unknown): value is {start:number;end:number}=>!!value && typeof value==='object' && typeof Reflect.get(value,'start')==='number' && typeof Reflect.get(value,'end')==='number') : []
     return answerDisplaySlice(state.message.parts,state.message.parts.indexOf(state.part),ranges)
   })
   const text = slice?.text ?? part.text, offset = slice?.offset ?? textOffset

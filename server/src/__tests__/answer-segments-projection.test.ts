@@ -62,7 +62,7 @@ function fixture(name: string) {
     push('public.text.delta', { ...id, chunkIndex: 0, text: COMMENTARY })
     push('public.text.ended', { ...id, chunkCount: 1, reason: 'tool' })
   }
-  function commit(sources: { segmentId: string; partId: string; bodyHash: string; text: string }[]) {
+  function commit(sources: { segmentId: string; partId: string; bodyHash: string; text: string }[], checkpointName = 'final') {
     const raw = sources.map(source => source.text).join(''), body = raw.trim(), left = raw.length - raw.trimStart().length
     let offset = 0
     const publicTextSources = { version: 3 as const, messageId: `answer:${runId}:v1`, bodyHash: hash(body), segments: sources.map(source => {
@@ -73,7 +73,7 @@ function fixture(name: string) {
     const message = { version: 2 as const, runId, agentId: target(runId).agentId, sessionId: 'synthetic-session', body, publicTextSources,
       envelope: { version: 1 as const, requestVersion: 1, body, evidenceSnapshotId: 'synthetic-evidence', citations: [], artifacts: [], goalOutcome } }
     push('response.committed', { requestVersion: 1, resultId: 'synthetic-result', publicTextSources })
-    checkpoint('commit-pending')
+    checkpoint(checkpointName === 'replacement-committed' ? checkpointName : 'commit-pending')
     const final: RunState = { ...state(runId, 'succeeded'), run: { ...state(runId, 'succeeded').run,
       resultId: 'synthetic-result', resultFence: 1, goalOutcome }, message, delivery: 'delivered' }
     const item: RunStreamEvent = { type: 'state', state: final }
@@ -85,14 +85,21 @@ function fixture(name: string) {
     for (const item of items.slice(1)) if (item.type === 'event') restored.advance(item)
     return { message: message as AssistantMessage, history, hydratedReplay: copy(restored.snapshot), final }
   }
-  return { runId, projection, items, frames, push, identity, checkpoint, segment, tool, commentary, commit }
+  function stop(lifecycle:'cancelled'|'failed') {
+    const item: RunStreamEvent = {type:'state',state:state(runId,lifecycle)}
+    items.push(item);projection.advance(item);checkpoint(lifecycle)
+    const restored=new RunStreamProjection(runId,false,{agentId:target(runId).agentId})
+    for(const item of items)restored.advance(item)
+    return {history:copy(restored.snapshot)}
+  }
+  return { runId, projection, items, frames, push, identity, checkpoint, segment, tool, commentary, commit,stop }
 }
 
 function appendScenario(name = 'append') {
   const f = fixture(name), a = f.segment('a', A)
-  f.checkpoint('a-visible'); f.tool('slow'); f.checkpoint('tool-held')
-  f.commentary(); f.checkpoint('commentary'); f.tool('slow', true); f.tool('second'); f.tool('second', true)
-  const b = f.segment('b', B); f.checkpoint('b-visible')
+  f.checkpoint('answer-a'); f.tool('slow'); f.checkpoint('first-tool-held')
+  f.commentary(); f.checkpoint('commentary'); f.tool('slow', true); f.tool('second'); f.checkpoint('second-tool-held');f.tool('second', true)
+  const b = f.segment('b', B); f.checkpoint('answer-b')
   const accepted = f.commit([a,b])
   for (const item of f.items.slice(1)) if (item.type === 'event') f.projection.advance(item)
   f.checkpoint('replay')
@@ -108,7 +115,7 @@ test('v3 substantive segments survive tools and commentary, append once and hydr
     assert.equal(answers(frame.snapshot)[0]?.type === 'text' && answers(frame.snapshot)[0]?.text, A, frame.checkpoint)
     assert.equal(frame.snapshot.message.content.filter(isAnswerRevision).length, 0, 'later attempts do not demote sealed answers')
   }
-  const beforeCommit = s.frames.find(frame => frame.checkpoint === 'b-visible')!.snapshot
+  const beforeCommit = s.frames.find(frame => frame.checkpoint === 'answer-b')!.snapshot
   assert.equal(answers(beforeCommit).length, 2)
   assert.deepEqual(answerIds(s.history), answerIds(beforeCommit))
   assert.deepEqual(answers(s.history), answers(s.frames.find(frame => frame.checkpoint === 'final')!.snapshot))
@@ -124,7 +131,7 @@ test('only committed explicit replacement replaces sources; failed replacement r
     const replacement = f.segment('replacement', REPLACEMENT, 'replace', [a.segmentId], success)
     f.checkpoint('replacement-pending')
     assert.equal(nativeText(f.projection.snapshot.message), A, 'uncommitted candidate cannot retract or append over the original')
-    const accepted = f.commit(success ? [replacement] : [a])
+    const accepted = success ? f.commit([replacement],'replacement-committed') : f.stop('failed')
     assert.equal(nativeText(accepted.history.message), success ? REPLACEMENT : A)
     assert.deepEqual(answers(accepted.history), answers(f.projection.snapshot))
     assert.equal(answers(f.projection.snapshot).length, 1)
@@ -177,12 +184,28 @@ test('real assistant transport preserves every segment checkpoint without native
   assert.ok(visible.every(snapshot => answerIds(snapshot)[0] === firstId))
   assert.deepEqual(answers(visible.at(-1)!), answers(s.history))
   if (process.env.ISSUE366_SNAPSHOTS) {
-    const scenarios = [s,appendScenario('same-text-other-run')].map(scenario => ({
-      name: scenario.runId === s.runId ? 'append' : 'same-text-distinct-runs', targets: [target(scenario.runId)], frames: scenario.frames,
-      history: [{ target: target(scenario.runId), snapshot: scenario.history }],
-    }))
+    const toScenario = (name:string,scenario:{runId:string;frames:typeof s.frames;history:AgentRunSnapshot})=>({
+      name,targets:[target(scenario.runId)],frames:scenario.frames,history:[{target:target(scenario.runId),snapshot:scenario.history}],
+    })
+    const scenarios=[toScenario('append',s)]
+    for(const success of [false,true]){
+      const name=success?'replacement-committed':'replacement-failed',f=fixture(name),a=f.segment('a',A)
+      f.checkpoint('answer-a')
+      const replacement=f.segment('replacement',REPLACEMENT,'replace',[a.partId],success)
+      f.checkpoint('replacement-pending')
+      const ended=success?f.commit([replacement],'replacement-committed'):f.stop('failed')
+      scenarios.push(toScenario(name,{...f,...ended}))
+    }
+    const cancelled=fixture('cancelled');cancelled.segment('a',A);cancelled.checkpoint('answer-a');cancelled.tool('slow');cancelled.checkpoint('first-tool-held')
+    scenarios.push(toScenario('cancelled',{...cancelled,...cancelled.stop('cancelled')}))
+    scenarios.push(toScenario('stale-reconnect',appendScenario('stale-reconnect')))
+    const left=fixture('same-left'),right=fixture('same-right'),a=left.segment('a',A),b=right.segment('a',A)
+    left.checkpoint('answer-a');right.checkpoint('answer-a')
+    const leftFinal=left.commit([a]),rightFinal=right.commit([b])
+    scenarios.push({name:'same-text-distinct-runs',targets:[target(left.runId),target(right.runId)],
+      frames:[...left.frames,...right.frames],history:[{target:target(left.runId),snapshot:leftFinal.history},{target:target(right.runId),snapshot:rightFinal.history}]})
     mkdirSync(dirname(process.env.ISSUE366_SNAPSHOTS), { recursive: true })
-    writeFileSync(process.env.ISSUE366_SNAPSHOTS, JSON.stringify({ version: 1, provenance: { producer: 'RunStreamProjection + assistantRunResponse',
+    writeFileSync(process.env.ISSUE366_SNAPSHOTS, JSON.stringify({ version: 1, provenance: { producer: 'native-event-projection-fixture',
       commit: process.env.ISSUE366_COMMIT ?? 'working-tree' }, scenarios }, null, 2))
   }
 })

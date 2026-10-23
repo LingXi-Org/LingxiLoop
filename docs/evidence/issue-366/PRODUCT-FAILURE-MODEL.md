@@ -45,7 +45,19 @@ and equal text in distinct runs. The browser owner consumes these frames through
 the actual decoder/store/renderer and checks visible content and stable DOM keys.
 No new provider request or production access is part of this test suite.
 
-Frame artifact contract: `artifacts/react-delivery-366/frames.json`, with a
+Frame artifact contract: `artifacts/react-delivery-366/snapshots.json`, with a
 version, scenario list, runId, ordered `{ checkpoint, snapshot }` frames and an
 independent `history` snapshot. Successful browser results must refer to the
 exact source/test revision. Synthetic timings are not production latency claims.
+
+The fixture producer is `native-event-projection-fixture`: synthetic native
+events pass through the actual product projection and official transport codec.
+This does not claim ModelDriver execution, persistence, production authorization
+or production timing. Those are separate native/runtime and release gates.
+
+The runtime owner selected direct `@langchain/core` `AIMessageChunk.concat` and
+`@langchain/langgraph/web` `messagesStateReducer` reuse. Product code consumes the
+public native source reader; it does not copy those reducers or add either runtime
+dependency to the browser. Citation, code and visualize tokens crossing source
+ranges are displayed atomically at their original starting source; copy text
+keeps the unchanged native source slices and UTF-16 coordinates.
