@@ -3,7 +3,7 @@ const enums = {
   category: new Set(['authorization', 'quota', 'rate_limit', 'timeout', 'network', 'unavailable',
     'protocol', 'cancelled', 'circuit_open', 'unknown']),
   protocolCode: new Set(['public_text_invalid', 'public_text_incomplete', 'public_text_answer_required',
-    'tool_identity_invalid', 'response_empty']),
+    'tool_identity_invalid', 'response_empty', 'native_envelope_invalid', 'terminal_outcome_required']),
 }
 const finishReasons = new Set(['stop', 'length', 'tool_calls', 'function_call', 'content_filter', 'missing', 'unknown'])
 

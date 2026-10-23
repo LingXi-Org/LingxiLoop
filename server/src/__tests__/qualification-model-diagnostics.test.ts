@@ -13,6 +13,15 @@ test('qualification retains exact safe terminal protocol diagnostics', () => {
     status: 200, retryable: false, finishReasons: ['tool_calls', 'tool_calls'],
   })
 })
+test('qualification distinguishes fixed envelope and terminal outcome codes without provider content', () => {
+  for (const protocolCode of ['native_envelope_invalid', 'terminal_outcome_required']) {
+    assert.deepEqual(qualificationModelDiagnostics({ kind: 'protocol', category: 'protocol', protocolCode,
+      message: 'private sentinel', arguments: 'private sentinel', cause: { content: 'private sentinel' } }), {
+      kind: 'protocol', category: 'protocol', protocolCode,
+    })
+    assert.deepEqual(qualificationModelDiagnostics({ protocolCode: `${protocolCode}: private sentinel` }), {})
+  }
+})
 test('unknown values and unbounded diagnostics cannot enter artifacts', () => {
   const result = qualificationModelDiagnostics({ kind: 'private sentinel', category: 'private sentinel',
     protocolCode: 'private sentinel', status: Infinity, retryable: 'private sentinel',

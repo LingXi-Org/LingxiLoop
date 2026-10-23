@@ -99,9 +99,8 @@ test('initial and selected visualization guidance use the declared answer channe
   const previous = buildPromptContext(selected, policy, 0)
   const restored = buildPromptContext({ ...selected, promptContextCandidate: previous }, policy, 2)
   for (const instructions of [buildPromptContext(initial, policy, 0).systemInstructions, previous.systemInstructions, restored.systemInstructions]) {
-    assert.match(instructions, /declared public `answer` field/)
+    assert.match(instructions, /public answer channel specified by the trusted model driver/)
     assert.match(instructions, /same response as a necessary native tool call/)
-    assert.match(instructions, /outcome:null/)
     assert.match(instructions, /Do not add a separate preamble turn/)
     assert.match(instructions, /do not repeat already delivered answer text/)
     assert.match(instructions, /Do not claim a future tool result/)
@@ -116,12 +115,31 @@ test('initial and selected visualization guidance use the declared answer channe
     assert.equal(instructions.split('Do not add a separate preamble turn').length, 2, 'Complete channel guidance occurs once')
   }
   for (const instructions of [visualizeHostInstructions('/authorized/output'), visualizeSkillAdaptations]) {
-    assert.match(instructions, /native declared public `answer` field contract/)
+    assert.match(instructions, /public answer channel specified by the trusted model driver/)
     assert.doesNotMatch(instructions, /streaming in ordinary response text/)
     assert.doesNotMatch(instructions, /Do not add a separate preamble turn/)
   }
   assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-readback-2')
   assert.notEqual(createProductHarness(tools).version, '3.8.6-conditional-readback-2')
+})
+
+// Failure model: docs/evidence/issue-366/DRIVER-FRAMING-CONSISTENCY.md (written first).
+test('product and visualization instructions defer wire encoding and branch selection to the trusted driver', () => {
+  const selected = context(), previous = buildPromptContext(selected, policy, 0)
+  const instructions = [
+    createProductHarness(tools).rules!,
+    buildPromptContext(context(undefined, false), policy, 0).systemInstructions,
+    previous.systemInstructions,
+    buildPromptContext({ ...selected, promptContextCandidate: previous }, policy, 2).systemInstructions,
+    visualizeHostInstructions('/authorized/output'),
+    visualizeSkillAdaptations,
+  ]
+  for (const text of instructions) {
+    assert.doesNotMatch(text, /complete native object|outcome\s*:\s*null|Follow its field order|tools remain native tool_calls|product harness governs response framing/i)
+    assert.match(text, /trusted model driver.*(?:wire|encoding)/i)
+  }
+  assert.notEqual(createProductHarness(tools).version, '3.8.9-public-answer-channel-1')
+  assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-answer-channel-3')
 })
 
 test('body and version independently invalidate the compiled full-skill identity', () => {

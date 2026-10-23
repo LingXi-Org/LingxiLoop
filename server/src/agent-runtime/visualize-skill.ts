@@ -7,14 +7,14 @@ import type { SkillDefinition } from '@lyyzka/lingxios'
 export const visualizeSkillRoot = fileURLToPath(new URL('../../../third_party/zcode/skills/visualize/', import.meta.url))
 // All adaptation lives outside the byte-for-byte upstream skill tree.
 export const visualizeSkill: SkillDefinition = {
-  name: 'visualize', version: '0a1fc56d279fd1001f78387bd81aec1c26767411-host-answer-channel-3',
+  name: 'visualize', version: '0a1fc56d279fd1001f78387bd81aec1c26767411-host-driver-framing-4',
   description: 'Create requested inline visual explanations, and proactively use them for useful comparisons, relationships, processes, trends or adjustable inputs. Keep simple facts and brief answers in text. For requested creation or an authoring commitment, select this exact contract once with native skills.activate before loading references or promising delivery. For documentation, existing-view reads or exports alone, use skills.load. Either selection supplies the complete current body next turn; activation also commits this request to verified delivery.',
   actions: ['visualize.read_reference', 'visualize.save', 'visualize.chart', 'visualize.diagram', 'visualize.sliding_window', 'visualize.read', 'visualize.export'],
   delivery: { checker: 'product:visualize-delivery' },
   body: readFileSync(resolve(visualizeSkillRoot, 'SKILL.md'), 'utf8'),
 }
 
-const visualizeAnswerGuidance = 'Follow the native declared public `answer` field contract for grounded explanation, including alongside necessary tools; do not delay known explanation until saving finishes. The product harness governs response framing and optional progress; never use unframed prose as the answer. '
+const visualizeAnswerGuidance = 'Provide grounded explanation through the public answer channel specified by the trusted model driver, including alongside necessary tools; do not delay known explanation until saving finishes. Follow the trusted model driver for wire encoding and response branch selection; product instructions add semantic and progress requirements only. '
 
 export const visualizeSkillAdaptations = 'Web host adaptations take precedence over the upstream host-specific instructions: '
   + 'The complete selected skill in this prompt satisfies the full-read requirement, including after compaction or restart. '
