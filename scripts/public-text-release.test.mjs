@@ -79,3 +79,49 @@ test('presentation release requires exact unchanged formal3.8.2/full53 to review
  const good={publicText:2,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'}};
  assert.doesNotThrow(()=>assertPublicTextMetadata(good,p));assert.throws(()=>assertPublicTextMetadata({...good,runTrace:undefined},p));
 });
+
+function full54Fixture({patch=true,sourceProducer='purpose-json-v1',targetProducer='purpose-json-v2'}={}){
+ const p=presentationFixture();p.source=structuredClone({...p.target,sha:p.source.sha,image:p.source.image});
+ p.source.runtime=sourceProducer==='purpose-json-v2'?'3.8.5':'3.8.3';p.target.runtime=patch?(sourceProducer==='purpose-json-v2'?'3.8.6':'3.8.5'):p.source.runtime;
+ p.format=patch?'runtime-patch-host-release/v1':'product54-image-host-release/v1';
+ p.publicText.source.producer=sourceProducer;p.publicText.target.producer=targetProducer;
+ p.publicText.targetConfigurationSha256=sourceProducer===targetProducer?hex:'d'.repeat(64);
+ p.stacks=['lingxiloop-app-a','lingxiloop-app-b'].map(stack=>({stack,source:{autoPull:false,extraArgs:['--no-deps','--pull','never']}}));return p;
+}
+test('runtime patch alone activates producer v2 with a distinct bound leaf and unchanged full54',()=>{
+ assert.doesNotThrow(()=>assertPublicTextPlan(full54Fixture()));
+ for(const mode of ['purpose-json-v1','purpose-json-v2'])for(const patch of [false,true]){
+  const p=full54Fixture({patch,sourceProducer:mode,targetProducer:mode});assert.doesNotThrow(()=>assertPublicTextPlan(p));
+ }
+});
+test('v2 cannot bypass runtime family, reader, configuration, producer or complete inventory boundaries',()=>{
+ const changes=[p=>p.target.runtime='3.8.4',p=>p.target.runtime='3.8.5-rc.1',p=>p.target.runtime='3.9.0',p=>p.target.runtime='3.8.3',
+  p=>p.publicText.targetConfigurationSha256=p.publicText.sourceConfigurationSha256,p=>p.publicText.target.reader=1,p=>p.publicText.source.reader=1,
+  p=>p.publicText.source.producer='disabled',p=>p.publicText.target.producer='disabled',p=>p.publicText.target.producer='purpose-json-v3',p=>p.publicText.source.producer='purpose-json-v0',
+  p=>p.publicText.sourceContainers.pop(),p=>p.target.schema=15,p=>p.target.protocol=12,p=>p.target.productVersion=55,p=>p.target.migrations[0].checksum='0'.repeat(64),p=>p.target.migrations.pop()];
+ for(const change of changes){const p=full54Fixture();change(p);assert.throws(()=>assertPublicTextPlan(p));}
+ for(const patch of [false,true]){
+  const p=full54Fixture({patch,sourceProducer:'purpose-json-v2',targetProducer:'purpose-json-v2'});p.source.runtime='3.8.4';assert.throws(()=>assertPublicTextPlan(p));
+  const down=full54Fixture({patch,sourceProducer:'purpose-json-v2',targetProducer:'purpose-json-v1'});assert.throws(()=>assertPublicTextPlan(down));
+  const changed=full54Fixture({patch,sourceProducer:'purpose-json-v2',targetProducer:'purpose-json-v2'});changed.publicText.targetConfigurationSha256='0'.repeat(64);assert.throws(()=>assertPublicTextPlan(changed));
+ }
+ for(const sameHash of [true,false]){const p=full54Fixture({patch:false});if(sameHash)p.publicText.targetConfigurationSha256=p.publicText.sourceConfigurationSha256;assert.throws(()=>assertPublicTextPlan(p));}
+ const drift=full54Fixture(),config=JSON.parse(drift.imageConfigs.target);config.config.Env.push('UNREVIEWED=1');drift.imageConfigs.target=JSON.stringify(config);drift.target.image.configDigest=digest(drift.imageConfigs.target);assert.throws(()=>assertPublicTextPlan(drift));
+});
+test('historical profiles cannot admit v2 on either side',()=>{
+ for(const make of [()=>fixture(),()=>fixture(true),repairFixture,presentationFixture])for(const side of ['source','target']){
+  const p=make();if(!p.publicText[side])continue;p.publicText[side].producer='purpose-json-v2';assert.throws(()=>assertPublicTextPlan(p));
+ }
+});
+test('v2 actual metadata requires exact target options, leaf and public capabilities',()=>{
+ const p=full54Fixture(),good={publicText:2,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v2'}};
+ assert.doesNotThrow(()=>assertPublicTextMetadata(good,p));
+ for(const change of [x=>x.modelOptions={},x=>x.modelOptions.publicTextProtocol='purpose-json-v1',x=>x.modelOptions.extra=true,x=>x.configurationSha256=hex,x=>x.publicText=3,x=>x.runTrace=2,x=>x.deployment={reader:2,producer:'purpose-json-v1'}]){const bad=structuredClone(good);change(bad);assert.throws(()=>assertPublicTextMetadata(bad,p));}
+});
+
+test('source restoration metadata binds original v1 options and leaf independently of the v2 target',()=>{
+ const p=full54Fixture(),source={publicText:2,runTrace:1,deployment:p.publicText.source,configurationSha256:p.publicText.sourceConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'}};
+ assert.doesNotThrow(()=>assertPublicTextMetadata(source,p,'source'));assert.throws(()=>assertPublicTextMetadata(source,p));
+ for(const change of [x=>x.deployment=p.publicText.target,x=>x.configurationSha256=p.publicText.targetConfigurationSha256,x=>x.modelOptions.publicTextProtocol='purpose-json-v2']){const bad=structuredClone(source);change(bad);assert.throws(()=>assertPublicTextMetadata(bad,p,'source'));}
+ assert.throws(()=>assertPublicTextMetadata(source,p,'unknown'));
+});

@@ -58,7 +58,13 @@ export function assertPublicTextPlan(plan){
   if([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)){
    if(plan.format===RUNTIME_PATCH_FORMAT)assertRuntimePatchPlan(s,t);
    else for(const k of ['runtime','schema','protocol','schemaHash','productVersion','migrations','integrity','tarball'])check(equal(s[k],t[k]),'Image-only release requires identical full54 package/provenance');
-   check(s.sha!==t.sha&&p.source?.producer==='purpose-json-v1'&&p.target.producer==='purpose-json-v1'&&p.sourceConfigurationSha256===p.targetConfigurationSha256,'Image-only release must preserve enabled reader/deployment contract');
+   const upgrade=plan.format===RUNTIME_PATCH_FORMAT&&p.source?.producer==='purpose-json-v1'&&p.target.producer==='purpose-json-v2';
+   check(s.sha!==t.sha&&['purpose-json-v1','purpose-json-v2'].includes(p.source?.producer)
+    &&(upgrade||p.source.producer===p.target.producer)
+    &&(upgrade?p.sourceConfigurationSha256!==p.targetConfigurationSha256:p.sourceConfigurationSha256===p.targetConfigurationSha256),'Only runtime patch may advance enabled producer with a new bound deployment leaf');
+   // This is only the version boundary. Formal package/image audit and actual
+   // publicText/runTrace/leaf/options checks remain mandatory before draining.
+   for(const [descriptor,deployment] of [[s,p.source],[t,p.target]])if(deployment.producer==='purpose-json-v2')check(Number(descriptor.runtime.split('.')[2])>=5,'Producer v2 requires formal runtime3.8.5 or later reviewed3.8 patch');
    check(plan.stacks?.slice(0,2).every(r=>r.source.autoPull===false&&equal(r.source.extraArgs,['--no-deps','--pull','never'])),'Image-only source must retain accepted offline host policy');
   }else if(plan.format===RUN_PRESENTATION_FORMAT){
    check(equal(s.migrations,t.migrations.slice(0,53))&&p.source?.producer==='purpose-json-v1'&&p.target.producer==='purpose-json-v1','Presentation upgrade requires enabled source/target and unchanged full53');
@@ -67,14 +73,17 @@ export function assertPublicTextPlan(plan){
   else if(plan.format===CONVERSATION_FORMAT)check(equal(s.migrations,t.migrations.slice(0,52))&&p.source?.producer==='purpose-json-v1'&&p.target.producer==='purpose-json-v1','Repair upgrade requires enabled source/target and unchanged full52');
   else if(plan.format===TRACE_FORMAT)check(equal(s.migrations,t.migrations.slice(0,51))&&p.source?.producer==='purpose-json-v1'&&p.target.producer==='purpose-json-v1','Trace upgrade requires enabled source/target and unchanged full51');
   else for(const k of ['runtime','schema','protocol','schemaHash','productVersion','migrations','integrity','tarball'])check(equal(s[k],t[k]),'Producer phase cannot change formal package/provenance');
-  check(keys(p.source,['reader','producer'])&&p.source.reader===2&&['disabled','purpose-json-v1'].includes(p.source.producer)&&hex.test(p.sourceConfigurationSha256??''),'Accepted capable source reader required');
+  const modes=[SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)?['purpose-json-v1','purpose-json-v2']:['disabled','purpose-json-v1'];
+  check(keys(p.source,['reader','producer'])&&p.source.reader===2&&modes.includes(p.source.producer)&&hex.test(p.sourceConfigurationSha256??''),'Accepted capable source reader required');
   check(Array.isArray(p.sourceContainers)&&p.sourceContainers.length===4&&new Set(p.sourceContainers.map(c=>c.id)).size===4&&equal(p.sourceContainers.map(c=>c.stack+':'+c.service).sort(),['lingxiloop-app-a:lingxiloop','lingxiloop-app-a:worker','lingxiloop-app-b:lingxiloop','lingxiloop-app-b:worker'])&&p.sourceContainers.every(c=>keys(c,['stack','service','id','imageId'])&&hex.test(c.id??'')&&/^sha256:[a-f0-9]{64}$/.test(c.imageId??'')),'Four accepted capable source identities required');
-  check(['disabled','purpose-json-v1'].includes(p.target.producer),'Explicit producer mode with capable readers required');
+  check(modes.includes(p.target.producer),'Explicit producer mode with capable readers required');
  }
  qualifyImageEnvironments(plan);
 }
-export function assertPublicTextMetadata(value,plan){
- check(value?.publicText===2&&equal(value.deployment,plan.publicText.target)&&value.configurationSha256===plan.publicText.targetConfigurationSha256&&equal(value.modelOptions,plan.publicText.target.producer==='disabled'?{}:{publicTextProtocol:'purpose-json-v1'}),'Actual image reader/producer capability mismatch');
+export function assertPublicTextMetadata(value,plan,which='target'){
+ check(['source','target'].includes(which),'Explicit public metadata direction required');
+ const deployment=plan.publicText[which];
+ check(value?.publicText===2&&equal(value.deployment,deployment)&&value.configurationSha256===plan.publicText[which+'ConfigurationSha256']&&equal(value.modelOptions,deployment.producer==='disabled'?{}:{publicTextProtocol:deployment.producer}),'Actual image reader/producer capability mismatch');
  if([TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format))check(value.runTrace===1,'Actual trace package capability mismatch');
 }
 function envMap(rows){check(Array.isArray(rows),'Image environment unavailable');const map=new Map();for(const x of rows){check(typeof x==='string'&&x.indexOf('=')>0,'Invalid environment entry');const n=x.indexOf('='),k=x.slice(0,n);check(!map.has(k),'Duplicate environment key');map.set(k,x.slice(n+1));}return map;}

@@ -81,7 +81,7 @@ export async function restoreImageSource({plan,receipt,ops,onProgress=async()=>{
   await barrier(true);await ops.wait(2000);await barrier()
   for(const stack of APPS){await ops.assertIdle();await inventory();await ops.restoreAcceptedSource(stack);await inventory()}
   await ops.verifyImages('source')
-  for(const stack of APPS){const meta=await ops.metadata(stack,'source');check(equal(select(meta,metadataKeys),select(plan.source,metadataKeys)),'Restoration source metadata differs');assertPublicTextMetadata(meta,plan)}
+  for(const stack of APPS){const meta=await ops.metadata(stack,'source');check(equal(select(meta,metadataKeys),select(plan.source,metadataKeys)),'Restoration source metadata differs');assertPublicTextMetadata(meta,plan,'source')}
   await barrier()
   for(const service of ['lingxiloop','worker'])for(const stack of APPS){
    await ops.assertIdle();await state();await inventory();await ops.verifyImages('source')
