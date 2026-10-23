@@ -27,6 +27,7 @@ import { runProductCallback } from './product-callbacks.js'
 import type { Queryable } from '../db/queryable.js'
 import { publicTextDeployment, publicTextModelOptions } from './public-text-deployment.js'
 import { readModelOperation } from '../../../src/lib/runTrace.js'
+import { visualizeSemanticReviewPolicy } from './visualize-workflow-review.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -118,6 +119,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     const harness = createProductHarness(createProductTools(lingxiOSControl), lingxiOSControl)
     const { tools } = assembleHarness(harness)
     control = createLingxiOS({ ...common(), harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
+      semanticReviewPolicy: visualizeSemanticReviewPolicy,
       background: { role: backgroundRole },
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
       ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
