@@ -27,6 +27,7 @@ import { runProductCallback } from './product-callbacks.js'
 import type { Queryable } from '../db/queryable.js'
 import { publicTextDeployment, publicTextModelOptions } from './public-text-deployment.js'
 import { readModelOperation } from '../../../src/lib/runTrace.js'
+import { visualizeSemanticReviewPolicy } from './visualize-workflow-review.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -69,7 +70,13 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
-    maxThinkingTokens: 0, capabilities: { parallelTools: false },
+    maxThinkingTokens: 0, capabilities: {
+      parallelTools: false,
+      // This provider/model suppresses native tool calls when JSON mode is
+      // combined with tools. Keep the strict public-purpose parser enabled.
+      ...(siliconFlow && model.id === 'deepseek-ai/DeepSeek-V4.1-Flash'
+        ? { jsonObjectWithTools: false } : {}),
+    },
     // Auxiliary review/compaction must retain streamed progress after the model
     // switch, under the same first-byte/idle/request and logical-call budgets.
     ...(siliconFlow && ['zai-org/GLM-5.3-Flash', 'deepseek-ai/DeepSeek-V4.1-Flash'].includes(model.id)
@@ -112,6 +119,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     const harness = createProductHarness(createProductTools(lingxiOSControl), lingxiOSControl)
     const { tools } = assembleHarness(harness)
     control = createLingxiOS({ ...common(), harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
+      semanticReviewPolicy: visualizeSemanticReviewPolicy,
       background: { role: backgroundRole },
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
       ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
@@ -234,6 +242,7 @@ export async function startLingxiOSWorker() {
   // tool continuations exceed the former 90s limit; retain bounded attempts.
   const requestTimeoutMs = positiveInteger('AGENT_OS_MODEL_REQUEST_TIMEOUT_MS', env.OPENAI_MODEL === 'zai-org/GLM-5.3-Flash' ? 180_000 : 90_000)
   const options = {
+    semanticReview: 'selective',
     additionalContentCorrections: 3,
     modelBudget: common().modelBudget,
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },

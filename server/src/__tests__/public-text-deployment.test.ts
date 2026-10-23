@@ -3,9 +3,9 @@ import test from 'node:test'
 import { publicTextDeployment, publicTextModelOptions } from '../agent-runtime/public-text-deployment.js'
 
 test('deployment metadata is a pure immutable enabled producer configuration source',()=>{
-  assert.deepEqual(publicTextDeployment,{reader:2,producer:'purpose-json-v1'})
+  assert.deepEqual(publicTextDeployment,{reader:2,producer:'purpose-json-v2'})
   assert.equal(Object.isFrozen(publicTextDeployment),true)
-  assert.deepEqual(publicTextModelOptions(),{publicTextProtocol:'purpose-json-v1'})
+  assert.deepEqual(publicTextModelOptions(),{publicTextProtocol:'purpose-json-v2'})
   assert.equal(Object.hasOwn(publicTextModelOptions(),'publicTextProtocol'),true)
 })
 
@@ -13,11 +13,28 @@ test('deployment metadata is a pure immutable enabled producer configuration sou
 test('normal Worker model configuration consumes the same producer leaf without changing budgets',async()=>{
   const { runtimeModelConfiguration }=await import('../agent-runtime/runtime.js')
   const config=runtimeModelConfiguration({id:'synthetic-fixture',apiKey:'synthetic-key',baseUrl:'http://127.0.0.1:1/v1'},90000)
-  assert.equal(config.publicTextProtocol,'purpose-json-v1')
+  assert.equal(config.publicTextProtocol,'purpose-json-v2')
   assert.deepEqual(config.recovery,{maxAttempts:3,totalTimeoutMs:120000})
   assert.equal(config.requestTimeoutMs,90000)
   assert.equal(config.firstByteTimeoutMs,30000)
   assert.equal(config.streamIdleTimeoutMs,30000)
   assert.equal(config.maxThinkingTokens,0)
   assert.deepEqual(config.capabilities,{parallelTools:false})
+})
+
+test('only the verified SiliconFlow DeepSeek configuration opts out of combined JSON mode and tools',async()=>{
+  const { runtimeModelConfiguration }=await import('../agent-runtime/runtime.js')
+  const configured=runtimeModelConfiguration({id:'deepseek-ai/DeepSeek-V4.1-Flash',apiKey:'synthetic-key',baseUrl:'https://api.siliconflow.cn/v1'},90000)
+  assert.equal(Reflect.get(configured.capabilities,'jsonObjectWithTools'),false)
+  assert.equal(configured.publicTextProtocol,'purpose-json-v2')
+  assert.equal(configured.maxThinkingTokens,0)
+  assert.deepEqual(configured.recovery,{maxAttempts:3,totalTimeoutMs:120000})
+  for(const [id,baseUrl] of [
+    ['zai-org/GLM-5.3-Flash','https://api.siliconflow.cn/v1'],
+    ['deepseek-ai/DeepSeek-V4.1-Flash','https://other-provider.example/v1'],
+    ['synthetic-fixture','https://api.siliconflow.cn/v1'],
+  ]){
+    const other=runtimeModelConfiguration({id:id!,apiKey:'synthetic-key',baseUrl:baseUrl!},90000)
+    assert.equal(Reflect.get(other.capabilities,'jsonObjectWithTools'),undefined)
+  }
 })

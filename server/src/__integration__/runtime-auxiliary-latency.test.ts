@@ -30,11 +30,15 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
   const provider = createServer(async (request, response) => {
     let raw = ''; for await (const chunk of request) raw += chunk
     const input = JSON.parse(raw)
-    assert.equal(input.response_format?.type, 'json_object')
-    // Both agent turns and auxiliary review use JSON mode; only main turns
-    // receive the public-purpose wire contract (review keeps its own schema).
+    // Only the qualified SiliconFlow DeepSeek profile omits JSON mode when
+    // tools are advertised. Tool-free review and the GLM profile retain it.
+    const jsonWithToolsUnsupported = model === 'deepseek-ai/DeepSeek-V4.1-Flash' && input.tools?.length > 0
+    if (jsonWithToolsUnsupported) assert.equal(input.response_format, undefined)
+    else assert.equal(input.response_format?.type, 'json_object')
+    // Main turns retain the public-purpose wire contract even without native
+    // JSON mode; auxiliary review keeps its own schema.
     const structured = !input.messages.some((message: { role: string; content: string }) =>
-      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v1):'))
+      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v2):'))
     const fail = retryAuxiliary && structured && !injectedFailure
     requests.push({ structured, stream: input.stream === true, effort: input.reasoning_effort, thinking: input.enable_thinking, status: fail ? 503 : 200 })
     if (fail) {
@@ -49,7 +53,7 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'fixture-identity', type: 'function', function: { name: 'directory__self', arguments: '{}' } }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
       return
     }
-    const content = structured ? '{"missing":[]}' : JSON.stringify({ commentary: '', answer: 'Fixture completed.' })
+    const content = structured ? '{"missing":[]}' : JSON.stringify({ commentary: '', answer: 'Fixture completed.', outcome: { status: 'satisfied', gaps: [] } })
     if (input.stream) {
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       const heartbeat = setInterval(() => response.write(`data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: 'PRIVATE_SYNTHETIC_REASONING' } }] })}\n\n`), 20)
@@ -76,7 +80,9 @@ for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary gener
     await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)', [room, companyId, JSON.stringify({ channelType: 2, members })])
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, room)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
-    worker = createWorker({ controlPlane: api, worker: { id: `auxiliary-latency-${retryAuxiliary}`, concurrency: 1 }, model: {
+    // This fixture owns optional review transport/retries; ordinary workers
+    // keep the runtime's disabled default.
+    worker = createWorker({ semanticReview: 'required', controlPlane: api, worker: { id: `auxiliary-latency-${retryAuxiliary}`, concurrency: 1 }, model: {
       ...runtimeModelConfiguration({ id: model, apiKey: 'synthetic-key', baseUrl: 'https://api.siliconflow.cn/v1' }, 1500),
       baseUrl: `http://127.0.0.1:${address.port}/v1`,
       firstByteTimeoutMs: 100, streamIdleTimeoutMs: 100,

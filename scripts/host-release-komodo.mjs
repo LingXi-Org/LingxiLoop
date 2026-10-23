@@ -226,7 +226,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    await guard();await verifyImages('target');const rows=await inspect();
    check(rows.every(row=>row.source===plan.source.sha&&!row.running&&!row.restarting&&row.pid===0&&row.restartCount===0
     &&plan.publicText.sourceContainers.some(c=>c.stack===row.stack&&c.service===row.service&&c.id===row.id&&c.imageId===row.imageId)),'Original runtime patch writers changed');
-   const expected={...Object.fromEntries(metadataKeys.map(key=>[key,plan.target[key]])),publicText:2,deployment:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v1'},runTrace:1};
+   const expected={...Object.fromEntries(metadataKeys.map(key=>[key,plan.target[key]])),publicText:2,deployment:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:plan.publicText.target.producer},runTrace:1};
    const code=METADATA_CODE+PUBLIC_METADATA_CODE+TRACE_METADATA_CODE+`import{isDeepStrictEqual}from'node:util';if(!isDeepStrictEqual(metadata,${JSON.stringify(expected)}))throw Error('target drift');const {applyPublishedRuntimePatch}=await import('./server/src/db/runtime-patch.ts');const {pool}=await import('./server/src/db/pool.ts');try{const r=await applyPublishedRuntimePatch(pool,${JSON.stringify(plan.source)},${JSON.stringify(plan.target)});console.log('SCHEMA_UPGRADE_PATCHED='+JSON.stringify(r));}finally{await pool.end();}`;
    patchSubmitted=true;
    const receipt=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{command:['timeout','-k','5','60','node','--import','tsx','--input-type=module','-e',code]})),'PATCHED');
@@ -239,7 +239,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    const rows=await inspect()
    check(rows.every(row=>row.source===plan.source.sha&&row.restartCount===0&&!row.restarting
     &&(native||provenanceUpgrade||row.service==='worker'?!row.running&&row.pid===0:row.running&&row.healthy&&row.pid>0)),'Original writer state differs from reviewed migration boundary')
-   const expected={...Object.fromEntries(metadataKeys.map(key=>[key,plan.target[key]])),...(publicText?{publicText:2,deployment:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,modelOptions:plan.publicText.target.producer==='disabled'?{}:{publicTextProtocol:'purpose-json-v1'},...(trace?{runTrace:1}:{})}:{})}
+   const expected={...Object.fromEntries(metadataKeys.map(key=>[key,plan.target[key]])),...(publicText?{publicText:2,deployment:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,modelOptions:plan.publicText.target.producer==='disabled'?{}:{publicTextProtocol:plan.publicText.target.producer},...(trace?{runTrace:1}:{})}:{})}
    // The executing image proves all public release metadata before opening DB.
    // Product-only migrations never inject env. Native maintenance injects the
    // drain acknowledgement into this oneoff only, after verified fresh backup.

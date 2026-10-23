@@ -92,7 +92,9 @@ test('ordinary and activated conversations repair missing delivery; exhausted re
       await new Promise<void>(resolve => provider.listen(0,'127.0.0.1',resolve))
       try {
         const address = provider.address(); assert.ok(address && typeof address !== 'string')
-        worker = createWorker({ controlPlane: api,policy: new ProductRuntimePolicy(),worker: { id: `incomplete-visual-${scenario}`,shutdownGraceMs: 1000 },
+        // Explicit review coverage: preserve content omissions/partial outcomes
+        // without restoring review to ordinary production conversations.
+        worker = createWorker({ semanticReview: 'required',controlPlane: api,policy: new ProductRuntimePolicy(),worker: { id: `incomplete-visual-${scenario}`,shutdownGraceMs: 1000 },
           model: { id: 'synthetic-visual',apiKey: 'synthetic-local-provider',baseUrl: `http://127.0.0.1:${address.port}/v1`,publicTextProtocol: 'purpose-json-v1',
             requestTimeoutMs: 10000,firstByteTimeoutMs: 2000,streamIdleTimeoutMs: 2000,contextWindowTokens: 1_000_000 },
           // Native handoff reserves a default 120s child call and a 120s closing call.

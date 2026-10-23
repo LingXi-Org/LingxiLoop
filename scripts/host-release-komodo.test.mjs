@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 import {createHostReleaseOperations} from './host-release-komodo.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,hash,sealHostPlan,runHostRelease,runImagePreparation} from './host-release.mjs'
 function fixture(fault={}){
- fault={...fault,image54:fault.image54||fault.runtimePatch}
+ fault={...fault,image54:fault.image54||fault.runtimePatch||fault.producerV2}
  fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
  const a='a'.repeat(40),b='b'.repeat(40),h='c'.repeat(64),d='sha256:'+h
  const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:h,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations:Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(i+1),checksum:h}))}
@@ -44,7 +44,8 @@ function fixture(fault={}){
   ignore_services:row.stack===CORE?[]:['db-migrate'],environment:'private fixture never persist',
  }})
  if(fault.image54){const p=structuredClone(plan);p.format='product54-image-host-release/v1';for(const k of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations'])p.source[k]=structuredClone(p.target[k]);for(const row of p.stacks.slice(0,2)){row.source.autoPull=false;row.source.extraArgs=RELEASE_ARGS;const c=configs.get(row.stack).config;c.auto_pull=false;c.extra_args=RELEASE_ARGS}plan=sealHostPlan(p);Object.assign(source,p.source)}
- if(fault.runtimePatch){const p=structuredClone(plan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');plan=sealHostPlan(p);Object.assign(target,p.target)}
+ if(fault.runtimePatch||fault.producerV2){const p=structuredClone(plan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');plan=sealHostPlan(p);Object.assign(target,p.target)}
+ if(fault.producerV2){const p=structuredClone(plan);p.source.runtime='3.8.3';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.runtime='3.8.5';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.publicText.target.producer='purpose-json-v2';p.publicText.targetConfigurationSha256='d'.repeat(64);plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target)}
  const containers=APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({
   stack,service,Id:String(i*2+j+1).repeat(64),Image:'sha256:'+(fault.sourceImageMismatch?'0':'f').repeat(64),
   Config:{Image:IMAGE+a,Env:['LINGXILOOP_COMMIT_SHA='+a,...((fault.reader||fault.producer||fault.trace)?['NODE_VERSION=22.23.4']:[]),'NODE_ENV=production','SECRET=private fixture never persist'],User:'node',Cmd:['npm','run',service==='worker'?'worker:start':'server:start']},
@@ -92,7 +93,8 @@ function fixture(fault={}){
     }
     if(fault.native14)state.otherClients=containers.every(c=>!c.State.Running)?0:4;
     const candidate=actualFiles.get(p.stack)===files.get(p.stack)?.source?source:target
-    const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:{...candidate,...((fault.reader||fault.producer||fault.trace)?{publicText:2,deployment:publicText.target,configurationSha256:h,modelOptions:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:fault.traceMetadataWrong?0:1}:{})}:{})}
+    const deployment=fault.producerV2&&candidate===source?plan.publicText.source:plan.publicText?.target,configurationSha256=fault.producerV2&&candidate===source?plan.publicText.sourceConfigurationSha256:plan.publicText?.targetConfigurationSha256;
+    const marker=p.service==='postgres'?'STATE':'METADATA',value=p.service==='postgres'?state:{...candidate,...((fault.reader||fault.producer||fault.trace)?{publicText:2,deployment,configurationSha256,modelOptions:fault.producerV2?{publicTextProtocol:fault.wrongV2Options?'purpose-json-v1':deployment.producer}:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:fault.traceMetadataWrong?0:1}:{})}:{})}
     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_'+marker+'='+JSON.stringify(value)}]}
    }
    if(op==='PullStack'){assert.deepEqual(p.services,['db-migrate']);return}
@@ -120,8 +122,8 @@ function fixture(fault={}){
  const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,sourceConfigurationProof,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
  return {plan,ops,calls,events,configs,actualFiles,files,containers,transport:t,sourceConfigurationProof,updates,run:()=>runHostRelease({plan,ops,onProgress})}
 }
-async function failedImageRelease(partial=false,runtimePatch=false){
- const f=fixture({image54:true,runtimePatch})
+async function failedImageRelease(partial=false,runtimePatch=false,producerV2=false){
+ const f=fixture({image54:true,runtimePatch,producerV2})
  if(partial)f.ops.verifyHealthy=async()=>{throw Error('synthetic target readiness failure')}
  else {const state=f.ops.state;f.ops.state=async()=>{const s=await state();return f.containers.every(c=>!c.State.Running)?{...s,liveWork:1}:s}}
  await assert.rejects(f.run())
@@ -323,3 +325,24 @@ test('runtime patch precheck refusal keeps services running, unknown CAS is neve
  assert.equal(unknown.calls.filter(c=>c.op==='RunStackService'&&JSON.stringify(c).includes('applyPublishedRuntimePatch')).length,1)
  assert.equal(unknown.calls.some(c=>c.op==='DeployStack'),false)
 })
+
+test('v2 native adapter rechecks exact target model options and leaf before the single provenance CAS',async()=>{
+ const f=fixture({producerV2:true});await f.run();
+ const patches=f.calls.filter(c=>c.op==='RunStackService'&&JSON.stringify(c).includes('applyPublishedRuntimePatch'));assert.equal(patches.length,1);
+ const code=patches[0].command.at(-1),literal=code.split('if(!isDeepStrictEqual(metadata,')[1].split("))throw Error('target drift')")[0];
+ const expected=JSON.parse(literal);
+ assert.equal(expected.runtime,'3.8.5');assert.equal(expected.publicText,2);assert.equal(expected.runTrace,1);
+ assert.deepEqual(expected.deployment,{reader:2,producer:'purpose-json-v2'});assert.deepEqual(expected.modelOptions,{publicTextProtocol:'purpose-json-v2'});assert.equal(expected.configurationSha256,f.plan.publicText.targetConfigurationSha256);
+ assert.equal(f.calls.some(c=>JSON.stringify(c).includes('migrate-bin')),false);assert.equal(Object.hasOwn(patches[0],'env'),false);assert.equal(f.calls.filter(c=>c.op==='DeployStack').length,4);
+});
+test('v2 native adapter retains capability, environment, original identity and incompatible-run fences',async()=>{
+ for(const fault of [{wrongV2Options:true},{traceMetadataWrong:true},{bound:true}]){const f=fixture({producerV2:true,...fault});await assert.rejects(f.run());assert.equal(f.calls.some(c=>c.op==='StopStack'||c.op==='DeployStack'),false);}
+ const identity=fixture({producerV2:true});identity.containers[0].Id='0'.repeat(64);await assert.rejects(identity.run());assert.equal(identity.calls.some(c=>c.op==='StopStack'),false);
+ const env=fixture({producerV2:true}),execute=env.transport.execute;env.transport.execute=async(op,p)=>{const result=await execute(op,p);if(op==='DeployStack')env.containers.find(c=>c.stack===p.stack&&c.service===p.services[0]).Config.Env.push('UNREVIEWED=1');return result};await assert.rejects(env.run());assert.equal(env.calls.filter(c=>c.op==='DeployStack').length,1);
+});
+
+test('v2 upgrade source restoration accepts only original v1 metadata before any committed runtime CAS',async()=>{
+ const f=await failedImageRelease(false,true,true),before=f.calls.length,result=await f.restore();
+ assert.equal(result.restoredSource,f.plan.source.sha);assert.equal(result.state.runtime,'3.8.3');assert.deepEqual(result.publicText,{reader:2,producer:'purpose-json-v1'});assert.equal(result.configurationSha256,f.plan.publicText.sourceConfigurationSha256);
+ const calls=f.calls.slice(before);assert.equal(calls.filter(c=>c.op==='DeployStack').length,4);assert.equal(calls.some(c=>JSON.stringify(c).includes('applyPublishedRuntimePatch')||JSON.stringify(c).includes('migrate-bin')||c.op==='StopStack'),false);
+});

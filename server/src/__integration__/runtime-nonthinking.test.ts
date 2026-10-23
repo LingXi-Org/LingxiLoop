@@ -43,7 +43,7 @@ test('production workers always expose full tools and disable thinking even with
         return
       }
       res.writeHead(200, { 'content-type': 'text/event-stream' })
-      assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v1\)/)
+      assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v2\)/)
       const send = (delta: unknown, finish_reason: string | null = null) =>
         res.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason }] })}\n\n`)
       assert.ok(!request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'response__upgrade'))
@@ -53,7 +53,7 @@ test('production workers always expose full tools and disable thinking even with
         res.end(`data: ${JSON.stringify({choices:[],usage})}\n\ndata: [DONE]\n\n`)
         return
       }
-        const framed = JSON.stringify({ commentary: '', answer: body })
+        const framed = JSON.stringify({ commentary: '', answer: body, outcome: { status: 'satisfied', gaps: [] } })
         const split = framed.indexOf('第一段') + '第一段'.length
         send({ role: 'assistant', reasoning_content: privateText })
         send({ content: framed.slice(0, split) })
@@ -116,7 +116,7 @@ test('production workers always expose full tools and disable thinking even with
       assert.equal((await api.readRunState(run))?.message?.body, body)
       assert.deepEqual(im.messages.filter(message => message.channelId === conversationId).map(message => nativeText(message.payload)), [body])
       assert.equal(requests.filter(request => request.stream).length, 2)
-      assert.ok(requests.some(request => !request.stream), 'auxiliary content check must also use the native driver')
+      assert.equal(requests.length, 2, 'the invalid-tool correction and answer must not trigger a default content review')
       for (const request of requests) {
         assert.equal(request.enable_thinking, false)
         assert.equal(request.thinking,undefined)
@@ -203,9 +203,9 @@ test('unavailable visualization references are repaired before durable delivery'
     if (calls === 0) {
       assert.match(JSON.stringify(request.messages), /Gen UI is available/)
     }
-    assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v1\)/)
+    assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v2\)/)
     correction ||= JSON.stringify(request.messages).includes('visualization path is unavailable')
-    const body = JSON.stringify({ commentary: '', answer: ++calls === 1 ? invalid : valid })
+    const body = JSON.stringify({ commentary: '', answer: ++calls === 1 ? invalid : valid, outcome: { status: 'satisfied', gaps: [] } })
     res.writeHead(200, { 'content-type': 'text/event-stream' })
     res.end(`data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content: body }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
   })

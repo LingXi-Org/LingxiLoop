@@ -17,6 +17,12 @@ import { installRecordingWukong } from './_recording-wukong.js'
 // multilingual history cannot fit; repeated compaction loses a prior fact; delivery
 // duplicates; completed summaries disappear; calls escape the shared ledger.
 // Auxiliary SSE must use JSON/compaction content, not the ordinary streamed-answer fixture.
+// Background memory reflection shares the structured transport after five turns:
+// treating every structured request as a semantic judge misclassifies maintenance,
+// and returning {missing:[]} to memory synthesis creates artificial repair calls.
+// Keep memory proposal/verification distinct, return a valid unapproved no-change
+// result, and require ledger operation=memory-synthesis for every structured call.
+// Content-review calls and unknown auxiliary request shapes must still fail.
 test('production GLM worker preserves conversation continuity across repeated compaction', { timeout: 480000 }, async () => {
   const live = process.env.LINGXIOS_LIVE_CONTEXT === '1'
   if (live) {
@@ -28,7 +34,8 @@ test('production GLM worker preserves conversation continuity across repeated co
   const originalModel = env.OPENAI_MODEL, originalBaseUrl = env.OPENAI_BASE_URL
   env.OPENAI_MODEL = 'zai-org/GLM-5.3-Flash'; env.OPENAI_BASE_URL = 'https://api.siliconflow.cn/v1'
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
-  const requests: { bytes: number; stream: boolean; purpose: 'agent-turn' | 'structured' | 'compaction' }[] = [], results: { status: string; delivered: boolean }[] = []
+  const requests: { bytes: number; stream: boolean; purpose: 'agent-turn' | 'structured' | 'compaction' | 'memory-proposal' | 'memory-verification' }[] = [], results: { status: string; delivered: boolean }[] = []
+  let calls: { purpose: string; operation: string | null; status: string; measured: boolean; input_tokens: number; error: string | null }[] = []
   const checkpoints: { epoch: number; historyBytes: number }[] = []
   const turnIds = ['initial', 'followup', ...Array.from({ length: live ? 6 : 24 }, (_, index) => `soak-${index}`)]
   globalThis.fetch = async (input, init) => {
@@ -41,17 +48,25 @@ test('production GLM worker preserves conversation continuity across repeated co
     assert.equal(request.response_format?.type, 'json_object')
     // JSON mode is also required for main public-purpose turns in runtime 3.7.
     const auxiliary = !request.messages.some((message: { role: string; content: string }) =>
-      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v1):'))
-    const compacting = auxiliary && String(request.messages[0]?.content).includes('observedResults')
-    const purpose = compacting ? 'compaction' : auxiliary ? 'structured' : 'agent-turn'
+      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v2):'))
+    const instructions = String(request.messages[0]?.content)
+    const compacting = auxiliary && instructions.includes('observedResults')
+    const memoryProposal = auxiliary && instructions.includes('Consolidate durable cognitive memory across the supplied committed interactions.')
+    const memoryVerification = auxiliary && instructions.includes('Independently audit extraction coverage and every proposed memory change against the supplied evidence and current memory versions.')
+    const purpose = compacting ? 'compaction' : memoryProposal ? 'memory-proposal' : memoryVerification ? 'memory-verification' : auxiliary ? 'structured' : 'agent-turn'
     requests.push({ bytes: Buffer.byteLength(body), stream: request.stream === true, purpose })
+    assert.notEqual(purpose, 'structured', 'default conversations must not issue semantic judges or unknown auxiliary requests')
     if (live) return originalFetch(input, init)
     const usage = { prompt_tokens: 30000, completion_tokens: 20 }
     if (!auxiliary) assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'prior fact must reach every generation')
     if (compacting) assert.match(JSON.stringify(request.messages), /蓝宝石47/, 'summary must be grounded in the preceding context')
     const content = auxiliary ? JSON.stringify(compacting
-      ? { observedResults: '用户的项目名称是蓝宝石47。', decisions: '', remainingWork: '', uncertainties: '' } : { missing: [] })
-      : JSON.stringify({ commentary: '', answer: '已收到，蓝宝石47。' })
+      ? { observedResults: '用户的项目名称是蓝宝石47。', decisions: '', remainingWork: '', uncertainties: '' }
+      : memoryProposal ? { changes: [], conflicts: [] }
+        // This continuity fixture does not certify memory extraction coverage.
+        // Reject the empty proposal truthfully through the bounded memory path.
+        : { approved: false, complete: false, confidence: 0, feedback: 'Synthetic fixture does not approve durable memory extraction.' })
+      : JSON.stringify({ commentary: '', answer: '已收到，蓝宝石47。', outcome: { status: 'satisfied', gaps: [] } })
     if (request.stream) {
       return new Response(`data: ${JSON.stringify({ choices: [{ index: 0,
         delta: { role: 'assistant', content }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`,
@@ -104,15 +119,20 @@ test('production GLM worker preserves conversation continuity across repeated co
       }
     }
     await worker.stop(); worker = undefined
+    calls = (await pool.query(`SELECT purpose,extras->>'operation' AS operation,status,measured,input_tokens,error
+      FROM llm_calls WHERE company_id=$1 ORDER BY created_at`, [companyId])).rows
     const messages = im.messages.filter(message => message.channelId === conversationId && message.fromUid === agentId)
     assert.equal(messages.length, turnIds.length)
     assert.ok(messages.slice(0, 2).every(message => /已收到/.test(nativeText(message.payload))))
     assert.ok(messages.slice(2).every(message => /蓝宝石47/.test(nativeText(message.payload))))
     assert.ok(requests.some(request => request.purpose === 'agent-turn' && request.bytes > 128000), 'must exercise the former hard context limit')
-    assert.ok(requests.every(request => request.stream), 'ordinary, structured and compaction calls must use the configured streaming transport')
-    assert.ok(requests.some(request => request.purpose === 'structured'))
+    assert.ok(requests.every(request => request.stream), 'ordinary and compaction calls must use the configured streaming transport')
+    assert.equal(requests.filter(request => request.purpose === 'agent-turn').length, turnIds.length, 'each ordinary turn needs one generation')
+    assert.equal(calls.filter(call => call.operation === 'content-review').length, 0, 'default conversations must not add semantic review calls')
+    const memoryCalls = calls.filter(call => call.purpose === 'lingxios.structured')
+    assert.ok(memoryCalls.every(call => call.operation === 'memory-synthesis'), 'only explicitly classified memory synthesis may use the auxiliary transport')
+    assert.equal(memoryCalls.length, requests.filter(request => request.purpose === 'memory-proposal' || request.purpose === 'memory-verification').length)
     assert.ok(requests.filter(request => request.purpose === 'compaction').length >= 2)
-    const calls = (await pool.query(`SELECT purpose,status,measured,input_tokens,error FROM llm_calls WHERE company_id=$1 ORDER BY created_at`, [companyId])).rows
     assert.equal(calls.length, requests.length)
     assert.ok(calls.every(call => call.status === 'succeeded' && call.measured
       || call.purpose === 'lingxios.compaction' && call.status === 'failed' && call.error === 'compaction candidate no longer needed'))
@@ -127,7 +147,7 @@ test('production GLM worker preserves conversation continuity across repeated co
   } catch (error) {
     await mkdir('artifacts/reply-generation', { recursive: true })
     await writeFile(`artifacts/reply-generation/${live ? 'live' : 'scripted'}.json`, JSON.stringify({ passed: false,
-      runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, checkpoints,
+      runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, calls, checkpoints,
       error: error instanceof Error ? error.message : String(error),
       replies: im.messages.filter(message => message.channelId === 'model-context-room' && message.payload.role === 'assistant')
         .map(message => nativeText(message.payload)),
