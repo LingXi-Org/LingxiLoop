@@ -50,7 +50,7 @@ remain present, and the instructions require their use before asserting facts
 that depend on course or case sources. There is no additional model router,
 fast-model path or language-keyword authority decision.
 
-Supplied attachments, homework/Canvas/delegated work, non-interactive work and
+Revised requests, supplied attachments, homework/Canvas/delegated work, non-interactive work and
 registered learning, homework, case, takeover or intervention context retain
 automatic source preparation. Workflow classification is read from the current
 authorized database scope, not cached permissions. Ordinary teacher operations
@@ -58,6 +58,11 @@ do not acquire a source obligation merely because the room belongs to a course.
 The changed harness version and course-evidence skill version participate in the
 runtime binding; release must drain old work or preserve its original runtime,
 not bypass a binding mismatch or reset its budget.
+
+Revisions conservatively retain preparation because a steering message can add
+an attachment to the durable request without changing the initial work metadata.
+The ordinary-room revision regression failed with zero searches instead of two
+before this boundary was added; no arbitrary metadata flag opts a revision out.
 
 The prior behavior failed a regression requiring zero unsolicited searches
 (`2 !== 0`). Owning PostgreSQL tests preserve supplied-attachment retrieval,

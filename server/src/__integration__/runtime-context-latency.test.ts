@@ -60,9 +60,11 @@ test('context bounds automatic search and persists Agent receipts before asynchr
     assert.deepEqual(ordinary.dynamic?.knowledgeRetrieval, { status: 'on_demand' })
     assert.ok(ordinary.capabilities.includes('knowledge'), 'on-demand preserves authorized evidence tools')
     assert.deepEqual(ordinary.evidence, [])
+    await provider.loadContext(work, undefined, { responseProfile: 'deep', requestVersion: 2 })
+    assert.equal(unsolicitedSearches, 2, 'a revised request may introduce attachments outside original work metadata')
     const attached = await provider.loadContext({ ...work, meta: { ...work.meta,
       attachments: [{ id: JSON.stringify(['input','fixture-attachment']), text: 'A supplied source that requires grounding.' }] } })
-    assert.equal(unsolicitedSearches, 2, 'a supplied attachment retains required source preparation')
+    assert.equal(unsolicitedSearches, 4, 'a supplied attachment retains required source preparation')
     assert.deepEqual(attached.dynamic?.knowledgeRetrieval, { status: 'no_matches', matchedChunks: 0, processingSources: 0 })
   } finally {
     openNotebookClient.search = beforeSearch

@@ -157,7 +157,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
     const historyReady = getAgentChannelHistory({ companyId: work.tenantId, agentId: work.agentId,
       channelId: productConversationId(work), limit: work.conversation ? 8 : 80 }).then(history => history ?? [])
     const requiredKnowledgeReady = !capabilities.includes('knowledge') || hasFrozenEvidence ? Promise.resolve(false)
-      : work.kind !== 'turn' || work.lane !== 'interactive' || work.conversation?.internal || canvasRun || homeworkContext
+      : (options?.requestVersion ?? 1) > 1 || work.kind !== 'turn' || work.lane !== 'interactive' || work.conversation?.internal || canvasRun || homeworkContext
         || work.meta?.delegation || work.meta?.parentWorkId || Array.isArray(work.meta?.attachments) && work.meta.attachments.length > 0
         ? Promise.resolve(true)
         : pool.query(`SELECT 1 FROM context_threads WHERE company_id=$1 AND channel_id=$2

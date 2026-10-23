@@ -30,3 +30,5 @@ The owning real PostgreSQL/local HTTP integration is extended before implementat
   introduced.
 - Changed preparation rules must change the product harness identity; old work
   resumes with its pinned deployment or is drained before rollout.
+- Revisions can add attachments to the durable request without changing original
+  work metadata. A revised ordinary turn must retain required preparation.
