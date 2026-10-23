@@ -351,26 +351,57 @@ test('legacy unclassified content stays visible and the answer region is stable 
 
 // #304 review: strict data parts cannot carry activity annotations. A delivered
 // artifact is still a result; citation metadata/process alone is not one.
-test('partial and blocked replies recognize data-only or persisted artifact delivery', () => {
+test('partial and blocked replies retain delivered results and always expose one recovery status', () => {
   for (const outcome of ['partial', 'blocked'] as const) {
-    for (const delivered of ['presentation', 'artifact', 'citations', 'process'] as const) {
-      const base = message('1')
-      const content = delivered === 'presentation'
-        ? [{ type: 'data', name: 'presentation-artifact', data: { artifactId: 'deck-304', artifactKind: 'lecture_deck_html', title: '已交付的演示稿' } }]
-        : delivered === 'citations' ? [{ type: 'data', name: 'citation-claims', data: { claims: [] } }]
-        : delivered === 'process' ? [{ type: 'text', text: '公开过程', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-304', kind: 'commentary', label: '公开过程' } } } }]
-        : []
-      const harness = { ...createRunView('run'), lifecycle: 'succeeded', requestVersion: 1,
-        goalOutcome: { status: outcome, requestVersion: 1 },
-        artifacts: delivered === 'artifact' ? [{ path: '/workspace/已交付.pdf', mime: 'application/pdf', size: 100, sha256: 'a'.repeat(64) }] : [] }
-      const reply = { ...base, content: [...content, { type: 'text', text: '过程记录', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-status-304', kind: 'commentary', label: '过程记录' } } } }], status: { type: 'incomplete', reason: 'other' },
-        metadata: { ...base.metadata, custom: { ...getLingxiMessageMetadata(base), runId: 'run', harness } } } as ThreadMessage
-      const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
-      if (delivered === 'presentation' || delivered === 'artifact') {
-        assert.doesNotMatch($.text(), /本次请求未能生成答复/, `${outcome}/${delivered}`)
-        assert.match($.text(), /已交付/, `${outcome}/${delivered}`)
-      } else assert.match($.text(), /本次请求未能生成答复/, `${outcome}/${delivered}`)
-      assert.match($.text(), /未完成/, 'a delivered result does not turn partial/blocked into success')
+    for (const lifecycle of [outcome, 'succeeded'] as const) {
+      for (const delivered of ['presentation', 'artifact', 'citations', 'process', 'text', 'empty'] as const) {
+        const base = message('1')
+        const content = delivered === 'presentation'
+          ? [{ type: 'data', name: 'presentation-artifact', data: { artifactId: 'deck-304', artifactKind: 'lecture_deck_html', title: '已交付的演示稿' } }]
+          : delivered === 'citations' ? [{ type: 'data', name: 'citation-claims', data: { claims: [] } }]
+          : delivered === 'process' ? [{ type: 'text', text: '公开过程', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-304', kind: 'commentary', label: '公开过程' } } } }]
+          : delivered === 'text' ? [{ type: 'text', text: '保留的部分答复。' }] : []
+        const harness = { ...createRunView('run'), lifecycle, requestVersion: 1,
+          goalOutcome: { status: outcome, requestVersion: 1 },
+          artifacts: delivered === 'artifact' ? [{ path: '/workspace/已交付.pdf', mime: 'application/pdf', size: 100, sha256: 'a'.repeat(64) }] : [] }
+        const reply = { ...base, content: [...content, ...(delivered === 'empty' ? [] : [{ type: 'text', text: '过程记录', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-status-304', kind: 'commentary', label: '过程记录' } } } }])], status: { type: 'incomplete', reason: 'other' },
+          metadata: { ...base.metadata, custom: { ...getLingxiMessageMetadata(base), sequence: null, sourceRef: 'source-question', runId: 'run', harness } } } as ThreadMessage
+        const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+        if (delivered === 'presentation' || delivered === 'artifact') {
+          assert.match($.text(), /已交付/, `${outcome}/${delivered}`)
+        }
+        if (delivered === 'text') assert.match($('[data-message-region="body"]').text(), /保留的部分答复/)
+        assert.equal($('[data-run-outcome]').length, 1, `${lifecycle}/${outcome}/${delivered}`)
+        assert.equal($('[data-run-outcome]').attr('data-run-outcome'), outcome)
+        assert.equal($('[data-run-outcome]').attr('role'), 'status')
+        assert.equal($('[data-run-outcome][data-slot="error-state"]').length, 0)
+        assert.match($('[data-run-outcome]').text(), /答复尚未完成/)
+        assert.equal($('[data-run-outcome] button').text(), '重试')
+      }
     }
+  }
+})
+
+test('incomplete recovery honors lifecycle and version protections', () => {
+  const base = message('1')
+  const harness = { ...createRunView('run'), lifecycle: 'partial', requestVersion: 1, artifacts: [],
+    goalOutcome: { status: 'partial', requestVersion: 1 } }
+  const reply = { ...base, content: [], status: { type: 'incomplete', reason: 'other' },
+    metadata: { ...base.metadata, custom: { ...getLingxiMessageMetadata(base), sequence: null, sourceRef: 'source-question', runId: 'run', harness } } } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.equal($('[data-run-outcome]').length, 1)
+  for (const [lifecycle, status, version] of [
+    ['cancelled', { type: 'incomplete', reason: 'cancelled' }, 1],
+    ['failed', { type: 'incomplete', reason: 'error' }, 1],
+    ['leased', { type: 'running' }, 1],
+    ['waiting', { type: 'requires-action', reason: 'tool-calls' }, 1],
+    ['succeeded', { type: 'complete', reason: 'stop' }, 1],
+    ['partial', { type: 'incomplete', reason: 'other' }, 2],
+    ['succeeded', { type: 'incomplete', reason: 'other' }, 2],
+  ] as const) {
+    const guarded = { ...reply, status, metadata: { ...reply.metadata, custom: { ...reply.metadata.custom,
+      harness: { ...harness, lifecycle, requestVersion: version } } } } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[guarded]} />))
+    assert.equal($('[data-run-outcome]').length, 0, `${lifecycle}/${version}`)
   }
 })
