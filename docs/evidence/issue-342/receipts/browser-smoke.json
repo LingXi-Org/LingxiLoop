@@ -1,0 +1,12 @@
+{
+  "syntheticOnly": true,
+  "productionRequests": 0,
+  "originalCaseVerified": false,
+  "productRenderer": true,
+  "transport": "local fixture",
+  "ready": true,
+  "before": 5,
+  "after": 6,
+  "interactionObserved": true,
+  "providerAdherenceProven": false
+}
