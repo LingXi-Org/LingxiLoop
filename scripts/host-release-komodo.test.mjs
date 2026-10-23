@@ -7,6 +7,7 @@ import assert from 'node:assert/strict'
 import {createHostReleaseOperations} from './host-release-komodo.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,hash,sealHostPlan,runHostRelease,runImagePreparation} from './host-release.mjs'
 function fixture(fault={}){
+ fault={...fault,image54:fault.image54||fault.runtimePatch}
  fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
  const a='a'.repeat(40),b='b'.repeat(40),h='c'.repeat(64),d='sha256:'+h
  const formal={runtime:'3.5.8',schema:13,protocol:11,schemaHash:h,integrity:'sha512-'+Buffer.alloc(64).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/fixture',productVersion:48,migrations:Array.from({length:48},(_,i)=>({version:i+1,name:'migration_'+(i+1),checksum:h}))}
@@ -43,6 +44,7 @@ function fixture(fault={}){
   ignore_services:row.stack===CORE?[]:['db-migrate'],environment:'private fixture never persist',
  }})
  if(fault.image54){const p=structuredClone(plan);p.format='product54-image-host-release/v1';for(const k of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations'])p.source[k]=structuredClone(p.target[k]);for(const row of p.stacks.slice(0,2)){row.source.autoPull=false;row.source.extraArgs=RELEASE_ARGS;const c=configs.get(row.stack).config;c.auto_pull=false;c.extra_args=RELEASE_ARGS}plan=sealHostPlan(p);Object.assign(source,p.source)}
+ if(fault.runtimePatch){const p=structuredClone(plan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');plan=sealHostPlan(p);Object.assign(target,p.target)}
  const containers=APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({
   stack,service,Id:String(i*2+j+1).repeat(64),Image:'sha256:'+(fault.sourceImageMismatch?'0':'f').repeat(64),
   Config:{Image:IMAGE+a,Env:['LINGXILOOP_COMMIT_SHA='+a,...((fault.reader||fault.producer||fault.trace)?['NODE_VERSION=22.23.4']:[]),'NODE_ENV=production','SECRET=private fixture never persist'],User:'node',Cmd:['npm','run',service==='worker'?'worker:start':'server:start']},
@@ -72,6 +74,14 @@ function fixture(fault={}){
    if(op==='RunStackService'){
     assert.equal(p.no_deps,true);assert.equal(p.pull,false);assert.equal(p.service_ports,false);assert.equal(p.detach,false)
     if(JSON.stringify(p).includes('expected_plans'))return {_id:{$oid:'9'.repeat(24)},operation:'RunStackService',target:{type:'Stack',id:'3'.repeat(24)},status:'Complete',success:true,start_ts:1,end_ts:2,logs:[{stdout:'SCHEMA_UPGRADE_METADATA='+JSON.stringify({readOnly:true,fullVisibility:true,canonicalSha256:'18182ceea150aec2db43a871e6100d6e7793ddcfec326cfd5031266cd84bb2e7',equal:true,counts:{missing:0,mismatched:fault.seed?1:0,plans:1,entitlements:8,planEntitlements:8}})}]};
+    if(JSON.stringify(p).includes('runtime-patch.ts')){
+     assert.equal(p.stack,APPS[0]);assert.equal(p.service,'db-migrate');assert.equal(Object.hasOwn(p,'env'),false);assert.doesNotMatch(JSON.stringify(p),/migrate-bin|seedCommand/)
+     if(JSON.stringify(p).includes('applyPublishedRuntimePatch')){
+      assert.ok(containers.every(c=>!c.State.Running));if(fault.patchUnknown)throw Object.assign(Error('unknown patch'),{uncertain:true});
+      Object.assign(state,{runtime:target.runtime});return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_PATCHED='+JSON.stringify({source:source.runtime,target:target.runtime,schema:14,product:54,updated:1})}]}
+     }
+     return {status:'Complete',success:true,logs:[{stdout:'SCHEMA_UPGRADE_PATCH_READ='+JSON.stringify({prepared:0,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,incompatibleRuns:fault.bound?1:0})}]}
+    }
     if(JSON.stringify(p).includes('migrate-bin')){
      assert.ok(fault.upgrade||fault.native14||fault.reader||fault.trace);assert.equal(p.stack,APPS[0]);assert.equal(p.service,'db-migrate')
      assert.equal(Object.hasOwn(p,'env'),Boolean(fault.native14));assert.equal(JSON.stringify(p).includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED'),Boolean(fault.native14));if(fault.reader||fault.trace)assert.ok(containers.every(c=>!c.State.Running));if(fault.native14){assert.deepEqual(p.env,{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'});assert.ok(containers.every(c=>!c.State.Running))}
@@ -110,8 +120,8 @@ function fixture(fault={}){
  const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,sourceConfigurationProof,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
  return {plan,ops,calls,events,configs,actualFiles,files,containers,transport:t,sourceConfigurationProof,updates,run:()=>runHostRelease({plan,ops,onProgress})}
 }
-async function failedImageRelease(partial=false){
- const f=fixture({image54:true})
+async function failedImageRelease(partial=false,runtimePatch=false){
+ const f=fixture({image54:true,runtimePatch})
  if(partial)f.ops.verifyHealthy=async()=>{throw Error('synthetic target readiness failure')}
  else {const state=f.ops.state;f.ops.state=async()=>{const s=await state();return f.containers.every(c=>!c.State.Running)?{...s,liveWork:1}:s}}
  await assert.rejects(f.run())
@@ -119,8 +129,8 @@ async function failedImageRelease(partial=false){
  const restore=()=>restoreImageSource({plan:f.plan,receipt,ops:createHostReleaseOperations({plan:f.plan,files:f.files,sourceConfigurationProof:f.sourceConfigurationProof,transport:f.transport,wait:async()=>{}})})
  return {...f,receipt,restore}
 }
-for(const partial of [false,true])test(`same54 source restoration handles ${partial?'partial target rollout':'all-stopped lease expiry'} with no migration or repeated stop`,async()=>{
- const f=await failedImageRelease(partial),offset=f.calls.length
+for(const [partial,runtimePatch] of [[false,false],[true,false],[false,true]])test(`${runtimePatch?'runtime patch':'same54'} source restoration handles ${partial?'partial target rollout':'all-stopped lease expiry'} with no migration or repeated stop`,async()=>{
+ const f=await failedImageRelease(partial,runtimePatch),offset=f.calls.length
  if(partial){const target=f.containers.find(c=>c.Config.Image===IMAGE+f.plan.target.sha);target.RestartCount=2;target.State.Restarting=true;target.State.Health.Status='unhealthy'}
  const result=await f.restore();assert.equal(result.status,'complete');assert.equal(result.restoredSource,f.plan.source.sha)
  const calls=f.calls.slice(offset)
@@ -299,3 +309,17 @@ test('presentation adapter stops before old readers on metadata drift and never 
  const bad=fixture({presentation:true,traceMetadataWrong:true});await assert.rejects(bad.run());assert.equal(bad.calls.some(c=>c.op==='StopStack'||c.op==='DeployStack'),false);
  const unknown=fixture({presentation:true,migrationUnknown:true});await assert.rejects(unknown.run(),e=>e.uncertain);assert.match(JSON.stringify(unknown.calls.at(-1).command),/migrate-bin/);assert.equal(unknown.calls.some(c=>c.op==='DeployStack'),false);
 });
+
+
+test('runtime patch native adapter uses only verified provenance module with no migration or injected env',async()=>{
+ const f=fixture({runtimePatch:true});await f.run();
+ const patches=f.calls.filter(c=>c.op==='RunStackService'&&JSON.stringify(c).includes('applyPublishedRuntimePatch'));assert.equal(patches.length,1)
+ assert.equal(f.calls.some(c=>JSON.stringify(c).includes('migrate-bin')),false)
+ assert.equal(f.calls.filter(c=>c.op==='DeployStack').length,4)
+})
+test('runtime patch precheck refusal keeps services running, unknown CAS is never replayed',async()=>{
+ const bound=fixture({runtimePatch:true,bound:true});await assert.rejects(bound.run());assert.equal(bound.calls.some(c=>c.op==='StopStack'),false)
+ const unknown=fixture({runtimePatch:true,patchUnknown:true});await assert.rejects(unknown.run(),e=>e.uncertain)
+ assert.equal(unknown.calls.filter(c=>c.op==='RunStackService'&&JSON.stringify(c).includes('applyPublishedRuntimePatch')).length,1)
+ assert.equal(unknown.calls.some(c=>c.op==='DeployStack'),false)
+})

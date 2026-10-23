@@ -19,7 +19,7 @@ export function releasePinPayload(stackId,commit) {
  return {id:stackId,config:{commit}}
 }
 export function parseMarker(update,name) {
- check(['STATE','METADATA','MIGRATED'].includes(name)&&update?.status==='Complete'&&update.success===true,'Unsuccessful receipt')
+ check(['STATE','METADATA','MIGRATED','PATCH_READ','PATCHED'].includes(name)&&update?.status==='Complete'&&update.success===true,'Unsuccessful receipt')
  const prefix=`SCHEMA_UPGRADE_${name}=`,lines=(update.logs??[]).flatMap(x=>typeof x.stdout==='string'?x.stdout.split(/\r?\n/):[]).filter(x=>x.startsWith(prefix))
  check(lines.length===1&&lines[0].length<=100000,'Missing or ambiguous receipt marker')
  try{return JSON.parse(lines[0].slice(prefix.length))}catch{throw Error('Invalid receipt JSON')}

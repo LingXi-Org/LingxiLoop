@@ -5,15 +5,16 @@ import {readFile,writeFile} from 'node:fs/promises'
 import {isAbsolute,resolve} from 'node:path'
 import {pathToFileURL} from 'node:url'
 import {APPS,check,hash,metadataKeys,validateHostPlan,validateHostPlanShape,assertCompatibleState,assertWorkerBarrier} from './host-release.mjs'
-import {SAME54_FORMAT,assertPublicTextMetadata} from './public-text-release.mjs'
+import {SAME54_FORMAT,RUNTIME_PATCH_FORMAT,assertPublicTextMetadata} from './public-text-release.mjs'
 import {waitForWorkerLeaseExpiry} from './host-release-lease-wait.mjs'
 const hex=/^[a-f0-9]{64}$/,id=/^[a-f0-9]{24}$/
 const key=r=>r.stack+':'+r.service,select=(v,keys)=>Object.fromEntries(keys.map(k=>[k,v?.[k]]))
 export function assertImageFailure(plan,receipt){
- check(plan.format===SAME54_FORMAT&&receipt?.mode===plan.format&&receipt.planHash===plan.planHash&&receipt.complete===false,'Wrong image-only failure receipt')
+ check([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)&&receipt?.mode===plan.format&&receipt.planHash===plan.planHash&&receipt.complete===false,'Wrong image-only failure receipt')
  const events=receipt.events,last=events?.at(-1)
  check(Array.isArray(events)&&last?.phase==='stopped'&&last.status==='failed'&&last.noAutomaticRetry===true,'Failure must be known, terminal and unreplayed')
  check(!events.some(e=>e.status==='uncertain'||['migration','backup','complete','source-restoration'].includes(e.phase)),'Unresolved operation or incompatible receipt')
+ if(plan.format===RUNTIME_PATCH_FORMAT)check(last.recovery==='source-unchanged-recovery-requires-review'&&!events.some(e=>e.phase==='provenance'&&e.status==='updated'),'Runtime patch restoration requires known unchanged source provenance');
  const preflight=events.filter(e=>e.phase==='preflight'&&e.status==='verified')
  check(preflight.length===1&&preflight[0].original?.length===4,'Original source evidence missing')
  const original=preflight[0].original
