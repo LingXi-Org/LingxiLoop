@@ -34,6 +34,8 @@ test('real provider activates and delivers a synthetic interactive diagram witho
   assert.equal(new URL(env.OPENAI_BASE_URL).hostname, 'api.siliconflow.cn')
   assert.ok(process.env.ISSUE342_RUNTIME_VERSION, 'Require the exact candidate runtime version')
   assert.equal(releaseVersions.runtime, process.env.ISSUE342_RUNTIME_VERSION)
+  const qualificationType = process.env.ISSUE366_QUALIFICATION_TYPE ?? 'formal'
+  assert.ok(qualificationType === 'formal' || qualificationType === 'development', 'Declare the actual package qualification type')
   const [major, minor, patch] = releaseVersions.runtime.split('.').map(Number)
   assert.ok(major > 3 || major === 3 && (minor > 8 || minor === 8 && patch >= 7), 'Stable answer sources require runtime 3.8.7 or newer')
   const model = runtimeModelConfiguration({ id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL }, 30000)
@@ -53,7 +55,7 @@ test('real provider activates and delivers a synthetic interactive diagram witho
   assert.ok(outputRelative && outputRelative !== '..' && !outputRelative.startsWith('../') && !isAbsolute(outputRelative),
     'The official browser output must be inside this project; fail before provider execution')
   await mkdir(output, { recursive: true })
-  const report: Record<string, unknown> = { status: 'running', runtime: releaseVersions.runtime, publicText: releaseVersions.publicText, syntheticRequest: true,
+  const report: Record<string, unknown> = { status: 'running', qualificationType, runtime: releaseVersions.runtime, publicText: releaseVersions.publicText, syntheticRequest: true,
     productionOperations: 0, realProvider: true, semanticReview: 'selective', originalCaseVerified: false }
   // Real model calls remain on their existing provider. Knowledge fixtures stay
   // local, with enabled sources so a zero-search result is not empty coverage.

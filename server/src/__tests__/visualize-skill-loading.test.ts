@@ -4,7 +4,7 @@ import { assembleHarness, buildPromptContext, skillIndex, type SkillDefinition, 
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { selectedSkillRules } from '../agent-runtime/skill-context.js'
 import { createProductHarness, productSkills } from '../agent-runtime/harness.js'
-import { visualizeHostInstructions, visualizeSkill } from '../agent-runtime/visualize-skill.js'
+import { visualizeHostInstructions, visualizeSkill, visualizeSkillAdaptations } from '../agent-runtime/visualize-skill.js'
 import { visualizeTools } from '../agent-runtime/visualize-tools.js'
 
 // Failure model: docs/evidence/feedback-272/FAILURE-MODEL.md (written first).
@@ -93,6 +93,37 @@ test('duplicate literal readback is conditional on visible current original and 
   assert.notEqual(createProductHarness(tools).version, '3.8.6-on-demand-evidence-1')
 })
 
+// Failure model: docs/evidence/issue-366/EARLY-ANSWER-PROMPT-FAILURE-MODEL.md.
+test('initial and selected visualization guidance use the declared answer channel without an extra preamble turn', () => {
+  const selected = context(), initial = context(undefined, false)
+  const previous = buildPromptContext(selected, policy, 0)
+  const restored = buildPromptContext({ ...selected, promptContextCandidate: previous }, policy, 2)
+  for (const instructions of [buildPromptContext(initial, policy, 0).systemInstructions, previous.systemInstructions, restored.systemInstructions]) {
+    assert.match(instructions, /declared public `answer` field/)
+    assert.match(instructions, /same response as a necessary native tool call/)
+    assert.match(instructions, /outcome:null/)
+    assert.match(instructions, /Do not add a separate preamble turn/)
+    assert.match(instructions, /do not repeat already delivered answer text/)
+    assert.match(instructions, /Do not claim a future tool result/)
+    assert.match(instructions, /Plain companion prose.*not.*public answer/)
+    assert.match(instructions, /When the request or trusted workflow restricts the answer to supplied facts, use only supplied facts and verified tool results/)
+    assert.match(instructions, /Otherwise established general knowledge remains available without mandatory retrieval/)
+    assert.match(instructions, /label any necessary inference/)
+    assert.match(instructions, /Do not add unsolicited review invitations or assign work to yourself/)
+    assert.match(instructions, /Native lifecycle events already show tool activity/)
+    assert.match(instructions, /do not report each tool separately/)
+    assert.doesNotMatch(instructions, /streaming in ordinary response text/)
+    assert.equal(instructions.split('Do not add a separate preamble turn').length, 2, 'Complete channel guidance occurs once')
+  }
+  for (const instructions of [visualizeHostInstructions('/authorized/output'), visualizeSkillAdaptations]) {
+    assert.match(instructions, /native declared public `answer` field contract/)
+    assert.doesNotMatch(instructions, /streaming in ordinary response text/)
+    assert.doesNotMatch(instructions, /Do not add a separate preamble turn/)
+  }
+  assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-readback-2')
+  assert.notEqual(createProductHarness(tools).version, '3.8.6-conditional-readback-2')
+})
+
 test('body and version independently invalidate the compiled full-skill identity', () => {
   const before = buildPromptContext(context(), policy, 0)
   for (const next of [{ ...visualizeSkill, version: 'next' }, { ...visualizeSkill, body: visualizeSkill.body + '\nChanged fixture constraint.' }]) {
@@ -104,6 +135,17 @@ test('body and version independently invalidate the compiled full-skill identity
     assert.ok(after.systemInstructions.includes(next.body))
     assert.ok(after.systemInstructions.includes(skillIndex(next).hash))
   }
+})
+
+test('selected public progress skill keeps plan identity while using native answer framing', () => {
+  const skill = productSkills.find(item => item.name === 'public-task-progress')!
+  assert.match(skill.body, /declared public `answer` field/)
+  assert.match(skill.body, /native response framing/)
+  assert.doesNotMatch(skill.body, /ordinary answer/)
+  assert.match(skill.body, /preserve each public item id/)
+  assert.match(skill.body, /stable step ids and activeIndex/)
+  assert.match(skill.body, /meaningful transitions/)
+  assert.notEqual(skill.version, '1')
 })
 
 test('long skills preserve the last constraint and reject over-budget or empty bodies instead of truncating', () => {
