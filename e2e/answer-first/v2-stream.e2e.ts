@@ -63,6 +63,7 @@ test('real superseded candidate leaves the main answer and correction receives a
   expect(await browser.evaluate(() => Reflect.get(window, '__oldPart') === document.querySelector('[data-message-region="body"]')?.firstElementChild)).toBe(false)
   await expect(browser.locator('[data-message-region="body"]')).not.toContainText('交换机按处理的网络层区分。')
   await browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > button').tap()
-  await expect(browser.locator('[data-slot="run-activity"]')).toContainText('交换机按处理的网络层区分。')
+  await expect(browser.locator('[data-slot="answer-revision"] summary')).toHaveText('已替换的答复草稿')
+  await expect(browser.locator('[data-slot="answer-revision"] .im-markdown')).not.toBeVisible()
   await app.screenshot('answer-first-real-v2-corrected-candidate')
 })
