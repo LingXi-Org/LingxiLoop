@@ -117,7 +117,8 @@ const planEvents = (call: string, seq: number, activeIndex: number, identity = {
   { ...start(call,seq,'chat.report_progress'),data: { ...start(call,seq,'chat.report_progress').data,...identity } },
   { ...finish(call,seq+1,planReport(activeIndex,id)),data: { ...finish(call,seq+1,planReport(activeIndex,id)).data,...identity } },
 ]
-const planParts = <T extends { type: string }>(parts: readonly T[]) => parts.filter((part): part is Extract<T, { type: 'generative-ui' }> => part.type === 'generative-ui')
+const planParts = (parts: readonly { readonly type: string }[]) =>
+  parts.filter((part): part is { type: 'generative-ui'; spec: unknown } => part.type === 'generative-ui' && 'spec' in part)
 const planIndex = (part: { spec: unknown }) => (part.spec as { root: { props: { activeIndex: number } } }).root.props.activeIndex
 
 test('one plan updates across model calls and recovered fences at its original position', () => {
