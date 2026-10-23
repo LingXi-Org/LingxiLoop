@@ -13,7 +13,7 @@ for (const width of [1280, 390]) {
     const path = resolve(process.env.E2E_REACT_DELIVERY_ARTIFACT ?? 'artifacts/react-delivery-366/snapshots.json')
     const evidence = JSON.parse(readFileSync(path, 'utf8')) as ReactDeliveryEvidence
     expect(evidence.version).toBe(1)
-    expect(evidence.provenance.producer).toBe('synthetic-scripted-provider')
+    expect(evidence.provenance.producer).toBe('native-event-projection-fixture')
     expect(evidence.provenance.commit).toMatch(/^[a-f0-9]{40}$/u)
     const observations: unknown[] = []
     await browser.setViewport({ width, height: 900 })
@@ -28,7 +28,7 @@ for (const width of [1280, 390]) {
         const required = ['answer-a', 'first-tool-held', 'commentary', 'second-tool-held', 'answer-b', 'final']
         const indices = required.map(checkpoint => scenario.frames.findIndex(frame => frame.checkpoint === checkpoint))
         expect(indices.every((index, position) => index >= 0 && (position === 0 || index > indices[position - 1]!)),
-          'The append scenario must include both actual held-tool boundaries in order').toBe(true)
+          'The append scenario must include both projected held-tool states in order').toBe(true)
       }
       await app.open('/e2e/react-delivery/index.html')
       await expect(browser.locator('input')).toHaveCount(1)
@@ -130,7 +130,8 @@ for (const width of [1280, 390]) {
       await app.screenshot(`react-${name}-${width}-live`)
 
       // Start with an empty client and read the independent canonical history
-      // through the normal authorized read endpoint, not the final live frame.
+      // through the normal read client with a synthetic HTTP response, not the
+      // final streamed frame. This does not independently prove authorization.
       await browser.evaluate(async frames => { await window.reactDelivery!.reset(); await window.reactDelivery!.restore(frames) }, scenario.history)
       const restored = await browser.evaluate(() => [...document.querySelectorAll<HTMLElement>('[data-react-message]')].map(region => ({
         id: region.dataset.reactMessage!, text: [...region.querySelectorAll<HTMLElement>('[data-agent-body]')].map(body => body.textContent ?? '').join('\n'),
@@ -141,7 +142,7 @@ for (const width of [1280, 390]) {
     const output = resolve('.e2e/react-delivery')
     mkdirSync(output, { recursive: true })
     writeFileSync(resolve(output, `observations-${width}.json`), JSON.stringify({
-      qualification: 'synthetic projection replay; browser DOM observations, not provider TTFT or production timings',
+      qualification: 'native-event projection fixture replay; browser DOM observations only, no ModelDriver/provider execution or authorization qualification, not provider TTFT or production timings',
       source: evidence.provenance, width, observations,
     }, null, 2))
   })

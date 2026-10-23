@@ -51,6 +51,11 @@ for a test to forge a trusted seal or final receipt.
 3. Record actual product `AgentRunSnapshot` frames and an independently loaded
    historical snapshot. Replay them through the real transport decoder, store
    reconciliation, assistant-ui message rendering and RunActivity components.
+   The initial product producer is `native-event-projection-fixture`: it feeds
+   synthetic events into `RunStreamProjection` and `assistantRunResponse`, not a
+   ModelDriver/provider run. Its browser result proves the projection/transport/UI
+   boundary only. The OS runtime execution and durable tests supply separate
+   evidence for steps 1–2; do not label the product artifact a provider trace.
 4. Official `@e2e-dev/web` checks both desktop and narrow layout, reconnect and
    history convergence. Record each failed attempt; no automatic provider rerun.
 5. Run only affected checks and exact-candidate CI. A browser-only simulation is

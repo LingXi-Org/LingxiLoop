@@ -6,16 +6,20 @@ integration and production publisher. The failure inventory is
 
 ## Synthetic fixtures
 
-The server fixture exports actual authorized product snapshots at named gates:
+The product fixture passes synthetic native events through the actual
+`RunStreamProjection` and `assistantRunResponse` implementations, exporting
+product snapshots with producer `native-event-projection-fixture`. It does not
+execute a ModelDriver, provider, tool or durable result transaction. Checkpoints:
 `answer-a`, `first-tool-held`, `commentary`, `second-tool-held`, `answer-b`, and
 `final`. A and B are short distinct factual explanations from supplied synthetic
-facts. Commentary and private-data canaries have unique strings. The tool gates
-remain held until the observer confirms the preceding visible state.
+facts. Commentary and private-data canaries have unique strings. The projected
+tool states let the browser observe A before B; actual runtime/tool gating is
+tested separately by the OS scripted-provider suite.
 
 The browser consumer does not invent a new protocol or a successful receipt. It
-uses the actual output produced by the server fixture, replayed through the
+uses the actual output produced by the product projection fixture, replayed through the
 normal HTTP transport/decoder/store, and checks ordinary answer visibility after
-each gate. It also opens independently fetched final history and compares that
+each checkpoint. It also opens independently loaded fixture history and compares that
 rendering to the last live frame. No expectation is derived from the product's
 actual output; the scenario's authored expected text and identities are separate.
 
@@ -30,10 +34,11 @@ Required replay cases:
 - Real failed/unknown/cancelled activity stays visible with the correct status;
   process text and private canaries never become substantive answer text.
 
-The runtime owner supplies public durable tests for null finalization, seal
+The runtime owner supplies scripted-provider execution and public durable tests for null finalization, seal
 integrity, old-fence recovery/new-write rejection, cancellation before dispatch,
 unknown-effect reconciliation and final assembled-body validation. These do not
-become browser-only assertions.
+become browser-only assertions. Projection replay cannot stand in for runtime
+execution, authorization or tool side-effect validation.
 
 ## Performance and real-provider qualification
 
@@ -66,7 +71,7 @@ The runtime uses the actual public `messagesStateReducer` from
 `@langchain/core@1.3.0`. Its source/commit/license/function map is maintained in
 LingxiOS `docs/react-harness-reuse.md`; the OS owner retains upstream
 append/update/remove/order and chunk/tool-delta regressions. The product browser
-fixture consumes the real authorized projections and does not implement another
+fixture consumes these native-event projections and does not implement another
 identity reducer. Its independent cases cover append retention, successful and
 failed replacement, cancellation, stale/reconnected streams and equal text in
 different runs. The OS recovery suite separately checks sealed provenance,

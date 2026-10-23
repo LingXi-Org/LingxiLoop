@@ -1,7 +1,7 @@
 import type { AgentRunSnapshot } from '../../src/lib/agentRunSnapshot'
 import type { AgentRunTarget } from '../../src/features/chat/runtime/harness-api'
 
-/** Synthetic integration output; this is not a runtime wire protocol. */
+/** Product projection of synthetic native events; not runtime/provider execution. */
 export interface ReactDeliveryFrame {
   checkpoint: string
   target: AgentRunTarget
@@ -12,13 +12,13 @@ export interface ReactDeliveryScenario {
   name: string
   targets: AgentRunTarget[]
   frames: ReactDeliveryFrame[]
-  /** Independently reloaded by the owning integration after the live run. */
+  /** Independently reloaded from the owning native-event fixture's final state. */
   history: Omit<ReactDeliveryFrame, 'checkpoint'>[]
 }
 
 export interface ReactDeliveryEvidence {
   version: 1
-  provenance: { producer: 'synthetic-scripted-provider'; commit: string }
+  provenance: { producer: 'native-event-projection-fixture'; commit: string }
   scenarios: ReactDeliveryScenario[]
 }
 
