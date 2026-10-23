@@ -16,3 +16,9 @@ No runtime dependency, event ledger, usage accounting, task execution, permissio
 - The earlier browser attempt failed before product assertions when concurrent compilation terminated Vite esbuild (`The service is no longer running`). The serial passing run above resolves that local environment blocker; it does not claim a production reproduction or production acceptance.
 
 To capture frames, run the owning projection tests with `TASK_PLAN_SNAPSHOTS=.e2e/issue354-plans.json` and the existing synthetic server test environment. Serve `e2e/vite.react-activity.config.ts` on a free loopback port. Then run the official engine with `E2E_BASE_URL` and `TASK_PLAN_SNAPSHOTS`, selecting `e2e/web/task-plan-identity.e2e.ts`. The browser checks 0/4 → 1/4 → 4/4 in one stable card, stale replay, history reload, cancellation at 1/4, and 390 px layout.
+
+## Combined release follow-up
+
+The combined release check found three type errors in the browser fixture itself. The fixture now uses the official `JsonValue` input type and explicit `null` for a missing DOM attribute. It also requires a real string identity before comparing updates, so absent attributes cannot pass by comparing equal missing values. Independent delta review found no P1/P2.
+
+The strengthened official browser case passed **1/1** on the combined five-fix tree, run `01a1693c-30a9-7acd-8fe8-1f58eb7f503d` (13.47 seconds), including the real string identity, progress, stale replay, history and cancellation assertions. The preview server was stopped. Combined Web typecheck passed. Whole-suite E2E typecheck no longer reports these three new errors but still reports the seven existing OpenAI/Zod boundary errors independently reproduced on unmodified main in `docs/evidence/issue-335/README.md`; it is not reported as fully passed.
