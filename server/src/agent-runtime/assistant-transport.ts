@@ -131,7 +131,7 @@ export class RunStreamProjection {
     this.llm = presentation.llm
     this.tools = this.tools.map(tool => {
       const recorded = records.get(tool.toolCallId)
-      return recorded && revisions.get(tool.toolCallId) === tool.eventSeq ? { ...tool, timing: recorded.timing, display: recorded.display } : tool
+      return recorded && revisions.get(tool.toolCallId) === tool.eventSeq ? { ...tool, timing: { ...recorded.timing,...tool.timing }, display: recorded.display } : tool
     })
   }
 

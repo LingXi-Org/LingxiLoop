@@ -1,6 +1,7 @@
 import { useEffect,useId,useMemo,useRef,useState } from 'react'
 import { BotIcon,ChevronRightIcon,Clock3Icon,DatabaseIcon,GitBranchIcon,SparklesIcon,WrenchIcon } from 'lucide-react'
 import type { RunTrace,TraceSpan } from '@/lib/runTrace'
+import { workKindLabels } from '@/lib/runTrace'
 import { cn } from '@/lib/utils'
 import { TimelineRowMetrics } from './TimelineRowMetrics'
 
@@ -13,6 +14,14 @@ const kindLabels = { agent: 'Agent',llm: 'LLM',embedding: 'Embedding',tool: 'Too
 const icons = { agent: BotIcon,llm: SparklesIcon,embedding: DatabaseIcon,tool: WrenchIcon }
 const hues = { agent: 'bg-indigo-400 dark:bg-indigo-400',llm: 'bg-sky-400 dark:bg-sky-400',embedding: 'bg-violet-400 dark:bg-violet-400',tool: 'bg-teal-400 dark:bg-teal-400' }
 function flatten(span: TraceSpan): TraceSpan[] { return [span,...span.children.flatMap(flatten)] }
+type WorkFilter = 'all'|'model'|'tool'|'skill'|'retrieval'|'subtask'
+const workGroup = (span: TraceSpan) => span.kind === 'llm' || span.kind === 'embedding' ? 'model'
+  : span.workKind ?? (span.kind === 'tool' ? 'tool' : 'run')
+function filterTree(span: TraceSpan,filter: WorkFilter): TraceSpan|null {
+  if (filter === 'all' || workGroup(span) === filter) return span
+  const children = span.children.flatMap(child=>{ const visible = filterTree(child,filter);return visible ? [visible] : [] })
+  return children.length ? { ...span,children } : null
+}
 const rowColumns = 'grid grid-cols-[minmax(0,40%)_minmax(0,1fr)_4.5rem]'
 
 /** Local composition around Langfuse's MIT bar metrics. No external requests. */
@@ -21,6 +30,7 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
 }) {
   const titleId = useId(),detailId = useId()
   const [collapsed,setCollapsed] = useState<ReadonlySet<string>>(() => new Set())
+  const [workFilter,setWorkFilter] = useState<WorkFilter>('all')
   const [localSelectedId,setLocalSelectedId] = useState<string|null>(null)
   const selectedId = selectedSpanId === undefined ? localSelectedId : selectedSpanId
   const setSelectedId = (id: string) => onSelectedSpanChange ? onSelectedSpanChange(id) : setLocalSelectedId(id)
@@ -46,6 +56,11 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
     return () => observer.disconnect()
   },[])
   const all = useMemo(() => flatten(trace.root),[trace.root])
+  const visibleRoot = useMemo(()=>filterTree(trace.root,workFilter),[trace.root,workFilter])
+  const filters: { id: WorkFilter; label: string; count: number }[] = [
+    { id: 'all',label: '全部',count: all.length },{ id: 'model',label: '模型',count: all.filter(span=>workGroup(span) === 'model').length },
+    ...(['tool','skill','retrieval','subtask'] as const).map(id=>({ id,label: workKindLabels[id],count: all.filter(span=>workGroup(span) === id).length })),
+  ]
   const selected = all.find(span => span.id === selectedId)
   // Only an explicit task inspection changes expansion/focus. Normal trace
   // refreshes keep the user's open state and scroll position.
@@ -89,7 +104,7 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
     const x = known ? Math.min(laneWidth,Math.max(0,span.start!/maxEnd*laneWidth)) : 0
     const width = known ? Math.min(laneWidth-x,Math.max(1,(end!-span.start!)/maxEnd*laneWidth)) : 0
     const duration = span.durationMs ?? (known ? end!-span.start! : null)
-    return <li key={span.id} data-trace-span-id={span.id} data-trace-kind={span.kind} data-trace-status={span.status}>
+    return <li key={span.id} data-trace-span-id={span.id} data-trace-kind={span.kind} data-trace-status={span.status} data-trace-work-kind={span.workKind}>
       <div data-trace-row className={cn(rowColumns,'items-center rounded-sm transition-colors duration-150 motion-reduce:transition-none hover:bg-muted/50',
         selected?.id === span.id && 'bg-muted/70')}>
         <div className="relative flex min-w-0 items-center gap-1 py-2 pe-2" style={{paddingInlineStart: Math.min(depth,6)*12+4}}>
@@ -133,16 +148,25 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
       <span>输入 {tokens(trace.root.tokensIn)}</span><span>输出 {tokens(trace.root.tokensOut)}</span><span>{cost(trace.root)}</span>
       <span className="ms-auto">{all.length} 个步骤</span>
     </div>
+    <div role="group" aria-label="筛选工作阶段" className="flex flex-wrap gap-1 px-3 pb-2">
+      {filters.filter(filter=>filter.count || filter.id === 'all').map(filter=><button key={filter.id} type="button"
+        aria-pressed={workFilter === filter.id} onClick={()=>setWorkFilter(filter.id)}
+        className={cn('rounded border px-2 py-1 text-[11px] tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          workFilter === filter.id ? 'border-primary/40 bg-primary/10 text-foreground' : 'border-border/60 text-muted-foreground hover:text-foreground')}>
+        {filter.label} {filter.count}
+      </button>)}
+    </div>
     <div ref={viewport} data-trace-viewport className="max-h-80 overflow-y-auto [scrollbar-gutter:stable]">
       <div className={cn(rowColumns,'bg-background text-muted-foreground sticky top-0 z-10 border-y border-border/40 px-2 py-1 text-[10px]')}>
         <span className="ps-1">步骤</span><div ref={rail} data-trace-axis={hasTimeline ? '' : undefined} data-trace-axis-end={hasTimeline ? maxEnd : undefined} className="relative flex min-w-0 justify-between whitespace-nowrap font-mono tabular-nums">{hasTimeline && <><span>0 ms</span><span>{ms(maxEnd)}</span></>}</div>
         <span className="pe-1 text-end">耗时 / 费用</span>
       </div>
-      <ol className="m-0 px-2 py-1">{row(trace.root,0)}</ol>
+      <ol className="m-0 px-2 py-1">{visibleRoot && row(visibleRoot,0)}</ol>
+      {!visibleRoot && <p className="text-muted-foreground px-3 py-2 text-xs">当前没有这类工作记录。</p>}
     </div>
     <div id={detailId} className="border-t border-border/50 px-3 py-3 text-xs">
       {selected ? <div className="grid gap-2">
-        <div className="flex flex-wrap justify-between gap-1"><h4 className="font-medium">{selected.name}</h4><span className="text-muted-foreground">{kindLabels[selected.kind]} · {labels[selected.status]}</span></div>
+        <div className="flex flex-wrap justify-between gap-1"><h4 className="font-medium">{selected.name}</h4><span className="text-muted-foreground">{selected.workKind ? workKindLabels[selected.workKind] : kindLabels[selected.kind]} · {labels[selected.status]}</span></div>
         {selected.model && <p className="text-muted-foreground break-all">{selected.model}</p>}
         <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground tabular-nums">
           <div><dt className="block">开始</dt><dd>{endpoint(selected.start,'start')}</dd></div><div><dt className="block">结束</dt><dd>{endpoint(selected.end,'end')}</dd></div>
