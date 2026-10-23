@@ -5,7 +5,7 @@ import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
 import { assertVisualizeCitationSpans, projectVisualizeText } from './visualize-projection.js'
-import { publicActivitySchema, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
+import { publicActivitySchema, answerRevisionLabels, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
 export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; display?: ToolDisplay;
   purpose?: 'process' | 'result'; taskId?: string; activityIdentity?: { requestVersion: number; fence: number; attemptId: string } }
@@ -112,19 +112,19 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
     if (!includeAcceptedPublicText && archivedPublicText(part) && !pendingAccepted) continue
     const kind = publicTextPurpose(part,view,tools)
     if (history && kind === 'answer') continue
-    // Existing v1 readers accept these commentary records during rollout. The
-    // explicit producer-owned namespace marks a revision for new renderers;
-    // neither an extra wire field nor text-based classification is required.
+    // Preserve source identity across supersession so older history pages
+    // reconcile with the live revision. Fixed lifecycle labels distinguish
+    // transcripts within the existing v1 metadata shape.
     const id = archivedPublicText(part) && (history || !pendingAccepted) ? `archive:${publicTextId(part)}`
-      : kind === 'revision' ? `revision:${publicTextId(part)}` : publicTextId(part)
+      : publicTextId(part)
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
     // Public text is an unverified archive, including candidates superseded by
     // repair. Only the delivered answer may activate a renderer reference.
     for (const text of projectVisualizeText(part.text, true)) {
       put(id,part.firstSeq,annotated({ ...text,status },{ id,kind: kind === 'revision' ? 'commentary' : kind,
-        label: kind === 'answer' ? '答复' : kind !== 'revision' ? '公开说明' : part.acceptedResultId ? '已交付答复的原始片段'
-          : part.reason === 'failed' ? '未完成的答复草稿（已替换）' : part.reason === 'cancelled' ? '已取消的答复草稿（已替换）' : '已替换的答复草稿',
+        label: kind === 'answer' ? '答复' : kind !== 'revision' ? '公开说明' : part.acceptedResultId ? answerRevisionLabels.accepted
+          : part.reason === 'failed' ? answerRevisionLabels.failed : part.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.superseded,
         purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }
   }

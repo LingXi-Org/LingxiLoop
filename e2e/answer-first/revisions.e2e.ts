@@ -73,3 +73,30 @@ test('same answer text in distinct messages remains visible in each message', as
   await expect(browser.locator('[data-message-region="body"]').last()).toHaveText('合成答复：交换机转发网络帧。')
   await app.screenshot('answer-revision-same-text-distinct-messages')
 })
+
+test('an in-flight older history page cannot resurrect ordinary draft prose after supersession', async ({ app, browser, screen }) => {
+  const frames = fixtures()
+  const first = JSON.parse(JSON.stringify(frames.first)) as AgentRunSnapshot
+  const replaced = JSON.parse(JSON.stringify(frames.replaced)) as AgentRunSnapshot
+  // Keep the history capability present throughout the request. The delayed
+  // page emulates the previous public projection, which listed the current
+  // candidate as commentary under its original public-text identity.
+  first.message.metadata.custom.activityHistory = { total: 1, attention: 0 }
+  replaced.message.metadata.custom.activityHistory = { total: 3, attention: 1 }
+  const staleMessage = JSON.parse(JSON.stringify(first.message))
+  const source = staleMessage.content.find((part: { type: string }) => part.type === 'text')
+  Object.assign(source.providerMetadata.lingxiloop.activity, { kind: 'commentary', label: '公开说明', purpose: 'process' })
+  await command('reset', { snapshot: first, holdPages: true, pages: { 0: { message: staleMessage, total: 1, nextOffset: null } } })
+  await app.open('/e2e/answer-first.html')
+  await browser.locator('[data-slot="run-activity"] > [data-slot="collapsible"] > button').tap()
+  await expect(browser.locator('[data-slot="run-activity-history"] button').first()).toHaveText('正在加载…')
+  await command('publish', replaced)
+  await expect(browser.locator('[data-slot="answer-revision"]')).toHaveCount(1)
+  await command('release')
+  await expect(browser.locator('[data-slot="run-activity-history"] button').first()).toHaveText('加载更多过程')
+  await expect(browser.locator('[data-slot="run-activity"] [data-native-part="text"]')).toHaveCount(2)
+  await expect(browser.locator('[data-slot="answer-revision"] .im-markdown')).not.toBeVisible()
+  await expect(screen.getByText('正在核对公开资料。', { exact: true })).toBeVisible()
+  await expect(browser.locator('[data-message-region="body"]')).toHaveText('合成答复：交换机转发网络帧。')
+  await app.screenshot('answer-revision-stale-page-does-not-resurrect-prose')
+})

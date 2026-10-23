@@ -133,6 +133,7 @@ for (const outcome of ['complete','cancelled','revoked','unsafe','final-stream']
       assert.ok(calls >= 2,'the unsafe candidate must be replaced by a later successful response')
       assert.equal(retained.length,1,'the replaced safe prefix belongs in RunActivity')
       assert.equal(activityAnnotation(retained[0])?.id,activityAnnotation(published[0])?.id)
+      assert.equal(activityAnnotation(retained[0])?.label,'已替换的答复草稿')
       const publishedId = activityAnnotation(published[0])?.id
       assert.ok(publishedId)
       const history = replayProjection.activityPage(0)

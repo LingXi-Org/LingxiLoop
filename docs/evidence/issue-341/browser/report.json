@@ -1,7 +1,7 @@
 {
   "schemaVersion": "report-1",
   "run": {
-    "id": "01a1681f-d5d2-7bd5-876b-9198b8d81075",
+    "id": "01a1682a-806b-721e-bde6-5cc7d7a83f31",
     "specVersion": "0.1",
     "runner": {
       "name": "e2e",
@@ -9,8 +9,8 @@
     },
     "status": "passed",
     "exitCode": 0,
-    "startedAt": "2026-10-23T09:38:01.880Z",
-    "finishedAt": "2026-10-23T09:39:12.356Z",
+    "startedAt": "2026-10-23T09:49:41.661Z",
+    "finishedAt": "2026-10-23T09:51:19.923Z",
     "project": {
       "id": "lingxiloop-answer-first",
       "configDigest": "a2a72288ee1ba06ad6589230678399ee6a02bc1db6fcae5f504ec6c993043d83"
@@ -23,7 +23,7 @@
       "runtime": "node v24.19.0"
     },
     "vcs": {
-      "commit": "29be24f575dd4c5231ab8595879dc59db5715d25",
+      "commit": "0dd3f13eb3f357672fbbc2efae89a65e055f0a4d",
       "branch": "fix/341-answer-revision-projection",
       "dirty": true
     },
@@ -325,51 +325,51 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3",
+            "id": "01a1682a-d52f-796d-bf21-e79377d3064c",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:38:09.227Z",
-            "durationMs": 33151,
+            "startedAt": "2026-10-23T09:49:59.986Z",
+            "durationMs": 33554,
             "artifacts": [
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:artifact:0",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a1681f-fccb-72da-b963-7836d4f2b6d3:12"
+                  "stepId": "01a1682a-d52f-796d-bf21-e79377d3064c:12"
                 },
                 "path": "desktop/e2e_answer-first_revisions.e2e.ts__answer_20replacement_20has_20a_20collapsed_20audit_20transcript_20while_20re-d04d6743/default/attempt-0/screenshots/001-answer-revision-collapsed-with-real-failure.png",
-                "size": 36223,
-                "sha256": "39f30102b2d356af551dbdc5733bc7527615a2705d603a86195a6267f7ea9c8e"
+                "size": 36203,
+                "sha256": "c6d8138e6fae3e0d56e0982ddeb03c74aac030320c9a05fe2969d2efef48d708"
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:artifact:1",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:artifact:1",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a1681f-fccb-72da-b963-7836d4f2b6d3:29"
+                  "stepId": "01a1682a-d52f-796d-bf21-e79377d3064c:29"
                 },
                 "path": "desktop/e2e_answer-first_revisions.e2e.ts__answer_20replacement_20has_20a_20collapsed_20audit_20transcript_20while_20re-d04d6743/default/attempt-0/screenshots/002-answer-revision-committed-reconnect.png",
-                "size": 41010,
-                "sha256": "2d0ef2a7dc87068a8ecb71346e57698e8abc6fcb6fa2db246ab22dc8ca488995"
+                "size": 41005,
+                "sha256": "13a15bb1bf3b64b6b73eabd30ee50e03a4a69c3a9a7c25f77ed832c46ab44adf"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:0",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:09.908Z",
-                "durationMs": 7259,
+                "startedAt": "2026-10-23T09:50:00.909Z",
+                "durationMs": 7623,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -379,14 +379,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:1",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:1",
                 "index": 1,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:17.168Z",
-                "durationMs": 685,
+                "startedAt": "2026-10-23T09:50:08.535Z",
+                "durationMs": 524,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -396,14 +396,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:2",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:2",
                 "index": 2,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:17.865Z",
-                "durationMs": 896,
+                "startedAt": "2026-10-23T09:50:09.075Z",
+                "durationMs": 553,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -413,14 +413,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:3",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:3",
                 "index": 3,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:18.773Z",
-                "durationMs": 989,
+                "startedAt": "2026-10-23T09:50:09.630Z",
+                "durationMs": 700,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -430,14 +430,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:4",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:4",
                 "index": 4,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:19.762Z",
-                "durationMs": 103,
+                "startedAt": "2026-10-23T09:50:10.332Z",
+                "durationMs": 124,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -447,14 +447,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:5",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:5",
                 "index": 5,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] summary\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:19.866Z",
-                "durationMs": 47,
+                "startedAt": "2026-10-23T09:50:10.459Z",
+                "durationMs": 185,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -464,14 +464,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:6",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:6",
                 "index": 6,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:19.914Z",
-                "durationMs": 1134,
+                "startedAt": "2026-10-23T09:50:10.645Z",
+                "durationMs": 1169,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -481,14 +481,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:7",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:7",
                 "index": 7,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByText(\"正在核对公开资料。\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:21.050Z",
-                "durationMs": 59,
+                "startedAt": "2026-10-23T09:50:11.816Z",
+                "durationMs": 55,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -498,14 +498,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:8",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:8",
                 "index": 8,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-message-region=\\\"attention\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:21.109Z",
-                "durationMs": 56,
+                "startedAt": "2026-10-23T09:50:11.871Z",
+                "durationMs": 101,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -515,14 +515,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:9",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:9",
                 "index": 9,
                 "kind": "locator",
                 "api": "locator.press",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] summary\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:21.165Z",
-                "durationMs": 178,
+                "startedAt": "2026-10-23T09:50:11.972Z",
+                "durationMs": 249,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -532,14 +532,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:10",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:10",
                 "index": 10,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:21.344Z",
-                "durationMs": 48,
+                "startedAt": "2026-10-23T09:50:12.222Z",
+                "durationMs": 50,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -549,14 +549,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:11",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:11",
                 "index": 11,
                 "kind": "locator",
                 "api": "locator.press",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] summary\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:21.392Z",
-                "durationMs": 308,
+                "startedAt": "2026-10-23T09:50:12.272Z",
+                "durationMs": 188,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -566,17 +566,17 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:12",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:12",
                 "index": 12,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-revision-collapsed-with-real-failure",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:21.700Z",
-                "durationMs": 625,
+                "startedAt": "2026-10-23T09:50:12.462Z",
+                "durationMs": 611,
                 "events": [],
                 "artifacts": [
-                  "01a1681f-fccb-72da-b963-7836d4f2b6d3:artifact:0"
+                  "01a1682a-d52f-796d-bf21-e79377d3064c:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/revisions.e2e.ts",
@@ -585,14 +585,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:13",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:13",
                 "index": 13,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:22.342Z",
-                "durationMs": 330,
+                "startedAt": "2026-10-23T09:50:13.127Z",
+                "durationMs": 243,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -602,14 +602,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:14",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:14",
                 "index": 14,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:22.683Z",
-                "durationMs": 358,
+                "startedAt": "2026-10-23T09:50:13.382Z",
+                "durationMs": 138,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -619,14 +619,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:15",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:15",
                 "index": 15,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:23.048Z",
-                "durationMs": 140,
+                "startedAt": "2026-10-23T09:50:13.540Z",
+                "durationMs": 334,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -636,14 +636,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:16",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:16",
                 "index": 16,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "getByRole(\"button\", name: \"加载更多过程\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:23.191Z",
-                "durationMs": 289,
+                "startedAt": "2026-10-23T09:50:13.875Z",
+                "durationMs": 460,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -653,14 +653,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:17",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:17",
                 "index": 17,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:23.527Z",
-                "durationMs": 129,
+                "startedAt": "2026-10-23T09:50:14.336Z",
+                "durationMs": 20,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -670,14 +670,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:18",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:18",
                 "index": 18,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:23.657Z",
-                "durationMs": 1084,
+                "startedAt": "2026-10-23T09:50:14.356Z",
+                "durationMs": 1026,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -687,14 +687,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:19",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:19",
                 "index": 19,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\").last()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:24.741Z",
-                "durationMs": 1246,
+                "startedAt": "2026-10-23T09:50:15.383Z",
+                "durationMs": 1082,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -704,14 +704,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:20",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:20",
                 "index": 20,
                 "kind": "assertion",
                 "api": "expect.toBeVisible",
                 "label": "getByText(\"正在核对公开资料。\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:25.988Z",
-                "durationMs": 286,
+                "startedAt": "2026-10-23T09:50:16.466Z",
+                "durationMs": 72,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -721,14 +721,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:21",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:21",
                 "index": 21,
                 "kind": "resource",
                 "api": "browser.reload",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:26.276Z",
-                "durationMs": 8859,
+                "startedAt": "2026-10-23T09:50:16.538Z",
+                "durationMs": 8190,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -738,14 +738,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:22",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:22",
                 "index": 22,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:35.135Z",
-                "durationMs": 912,
+                "startedAt": "2026-10-23T09:50:24.730Z",
+                "durationMs": 785,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -755,14 +755,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:23",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:23",
                 "index": 23,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:36.047Z",
-                "durationMs": 790,
+                "startedAt": "2026-10-23T09:50:25.515Z",
+                "durationMs": 2319,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -772,14 +772,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:24",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:24",
                 "index": 24,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:36.838Z",
-                "durationMs": 54,
+                "startedAt": "2026-10-23T09:50:27.867Z",
+                "durationMs": 162,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -789,14 +789,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:25",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:25",
                 "index": 25,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:36.893Z",
-                "durationMs": 1348,
+                "startedAt": "2026-10-23T09:50:28.030Z",
+                "durationMs": 1083,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -806,14 +806,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:26",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:26",
                 "index": 26,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\").last()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:38.242Z",
-                "durationMs": 1084,
+                "startedAt": "2026-10-23T09:50:29.113Z",
+                "durationMs": 1101,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -823,14 +823,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:27",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:27",
                 "index": 27,
                 "kind": "assertion",
                 "api": "expect.toContainText",
                 "label": "locator(\"[data-message-region=\\\"attention\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:39.327Z",
-                "durationMs": 210,
+                "startedAt": "2026-10-23T09:50:30.243Z",
+                "durationMs": 104,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -840,14 +840,14 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:28",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:28",
                 "index": 28,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:39.537Z",
-                "durationMs": 28,
+                "startedAt": "2026-10-23T09:50:30.348Z",
+                "durationMs": 29,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -857,17 +857,17 @@
                 }
               },
               {
-                "id": "01a1681f-fccb-72da-b963-7836d4f2b6d3:29",
+                "id": "01a1682a-d52f-796d-bf21-e79377d3064c:29",
                 "index": 29,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-revision-committed-reconnect",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:39.566Z",
-                "durationMs": 783,
+                "startedAt": "2026-10-23T09:50:30.380Z",
+                "durationMs": 931,
                 "events": [],
                 "artifacts": [
-                  "01a1681f-fccb-72da-b963-7836d4f2b6d3:artifact:1"
+                  "01a1682a-d52f-796d-bf21-e79377d3064c:artifact:1"
                 ],
                 "source": {
                   "file": "e2e/answer-first/revisions.e2e.ts",
@@ -902,38 +902,38 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262",
+            "id": "01a1682b-5851-7597-92bd-c7c68b0c741e",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:38:42.382Z",
-            "durationMs": 9639,
+            "startedAt": "2026-10-23T09:50:33.554Z",
+            "durationMs": 11733,
             "artifacts": [
               {
-                "id": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:artifact:0",
+                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:5"
+                  "stepId": "01a1682b-5851-7597-92bd-c7c68b0c741e:5"
                 },
                 "path": "desktop/e2e_answer-first_revisions.e2e.ts__same_20answer_20text_20in_20distinct_20messages_20remains_20visible_20in_20e-d21889c0/default/attempt-0/screenshots/001-answer-revision-same-text-distinct-messages.png",
-                "size": 31130,
-                "sha256": "1bbce8a311eaf14cf4e207a253630d483cd3fb2dc88dd683f7826263384632f1"
+                "size": 31069,
+                "sha256": "6eccaa4cc9899819ef36266539fb088534fae185a9f69441615fbd50fbcc20ae"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:0",
+                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:42.457Z",
-                "durationMs": 5790,
+                "startedAt": "2026-10-23T09:50:33.769Z",
+                "durationMs": 9170,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -943,14 +943,14 @@
                 }
               },
               {
-                "id": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:1",
+                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:1",
                 "index": 1,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:48.247Z",
-                "durationMs": 878,
+                "startedAt": "2026-10-23T09:50:42.939Z",
+                "durationMs": 414,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -960,14 +960,14 @@
                 }
               },
               {
-                "id": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:2",
+                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:2",
                 "index": 2,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:49.126Z",
-                "durationMs": 846,
+                "startedAt": "2026-10-23T09:50:43.355Z",
+                "durationMs": 503,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -977,14 +977,14 @@
                 }
               },
               {
-                "id": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:3",
+                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\").first()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:49.973Z",
-                "durationMs": 345,
+                "startedAt": "2026-10-23T09:50:43.861Z",
+                "durationMs": 104,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -994,14 +994,14 @@
                 }
               },
               {
-                "id": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:4",
+                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:4",
                 "index": 4,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\").last()",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:50.320Z",
-                "durationMs": 535,
+                "startedAt": "2026-10-23T09:50:43.967Z",
+                "durationMs": 64,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1011,21 +1011,243 @@
                 }
               },
               {
-                "id": "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:5",
+                "id": "01a1682b-5851-7597-92bd-c7c68b0c741e:5",
                 "index": 5,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-revision-same-text-distinct-messages",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:50.855Z",
-                "durationMs": 970,
+                "startedAt": "2026-10-23T09:50:44.032Z",
+                "durationMs": 978,
                 "events": [],
                 "artifacts": [
-                  "01a16820-7e4e-7ef2-9c1a-47d9bd7f1262:artifact:0"
+                  "01a1682b-5851-7597-92bd-c7c68b0c741e:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/revisions.e2e.ts",
                   "line": 74,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "9cc959fadc9aeb3bf4db993830175e490d5725bd2f3ba19ae008443da96292ec",
+        "testId": "e2e/answer-first/revisions.e2e.ts::an%20in-flight%20older%20history%20page%20cannot%20resurrect%20ordinary%20draft%20prose%20after%20supersession",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "an in-flight older history page cannot resurrect ordinary draft prose after supersession"
+        ],
+        "file": "e2e/answer-first/revisions.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/revisions.e2e.ts",
+          "line": 77,
+          "column": 1
+        },
+        "targetId": "desktop",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-23T09:50:45.288Z",
+            "durationMs": 12093,
+            "artifacts": [
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:9"
+                },
+                "path": "desktop/e2e_answer-first_revisions.e2e.ts__an_20in-flight_20older_20history_20page_20cannot_20resurrect_20ordinary_20dr-a01d97d3/default/attempt-0/screenshots/001-answer-revision-stale-page-does-not-resurrect-prose.png",
+                "size": 38305,
+                "sha256": "489f45566a0f3cc0235294298f80149dffbd853372150987f63ff3f2bc54afc9"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:45.390Z",
+                "durationMs": 7661,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 90,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:1",
+                "index": 1,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:53.069Z",
+                "durationMs": 1376,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 91,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"] button\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:54.446Z",
+                "durationMs": 78,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 92,
+                  "column": 86
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"answer-revision\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:54.541Z",
+                "durationMs": 573,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 94,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-slot=\\\"run-activity-history\\\"] button\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:55.120Z",
+                "durationMs": 346,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 96,
+                  "column": 86
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] [data-native-part=\\\"text\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:55.467Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 97,
+                  "column": 89
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.not.toBeVisible",
+                "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\")",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:55.483Z",
+                "durationMs": 1161,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 98,
+                  "column": 83
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"正在核对公开资料。\")",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:56.645Z",
+                "durationMs": 36,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 99,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:56.684Z",
+                "durationMs": 66,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 100,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:9",
+                "index": 9,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-revision-stale-page-does-not-resurrect-prose",
+                "status": "passed",
+                "startedAt": "2026-10-23T09:50:56.751Z",
+                "durationMs": 290,
+                "events": [],
+                "artifacts": [
+                  "01a1682b-8627-7eed-81bb-1ec0ee6dc3a9:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/revisions.e2e.ts",
+                  "line": 101,
                   "column": 13
                 }
               }
@@ -1056,38 +1278,38 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a16820-a401-7a97-9513-92c6db70599b",
+            "id": "01a1682b-b596-7ec3-b02c-507c60799081",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:38:52.033Z",
-            "durationMs": 9751,
+            "startedAt": "2026-10-23T09:50:57.430Z",
+            "durationMs": 10904,
             "artifacts": [
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:artifact:0",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a16820-a401-7a97-9513-92c6db70599b:11"
+                  "stepId": "01a1682b-b596-7ec3-b02c-507c60799081:11"
                 },
                 "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20v2_20first_20character_2C_20pending_20acceptance_20and_20final_20hand-cd5c2c8e/default/attempt-0/screenshots/001-answer-first-real-v2-accepted-handoff.png",
-                "size": 23214,
-                "sha256": "258e100bda96177c9c46a702e0c066170f9f5cf5ba302cbddbaa7e8327f27c93"
+                "size": 23268,
+                "sha256": "6159512b48f6ef8ce166178f3d29091585d4a19e03f97b866146e93652fa509a"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:0",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:52.056Z",
-                "durationMs": 6584,
+                "startedAt": "2026-10-23T09:50:57.461Z",
+                "durationMs": 7078,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1097,14 +1319,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:1",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:1",
                 "index": 1,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:58.640Z",
-                "durationMs": 1290,
+                "startedAt": "2026-10-23T09:51:04.539Z",
+                "durationMs": 968,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1114,14 +1336,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:2",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:2",
                 "index": 2,
                 "kind": "assertion",
                 "api": "expect.toHaveCount",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:38:59.932Z",
-                "durationMs": 44,
+                "startedAt": "2026-10-23T09:51:05.508Z",
+                "durationMs": 28,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1131,14 +1353,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:3",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.027Z",
-                "durationMs": 339,
+                "startedAt": "2026-10-23T09:51:05.559Z",
+                "durationMs": 583,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1148,14 +1370,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:4",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:4",
                 "index": 4,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.366Z",
-                "durationMs": 18,
+                "startedAt": "2026-10-23T09:51:06.142Z",
+                "durationMs": 32,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1165,14 +1387,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:5",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:5",
                 "index": 5,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-fixture-received]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.410Z",
-                "durationMs": 198,
+                "startedAt": "2026-10-23T09:51:06.180Z",
+                "durationMs": 250,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1182,14 +1404,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:6",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:6",
                 "index": 6,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.608Z",
-                "durationMs": 14,
+                "startedAt": "2026-10-23T09:51:06.430Z",
+                "durationMs": 44,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1199,14 +1421,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:7",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:7",
                 "index": 7,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.623Z",
-                "durationMs": 16,
+                "startedAt": "2026-10-23T09:51:06.475Z",
+                "durationMs": 38,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1216,14 +1438,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:8",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:8",
                 "index": 8,
                 "kind": "assertion",
                 "api": "expect.toHaveAttribute",
                 "label": "locator(\"[data-fixture-received]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.649Z",
-                "durationMs": 199,
+                "startedAt": "2026-10-23T09:51:06.523Z",
+                "durationMs": 263,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1233,14 +1455,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:9",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:9",
                 "index": 9,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.849Z",
-                "durationMs": 25,
+                "startedAt": "2026-10-23T09:51:06.787Z",
+                "durationMs": 56,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1250,14 +1472,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:10",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:10",
                 "index": 10,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.874Z",
-                "durationMs": 44,
+                "startedAt": "2026-10-23T09:51:06.843Z",
+                "durationMs": 17,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1267,17 +1489,17 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:11",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:11",
                 "index": 11,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-first-real-v2-accepted-handoff",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:00.919Z",
-                "durationMs": 327,
+                "startedAt": "2026-10-23T09:51:06.861Z",
+                "durationMs": 485,
                 "events": [],
                 "artifacts": [
-                  "01a16820-a401-7a97-9513-92c6db70599b:artifact:0"
+                  "01a1682b-b596-7ec3-b02c-507c60799081:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/v2-stream.e2e.ts",
@@ -1286,14 +1508,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:12",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:12",
                 "index": 12,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:01.249Z",
-                "durationMs": 377,
+                "startedAt": "2026-10-23T09:51:07.358Z",
+                "durationMs": 494,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1303,14 +1525,14 @@
                 }
               },
               {
-                "id": "01a16820-a401-7a97-9513-92c6db70599b:13",
+                "id": "01a1682b-b596-7ec3-b02c-507c60799081:13",
                 "index": 13,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:01.626Z",
-                "durationMs": 11,
+                "startedAt": "2026-10-23T09:51:07.852Z",
+                "durationMs": 69,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1346,38 +1568,38 @@
         "status": "passed",
         "attempts": [
           {
-            "id": "01a16820-ca18-7683-b323-8ce0aa2d967b",
+            "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99",
             "index": 0,
             "status": "passed",
-            "startedAt": "2026-10-23T09:39:01.784Z",
-            "durationMs": 10269,
+            "startedAt": "2026-10-23T09:51:08.335Z",
+            "durationMs": 11322,
             "artifacts": [
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:artifact:0",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:artifact:0",
                 "kind": "screenshot",
                 "mediaType": "image/png",
                 "redaction": "complete",
                 "producer": {
                   "kind": "step",
-                  "stepId": "01a16820-ca18-7683-b323-8ce0aa2d967b:9"
+                  "stepId": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:9"
                 },
                 "path": "desktop/e2e_answer-first_v2-stream.e2e.ts__real_20superseded_20candidate_20leaves_20the_20main_20answer_20and_20correct-a1608533/default/attempt-0/screenshots/001-answer-first-real-v2-corrected-candidate.png",
-                "size": 32587,
-                "sha256": "edc468a2be7bc3635f61bcb016669c95182cf5f56322653e0bee3ab83b3cf7dd"
+                "size": 32577,
+                "sha256": "cf274f4c2978009fe48c10154e7277c8c10ac11b1c7d495c2513bb8154fa51e9"
               }
             ],
             "secondaryErrors": [],
             "cleanup": "complete",
             "steps": [
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:0",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:0",
                 "index": 0,
                 "kind": "app",
                 "api": "app.open",
                 "label": "/e2e/answer-first.html",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:01.849Z",
-                "durationMs": 5422,
+                "startedAt": "2026-10-23T09:51:08.378Z",
+                "durationMs": 5682,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1387,14 +1609,14 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:1",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:1",
                 "index": 1,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:07.272Z",
-                "durationMs": 740,
+                "startedAt": "2026-10-23T09:51:14.061Z",
+                "durationMs": 700,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1404,14 +1626,14 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:2",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:2",
                 "index": 2,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:08.050Z",
-                "durationMs": 17,
+                "startedAt": "2026-10-23T09:51:14.763Z",
+                "durationMs": 19,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1421,14 +1643,14 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:3",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:3",
                 "index": 3,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:08.115Z",
-                "durationMs": 466,
+                "startedAt": "2026-10-23T09:51:14.791Z",
+                "durationMs": 540,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1438,14 +1660,14 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:4",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:4",
                 "index": 4,
                 "kind": "resource",
                 "api": "browser.evaluate",
                 "label": "",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:08.581Z",
-                "durationMs": 35,
+                "startedAt": "2026-10-23T09:51:15.333Z",
+                "durationMs": 15,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1455,14 +1677,14 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:5",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:5",
                 "index": 5,
                 "kind": "assertion",
                 "api": "expect.not.toContainText",
                 "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:08.616Z",
-                "durationMs": 1051,
+                "startedAt": "2026-10-23T09:51:15.348Z",
+                "durationMs": 1132,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1472,14 +1694,14 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:6",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:6",
                 "index": 6,
                 "kind": "locator",
                 "api": "locator.tap",
                 "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:09.668Z",
-                "durationMs": 692,
+                "startedAt": "2026-10-23T09:51:16.482Z",
+                "durationMs": 1042,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1489,14 +1711,14 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:7",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:7",
                 "index": 7,
                 "kind": "assertion",
                 "api": "expect.toHaveText",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] summary\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:10.360Z",
-                "durationMs": 35,
+                "startedAt": "2026-10-23T09:51:17.524Z",
+                "durationMs": 37,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1506,14 +1728,14 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:8",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:8",
                 "index": 8,
                 "kind": "assertion",
                 "api": "expect.not.toBeVisible",
                 "label": "locator(\"[data-slot=\\\"answer-revision\\\"] .im-markdown\")",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:10.397Z",
-                "durationMs": 1069,
+                "startedAt": "2026-10-23T09:51:17.562Z",
+                "durationMs": 1053,
                 "events": [],
                 "artifacts": [],
                 "source": {
@@ -1523,17 +1745,17 @@
                 }
               },
               {
-                "id": "01a16820-ca18-7683-b323-8ce0aa2d967b:9",
+                "id": "01a1682b-e02e-7049-80c9-e6cb61eb6f99:9",
                 "index": 9,
                 "kind": "app",
                 "api": "app.screenshot",
                 "label": "answer-first-real-v2-corrected-candidate",
                 "status": "passed",
-                "startedAt": "2026-10-23T09:39:11.466Z",
-                "durationMs": 378,
+                "startedAt": "2026-10-23T09:51:18.615Z",
+                "durationMs": 454,
                 "events": [],
                 "artifacts": [
-                  "01a16820-ca18-7683-b323-8ce0aa2d967b:artifact:0"
+                  "01a1682b-e02e-7049-80c9-e6cb61eb6f99:artifact:0"
                 ],
                 "source": {
                   "file": "e2e/answer-first/v2-stream.e2e.ts",
@@ -1602,10 +1824,10 @@
     ],
     "errors": [],
     "summary": {
-      "discovered": 15,
-      "selected": 4,
-      "executed": 4,
-      "passed": 4,
+      "discovered": 16,
+      "selected": 5,
+      "executed": 5,
+      "passed": 5,
       "failed": 0,
       "interrupted": 0,
       "flaky": 0,
@@ -1619,11 +1841,11 @@
       "maxModelTokensPerCall": 64000
     },
     "usage": {
-      "discoveredResults": 15,
+      "discoveredResults": 16,
       "maxAgentContextBytes": 0,
       "maxLedgerBytes": 0,
       "maxObservationBytes": 0,
-      "artifactBytes": 164164,
+      "artifactBytes": 202427,
       "downloads": 0,
       "events": 0,
       "modelTokens": 0,

@@ -4,7 +4,7 @@ import { createRunView, type RunEvent, type RunState } from '@lyyzka/lingxios/ui
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
-import { activityAnnotation } from '../../../src/lib/runActivity.js'
+import { activityAnnotation, isAnswerRevision } from '../../../src/lib/runActivity.js'
 import { harnessToolParts, runMessageParts } from '../agent-runtime/message-projection.js'
 
 // Failure inventory written first: docs/evidence/issue-304/CONTRACT-FAILURE-MODEL.md.
@@ -73,7 +73,7 @@ test('superseded candidates and new requests reset the answer identity without r
   const correction = repaired.snapshot
   assert.equal(answer(repaired).length, 1)
   assert.notEqual(activityAnnotation(answer(repaired)[0])?.id, activityAnnotation(answer(projection)[0])?.id)
-  assert.equal(correction.message.content.filter(part => activityAnnotation(part)?.id.startsWith('revision:public-text:') && part.type === 'text' && part.text === '交换机按处理的网络层区分。').length, 1)
+  assert.equal(correction.message.content.filter(part => isAnswerRevision(part) && part.type === 'text' && part.text === '交换机按处理的网络层区分。').length, 1)
   const next = state('leased', 2); next.run.fence = 2
   projection.advance({ type: 'state',state: next })
   projection.advance({ type: 'event',event: event(100001,'public.text.delta',{ ...source('new-request','answer'),requestVersion: 2,fence: 2,chunkIndex: 0,text: '新的问题答复。' }) })

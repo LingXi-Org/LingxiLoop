@@ -2,7 +2,7 @@
 
 Superseded answer candidates retain their public text under an explicit, collapsed transcript disclosure. They no longer supply normal progress prose or its compact summary. Real commentary and failed tools remain in their existing locations, and current streamed/accepted text remains in the answer through the commit-read gap. The transcript never activates archived visualization references.
 
-The existing v1 annotation schema is unchanged. Projection-owned `revision:public-text:<hash>` identities distinguish superseded answer transcripts; accepted source history keeps its existing `archive:public-text:<hash>` identity. Lifecycle labels are fixed product copy. No text comparison, fuzzy deduplication, failure suppression, provider call changes, or production access is involved. Old base `29be24f5` native wire readers successfully parsed all six generated frames/pages.
+The existing v1 annotation schema is unchanged. Superseded answer transcripts keep their existing `public-text:<hash>` source identity; closed, shared producer lifecycle labels distinguish them from genuine commentary. Accepted source history keeps its existing `archive:public-text:<hash>` identity. Lifecycle labels are fixed product copy. No text comparison, fuzzy deduplication, failure suppression, provider call changes, or production access is involved. Old base `29be24f5` native wire readers successfully parsed all six generated frames/pages.
 
 Failure inventory was written before implementation in [projection-failure-model.md](projection-failure-model.md).
 
@@ -11,12 +11,12 @@ Failure inventory was written before implementation in [projection-failure-model
 - Web tests: 123/123 passed; server tests with the new test included: 127/127 passed.
 - Web/server lint and typecheck, E2E typecheck, production build: passed. Existing unrelated lint/build warnings remain.
 - Focused projection tests: 10/10 passed, including first answer, explicit supersede, pending acceptance, commit, replay, failure/cancellation retention, and answer-only copy text.
-- Official tester-army `e2e` 0.17.0 / `@e2e-dev/web` 0.12.0: 4/4 passed. The fixture sends real server projection snapshots through the normal AssistantTransport decoder, store, and conversation renderer; it is synthetic fixture coverage, not a provider or production run.
-- Browser assertions cover collapsed/full transcript keyboard access, visible genuine commentary and failed calls, committed partial output, history loading, reconnect, unchanged answer DOM/selection across acceptance, and same wording in distinct messages.
+- Official tester-army `e2e` 0.17.0 / `@e2e-dev/web` 0.12.0: 5/5 passed. The fixture sends real server projection snapshots through the normal AssistantTransport decoder, store, and conversation renderer; it is synthetic fixture coverage, not a provider or production run.
+- Browser assertions cover collapsed/full transcript keyboard access, visible genuine commentary and failed calls, committed partial output, history loading, reconnect, unchanged answer DOM/selection across acceptance, same wording in distinct messages, and an older commentary page arriving after live supersession without resurrecting draft prose.
 
-[Runner report](browser/report.json), [source/artifact hashes](browser/sha256.json), [collapsed draft and real failure](browser/001-answer-revision-collapsed-with-real-failure.png), [commit/reconnect](browser/002-answer-revision-committed-reconnect.png), [same text in separate messages](browser/001-answer-revision-same-text-distinct-messages.png).
+[Runner report](browser/report.json), [source/artifact hashes](browser/sha256.json), [collapsed draft and real failure](browser/001-answer-revision-collapsed-with-real-failure.png), [commit/reconnect](browser/002-answer-revision-committed-reconnect.png), [same text in separate messages](browser/001-answer-revision-same-text-distinct-messages.png), [stale-page merge](browser/001-answer-revision-stale-page-does-not-resurrect-prose.png), [reproduced stale-namespace failure](browser/stale-namespace-red-report.json).
 
-The local runner report records the precommit dirty worktree against the stated base; `sha256.json` binds the verified source tree. Exact-head CI and independent review remain release integration gates.
+The local runner report records the precommit dirty worktree against the stated base; `sha256.json` binds the verified source tree. Exact-head CI and independent review remain release integration gates. The stale-page regression first failed on the temporary renamed-identity implementation (3 activity text records rather than 2); the final correction preserves source identity instead of changing the integration contract.
 
 ## Reproduce
 

@@ -10,3 +10,5 @@ Written before implementation; all test text and identities are synthetic.
 - Copy answer includes an archived revision; archived renderer references become live.
 
 Checks: real RunStreamProjection transitions, strict native wire/history parsing, and the official @e2e-dev/web browser using the existing isolated AssistantTransport/store/conversation fixture. Preserve full revision text behind an explicit labelled disclosure; keep real failure/call entries and public commentary in their existing locations.
+
+Additional replay failure identified before the stable-identity correction: a delayed page from the older projection can carry the current candidate as ordinary commentary. If supersession renames the live identity, page merging may retain both the stale prose and the revision transcript. Preserve the existing public-text identity across this transition; exercise the real transport/store/history merge while that page is held in flight.

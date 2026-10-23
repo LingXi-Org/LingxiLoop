@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import type { RunEvent, RunState } from '@lyyzka/lingxios/ui'
 import { RunStreamProjection } from '../agent-runtime/assistant-transport.js'
-import { activityAnnotation } from '../../../src/lib/runActivity.js'
+import { activityAnnotation, isAnswerRevision } from '../../../src/lib/runActivity.js'
 import { nativeText } from '../../../src/lib/nativeMessage.js'
 
 // Failure model: docs/evidence/issue-341/projection-failure-model.md (written first).
@@ -17,7 +17,7 @@ const source = (partId: string, purpose: 'answer' | 'commentary' = 'answer') => 
   attemptId: partId, partId, partIndex: 0, purpose })
 const event = (seq: number, kind: string, data: RunEvent['data']): RunEvent => ({ runId: 'run', seq, kind,
   stage: kind.endsWith('delta') ? 'delta' : kind.endsWith('started') ? 'started' : 'completed', visibility: 'user', data })
-const revision = (part: unknown) => /^(?:revision|archive):public-text:/.test(activityAnnotation(part)?.id ?? '')
+const revision = isAnswerRevision
 const answer = (projection: RunStreamProjection) => projection.snapshot.message.content.filter(part => activityAnnotation(part)?.kind === 'answer')
 function scenario() {
   const projection = new RunStreamProjection('run', true)
@@ -56,6 +56,7 @@ test('replaced answer drafts have an explicit transcript identity; acceptance re
   }
   const revisions = frames.replaced.message.content.filter(part => revision(part))
   assert.equal(revisions.length, 1)
+  assert.equal(activityAnnotation(revisions[0])?.id, activityAnnotation(frames.first.message.content[0])?.id, 'supersession preserves the source identity for history reconciliation')
   assert.equal(revisions[0].type === 'text' && revisions[0].text, text)
   assert.equal(activityAnnotation(revisions[0])?.label, '已替换的答复草稿')
   assert.equal(frames.replaced.message.content.filter(part => activityAnnotation(part)?.kind === 'commentary' && !revision(part)).length, 1)
