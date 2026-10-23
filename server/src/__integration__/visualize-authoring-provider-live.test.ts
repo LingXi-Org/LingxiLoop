@@ -18,12 +18,13 @@ import { siliconFlowPricingForModel } from '../agent-runtime/pricing.js'
 import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 import { assertLocalQualificationTarget } from './_local-qualification-target.js'
+import { openNotebookClient } from '../modules/knowledge/provider.js'
 
 // Opt-in only. Preparation/typechecking never executes a provider call.
 // Failure model: docs/evidence/issue-342/FAILURE-MODEL.md.
 test('real provider activates and delivers a synthetic interactive diagram without semantic review', {
   skip: process.env.LINGXIOS_LIVE_VISUALIZE_342 !== '1', timeout: 300000,
-}, async () => {
+}, async t => {
   assertLocalQualificationTarget(env.DATABASE_URL)
   assert.equal(process.env.LINGXILOOP_DISABLE_EMBEDDINGS, '1', 'Keep unrelated embedding calls disabled in this narrow provider gate')
   assert.equal(new URL(env.OPENAI_BASE_URL).hostname, 'api.siliconflow.cn')
@@ -46,6 +47,14 @@ test('real provider activates and delivers a synthetic interactive diagram witho
   await mkdir(output, { recursive: true })
   const report: Record<string, unknown> = { status: 'running', runtime: releaseVersions.runtime, syntheticRequest: true,
     productionOperations: 0, realProvider: true, semanticReview: 'selective', originalCaseVerified: false }
+  // Real model calls remain on their existing provider. Knowledge fixtures stay
+  // local, with enabled sources so a zero-search result is not empty coverage.
+  let knowledgeSearches = 0
+  t.mock.method(openNotebookClient, 'search', async () => { knowledgeSearches++; return [] })
+  t.mock.method(openNotebookClient, 'getSource', async () => ({ id: 'source:latency-local', full_text: 'Gather collects items. Check reviews those items.' }))
+  const previousNotebook = process.env.OPEN_NOTEBOOK_ENABLED
+  process.env.OPEN_NOTEBOOK_ENABLED = 'true'
+  t.after(() => { if (previousNotebook === undefined) delete process.env.OPEN_NOTEBOOK_ENABLED; else process.env.OPEN_NOTEBOOK_ENABLED = previousNotebook })
   const im = await installRecordingWukong()
   let worker: ReturnType<typeof createWorker> | undefined, server: ReturnType<typeof createServer> | undefined
   let browser: ReturnType<typeof spawn> | undefined
@@ -53,9 +62,15 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     const { companyId, projectId, agentId } = await seedCompanyWithAgent()
     const principalId = 'test-owner', channelId = 'visualize-provider-342', members = [principalId, agentId]
     await seedUserMembership(principalId, companyId)
-    await pool.query("UPDATE participants SET capabilities='[]'::jsonb WHERE company_id=$1 AND id=$2", [companyId, agentId])
+    await pool.query("UPDATE participants SET capabilities='[\"knowledge\"]'::jsonb WHERE company_id=$1 AND id=$2", [companyId, agentId])
     await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group',$1,$4::jsonb)", [channelId, companyId, projectId, JSON.stringify(members)])
     await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)', [channelId, companyId, JSON.stringify({ channelType: 2, members })])
+    await pool.query(`INSERT INTO knowledge_notebook_bindings(project_id,company_id,external_key,external_notebook_id,state)
+      VALUES($1,$2,'latency-live-notebook','notebook:latency-local','ready')`, [projectId, companyId])
+    await pool.query(`INSERT INTO knowledge_sources(id,company_id,project_id,kind,title,external_source_id,status,stage,
+      visibility_scope,owner_user_id,created_by_user_id,created_via)
+      VALUES('latency-live-source',$1,$2,'text','Local fixture','source:latency-local','ready','ready','PROJECT',$3,$3,'USER')`,
+    [companyId, projectId, principalId])
     // Direct in-process control and Worker share this one installed runtime.
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const accepted = await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version,
@@ -80,7 +95,8 @@ test('real provider activates and delivers a synthetic interactive diagram witho
         if (event.kind === 'tool.started' && ['visualize.save','visualize.chart','visualize.diagram','visualize.sliding_window'].includes(String(event.data.name))) {
           saveCalls.add(String(event.data.toolCallId)); firstSaveStartedMs ??= elapsed
         }
-        if (event.kind === 'tool.completed' && saveCalls.has(String(event.data.toolCallId)) && event.data.isError === false) firstSaveCompletedMs ??= elapsed
+        if (event.kind === 'tool.completed' && saveCalls.has(String(event.data.toolCallId)) && event.data.isError === false
+          && event.data.result && typeof event.data.result === 'object' && Reflect.get(event.data.result, 'status') === 'completed') firstSaveCompletedMs ??= elapsed
         if (event.kind !== 'public.text.delta' || event.data.purpose !== 'answer' || typeof event.data.text !== 'string') continue
         firstAnswerMs ??= elapsed
         const id = String(event.data.partId), text = (parts.get(id) ?? '') + event.data.text
@@ -88,8 +104,9 @@ test('real provider activates and delivers a synthetic interactive diagram witho
         if (firstUsefulAnswerMs === null && isUseful(text)) { firstUsefulAnswerMs = elapsed; usefulAnswerExcerpt = text.slice(0, 600) }
       }
       return { basis: 'durable-public-event-recorded-at', browserPaintMeasured: false,
-        firstAnswerMs, firstUsefulAnswerMs, firstSaveStartedMs, firstSaveCompletedMs, usefulAnswerExcerpt,
-        usefulBeforeSave: firstUsefulAnswerMs !== null && firstSaveCompletedMs !== null && firstUsefulAnswerMs < firstSaveCompletedMs }
+        firstAnswerMs, firstUsefulCandidateMs: firstUsefulAnswerMs, firstSaveStartedMs, firstSaveCompletedMs,
+        usefulAnswerExcerpt, semanticAcceptance: 'requires-independent-excerpt-review',
+        usefulCandidateBeforeSave: firstUsefulAnswerMs !== null && firstSaveCompletedMs !== null && firstUsefulAnswerMs < firstSaveCompletedMs }
     }
     const options: WorkerOptions & { semanticReview: 'selective' } = { controlPlane: api, policy: new ProductRuntimePolicy(),
       worker: { id: 'visualize-provider-342', shutdownGraceMs: 1000 }, model, semanticReview: 'selective',
@@ -111,8 +128,8 @@ test('real provider activates and delivers a synthetic interactive diagram witho
       cursor = page.nextSeq
     }
     report.actions = actions
-    // Do not require a supplied answer verbatim. Retain the measured synthetic
-    // excerpt for review; both stage roles must be explained in answer text.
+    // This filter locates a candidate, not semantic proof. Retain the actual
+    // synthetic excerpt for independent review of role attribution and tense.
     report.timing = await measureAnswer(identity.runId, text => /\bGather\b/i.test(text) && /\bCheck\b/i.test(text)
       && /\bcollect(?:s|ed|ing|ion)?\b|\bbring(?:s|ing)?\s+together\b/i.test(text)
       && /\breview(?:s|ed|ing)?\b|\bexamin(?:e|es|ing|ation)\b|\binspect(?:s|ed|ing|ion)?\b/i.test(text))
@@ -155,10 +172,11 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     assert.equal(exit, 0, 'Official browser resource/readback gate')
     assert.deepEqual(await ledger(), before, 'Browser interaction performs no extra model call')
     report.browser = JSON.parse(await readFile(`${output}/provider-browser.json`, 'utf8'))
-    assert.equal((report.timing as { usefulBeforeSave: boolean }).usefulBeforeSave, true,
-      'The requested substantive explanation must arrive before the diagram save completes; commentary does not count')
+    assert.equal((report.timing as { usefulCandidateBeforeSave: boolean }).usefulCandidateBeforeSave, true,
+      'A candidate explanation must arrive before the diagram save completes; its actual meaning still needs excerpt review')
     // A new ordinary request must not inherit the previous visual workflow's
     // selective gate, add a judge, or revise an already correct short answer.
+    const priorKnowledgeSearches = knowledgeSearches
     const question = await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version,
       messageId: 'direct-question-385', version: 1, author: { id: principalId, kind: 'human' }, mentions: [agentId],
       text: 'Reply with only the numeric result of 17 + 26.' },
@@ -180,8 +198,10 @@ test('real provider activates and delivers a synthetic interactive diagram witho
     assert.ok(questionCalls.every(row => row.operation !== 'content-review' && row.status === 'succeeded' && row.measured))
     const questionEvents = await api.readEvents(questionIdentity, 0)
     assert.equal(questionEvents.events.filter(event => event.kind === 'tool.started' && String(event.data.name).startsWith('knowledge.')).length, 0)
+    assert.equal(knowledgeSearches, priorKnowledgeSearches, 'Ordinary arithmetic does not run automatic text/vector retrieval despite authorized enabled sources')
     report.directQuestion = { status: 'passed', correct: true, measuredCalls: 1, semanticReviewCalls: 0,
-      knowledgeTools: 0, calls: questionCalls, timing: await measureAnswer(questionIdentity.runId, text => text.trim() === '43') }
+      knowledgeTools: 0, automaticKnowledgeSearches: 0, enabledKnowledgeSources: 1,
+      calls: questionCalls, timing: await measureAnswer(questionIdentity.runId, text => text.trim() === '43') }
     report.status = 'passed'
   } catch (error) { report.status = 'failed'; report.failure = 'required-live-delivery-check-failed'; throw error }
   finally {

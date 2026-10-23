@@ -42,6 +42,10 @@ The owning real PostgreSQL/local HTTP integration is extended before implementat
 - Retain the official browser check of the real saved diagram and delivered
   assistant reference. A standalone synthetic document is not this qualification.
 - The following ordinary arithmetic request must use one generation, no knowledge
-  search, no semantic judge and no inherited visual authoring obligation.
+  search despite an authorized enabled source, no semantic judge and no inherited
+  visual authoring obligation. Knowledge provider fixtures are counted locally.
+- Automatic word coverage only locates a candidate explanation; independently
+  review its actual role attribution and tense before accepting useful-answer
+  timing. Approval waiting is not a successful save completion.
 - Record failed measurements honestly, use one fixture run with one provider
   attempt per logical call, and never replay a failed original production request.
