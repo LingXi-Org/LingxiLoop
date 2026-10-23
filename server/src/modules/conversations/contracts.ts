@@ -6,6 +6,7 @@ export const createConversationRequestSchema = z.object({
   participantIds: z.array(participantIdSchema).min(1).max(49)
     .refine((ids) => new Set(ids).size === ids.length, 'participants must be unique'),
   title: z.string().trim().max(80).optional(),
+  requestId: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9_-]+$/).optional(),
 }).strict()
 export type CreateConversationInput = z.infer<typeof createConversationRequestSchema>
 

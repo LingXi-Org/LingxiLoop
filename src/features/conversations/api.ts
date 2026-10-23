@@ -3,7 +3,7 @@ import { http } from '@/api/core/http'
 import type { ApiConversation, ConversationSearchResults } from './contracts'
 
 export const conversationsApi = {
-  create: (projectId: string, input: { participantIds: string[]; title?: string }) =>
+  create: (projectId: string, input: { participantIds: string[]; title?: string; requestId?: string }) =>
     http<{ id: string; created: boolean }>(`/projects/${encodeURIComponent(projectId)}/conversations`, {
       method: 'POST', body: JSON.stringify(input),
     }),

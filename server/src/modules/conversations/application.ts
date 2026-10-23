@@ -1,5 +1,5 @@
 import { nativeText, type NativeMessage } from '../../im/message-types.js'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
 import type { ImChannelProfile } from '../../im/types.js'
 import type {
@@ -33,6 +33,7 @@ import {
 
 export type ConversationErrorCode =
   | 'invalid_members'
+  | 'creation_conflict'
   | 'invalid_leader'
   | 'managed_pulse'
   | 'workspace_read_only'
@@ -105,6 +106,11 @@ export class ConversationsApplication {
       throw new ConversationApplicationError('invalid_members', 'participants must not include yourself')
     }
     const members = [scope.userId, ...input.participantIds]
+    // Scope each intent to its authorized creator. Ordinary unkeyed API calls
+    // retain the existing ability to intentionally create another group.
+    const creationId = input.requestId && input.participantIds.length > 1
+      ? `conversation-${createHash('sha256').update(JSON.stringify([scope.companyId, scope.projectId, scope.userId, input.requestId])).digest('hex')}` : null
+    const creationHash = createHash('sha256').update(JSON.stringify([[...input.participantIds].sort(), input.title || ''])).digest('hex')
     const result = await this.infrastructure.transaction(async (db) => {
       const participants = await listEligibleConversationParticipants(db, { ...scope, ids: members })
       if (participants.length !== members.length) {
@@ -115,17 +121,30 @@ export class ConversationsApplication {
       const other = participants.find((participant) => participant.id === input.participantIds[0])!
       if (input.participantIds.length === 1 && other.kind === 'agent') return { kind: 'learning', agentId: other.id } as const
 
+      if (creationId) {
+        await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [creationId])
+        const replay = await findConversationForUpdate(db, scope.companyId, creationId)
+        if (replay) {
+          const binding = await findBindingForUpdate(db, scope.companyId, creationId)
+          if (replay.project_id !== scope.projectId || !replay.members.includes(scope.userId)
+            || binding?.profile.creationRequestHash !== creationHash) {
+            throw new ConversationApplicationError('creation_conflict', 'creation request already used for a different selection')
+          }
+          return { kind: 'conversation', id: replay.id, created: false, profile: binding.profile as unknown as ImChannelProfile } as const
+        }
+      }
       const existing = input.participantIds.length === 1
         ? await findDirectConversation(db, { ...scope, members }) : null
       const conversation: ConversationRow = existing ?? {
-        id: `conversation-${randomUUID()}`, kind: input.participantIds.length === 1 ? 'direct' : 'group',
+        id: creationId ?? `conversation-${randomUUID()}`, kind: input.participantIds.length === 1 ? 'direct' : 'group',
         title: input.participantIds.length === 1 ? other.name : input.title || members
           .map((id) => participants.find((participant) => participant.id === id)!.name).join('、').slice(0, 80),
         topic: null, members, leader_id: null, pinned: false, project_id: scope.projectId,
       }
       if (!existing) await insertConversation(db, { companyId: scope.companyId, conversation })
       const binding = existing ? await findBindingForUpdate(db, scope.companyId, conversation.id) : null
-      const profile = { ...profileFor(conversation), ...binding?.profile } as ImChannelProfile
+      const profile = { ...profileFor(conversation), ...binding?.profile,
+        ...(creationId ? { creationRequestHash: creationHash } : {}) } as ImChannelProfile
       // Older ordinary direct conversations may not have an IM binding yet.
       if (!binding) {
         await upsertBinding(db, scope.companyId, profile, conversation.leader_id, null)
