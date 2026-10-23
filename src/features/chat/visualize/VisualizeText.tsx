@@ -3,7 +3,7 @@ import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { getActiveCompanyId } from '@/stores/auth'
 import { activityAnnotation } from '@/lib/runActivity'
 import { answerTextOffset } from '@/lib/answerSegment'
-import { answerDisplaySlice } from '@/lib/answerSegmentDisplay'
+import { answerDisplayRunning, answerDisplaySlice } from '@/lib/answerSegmentDisplay'
 import { TextOffsetContext } from './TextOffsetContext'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { GenUiMessageResponse } from './zcode/gen-ui/components/GenUiMessageResponse'
@@ -19,12 +19,14 @@ export function VisualizeText({part,Text,readOnly}: {part:TextMessagePartProps;T
     const claims = state.message.content.find(item=>item.type==='data' && item.name==='citation-claims')
     const ranges = claims?.type==='data' && claims.data && typeof claims.data==='object' && 'claims' in claims.data && Array.isArray(claims.data.claims)
       ? claims.data.claims.filter((value: unknown): value is {start:number;end:number}=>!!value && typeof value==='object' && typeof Reflect.get(value,'start')==='number' && typeof Reflect.get(value,'end')==='number') : []
-    return answerDisplaySlice(state.message.parts,state.message.parts.indexOf(state.part),ranges)
+    const index=state.message.parts.indexOf(state.part),display=answerDisplaySlice(state.message.parts,index,ranges)
+    return display ? {...display,running:answerDisplayRunning(state.message.parts,index,display)} : undefined
   })
   const text = slice?.text ?? part.text, offset = slice?.offset ?? textOffset
+  const running=part.status.type==='running' || slice?.running===true
   if (!text) return null
-  if(message.role!=='assistant' || !/::|/.test(text)) return slice && (text!==part.text || offset!==textOffset)
-    ? <TextOffsetContext.Provider value={offset}><TextMessagePartProvider text={text} isRunning={part.status.type==='running'}><Text {...part} text={text}/></TextMessagePartProvider></TextOffsetContext.Provider>
+  if(message.role!=='assistant' || !/::|/.test(text)) return slice && (text!==part.text || offset!==textOffset || running!==(part.status.type==='running'))
+    ? <TextOffsetContext.Provider value={offset}><TextMessagePartProvider text={text} isRunning={running}><Text {...part} text={text} status={running?{type:'running'}:part.status}/></TextMessagePartProvider></TextOffsetContext.Provider>
     : <Text {...part}/>
   const workspace = getWorkspaceSession()
   const conversationId = message.metadata.custom.conversationId
