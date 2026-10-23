@@ -26,8 +26,8 @@ export function CourseMembersSection({ space }: { space: LearningSpace }) {
   const canRevoke = canView && space.canRevokeInvitations
   const canRemove = canView && space.canRemoveMembers
   const canPromote = canView && isCompanyAdmin && space.status === 'ACTIVE'
-  const canAddTeacher = canPromote && space.canUpdateMembers
-  const canWrite = canInvite || canRevoke || canRemove || canPromote
+  const canAddTeacher = canView && isCompanyAdmin && (space.status === 'DRAFT' || space.status === 'ACTIVE') && space.canUpdateMembers
+  const canWrite = canInvite || canRevoke || canRemove || canPromote || canAddTeacher
   const [members, setMembers] = useState<ApiCourseMember[]>([])
   const [invitations, setInvitations] = useState<ApiProjectInvitation[]>([])
   const [createdLink, setCreatedLink] = useState('')

@@ -8,6 +8,7 @@
   "receipts": [
     {
       "scenario": "management-scope",
+      "draftAssignment": 201,
       "ownWritableCourses": 1,
       "foreignOrReadonlyDenied": true,
       "nonAdminDenied": true

@@ -53,7 +53,7 @@ window.fetch = async (input, init) => {
 useAuth.setState({ activeCompanyId: 'company', user: { id: 'owner', name: '管理员' } as never,
   companies: [{ id: 'company', isAdmin: admin }] as never })
 const space = { companyId: 'company', courseId: 'course-a', projectId: 'project-a', title: course.name,
-  perspective: scenario === 'student' ? 'learner' : 'teacher', canManage: scenario !== 'student', status: 'ACTIVE',
+  perspective: scenario === 'student' ? 'learner' : 'teacher', canManage: scenario !== 'student', status: scenario === 'draft' ? 'DRAFT' : scenario === 'readonly' ? 'READ_ONLY' : 'ACTIVE',
   canInviteMembers: true, canRevokeInvitations: true, canRemoveMembers: true, canUpdateMembers: true } as LearningSpace
 function App() {
   const [, render] = useState(0)

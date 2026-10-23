@@ -66,6 +66,7 @@ after(async () => {
 })
 
 test('company management offers only writable courses from its own authoritative company', async () => {
+  await pool.query("UPDATE projects SET status='DRAFT' WHERE id=$1", [`${target}-project`])
   await pool.query("UPDATE projects SET status='READ_ONLY' WHERE id=$1", [`${other}-project`])
   const courses = await request<Array<{ id: string; companyId: string }>>(admin, '/management/courses')
   assert.equal(courses.status, 200)
@@ -75,7 +76,8 @@ test('company management offers only writable courses from its own authoritative
   denied((await add(admin, foreign, teacher)).status)
   denied((await add(admin, other, teacher)).status)
   assert.equal((await pool.query('SELECT count(*)::int n FROM project_memberships WHERE user_id=$1', [teacher])).rows[0].n, 0)
-  receipts.push({ scenario: 'management-scope', ownWritableCourses: 1, foreignOrReadonlyDenied: true, nonAdminDenied: true })
+  assert.equal((await add(admin, target, teacher, 'draft-course')).status, 201)
+  receipts.push({ scenario: 'management-scope', draftAssignment: 201, ownWritableCourses: 1, foreignOrReadonlyDenied: true, nonAdminDenied: true })
 })
 
 test('explicit teacher assignment reads back in both member lists and permits publishing only in that course', async () => {

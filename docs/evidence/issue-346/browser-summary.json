@@ -1,88 +1,125 @@
 {
-  "id": "01a1685c-c8f7-7fc7-8e2d-35d077706be9",
-  "runner": {
-    "name": "e2e",
-    "version": "0.17.0"
-  },
-  "status": "passed",
-  "exitCode": 0,
-  "startedAt": "2026-10-23T10:44:35.135Z",
-  "finishedAt": "2026-10-23T10:46:43.910Z",
-  "vcs": {
-    "commit": "77f857e0438d216b9b517c05d9d6c88caba12a8b",
-    "branch": "fix/346-course-teacher-membership",
-    "dirty": true
-  },
   "syntheticOnly": true,
   "originalCaseVerified": false,
   "productionOperations": 0,
   "modelCalls": 0,
-  "results": [
+  "uniqueScenariosWithPassingAssertions": 10,
+  "singleAllGreenRun": false,
+  "qualificationNote": "The full final run passed 9/10; the first page was still blank at the initial UI assertion after local Vite cache relocation to recover disk space. The same first test was rerun alone without code or assertion changes and passed 1/1. Both actual run results are retained.",
+  "runs": [
     {
-      "title": [
-        "course administrator explicitly adds one company teacher and persists the readback"
-      ],
-      "status": "passed",
-      "artifacts": [
+      "id": "01a16866-38d8-7dc2-999a-02682d147661",
+      "runner": {
+        "name": "e2e",
+        "version": "0.17.0"
+      },
+      "status": "failed",
+      "exitCode": 1,
+      "startedAt": "2026-10-23T10:54:53.878Z",
+      "finishedAt": "2026-10-23T10:56:10.923Z",
+      "vcs": {
+        "commit": "7b403a656b49f7372ba2bef26b55ad26d85f31a3",
+        "branch": "fix/346-course-teacher-membership",
+        "dirty": true
+      },
+      "results": [
         {
-          "path": "course-teacher-readback.png",
-          "sha256": "836c7ea1ffd4e65498dbef54a1a34dfaba2267409d6b360fbfd4a680f8094e60"
+          "title": [
+            "course administrator explicitly adds one company teacher and persists the readback"
+          ],
+          "status": "failed"
+        },
+        {
+          "title": [
+            "teacher does not access the company directory or offer assignment"
+          ],
+          "status": "passed"
+        },
+        {
+          "title": [
+            "student does not access the company directory or offer assignment"
+          ],
+          "status": "passed"
+        },
+        {
+          "title": [
+            "directory failure can retry without a premature write"
+          ],
+          "status": "passed"
+        },
+        {
+          "title": [
+            "assign-failure preserves the selected teacher and retry key"
+          ],
+          "status": "passed"
+        },
+        {
+          "title": [
+            "readback-failure preserves the selected teacher and retry key"
+          ],
+          "status": "passed"
+        },
+        {
+          "title": [
+            "management shows organization scope and explicitly assigns the selected course"
+          ],
+          "status": "passed",
+          "artifacts": [
+            {
+              "path": "management-course-scope.png",
+              "sha256": "e4d84f0f089a9b595a94da3d98119c46599c4d8a797027fc1489d4865eced740"
+            }
+          ]
+        },
+        {
+          "title": [
+            "late assignment readback cannot overwrite another course or close its new dialog"
+          ],
+          "status": "passed"
+        },
+        {
+          "title": [
+            "draft course administrator explicitly assigns a teacher without changing organization identity"
+          ],
+          "status": "passed"
+        },
+        {
+          "title": [
+            "readonly course does not offer teacher assignment even with stale member capability"
+          ],
+          "status": "passed"
         }
       ]
     },
     {
-      "title": [
-        "teacher does not access the company directory or offer assignment"
-      ],
+      "id": "01a16867-eafc-707e-afa8-d5823477eaf8",
+      "runner": {
+        "name": "e2e",
+        "version": "0.17.0"
+      },
       "status": "passed",
-      "artifacts": []
-    },
-    {
-      "title": [
-        "student does not access the company directory or offer assignment"
-      ],
-      "status": "passed",
-      "artifacts": []
-    },
-    {
-      "title": [
-        "directory failure can retry without a premature write"
-      ],
-      "status": "passed",
-      "artifacts": []
-    },
-    {
-      "title": [
-        "assign-failure preserves the selected teacher and retry key"
-      ],
-      "status": "passed",
-      "artifacts": []
-    },
-    {
-      "title": [
-        "readback-failure preserves the selected teacher and retry key"
-      ],
-      "status": "passed",
-      "artifacts": []
-    },
-    {
-      "title": [
-        "management shows organization scope and explicitly assigns the selected course"
-      ],
-      "status": "passed",
-      "artifacts": [
+      "exitCode": 0,
+      "startedAt": "2026-10-23T10:56:44.472Z",
+      "finishedAt": "2026-10-23T10:56:58.322Z",
+      "vcs": {
+        "commit": "7b403a656b49f7372ba2bef26b55ad26d85f31a3",
+        "branch": "fix/346-course-teacher-membership",
+        "dirty": true
+      },
+      "results": [
         {
-          "path": "management-course-scope.png",
-          "sha256": "e4d84f0f089a9b595a94da3d98119c46599c4d8a797027fc1489d4865eced740"
+          "title": [
+            "course administrator explicitly adds one company teacher and persists the readback"
+          ],
+          "status": "passed",
+          "artifacts": [
+            {
+              "path": "course-teacher-readback.png",
+              "sha256": "836c7ea1ffd4e65498dbef54a1a34dfaba2267409d6b360fbfd4a680f8094e60"
+            }
+          ]
         }
       ]
-    },
-    {
-      "title": [
-        "late assignment readback cannot overwrite another course or close its new dialog"
-      ],
-      "status": "passed",
-      "artifacts": []
     }
   ]
 }

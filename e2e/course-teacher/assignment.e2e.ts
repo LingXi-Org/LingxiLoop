@@ -88,3 +88,23 @@ test('late assignment readback cannot overwrite another course or close its new 
   await expect(screen.getByRole('row').filter({ hasText: '合成新教师' })).toHaveCount(0)
   await expect(screen.getByRole('row').filter({ hasText: '新课程教师' })).toBeVisible()
 })
+
+
+test('draft course administrator explicitly assigns a teacher without changing organization identity', async ({ app, screen }) => {
+  await app.open('/e2e/course-teacher/index.html?scenario=draft')
+  await screen.getByRole('button', '添加课程教师', { exact: true }).tap()
+  await chooseTeacher(screen)
+  await screen.getByRole('button', '确认加入本课程', { exact: true }).tap()
+  await expect(screen.getByRole('dialog')).toHaveCount(0)
+  await expect(screen.getByRole('row').filter({ hasText: '合成新教师' })).toContainText('课程管理者')
+  const evidence = JSON.parse((await screen.getByLabel('授权证据').textContent())!)
+  expect(evidence.puts.length).toBe(1)
+  expect(evidence.puts[0].path).toBe('/api/courses/course-a/members/new-teacher')
+})
+
+test('readonly course does not offer teacher assignment even with stale member capability', async ({ app, screen }) => {
+  await app.open('/e2e/course-teacher/index.html?scenario=readonly')
+  await expect(screen.getByRole('button', '添加课程教师', { exact: true })).toHaveCount(0)
+  await expect(screen.getByLabel('授权证据')).toContainText('"directoryReads":0')
+  await expect(screen.getByLabel('授权证据')).toContainText('"puts":[]')
+})
