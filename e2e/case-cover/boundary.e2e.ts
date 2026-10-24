@@ -6,6 +6,8 @@ const staticSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320"
 // server-generated SVG preview never comes back from this untrusted document.
 const interactive = `<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;touch-action:pan-y}svg{width:100%;height:100%}#drawer{transition:transform .15s}body[data-engaged=true] #drawer{transform:translateY(-20px)}</style>${staticSvg.replace('<rect ', '<rect id="drawer" ')}<script>
 let storage='blocked';try{localStorage.getItem('session');storage='accessible'}catch{}
+let parentAccess='blocked';try{parent.document.body.dataset.untrusted='yes';parentAccess='accessible'}catch{}
+document.body.dataset.parent=parentAccess;
 document.body.dataset.storage=storage;
 fetch('https://case-cover-boundary.invalid/probe').then(()=>document.body.dataset.network='allowed').catch(()=>document.body.dataset.network='blocked');
 addEventListener('message',e=>{const d=e.data;if(e.source!==parent||d?.type!=='case-cover:environment')return;document.body.dataset.engaged=String(d.engaged);document.body.dataset.theme=d.theme});
@@ -28,6 +30,7 @@ for (const theme of ['light', 'dark']) test(`opaque cover lifecycle, keyboard ac
     const frame = browser.frameLocator(`[data-fixture-cover="${id}"] iframe`).frameLocator('#renderer')
     await expect(frame.locator('body')).toHaveAttribute('data-engaged', 'true')
     await expect(frame.locator('body')).toHaveAttribute('data-storage', 'blocked')
+    await expect(frame.locator('body')).toHaveAttribute('data-parent', 'blocked')
     await expect(frame.locator('body')).toHaveAttribute('data-network', 'blocked')
     await expect(frame.locator('body')).toHaveAttribute('data-theme', theme)
   }
@@ -95,4 +98,36 @@ test('pinned upstream riffle renders through the trusted nested adapter and resp
   await browser.locator('[data-fixture-cover="1"] button').focus()
   await browser.keyboard.press('Enter')
   await expect(browser.locator('iframe')).toHaveCount(0)
+})
+
+test('characterize WebRTC separately from HTTP policy checks without claiming a universal network boundary', async ({ app, browser }) => {
+  const html = `<p>synthetic WebRTC capability probe</p><script>
+document.body.dataset.rtc='attempting';
+(async()=>{try{
+const connection=new RTCPeerConnection({iceServers:[{urls:'stun:127.0.0.1:51890'}]});
+connection.createDataChannel('synthetic-public-probe');
+await connection.setLocalDescription(await connection.createOffer());
+document.body.dataset.rtc='offered';
+addEventListener('pagehide',()=>connection.close(),{once:true});
+}catch(error){document.body.dataset.rtc='blocked:'+error.name}
+parent.postMessage({type:'case-cover:ready',version:1},'*');})();
+<` + '/script>'
+  await browser.route(/\/api\/cases\/fixture\/cover\/assets\//, route => route.request.url.includes('/preview?')
+    ? route.fulfill({ body: staticSvg, contentType: 'image/svg+xml' }) : route.fulfill({ json: { html } }))
+  await app.open('/scripts/case-cover-fixture.html')
+  await browser.locator('[data-fixture-cover="1"] button').focus()
+  await browser.keyboard.press('Enter')
+  const child = browser.frameLocator('[data-fixture-cover="1"] iframe').frameLocator('#renderer')
+  await expect(child.locator('body')).not.toHaveAttribute('data-rtc', 'attempting')
+  const capability = await child.locator('body').getAttribute('data-rtc')
+  const network = await browser.evaluate(async () => {
+    await new Promise(resolve => setTimeout(resolve, 2_000))
+    return await (await fetch('/cover-network-count')).json() as { requests: number; udpPackets: number }
+  })
+  const { writeFile } = await import('node:fs/promises')
+  await writeFile('.e2e/case-cover/webrtc-characterization.json', JSON.stringify({ capability, network,
+    interpretation: network.udpPackets > 0 ? 'CONFIRMED: arbitrary iframe JS reached local UDP despite CSP; no-network acceptance fails.' : 'No local UDP observed; this is not proof of universal/cross-browser/non-HTTP isolation.' }, null, 2))
+  expect(capability !== null).toBe(true)
+  // This characterization records the gap. It deliberately does not assert the
+  // false proposition that passing HTTP probes proves no network on every channel.
 })

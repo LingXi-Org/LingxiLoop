@@ -72,7 +72,7 @@ Static SVG uses `<img>` with object-contain and a complete 400×320 / 5:4 box.
 No inner HTML is injected into the application. Generated JSON is fetched from
 the dedicated asset endpoint with the existing authenticated HTTP client only
 on visible hover or explicit keyboard/touch activation. The global budget allows
-two active documents (oldest activation is disposed); hidden/offscreen/unmounted
+two active cover renderers (each has one trusted outer and one model document) (oldest activation is disposed); hidden/offscreen/unmounted
 covers dispose documents and abort in-flight requests. Reduced motion stays
 static. Touch iframe pointer events stay disabled to preserve page scrolling;
 the accessible toggle requests the renderer's meaningful central interaction.
@@ -113,5 +113,16 @@ upstream installer/build/validate scripts. In isolated UI worktree set
 `CASE_COVER_SOURCE_ROOT=/tmp/loop-376-render` for that command. Browser output is
 `.e2e/case-cover`; prepare `hairline.html` first. Browser starts one localhost
 fixture at port5189, a small isolated cache under /tmp, no API proxy or credentials.
+For the managed session's existing browser, set `E2E_CASE_COVER_CDP_URL` to the
+integrator-provided local endpoint. `--trace off --video off --output /tmp/loop-case-cover-e2e`
+keeps browser artifacts off the constrained workspace disk. The approved UDP
+characterization listener binds only127.0.0.1:51890; check the port first and
+retain start/stop log plus the final free-port check. `webrtc-characterization.json`
+records local packets separately from HTTP checks; positive UDP means the
+no-network requirement fails, while zero packets prove only this measured case.
+The primary [Firefox implementation tracker](https://bugzilla.mozilla.org/show_bug.cgi?id=1783489)
+is still open, and [CSP3 defines WebRTC separately from fetch](https://www.w3.org/TR/CSP3/#directive-webrtc).
+This wrapper therefore does not claim a universal no-network browser boundary.
+
 The synthetic component fixture is labelled as synthetic and is not evidence of
 three real article/model generations. Use the serialized browser slot.

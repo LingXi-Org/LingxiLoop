@@ -68,6 +68,7 @@ function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry }: Omit
   const description = cover?.alt?.trim() || `${title}的案例封面`
   const preview = !failedPreview ? cover?.previewUrl : null
   const image = preview || (!failedOriginal ? fallbackUrl : null)
+  const imageDescription = preview ? description : `${title}的案例封面`
 
   useEffect(() => {
     const target = container.current
@@ -121,7 +122,7 @@ function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry }: Omit
     <div ref={container} className="relative isolate aspect-[5/4] w-full overflow-hidden rounded-md bg-muted/30"
       onPointerEnter={event => { if (finePointer && event.pointerType === 'mouse') setHovered(true) }}
       onPointerLeave={() => setHovered(false)} style={{ touchAction: 'pan-y' }}>
-      {image ? <img src={image} alt={description} width={400} height={320} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain" onError={() => { if (preview) setFailedPreview(true); else setFailedOriginal(true) }} />
+      {image ? <img src={image} alt={imageDescription} width={400} height={320} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain" onError={() => { if (preview) setFailedPreview(true); else setFailedOriginal(true) }} />
         : <div role="img" aria-label={description} className="flex h-full items-center justify-center text-xs text-muted-foreground">案例封面</div>}
       {document && <iframe ref={frame} title={`${description}（交互）`} srcDoc={document} sandbox="allow-scripts" referrerPolicy="no-referrer" tabIndex={-1} aria-hidden="true" onLoad={environment}
         className="absolute inset-0 h-full w-full border-0" style={{ opacity: ready ? 1 : 0, pointerEvents: finePointer && ready ? 'auto' : 'none', touchAction: 'pan-y' }} />}

@@ -24,6 +24,7 @@ test('teacher failures retain original cover and expose only a stable retry call
   const failed = { ...cover, status: 'failed' as const, previewUrl: null, interactiveUrl: null, canRetry: true }
   const html = renderToStaticMarkup(<CaseCover cover={failed} title="知识整理" scopeKey="company:teacher" fallbackUrl="/manual.png" onRetry={async () => undefined} />)
   assert.match(html, /manual\.png/); assert.match(html, /重试封面/)
+  assert.match(html, /alt="知识整理的案例封面"/)
   assert.doesNotMatch(html, /fingerprint|synthetic|stack|prompt/)
   const student = renderToStaticMarkup(<CaseCover cover={{ ...failed, canRetry: false }} title="知识整理" scopeKey="company:reader" />)
   assert.doesNotMatch(student, /重试封面/)
