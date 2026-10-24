@@ -1,0 +1,112 @@
+e2e/react-delivery/recovery.e2e.ts(25,28): error TS2345: Argument of type '() => Promise<void>' is not assignable to parameter of type 'string | (() => JsonValue | Promise<JsonValue>)'.
+  Type '() => Promise<void>' is not assignable to type '() => JsonValue | Promise<JsonValue>'.
+    Type 'Promise<void>' is not assignable to type 'JsonValue | Promise<JsonValue>'.
+      Type 'Promise<void>' is not assignable to type 'Promise<JsonValue>'.
+        Type 'void' is not assignable to type 'JsonValue'.
+e2e/react-delivery/recovery.e2e.ts(45,30): error TS2345: Argument of type '() => Promise<void>' is not assignable to parameter of type 'string | (() => JsonValue | Promise<JsonValue>)'.
+  Type '() => Promise<void>' is not assignable to type '() => JsonValue | Promise<JsonValue>'.
+    Type 'Promise<void>' is not assignable to type 'JsonValue | Promise<JsonValue>'.
+      Type 'Promise<void>' is not assignable to type 'Promise<JsonValue>'.
+        Type 'void' is not assignable to type 'JsonValue'.
+e2e/react-delivery/recovery.e2e.ts(54,34): error TS2345: Argument of type '(target: JsonValue) => Promise<void>' is not assignable to parameter of type 'string | ((arg: JsonValue) => JsonValue | Promise<JsonValue>)'.
+  Type '(target: JsonValue) => Promise<void>' is not assignable to type '(arg: JsonValue) => JsonValue | Promise<JsonValue>'.
+    Type 'Promise<void>' is not assignable to type 'JsonValue | Promise<JsonValue>'.
+      Type 'Promise<void>' is not assignable to type 'Promise<JsonValue>'.
+        Type 'void' is not assignable to type 'JsonValue'.
+e2e/react-delivery/recovery.e2e.ts(54,90): error TS2345: Argument of type 'JsonValue' is not assignable to parameter of type 'AgentRunTarget'.
+  Type 'null' is not assignable to type 'AgentRunTarget'.
+e2e/react-delivery/recovery.e2e.ts(56,58): error TS2339: Property 'frame' does not exist on type 'JsonValue'.
+e2e/react-delivery/recovery.e2e.ts(56,65): error TS2339: Property 'a' does not exist on type 'JsonValue'.
+e2e/react-delivery/recovery.e2e.ts(56,68): error TS2339: Property 'b' does not exist on type 'JsonValue'.
+e2e/react-delivery/recovery.e2e.ts(56,71): error TS2339: Property 'replacement' does not exist on type 'JsonValue'.
+e2e/react-delivery/recovery.e2e.ts(75,12): error TS2345: Argument of type '{ frame: ReactDeliveryFrame; a: "Gather collects the available inputs."; b: "Check compares those inputs with the stated goal."; replacement: "Gather records the approved inputs."; }' is not assignable to parameter of type 'JsonValue'.
+  Types of property 'frame' are incompatible.
+    Type 'ReactDeliveryFrame' is not assignable to type 'JsonValue | undefined'.
+      Type 'ReactDeliveryFrame' is not assignable to type '{ readonly [key: string]: JsonValue; }'.
+        Index signature for type 'string' is missing in type 'ReactDeliveryFrame'.
+e2e/react-delivery/recovery.e2e.ts(79,18): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(79,27): error TS2339: Property 'contains' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'contains' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(80,18): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(80,27): error TS2339: Property 'samples' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'samples' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(80,41): error TS7006: Parameter 'sample' implicitly has an 'any' type.
+e2e/react-delivery/recovery.e2e.ts(80,63): error TS7006: Parameter 'body' implicitly has an 'any' type.
+e2e/react-delivery/recovery.e2e.ts(84,18): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(84,27): error TS2339: Property 'contains' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'contains' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(85,18): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(85,27): error TS2339: Property 'contains' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'contains' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(88,18): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(88,27): error TS2339: Property 'samples' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'samples' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(88,41): error TS7006: Parameter 'sample' implicitly has an 'any' type.
+e2e/react-delivery/recovery.e2e.ts(89,38): error TS7006: Parameter 'body' implicitly has an 'any' type.
+e2e/react-delivery/recovery.e2e.ts(92,23): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(92,32): error TS2339: Property 'contains' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'contains' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(93,13): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(93,22): error TS2339: Property 'contains' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'contains' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(94,18): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(94,27): error TS2339: Property 'identity' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'identity' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(95,46): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(95,55): error TS2339: Property 'identity' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'identity' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(96,32): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(96,41): error TS2339: Property 'identity' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'identity' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(98,22): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(98,31): error TS2339: Property 'bodies' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'bodies' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(98,42): error TS7006: Parameter 'item' implicitly has an 'any' type.
+e2e/react-delivery/recovery.e2e.ts(105,26): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(105,35): error TS2339: Property 'contains' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'contains' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(106,18): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(106,27): error TS2339: Property 'contains' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'contains' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(107,18): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(107,27): error TS2339: Property 'contains' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'contains' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(108,23): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(108,32): error TS2339: Property 'bodies' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'bodies' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(109,45): error TS2698: Spread types may only be created from object types.
+e2e/react-delivery/recovery.e2e.ts(109,67): error TS18047: 'observed' is possibly 'null'.
+e2e/react-delivery/recovery.e2e.ts(109,76): error TS2339: Property 'samples' does not exist on type 'string | number | boolean | { readonly [key: string]: JsonValue; } | readonly JsonValue[]'.
+  Property 'samples' does not exist on type 'string'.
+e2e/react-delivery/recovery.e2e.ts(139,30): error TS2345: Argument of type '(frames: JsonValue) => Promise<void>' is not assignable to parameter of type 'string | ((arg: JsonValue) => JsonValue | Promise<JsonValue>)'.
+  Type '(frames: JsonValue) => Promise<void>' is not assignable to type '(arg: JsonValue) => JsonValue | Promise<JsonValue>'.
+    Type 'Promise<void>' is not assignable to type 'JsonValue | Promise<JsonValue>'.
+      Type 'Promise<void>' is not assignable to type 'Promise<JsonValue>'.
+        Type 'void' is not assignable to type 'JsonValue'.
+e2e/react-delivery/recovery.e2e.ts(139,121): error TS2345: Argument of type 'JsonValue' is not assignable to parameter of type 'Omit<ReactDeliveryFrame, "checkpoint">[]'.
+  Type 'null' is not assignable to type 'Omit<ReactDeliveryFrame, "checkpoint">[]'.
+e2e/web/mentions-admission.e2e.ts(19,35): error TS2345: Argument of type '() => boolean | undefined' is not assignable to parameter of type 'string | (() => JsonValue | Promise<JsonValue>)'.
+  Type '() => boolean | undefined' is not assignable to type '() => JsonValue | Promise<JsonValue>'.
+    Type 'boolean | undefined' is not assignable to type 'JsonValue | Promise<JsonValue>'.
+      Type 'undefined' is not assignable to type 'JsonValue | Promise<JsonValue>'.
+e2e/web/mentions-chinese.e2e.ts(14,28): error TS2345: Argument of type '() => Navigator' is not assignable to parameter of type 'string | (() => JsonValue | Promise<JsonValue>)'.
+  Type '() => Navigator' is not assignable to type '() => JsonValue | Promise<JsonValue>'.
+    Type 'Navigator' is not assignable to type 'JsonValue | Promise<JsonValue>'.
+      Type 'Navigator' is not assignable to type '{ readonly [key: string]: JsonValue; }'.
+        Index signature for type 'string' is missing in type 'Navigator'.
+src/features/chat/runtime/harness-api.ts(3,27): error TS2307: Cannot find module '@/api/core/http' or its corresponding type declarations.
+src/features/chat/runtime/harness-api.ts(4,32): error TS2307: Cannot find module '@/api/transport' or its corresponding type declarations.
+src/features/chat/runtime/harness-api.ts(5,36): error TS2307: Cannot find module '@/stores/auth' or its corresponding type declarations.
+src/features/chat/runtime/harness-api.ts(6,37): error TS2307: Cannot find module '@/lib/workspaceSession' or its corresponding type declarations.
+src/features/chat/runtime/harness-api.ts(7,39): error TS2307: Cannot find module '@/lib/agentRunSnapshot' or its corresponding type declarations.
+src/features/chat/runtime/harness-api.ts(8,38): error TS2307: Cannot find module '@/lib/memoryActivity' or its corresponding type declarations.
+src/features/chat/runtime/runActivityHistory.ts(3,57): error TS2307: Cannot find module '@/lib/nativeMessage' or its corresponding type declarations.
+src/features/chat/runtime/runActivityHistory.ts(4,36): error TS2307: Cannot find module '@/lib/runActivity' or its corresponding type declarations.
+src/features/chat/runtime/runActivityHistory.ts(62,25): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+src/features/chat/runtime/runActivityHistory.ts(63,32): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+src/features/chat/runtime/runActivityHistory.ts(133,43): error TS2339: Property 'message' does not exist on type '{ scope: string; sequence: number; total: number; nextOffset: number | null; }'.
+src/features/chat/runtime/runActivityHistory.ts(134,44): error TS7006: Parameter 'part' implicitly has an 'any' type.
+src/features/chat/runtime/snapshot-publication.ts(2,56): error TS2307: Cannot find module '@/lib/agentRunSnapshot' or its corresponding type declarations.
+src/features/chat/runtime/snapshot-publication.ts(3,69): error TS2307: Cannot find module '@/lib/nativeMessage' or its corresponding type declarations.
+src/features/chat/runtime/text-update.ts(2,31): error TS2307: Cannot find module '@/lib/answerSegment' or its corresponding type declarations.
+src/features/chat/runtime/text-update.ts(3,36): error TS2307: Cannot find module '@/lib/runActivity' or its corresponding type declarations.

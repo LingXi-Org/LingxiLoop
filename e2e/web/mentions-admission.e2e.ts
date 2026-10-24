@@ -16,7 +16,7 @@ test.describe('Multi-segment mention admission', {
       await expect(body).toHaveText(expected!)
       await expect(browser.locator('[data-mention-id]')).toHaveCount(7)
     }
-    expect(await browser.evaluate(() => document.querySelector('.native-message-content')?.textContent?.includes('中文紧邻@明理检查；未知@unknown保持原文。'))).toBe(true)
+    expect(await browser.evaluate(() => Boolean(document.querySelector('.native-message-content')?.textContent?.includes('中文紧邻@明理检查；未知@未识别成员保持原文。')))).toBe(true)
     expect(await browser.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false)
     await app.screenshot(`mentions-admission-${width}`)
   })

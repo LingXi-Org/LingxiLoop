@@ -1,3 +1,4 @@
+import { participantDisplayName, presentParticipant } from '../../../src/lib/participantDisplayName.js'
 import { nativeText } from '../im/message-types.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { publicTextSafety } from './public-text-safety.js'
@@ -33,8 +34,8 @@ type Work = Omit<WorkItem, 'leaseToken'>
 
 export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principalId' | 'agentId'> & { conversationId: string; createdAt?: string }, database: Queryable = pool) {
   if (!work.principalId) throw new NoEffectError('original human is required', 'forbidden')
-  const { rows } = await database.query<{ name: string; role: string; system_prompt: string; capabilities: string[]; teacher_managed: boolean; channel_type: number }>(
-    `SELECT agent.name,agent.role,agent.system_prompt,agent.capabilities,(binding.profile->>'channelType')::integer AS channel_type,
+  const { rows } = await database.query<{ name: string; role: string; system_prompt: string; capabilities: string[]; presetKey: string | null; teacher_managed: boolean; channel_type: number }>(
+    `SELECT agent.name,agent.role,agent.system_prompt,agent.capabilities,agent.preset_key AS "presetKey",(binding.profile->>'channelType')::integer AS channel_type,
       EXISTS(SELECT 1 FROM learning_project_teacher_agents teacher WHERE teacher.company_id=agent.company_id AND teacher.agent_id=agent.id) AS teacher_managed
     FROM participants agent JOIN participants human ON human.company_id=agent.company_id
     JOIN users principal ON principal.id=human.id AND principal.deleted_at IS NULL AND principal.suspended_at IS NULL
@@ -48,7 +49,7 @@ export async function loadRuntimeBinding(work: Pick<Work, 'tenantId' | 'principa
   if (!row || ![1,2].includes(row.channel_type)) throw new NoEffectError('agent or original human membership was revoked', 'forbidden')
   await createPermissionService(database, { lockDependencies: database !== pool }).assertCan({ actorUserId: work.principalId, companyId: work.tenantId,
     action: 'conversation:read', resource: { type: 'conversation', id: work.conversationId } })
-  return { ...row, system_prompt: row.teacher_managed ? TEACHER_PROMPT : row.system_prompt,
+  return { ...row, name: participantDisplayName({ ...row,kind:'agent' }), system_prompt: row.teacher_managed ? TEACHER_PROMPT : row.system_prompt,
     capabilities: row.capabilities.filter(capability => capability !== 'email' && capability !== 'calendar') }
 }
 
@@ -264,7 +265,7 @@ export function createProductContext(tools: readonly ToolDefinition[]) {
         memoryScopes: memorySnapshot.scopes,memoryScopesStatus: memorySnapshot.status,
         visualize: visualizeDirectory ? { outputDirectory: visualizeDirectory } : undefined,
         visualizeWidgetContext: visualizeModelContext(visualizeState),
-        roster: roster.rows.map(({ preset_key: _preset, ...member }) => ({ ...member, capabilities: member.capabilities.filter(capability => capability !== 'email' && capability !== 'calendar') })),
+        roster: roster.rows.map(({ preset_key: presetKey, ...member }) => ({ ...presentParticipant({ ...member,kind:'agent' as const,presetKey }), capabilities: member.capabilities.filter(capability => capability !== 'email' && capability !== 'calendar') })),
         missingSpecialists: STARTER_TEAM.filter(agent => !roster.rows.some(member => member.preset_key === agent.presetKey)).map(({ name, role }) => ({ name, role })),
         knowledgeRetrieval: knowledgeRetrieval ? { status: knowledgeRetrieval.status,
           ...(['frozen','on_demand'].includes(knowledgeRetrieval.status) ? {} : { matchedChunks: retrieval.length }),

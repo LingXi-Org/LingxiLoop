@@ -69,9 +69,9 @@ test('committed formatted mentions drive A → B → C → A and a plain reply e
         const context = JSON.stringify(request.items)
         assert.match(context, /Unique recorded value: 7391/)
         const text = context.includes('FOLLOW_UP') ? 'Clarification recorded. The task is complete.'
-          : context.includes('CHECK_SECOND') ? `@${agentId} FOLLOW_UP: clarify this point.`
-          : context.includes('DELEGATE_B') ? `@${third} CHECK_SECOND: independently verify this finding.`
-          : `- Specialist \`@${second}\` DELEGATE_B: investigate the assigned part.`
+          : context.includes('CHECK_SECOND') ? `协作交接：@${agentId} FOLLOW_UP: clarify this point.`
+          : context.includes('DELEGATE_B') ? `协作交接：@${third} CHECK_SECOND: independently verify this finding.`
+          : `协作交接：@${second} DELEGATE_B: investigate the assigned part.`
         return { output: [{ role: 'assistant', content: text }], text, model: 'mention-fixture', usage }
       },
       async structured() { return { value: { missing: [] }, model: 'mention-fixture', usage } },
@@ -177,20 +177,22 @@ test('message admission freezes canonical mentions across renames and preserves 
 
 // Screenshot regression: all five formatted roster mentions must create public
 // replies after the leader commits, without waking an unmentioned room member.
-test('a leader introduction wakes all five inline-code mentioned specialists once', { timeout: 60000 }, async () => {
+for (const assign of [false,true]) test(assign ? 'explicit introduction handoffs wake the five specialists once' : 'a descriptive six-agent roster creates one answer and zero successor runs', { timeout: 60000 }, async () => {
   await resetAllTables()
+  recording.messages.length = 0
   const { companyId, projectId, agentId } = await seedCompanyWithAgent()
   await seedUserMembership('test-owner', companyId)
   const specialists = ['sage', 'milo', 'trace', 'scout', 'forge']
+  const chineseNames: Record<string,string> = {sage:'明理',milo:'砺思',trace:'溯源',scout:'寻知',forge:'成器'}
   const channelId = 'introduction-room', excluded = 'example-only'
-  for (const id of [...specialists, excluded]) await pool.query(`INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status)
-    VALUES($1,$2,'agent',$1,'specialist','M','#abcdef','avail')`, [id, companyId])
+  for (const id of [...specialists, excluded]) await pool.query(`INSERT INTO participants(id,company_id,kind,name,role,initial,avatar_bg,status,preset_key)
+    VALUES($1,$2,'agent',$3,'specialist','助','#abcdef','avail',$4)`, [id, companyId,chineseNames[id]??'示例成员',chineseNames[id]?id:null])
   const members = ['test-owner', agentId, ...specialists, excluded]
   await pool.query(`INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group',$1,$4::jsonb)`,
     [channelId, companyId, projectId, JSON.stringify(members)])
   await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile,leader_agent_id) VALUES($1,$2,$3::jsonb,$4)`,
     [channelId, companyId, JSON.stringify({ channelType: 2, members }), agentId])
-  const payload = createNativeMessage({ id: 'introduction-source', role: 'user', content: [{ type: 'text', text: '介绍一下自己，并且提及其他成员介绍自己。' }] })
+  const payload = createNativeMessage({ id: 'introduction-source', role: 'user', content: [{ type: 'text', text: assign ? '介绍一下自己，并交接给其他成员介绍自己。' : '房间里还有谁？' }] })
   await imMessagesApplication.acceptUserMessage({ companyId, userId: 'test-owner', channelId, clientNonce: payload.id, payload })
   await receiveAgentRequest({ companyId, agentId, channelId, clientMsgNo: payload.id })
   const api = await lingxiOSControl()
@@ -204,9 +206,9 @@ test('a leader introduction wakes all five inline-code mentioned specialists onc
     model: { modelId: 'introduction-fixture', contextWindowTokens: 200000,
       async run() {
         const text = speaker === agentId ? '我是协调者，请各位介绍自己：\n'
-          + specialists.map(id => `- \`@${id}\` 请用一句话介绍自己的职责。`).join('\n')
+          + specialists.map(id => assign ? `协作交接：@${chineseNames[id]} 请用一句话介绍自己的职责。` : `| @${id} | 专业成员 |`).join('\n')
           + `\n\n> \`@${excluded}\` 引用示例\n\n\`print("@${excluded}")\`\n\n\`\`\`text\n@${excluded}\n\`\`\``
-          : `我是 ${speaker}，负责团队中的专业工作。`
+          : `我是${chineseNames[speaker]}，负责团队中的专业工作。`
         return { output: [{ role: 'assistant', content: text }], text, model: 'introduction-fixture', usage }
       },
       async structured() { return { value: { missing: [] }, model: 'introduction-fixture', usage } },
@@ -215,15 +217,15 @@ test('a leader introduction wakes all five inline-code mentioned specialists onc
   await worker.start()
   const replies = () => recording.messages.filter(message => message.channelId === channelId && message.payload.role === 'assistant')
   const deadline = Date.now() + 45000
-  while (replies().length < 6) { assert.ok(Date.now() < deadline, 'five specialist introductions did not arrive'); await delay(50) }
+  while (replies().length < (assign ? 6 : 1)) { assert.ok(Date.now() < deadline, 'five specialist introductions did not arrive'); await delay(50) }
   await worker.stop()
   assert.equal(replies()[0].fromUid, agentId, 'the assignment must be committed first')
-  assert.deepEqual(replies().slice(1).map(message => message.fromUid).sort(), [...specialists].sort())
+  assert.deepEqual(replies().slice(1).map(message => message.fromUid).sort(), assign ? [...specialists].sort() : [])
   const runs = (await pool.query('SELECT agent_id,principal_id,internal FROM agent_run_bindings')).rows
-  assert.equal(runs.length, 6)
+  assert.equal(runs.length, assign ? 6 : 1)
   assert.ok(runs.every(run => run.principal_id === 'test-owner' && !run.internal))
   await mkdir(`${acceptanceOutput}/group-mentions`, { recursive: true })
-  await writeFile(`${acceptanceOutput}/group-mentions/introduction.json`, JSON.stringify({ passed: true,
+  await writeFile(`${acceptanceOutput}/group-mentions/${assign ? "introduction" : "roster-inert"}.json`, JSON.stringify({ passed: true,
     authors: replies().map(message => message.fromUid), runs,
     checks: ['five-specialists', 'commit-before-dispatch', 'one-reply-each', 'examples-inert', 'shared-human'] }, null, 2), { flag: 'wx' })
 })

@@ -19,6 +19,7 @@ import { useConversations } from '@/features/conversations/store'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 import type { Participant } from '@/types'
+import { participantDisplayName } from '@/lib/participantDisplayName'
 import { chatTransport } from '../runtime/transport'
 import type { LingxiMessageMetadata } from '../runtime/model'
 import { NativeMessageContent } from './NativeMessageContent'
@@ -120,7 +121,7 @@ function MessageTextPart() {
   const isHuman = metadata.senderKind === 'human'
   const ownsQuote = useAuiState(state => state.message.parts[0] === state.part)
   const inlineCitations = Boolean(metadata.runId)
-  const { rawText, confidenceClaims, getText } = useMessageCopyText(bodyRef)
+  const { rawText, confidenceClaims, getText } = useMessageCopyText(bodyRef,mentionTargets)
   useEffect(() => {
     if (!metadata.runId || metadata.isMine || !rawText.trim() || document.visibilityState !== 'visible') return
     if (bodyRef.current) chatLatency.painted(metadata.runId, bodyRef.current)
@@ -281,7 +282,7 @@ export function ConversationMessage() {
       <div className={cn('contents', custom.isMine ? '[&>div]:col-start-1' : '[&>div]:col-start-2')}>
         {custom.groupStart && !custom.isMine && (
           <div className="row-start-1 mb-1 flex items-center gap-2 px-1 text-xs text-muted-foreground">
-            <span className="font-medium">{custom.senderName}</span>
+            <span className="font-medium">{participant ? participantDisplayName(participant) : custom.senderName}</span>
           </div>
         )}
         <div className={cn('row-start-2 grid w-full max-w-[800px] min-w-0 gap-0.5', custom.isMine ? 'justify-self-end' : 'justify-self-start', running && 'min-h-5')}>

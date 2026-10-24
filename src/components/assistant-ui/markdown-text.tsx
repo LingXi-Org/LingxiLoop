@@ -21,7 +21,8 @@ import { StreamingBlock, StreamingPart, useStreamingBlock } from './streaming-ta
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 import { activityAnnotation } from '@/lib/runActivity'
 import { answerTextOffset } from '@/lib/answerSegment'
-import { scanMentions, standaloneMention } from '@/lib/mentions'
+import { scanVisibleMentions, standaloneVisibleMention, isMemberIdColumn, isExplicitMemberIdColumn, memberIdTarget } from '@/lib/mentions'
+import { participantDisplayName } from '@/lib/participantDisplayName'
 import type { Participant } from '@/types'
 import { MentionBadge } from '@/components/MentionBadge'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
@@ -81,29 +82,47 @@ const confidenceComponents = { span: ConfidenceSpan }
 const emptyClaims: readonly MarkdownConfidenceClaim[] = []
 const emptyMentionTargets: readonly Participant[] = []
 
-function rehypeMentionNames({ targets, allowInlineCodeMentions = false }: { targets: readonly Participant[]; allowInlineCodeMentions?: boolean }) {
+function rehypeMentionNames({ targets }: { targets: readonly Participant[] }) {
   return (tree: Root) => {
+    // Model/history member-ID columns use the same display contract as mentions.
+    // Streamdown's official table copy/download controls read these DOM cells.
+    visit(tree,'element',node=>{
+      if (node.tagName !== 'table') return
+      const rows: Extract<ElementContent,{type:'element'}>[] = []
+      visit(node,'element',child=>{if(child.tagName==='tr') rows.push(child)})
+      const cells = (row: (typeof rows)[number]) => row.children.filter((child):child is Extract<ElementContent,{type:'element'}>=>child.type==='element' && ['th','td'].includes(child.tagName))
+      const text = (cell: (typeof rows)[number]) => cell.children.length === 1 && cell.children[0].type === 'text' ? cell.children[0].value : ''
+      for(const [column,header] of (rows[0] ? cells(rows[0]) : []).entries()) {
+        if (!isMemberIdColumn(text(header)) || !isExplicitMemberIdColumn(text(header)) && !rows.slice(1).some(row=>{const cell=cells(row)[column];return cell && memberIdTarget(text(cell),targets)})) continue
+        header.children=[{type:'text',value:'成员'}]
+        for(const row of rows.slice(1)) {
+          const cell=cells(row)[column], target=cell && memberIdTarget(text(cell),targets)
+          if(target || cell && /^[a-z0-9_-]+$/i.test(text(cell))) cell.children=[{type:'text',value:'@'+(target?participantDisplayName(target):'未识别成员')}]
+        }
+      }
+    })
     visit(tree, (node, index, parent) => {
-      if (allowInlineCodeMentions && node.type === 'element' && node.tagName === 'code'
+      if (node.type === 'element' && node.tagName === 'code'
         && node.position?.start.line === node.position?.end.line
         && node.children.length === 1 && node.children[0].type === 'text') {
-        const mention = standaloneMention(node.children[0].value, targets)
+        const mention = standaloneVisibleMention(node.children[0].value, targets)
         if (mention) {
           node.tagName = 'span'
           node.data = { ...node.data, mentionId: mention.id }
+          node.children = [{type:'text',value:'@'+mention.label}]
           return SKIP
         }
       }
-      if (node.type === 'element' && ['a', 'code', 'pre', 'blockquote'].includes(node.tagName)) return SKIP
+      if (node.type === 'element' && ['code', 'pre'].includes(node.tagName)) return SKIP
       if (node.type !== 'text' || !parent || index === undefined) return
-      const mentions = scanMentions(node.value, targets)
+      const mentions = scanVisibleMentions(node.value, targets, true)
       if (!mentions.length) return
       const parts: ElementContent[] = []
       let cursor = 0
       for (const mention of mentions) {
         if (mention.start > cursor) parts.push({ type: 'text', value: node.value.slice(cursor, mention.start) })
-        parts.push({ type: 'element', tagName: 'span', properties: {}, data: { mentionId: mention.id },
-          children: [{ type: 'text', value: node.value.slice(mention.start, mention.end) }] })
+        parts.push({ type: 'element', tagName: 'span', properties: mention.id ? {} : {'aria-label':'未识别的成员提及'}, data: { mentionId: mention.id },
+          children: [{ type: 'text', value: '@'+mention.label }] })
         cursor = mention.end
       }
       if (cursor < node.value.length) parts.push({ type: 'text', value: node.value.slice(cursor) })
@@ -167,7 +186,7 @@ const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, m
   const streamingBlock = useStreamingBlock(props.index, agent && isAnimating, decorated && animate)
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
-    [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
+    [rehypeMentionNames, { targets: mentionTargets }],
     ...decorated ? [rehypeStreamingText] : [],
   ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets, agent, decorated])
   return <StreamingBlock.Provider value={streamingBlock}><Block {...props} rehypePlugins={rehypePlugins} /></StreamingBlock.Provider>
@@ -216,7 +235,7 @@ const MarkdownTextImpl = ({
   const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, mentionTargets, agent, animate: !motionSettled }), [offsets, confidenceClaims, inlineCitations, mentionTargets, agent, motionSettled])
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...Object.values(defaultRehypePlugins),
-    [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
+    [rehypeMentionNames, { targets: mentionTargets }],
   ], [mentionTargets, agent])
   return <ConfidenceMarker claims={confidenceClaims} hoveredId={hoveredId} onHover={setHoveredId} floatingBasis={inlineCitations}>
     <MentionTargets.Provider value={mentionTargets}><CitationBlocks.Provider value={citationBlocks}>

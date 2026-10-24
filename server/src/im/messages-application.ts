@@ -405,7 +405,7 @@ export class ImMessagesApplication {
       let acceptance = await getSendAcceptance(db, identity)
       if (!acceptance) {
         const members = input.payload.role !== 'system' && /[@＠]/u.test(nativeText(input.payload))
-          ? (await db.query<{ id: string; name: string }>(`SELECT member.id,member.name FROM participants member
+          ? (await db.query<{ id: string; name: string; kind: 'agent' | 'human'; presetKey: string | null }>(`SELECT member.id,member.name,member.kind,member.preset_key AS "presetKey" FROM participants member
               JOIN im_channel_bindings channel ON channel.company_id=member.company_id AND channel.channel_id=$2
               WHERE member.company_id=$1 AND member.departed_at IS NULL AND channel.profile->'members' ? member.id`,
             [input.companyId,input.channelId])).rows : []

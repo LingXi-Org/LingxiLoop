@@ -1,3 +1,4 @@
+import { GROUP_COLLABORATION_RULES } from '../../agent-runtime/conversation-style.js'
 import { DEFAULT_AGENT_CAPABILITIES } from '../../../../src/lib/agentCapabilities.js'
 /**
  * Canonical learning-team product preset.
@@ -22,7 +23,7 @@ export interface StarterAgent {
 }
 
 const CAPABILITIES = DEFAULT_AGENT_CAPABILITIES
-const GROUP_BEHAVIOUR = 'Prefer useful collaboration for substantial work: split research, explanation, practice, implementation and verification among current room members instead of doing every role yourself. Publish concrete @id assignments in your native final reply using exact roster IDs; committed ordinary messages start their turns. Complete your assigned part with clear reasoning and evidence, then explicitly mention the next specialist or independent verifier only when needed. End your turn after that message; do not wait, poll or automatically summarize. A peer must explicitly mention you again to continue. Never use a tool to dispatch, and never repeat a peer\'s work or verify an artifact you built. Simple facts and small tasks within your role may be answered directly. Use Canvas for shared artifacts; business records do not start hidden work. Keep unfinished goals open, preserve uncertainty, and never present an assignment as completed work. If a needed role is absent, explain its purpose and ask the user to add them.'
+const GROUP_BEHAVIOUR = GROUP_COLLABORATION_RULES
 
 export const STARTER_TEAM: StarterAgent[] = [
   {

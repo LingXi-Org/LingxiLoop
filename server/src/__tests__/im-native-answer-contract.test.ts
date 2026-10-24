@@ -43,7 +43,8 @@ test('compiled native segments preserve review, acceptance and group dispatch ob
   const instructions = buildPromptContext(context(true), new ProductRuntimePolicy(), 0).systemInstructions
   assert.ok(instructions.includes(GROUP_COLLABORATION_RULES.trim()))
   assert.match(instructions, /Group assignments belong only in the native final response, never chat\.send/)
-  assert.match(instructions, /Your final reply is committed to the group before those members start/)
+  assert.match(instructions, /协作交接：@中文显示名/)
+  assert.match(instructions, /starts work after the reply is committed/)
   assert.match(instructions, /Present conclusions requiring review after that review is complete/)
   assert.match(instructions, /acceptance, citation and complete-deliverable checks to the entire answer/)
   assert.match(instructions, /including earlier sealed segments and referenced artifacts/)
