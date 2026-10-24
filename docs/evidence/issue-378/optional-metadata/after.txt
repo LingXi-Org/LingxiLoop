@@ -1,0 +1,121 @@
+TAP version 13
+# Subtest: native source offsets count UTF-16 and contain no invented separator
+ok 1 - native source offsets count UTF-16 and contain no invented separator
+  ---
+  duration_ms: 4.223792
+  type: 'test'
+  ...
+# Subtest: malformed scope/ranges are not accepted as canonical source metadata
+ok 2 - malformed scope/ranges are not accepted as canonical source metadata
+  ---
+  duration_ms: 1.098149
+  type: 'test'
+  ...
+# Subtest: a citation crossing sources is rendered once at its true UTF-16 position
+ok 3 - a citation crossing sources is rendered once at its true UTF-16 position
+  ---
+  duration_ms: 21.022412
+  type: 'test'
+  ...
+# Subtest: a sealed first source does not stop a shared Markdown block while the continuation is streaming
+ok 4 - a sealed first source does not stop a shared Markdown block while the continuation is streaming
+  ---
+  duration_ms: 4.46818
+  type: 'test'
+  ...
+# Subtest: a cross-source visualize reference is kept complete exactly once without changing copied source text
+ok 5 - a cross-source visualize reference is kept complete exactly once without changing copied source text
+  ---
+  duration_ms: 1.420027
+  type: 'test'
+  ...
+# Subtest: normal segments remain independent and missing ranges never synthesize a complete source set
+ok 6 - normal segments remain independent and missing ranges never synthesize a complete source set
+  ---
+  duration_ms: 1.168004
+  type: 'test'
+  ...
+# Subtest: literal visualize examples in Markdown code never acquire a cross-source renderer
+ok 7 - literal visualize examples in Markdown code never acquire a cross-source renderer
+  ---
+  duration_ms: 1.388417
+  type: 'test'
+  ...
+# Subtest: official Markdown blocks spanning sources retain links, tables and math without replaying other blocks
+ok 8 - official Markdown blocks spanning sources retain links, tables and math without replaying other blocks
+  ---
+  duration_ms: 1.405702
+  type: 'test'
+  ...
+# Subtest: parser newline normalization falls back to intact canonical code, never an isolated active directive
+ok 9 - parser newline normalization falls back to intact canonical code, never an isolated active directive
+  ---
+  duration_ms: 0.438952
+  type: 'test'
+  ...
+# Subtest: historical system placeholders are filtered in every language and nested replay without rewriting storage or real prose
+ok 10 - historical system placeholders are filtered in every language and nested replay without rewriting storage or real prose
+  ---
+  duration_ms: 25.670541
+  type: 'test'
+  ...
+# Subtest: native messages survive JSON and nested-message replay without losing content or metadata
+ok 11 - native messages survive JSON and nested-message replay without losing content or metadata
+  ---
+  duration_ms: 15.719795
+  type: 'test'
+  ...
+# Subtest: native protocol rejects legacy messages, unsupported parts and executable component trees
+ok 12 - native protocol rejects legacy messages, unsupported parts and executable component trees
+  ---
+  duration_ms: 5.794782
+  type: 'test'
+  ...
+# Subtest: one user message carries all attachments exactly once and rejects forged routing
+ok 13 - one user message carries all attachments exactly once and rejects forged routing
+  ---
+  duration_ms: 4.090285
+  type: 'test'
+  ...
+# (node:568290) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# OPTIONAL_METADATA_MISSING_COST {"iterations":3000,"elapsedMs":1.6017409999999472,"activity":0,"segment":0,"missingActivity":0,"missingSegment":0,"failures":0}
+# Subtest: ordinary missing optional metadata returns without schema failure allocation
+ok 14 - ordinary missing optional metadata returns without schema failure allocation
+  ---
+  duration_ms: 3.360146
+  type: 'test'
+  ...
+# Subtest: present null/malformed values keep their schema path, while valid metadata and segment bounds keep the same outputs
+ok 15 - present null/malformed values keep their schema path, while valid metadata and segment bounds keep the same outputs
+  ---
+  duration_ms: 5.135428
+  type: 'test'
+  ...
+# Subtest: tool receipts and old synthesized summaries avoid delivery implementation commentary
+ok 16 - tool receipts and old synthesized summaries avoid delivery implementation commentary
+  ---
+  duration_ms: 3.780052
+  type: 'test'
+  ...
+# Subtest: every registered product action has specific copy and equivalent public alias
+ok 17 - every registered product action has specific copy and equivalent public alias
+  ---
+  duration_ms: 31.809904
+  type: 'test'
+  ...
+# Subtest: runtime public actions and unknown identifiers have safe labels
+ok 18 - runtime public actions and unknown identifiers have safe labels
+  ---
+  duration_ms: 0.457985
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3360.322451
