@@ -1,0 +1,22 @@
+{
+  "mode": "selected",
+  "availableFiles": 119,
+  "selectedFiles": [
+    "message-mentions.test.ts"
+  ],
+  "executedFiles": [
+    "message-mentions.test.ts"
+  ],
+  "records": [
+    {
+      "files": [
+        "message-mentions.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 5029,
+      "exitCode": 0
+    }
+  ],
+  "durationMs": 5030,
+  "exitCode": 0
+}
