@@ -1,0 +1,27 @@
+{
+  "source": "14c941eef88c4a85e69a13d2350f859da5980c66",
+  "theme": "dark",
+  "waitAfterThemeFrameMs": 850,
+  "stableAcrossTwoFrames": true,
+  "visibleWordSamples": 213,
+  "width": 390,
+  "documentWidth": 390,
+  "viewportWidth": 348,
+  "background": "oklch(0.141 0.005 285.823)",
+  "backgroundSrgb": [
+    9,
+    9,
+    11
+  ],
+  "colors": [
+    {
+      "color": "oklch(0.985 0 0)",
+      "srgb": [
+        250,
+        250,
+        250
+      ],
+      "contrastToThreadBackground": 19.061142529601344
+    }
+  ]
+}

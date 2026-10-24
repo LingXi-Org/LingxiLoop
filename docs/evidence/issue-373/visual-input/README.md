@@ -65,6 +65,45 @@ Fixed baseline companion run `01a16c64-61e4-73f3-8cd1-8217f8071a6e` passed1/1 in
 
 Source checks: focused33 tests passed (2 new +23 message +7 presentation +1 collector), focused lint passed6 source files, web `tsc --noEmit` passed. An attempted broader unchanged `run-updates.test.ts` failed during server env initialization (first DATABASE_URL, then WUKONG_USER_TOKEN_SECRET); it was not counted as passed and is outside this isolated UI boundary.
 
-Visual inspection limit: `after-dark-narrow.png` was taken immediately after a same-page theme switch, during the inherited700ms streaming-word color transition. Older text is temporarily dark in this transition snapshot. The subsequent native reduced-motion and focus assertions pass, but this image is not settled dark contrast acceptance; retain it honestly and capture a settled dark frame in combined integration.
+Visual inspection limit: `after-dark-narrow.png` was taken immediately after a same-page theme switch, during the inherited700ms streaming-word color transition. Older text is temporarily dark in this transition snapshot. The subsequent native reduced-motion and focus assertions pass, but this image is not settled dark contrast acceptance; retain it as the historical transition snapshot; the follow-up below supplies the settled dark390px evidence.
 
 Fixture verification: `tsc -p e2e/visual-input/tsconfig.json --noEmit` passes after narrowing the synthetic assistant tail and making official-engine evaluate callback results explicitly JSON-serializable. The first stricter fixture check failed on these typings and an omitted existing DOM declaration; the owning configuration now includes that declaration. These fixture typing/JSON-return corrections followed the passing browser reports; product source and assertions were unchanged, and no additional browser slot was consumed. Focused fixture/config lint also passes4 files.
+
+## Settled dark390px follow-up
+
+Root requested a bounded follow-up of the existing fixture, with no product or
+original assertion changes. Official run
+`01a16ca3-4687-7e56-83ad-59af73a1a533` passed1/1 in15.75s (17.71s total,
+Vite startup752ms) on original source
+`14c941eef88c4a85e69a13d2350f859da5980c66`. The capture-only helper used the
+existing synthetic stream, switched light→dark, waited850ms after the next
+frame, and verified computed colors stayed identical across two further frames.
+No IME scenario, provider, full visual suite or product build was rerun.
+
+All213 sampled visible answer-word spans settled to `oklch(0.985 0 0)`
+(sRGB250/250/250) on the actual thread background
+`oklch(0.141 0.005 285.823)` (sRGB9/9/11). The measured opaque-text contrast
+to that background was19.061142529601344:1. At390px the document scrollWidth
+was390px; the thread client width was348px. These facts describe this settled
+visible answer path, not every control or browser. The prior immediate-switch
+image remains retained as transition evidence; the new
+`001-settled-dark-390.png` supplies the previously pending settled frame.
+
+`settled-dark-metrics.json`, `settled-dark-browser-report.json` and
+`settled-dark-sha256.json` retain the raw facts, actual official runner receipt
+and file hashes. The helper and root-level capture config are retained for
+reproduction from the repository root:
+
+```sh
+E2E_CDP_URL=http://127.0.0.1:9337 E2E_TELEMETRY_DISABLED=1 \
+  node_modules/.bin/e2e run --config e2e.settled-dark-capture.config.ts
+```
+
+The first configuration was placed beside evidence; the engine treated that
+folder as its project root and rejected collection with `NO_TESTS` before any
+browser started. Moving only the capture config to the repository root resolved
+collection. After the successful run its own Vite5193 listener and generated
+cache were gone, and CDP9337 was handed to the377 learning owner.
+Physical IME/other engines, asynchronous height changes and pagination remain
+separate acceptance boundaries. This follow-up does not establish all eight
+areas of #373, server authorization/idempotency or a production release.
