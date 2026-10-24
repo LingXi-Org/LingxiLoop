@@ -105,3 +105,38 @@ test('decoded internal display reuses validation; untrusted clones still parse a
   assert.throws(() => decodeRunSnapshot(snapshot('A'), { ...target, runId: 'other' }), /身份/)
   assert.throws(() => decodeRunSnapshot({ message: { ...snapshot('A').message, content: [{ type: 'text', text: 'x'.repeat(1_000_001) }] } }, target))
 })
+
+test('a pending visible animation frame switches to the bounded hidden-tab timer', context => {
+  const names = ['document', 'requestAnimationFrame', 'cancelAnimationFrame'] as const
+  const originals = names.map(name => Object.getOwnPropertyDescriptor(globalThis, name))
+  const document = Object.assign(new EventTarget(), { visibilityState: 'visible' })
+  let frame: (() => void) | undefined, cancelled = 0
+  Object.defineProperties(globalThis, {
+    document: { configurable: true, value: document },
+    requestAnimationFrame: { configurable: true, value: (callback: () => void) => { frame = callback; return 1 } },
+    cancelAnimationFrame: { configurable: true, value: () => { frame = undefined; cancelled++ } },
+  })
+  context.mock.timers.enable({ apis: ['setTimeout'] })
+  const received: AgentRunSnapshot[] = []
+  const publisher = createSnapshotPublisher(value => received.push(value), new AbortController().signal, error => { throw error })
+  try {
+    publisher.push(decodeRunSnapshot(snapshot('A'), target))
+    publisher.push(decodeRunSnapshot(snapshot('AB', 1), target))
+    assert.ok(frame)
+    const staleFrame = frame
+    document.visibilityState = 'hidden'; document.dispatchEvent(new Event('visibilitychange'))
+    assert.equal(frame, undefined); assert.equal(cancelled, 1)
+    staleFrame()
+    assert.equal(received.length, 1, 'a cancelled frame cannot publish the new pending timer state')
+    context.mock.timers.tick(249)
+    assert.equal(received.length, 1)
+    context.mock.timers.tick(1)
+    assert.deepEqual(received.map(item => nativeText(item.message)), ['A', 'AB'])
+  } finally {
+    publisher.dispose(); context.mock.timers.reset()
+    names.forEach((name, index) => {
+      if (originals[index]) Object.defineProperty(globalThis, name, originals[index]!)
+      else Reflect.deleteProperty(globalThis, name)
+    })
+  }
+})

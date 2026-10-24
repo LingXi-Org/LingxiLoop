@@ -46,15 +46,22 @@ const schedule: Schedule = publish => {
 export function createSnapshotPublisher(receive: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal,
   onError: (error: unknown) => void, clock: Schedule = schedule) {
   let previous: AgentRunSnapshot | undefined, pending: AgentRunSnapshot | undefined, cancel: (() => void) | undefined
-  let disposed = false
-  const clear = () => { cancel?.(); cancel = undefined }
+  let disposed = false, generation = 0
+  const clear = () => { generation++; cancel?.(); cancel = undefined }
   const flush = () => {
     clear()
     const value = pending; pending = undefined
     if (value && !disposed && !signal.aborted) receive(value)
   }
   const publish = () => { try { flush() } catch (error) { onError(error) } }
-  const visible = () => { if (document.visibilityState === 'visible') publish() }
+  const scheduleNext = () => {
+    const scheduled = ++generation
+    cancel = clock(() => { if (scheduled === generation) publish() })
+  }
+  const visible = () => {
+    if (document.visibilityState === 'visible') publish()
+    else if (pending) { clear(); scheduleNext() }
+  }
   const dispose = () => {
     disposed = true; clear(); pending = previous = undefined
     signal.removeEventListener('abort', dispose)
@@ -69,7 +76,7 @@ export function createSnapshotPublisher(receive: (snapshot: AgentRunSnapshot) =>
       previous = snapshot
       if (!batch) { flush(); if (!signal.aborted) receive(snapshot); return }
       pending = snapshot
-      cancel ??= clock(publish)
+      if (!cancel) scheduleNext()
     }, flush, dispose,
   }
 }
