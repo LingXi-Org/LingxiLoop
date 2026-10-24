@@ -1,6 +1,6 @@
 // Adapted from Memos MemoContent/CodeBlock.tsx (MIT). See README.md and LICENSE.
 import { CheckIcon, CopyIcon } from 'lucide-react'
-import { Children, isValidElement, type ReactNode, type CSSProperties, useEffect, useState } from 'react'
+import { Children, Fragment, isValidElement, type ReactNode, type CSSProperties, useEffect, useState } from 'react'
 import type { ThemedToken } from 'shiki'
 import { Button } from '@/components/ui/button'
 import { MermaidBlock } from './MermaidBlock'
@@ -18,7 +18,7 @@ export function CodeBlock({ children }: { children?: ReactNode }) {
   return <HighlightedCodeBlock key={`${language}\0${codeContent}`} language={language} codeContent={codeContent} />
 }
 
-function HighlightedCodeBlock({ language, codeContent }: { language: string; codeContent: string }) {
+export function HighlightedCodeBlock({ language, codeContent }: { language: string; codeContent: string }) {
   const [copied, setCopied] = useState(false), [error, setError] = useState(false)
   const [tokens, setTokens] = useState<ThemedToken[][] | null>(null)
   useEffect(() => {
@@ -44,7 +44,7 @@ function HighlightedCodeBlock({ language, codeContent }: { language: string; cod
       </Button>
     </div>
     <pre className="m-0 overflow-x-auto"><code data-code-highlighted={tokens ? '' : undefined} className={`block px-3 py-2 text-sm leading-relaxed language-${language}`}>
-      {tokens ? tokens.map((line, index) => <span key={index} className="block min-h-[1lh]">{line.map((token, tokenIndex) => <span key={tokenIndex} style={token.htmlStyle as CSSProperties}>{token.content}</span>)}</span>) : codeContent}
+      {tokens ? tokens.map((line, index) => <Fragment key={index}>{index > 0 && '\n'}{line.map((token, tokenIndex) => <span key={tokenIndex} className="dark:!text-[var(--shiki-dark)]" style={token.htmlStyle as CSSProperties}>{token.content}</span>)}</Fragment>) : codeContent}
     </code></pre>
     {error && <p role="status" className="px-3 pb-2 text-xs text-muted-foreground">复制失败，请选择代码后复制。</p>}
   </div>

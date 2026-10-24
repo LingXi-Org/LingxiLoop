@@ -1,0 +1,33 @@
+{
+  "baseline": "2686f475eac075bc9033f13714d5d6bbfa5078eb",
+  "reports": [
+    {"stage":"baseline","id":"01a16c53-4d2c-7436-b5a2-455f29bf4de5","status":"error","exitCode":3,"startedAt":"2026-10-24T05:12:41.445Z","finishedAt":"2026-10-24T05:12:41.969Z","summary":{"discovered":5,"selected":2,"executed":2,"passed":0,"failed":2,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0},
+    {"stage":"baseline-browser","id":"01a16c53-a8bc-7149-9100-a1c724781166","status":"error","exitCode":3,"startedAt":"2026-10-24T05:13:04.885Z","finishedAt":"2026-10-24T05:13:05.418Z","summary":{"discovered":5,"selected":2,"executed":2,"passed":0,"failed":2,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0},
+    {"stage":"baseline-app","id":"01a16c53-e9b2-76b0-9b42-f9c72d4f543f","status":"failed","exitCode":1,"startedAt":"2026-10-24T05:13:21.512Z","finishedAt":"2026-10-24T05:14:20.116Z","summary":{"discovered":5,"selected":2,"executed":2,"passed":0,"failed":2,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0},
+    {"stage":"first-fix","id":"01a16c56-cdaa-7aa8-8c3a-08e13be5cdaa","status":"passed","exitCode":0,"startedAt":"2026-10-24T05:16:30.901Z","finishedAt":"2026-10-24T05:16:45.959Z","summary":{"discovered":5,"selected":2,"executed":2,"passed":2,"failed":0,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0},
+    {"stage":"legacy-check","id":"01a16c59-4a19-7c10-9d82-cbca32f1c6b7","status":"failed","exitCode":1,"startedAt":"2026-10-24T05:19:13.904Z","finishedAt":"2026-10-24T05:19:56.325Z","summary":{"discovered":6,"selected":3,"executed":3,"passed":1,"failed":2,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0},
+    {"stage":"complete-chain","id":"01a16c5d-5650-76b1-9cc8-9aea06d8a728","status":"passed","exitCode":0,"startedAt":"2026-10-24T05:23:39.162Z","finishedAt":"2026-10-24T05:23:58.313Z","summary":{"discovered":6,"selected":3,"executed":3,"passed":3,"failed":0,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0},
+    {"stage":"final-chain","id":"01a16c5f-1890-7a68-88ae-3fb5c65beb90","status":"passed","exitCode":0,"startedAt":"2026-10-24T05:25:34.469Z","finishedAt":"2026-10-24T05:25:59.316Z","summary":{"discovered":6,"selected":3,"executed":3,"passed":3,"failed":0,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0},
+    {"stage":"compatibility","id":"01a16c60-19a8-772d-be44-5011063360e0","status":"passed","exitCode":0,"startedAt":"2026-10-24T05:26:40.216Z","finishedAt":"2026-10-24T05:26:53.238Z","summary":{"discovered":10,"selected":2,"executed":2,"passed":2,"failed":0,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0},
+    {"stage":"verified","id":"01a16c61-a5db-7672-a8d9-bb7f6984194f","status":"passed","exitCode":0,"startedAt":"2026-10-24T05:28:21.671Z","finishedAt":"2026-10-24T05:28:47.276Z","summary":{"discovered":10,"selected":3,"executed":3,"passed":3,"failed":0,"interrupted":0,"flaky":0,"skipped":0},"modelTokens":0}
+  ],
+  "sourceSha256": {
+    "src/features/cases/CasesPage.tsx": "27cdd4951259e51e8450fa7caa93155f80a30044f9369b2328fa9b7239596795",
+    "src/features/cases/CaseCodeBlock.tsx": "6c68b6645147d7dddcfef6e6f6aeb858c199ed1e30a9a981ccf91fba5d23a395",
+    "src/features/content-editor/ContentEditor.tsx": "0dfeca67c02f62f67b60f6d31a786fb053b9f60410a5ea9e85efc7e2c08b909e",
+    "src/features/content-editor/code-block.ts": "84e1e358ce64d98141754a76e4dfd761883da2bc2ef2be16c4802acb0de0cb54",
+    "src/features/content-editor/legacy.tsx": "a2ce503a00b6d201710f5f22b60206b40100a8bec39ade8ee2ed4124481f438a",
+    "src/features/content-editor/schema.ts": "8aa78cf5e6ca0859c85d76c8c95fb7569573f9f6407034d3697e4acb2d4b7284",
+    "src/features/content-editor/content-editor.css": "b54cd08605acfd0019cf6b25926866511a6dbb91862a5f943696fb351212b2a9",
+    "src/features/learning/forum/memos/CodeBlock.tsx": "8cce2aeacdd3308f1793edc483e960838ce1dbb6b503764aba7ff9ca79368ac7",
+    "e2e/cases/code-blocks.e2e.ts": "fa599f9d404fbcaae77ae6b17007bd6179610afd97136983275174e2db3f02ac"
+  },
+  "localChecks": {
+    "unitTests": 4,
+    "focusedE2ETypecheck": "passed",
+    "webTypecheck": "passed",
+    "webBuild": "passed",
+    "lint": "passed",
+    "fullE2ETypecheck": "failed: unchanged recovery fixture typing and harness path aliases; out of scope"
+  }
+}
