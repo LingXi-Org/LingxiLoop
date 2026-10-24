@@ -21,7 +21,7 @@ function App() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const ordered = [...rows.filter(row => row.pinned), ...rows.filter(row => !row.pinned)]
-  return <main className="mx-auto max-w-3xl space-y-5 bg-background p-5 text-foreground">
+  return <main className="desktop-openmaus mx-auto max-w-3xl space-y-5 bg-background p-5 text-foreground">
     <h1 className="text-lg">实际图标资源与合成会话</h1>
     <div className="flex gap-4" aria-label="图标在深浅背景中">
       {['white', '#151515'].map(background => <div key={background} className="flex gap-3 p-3" style={{ background }}>
