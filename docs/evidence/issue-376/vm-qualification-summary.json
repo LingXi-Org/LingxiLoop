@@ -1,0 +1,74 @@
+{
+  "fixedScriptSha256": "8bd2e226568708e00e7cea0caee5f98caa2a0c3f7099b100d78c57d4a9dc5995",
+  "fixedScope": "fixed Hairline kernel, two original examples, bounded negative cases in QuickJS; implementation fix regressions preserve fixed script and assertions",
+  "attempts": [
+    {
+      "candidate": "c69e6397e4dd74fc200f34ba91d0b2c036b2caab",
+      "exitCode": 1,
+      "logSha256": "0771fe3f58c9fa33128b3d037afe1d2be7bb88cddb34ca2922210ec0bb98dd22",
+      "checks": []
+    },
+    {
+      "candidate": "a30b888595eac29405ac2719bd890d08ae459d75",
+      "exitCode": 1,
+      "logSha256": "53bdf931d0288718ba7db3906db7ce7030f6a53426e1371beb419f1de1547b8e",
+      "checks": [
+        {
+          "name": "riffle",
+          "pass": true,
+          "svgBytes": 27423,
+          "nodes": 23529
+        }
+      ]
+    },
+    {
+      "candidate": "6b184aa08e5caf6ee1391bf89568b3fb663a18bc",
+      "exitCode": 1,
+      "logSha256": "c31eb25886cae7cee5eec778f3d74a33bf86533fc64fb0e0857caa25108e4469",
+      "checks": []
+    },
+    {
+      "candidate": "f7d254d7d01f083ac894afc196dec7f3955ddefb",
+      "exitCode": 0,
+      "logSha256": "2901c8fdc9ec2c931fa0ba067bfb3ff9731f53c94462a3aede80aa85fa2ef648",
+      "checks": [
+        {
+          "name": "riffle",
+          "pass": true,
+          "svgBytes": 27423,
+          "nodes": 23529
+        },
+        {
+          "name": "terrain",
+          "pass": true,
+          "svgBytes": 58116,
+          "nodes": 53478
+        },
+        {
+          "name": "cpu",
+          "pass": true
+        },
+        {
+          "name": "heap",
+          "pass": true
+        },
+        {
+          "name": "external SVG",
+          "pass": true
+        },
+        {
+          "name": "oversize output",
+          "pass": true
+        },
+        {
+          "name": "module load",
+          "pass": true
+        },
+        {
+          "name": "no host API",
+          "pass": true
+        }
+      ]
+    }
+  ]
+}
