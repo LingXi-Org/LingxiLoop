@@ -19,15 +19,24 @@ the saved draft. Local inputs and the receipt are scoped by company/account/cour
   tests failed 2/2 with 404 before implementation.
 - Browser baseline: the header regression failed and captured the URL changing
   to `view=conversations` (official `@e2e-dev/web`, shared Chromium CDP).
-- Browser completion is still pending; see the current handoff evidence rather
-  than treating the baseline or a partial pass as release acceptance.
+- Official browser against the compiled real application: 4/4 passed in 35.93s
+  at implementation head `8b04f197bf61baba922343c091d39eb1b020e99c`. Cases cover
+  the direct entry, lost-response retry and student visibility, cancelled late
+  assistant navigation/course isolation, and a late creation receipt after
+  returning to edit the same course. React duplicate-key warnings were absent.
+- Earlier browser failures remain in the handoff evidence. A duplicate sibling
+  key caused stale/duplicated editor DOM and was fixed with a homework-specific
+  key. The independent review's late-write race was fixed with mounted guards.
+- Current-head CI and independent review are tracked in draft PR #388; these
+  synthetic results do not establish a deployed release or model judgment quality.
 
 The fixture is `e2e/forum/api.ts` with `FORUM_ISSUE381=1`; it accepts only the
 specified dedicated test database in that mode. Run migrations explicitly first,
 then the fixture with synthetic environment and a fake model endpoint. It resets
 that fixture database. Run Vite against `http://127.0.0.1:53097` on port 53098,
 then `e2e run --config e2e.assignment-publication.config.ts` using an existing
-browser slot. The browser suite uses an explicitly synthetic READY receipt to
+browser slot. For the compiled path used in acceptance, build and preview with
+`--config e2e/assignment-publication/vite.config.ts` instead of starting dev Vite. The browser suite uses an explicitly synthetic READY receipt to
 exercise the real human publication transaction; it makes no model-quality claim.
 
 Focused browser typecheck: `tsc -p e2e/assignment-publication/tsconfig.json`.
