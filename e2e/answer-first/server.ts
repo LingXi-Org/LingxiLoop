@@ -4,7 +4,7 @@ import type { Plugin } from 'vite'
 
 type Snapshot = { message: { id: string; metadata: { custom: Record<string, unknown> } } }
 type Page = { message: unknown; total: number; nextOffset: number | null }
-type Setup = { snapshot: Snapshot; pages?: Record<string, Page>; failPages?: number; holdPages?: boolean }
+type Setup = { approval?: Record<string, unknown>; snapshot: Snapshot; pages?: Record<string, Page>; failPages?: number; holdPages?: boolean }
 
 // Synthetic local HTTP service. No proxy, production network, browser routes,
 // credentials, private records, or replacement product decoder/store.
@@ -63,7 +63,7 @@ export function answerFirstFixture(): Plugin {
         return json(res, page)
       }
       if (url.pathname.includes('/approvals/') && req.method === 'POST') { approvalPosts++; return json(res, { ok: true, approved: true }) }
-      if (url.pathname.includes('/approvals/')) return json(res, { id: url.pathname.split('/').at(-1), summary: '批准合成资料导出', status: 'PENDING', action: { action: 'test.export' } })
+      if (url.pathname.includes('/approvals/')) return json(res, { id: url.pathname.split('/').at(-1), summary: '批准合成资料导出', status: 'PENDING', action: { action: 'test.export' }, ...setup?.approval })
       if (url.pathname.endsWith('/memory')) {
         const id = url.searchParams.get('ids') === 'memory-process' ? 'memory-process' : 'memory-fixture'
         return json(res, { chips: [{ id, text: id === 'memory-process' ? '过程学习偏好' : '用户请求的记忆摘要', version: 1, change: 'existing' }] })
