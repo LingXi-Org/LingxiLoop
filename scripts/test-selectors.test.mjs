@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import test from 'node:test'
+import { SMOKE_FILES, parseIntegrationArgs, selectIntegrationFiles } from '../server/integration-suite.mjs'
 import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact } from '../server/run-historical-migration-tests.mjs'
 import { createHash } from 'node:crypto'
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
@@ -80,9 +81,9 @@ test('test selectors reject malformed and cross-scope paths before starting test
     assert.equal(run('server/run-integration-tests.mjs', [], { INTEGRATION_TEST_FILES: files }).status, 2)
   }
   const selected = run('server/run-integration-tests.mjs', [], { INTEGRATION_TEST_FILES: '["migration.test.ts"]' })
-  assert.equal(selected.status, 0)
+  assert.equal(selected.status, 2)
   assert.match(selected.stdout, /selected 1\/\d+ file\(s\): migration\.test\.ts/)
-  assert.match(selected.stdout, /skipped/)
+  assert.match(selected.stderr, /INTEGRATION_DATABASE_URL is required/)
 })
 
 test('integration runner refuses unsafe database targets without exposing credentials', () => {
@@ -118,4 +119,36 @@ test('integration runner refuses unsafe database targets without exposing creden
     assert.match(result.stderr, /dedicated test database/i)
     assert.doesNotMatch(`${result.stdout}${result.stderr}`, /sentinel-secret|sentinel-test-secret/)
   }
+})
+
+
+test('integration modes are explicit and empty selections never mean full', () => {
+  const availableFiles = [...SMOKE_FILES, 'migration.test.ts', 'runtime-model-context.test.ts']
+  const choose = (argv = [], env = {}) => selectIntegrationFiles({ ...parseIntegrationArgs(argv, env), availableFiles })
+  assert.deepEqual(choose(), SMOKE_FILES)
+  assert.deepEqual(choose([], { INTEGRATION_TEST_FILES: '[]' }), SMOKE_FILES)
+  assert.deepEqual(choose(['--mode', 'smoke']), SMOKE_FILES)
+  assert.deepEqual(choose(['--file', 'migration.test.ts', '--file', 'migration.test.ts']), ['migration.test.ts'])
+  assert.deepEqual(choose([], { INTEGRATION_TEST_MODE: 'selected', INTEGRATION_TEST_FILES: '["migration.test.ts"]' }), ['migration.test.ts'])
+  assert.deepEqual(choose(['--mode', 'full']), availableFiles.toSorted())
+  for (const argv of [['--mode', 'selected'], ['--mode', 'full', '--file', 'migration.test.ts'], ['--mode', 'smoke', '--file', 'migration.test.ts'], ['--mode', 'typo'], ['--mode'], ['--file'], ['--mode', 'smoke', '--mode', 'full'], ['--file', '../migration.test.ts'], ['--file', 'unknown.test.ts']]) {
+    assert.throws(() => choose(argv), undefined, JSON.stringify(argv))
+  }
+  for (const files of ['{}', 'null', '[1]', 'invalid']) assert.throws(() => choose([], { INTEGRATION_TEST_FILES: files }))
+  assert.throws(() => selectIntegrationFiles({ mode: 'smoke', files: [], availableFiles: [] }), /missing|unavailable/)
+  assert.throws(() => selectIntegrationFiles({ mode: 'full', files: [], availableFiles: [] }), /empty/)
+})
+
+test('integration required services fail before any test is spawned', () => {
+  const run = env => spawnSync(process.execPath, ['server/run-integration-tests.mjs', '--mode', 'smoke'], {
+    encoding: 'utf8', env: { ...process.env, DOTENV_CONFIG_PATH: '__no_test_env__', INTEGRATION_TEST_FILES: '', INTEGRATION_TEST_MODE: '', INTEGRATION_DATABASE_URL: '', REDIS_URL: '', LINGXIOS_TEST_REDIS_URL: '', ...env },
+  })
+  const missingDb = run({})
+  assert.equal(missingDb.status, 2)
+  assert.match(missingDb.stderr, /INTEGRATION_DATABASE_URL is required/)
+  assert.doesNotMatch(missingDb.stdout, /TAP version|skipped/)
+  const missingRedis = run({ INTEGRATION_DATABASE_URL: 'postgres://test@127.0.0.1:1/ci_test' })
+  assert.equal(missingRedis.status, 2)
+  assert.match(missingRedis.stderr, /REDIS_URL is required/)
+  assert.doesNotMatch(missingRedis.stdout, /TAP version|skipped/)
 })

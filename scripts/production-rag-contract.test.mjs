@@ -457,8 +457,11 @@ test('test and CI changes select checks without publishing; heavy experiments re
   assert.equal(selected.integration, true)
   assert.equal(selected.publish, false)
   assert.deepEqual(selected.integration_files, ['migration.test.ts'])
+  assert.equal(selected.integration_mode, 'selected')
+  assert.equal(computeScope({ integrationRunner: true }).integration_mode, 'smoke')
   assert.deepEqual(computeScope({ integrationRunner: true }).integration_files, [])
   const deep = computeScope({ release: true, web: true }, 'deep-integration')
+  assert.equal(deep.integration_mode, 'full')
   assert.equal(deep.deep_integration, true)
   assert.equal(deep.integration, true)
   assert.deepEqual(deep.integration_files, [])
@@ -483,10 +486,10 @@ test('workflow path filters route real changed paths to their owning checks', ()
       patterns.some(pattern => !pattern.startsWith('!') && matchesGlob(file, pattern)) &&
       !patterns.some(pattern => pattern.startsWith('!') && matchesGlob(file, pattern.slice(1))),
     ]))
-    return computeScope({ ...flags, integrationFiles: [file] })
+    return computeScope({ ...flags, integrationFiles: flags.integrationTests ? [file] : [], serverSourceFiles: flags.serverSource ? [file] : [], integrationRunnerFiles: flags.integrationRunner ? [file] : [] })
   }
   for (const [file, check, packages] of [
-    ['src/features/settings/settingsDialog.test.ts', 'web', ''],
+    ['src/features/chat/runtime/store.test.ts', 'web', ''],
     ['admin/src/management-session.test.ts', 'admin', ''],
     ['workers/control-plane/src/index.test.ts', 'control', ''],
     ['server/src/__tests__/gateway-auth.test.ts', 'server', ''],
@@ -527,7 +530,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
     const scope = select(file)
     assert.equal(scope.server, true, `server check missing for ${file}`)
     assert.equal(scope.integration, true, `integration missing for ${file}`)
-    assert.deepEqual(scope.integration_files, [], `shared source requires full integration: ${file}`)
+    assert.notEqual(scope.integration_mode, 'full', `shared source must use bounded owning checks: ${file}`)
   }
 })
 
@@ -571,4 +574,64 @@ test('actual workflow conditions block publishing and deployment after a failed 
     assert.equal(allows('rollout', release, { deploy: result }), false)
   }
   assert.equal((workflow.match(/if: needs\.changes\.outputs\.deep_integration == 'true'/g) ?? []).length, 2)
+})
+
+// Failure model: ordinary source/empty changes expand to full history, or a
+// migration/auth/native boundary loses its owning checks while reducing scope.
+test('CI integration modes distinguish core smoke, explicit owners and manual full', () => {
+  for (const flags of [{ serverSource: true }, { sharedFrontend: true }, { release: true }, { integrationRunner: true }]) {
+    const scope = computeScope(flags)
+    assert.equal(scope.integration, true)
+    assert.equal(scope.integration_mode, 'smoke')
+    assert.deepEqual(scope.integration_files, [])
+  }
+  assert.equal(computeScope().integration, false)
+  assert.equal(computeScope({ web: true }).integration, false)
+  const removed = computeScope({ integrationTests: true, integrationFiles: ['server/src/__integration__/deleted.test.ts'] })
+  assert.equal(removed.integration_mode, 'smoke')
+  assert.deepEqual(removed.integration_files, [])
+  const migration = computeScope({ serverSource: true, serverSourceFiles: ['server/src/db/migrations/0055_example.sql'] })
+  assert.equal(migration.integration_mode, 'selected')
+  for (const file of ['identity-vertical-slice.test.ts', 'migration.test.ts', 'conversation-repair-provenance-migration.test.ts', 'public-purpose-reader-migration.test.ts', 'run-trace-provenance-migration.test.ts', 'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts']) {
+    assert.ok(migration.integration_files.includes(file), file)
+  }
+  for (const path of ['server/package-lock.json', 'server/package.json']) {
+    assert.ok(computeScope({ serverSource: true, serverSourceFiles: [path] }).integration_files.includes('migration.test.ts'))
+  }
+  const fixture = computeScope({ integrationRunner: true, integrationRunnerFiles: ['server/fixtures/historical-runtime-3.8.2.json'] })
+  assert.ok(fixture.integration_files.includes('run-presentation-contract.test.ts'))
+  const owners = [
+    ['server/src/auth.ts', 'trust-bff.test.ts'],
+    ['server/src/agent-runtime/runtime.ts', 'runtime-chat-recovery.test.ts'],
+    ['server/src/im/reconcile.ts', 'im-send-reconciliation.test.ts'],
+    ['server/src/modules/learning/homework-application.ts', 'homework.test.ts'],
+    ['server/src/agent-runtime/visualize-delivery.ts', 'visualize-delivery.test.ts'],
+  ]
+  for (const [path, file] of owners) {
+    const selected = computeScope({ serverSource: true, serverSourceFiles: [path] })
+    assert.equal(selected.integration_mode, 'selected', path)
+    assert.ok(selected.integration_files.includes(file), `${path}: ${file}`)
+    assert.equal(new Set(selected.integration_files).size, selected.integration_files.length)
+    assert.ok(selected.integration_files.includes('basic-process-recovery.test.ts'))
+  }
+  for (const invalid of [null, {}, '../secret', ['../secret'], ['/absolute'], ['server\\src\\auth.ts']]) {
+    assert.throws(() => computeScope({ serverSource: true, serverSourceFiles: invalid }), /paths/)
+  }
+  assert.throws(() => computeScope({ integrationTests: true, integrationFiles: ['../migration.test.ts'] }), /integration/)
+  assert.equal(computeScope({ serverSource: true }, 'deep-integration').integration_mode, 'full')
+})
+
+test('workflow carries explicit integration mode and bounded ordinary budgets', () => {
+  const workflow = read('.github/workflows/ci.yml')
+  assert.match(workflow, /integration_mode: \$\{\{ steps.scope.outputs.integration_mode \}\}/)
+  assert.match(workflow, /INTEGRATION_TEST_MODE: \$\{\{ needs.changes.outputs.integration_mode \}\}/)
+  assert.match(workflow, /SERVER_SOURCE_FILES: \$\{\{ steps.paths.outputs.server_source_files \}\}/)
+  assert.match(workflow, /INTEGRATION_RUNNER_FILES: \$\{\{ steps.paths.outputs.integration_runner_files \}\}/)
+  const checks = workflow.match(/^  checks:\r?\n([\s\S]*?)(?=^  integration:)/m)?.[1]
+  assert.match(checks, /timeout-minutes: 8/)
+  const integration = workflow.match(/^  integration:\r?\n([\s\S]*?)(?=^  publish:)/m)?.[1]
+  assert.match(integration, /timeout-minutes: \$\{\{ needs.changes.outputs.deep_integration == 'true' && 30 \|\| 8 \}\}/)
+  assert.match(integration, /- if: always\(\)\r?\n\s+uses: actions\/upload-artifact@v4/)
+  assert.match(integration, /path: artifacts\/ci-integration\/timings\.json/)
+  assert.match(integration, /if-no-files-found: warn/)
 })
