@@ -29,6 +29,7 @@ node --import tsx --experimental-test-module-mocks --test --test-force-exit \
   src/features/chat/components/message-presentation.test.ts \
   src/features/chat/runtime/latency.test.ts
 node node_modules/typescript/bin/tsc --noEmit
+node node_modules/typescript/bin/tsc -p e2e/visual-input/tsconfig.json --noEmit
 ```
 
 The 23 existing ConversationMessage cases verify retained native v2 messages, one default process disclosure, visible current decisions, legacy compatibility and recovery/terminal behavior. Seven existing presentation cases cover unique interaction ownership, stable answer identity, process/attention separation and ordered events. The existing latency test checks real text eligibility, double-frame timing, coalescing and cancellation on a controlled browser clock. These are unit/component evidence, not a performance benchmark.
@@ -65,3 +66,5 @@ Fixed baseline companion run `01a16c64-61e4-73f3-8cd1-8217f8071a6e` passed1/1 in
 Source checks: focused33 tests passed (2 new +23 message +7 presentation +1 collector), focused lint passed6 source files, web `tsc --noEmit` passed. An attempted broader unchanged `run-updates.test.ts` failed during server env initialization (first DATABASE_URL, then WUKONG_USER_TOKEN_SECRET); it was not counted as passed and is outside this isolated UI boundary.
 
 Visual inspection limit: `after-dark-narrow.png` was taken immediately after a same-page theme switch, during the inherited700ms streaming-word color transition. Older text is temporarily dark in this transition snapshot. The subsequent native reduced-motion and focus assertions pass, but this image is not settled dark contrast acceptance; retain it honestly and capture a settled dark frame in combined integration.
+
+Fixture verification: `tsc -p e2e/visual-input/tsconfig.json --noEmit` passes after narrowing the synthetic assistant tail and making official-engine evaluate callback results explicitly JSON-serializable. The first stricter fixture check failed on these typings and an omitted existing DOM declaration; the owning configuration now includes that declaration. These fixture typing/JSON-return corrections followed the passing browser reports; product source and assertions were unchanged, and no additional browser slot was consumed. Focused fixture/config lint also passes4 files.

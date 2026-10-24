@@ -15,8 +15,8 @@ test('synthetic before/after IME, reading, theme and body paint', async ({ app, 
     evidence[`${version}229Submissions`] = await browser.locator('output').getAttribute('data-fixture-submitted')
     await editor.fill('')
     await app.screenshot(`${version}-light-comfortable-compact`)
-    await browser.evaluate(() => Object.assign(window, { retainedBody: document.querySelector('[data-msg-id="history-11"] [data-message-region="body"]') }))
-    evidence[`${version}Paint`] = await browser.evaluate(async () => (window as unknown as { visualInputStream: () => Promise<unknown> }).visualInputStream())
+    await browser.evaluate(() => { Object.assign(window, { retainedBody: document.querySelector('[data-msg-id="history-11"] [data-message-region="body"]') }); return null })
+    evidence[`${version}Paint`] = await browser.evaluate(async () => (window as unknown as { visualInputStream: () => Promise<Record<string, string | number>[]> }).visualInputStream())
     evidence[`${version}BodyIdentity`] = await browser.evaluate(() => (window as unknown as { retainedBody: Element }).retainedBody === document.querySelector('[data-msg-id="history-11"] [data-message-region="body"]'))
     expect(evidence[`${version}BodyIdentity`]).toBe(true)
     evidence[`${version}Style`] = await browser.evaluate(() => ({
@@ -33,6 +33,7 @@ test('synthetic before/after IME, reading, theme and body paint', async ({ app, 
       node.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }))
       node.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true, data: '组合结束候选' }))
       node.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+      return null
     })
     await expect(browser.locator('output')).toHaveAttribute('data-fixture-submitted', '0')
     await browser.keyboard.press('Enter')
@@ -61,7 +62,7 @@ test('synthetic before/after IME, reading, theme and body paint', async ({ app, 
     await browser.keyboard.press('Enter')
     await expect(browser.locator('output')).toHaveText('已打开投票')
     await editor.fill('')
-    await browser.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
+    await browser.evaluate(() => new Promise<null>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)))))
     // Native selection is a reading action even if the viewport is at bottom.
     await browser.evaluate(() => {
       const node = document.querySelector('[data-msg-id="history-9"] [data-message-region="body"]')!
@@ -69,10 +70,11 @@ test('synthetic before/after IME, reading, theme and body paint', async ({ app, 
       const range = document.createRange(); range.selectNodeContents(node)
       window.getSelection()!.removeAllRanges(); window.getSelection()!.addRange(range)
       document.dispatchEvent(new Event('selectionchange'))
+      return null
     })
     await expect(browser.locator('[data-chat-scroll-bottom]')).toBeVisible()
     const reading = await browser.evaluate(() => ({ top: document.querySelector('[data-chat-viewport]')!.scrollTop, height: document.querySelector('[data-chat-viewport]')!.clientHeight, anchor: document.querySelector('[data-msg-id="history-9"]')!.getBoundingClientRect().top, selected: window.getSelection()!.toString() }))
-    await browser.evaluate(() => (window as unknown as { visualInputRevise: () => void }).visualInputRevise())
+    await browser.evaluate(() => { (window as unknown as { visualInputRevise: () => void }).visualInputRevise(); return null })
     await expect(browser.locator('[data-msg-id="history-11"]')).toContainText('新增解题说明')
     const after = await browser.evaluate(() => ({ top: document.querySelector('[data-chat-viewport]')!.scrollTop, height: document.querySelector('[data-chat-viewport]')!.clientHeight, anchor: document.querySelector('[data-msg-id="history-9"]')!.getBoundingClientRect().top, selected: window.getSelection()!.toString() }))
     evidence.selectionBefore = reading; evidence.selectionAfter = after
@@ -83,7 +85,7 @@ test('synthetic before/after IME, reading, theme and body paint', async ({ app, 
     expect(after.selected).toBe(reading.selected)
     await browser.locator('[data-chat-scroll-bottom]').tap()
     await browser.setViewport({ width: 390, height: 900 })
-    await browser.evaluate(() => { document.documentElement.classList.add('dark'); document.documentElement.dataset.theme = 'dark' })
+    await browser.evaluate(() => { document.documentElement.classList.add('dark'); document.documentElement.dataset.theme = 'dark'; return null })
     expect(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await app.screenshot('after-dark-narrow')
     await browser.locator('[contenteditable="true"]').fill('焦点与选中可见')
@@ -100,7 +102,7 @@ test('synthetic before/after IME, reading, theme and body paint', async ({ app, 
       socket.addEventListener('open', () => socket.send(JSON.stringify({ id: 1, method: 'Emulation.setEmulatedMedia', params: { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] } })), { once: true })
       socket.addEventListener('message', event => { const reply = JSON.parse(String(event.data)); if (reply.id === 1) { reply.error ? reject(new Error(reply.error.message)) : resolve() } })
     })
-    await browser.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)))
+    await browser.evaluate(() => new Promise<null>(resolve => requestAnimationFrame(() => resolve(null))))
     evidence.reducedMotion = await browser.evaluate(() => {
       const node = document.querySelector('[data-chat-message-column]')!; node.classList.add('ui-enter')
       return { matches: matchMedia('(prefers-reduced-motion: reduce)').matches, animation: getComputedStyle(node).animationName }

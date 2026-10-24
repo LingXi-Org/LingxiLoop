@@ -38,7 +38,7 @@ function App() {
   const [messages, setMessages] = useState(history)
   const runtime = useExternalStoreRuntime({ messages, onNew: async message => { setSubmitted(value => value + 1); setText(message.content.map(part => part.type === 'text' ? part.text : '').join('')) } })
   Object.assign(window, { visualInputRevise: () => {
-    setMessages(current => current.map((message, index) => index === current.length - 1
+    setMessages(current => current.map((message, index) => index === current.length - 1 && message.role === 'assistant'
       ? { ...message, content: message.content.map(part => part.type === 'text' ? { ...part, text: part.text.replace('有效首段', '修订首段') + '\n\n' + '新增解题说明。'.repeat(30) } : part) } : message))
   }, visualInputStream: async (replace = false) => {
     const run = 'synthetic-run'
@@ -46,8 +46,10 @@ function App() {
     const records: unknown[] = []
     const observer = new PerformanceObserver(list => { for (const item of list.getEntries()) if (item.name === 'lingxiloop.chat.latency') records.push((item as PerformanceMeasure).detail) })
     observer.observe({ entryTypes: ['measure'] })
-    const answer = { ...history.at(-1)!, status: { type: 'running' as const },
-      metadata: { ...history.at(-1)!.metadata, custom: { ...history.at(-1)!.metadata.custom, runId: run } },
+    const original = history.at(-1)!
+    if (original.role !== 'assistant') throw new Error('Expected synthetic assistant tail')
+    const answer = { ...original, status: { type: 'running' as const },
+      metadata: { ...original.metadata, custom: { ...original.metadata.custom, runId: run } },
       content: [{ type: 'text' as const, text: replace ? '修订后的有效首段。' : '有效首段：先解释已知条件。' }] }
     chatLatency.preview(run, 1, answer.content[0].text.length)
     setMessages([...history.slice(0, -1), answer])
