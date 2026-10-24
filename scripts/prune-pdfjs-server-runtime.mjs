@@ -2,8 +2,9 @@
 // Bound the server-only PDF.js install to its product consumers. Never run on the SPA install.
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { lstatSync, readFileSync, readdirSync, rmSync } from 'node:fs'
+import { existsSync, lstatSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
+import { createRequire } from 'node:module'
 
 const [packageArg, mode = '--dry-run'] = process.argv.slice(2)
 assert.ok(packageArg && ['--dry-run', '--apply'].includes(mode),
@@ -32,6 +33,34 @@ const allowedConsumers = [
   '.package-lock.json', '@lyyzka/lingxios/package.json',
   '@lyyzka/lingxios/dist/src/context/document-worker.js',
 ]
+const officeRoot = join(dependencyRoot, 'officeparser')
+if (existsSync(join(officeRoot, 'package.json'))) {
+  const office = JSON.parse(readFileSync(join(officeRoot, 'package.json'), 'utf8'))
+  assert.equal(office.version, '8.2.0', 'Re-audit officeparser PDF.js consumers before changing its version')
+  assert.equal(office.dependencies?.['pdfjs-dist'], '6.2.108')
+  // OfficeParser resolves its own PDF module and worker from these two Node
+  // consumers. Its entire nested6.2.108 tree stays intact; this script trims
+  // only the separately pinned top-level6.3.289 used by LingxiOS.
+  const nested = join(officeRoot, 'node_modules/pdfjs-dist')
+  assert.equal(JSON.parse(readFileSync(join(nested, 'package.json'), 'utf8')).version, '6.2.108')
+  for (const consumer of ['dist/utils/moduleLoader.js', 'dist/parsers/PdfParser.js']) {
+    const require = createRequire(join(officeRoot, consumer))
+    for (const [specifier, path] of [
+      ['pdfjs-dist', 'build/pdf.mjs'], ['pdfjs-dist/package.json', 'package.json'],
+      ['pdfjs-dist/legacy/build/pdf.mjs', 'legacy/build/pdf.mjs'],
+      ['pdfjs-dist/legacy/build/pdf.worker.mjs', 'legacy/build/pdf.worker.mjs'],
+    ]) assert.equal(require.resolve(specifier), join(nested, path), 'OfficeParser must retain its separate PDF.js runtime')
+  }
+  allowedConsumers.push(...[
+    'package.json', 'node_modules/pdfjs-dist/package.json',
+    'dist/defaults.js', 'dist/officeparser.browser.d.ts', 'dist/officeparser.browser.iife.js',
+    'dist/officeparser.browser.mjs', 'dist/officeparser.browser.native-pdf.mjs',
+    'dist/officeparser.browser.slim.d.ts', 'dist/officeparser.browser.slim.iife.js',
+    'dist/officeparser.browser.slim.mjs', 'dist/parsers/PdfParser.d.ts', 'dist/parsers/PdfParser.js',
+    'dist/types.d.ts', 'dist/utils/envUtils.d.ts', 'dist/utils/envUtils.js',
+    'dist/utils/moduleLoader.d.ts', 'dist/utils/moduleLoader.js',
+  ].map(path => 'officeparser/' + path))
+}
 assert.deepEqual(consumers.sort(), allowedConsumers.sort(),
   'Re-audit PDF.js consumers before pruning the installed package')
 const documentWorker = readFileSync(join(dependencyRoot,
