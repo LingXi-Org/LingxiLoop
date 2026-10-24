@@ -1,0 +1,92 @@
+TAP version 13
+# Subtest: empty authorized bindings perform zero runtime reads; a single session stays filtered
+ok 1 - empty authorized bindings perform zero runtime reads; a single session stays filtered
+  ---
+  duration_ms: 2.799296
+  type: 'test'
+  ...
+# Subtest: bound metadata cannot leak another tenant/principal/session or an unbound internal run
+ok 2 - bound metadata cannot leak another tenant/principal/session or an unbound internal run
+  ---
+  duration_ms: 0.818029
+  type: 'test'
+  ...
+# Subtest: a cancelled or changed-version/fence receipt replaces an old waiting snapshot
+ok 3 - a cancelled or changed-version/fence receipt replaces an old waiting snapshot
+  ---
+  duration_ms: 0.887729
+  type: 'test'
+  ...
+# Subtest: resolved approval and missing control permission never advertise a personal decision
+ok 4 - resolved approval and missing control permission never advertise a personal decision
+  ---
+  duration_ms: 0.451446
+  type: 'test'
+  ...
+# Subtest: pagination has a request-wide hard bound and does not fetch message or event histories
+ok 5 - pagination has a request-wide hard bound and does not fetch message or event histories
+  ---
+  duration_ms: 0.500297
+  type: 'test'
+  ...
+# Subtest: a later relevant active page is found, then older pages stop early
+ok 6 - a later relevant active page is found, then older pages stop early
+  ---
+  duration_ms: 0.281789
+  type: 'test'
+  ...
+# Subtest: no proven control means no guessed approval actor; repeat reads do not retain resolved state
+ok 7 - no proven control means no guessed approval actor; repeat reads do not retain resolved state
+  ---
+  duration_ms: 0.775681
+  type: 'test'
+  ...
+# Subtest: channel projection overlaps independent reads and only emits authorized rows
+ok 8 - channel projection overlaps independent reads and only emits authorized rows
+  ---
+  duration_ms: 3.319042
+  type: 'test'
+  ...
+# (node:543669) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: personal removal commits only after authorization and fences stale list/scope completions
+ok 9 - personal removal commits only after authorization and fences stale list/scope completions
+  ---
+  duration_ms: 92.181099
+  type: 'test'
+  ...
+# (node:543709) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: title emphasis follows the actual pin value and retains semantic markers in selected/unread/long rows
+ok 10 - title emphasis follows the actual pin value and retains semantic markers in selected/unread/long rows
+  ---
+  duration_ms: 49.98469
+  type: 'test'
+  ...
+# Subtest: an unopened conversation exposes the authorized durable waiting summary without loading messages
+ok 11 - an unopened conversation exposes the authorized durable waiting summary without loading messages
+  ---
+  duration_ms: 1.377424
+  type: 'test'
+  ...
+# Subtest: only a current receipt for the same run supersedes the unloaded-list wait
+ok 12 - only a current receipt for the same run supersedes the unloaded-list wait
+  ---
+  duration_ms: 1.126721
+  type: 'test'
+  ...
+# Subtest: unknown or unproven actors never become personal next actions
+ok 13 - unknown or unproven actors never become personal next actions
+  ---
+  duration_ms: 0.214419
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3139.861658

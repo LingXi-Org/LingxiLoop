@@ -1,6 +1,7 @@
 import { nativeText, type NativeMessage } from './message-types.js'
 import type { Queryable } from '../db/queryable.js'
 import { workspaceChannels } from './channels-repository.js'
+import type { ConversationRunSummary } from '../../../src/lib/conversationRunSummary.js'
 
 interface ImConversationState {
   channelId: string
@@ -18,6 +19,7 @@ interface ImConversationState {
 export interface ImChannelsInfrastructure {
   db: Queryable
   listConversations(userId: string): Promise<ImConversationState[]>
+  runSummaries?(input: { companyId: string; userId: string; projectId: string }, channelIds: string[]): Promise<{ [channelId: string]: ConversationRunSummary }>
 }
 
 export class ImChannelsApplication {
@@ -28,6 +30,8 @@ export class ImChannelsApplication {
       workspaceChannels(this.infrastructure.db, input),
       this.infrastructure.listConversations(input.userId),
     ])
+    const summaries = rows.length && this.infrastructure.runSummaries
+      ? await this.infrastructure.runSummaries(input, rows.map(row => row.channel_id)) : {}
     const state = new Map(conversations.map((item) => [`${item.channelId}:${item.channelType}`, item]))
     return rows.map((row) => {
       const channelType = Number(row.profile.channelType ?? 2)
@@ -59,6 +63,7 @@ export class ImChannelsApplication {
           createdAt: new Date(last.timestamp * 1000).toISOString(),
         } : null,
         presetKey: row.preset_key,
+        runSummary: summaries[row.channel_id] ?? null,
       }
     })
   }
