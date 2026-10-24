@@ -91,7 +91,7 @@ test.describe('Streaming Text lifecycle', {
     await app.screenshot('streaming-lifecycle-motion')
   })
 
-  test('normal completion drains pending text and replaced history stays static', async ({ app, browser }) => {
+  test('normal completion reveals pending text immediately while tail color settles', async ({ app, browser }) => {
     await app.open('/scripts/streaming-lifecycle-check.html')
     await expect(browser.locator('[data-text-index="0"]')).toHaveText('准备')
     const result = await browser.evaluate(async () => {
@@ -103,48 +103,50 @@ test.describe('Streaming Text lifecycle', {
       const snapshot = () => ({ length: root().textContent!.length,
         received: Number(root().getAttribute('data-received-length')),
         message: root().getAttribute('data-message-status'),
-        carets: root().querySelectorAll('[data-streaming-caret]').length })
+        carets: root().querySelectorAll('[data-streaming-caret]').length,
+        wrappers: root().querySelectorAll('[data-streaming-word]').length,
+        fresh: root().querySelectorAll('[data-streaming-fresh="true"]').length })
       const step = (status: string) => window.dispatchEvent(new CustomEvent('streaming-lifecycle-step', { detail: { text, status, sync: status === 'complete' } }))
       // Observe the committed pending queue, before another animation frame can drain it.
-      const before = await new Promise<ReturnType<typeof snapshot>>((resolve, reject) => {
+      const completion = await new Promise<{ before: ReturnType<typeof snapshot>; terminal: ReturnType<typeof snapshot>; commitMs: number }>((resolve, reject) => {
         const observer = new MutationObserver(() => {
           const sample = snapshot()
           if (sample.message !== 'running' || sample.received !== text.length || sample.length <= 0 || sample.length >= text.length) return
           observer.disconnect()
           clearTimeout(timeout)
+          const terminalAt = performance.now()
           step('complete')
-          resolve(sample)
+          resolve({ before: sample, terminal: snapshot(), commitMs: performance.now() - terminalAt })
         })
         const timeout = setTimeout(() => { observer.disconnect(); reject(new Error('No committed pending queue before completion')) }, remaining())
         observer.observe(root(), { subtree: true, childList: true, characterData: true, attributes: true })
         step('running')
       })
-      while (root().getAttribute('data-message-status') !== 'complete') {
-        if (!remaining()) throw new Error('Complete message did not commit')
-        await frame()
-      }
-      const samples: ReturnType<typeof snapshot>[] = []
+      // Body completeness is checked at the terminal commit, before any rAF can
+      // replay the old queue. Color exit is a separate, non-blocking lifetime.
+      const samples: ReturnType<typeof snapshot>[] = [completion.terminal]
       do {
         const sample = snapshot()
         samples.push(sample)
-        if (root().textContent === text && sample.carets === 0) break
-        if (!remaining()) throw new Error('Completion did not drain')
+        if (sample.wrappers === 0) break
+        if (!remaining()) throw new Error('Terminal color did not settle')
         await frame()
-      } while (true)
-      return { total: text.length, before, samples, full: root().textContent === text,
-        carets: root().querySelectorAll('[data-streaming-caret]').length }
+      } while (samples.at(-1)?.wrappers !== 0)
+      return { total: text.length, ...completion, samples, full: root().textContent === text }
     })
-    console.log('Completion drain', JSON.stringify(result))
+    console.log('Completion body and color', JSON.stringify(result))
     expect(result.before.message).toBe('running')
     expect(result.before.received).toBe(result.total)
     expect(result.before.length).toBeGreaterThan(0)
     expect(result.before.length).toBeLessThan(result.total)
     expect(result.samples.length).toBeGreaterThan(0)
     expect(result.samples.every(sample => sample.message === 'complete' && sample.received === result.total)).toBe(true)
-    expect(result.samples.some(sample => sample.length > 0 && sample.length < result.total)).toBe(true)
-    expect(result.samples.every((sample, index) => sample.length >= (index ? result.samples[index - 1].length : result.before.length))).toBe(true)
+    expect(result.terminal.message).toBe('complete')
+    expect(result.terminal.length).toBe(result.total)
+    expect(result.terminal.wrappers).toBeGreaterThan(0)
+    expect(result.samples.every(sample => sample.length === result.total && sample.carets === 0 && sample.fresh === 0)).toBe(true)
+    expect(result.samples.at(-1)?.wrappers).toBe(0)
     expect(result.full).toBe(true)
-    expect(result.carets).toBe(0)
     await browser.evaluate(() => window.dispatchEvent(new CustomEvent('streaming-lifecycle-step', { detail: { text: '历史正文', status: 'complete', id: 'history-message' } })))
     await expect(browser.locator('[data-text-index="0"]')).toHaveText('历史正文')
     await expect(browser.locator('[data-streaming-word]')).toHaveCount(0)
