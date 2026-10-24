@@ -1,0 +1,1363 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a16c7d-235c-77dd-9d84-a8ff2c1cc48b",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-24T05:58:23.557Z",
+    "finishedAt": "2026-10-24T05:58:43.036Z",
+    "project": {
+      "id": "lingxiloop-373-learning",
+      "configDigest": "83e20cdea49f225bf572a4e4b2089d35fd6b5756e0cc25ca8aa890173d7b530e"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "94d93199b1b469cff6a0dc135d772ec37de69f55",
+      "branch": "fix/373-artifact-learning",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "b19a574ce7465a43db0cb00dc93db11416c7d8751793108aa2d7c264b421f4b1",
+        "testId": "e2e/visualize/learning.e2e.ts::student%20operates%20a%20topology%2C%20compares%20settings%20and%20continues%20in%20the%20original%20conversation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "student operates a topology, compares settings and continues in the original conversation"
+        ],
+        "file": "e2e/visualize/learning.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/learning.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16c7d-3362-7395-a64b-9d5844a39b31",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-24T05:58:26.914Z",
+            "durationMs": 15969,
+            "artifacts": [
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16c7d-3362-7395-a64b-9d5844a39b31:69"
+                },
+                "path": "web/e2e_visualize_learning.e2e.ts__student_20operates_20a_20topology_2C_20compares_20settings_20and_20continues_20i-4767b27c/default/attempt-0/screenshots/001-topology-learning-feedback.png",
+                "size": 70871,
+                "sha256": "31542bbad44523f2d1e95259c5e78a0a2357d61d54f051b5a4a110c9474cabd4"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/learning.html",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:27.142Z",
+                "durationMs": 3818,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 7,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:30.961Z",
+                "durationMs": 782,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 8,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.mouse.move",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:31.893Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 15,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.mouse.down",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:31.901Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.mouse.up",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:31.907Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:31.925Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.045Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:7",
+                "index": 7,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"检查我的思路\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.064Z",
+                "durationMs": 207,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 23,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveValue",
+                "label": "getByLabel(\"我的推导\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.271Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 24,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.285Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 25,
+                  "column": 32
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"separator\", name: \"调整练习与作品宽度\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.289Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 29,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.332Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 30,
+                  "column": 31
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"调整设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.340Z",
+                "durationMs": 109,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 32,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "getByRole(\"slider\", name: \"每个子网地址数\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.449Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 33,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.mouse.move",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.703Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 15,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.mouse.down",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.730Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.mouse.up",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.741Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.773Z",
+                "durationMs": 47,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:18",
+                "index": 18,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"预览原始值\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:32.822Z",
+                "durationMs": 176,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 35,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.mouse.move",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.214Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 15,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.mouse.down",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.221Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.mouse.up",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.238Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.246Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"预览原始值\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.292Z",
+                "durationMs": 210,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 37,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.mouse.move",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.799Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 15,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.mouse.down",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.803Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.mouse.up",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.812Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.818Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.929Z",
+                "durationMs": 68,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:29",
+                "index": 29,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"提交设计变更\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:33.997Z",
+                "durationMs": 155,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 39,
+                  "column": 63
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"变更已提交，请在原会话中核对后续结果。\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.154Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 40,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:31",
+                "index": 31,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"调整设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.166Z",
+                "durationMs": 91,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 41,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:32",
+                "index": 32,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"调整设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.258Z",
+                "durationMs": 106,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 42,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:33",
+                "index": 33,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"button\", name: \"提交设计变更\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.365Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 43,
+                  "column": 71
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:34",
+                "index": 34,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"围绕作品继续提问\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.390Z",
+                "durationMs": 154,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 44,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:35",
+                "index": 35,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"我的问题或思路\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.545Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 45,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"取消\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.600Z",
+                "durationMs": 204,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 46,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:37",
+                "index": 37,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.806Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 47,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:38",
+                "index": 38,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:34.919Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 47,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:39",
+                "index": 39,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:35.024Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 47,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:40",
+                "index": 40,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"放大\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:35.043Z",
+                "durationMs": 117,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 48,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:41",
+                "index": 41,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"button\", name: \"提交设计变更\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:35.161Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 49,
+                  "column": 78
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:42",
+                "index": 42,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"围绕作品继续提问\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:35.176Z",
+                "durationMs": 162,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 50,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:43",
+                "index": 43,
+                "kind": "assertion",
+                "api": "expect.toHaveValue",
+                "label": "getByLabel(\"我的问题或思路\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:35.338Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 51,
+                  "column": 46
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:44",
+                "index": 44,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:35.360Z",
+                "durationMs": 5034,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 52,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:45",
+                "index": 45,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"发送尚未确认，问题已保留。请检查原会话后重试。\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.395Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 62,
+                  "column": 78
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:46",
+                "index": 46,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.421Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 63,
+                  "column": 40
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:47",
+                "index": 47,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"发送\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.438Z",
+                "durationMs": 152,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 65,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:48",
+                "index": 48,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"问题已发送，回复将在原会话中继续。\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.593Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 66,
+                  "column": 72
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:49",
+                "index": 49,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.607Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 67,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:50",
+                "index": 50,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.714Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 67,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:51",
+                "index": 51,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.820Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 67,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:52",
+                "index": 52,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.924Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 67,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:53",
+                "index": 53,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"收起\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:40.928Z",
+                "durationMs": 124,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 68,
+                  "column": 59
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:54",
+                "index": 54,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"打开后续回复中的下一版\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:41.052Z",
+                "durationMs": 246,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 69,
+                  "column": 68
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:55",
+                "index": 55,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"拓扑方案 · 第 2 版\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:41.299Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 70,
+                  "column": 78
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:56",
+                "index": 56,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:41.311Z",
+                "durationMs": 458,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 71,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:57",
+                "index": 57,
+                "kind": "resource",
+                "api": "browser.mouse.move",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:41.927Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 15,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:58",
+                "index": 58,
+                "kind": "resource",
+                "api": "browser.mouse.down",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:41.934Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:59",
+                "index": 59,
+                "kind": "resource",
+                "api": "browser.mouse.up",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:41.942Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:60",
+                "index": 60,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:41.954Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:61",
+                "index": 61,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.067Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:62",
+                "index": 62,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"对照上一版\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.081Z",
+                "durationMs": 79,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 73,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:63",
+                "index": 63,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.160Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 74,
+                  "column": 64
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:64",
+                "index": 64,
+                "kind": "resource",
+                "api": "browser.mouse.move",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.339Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 15,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:65",
+                "index": 65,
+                "kind": "resource",
+                "api": "browser.mouse.down",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.345Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 25
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:66",
+                "index": 66,
+                "kind": "resource",
+                "api": "browser.mouse.up",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.351Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 16,
+                  "column": 53
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:67",
+                "index": 67,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.356Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 17,
+                  "column": 37
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:68",
+                "index": 68,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.365Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 76,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a16c7d-3362-7395-a64b-9d5844a39b31:69",
+                "index": 69,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "topology-learning-feedback",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:58:42.377Z",
+                "durationMs": 464,
+                "events": [],
+                "artifacts": [
+                  "01a16c7d-3362-7395-a64b-9d5844a39b31:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 82,
+                  "column": 13
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "39eef842fcefdaa1240e4645ceb430b276dbc2964ed4939b89cea5ed7f4db613",
+        "testId": "e2e/visualize/learning.e2e.ts::artifact%20question%20drafts%20survive%20refresh%20and%20stay%20within%20the%20actual%20account%2Fsource%20scope",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "artifact question drafts survive refresh and stay within the actual account/source scope"
+        ],
+        "file": "e2e/visualize/learning.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/learning.e2e.ts",
+          "line": 85,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 70871,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

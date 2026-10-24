@@ -244,7 +244,7 @@ export function GenUiCard({
           {error}
         </p>
       )}
-      {sent && <p role="status" className="py-1 text-ui-sm text-foreground-subtle">{label("submitted")}</p>}
+      {sent && !expanded && <p role="status" className="py-1 text-ui-sm text-foreground-subtle">{label("submitted")}</p>}
       <Dialog open={expanded} onOpenChange={setExpanded} modal={false}>
         {expanded && (
           <DialogPortal>
@@ -267,6 +267,7 @@ export function GenUiCard({
           }}
         >
           {controls(true)}
+          {sent && <p role="status" className="px-3 pb-2 text-ui-sm text-foreground-subtle">{label("submitted")}</p>}
           {page && (
             <PreviewAnchor page={page} suspended={draft !== null || question !== null} hasPanel={panel !== null} />
           )}
