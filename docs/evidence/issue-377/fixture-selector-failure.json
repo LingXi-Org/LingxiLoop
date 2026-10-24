@@ -1,0 +1,370 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a16ca5-4647-71fa-98cd-b7191c204199",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-24T06:42:14.136Z",
+    "finishedAt": "2026-10-24T06:42:21.476Z",
+    "project": {
+      "id": "lingxiloop-377-loading",
+      "configDigest": "e377188ec3465e5d039afbc8aea78d12d24fdc76ff140012a76ba7b617e1e562"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "0d1271a0cf92b22e01b456c7473f4e446027bd28",
+      "branch": "perf/377-visualize-loading",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5195",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "b35db740546bd527309f3e17c9ce664106e99014d206b41d68e3fd75187479fa",
+        "testId": "e2e/visualize/performance.e2e.ts::measure%20saved%20static%2C%20interactive%2C%20fresh-page%2C%20retained%20and%20first-visible-card%20startup",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "measure saved static, interactive, fresh-page, retained and first-visible-card startup"
+        ],
+        "file": "e2e/visualize/performance.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/performance.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-24T06:42:16.676Z",
+            "durationMs": 4675,
+            "artifacts": [
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_performance.e2e.ts__measure_20saved_20static_2C_20interactive_2C_20fresh-page_2C_20retained_20and-1f8a3f38/default/attempt-0/failure/screen.txt",
+                "size": 907,
+                "sha256": "d2c6f5c183b9b3e2cc86061cfaf3b98089c290ad973b7d9cb77c86bb54e6caf6"
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_performance.e2e.ts__measure_20saved_20static_2C_20interactive_2C_20fresh-page_2C_20retained_20and-1f8a3f38/default/attempt-0/screenshots/001-failure.png",
+                "size": 33645,
+                "sha256": "34774b53da18f62329f9dd15205fd30e86488a6d7bd329247a355f4ee1279ea8"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "EVALUATE_FAILED",
+              "message": "Failed to execute 'querySelector' on 'Document': 'iframe[data-visualize-guest]:visible' is not a valid selector.",
+              "retryable": false,
+              "phase": "body",
+              "source": {
+                "file": "e2e/visualize/performance.e2e.ts",
+                "line": 66,
+                "column": 23
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5195/e2e/visualize/performance.html?case=0-static-0",
+              "screen": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:artifact:0",
+              "screenshot": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.addInitScript",
+                "label": "function",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:16.918Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 7,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/performance.html",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:16.924Z",
+                "durationMs": 2341,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 53,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/performance.html?case=0-static-0",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:19.265Z",
+                "durationMs": 321,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 115,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:19.587Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 56,
+                  "column": 31
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-perf-selection]\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:19.666Z",
+                "durationMs": 148,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 64,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:19.816Z",
+                "durationMs": 55,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 65,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:19.973Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 65,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:20.081Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 65,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:20.194Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 65,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:42:20.306Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 65,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a16ca5-53e4-7d9e-9e36-ebfe761353a8:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "failed",
+                "startedAt": "2026-10-24T06:42:20.329Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/performance.e2e.ts",
+                  "line": 66,
+                  "column": 37
+                },
+                "error": {
+                  "category": "test",
+                  "code": "EVALUATE_FAILED",
+                  "message": "Failed to execute 'querySelector' on 'Document': 'iframe[data-visualize-guest]:visible' is not a valid selector.",
+                  "retryable": false,
+                  "source": {
+                    "file": "e2e/visualize/performance.e2e.ts",
+                    "line": 66,
+                    "column": 23
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 34552,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

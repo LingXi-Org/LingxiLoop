@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import path from 'node:path'
 import type { Plugin } from 'vite'
 import { windowFixture } from './window-fixture'
@@ -15,17 +15,28 @@ export function visualizeFixtureApi(): Plugin {
   let resourceFault=''
   const resourceAttempts: {name:string;attempt:number;start:number;end?:number;outcome?:string}[]=[]
   const held=new Set<()=>void>(),blocked:string[]=[],aborted:string[]=[]
+  let performanceConfig = { resourceMs: 0, stateMs: 0 }
+  const performanceRequests: { stage: string; method: string; name?: string; start: number; end?: number }[] = []
   const stateKey=(page:Pick<Page,'channel'|'path'>)=>JSON.stringify([page.channel,page.path])
+  const resourceFile = (name:string) => name==='gen-ui.js'?path.join(process.env.E2E_VISUALIZE_RUNTIME_ROOT??'server/assets/visualize-runtime','gen-ui.js')
+    :path.join(process.env.E2E_VISUALIZE_ASSET_ROOT??'third_party/zcode/skills/visualize/assets',name)
+  let publicHashes: Promise<Record<string,string>> | undefined
+  const performanceHashes = () => publicHashes ??= Promise.all(['visualize.css','visualize.html','gen-ui.js','calendar.js','vendor/d3-7.9.0.min.js','vendor/floating-ui-core-1.7.3.min.js','vendor/floating-ui-dom-1.7.4.min.js','vendor/lucide-1.17.0.js']
+    .map(async name=>[name,createHash('sha256').update(await readFile(resourceFile(name))).digest('hex')])).then(Object.fromEntries).catch(error=>{publicHashes=undefined;throw error})
   return {name:'issue193-presentation-api',configureServer(server){
     server.middlewares.use(async(req,res,next)=>{
       const url=new URL(req.url??'/', 'http://127.0.0.1:5193')
       const reply=(value:unknown,status=200)=>{res.statusCode=status;res.setHeader('content-type','application/json');res.end(JSON.stringify(value))}
+      if(url.pathname==='/__visualize_fixture/performance') {
+        if(req.method==='POST') { const body:Buffer[]=[];for await(const chunk of req)body.push(Buffer.from(chunk));const value=JSON.parse(Buffer.concat(body).toString());performanceConfig={resourceMs:Math.max(0,Math.min(2000,Number(value.resourceMs)||0)),stateMs:Math.max(0,Math.min(2000,Number(value.stateMs)||0))} }
+        reply({config:performanceConfig,requests:performanceRequests,resourceHashes:publicHashes?await publicHashes:null});return
+      }
       if(url.pathname==='/__visualize_fixture/ready'){reply({},process.env.E2E_VISUALIZE_READY==='1'?200:503);return}
       if(url.pathname==='/__visualize_fixture/fault') {fault=url.searchParams.get('stage')??'';if(url.searchParams.has('release')){for(const release of held)release();held.clear()}reply({});return}
       if(url.pathname==='/__visualize_fixture/resource-fault') {resourceFault=url.searchParams.get('mode')??'';reply({});return}
       if(url.pathname==='/__visualize_fixture/resource-evidence') {reply({attempts:resourceAttempts});return}
       if(url.pathname==='/__visualize_fixture/evidence') {reply({follows,external,denied,externalHits,acceptedSaves,savedStates:Object.fromEntries(states),activePages:[...pages.values()].filter(page=>page.active).length,closedPages,blocked,aborted});return}
-      if(url.pathname==='/__visualize_fixture/reset') {fault='';resourceFault='';resourceAttempts.length=0;for(const release of held)release();held.clear();blocked.length=aborted.length=0;pages.clear();states.clear();revisions.clear();follows.length=external.length=denied.length=0;closedPages=externalHits=acceptedSaves=0;failOnce=url.searchParams.get('failOnce')==='1';reply({});return}
+      if(url.pathname==='/__visualize_fixture/reset') {performanceRequests.length=0;performanceConfig={resourceMs:0,stateMs:0};fault='';resourceFault='';resourceAttempts.length=0;for(const release of held)release();held.clear();blocked.length=aborted.length=0;pages.clear();states.clear();revisions.clear();follows.length=external.length=denied.length=0;closedPages=externalHits=acceptedSaves=0;failOnce=url.searchParams.get('failOnce')==='1';reply({});return}
       if(url.pathname==='/__visualize_fixture/invalidate') {for(const page of pages.values())if(page.active)page.stale=true;reply({});return}
       if(url.pathname==='/__visualize_fixture/external') {externalHits++;res.setHeader('content-type','text/plain');res.end('Local fictional visualization link');return}
       const match=/^\/api\/im\/channels\/([^/]+)\/visualize\/pages(?:\/([^/]+)(?:\/(.*))?)?$/.exec(url.pathname)
@@ -35,6 +46,9 @@ export function visualizeFixtureApi(): Plugin {
         const chunks:Buffer[]=[];for await(const chunk of req)chunks.push(Buffer.from(chunk))
         const input=chunks.length?JSON.parse(Buffer.concat(chunks).toString()):{}
         const stage=!id&&req.method==='POST'?'create':req.method==='DELETE'?'delete':action
+        const timing = { stage: stage ?? 'unknown', method: req.method ?? 'GET', ...(action==='resources'?{name:url.searchParams.get('name')??''}:{}), start: performance.now() }
+        performanceRequests.push(timing)
+        res.once('finish',()=>{(timing as typeof performanceRequests[number]).end=performance.now()})
         // Real createVisualizePage can continue after the HTTP client aborts.
         // Hold its pre-transaction work, then commit even without a response.
         if(stage==='create'&&fault==='late-create'){
@@ -54,8 +68,9 @@ export function visualizeFixtureApi(): Plugin {
           if(failOnce){failOnce=false;reply({error:'Deterministic first acquisition failure'},503);return}
           for(const page of pages.values())if(page.channel===channel&&page.instanceKey===input.instanceKey)page.active=false
           const pageId=randomUUID(),initId=randomUUID(),page:Page={channel,path:input.path,instanceKey:input.instanceKey,initId,active:true,stale:false,gestures:new Set()};pages.set(pageId,page)
-          const fixture=input.path.startsWith('/fixture/learning')?'learning':input.path==='/fixture/corners.html'?'corners':input.path==='/fixture/bridge.html'?'bridge':'acceptance'
-          reply({pageId,initId,path:input.path,html:input.path==='/fixture/window.html'?windowFixture():await readFile(`e2e/visualize/fixtures/${fixture}.html`,'utf8'),state:states.get(stateKey(page))??null,stateRevision:revisions.get(stateKey(page))??0});return
+          const fixture=input.path.includes('/performance-static')?'performance-static':input.path.includes('/performance-')?'performance':input.path.startsWith('/fixture/learning')?'learning':input.path==='/fixture/corners.html'?'corners':input.path==='/fixture/bridge.html'?'bridge':'acceptance'
+          reply({pageId,initId,path:input.path,html:input.path==='/fixture/window.html'?windowFixture():await readFile(`e2e/visualize/fixtures/${fixture}.html`,'utf8'),state:states.get(stateKey(page))??null,stateRevision:revisions.get(stateKey(page))??0,
+            ...(input.path.includes('/performance-')?{resourceHashes:await performanceHashes()}: {})});return
         }
         const page=pages.get(id)
         if(!page||page.channel!==channel||req.headers['x-visualize-page-token']!==page.initId){reply({error:'fixture page unauthorized'},403);return}
@@ -66,8 +81,7 @@ export function visualizeFixtureApi(): Plugin {
           const allowed=['visualize.css','visualize.html','calendar.js','gen-ui.js','vendor/d3-7.9.0.min.js','vendor/floating-ui-core-1.7.3.min.js','vendor/floating-ui-dom-1.7.4.min.js','vendor/lucide-1.17.0.js']
           if(!allowed.includes(name)){reply({},404);return}
           if(fault.split(',').includes('handshake')&&name==='gen-ui.js'){res.setHeader('content-type','text/plain');res.end('/* fault fixture: runtime unavailable */');return}
-          const file=name==='gen-ui.js'?path.join(process.env.E2E_VISUALIZE_RUNTIME_ROOT??'server/assets/visualize-runtime','gen-ui.js')
-            :path.join(process.env.E2E_VISUALIZE_ASSET_ROOT??'third_party/zcode/skills/visualize/assets',name)
+          const file=resourceFile(name)
           const attempt = resourceAttempts.filter(item=>item.name===name).length + 1
           const entry: typeof resourceAttempts[number] = {name,attempt,start:performance.now()}
           resourceAttempts.push(entry)
@@ -100,12 +114,13 @@ export function visualizeFixtureApi(): Plugin {
           }
           const delays = JSON.parse(process.env.E2E_VISUALIZE_RESOURCE_DELAYS ?? '{}') as Record<string, number>
           const delay = Number(delays[name] ?? process.env.E2E_VISUALIZE_RESOURCE_DELAY ?? 0)
-          if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay))
+          if (delay + performanceConfig.resourceMs > 0) await new Promise(resolve => setTimeout(resolve, delay + performanceConfig.resourceMs))
           res.setHeader('cache-control','no-store')
           res.setHeader('content-type','text/plain');res.end(await readFile(file));return
         }
         const key=stateKey(page)
         if(action==='state'){
+          if(req.method==='GET' && performanceConfig.stateMs) await new Promise(resolve=>setTimeout(resolve,performanceConfig.stateMs))
           if(req.method==='PUT'){states.set(key,input.state);revisions.set(key,(revisions.get(key)??0)+1);acceptedSaves++}
           reply({state:states.get(key)??null,revision:revisions.get(key)??0});return
         }

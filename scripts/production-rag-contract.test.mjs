@@ -29,7 +29,7 @@ test('production stops both old workers before an application can enqueue new ef
 test('server image includes the complete shared runtime import graph', () => {
   const root = fileURLToPath(new URL('../', import.meta.url))
   const copied = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1).split(/\r?\n/)
-    .filter(line => /^COPY src[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
+    .filter(line => /^COPY (?:src|shared)[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
   const pending = ts.sys.readDirectory(resolve(root, 'server/src'), ['.ts'], ['**/*.test.ts', '**/__tests__/**', '**/__integration__/**'])
   const visited = new Set(), missing = new Set()
   for (const file of pending) {
@@ -47,7 +47,7 @@ test('server image includes the complete shared runtime import graph', () => {
       if (specifier && ts.isStringLiteral(specifier) && specifier.text.startsWith('.')) {
         const target = resolve(dirname(file), specifier.text.replace(/\.js$/, '.ts'))
         const path = relative(root, target).replaceAll('\\', '/')
-        if (path.startsWith('src/')) {
+        if (path.startsWith('src/') || path.startsWith('shared/')) {
           if (!copied.some(item => path === item || path.startsWith(`${item}/`))) missing.add(path)
           pending.push(target)
         }
@@ -523,7 +523,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
   // The image's shared runtime inputs also need owning server checks. Cover
   // future additions instead of relying only on the examples above.
   const sharedSources = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1).split(/\r?\n/)
-    .filter(line => /^COPY src[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
+    .filter(line => /^COPY (?:src|shared)[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
     .flatMap(path => path.endsWith('.ts') ? [path] : ts.sys.readDirectory(path, ['.ts'], ['**/*.test.ts']))
   assert.ok(sharedSources.length > 10)
   for (const file of sharedSources) {

@@ -1,0 +1,28 @@
+TAP version 13
+# Subtest: server image includes the complete shared runtime import graph
+ok 1 - server image includes the complete shared runtime import graph
+  ---
+  duration_ms: 985.143039
+  type: 'test'
+  ...
+# Subtest: SPA image includes the transitive source graph and pinned vendor license
+ok 2 - SPA image includes the transitive source graph and pinned vendor license
+  ---
+  duration_ms: 2915.553816
+  type: 'test'
+  ...
+# Subtest: workflow path filters route real changed paths to their owning checks
+ok 3 - workflow path filters route real changed paths to their owning checks
+  ---
+  duration_ms: 142.351881
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4813.188086
