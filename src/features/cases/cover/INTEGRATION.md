@@ -114,8 +114,8 @@ upstream installer/build/validate scripts. In isolated UI worktree set
 `.e2e/case-cover`; prepare `hairline.html` first. Browser starts one localhost
 fixture at port5189, a small isolated cache under /tmp, no API proxy or credentials.
 For the managed session's existing browser, set `E2E_CASE_COVER_CDP_URL` to the
-integrator-provided local endpoint. `--trace off --video off --output /tmp/loop-case-cover-e2e`
-keeps browser artifacts off the constrained workspace disk. The approved UDP
+integrator-provided local endpoint. `--trace off --video off --output .e2e/case-cover-run`
+keeps evidence within this worktree and separate from prepared fixture inputs. The approved UDP
 characterization listener binds only127.0.0.1:51890; check the port first and
 retain start/stop log plus the final free-port check. `webrtc-characterization.json`
 records local packets separately from HTTP checks; positive UDP means the

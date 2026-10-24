@@ -24,4 +24,4 @@ function Fixture() {
   </main>
 }
 const theme = new URLSearchParams(location.search).get('theme') === 'dark' ? 'dark' : 'light'
-createRoot(document.getElementById('root')!).render(<ThemeProvider attribute="class" forcedTheme={theme}><Fixture /></ThemeProvider>)
+createRoot(document.getElementById('root')!).render(<ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false} storageKey="case-cover-fixture-theme" forcedTheme={theme}><Fixture /></ThemeProvider>)

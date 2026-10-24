@@ -49,12 +49,13 @@ for (const theme of ['light', 'dark']) test(`opaque cover lifecycle, keyboard ac
 for (const attack of ['location', 'data', 'blob', 'nested', 'document-write']) test(`native policy blocks generated ${attack} network escape`, async ({ app, browser }) => {
   const endpoint = `http://127.0.0.1:5189/cover-network-probe?kind=${attack}`
   const nested = `<script>fetch(${JSON.stringify(endpoint)});location.href=${JSON.stringify(endpoint)}<` + '/script>'
+  const nestedData = JSON.stringify(nested).replace(/</g, '\\u003c')
   const code = attack === 'location' ? `location.href=${JSON.stringify(endpoint)}`
-    : attack === 'data' ? `location.href='data:text/html,'+encodeURIComponent(${JSON.stringify(nested)})`
-    : attack === 'blob' ? `location.href=URL.createObjectURL(new Blob([${JSON.stringify(nested)}],{type:'text/html'}))`
-    : attack === 'document-write' ? `document.open();document.write(${JSON.stringify(nested)});document.close()`
-    : `const child=document.createElement('iframe');document.body.append(child);child.src=${JSON.stringify(endpoint)};try{child.contentDocument.write(${JSON.stringify(nested)})}catch{}`
-  const html = `<p>native escape probe</p><script>document.body.dataset.attempted=${JSON.stringify(attack)};parent.postMessage({type:'case-cover:ready',version:1},'*');setTimeout(()=>{${code}},500)<` + '/script>'
+    : attack === 'data' ? `location.href='data:text/html,'+encodeURIComponent(${nestedData})`
+    : attack === 'blob' ? `location.href=URL.createObjectURL(new Blob([${nestedData}],{type:'text/html'}))`
+    : attack === 'document-write' ? `document.open();document.write(${nestedData});document.close()`
+    : `const child=document.createElement('iframe');document.body.append(child);child.src=${JSON.stringify(endpoint)};try{child.contentDocument.write(${nestedData})}catch{}`
+  const html = `<p>native escape probe</p><script>document.body.dataset.attempted=${JSON.stringify(attack)};parent.postMessage({type:'case-cover:ready',version:1},'*');let armed=false;addEventListener('message',event=>{if(event.source!==parent||event.data?.type!=='case-cover:environment')return;if(event.data.engaged)armed=true;else if(armed){armed=false;document.body.dataset.started='yes';setTimeout(()=>{${code}},1000)}})<` + '/script>'
   await browser.route(/\/api\/cases\/fixture\/cover\/assets\//, route => route.request.url.includes('/preview?')
     ? route.fulfill({ body: staticSvg, contentType: 'image/svg+xml' }) : route.fulfill({ json: { html } }))
   await app.open('/scripts/case-cover-fixture.html')
@@ -62,8 +63,11 @@ for (const attack of ['location', 'data', 'blob', 'nested', 'document-write']) t
   await browser.keyboard.press('Enter')
   const child = browser.frameLocator('[data-fixture-cover="1"] iframe').frameLocator('#renderer')
   await expect(child.locator('body')).toHaveAttribute('data-attempted', attack)
+  await browser.locator('[data-fixture-cover="1"] button').hover()
+  await browser.keyboard.press('Enter')
+  await expect(child.locator('body')).toHaveAttribute('data-started', 'yes')
   const requests = await browser.evaluate(async () => {
-    await new Promise(resolve => setTimeout(resolve, 1_000))
+    await new Promise(resolve => setTimeout(resolve, 1_500))
     return (await (await fetch('/cover-network-count')).json()).requests as number
   })
   expect(requests).toBe(0)
