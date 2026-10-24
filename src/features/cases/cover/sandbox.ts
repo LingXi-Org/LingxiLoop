@@ -4,7 +4,7 @@ export const MAX_CASE_COVER_HTML = 512 * 1024
 
 export function coverSandboxDocument(payload: unknown): string {
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)
-    || Object.keys(payload).length !== 1 || !('html' in payload)
+    || Object.keys(payload).length !== 1 || !Object.hasOwn(payload, 'html') || !('html' in payload)
     || typeof payload.html !== 'string' || !payload.html.trim()
     || payload.html.length > MAX_CASE_COVER_HTML || payload.html.includes('\0')) {
     throw new Error('封面暂时无法交互。')
@@ -36,8 +36,12 @@ renderer.src=url;
 
 export function coverAssetPath(url: string): string {
   // Only the dedicated, authenticated cases endpoint can supply executable content.
-  if (!/^\/api\/cases\/[A-Za-z0-9_%.-]+\/cover\/assets\/[A-Za-z0-9_%.-]+\/[1-9][0-9]*\/(?:interactive|preview)\?snapshot=(?:draft|published)$/.test(url)) {
-    throw new Error('封面资源地址无效。')
+  const match = /^\/api\/cases\/([A-Za-z0-9_%.-]+)\/cover\/assets\/([A-Za-z0-9_%.-]+)\/[1-9][0-9]*\/(?:interactive|preview)\?snapshot=(?:draft|published)$/.exec(url)
+  if (!match) throw new Error('封面资源地址无效。')
+  for (const part of [match[1], match[2]]) {
+    let decoded: string
+    try { decoded = decodeURIComponent(part) } catch { throw new Error('封面资源地址无效。') }
+    if (decoded === '.' || decoded === '..' || /[/\\?#\u0000-\u0020\u007f]/.test(decoded)) throw new Error('封面资源地址无效。')
   }
   return url.slice('/api'.length)
 }
@@ -45,7 +49,7 @@ export function coverAssetPath(url: string): string {
 export function isCoverMessage(event: Pick<MessageEvent, 'source' | 'data'>, source: MessageEventSource | null): event is MessageEvent<{ type: 'case-cover:ready' | 'case-cover:error'; version: 1 }> {
   const data: unknown = event.data
   return source !== null && event.source === source && !!data && typeof data === 'object'
-    && !Array.isArray(data) && Object.keys(data).length === 2
+    && !Array.isArray(data) && Object.keys(data).sort().join(',') === 'type,version'
     && 'version' in data && data.version === 1 && 'type' in data
     && (data.type === 'case-cover:ready' || data.type === 'case-cover:error')
 }

@@ -9,7 +9,7 @@ test('generated code is isolated by an initial restrictive policy; active assets
   assert.ok(doc.indexOf('Content-Security-Policy') < doc.indexOf('<script>'))
   for (const directive of ["connect-src 'none'", "frame-src 'none'", "base-uri 'none'", "form-action 'none'", "worker-src 'none'"]) assert.ok(CASE_COVER_CSP.includes(directive))
   assert.equal(coverAssetPath('/api/cases/a/cover/assets/job/1/interactive?snapshot=published'), '/cases/a/cover/assets/job/1/interactive?snapshot=published')
-  for (const url of ['https://evil.invalid/cover', '//evil.invalid', '/api/files/a', '/api/cases/a/cover/interactive?x#fragment']) assert.throws(() => coverAssetPath(url))
+  for (const url of ['https://evil.invalid/cover', '//evil.invalid', '/api/files/a', '/api/cases/a/cover/interactive?x#fragment', '/api/cases/../cover/assets/j/1/interactive?snapshot=draft', '/api/cases/a/cover/assets/%2e%2e/1/interactive?snapshot=draft', '/api/cases/%2f/cover/assets/j/1/interactive?snapshot=draft']) assert.throws(() => coverAssetPath(url))
   for (const payload of [{ html: 'x', unexpected: true }, { html: 'x'.repeat(MAX_CASE_COVER_HTML + 1) }, { html: '' }, null]) assert.throws(() => coverSandboxDocument(payload))
 })
 
@@ -36,7 +36,7 @@ test('opaque-origin messages require the exact frame and exact protocol shape', 
   assert.ok(isCoverMessage({ source: frame, data: ready }, frame))
   assert.equal(isCoverMessage({ source: {} as Window, data: ready }, frame), false)
   assert.equal(isCoverMessage({ source: null, data: ready }, null), false)
-  for (const data of [{ ...ready, height: 10000 }, { ...ready, version: 2 }, { type: 'open', version: 1 }, 'case-cover:ready']) assert.equal(isCoverMessage({ source: frame, data }, frame), false)
+  for (const data of [{ ...ready, height: 10000 }, { ...ready, version: 2 }, { type: 'open', version: 1 }, 'case-cover:ready', Object.assign(Object.create(ready), { extra: 1, other: 2 })]) assert.equal(isCoverMessage({ source: frame, data }, frame), false)
 })
 
 test('activating a third cover disposes the oldest animation and releases do not remove new slots', () => {
