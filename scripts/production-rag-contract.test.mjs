@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { matchesGlob, relative, resolve } from 'node:path'
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { join, matchesGlob, relative, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
+import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 import ts from 'typescript'
@@ -8,6 +10,72 @@ import { computeScope } from './ci-scope.mjs'
 import { updateImageTags } from './update-deployment-images.mjs'
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
+
+function pdfPruneFixture(t) {
+  const directory = mkdtempSync(join(tmpdir(), 'pdf-prune-office-'))
+  t.after(() => rmSync(directory, { recursive: true, force: true }))
+  const put = (path, value) => {
+    mkdirSync(resolve(directory, path, '..'), { recursive: true })
+    writeFileSync(join(directory, path), value)
+  }
+  const pdf = 'node_modules/pdfjs-dist/', office = 'node_modules/officeparser/'
+  put('node_modules/.package-lock.json', '{"pdfjs-dist":{}}')
+  put('node_modules/@lyyzka/lingxios/package.json', '{"dependencies":{"pdfjs-dist":"6.3.289"}}')
+  put('node_modules/@lyyzka/lingxios/dist/src/context/document-worker.js', "import('pdfjs-dist/legacy/build/pdf.mjs'); import.meta.resolve('pdfjs-dist/package.json')")
+  put(pdf + 'package.json', '{"name":"pdfjs-dist","version":"6.3.289","main":"build/pdf.mjs"}')
+  for (const path of ['LICENSE', 'types/src/pdf.d.ts', 'build/pdf.mjs', 'build/pdf.worker.min.mjs',
+    'legacy/build/pdf.mjs', 'legacy/build/pdf.worker.mjs', 'legacy/build/pdf.mjs.map',
+    'cmaps/LICENSE', 'standard_fonts/LICENSE_FOXIT', 'standard_fonts/LICENSE_LIBERATION',
+    'wasm/LICENSE_PDFJS_JBIG2', 'wasm/LICENSE_PDFJS_OPENJPEG', 'iccs/profile.bin',
+    'image_decoders/decoder.mjs', 'legacy/image_decoders/decoder.mjs']) put(pdf + path, 'retained')
+  for (const path of ['web/viewer.mjs', 'legacy/web/viewer.mjs', 'build/pdf.mjs.map',
+    'build/pdf.worker.mjs.map', 'build/pdf.sandbox.mjs.map']) put(pdf + path, 'trimmed')
+  put(office + 'package.json', '{"name":"officeparser","version":"8.2.0","dependencies":{"pdfjs-dist":"6.2.108"}}')
+  for (const path of ['dist/defaults.js', 'dist/officeparser.browser.d.ts', 'dist/officeparser.browser.iife.js',
+    'dist/officeparser.browser.mjs', 'dist/officeparser.browser.native-pdf.mjs',
+    'dist/officeparser.browser.slim.d.ts', 'dist/officeparser.browser.slim.iife.js',
+    'dist/officeparser.browser.slim.mjs', 'dist/parsers/PdfParser.d.ts', 'dist/parsers/PdfParser.js',
+    'dist/types.d.ts', 'dist/utils/envUtils.d.ts', 'dist/utils/envUtils.js',
+    'dist/utils/moduleLoader.d.ts', 'dist/utils/moduleLoader.js']) put(office + path, '// pdfjs-dist')
+  const nested = office + 'node_modules/pdfjs-dist/'
+  put(nested + 'package.json', '{"name":"pdfjs-dist","version":"6.2.108","main":"build/pdf.mjs"}')
+  for (const path of ['build/pdf.mjs', 'legacy/build/pdf.mjs', 'legacy/build/pdf.worker.mjs',
+    'web/viewer.mjs', 'cmaps/map.bcmap', 'standard_fonts/font.pfb', 'wasm/decoder.wasm', 'LICENSE']) put(nested + path, 'nested retained')
+  const run = () => spawnSync(process.execPath, [fileURLToPath(new URL('./prune-pdfjs-server-runtime.mjs', import.meta.url)), join(directory, pdf), '--apply'],
+    { encoding: 'utf8', timeout: 10000, env: { PATH: process.env.PATH } })
+  const inventory = (path) => readdirSync(join(directory, path), { recursive: true, withFileTypes: true })
+    .filter(entry => entry.isFile()).map(entry => {
+      const full = join(entry.parentPath, entry.name)
+      return [relative(join(directory, path), full), readFileSync(full).toString('base64')]
+    }).sort((a, b) => a[0].localeCompare(b[0]))
+  return { directory, pdf, office, nested, put, run, inventory }
+}
+
+test('PDF.js prune accepts pinned officeparser consumers and preserves its separate PDF runtime byte-for-byte', t => {
+  const f = pdfPruneFixture(t), nested = f.inventory(f.nested), result = f.run()
+  assert.equal(result.status, 0, result.stderr)
+  const report = JSON.parse(result.stdout)
+  assert.equal(report.removedFiles, 5)
+  assert.deepEqual(f.inventory(f.nested), nested)
+  assert.ok(f.inventory(f.pdf).some(([path]) => path === 'legacy/build/pdf.worker.mjs'))
+  assert.ok(f.inventory(f.pdf).some(([path]) => path === 'cmaps/LICENSE'))
+  assert.ok(f.inventory(f.pdf).every(([path]) => !path.startsWith('web/') && !path.startsWith('legacy/web/')))
+})
+test('PDF.js prune rejects an unreviewed officeparser consumer before removing any file', t => {
+  const f = pdfPruneFixture(t)
+  f.put(f.office + 'dist/new-consumer.js', "import('pdfjs-dist/web/pdf_viewer.mjs')")
+  const before = f.inventory(f.pdf), result = f.run()
+  assert.notEqual(result.status, 0)
+  assert.match(result.stderr, /Re-audit PDF.js consumers/)
+  assert.deepEqual(f.inventory(f.pdf), before)
+})
+test('PDF.js prune rejects officeparser falling back to the top-level runtime before trimming', t => {
+  const f = pdfPruneFixture(t), before = f.inventory(f.pdf)
+  rmSync(join(f.directory, f.nested), { recursive: true })
+  const result = f.run()
+  assert.notEqual(result.status, 0)
+  assert.deepEqual(f.inventory(f.pdf), before)
+})
 
 // Failures: sync deploys an application before the worker stop; an old worker acknowledges a new effect.
 test('production stops both old workers before an application can enqueue new effect kinds', () => {
