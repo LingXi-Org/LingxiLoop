@@ -1,4 +1,4 @@
-import type { AuthCompany, AuthUser, ServerCapabilities } from '@/auth/contracts'
+import type { AuthCompany, AuthMeResponse, AuthUser, ServerCapabilities } from '@/auth/contracts'
 export type { AuthCompany, AuthUser } from '@/auth/contracts'
 /**
  * Browser authentication is held only by Better Auth's host-only cookie.
@@ -6,6 +6,9 @@ export type { AuthCompany, AuthUser } from '@/auth/contracts'
 import { create } from 'zustand'
 import { runAuthTeardown, type AuthTeardownReason } from './authTeardown'
 interface AuthState {
+  sessionKey: string | null
+  authorizationEpoch: number
+  acceptSession: (me: AuthMeResponse, sessionKey: string) => void
   authenticated: boolean
   user: AuthUser | null
   companies: AuthCompany[]
@@ -25,7 +28,30 @@ interface AuthState {
 
 const COMPANY_KEY = 'lingxiloop.auth.company'
 
+function permissionScope(user: AuthUser | null, companies: AuthCompany[], activeCompanyId: string | null) {
+  return JSON.stringify([user?.id ?? null, activeCompanyId, companies.map(company =>
+    [company.id, company.role, company.isAdmin, company.status]).sort((a, b) => String(a[0]).localeCompare(String(b[0])))])
+}
+
 export const useAuth = create<AuthState>((set) => ({
+  sessionKey: null,
+  authorizationEpoch: 0,
+  acceptSession(me, sessionKey) {
+    if (me.companies.length !== 1 || me.companies[0].id !== me.activeCompanyId) {
+      useAuth.getState().clear()
+      throw new Error('Active company membership required')
+    }
+    const previous = useAuth.getState()
+    const changed = previous.sessionKey !== sessionKey
+      || permissionScope(previous.user, previous.companies, previous.activeCompanyId) !== permissionScope(me.user, me.companies, me.activeCompanyId)
+    if (changed) runAuthTeardown()
+    const authorizationEpoch = previous.authorizationEpoch + Number(changed)
+    localStorage.setItem(COMPANY_KEY, me.activeCompanyId)
+    set({ ...me, sessionKey, authenticated: true, ready: true, authorizationEpoch })
+    if (changed) void import('@/api/core/realtime').then(({ ws }) => {
+      if (useAuth.getState().authorizationEpoch === authorizationEpoch && useAuth.getState().authenticated) ws.reconnect()
+    })
+  },
   authenticated: false,
   user: null,
   companies: [],
@@ -56,25 +82,34 @@ export const useAuth = create<AuthState>((set) => ({
   },
   clear(reason) {
     runAuthTeardown(reason)
+    const authorizationEpoch = useAuth.getState().authorizationEpoch + 1
     localStorage.removeItem(COMPANY_KEY)
     set({
+      sessionKey: null,
+      authorizationEpoch,
       authenticated: false,
       user: null,
       companies: [],
       activeCompanyId: null,
-          ready: true,
+      ready: true,
       serverCapabilities: null,
     })
     // Stale object-URLs from the previous user's avatars would otherwise
     // linger; clear them so the next sign-in doesn't briefly render a
     // dead URL.createObjectURL pointing at a freed blob.
-    void import('@/lib/avatarCache').then(({ clearAvatarCache }) => clearAvatarCache())
+    void import('@/lib/avatarCache').then(({ clearAvatarCache }) => {
+      if (useAuth.getState().authorizationEpoch === authorizationEpoch) clearAvatarCache()
+    })
     // ChatTransport cancels synchronously through runAuthTeardown above.
     // A deferred disconnect could instead cancel a newer sign-in's transport.
-    void import('@/api/core/realtime').then(({ ws }) => ws.close())
+    void import('@/api/core/realtime').then(({ ws }) => {
+      if (useAuth.getState().authorizationEpoch === authorizationEpoch) ws.close()
+    })
     // Library stores survive logout otherwise (they're global singletons).
     void Promise.all([
-      import('@/features/documents/state').then(({ useDocuments }) => useDocuments.getState().reset()),
+      import('@/features/documents/state').then(({ useDocuments }) => {
+        if (useAuth.getState().authorizationEpoch === authorizationEpoch) useDocuments.getState().reset()
+      }),
     ])
   },
   markReady() {

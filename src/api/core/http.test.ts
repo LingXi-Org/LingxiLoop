@@ -24,6 +24,16 @@ test('a current session rejection stops automatic recovery but a stale rejection
     await assert.rejects(stale)
     assert.equal(clears.length,1,'A response from an earlier auth object must not clear a newer sign-in')
   }
+  const controller = new AbortController()
+  const cancelled = http('/session', { signal: controller.signal })
+  controller.abort()
+  respond(new Response('{}', { status: 401 }))
+  await assert.rejects(cancelled)
+  assert.equal(clears.length, 1, 'cancelled session checks cannot log out the current identity')
+  const forbidden = http('/courses/synthetic', { method: 'PATCH' })
+  respond(new Response('{}', { status: 403 }))
+  await assert.rejects(forbidden)
+  assert.equal(clears.length, 1, 'ordinary permission denial is not global logout')
   const oldCompany=http('/conversations/room/typing')
   company='other'
   respond(new Response('{}',{status:401}))

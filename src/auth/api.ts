@@ -58,5 +58,5 @@ export const authApi = {
   resetPassword: (newPassword: string, token: string) => authClient.resetPassword({ newPassword, token }),
   sendVerification: (email: string) => authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' }),
   verifyEmail: (email: string, otp: string) => authClient.emailOtp.verifyEmail({ email, otp }),
-  me: () => http<AuthMeResponse>('/session'),
+  me: (signal?: AbortSignal) => http<AuthMeResponse>('/session', { signal }),
 }
