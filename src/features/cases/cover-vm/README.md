@@ -24,7 +24,8 @@ document only constructs permitted SVG nodes in VM memory. This is a capability
 boundary, not a CSP claim or an OS sandbox.
 
 Budgets: 8 MiB QuickJS heap, 256 KiB QuickJS stack, 64 MiB imported WASM memory,
-100 ms and 10,000 interrupt callbacks per evaluation, 18,000 requests per VM,
+500 ms shared across bootstrap/kernel/mount/first snapshot, 100 ms per later
+event/tick, 10,000 interrupt callbacks per evaluation, 18,000 requests per VM,
 1,024 nodes, 16 tree levels, 128 pending callbacks and 256 KiB output. Browser
 owner terminates after 8 seconds starting or 1 second awaiting a reply; it keeps
 one request in flight and a fixed number of coalesced event categories. The
@@ -58,13 +59,21 @@ security qualification.
 
 ## Verification status
 
-Pure guest/data/session and generator-stub tests: 26 passed. Focused TypeScript
+Pure guest/data/session and generator-stub tests: 30 passed. Focused TypeScript
 and browser Worker static bundling passed using the exact already audited
 package files (no package lifecycle scripts). No actual VM was run during these
 checks. `verify-package.mjs`'s five primitive checks were executed once by the
 parent and are not rerun here. `verify-runtime.mjs` is a new, separately reviewed
 qualification action, not an automatically executed test. It exercises the two
 pinned public examples and literal hostile fixtures under a bounded child.
-Actual VM geometry, renderer worker startup, browser interaction, model output,
-production packaging and integrated ACL/task fencing still require their own
-results. Resource limits and pure tests alone do not make those claims.
+The parent's first actual runtime attempt exposed the primitive-string length
+API mismatch, now fixed. The next produced a real riffle frame (27,423 SVG bytes,
+23,529 root JSON characters) with changed pointer geometry, then exposed terrain's
+missing VM-local after() operation, now covered by the guest. A later attempt
+hit the 100 ms mount deadline on riffle under contention. Initialization now has
+one shared 500 ms allowance; step, heap, WASM and watchdog ceilings stay fixed.
+The pinned kernel is 27,905 bytes; riffle 7,399 bytes/123 SVG nodes; terrain 4,444
+bytes/258 nodes. Counts derive from the original loops, not a reduced fixture.
+Full fixed-suite success, renderer worker startup, browser interaction, model
+output, packaging and integrated ACL/task fencing still require their own results.
+Resource limits and pure tests alone do not make those claims.

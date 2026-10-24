@@ -5,7 +5,7 @@ import { COVER_GUEST_SOURCE } from './guest-source'
 import { copyCoverFrameString, invalidCoverData } from './protocol'
 import { parseCoverProgram, validateCoverEvent, type CoverVmEvent } from './program'
 
-export const VM_BUDGET = Object.freeze({ heap: 8 * 1024 * 1024, wasmPages: 1024, stack: 256 * 1024, cpuMs: 100, interrupts: 10000, lifetimeTicks: 18000 })
+export const VM_BUDGET = Object.freeze({ heap: 8 * 1024 * 1024, wasmPages: 1024, stack: 256 * 1024, initializationCpuMs: 500, cpuMs: 100, interrupts: 10000, lifetimeTicks: 18000 })
 
 // Keep the shared server source typed without adding browser DOM globals.
 declare const WebAssembly: { Memory: new (descriptor: { initial: number; maximum: number }) => ReturnType<Awaited<ReturnType<typeof newQuickJSWASMModuleFromVariant>>['getWasmMemory']> }
@@ -31,9 +31,13 @@ export async function createCoverVm(wasmBinary: ArrayBuffer, programJson: string
   runtime.removeModuleLoader()
   const context = runtime.newContext()
   let disposed = false, ticks = 0
+  // One shared allowance covers adapter, kernel, complete geometry mount and
+  // first snapshot. Original figures construct 123/258 nodes synchronously;
+  // the initial mount is materially larger than an incremental event/tick.
+  const initializationDeadline = Date.now() + VM_BUDGET.initializationCpuMs
   function evaluate(source: string, frame: boolean, phase: 'bootstrap' | 'kernel' | 'mount' | 'snapshot' | 'step'): string {
     if (disposed) invalidCoverData()
-    const deadline = Date.now() + VM_BUDGET.cpuMs
+    const deadline = phase === 'step' ? Date.now() + VM_BUDGET.cpuMs : initializationDeadline
     let interrupts = 0, interrupted = false
     runtime.setInterruptHandler(() => {
       interrupted = ++interrupts > VM_BUDGET.interrupts || Date.now() >= deadline
