@@ -1,7 +1,7 @@
 import { readRunProjection } from './assistant-transport.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type createLingxiOS, type ApprovalSnapshot, type DeliveryPort } from '@lyyzka/lingxios'
+import { NoEffectError, type createLingxiOS, type DeliveryPort } from '@lyyzka/lingxios'
 import { sendAgentChannelMessage, sendSystemChannelMessage } from '../im/public.js'
 import { loadRuntimeBinding } from './context.js'
 import { productConversationId, assertFrozenAudience, bindProductRun } from './identity.js'
@@ -12,16 +12,7 @@ import { getSendAcceptance } from '../im/messages-repository.js'
 import { parseMentions } from '../mentions.js'
 import { assertCanvasRequestCurrent } from '../modules/canvas/index.js'
 
-export function approvalView(approval: ApprovalSnapshot) {
-  const status = approval.decision === null ? 'PENDING' : approval.decision === false ? 'REJECTED'
-    : approval.result?.executionState === 'unknown' ? 'UNKNOWN' : approval.result?.ok ? 'EXECUTED'
-    : approval.result?.executionState === 'awaiting_approval' ? 'APPROVED' : 'FAILED'
-  return { id: approval.approvalId, runId: approval.runId, agentId: approval.agentId, status,
-    summary: String(approval.preview.summary ?? approval.preview.title ?? approval.action),
-    action: { action: approval.action, args: approval.args }, preview: approval.preview,
-    requestedBy: approval.principalId, requestedAt: approval.createdAt, resolvedAt: approval.decidedAt,
-    scope: { requestVersion: approval.requestVersion }, ...(approval.result ? { result: approval.result } : {}) }
-}
+export { approvalView } from './approval-public-view.js'
 
 export function createProductDelivery(control: () => ReturnType<typeof createLingxiOS>): DeliveryPort {
   return {

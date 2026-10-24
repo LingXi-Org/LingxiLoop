@@ -48,7 +48,7 @@ test('connection recovery keeps reply text and exposes no diagnostic card', () =
     const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
     assert.match($.text(), /正文1/)
     assert.doesNotMatch($.text(), /连接任务失败|核对任务状态|状态待确认|已停止本地等待|权限可能已变化/)
-    assert.equal($('button').filter((_, el) => $(el).text().includes('重新连接')).length, connection === 'released' ? 1 : 0)
+    assert.equal($('button').filter((_, el) => $(el).text().includes('恢复连接')).length, connection === 'released' ? 1 : 0)
   }
 })
 
