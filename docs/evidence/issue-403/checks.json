@@ -1,0 +1,80 @@
+{
+  "base": "55f62548887b03dbc0321e54e0ca2036a77639b3",
+  "firstCandidate": "e5c144ca6f30237454d9af4fb4a738facc3d72e6",
+  "firstCi": {
+    "id": 40077033989,
+    "conclusion": "failure",
+    "job": 120822545138,
+    "logDownload": "Forbidden; 0 bytes; not retrieved; no alternate route"
+  },
+  "runs": {
+    "gate-red.log": {
+      "sha256": "f24f815cebc37270ffc85208eaa3c82bbe8f9a232d8e6f96897dbad038e7755a",
+      "bytes": 1113
+    },
+    "http-red.log": {
+      "sha256": "c782f055e58989ff3821c222b30c7dc9197f2bef8a828a917aa712c328aa0e3e",
+      "bytes": 1114
+    },
+    "rejection-red.log": {
+      "sha256": "6655bda5bea73b49c7ade6ddef8b57396c011d22cec15638f3967e92cab60572",
+      "bytes": 1156
+    },
+    "three-p2-red.log": {
+      "sha256": "74c03fa06cdb8d95a4a87007695f6e80cf501caa90bbada62dc53d1a1cccd53e",
+      "bytes": 4677
+    },
+    "full-lint-repro.log": {
+      "sha256": "1adea149fc49db914b5614c69e4c717cf117ec64fa5e6a6e23a1519441f1e6e0",
+      "bytes": 9459
+    },
+    "final-lint.log": {
+      "sha256": "ea23b9b3328c3e2646b506dbb8982a29065b50f89f41c517f082e3fc70fd8623",
+      "bytes": 7314
+    },
+    "owning-web.log": {
+      "sha256": "c0c7e9ee2afcdddf90e994e910dfcf9323cbf46bca429bcee23028f4b8283e6c",
+      "bytes": 35874
+    },
+    "final-gate-delta.log": {
+      "sha256": "433ac0d2a39054efe6f2f8e5e1e701d51dd1ad3dc8802edd24b154d94e892d59",
+      "bytes": 1300
+    },
+    "rejection-owner-red.log": {
+      "sha256": "cc9cdfda8a03db6c68255291e9ec96117db01b23e29a0b0d0dc91a7ad18a6e0f",
+      "bytes": 2333
+    },
+    "rejection-owner-green.log": {
+      "sha256": "5ea967112d1cc6d39da6283e91fdcdb06fe65471994fa55b3aa8c14849aacf91",
+      "bytes": 3820
+    },
+    "acceptance-red.log": {
+      "sha256": "18c94d7daef7576827b9f60e8f58dbc81a709a8cdc6c87ba54a794233fc363d5",
+      "bytes": 1961
+    },
+    "final-focused.log": {
+      "sha256": "4608768e20cca8bd53a1c80a938f66346407eff95de3b41fc091514da2abe5f4",
+      "bytes": 4348
+    },
+    "signin-broadcast-red.log": {
+      "sha256": "bcf9ad70da8e2459c2a8e5874ed1e62242416207b2aabea5d84abc4cb8648ffb",
+      "bytes": 1257
+    },
+    "signin-broadcast-green.log": {
+      "sha256": "2ff4a1956c01ab1e92a401a3a92ab382771421c3f1084a8a432ac3ac3633bc5c",
+      "bytes": 4811
+    },
+    "ci431ce837.json": {
+      "sha256": "bab64c2bd9e20474fa1f610edce0d9404a67d458ecb78d96dba43b6471687209",
+      "bytes": 6344
+    }
+  },
+  "browser": "pending independent synthetic two-context validation",
+  "productionActions": 0,
+  "externalProviderCalls": 0,
+  "precedingCi": {
+    "id": 40078104391,
+    "head": "431ce8373c0675a3eac3e10947c51f366f4a952f",
+    "conclusion": "success"
+  }
+}

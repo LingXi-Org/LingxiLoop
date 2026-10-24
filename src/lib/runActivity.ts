@@ -64,7 +64,9 @@ export function activityAnnotation(part: unknown): ActivityAnnotation | undefine
   if (!part || typeof part !== 'object') return undefined
   const metadata = Reflect.get(part, 'providerMetadata')
   const product = metadata && typeof metadata === 'object' ? Reflect.get(metadata, 'lingxiloop') : undefined
-  const result = activityAnnotationSchema.safeParse(product && typeof product === 'object' ? Reflect.get(product, 'activity') : undefined)
+  const value = product && typeof product === 'object' ? Reflect.get(product, 'activity') : undefined
+  if (value === undefined) return undefined
+  const result = activityAnnotationSchema.safeParse(value)
   return result.success ? result.data : undefined
 }
 

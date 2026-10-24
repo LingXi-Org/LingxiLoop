@@ -1,0 +1,59 @@
+
+> lingxiloop@0.1.0-beta test:integration
+> node server/run-integration-tests.mjs --file runtime-reliability.test.ts --file message-mentions.test.ts
+
+[integration selected] selected 2/119 file(s): runtime-reliability.test.ts, message-mentions.test.ts
+TAP version 13
+# Subtest: optional scope outages omit memory while mandatory authorization and implementation errors stay strict
+ok 1 - optional scope outages omit memory while mandatory authorization and implementation errors stay strict
+  ---
+  duration_ms: 1519.183282
+  type: 'test'
+  ...
+# {"ts":"2026-10-24T09:13:14.453Z","level":"warn","msg":"terminal feedback failed","error":"Background operation failed"}
+# Subtest: revoking the project before terminal delivery prevents a protected notification and stops retries
+ok 2 - revoking the project before terminal delivery prevents a protected notification and stops retries
+  ---
+  duration_ms: 1276.664085
+  type: 'test'
+  ...
+# {"ts":"2026-10-24T09:13:17.229Z","level":"info","msg":"worker stopped","workerId":"terminal-product","timedOut":false}
+# Subtest: failed and cancelled turns persist one system feedback, preserve work state and allow the next message
+ok 3 - failed and cancelled turns persist one system feedback, preserve work state and allow the next message
+  ---
+  duration_ms: 1660.09766
+  type: 'test'
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 3
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10133.082206
+[integration file] runtime-reliability.test.ts duration_ms=10239 exit=0
+TAP version 13
+# Subtest: contiguous public answer survives admission, receipt, retry and authorized history without corrupting mentions
+ok 1 - contiguous public answer survives admission, receipt, retry and authorized history without corrupting mentions
+  ---
+  duration_ms: 799.106715
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4816.295353
+[integration file] message-mentions.test.ts duration_ms=4862 exit=0
+[integration result] mode=selected files=2 duration_ms=15102 exit=0
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

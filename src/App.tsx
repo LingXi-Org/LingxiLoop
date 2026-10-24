@@ -24,12 +24,13 @@ export function App() {
   // the simplest way to reload all data without stale rows leaking across.
   const userId = useAuth((s) => s.user?.id ?? null)
   const companyId = useAuth((s) => s.activeCompanyId)
+  const authorizationEpoch = useAuth((s) => s.authorizationEpoch)
 
   return (
     <AuthGate unauthFallback={invitationScreen}>
       <ErrorBoundary>
         <Suspense fallback={<WorkspaceSkeleton />}>
-          {invitationScreen ?? <AuthedApp key={`${userId ?? 'anon'}::${companyId ?? 'none'}`} />}
+          {invitationScreen ?? <AuthedApp key={`${userId ?? 'anon'}::${companyId ?? 'none'}::${authorizationEpoch}`} />}
         </Suspense>
       </ErrorBoundary>
     </AuthGate>

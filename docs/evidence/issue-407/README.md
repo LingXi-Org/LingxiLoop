@@ -27,3 +27,5 @@ node_modules/.bin/tsc --noEmit --strict --skipLibCheck --target ES2022 --module 
 ```
 
 Run `npm run test:integration -- --file runtime-reliability.test.ts` only against a dedicated migrated local test DB, with synthetic required startup values and dedicated Redis. The suite truncates its explicit test target.
+
+Latest integration evidence: [2026-10-24 main integration](main-integration/README.md) records both parents, preservation of #405 and the now-passing full server typecheck in CI's single-root dependency layout. Earlier typecheck failures above remain historical evidence and do not describe that final integrated check.

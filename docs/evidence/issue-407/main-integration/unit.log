@@ -1,0 +1,27 @@
+✔ admission preserves contiguous answer slices (process=false, parts=["第一段。\n\n","成员 @milo / @sage / @nova。"]) (36.160076ms)
+✔ admission preserves contiguous answer slices (process=false, parts=["🙂中文 @sage。\n","| 成员 | 分工 |\n| @milo | 核对 |\n","中文紧邻@sage检查、＠　司南核对。"]) (16.63229ms)
+✔ admission preserves contiguous answer slices (process=false, parts=["第一段。","@明理请核对。[证据](#cite-S1)","\n@砺思检查。"]) (9.035246ms)
+✔ admission preserves contiguous answer slices (process=false, parts=["检查 @sa","ge 和 @明","理的出处。"]) (5.641571ms)
+✔ admission preserves contiguous answer slices (process=true, parts=["第一段。\n\n","成员 @milo / @sage / @nova。"]) (4.876368ms)
+✔ admission preserves contiguous answer slices (process=true, parts=["🙂中文 @sage。\n","| 成员 | 分工 |\n| @milo | 核对 |\n","中文紧邻@sage检查、＠　司南核对。"]) (4.078626ms)
+✔ admission preserves contiguous answer slices (process=true, parts=["第一段。","@明理请核对。[证据](#cite-S1)","\n@砺思检查。"]) (20.099195ms)
+✔ admission preserves contiguous answer slices (process=true, parts=["检查 @sa","ge 和 @明","理的出处。"]) (3.053005ms)
+✔ legacy separators and citation ranges share the exact transformed text coordinates (14.29097ms)
+✔ unknown and prefix-like handles cannot be repaired into authorized peers (1.649634ms)
+(node:36003) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:36003) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ terminal port preserves accepted feedback, fences stale versions and never wakes agents (2234.559945ms)
+✔ root delivery and failed successors have separate scope without negating an existing answer (1.687379ms)
+✔ only the matching delivered result permits an already-sent claim (0.442952ms)
+✔ protocol, timeout and ordinary provider failures keep distinct safe wording (0.371053ms)
+✔ structured terminal failure belongs to the current request and fence; raw text is never classification (0.754215ms)
+✔ diagnostic pagination is bounded and the same callback operation is propagated (1.571638ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3061.857614

@@ -10,24 +10,36 @@ const vendors = [
   ['https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js','vendor/lucide-1.17.0.js'],
   ['https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js','vendor/d3-7.9.0.min.js'],
 ]
+// Dependencies of the pinned ZCode kit. Unknown versions retain discovery from
+// their actual HTML; only this exact kit can skip the extra dependency round.
+const PINNED_KIT_SHA256 = '42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf'
 /** Same ordering as ZCode service/protocol; all resources are fetched by the authorized host. */
-export async function buildWebDocument(fragment: string, state: GenUiWidgetState | null, resource: (name: string) => Promise<string>) {
+export async function buildWebDocument(fragment: string, state: GenUiWidgetState | null, resource: (name: string) => Promise<string>, kitHash?: unknown) {
+  const reads = new Map<string, Promise<string>>()
+  const read = (name: string) => {
+    let pending = reads.get(name)
+    if (!pending) { pending = resource(name); reads.set(name, pending) }
+    return pending
+  }
   const [css, content, runtime, calendar] = await Promise.all([
-    resource('visualize.css'),resource('visualize.html').then(async kit => {
+    read('visualize.css'),read('visualize.html').then(async kit => {
       let content = fragment + kit.replace('<!--__INLINE_VISUALIZATION_FRAGMENT__-->','')
-      // Only the kit/fragment determines these dependencies. Start their reads
-      // as soon as it arrives, without waiting for unrelated CSS/runtime/calendar.
+      // Discover optional/unknown-kit dependencies from the actual HTML as soon
+      // as it arrives; pinned dependencies reuse their already-started reads.
       // Keep the whole chain in Promise.all so any failure aborts preparation.
       const sources = await Promise.all(vendors.filter(([url]) => content.includes(url))
-        .map(async ([url, name]) => [url, await resource(name)] as const))
+        .map(async ([url, name]) => [url, await read(name)] as const))
       // Fetch timing does not change script execution order (Core before DOM).
       for (const [url,source] of sources) {
         const escaped = url.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')
         content = content.replace(new RegExp(`<script\\b[^>]*\\bsrc=["']${escaped}["'][^>]*>\\s*</script>`, 'gi'), () => script(source))
       }
       return content
-    }),resource('gen-ui.js'),
-    /\bviz-calendar\b/i.test(fragment) ? resource('calendar.js') : Promise.resolve(''),
+    }),read('gen-ui.js'),
+    /\bviz-calendar\b/i.test(fragment) ? read('calendar.js') : Promise.resolve(''),
+    // These reads retain this page's capability and cancellation. They join
+    // the same failure boundary; the later HTML substitution reuses each read.
+    Promise.all(kitHash === PINNED_KIT_SHA256 ? vendors.slice(0, 3).map(([, name]) => read(name)) : []),
   ])
   const initial = JSON.stringify(state).replaceAll('<','\\u003c')
   return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${SANDBOX_CSP}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script(captureLibrary+'\n;('+trustedBootstrap.toString()+')();')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`
