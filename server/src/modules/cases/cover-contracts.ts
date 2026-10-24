@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { CaseContent } from './contracts.js'
 
-export const CASE_COVER_RULES_VERSION = 'hairline-37d2e78dcb333ab30c3338e28ed4a690364ea014-adapter-v1'
+export const CASE_COVER_RULES_VERSION = 'hairline-37d2e78dcb333ab30c3338e28ed4a690364ea014-adapter-v2-quickjs'
 export type CoverSnapshotKind = 'draft' | 'published'
 export interface GeneratedCaseCover {
   schemaVersion: 1

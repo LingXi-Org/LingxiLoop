@@ -55,12 +55,12 @@ function TriggerItems() {
           key={`${item.type}:${item.id}`}
           item={item}
           index={index}
-          className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left outline-none hover:bg-muted data-[highlighted]:bg-muted"
+          className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left outline-none hover:bg-muted data-[highlighted]:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
         >
           <TriggerIcon item={item} />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-xs font-semibold text-foreground">{item.label}</span>
-            {item.description ? <span className="block truncate text-[10.5px] text-muted-foreground">{item.description}</span> : null}
+            <span className="block break-words text-sm font-semibold text-foreground">{item.label}</span>
+            {item.description ? <span className="block break-words text-xs text-muted-foreground">{item.description}</span> : null}
           </span>
         </ComposerPrimitive.Unstable_TriggerPopoverItem>
       ))}
@@ -130,7 +130,7 @@ export function ComposerTriggers({
           char="@"
           adapter={mention.adapter}
           aria-label="提及成员"
-          className="app-menu-surface absolute bottom-full left-0 z-30 mb-2 min-w-64 animate-rise"
+          className="app-menu-surface absolute bottom-full left-0 z-30 mb-2 w-80 max-w-full animate-rise"
         >
           <ComposerPrimitive.Unstable_TriggerPopover.Directive {...mention.directive} />
           <TriggerItems />
@@ -139,7 +139,7 @@ export function ComposerTriggers({
           char="/"
           adapter={slash.adapter}
           aria-label="快捷命令"
-          className="app-menu-surface absolute bottom-full left-0 z-30 mb-2 min-w-72 animate-rise"
+          className="app-menu-surface absolute bottom-full left-0 z-30 mb-2 w-80 max-w-full animate-rise"
         >
           <ComposerPrimitive.Unstable_TriggerPopover.Action {...slash.action} />
           <TriggerItems />

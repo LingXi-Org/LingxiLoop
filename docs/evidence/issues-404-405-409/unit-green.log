@@ -1,0 +1,31 @@
+✔ assistant formatting permits only a complete standalone inline mention (21.175723ms)
+✔ parses ids, unique names, unicode names, case and multiple mentions (1.050886ms)
+✔ recognizes standalone @all without prefix collisions (0.781925ms)
+✔ recognizes native @all next to CJK prose and rejects @everyone (1.28863ms)
+✔ ignores emails, URLs, inline code and fenced code (0.936592ms)
+✔ uses token boundaries for prefix-like member ids (0.673239ms)
+✔ Chinese prose may immediately follow a unique longest roster name (1.16015ms)
+✔ shared mention ranges preserve original text across Unicode and whitespace (1.282657ms)
+✔ normalizes composed graphemes while preserving their full source ranges (3.588931ms)
+✔ only ordinary message prose can mention a member (2.463155ms)
+✔ canonical storage preserves prose and examples while surviving a member rename (2.450026ms)
+✔ admission preserves contiguous answer slices (process=false, parts=["第一段。\n\n","成员 @milo / @sage / @nova。"]) (22.348466ms)
+✔ admission preserves contiguous answer slices (process=false, parts=["🙂中文 @sage。\n","| 成员 | 分工 |\n| @milo | 核对 |\n","中文紧邻@sage检查、＠　司南核对。"]) (5.965745ms)
+✔ admission preserves contiguous answer slices (process=false, parts=["第一段。","@明理请核对。[证据](#cite-S1)","\n@砺思检查。"]) (8.878215ms)
+✔ admission preserves contiguous answer slices (process=false, parts=["检查 @sa","ge 和 @明","理的出处。"]) (3.273859ms)
+✔ admission preserves contiguous answer slices (process=true, parts=["第一段。\n\n","成员 @milo / @sage / @nova。"]) (4.371884ms)
+✔ admission preserves contiguous answer slices (process=true, parts=["🙂中文 @sage。\n","| 成员 | 分工 |\n| @milo | 核对 |\n","中文紧邻@sage检查、＠　司南核对。"]) (4.189049ms)
+✔ admission preserves contiguous answer slices (process=true, parts=["第一段。","@明理请核对。[证据](#cite-S1)","\n@砺思检查。"]) (5.499517ms)
+✔ admission preserves contiguous answer slices (process=true, parts=["检查 @sa","ge 和 @明","理的出处。"]) (2.569381ms)
+✔ legacy separators and citation ranges share the exact transformed text coordinates (5.367618ms)
+✔ unknown and prefix-like handles cannot be repaired into authorized peers (2.410624ms)
+✔ copy text includes answers and results, excludes explicit process, and retains unknown legacy text (4.043212ms)
+✔ v3 source text is copied byte-for-byte without separators; unrelated messages stay separate (1.900283ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 695.388157

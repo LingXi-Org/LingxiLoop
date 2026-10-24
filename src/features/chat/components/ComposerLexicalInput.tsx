@@ -20,6 +20,7 @@ import {
 import { useEffect, useImperativeHandle, useRef, type ComponentProps, type Ref } from 'react'
 import { ComposerDirectiveChip } from './ComposerTriggers'
 import { chatLatency } from '../runtime/latency'
+import { installComposerCompositionGuard } from './composer-composition'
 
 function ComposerReadyPlugin({ conversationId }: { conversationId: string }) {
   const [editor] = useLexicalComposerContext()
@@ -41,8 +42,16 @@ function ConcurrentSubmitPlugin() {
   const [editor] = useLexicalComposerContext()
   const triggerRoot = unstable_useTriggerPopoverRootContextOptional()
   const canSend = useAuiState((state) => state.composer.canSend)
+  useEffect(() => {
+    let cleanup: (() => void) | undefined
+    const unregister = editor.registerRootListener((root) => {
+      cleanup?.()
+      cleanup = root ? installComposerCompositionGuard(root, () => editor.isComposing()) : undefined
+    })
+    return () => { unregister(); cleanup?.() }
+  }, [editor])
   useEffect(() => editor.registerCommand(KEY_ENTER_COMMAND, (event) => {
-    if (!event || event.isComposing || event.shiftKey || event.ctrlKey || event.metaKey) return false
+    if (!event || event.isComposing || event.keyCode === 229 || editor.isComposing() || event.shiftKey || event.ctrlKey || event.metaKey) return false
     if (triggerRoot?.getActiveAria()) return false
     if (!canSend) return false
     event.preventDefault()

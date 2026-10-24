@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "types": ["node"]
+  },
+  "include": [
+    "../../src/vite-env.d.ts",
+    "../../src/features/chat/visualize/web/dom.d.ts",
+    "../visual-input.tsx",
+    "../web/visual-input.e2e.ts",
+    "../../e2e.visual-input.config.ts",
+    "../../e2e.visual-input.vite.config.ts"
+  ]
+}

@@ -30,7 +30,7 @@ test('case loading, retry and empty filters retain reachable controls',async({ap
 test('organization case publication, cross-course access, isolation and responsive navigation', async ({ app, browser, screen }) => {
   await app.open('/')
   let company='cases-school'
-  const role = async (name: string) => { company=name==='outsider'?'cases-other-school':'cases-school'; expect(await browser.evaluate(async name => (await fetch(`/api/fixture-role/${name}`)).status, name)).toBe(200) }
+  const role = async (name: string) => { company=name==='outsider'?'cases-other-school':'cases-school'; expect(await browser.evaluate(async name => {localStorage.setItem('lingxiloop-theme','light');return (await fetch(`/api/fixture-role/${name}`)).status}, name)).toBe(200) }
   const request = async <T extends JsonValue = CaseResponse>(path: string, method = 'GET', body: JsonValue = null) => browser.evaluate(async ({path,method,body,company}) => {
     const response = await fetch(path, { method, headers: {'Content-Type':'application/json','x-company-id':company}, ...(body === null ? {} : {body: JSON.stringify(body)}) })
     return {status:response.status, data:await response.json().catch(()=>null) as T}
@@ -52,6 +52,9 @@ test('organization case publication, cross-course access, isolation and responsi
   expect(published.status).toBe(200)
   const second=await request('/api/cases','POST',{...content,title:'社区口述历史',category:'人文',cover:null,body:'公开的口述历史方法'})
   expect((await request(`/api/cases/${second.data.id}/publish`,'POST',{version:second.data.version})).status).toBe(200)
+  const third=await request('/api/cases','POST',{...content,title:'校园能源调查：从一周的用电记录到可执行的节能方案',category:'设计实践',cover:null,body:'记录校园用电，比较不同时段的能源消耗。'})
+  expect(third.status).toBe(201)
+  expect((await request(`/api/cases/${third.data.id}/publish`,'POST',{version:third.data.version})).status).toBe(200)
 
   await role('student')
   expect((await request(`/api/cases/${privateDraft.data.id}`)).status).toBe(404)
@@ -70,14 +73,32 @@ test('organization case publication, cross-course access, isolation and responsi
   await expect(screen.getByRole('heading','案例库',{exact:true})).toBeVisible({timeout:120000})
   await expect(screen.getByRole('button','新建案例',{exact:true})).toHaveCount(0)
   await expect(screen.getByRole('heading',content.title,{exact:true})).toBeVisible()
-  await browser.evaluate(()=>{document.documentElement.classList.remove('dark');document.documentElement.classList.add('light');return true})
+  await browser.evaluate(()=>{(document.activeElement as HTMLElement)?.blur();return true})
+  await browser.setViewport({width:1774,height:887})
+  await expect.poll(()=>browser.evaluate(()=>getComputedStyle(document.querySelector('[data-case-grid]')!).gridTemplateColumns.split(' ').length)).toBe(3)
+  expect(await browser.evaluate(()=>{
+    const covers=Array.from(document.querySelectorAll('.case-grid-cover')).map(node=>node.getBoundingClientRect())
+    return covers.every(cover=>Math.abs(cover.height-covers[0].height)<1)
+  })).toBe(true)
   await app.screenshot('student-editorial-grid-light')
+  for (const width of [1440,768,390]) {
+    await browser.setViewport({width,height:887})
+    expect(await browser.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+    expect(await browser.evaluate(()=>{
+      const shell=document.querySelector('.case-library-shell')!
+      const style=getComputedStyle(shell)
+      const width=shell.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight)
+      return getComputedStyle(document.querySelector('[data-case-grid]')!).gridTemplateColumns.split(' ').length === (width<640?1:width<1024?2:3)
+    })).toBe(true)
+    await app.screenshot(`case-grid-${width}`)
+  }
+  await browser.setViewport({width:1774,height:887})
   // The remainder exercises browser UI against the seeded real API records.
   await screen.getByLabel('关键词搜索').fill('口述')
   await expect(screen.getByRole('heading','社区口述历史',{exact:true})).toBeVisible()
   await expect(screen.getByRole('heading',content.title,{exact:true})).toHaveCount(0)
   await screen.getByLabel('关键词搜索').fill('')
-  await screen.getByLabel('分类',{exact:true}).selectOption('自然科学')
+  await screen.getByRole('navigation','案例分类').getByRole('button','自然科学',{exact:true}).tap()
   await expect(screen.getByRole('heading',content.title,{exact:true})).toBeVisible()
   await expect(screen.getByRole('heading','社区口述历史',{exact:true})).toHaveCount(0)
   await screen.getByRole('link',/河流生态调查/).tap()
@@ -85,7 +106,19 @@ test('organization case publication, cross-course access, isolation and responsi
   await expect(screen.getByRole('button','编辑案例',{exact:true})).toHaveCount(0)
   await expect(screen.getByRole('link','调查资料',{exact:true})).toBeVisible()
   await expect.poll(()=>browser.evaluate(()=>Array.from(document.querySelectorAll('main img')).every(i=>(i as HTMLImageElement).complete&&(i as HTMLImageElement).naturalWidth>0))).toBe(true)
+  await expect.poll(()=>browser.evaluate(()=>{
+    const cover=document.querySelector('[data-case-hero] .case-cover')!.getBoundingClientRect()
+    const title=document.querySelector('[data-case-hero] h2')!.getBoundingClientRect()
+    const body=document.querySelector('[data-case-body]')!.getBoundingClientRect()
+    return cover.right<title.left && body.width<=760
+  })).toBe(true)
   await app.screenshot('student-article-images')
+  for (const width of [1440,768,390]) {
+    await browser.setViewport({width,height:887})
+    expect(await browser.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+    await app.screenshot(`case-reading-${width}`)
+  }
+  await browser.setViewport({width:1774,height:887})
   await browser.reload()
   await expect(screen.getByRole('heading','调查方法',{exact:true})).toBeVisible()
   await screen.getByRole('button','返回案例库',{exact:true}).tap()
@@ -100,6 +133,17 @@ test('organization case publication, cross-course access, isolation and responsi
   await app.open(`/cases/${id}?project=cases-other-course&view=cases`)
   await screen.getByRole('button','编辑案例',{exact:true}).tap()
   await nativeHeading(browser,screen,'正文','新的实地方法','未发布修订：新增水质观察。')
+  await app.screenshot('case-inline-editor-1774')
+  for (const width of [1440,768,390]) {
+    await browser.setViewport({width,height:887})
+    expect(await browser.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
+    await app.screenshot(`case-editing-${width}`)
+  }
+  await browser.setViewport({width:1774,height:887})
+  await screen.getByRole('button','预览',{exact:true}).tap()
+  await expect(screen.getByRole('region','案例预览')).toContainText('未发布修订：新增水质观察。')
+  await screen.getByRole('button','继续编辑',{exact:true}).tap()
+  await expect(screen.getByLabel('正文',{exact:true})).toContainText('未发布修订：新增水质观察。')
   await screen.getByRole('button','保存草稿',{exact:true}).tap()
   await expect(screen.getByRole('status').first()).toContainText('草稿已保存')
   await app.screenshot('other-teacher-unpublished-draft')
@@ -113,25 +157,26 @@ test('organization case publication, cross-course access, isolation and responsi
   await role('teacher2')
   await app.open(`/cases/${id}?project=cases-other-course&view=cases`)
   await screen.getByRole('button','编辑案例',{exact:true}).tap()
-  await screen.getByRole('button','保存并发布',{exact:true}).tap()
+  await screen.getByRole('button','发布',{exact:true}).tap()
   await expect(screen.getByRole('status').first()).toContainText('案例已发布')
   await role('student')
   expect((await request(`/api/cases/${id}`)).data.body).toContain('新的实地方法')
   await app.open('/cases?project=cases-classroom&view=cases')
   await browser.setViewport({width:390,height:900})
   await expect(screen.getByLabel('关键词搜索')).toBeVisible()
+  await expect(screen.getByRole('heading',content.title,{exact:true})).toBeVisible()
   await browser.evaluate(()=>{document.documentElement.classList.add('dark');document.documentElement.classList.remove('light');return true})
   await screen.getByLabel('关键词搜索').tap()
   await browser.keyboard.press('Tab')
   expect(await browser.evaluate(()=>{
     const active=document.activeElement as HTMLElement
     const style=getComputedStyle(active)
-    return active.tagName==='SELECT'&&(style.outlineStyle!=='none'||style.boxShadow!=='none')
+    return active!==document.body&&(style.outlineStyle!=='none'||style.boxShadow!=='none')
   })).toBe(true)
   expect(await browser.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true)
   await expect.poll(()=>browser.evaluate(()=>{
     const cards=Array.from(document.querySelectorAll('main article')).map(x=>x.getBoundingClientRect())
-    return cards.length===2&&Math.abs(cards[0].x-cards[1].x)<1&&cards[1].top>=cards[0].bottom
+    return cards.length===3&&Math.abs(cards[0].x-cards[1].x)<1&&cards[1].top>=cards[0].bottom
   })).toBe(true)
   await app.screenshot('mobile-dark-single-column-keyboard')
 
@@ -148,7 +193,8 @@ test('organization case publication, cross-course access, isolation and responsi
   await role('teacher')
   await browser.setViewport({width:1440,height:1000})
   await app.open(`/cases/${id}?project=cases-classroom&view=cases`)
-  await screen.getByRole('button','下架案例',{exact:true}).tap()
+  await screen.getByRole('button','更多案例操作',{exact:true}).tap()
+  await screen.getByRole('menuitem','下架案例',{exact:true}).tap()
   await expect(screen.getByRole('status').first()).toContainText('案例已下架')
   await role('student')
   expect((await request(`/api/cases/${id}`)).status).toBe(404)
@@ -167,24 +213,25 @@ test('organization case publication, cross-course access, isolation and responsi
 
 test('teacher authors and publishes cover and body images through the UI',async({app,browser,screen})=>{
   await app.open('/')
-  await browser.evaluate(async()=>(await fetch('/api/fixture-role/teacher')).ok)
+  await browser.setViewport({width:1774,height:887})
+  await browser.evaluate(async()=>{localStorage.setItem('lingxiloop-theme','light');return(await fetch('/api/fixture-role/teacher')).ok})
   await app.open('/cases?project=cases-classroom&view=cases')
   await screen.getByRole('button','新建案例',{exact:true}).tap()
   await screen.getByLabel('标题',{exact:true}).fill('教师图文创作验收')
   await nativePaste(browser,screen,'摘要','**通过真实图片上传与发布**')
   await screen.getByLabel('分类',{exact:true}).fill('设计实践')
   await screen.getByLabel('标签（逗号分隔）').fill('设计,协作')
-  await nativeHeading(browser,screen,'正文','从观察到设计','这篇图文案例由教师主动编写。')
-  await screen.getByText('封面图片',{exact:true}).tap()
+  await nativePaste(browser,screen,'正文','## 从观察到设计\n\n这篇图文案例由教师主动编写。\n\n| 观察对象 | 记录方法 |\n| --- | --- |\n| 校园河流 | 每日采样 |\n\n```typescript\nconst observations = [12, 16, 20];\n```')
   await screen.getByLabel('上传封面').setInputFiles([fileURLToPath(new URL('./cover.png',import.meta.url))])
   await expect(screen.getByRole('status').first()).toContainText('附件已上传')
   await nativeUpload(browser,screen,'正文',fileURLToPath(new URL('./cover.png',import.meta.url)))
-  await screen.getByText('预览正文',{exact:true}).tap()
-  await expect(screen.getByRole('region','正文预览')).toBeVisible()
+  await screen.getByText('预览',{exact:true}).tap()
+  await expect(screen.getByRole('region','案例预览')).toBeVisible()
   await app.screenshot('teacher-create-image-preview')
-  await screen.getByRole('button','保存并发布',{exact:true}).tap()
+  await screen.getByRole('button','发布',{exact:true}).tap()
   await expect(screen.getByRole('status').first()).toContainText('案例已发布')
   await expect(screen.getByRole('heading','从观察到设计',{exact:true})).toBeVisible()
+  await expect(screen.getByText('草稿预览',{exact:true})).toHaveCount(0)
   await app.screenshot('teacher-authored-published-article')
   const saved = await browser.evaluate(async()=>{
     const result=await fetch('/api/cases?q=教师图文创作验收',{headers:{'x-company-id':'cases-school'}}).then(r=>r.json())
@@ -193,6 +240,8 @@ test('teacher authors and publishes cover and body images through the UI',async(
   })
   expect(saved.document.format).toBe('blocknote')
   expect(saved.document.blocks.some((block:{type:string})=>block.type==='image')).toBe(true)
+  expect(saved.document.blocks.some((block:{type:string})=>block.type==='table')).toBe(true)
+  expect(saved.document.blocks.some((block:{type:string})=>block.type==='codeBlock')).toBe(true)
   expect(saved.summary.format).toBe('blocknote')
   await browser.reload()
   await expect(screen.getByRole('heading','从观察到设计',{exact:true})).toBeVisible({timeout:120000})

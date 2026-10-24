@@ -501,3 +501,30 @@ test('separate agents and child threads cannot overwrite each other', () => {
   assert.deepEqual(state.messages.map(message => [metadata(message).senderId, metadata(message).threadRootId]), [['agent', null], ['other-agent', 'thread']])
   assert.throws(() => applyRunSnapshot(state, target, second), /身份/)
 })
+
+// Exercise actual server projection watermarks, not an artificially metadata-free stream.
+test('actual projected text deltas coalesce while preserving part revisions and final text', async () => {
+  const { createSnapshotPublisher, decodeRunSnapshot } = await import('./snapshot-publication')
+  for (const version of [2, 3] as const) {
+  projections.clear()
+  const output: AgentRunSnapshot[] = []
+  const controller = new AbortController()
+  const publisher = createSnapshotPublisher(value => output.push(value), controller.signal, error => { throw error }, () => () => {})
+  publisher.push(decodeRunSnapshot(project({ type: 'state', state: snapshot('run', 'leased') }), target))
+  const identity = { version, requestVersion: 1, fence: 1, attemptId: 'answer', partId: 'answer', partIndex: 0, purpose: 'answer',
+    ...(version === 3 ? { messageId: 'answer:run:v1', segmentId: 'answer', operation: 'append', supersedes: [] } : {}) }
+  if (version === 3) publisher.push(decodeRunSnapshot(project({ type: 'event', event: { runId: 'run', seq: 1, kind: 'public.text.operation', stage: 'started', visibility: 'user', data: identity } }), target))
+  for (let index = 0; index < 25; index++) {
+    const response = project({ type: 'event', event: { runId: 'run', seq: index + 2, kind: 'public.text.delta', stage: 'delta', visibility: 'user', data: {
+      ...identity, chunkIndex: index, text: '正文',
+    } } })
+    publisher.push(decodeRunSnapshot(response, target))
+  }
+  assert.equal(output.length, version === 3 ? 3 : 2, 'initial snapshot and first body publish immediately; later text waits for one frame')
+  publisher.flush(); publisher.dispose()
+  assert.equal(output.length, version === 3 ? 4 : 3)
+  const last = output.at(-1)!
+  assert.equal(last.message.content[0].type === 'text' && last.message.content[0].text, '正文'.repeat(25))
+  assert.equal(last.message.metadata.custom.harness && Reflect.get(last.message.metadata.custom.harness, 'lastSeq'), 26)
+  }
+})

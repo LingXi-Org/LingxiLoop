@@ -1,0 +1,164 @@
+TAP version 13
+# Subtest: empty authorized bindings perform zero runtime reads; a single session stays filtered
+ok 1 - empty authorized bindings perform zero runtime reads; a single session stays filtered
+  ---
+  duration_ms: 4.425132
+  type: 'test'
+  ...
+# Subtest: bound metadata cannot leak another tenant/principal/session or an unbound internal run
+ok 2 - bound metadata cannot leak another tenant/principal/session or an unbound internal run
+  ---
+  duration_ms: 0.629553
+  type: 'test'
+  ...
+# Subtest: a cancelled or changed-version/fence receipt replaces an old waiting snapshot
+ok 3 - a cancelled or changed-version/fence receipt replaces an old waiting snapshot
+  ---
+  duration_ms: 1.221134
+  type: 'test'
+  ...
+# Subtest: resolved approval and missing control permission never advertise a personal decision
+ok 4 - resolved approval and missing control permission never advertise a personal decision
+  ---
+  duration_ms: 0.887791
+  type: 'test'
+  ...
+# Subtest: pagination has a request-wide hard bound and does not fetch message or event histories
+ok 5 - pagination has a request-wide hard bound and does not fetch message or event histories
+  ---
+  duration_ms: 0.648958
+  type: 'test'
+  ...
+# Subtest: a later relevant active page is found, then older pages stop early
+ok 6 - a later relevant active page is found, then older pages stop early
+  ---
+  duration_ms: 0.457677
+  type: 'test'
+  ...
+# Subtest: no proven control means no guessed approval actor; repeat reads do not retain resolved state
+ok 7 - no proven control means no guessed approval actor; repeat reads do not retain resolved state
+  ---
+  duration_ms: 0.68915
+  type: 'test'
+  ...
+# Subtest: equal-time cross-status frontier continues to the later bound run
+not ok 8 - equal-time cross-status frontier continues to the later bound run
+  ---
+  duration_ms: 3.813216
+  type: 'test'
+  location: '/tmp/loop-373-list/server/src/__tests__/channel-run-summary.test.ts:1:6156'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'waiting_input'
+    - 'queued'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'queued'
+  actual: 'waiting_input'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-373-list/server/src/__tests__/channel-run-summary.test.ts:121:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: equal-time cross-status frontier stays unknown at the cap
+not ok 9 - equal-time cross-status frontier stays unknown at the cap
+  ---
+  duration_ms: 0.832634
+  type: 'test'
+  location: '/tmp/loop-373-list/server/src/__tests__/channel-run-summary.test.ts:1:6156'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+
+    + 'waiting_input'
+    - 'unknown'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'unknown'
+  actual: 'waiting_input'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-373-list/server/src/__tests__/channel-run-summary.test.ts:121:10)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: only a current receipt for the same run supersedes the unloaded-list wait
+ok 10 - only a current receipt for the same run supersedes the unloaded-list wait
+  ---
+  duration_ms: 1.934714
+  type: 'test'
+  ...
+# Subtest: unknown or unproven actors never become personal next actions
+ok 11 - unknown or unproven actors never become personal next actions
+  ---
+  duration_ms: 0.234217
+  type: 'test'
+  ...
+# Subtest: a same-fence local durable wait supersedes an older processing list snapshot
+not ok 12 - a same-fence local durable wait supersedes an older processing list snapshot
+  ---
+  duration_ms: 2.85745
+  type: 'test'
+  location: '/tmp/loop-373-list/src/lib/conversationRunSummary.test.ts:1:1808'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    '处理中' !== '等你回答'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '等你回答'
+  actual: '处理中'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-373-list/src/lib/conversationRunSummary.test.ts:23:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: an unidentifiable optional summary failure does not conceal known loaded state
+not ok 13 - an unidentifiable optional summary failure does not conceal known loaded state
+  ---
+  duration_ms: 0.576106
+  type: 'test'
+  location: '/tmp/loop-373-list/src/lib/conversationRunSummary.test.ts:1:2152'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+
+    '任务状态待刷新' !== '等你审批'
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: '等你审批'
+  actual: '任务状态待刷新'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-373-list/src/lib/conversationRunSummary.test.ts:26:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 9
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 630.18717

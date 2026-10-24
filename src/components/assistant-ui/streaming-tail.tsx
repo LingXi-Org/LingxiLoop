@@ -1,10 +1,11 @@
 import { createContext, useContext, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { STREAMING_WORD_BUDGET } from './elements/streaming-text'
 
 type BlockPosition = readonly [offset: number, index: number]
 type Summary = { owner: object; words: number; position: BlockPosition }
 
 /** Only capped word counts cross block boundaries; completed ASTs stay cached. */
-function createTail() {
+export function createStreamingTail() {
   const blocks = new Map<string, Summary>()
   const listeners = new Map<string, Set<() => void>>()
   const order: string[] = []
@@ -12,22 +13,22 @@ function createTail() {
   const publish = () => {
     const next = new Map<string, number>()
     let trailing = 0
-    for (let i = order.length - 1; i >= 0 && trailing < 2; i--) {
+    for (let i = order.length - 1; i >= 0 && trailing < STREAMING_WORD_BUDGET; i--) {
       const key = order[i]
-      // Bit 2 owns the single caret; low bits count words in later blocks.
-      next.set(key, trailing + (i === order.length - 1 ? 4 : 0))
-      trailing = Math.min(2, trailing + blocks.get(key)!.words)
+      // Bit 8 owns the single caret; low bits count capped later words.
+      next.set(key, trailing + (i === order.length - 1 ? 256 : 0))
+      trailing = Math.min(STREAMING_WORD_BUDGET, trailing + blocks.get(key)!.words)
     }
     const previous = positions
     positions = next
     for (const key of new Set([...previous.keys(), ...next.keys()])) {
-      if ((previous.get(key) ?? 2) !== (next.get(key) ?? 2)) {
+      if ((previous.get(key) ?? STREAMING_WORD_BUDGET) !== (next.get(key) ?? STREAMING_WORD_BUDGET)) {
         for (const listener of listeners.get(key) ?? []) listener()
       }
     }
   }
   return {
-    snapshot: (key: string) => positions.get(key) ?? 2,
+    snapshot: (key: string) => positions.get(key) ?? STREAMING_WORD_BUDGET,
     subscribe(key: string, listener: () => void) {
       const set = listeners.get(key) ?? new Set()
       listeners.set(key, set)
@@ -55,19 +56,19 @@ function createTail() {
   }
 }
 
-const PartTail = createContext<{ tail: ReturnType<typeof createTail>; offset: number } | null>(null)
+const PartTail = createContext<{ tail: ReturnType<typeof createStreamingTail>; offset: number } | null>(null)
 
 /** Nested Markdown slices share their original text-part's window. */
 export function StreamingPart({ children, offset = 0 }: { children: ReactNode; offset?: number }) {
   const parent = useContext(PartTail)
-  const [own] = useState(createTail)
+  const [own] = useState(createStreamingTail)
   const tail = parent?.tail ?? own
   const value = useMemo(() => ({ tail, offset }), [tail, offset])
   return <PartTail.Provider value={value}>{children}</PartTail.Provider>
 }
 
 export const StreamingBlock = createContext({
-  streaming: false, animate: false, after: 2, isTail: false,
+  streaming: false, animate: false, after: STREAMING_WORD_BUDGET, isTail: false,
   register: (_words: number): (() => void) => () => {},
 })
 
@@ -83,5 +84,5 @@ export function useStreamingBlock(index: number, streaming: boolean, animate: bo
   }), [tail, key, offset, index])
   const position = useSyncExternalStore(binding.subscribe, binding.snapshot, binding.snapshot)
   return useMemo(() => ({ streaming, animate, register: binding.register,
-    after: position & 3, isTail: Boolean(position & 4) }), [streaming, animate, binding, position])
+    after: position & 255, isTail: Boolean(position & 256) }), [streaming, animate, binding, position])
 }

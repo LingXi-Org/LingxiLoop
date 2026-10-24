@@ -16,6 +16,14 @@ mock.module('../visualize/VisualizeText', { namedExports: { VisualizeText: ({ Te
 mock.module('./ConversationComposer', { namedExports: { ConversationComposer: () => null } })
 mock.module('../runtime/transport', { namedExports: { ChatTransport: class {}, chatTransport: {}, filterThreadMessages: (messages: ThreadMessage[]) => messages } })
 mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })), getMeId: () => null, getActiveCompanyId: () => null } })
+const actualPresentation = await import('./message-presentation')
+let presentationCalls = 0
+mock.module('./message-presentation', { namedExports: { ...actualPresentation,
+  messagePresentation: (...args: Parameters<typeof actualPresentation.messagePresentation>) => {
+    presentationCalls++
+    return actualPresentation.messagePresentation(...args)
+  },
+} })
 const { useParticipants } = await import('@/features/agents/state')
 const { ConversationMessage } = await import('./ConversationMessage')
 const { ConversationThread } = await import('./ConversationThread')
@@ -48,7 +56,7 @@ test('connection recovery keeps reply text and exposes no diagnostic card', () =
     const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
     assert.match($.text(), /正文1/)
     assert.doesNotMatch($.text(), /连接任务失败|核对任务状态|状态待确认|已停止本地等待|权限可能已变化/)
-    assert.equal($('button').filter((_, el) => $(el).text().includes('重新连接')).length, connection === 'released' ? 1 : 0)
+    assert.equal($('button').filter((_, el) => $(el).text().includes('恢复连接')).length, connection === 'released' ? 1 : 0)
   }
 })
 
@@ -426,4 +434,15 @@ test('knowledge results use one compact tool row while preserving source and ter
     assert.doesNotMatch($.text(), /PRIVATE_SOURCE_CANARY/)
     if (sourceStatus === 'unavailable' || resultStatus === 'failed') assert.match($('[role="alert"]').text(), /这一步未完成/)
   }
+})
+
+
+test('each message render classifies its parts once and still places exactly one final footer', () => {
+  const original = message('1', 'me')
+  const reply = { ...original, content: Array.from({ length: 80 }, (_, index) => ({ type: 'text' as const, text: `part ${index}` })) } as ThreadMessage
+  presentationCalls = 0
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.equal($('[data-native-part="text"]').length, 80)
+  assert.equal($('[data-message-footer]').length, 1)
+  assert.equal(presentationCalls, 1, 'footer consumers reuse their message owner classification')
 })

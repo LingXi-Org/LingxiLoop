@@ -80,7 +80,11 @@ async function publish(title?: string) {
 }
 
 test('[integration] cases enforce organization teacher writes and published-only student reads at HTTP boundaries', async () => {
+  // Attribution must remain the creator when another teacher edits/publishes.
+  await pool.query('UPDATE users SET display_name=$2,avatar_url=$3 WHERE id=$1', [teacher.userId,'案例作者','https://example.com/author.png'])
   const draft = await application.create(teacher, content())
+  assert.deepEqual({id:draft.authorId,name:draft.authorName,avatar:draft.authorAvatarUrl},
+    {id:teacher.userId,name:'案例作者',avatar:'https://example.com/author.png'})
   assert.equal((await application.list(student)).items.length, 0)
   await assert.rejects(application.detail(student, draft.id))
   await assert.rejects(application.detail(outsider, draft.id))
@@ -99,6 +103,12 @@ test('[integration] cases enforce organization teacher writes and published-only
   const live = await application.publish(colleague, draft.id, edited.version)
   assert.equal((await application.detail(student, draft.id)).title, 'Colleague article')
   assert.equal(live.canManage, true)
+  const reader = await application.detail(student, draft.id)
+  const listed = (await application.list(student)).items.find(item => item.id === draft.id)!
+  for (const article of [live,reader,listed]) assert.deepEqual(
+    {id:article.authorId,name:article.authorName,avatar:article.authorAvatarUrl},
+    {id:teacher.userId,name:'案例作者',avatar:'https://example.com/author.png'})
+
   await assert.rejects(application.save(teacher, draft.id, content('Lost update'), draft.version), { status: 409 })
 })
 

@@ -7,6 +7,9 @@ import type { IGenUiService, PluginSandboxHandle, PluginSandboxPlatformPort } fr
 import { buildWebDocument, buildWebShell } from './document'
 import { lingxiApiFetch } from '@/api/transport'
 import { readWebResource } from './resource'
+import { createPublicResourceCache } from './public-resource-cache'
+
+const publicResources = createPublicResourceCache()
 
 type Page = PluginSandboxHandle & {
   target: GenUiCardTarget; html: string; state: GenUiWidgetState | null; frame?: HTMLIFrameElement
@@ -209,6 +212,7 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
   const ownerUserId = useAuth.getState().user?.id ?? null
   const assertScope = () => {const workspace=getWorkspaceSession();if(ownerUserId!==(useAuth.getState().user?.id ?? null)||target.workspaceIdentity!==getActiveCompanyId()||target.workspacePath!==workspace?.projectId||target.workspaceIdentity!==workspace?.companyId)throw new Error("Interactive view session changed")}
   let active: Page | undefined
+  let preparedState: Page | undefined
   let pendingFollowUp: {prompt:string;idempotencyKey:string} | undefined
   const requirePage = () => { if (!active) throw new Error('Interactive view is not ready'); current(active,false); return active }
   const service: IGenUiService = {
@@ -221,7 +225,7 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
       // Its late transaction must not revoke that newer page as a replacement.
       const instanceKey = crypto.randomUUID()
       onProgress?.({stage:'page'})
-      const result = await http<{pageId:string;initId:string;html:string;state:GenUiWidgetState|null;stateRevision:number;path:string}>(`${path(target)}/pages`, {method:'POST',signal,body:JSON.stringify({path:target.path,sourceMessageId:target.sourceMessageId,instanceKey})})
+      const result = await http<{pageId:string;initId:string;html:string;state:GenUiWidgetState|null;stateRevision:number;path:string;resourceHashes?:Record<string,string>}>(`${path(target)}/pages`, {method:'POST',signal,body:JSON.stringify({path:target.path,sourceMessageId:target.sourceMessageId,instanceKey})})
       const page: Page = {...result,sandboxId:result.pageId,shellUrl:'about:srcdoc',partition:'opaque',target,html:'',state:result.state === null ? null : genUiWidgetStateSchema.parse(result.state),active:false,disposed:false,gestureAt:-Infinity,captures:new Map(),loadCount:0,revision:result.stateRevision ?? 0,userId:ownerUserId}
       pages.set(page.sandboxId,page)
       const resources = new AbortController()
@@ -232,29 +236,41 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
         active = page
         const pending = new Set<string>()
         const progress = () => onProgress?.({stage:'resources',pending:[...pending]})
-        page.html = await buildWebDocument(result.html,result.state,async name => {
+        const [html] = await Promise.all([buildWebDocument(result.html,result.state,async name => {
           pending.add(name);progress()
           try {
-            return await readWebResource(name, attemptSignal => {
+            return await publicResources.read(name, result.resourceHashes?.[name], () => readWebResource(name, attemptSignal => {
               assertScope()
               // Match the resource route's no-store policy even before headers
               // arrive, so a recovery GET is not queued behind an idle GET of
               // the same URL by the browser's HTTP cache lock.
               return lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',cache:'no-store',headers:headers(page),signal:attemptSignal})
-            }, resourceSignal)
+            }, resourceSignal), resourceSignal)
           } finally { pending.delete(name);progress() }
-        })
+        }, result.resourceHashes?.['visualize.html']), refreshState(page,false,resourceSignal)])
         assertScope()
         signal?.throwIfAborted()
+        page.html = html
+        preparedState = page
       } catch(error) {
         resources.abort()
+        if (preparedState === page) preparedState = undefined
         if (active === page) active = undefined
         await webPlatform.disposeSandbox(page.sandboxId,page.initId)
         throw error
       }
       return page
     },
-    async getState(_target, signal) { const page = requirePage(); await refreshState(page,false,signal); return page.state },
+    async getState(_target, signal) {
+      const page = requirePage()
+      signal?.throwIfAborted()
+      // Preparation already awaited this page's authorized fresh GET alongside
+      // its resources. Consume it once before mounting; subsequent reads stay
+      // fresh, and projectState retains any newer same-scope revision.
+      if (preparedState === page) preparedState = undefined
+      else await refreshState(page,false,signal)
+      return page.state
+    },
     async setState({target: stateTarget,state}) {
       const page = requirePage(); current(page)
       const response = await http<StateResponse>(`${pagePath(page)}/state`, {method:'PUT',headers:headers(page),body:JSON.stringify({state})})

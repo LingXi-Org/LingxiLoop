@@ -1,0 +1,31 @@
+
+> lingxiloop@0.1.0-beta server:typecheck
+> tsc -p server/tsconfig.json --noEmit
+
+server/src/__integration__/callback-deadlines.test.ts(134,44): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'number'.
+  Type 'string' is not assignable to type 'number'.
+server/src/__integration__/runtime-model-context.test.ts(173,52): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(actual: unknown, expected: "succeeded", message?: Error | AssertMessageFunction | undefined): asserts actual is "succeeded"', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'Error | AssertMessageFunction | undefined'.
+      Type 'string' is not assignable to type 'Error | AssertMessageFunction | undefined'.
+  Overload 2 of 2, '(actual: unknown, expected: "succeeded", message: string, ...args: unknown[]): asserts actual is "succeeded"', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+server/src/agent-runtime/activity-tool.ts(9,64): error TS2345: Argument of type 'ZodObject<{ version: ZodLiteral<1>; id: ZodString; kind: ZodEnum<{ plan: "plan"; commentary: "commentary"; reasoning: "reasoning"; }>; label: ZodPipe<ZodString, ZodString>; text: ZodString; state: ZodEnum<...>; plan: ZodOptional<...>; }, $strict>' is not assignable to parameter of type 'ZodObject<$ZodLooseShape, $strip>'.
+  Property 'exactPartial' is missing in type 'ZodObject<{ version: ZodLiteral<1>; id: ZodString; kind: ZodEnum<{ plan: "plan"; commentary: "commentary"; reasoning: "reasoning"; }>; label: ZodPipe<ZodString, ZodString>; text: ZodString; state: ZodEnum<...>; plan: ZodOptional<...>; }, $strict>' but required in type 'ZodObject<$ZodLooseShape, $strip>'.
+server/src/agent-runtime/activity-tool.ts(18,46): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
+server/src/im/router.ts(242,74): error TS2345: Argument of type 'ZodArray<SomeType>' is not assignable to parameter of type '$ZodType<any, string[], $ZodTypeInternals<any, string[]>>'.
+  The types of '_zod.input' are incompatible between these types.
+    Type 'unknown[]' is not assignable to type 'string[]'.
+      Type 'unknown' is not assignable to type 'string'.
+server/src/im/router.ts(242,82): error TS2345: Argument of type 'ZodString' is not assignable to parameter of type 'SomeType'.
+  The types of '_zod.version.minor' are incompatible between these types.
+    Type '4' is not assignable to type '5'.
+server/src/im/router.ts(251,14): error TS2589: Type instantiation is excessively deep and possibly infinite.
+server/src/im/router.ts(254,50): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

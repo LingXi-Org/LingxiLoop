@@ -14,6 +14,7 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
+  [/^server\/src\/modules\/(?:cases|case-covers)\/|^src\/features\/cases\/cover-vm\/(?:runtime|protocol|program|guest-source|svg)\.ts$/, ['case-covers.test.ts']],
   [/^server\/(?:src\/db\/|src\/migrate-bin\.ts$|package(?:-lock)?\.json$|fixtures\/|run-historical-migration-tests\.mjs$)/, HISTORICAL_FILES],
   [/^server\/src\/(?:auth\.ts|tenant\.ts|http\/|domain\/(?:access|entitlement|identity|tenancy)\/|modules\/(?:access|identity|entitlements|trust)\/)/, ['trust-bff.test.ts']],
   [/^server\/src\/(?:agent-runtime\/|runtime\/|worker\.ts|bin\/worker\.ts)/, ['runtime-chat-recovery.test.ts', 'native-authorization-faults.test.ts']],
@@ -27,7 +28,7 @@ const OWNERS = [
   [/^server\/src\/(?:canvas\/|modules\/canvas\/)/, ['canvas-app-boundary.test.ts']],
   [/^server\/src\/modules\/(?:documents|content-editor)\//, ['runtime-objects.test.ts']],
   [/^server\/src\/(?:llm-ledger|llm|llm-client)\.ts$|^server\/src\/agent-runtime\/pricing\.ts$/, ['model-pricing.test.ts', 'native-admission.test.ts']],
-  [/^server\/src\/agent-runtime\/(?:visualize-|system-skills|skill-context)|^src\/features\/chat\/visualize\/|^third_party\/zcode\/|^scripts\/(?:verify-zcode-visualize|build-visualize-runtime)\.mjs$/, ['visualize-delivery.test.ts', 'visualize-quality-contract.test.ts']],
+  [/^server\/src\/agent-runtime\/(?:visualize-|system-skills|skill-context)|^src\/features\/chat\/visualize\/|^shared\/visualize-public-resources\.ts$|^third_party\/zcode\/|^scripts\/(?:verify-zcode-visualize|build-visualize-runtime)\.mjs$/, ['visualize-delivery.test.ts', 'visualize-quality-contract.test.ts']],
 ]
 function paths(value, label) {
   if (!Array.isArray(value) || value.some(path => typeof path !== 'string' || !path ||

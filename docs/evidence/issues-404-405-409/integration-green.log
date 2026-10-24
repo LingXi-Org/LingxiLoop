@@ -1,0 +1,19 @@
+[integration selected] selected 1/119 file(s): message-mentions.test.ts
+TAP version 13
+# Subtest: contiguous public answer survives admission, receipt, retry and authorized history without corrupting mentions
+ok 1 - contiguous public answer survives admission, receipt, retry and authorized history without corrupting mentions
+  ---
+  duration_ms: 948.564602
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4982.91473
+[integration file] message-mentions.test.ts duration_ms=5029 exit=0
+[integration result] mode=selected files=1 duration_ms=5030 exit=0

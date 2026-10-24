@@ -1,0 +1,107 @@
+{
+  "node": "v22.23.3",
+  "before": "0.3.12",
+  "after": "0.3.14",
+  "scope": "Public package functions; requested delimiter search spans and warm Node CPU samples only, not whole remend cost or browser FPS.",
+  "comparisons": [
+    {
+      "name": "mixed",
+      "inputSha256": "23a425a658d6f207903a30cc00f3458b743231ec08aa6146a20c52667bed55c0",
+      "inputUtf16": 72,
+      "outputEqual": true,
+      "oldOutputSha256": "72e1b4e516eee8f921ef338d90a12d46b1c7553c3db21b584945dad555a4716d",
+      "newOutputSha256": "72e1b4e516eee8f921ef338d90a12d46b1c7553c3db21b584945dad555a4716d"
+    },
+    {
+      "name": "fenced-code",
+      "inputSha256": "05904dfa3554929d0392f1c0fe0c0326235fe7c0396c39673d65f3197d7a7213",
+      "inputUtf16": 56,
+      "outputEqual": true,
+      "oldOutputSha256": "05904dfa3554929d0392f1c0fe0c0326235fe7c0396c39673d65f3197d7a7213",
+      "newOutputSha256": "05904dfa3554929d0392f1c0fe0c0326235fe7c0396c39673d65f3197d7a7213"
+    },
+    {
+      "name": "open-fence",
+      "inputSha256": "282ba79471d596657b3305bc32cd9d855809338d07553681a1f1865c0bb268b2",
+      "inputUtf16": 32,
+      "outputEqual": true,
+      "oldOutputSha256": "64881a1be7be231a978168f28ed81da4dcbc3f8382677d29db306bdfe5bf9f28",
+      "newOutputSha256": "64881a1be7be231a978168f28ed81da4dcbc3f8382677d29db306bdfe5bf9f28"
+    },
+    {
+      "name": "math",
+      "inputSha256": "614980b5cc6db3430f1b76e82df0de6f55e3aa120f7928b837fa1cb75fd28d69",
+      "inputUtf16": 22,
+      "outputEqual": true,
+      "oldOutputSha256": "ddd608735f2fdabc4921f3a66feb4718291c2109a798ffbca8ca1cc4f3e5e4bd",
+      "newOutputSha256": "ddd608735f2fdabc4921f3a66feb4718291c2109a798ffbca8ca1cc4f3e5e4bd"
+    },
+    {
+      "name": "unicode",
+      "inputSha256": "1e1062bbc9b0d0c953ab7411ff7a480629b7288a812a9945fd3ce0f3a41fe451",
+      "inputUtf16": 47,
+      "outputEqual": true,
+      "oldOutputSha256": "a598f7eb7dffdbb45460da37e3426087cc1deb01882c758aaf73b9fe8393d117",
+      "newOutputSha256": "a598f7eb7dffdbb45460da37e3426087cc1deb01882c758aaf73b9fe8393d117"
+    },
+    {
+      "name": "prefix-escapes",
+      "inputSha256": "2896462bd7815e3878f9f988f135ca79de4a21f8bb808ef1db9e94634cf9589d",
+      "inputUtf16": 33,
+      "outputEqual": false,
+      "oldOutputSha256": "77fccd1c109a2834a5025581e1bb3fa15ced4248bd9bf38687fb6f81473dd8d3",
+      "newOutputSha256": "6d5fae528a04e2c7e35430209a33e54e45ee25d93cac8ac7e1e67788896a44d7",
+      "oldOutput": "20~25 and 30~35\n\n- > 25\n\n下一段 **文字**",
+      "newOutput": "20\\~25 and 30\\~35\n\n- \\> 25\n\n下一段 **文字**"
+    }
+  ],
+  "math": {
+    "inputSha256": "385075a08647333cd36970b5ca0dec3af94caf2a0ed73524ef236dd0f9ffc98f",
+    "oldOutput": "`$x$`\n\n~~~text\n$$a\nb$$\n~~~",
+    "newOutput": "`\\(x\\)`\n\n~~~text\n\\[a\nb\\]\n~~~"
+  },
+  "scans": [
+    {
+      "paragraphs": 1000,
+      "inputUtf16": 16004,
+      "inputSha256": "8cbd4414afd46827f2cdf9d9392f30207df91e68dcce9236e4996c2f3d821245",
+      "before": {
+        "delimiterSearchSpan": 16009004,
+        "samplesMs": [
+          0.9826100000000224,
+          0.7576150000002144,
+          0.8758840000000419
+        ]
+      },
+      "after": {
+        "delimiterSearchSpan": 0,
+        "samplesMs": [
+          0.925899999999956,
+          0.9304360000000997,
+          0.8590370000001712
+        ]
+      }
+    },
+    {
+      "paragraphs": 4000,
+      "inputUtf16": 64004,
+      "inputSha256": "88cee4675c4d226463a13eaa13904810af700a4125e504654735773b1facfa8c",
+      "before": {
+        "delimiterSearchSpan": 256036004,
+        "samplesMs": [
+          8.621148999999832,
+          9.74875400000019,
+          8.170658999999887
+        ]
+      },
+      "after": {
+        "delimiterSearchSpan": 0,
+        "samplesMs": [
+          0.8490670000001046,
+          0.5656780000001618,
+          0.5954979999999068
+        ]
+      }
+    }
+  ]
+}

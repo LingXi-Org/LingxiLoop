@@ -1,3 +1,13 @@
+import type { GeneratedCaseCover } from '../api'
+
+/** A background cover refresh cannot replace the reader/editor snapshot. */
+export function mergeCaseCoverMetadata<T extends { id: string; generatedCover?: GeneratedCaseCover | null }>(current: T, incoming: T): T {
+  if (current.id !== incoming.id || !current.generatedCover || !incoming.generatedCover
+    || current.generatedCover.fingerprint !== incoming.generatedCover.fingerprint
+    || current.generatedCover.generation !== incoming.generatedCover.generation) return current
+  return { ...current, generatedCover: incoming.generatedCover }
+}
+
 export const COVER_POLL_LIMIT = 24
 export const COVER_POLL_WINDOW_MS = 120_000
 export function coverPollDelay(attempt: number) { return Math.min(2_000 * 1.4 ** attempt, 10_000) }

@@ -1,0 +1,43 @@
+TAP version 13
+# (node:565609) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# OPTIONAL_METADATA_MISSING_COST {"iterations":3000,"elapsedMs":94.726403,"activity":3000,"segment":3000,"missingActivity":3000,"missingSegment":3000,"failures":6000}
+# Subtest: ordinary missing optional metadata returns without schema failure allocation
+not ok 1 - ordinary missing optional metadata returns without schema failure allocation
+  ---
+  duration_ms: 99.862248
+  type: 'test'
+  location: '/tmp/loop-378-optional-metadata/src/lib/optional-part-metadata.test.ts:1:1610'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    3000 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 3000
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-378-optional-metadata/src/lib/optional-part-metadata.test.ts:42:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: present null/malformed values keep their schema path, while valid metadata and segment bounds keep the same outputs
+ok 2 - present null/malformed values keep their schema path, while valid metadata and segment bounds keep the same outputs
+  ---
+  duration_ms: 6.420713
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 1
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 739.876239

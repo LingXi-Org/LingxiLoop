@@ -6,6 +6,7 @@ test('workspace realtime shares tickets and fences late connections across recon
   const requests: Array<{ resolve(response: Response): void; reject(error: Error): void }> = []
   const sockets: Socket[] = []
   let clears = 0
+  const reasons: unknown[] = []
   let userId: string | null = 'user'
   class Socket {
     static CONNECTING = 0
@@ -21,7 +22,7 @@ test('workspace realtime shares tickets and fences late connections across recon
   }
   mock.module('@/stores/auth', { namedExports: {
     getMeId: () => userId,
-    useAuth: { getState: () => ({ clear: () => { clears++ } }) },
+    useAuth: { getState: () => ({ clear: (reason: unknown) => { clears++; reasons.push(reason) } }) },
   } })
   mock.module('@/api/core/http', { namedExports: { getServerOrigin: () => 'https://loop.test' } })
   mock.module('@/api/transport', { namedExports: {
@@ -79,6 +80,7 @@ test('workspace realtime shares tickets and fences late connections across recon
     assert.equal(sockets.length, 3)
     sockets[2].onclose?.({ code: 4403 })
     assert.equal(clears, 1, 'current forbidden sockets still clear authentication')
+    assert.deepEqual(reasons, ['session-rejected'], 'trusted socket rejection requests bounded official session reconciliation')
 
     ws.close()
     userId = null

@@ -1,0 +1,22 @@
+{
+  "mode": "selected",
+  "availableFiles": 118,
+  "selectedFiles": [
+    "channel-run-summary.test.ts"
+  ],
+  "executedFiles": [
+    "channel-run-summary.test.ts"
+  ],
+  "records": [
+    {
+      "files": [
+        "channel-run-summary.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 6260,
+      "exitCode": 0
+    }
+  ],
+  "durationMs": 6260,
+  "exitCode": 0
+}

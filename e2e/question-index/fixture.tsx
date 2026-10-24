@@ -55,6 +55,10 @@ window.addEventListener('question-index-step', ((event: CustomEvent<string>) => 
     updateConversation('questions', state => ({ ...state, messages: mergeCanonicalMessages(state.messages, convert([envelope(61, 'user'), envelope(61, 'assistant')])) }))
   } else if (event.detail === 'receipt') {
     updateConversation('questions', state => ({ ...state, messages: mergeCanonicalMessages(state.messages, convert([envelope(61, 'user')])) }))
+  } else if (event.detail === 'math') {
+    updateConversation('questions', state => ({ ...state, messages: state.messages.map(message =>
+      message.metadata.custom.clientMessageId === 'a-60'
+        ? { ...message, content: [{ type: 'text', text: '公式尺寸变化。\n\n$$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$' }] } : message) }))
   } else if (event.detail === 'stream') {
     updateConversation('questions', state => ({ ...state, activeRuns: { stream: { id: 'stream', agentId: 'agent', messageId: 'a-60', lastSequence: null, state: 'running' } },
       messages: state.messages.map(message => message.metadata.custom.clientMessageId === 'a-60' && message.role === 'assistant'
@@ -72,3 +76,11 @@ function App() {
 document.documentElement.dataset.theme = new URLSearchParams(location.search).get('theme') ?? 'light'
 document.documentElement.classList.toggle('dark', document.documentElement.dataset.theme === 'dark')
 createRoot(document.getElementById('root')!).render(<App />)
+
+window.addEventListener('chrome-perf-step', () => {
+  updateConversation('questions', state => ({ ...state,
+    activeRuns: { stream: { id:'stream',agentId:'agent',messageId:`a-${turnCount}`,lastSequence:null,state:'running' } },
+    messages: state.messages.map(message => message.metadata.custom.clientMessageId === `a-${turnCount}` && message.role === 'assistant'
+      ? { ...message, status: {type:'running'}, content:[{type:'text',text:message.content.flatMap(part=>part.type==='text'?[part.text]:[]).join('')+'新增一段实质正文。'}] } : message),
+  }))
+})

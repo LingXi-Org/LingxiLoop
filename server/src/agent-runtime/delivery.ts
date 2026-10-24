@@ -1,31 +1,24 @@
 import { readRunProjection } from './assistant-transport.js'
 import { assistantTextViolation } from './assistant-text.js'
 import { createHash } from 'node:crypto'
-import { NoEffectError, type createLingxiOS, type ApprovalSnapshot, type DeliveryPort } from '@lyyzka/lingxios'
+import { NoEffectError, type createLingxiOS, type DeliveryPort } from '@lyyzka/lingxios'
 import { sendAgentChannelMessage, sendSystemChannelMessage } from '../im/public.js'
 import { loadRuntimeBinding } from './context.js'
-import { productConversationId, assertFrozenAudience, bindProductRun } from './identity.js'
+import { productConversationId, assertFrozenAudience, bindProductRun, notifyRunAvailable } from './identity.js'
 import { runProductCallback } from './product-callbacks.js'
+import { createRunListInvalidation } from './run-list-invalidation.js'
 import { syncConversationPolicy } from './conversations.js'
 import { createNativeMessage, nativeMessageSchema, nativeText } from '../im/message-types.js'
 import { getSendAcceptance } from '../im/messages-repository.js'
 import { parseMentions } from '../mentions.js'
 import { assertCanvasRequestCurrent } from '../modules/canvas/index.js'
+import { terminalFailure, terminalFeedbackText } from './terminal-feedback.js'
 
-export function approvalView(approval: ApprovalSnapshot) {
-  const status = approval.decision === null ? 'PENDING' : approval.decision === false ? 'REJECTED'
-    : approval.result?.executionState === 'unknown' ? 'UNKNOWN' : approval.result?.ok ? 'EXECUTED'
-    : approval.result?.executionState === 'awaiting_approval' ? 'APPROVED' : 'FAILED'
-  return { id: approval.approvalId, runId: approval.runId, agentId: approval.agentId, status,
-    summary: String(approval.preview.summary ?? approval.preview.title ?? approval.action),
-    action: { action: approval.action, args: approval.args }, preview: approval.preview,
-    requestedBy: approval.principalId, requestedAt: approval.createdAt, resolvedAt: approval.decidedAt,
-    scope: { requestVersion: approval.requestVersion }, ...(approval.result ? { result: approval.result } : {}) }
-}
+export { approvalView } from './approval-public-view.js'
 
 export function createProductDelivery(control: () => ReturnType<typeof createLingxiOS>): DeliveryPort {
   return {
-    async onEvent() { /* Native SSE owns replay and preview delivery. */ },
+    onEvent: createRunListInvalidation(control, notifyRunAvailable),
     async deliverTerminal(work, feedback, inputContext) {
       return runProductCallback(inputContext, async scope => {
         const { database } = scope, context = { ...inputContext, ...scope }
@@ -46,24 +39,17 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
           throw new Error('Terminal notification identity conflicts with a recorded acceptance')
         }
         if (!payload) {
-          const reasons = {
-            context_limit: '这次请求超出了当前可处理的上下文范围，任务未能完成。可以缩小材料范围后继续。',
-            budget_limit: '本轮预算已达上限，部分工作未能继续。',
-            model_unavailable: '模型服务暂时不可用，这次任务未能完成。',
-            permission_denied: '当前权限不足，这次任务已停止。',
-            dependency_unavailable: '所需服务暂时不可用，这次任务未能完成。',
-            cancelled: '这次任务已取消。',
-            interrupted: '这次任务在恢复过程中中断，未能完成。',
-            execution_failed: '这次任务未能完成。',
-          } as const
+          const state = await api.readRunState(identity, scope)
+          if (!state || state.run.requestVersion !== feedback.requestVersion) return
+          const failure = ['execution_failed', 'model_unavailable'].includes(feedback.reason)
+            ? await terminalFailure(api, identity, state, scope) : null
           const recipients = new Set(work.conversation?.audience.participantIds ?? [])
           const visible = feedback.notStartedAgentIds.filter(id => recipients.has(id))
           const names = visible.length ? (await database.query<{ name: string }>(`SELECT name FROM participants
             WHERE company_id=$1 AND id=ANY($2::text[]) AND kind='agent' AND departed_at IS NULL ORDER BY id LIMIT 8`,
           [work.tenantId,visible])).rows.map(row => row.name.slice(0,80)) : []
-          const detail = feedback.notStartedCount ? ` 本轮有 ${feedback.notStartedCount} 项协作未启动${names.length ? `（${names.join('、')}）` : ''}。` : ''
           payload = createNativeMessage({ id: clientNonce,role: 'system',createdAt: feedback.createdAt,
-            content: [{ type: 'text',text: `${reasons[feedback.reason]}${detail} 已完成的操作会保留，你可以发送新消息继续。` }],
+            content: [{ type: 'text',text: terminalFeedbackText(feedback, state, failure, names) }],
             custom: { runId: work.id,requestVersion: feedback.requestVersion,controlPrincipalId: work.principalId,
               terminalFeedbackId: feedback.id,terminalStatus: feedback.status,terminalReason: feedback.reason,suppressAgentWake: true,
               ...(work.threadId ? { replyToClientMsgNo: work.threadId } : {}) } })

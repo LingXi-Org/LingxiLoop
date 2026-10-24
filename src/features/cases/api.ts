@@ -25,6 +25,10 @@ export interface CaseArticle extends CaseInput {
   generatedCover?: GeneratedCaseCover | null
   id: string
   companyId: string
+  authorId: string
+  authorName: string
+  authorAvatarUrl: string | null
+  createdAt: string
   status: 'draft' | 'published' | 'unpublished'
   version: number
   publishedVersion: number | null

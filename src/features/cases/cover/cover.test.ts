@@ -93,3 +93,17 @@ test('an absolute deadline aborts a hung read and prevents even abort-ignoring l
   finish('too late'); await new Promise(resolve => setImmediate(resolve))
   assert.equal(received, false); assert.equal(timer.size, 0)
 })
+
+// Failure modes: a cover refresh overwrites unsaved/native content or article
+// versions, or an older generation/snapshot installs after a retry/save.
+test('cover refresh adopts only matching snapshot metadata and preserves article content and versions', async () => {
+  const { mergeCaseCoverMetadata } = await import('./polling')
+  const generatedCover = { schemaVersion: 1 as const, status: 'pending' as const, fingerprint: 'draft-a', generation: 2, alt: null, previewUrl: null, interactiveUrl: null, canRetry: false }
+  const current = { id: 'case-a', body: 'Current native projection', title: 'Draft title', version: 9, generatedCover }
+  const fresh = { ...current, body: 'Remote body', title: 'Remote title', version: 10, generatedCover: { ...generatedCover, status: 'ready' as const, previewUrl: '/ready.svg' } }
+  const adopted = mergeCaseCoverMetadata(current, fresh)
+  assert.deepEqual(adopted, { ...current, generatedCover: fresh.generatedCover })
+  for (const stale of [{ ...fresh, id: 'other-case' }, { ...fresh, generatedCover: { ...fresh.generatedCover, fingerprint: 'published-b' } }, { ...fresh, generatedCover: { ...fresh.generatedCover, generation: 1 } }]) {
+    assert.equal(mergeCaseCoverMetadata(current, stale), current)
+  }
+})

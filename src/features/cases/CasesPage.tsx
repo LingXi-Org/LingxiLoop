@@ -1,14 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ArrowLeft, Plus, Search } from 'lucide-react'
+import './cases.css'
+import { CaseCodeBlock } from './CaseCodeBlock'
+import { ArrowLeft, BookImage, ImagePlus, LockKeyhole, MoreHorizontal, Pencil, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { markdownText, usableDocument } from '@/features/content-editor/document'
 import { ContentEditor, ContentDocumentView } from '@/features/content-editor'
 import { useAuth } from '@/stores/auth'
 import { userFacingError } from '@/lib/userFacingError'
 import { casesApi, type CaseArticle, type CaseInput, type CaseList } from './api'
+import { CaseCover, caseCoverIdentity, caseCoverPending } from './CaseCover'
+import { mergeCaseCoverMetadata } from './cover/polling'
+import { useCaseCoverPolling } from './cover/useCaseCoverPolling'
 
 const empty: CaseInput = { title: '', summary: '', body: '', cover: null, category: '', tags: [] }
 const statusLabels = { draft: '草稿', published: '已发布', unpublished: '已下架' }
@@ -26,11 +34,12 @@ function articleUrl(id?: string) {
   return `/cases${id ? `/${encodeURIComponent(id)}` : ''}?${query}`
 }
 function Markdown({ body }: { body: string }) {
-  return <div className="space-y-5 break-words text-base leading-8 [&_h2]:mt-8 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_a]:focus-visible:outline-2 [&_img]:my-6 [&_img]:max-h-[36rem] [&_img]:rounded-xl [&_img]:object-contain [&_ul]:list-disc [&_ul]:ps-6 [&_ol]:list-decimal [&_ol]:ps-6 [&_pre]:overflow-auto [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-4 [&_blockquote]:border-s-2 [&_blockquote]:ps-4"><ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown></div>
+  return <div className="case-markdown space-y-5 break-words text-base leading-8 [&_h2]:mt-8 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_a]:focus-visible:outline-2 [&_img]:my-6 [&_img]:max-h-[36rem] [&_img]:rounded-xl [&_img]:object-contain [&_ul]:list-disc [&_ul]:ps-6 [&_ol]:list-decimal [&_ol]:ps-6 [&_pre]:overflow-auto [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-0 [&_blockquote]:border-s-2 [&_blockquote]:ps-4"><ReactMarkdown remarkPlugins={[remarkGfm]} components={{pre: CaseCodeBlock, table: ({children}) => <div className="overflow-x-auto"><table>{children}</table></div>}}>{body}</ReactMarkdown></div>
 }
 
 export function CasesPage() {
   const companyId = useAuth(state => state.activeCompanyId)
+  const userId = useAuth(state => state.user?.id)
   const [id, setId] = useState(routeId)
   const [list, setList] = useState<CaseList>({ items: [], categories: [], canManage: false })
   const [article, setArticle] = useState<CaseArticle | null>(null)
@@ -51,7 +60,12 @@ export function CasesPage() {
   const adoptedId = useRef<string | null>(null)
   const skipFocus = useRef(false)
   const currentScope = useRef(companyId)
-  useEffect(() => { currentScope.current = companyId; return () => { currentScope.current = null; operationEpoch.current += 1 } }, [companyId])
+  useEffect(() => {
+    currentScope.current = companyId
+    mutationPending.current = false; setBusy(false); setEditing(false); setPreview(false); setInput(empty)
+    setArticle(null); setList({ items: [], categories: [], canManage: false })
+    return () => { currentScope.current = null; operationEpoch.current += 1 }
+  }, [companyId, userId])
   const navigate = (next?: string) => {
     operationEpoch.current += 1
     mutationPending.current = false; setBusy(false)
@@ -75,7 +89,7 @@ export function CasesPage() {
       void request.catch(reason => { if (!abort.signal.aborted) { setError(userFacingError(reason, '案例暂时无法加载，请重试。')); if (!id) setList(value => ({ ...value, items: [] })) } }).finally(() => { if (!abort.signal.aborted) setLoading(false) })
     }, id ? 0 : 200)
     return () => { abort.abort(); window.clearTimeout(timer) }
-  }, [id, search, category, revision])
+  }, [id, search, category, revision, companyId, userId])
   useEffect(() => { if (skipFocus.current) { skipFocus.current = false; return }; heading.current?.focus({ preventScroll: true }) }, [id])
   const beginEdit = () => { setInput(article ? { title: article.title, summary: article.summary, body: article.body, editorDocument: article.editorDocument, summaryDocument: article.summaryDocument, cover: article.cover, category: article.category, tags: article.tags } : { ...empty }); setEditing(true); setPreview(false); setNotice(''); setError('') }
   // Navigation invalidates completions; a settled request must never mutate a new page.
@@ -124,6 +138,38 @@ export function CasesPage() {
     catch (reason) { if (operation.current()) setError(userFacingError(reason, '操作失败，请重试。')) }
     finally { operation.finish() }
   }
+  const retryCover = async (target: CaseArticle) => {
+    const operation = startMutation()
+    if (!operation) return
+    try {
+      const next = await casesApi.retryCover(target)
+      if (!operation.current()) return
+      setArticle(current => current?.id === target.id ? { ...current, generatedCover: next.generatedCover } : current)
+      setList(current => ({ ...current, items: current.items.map(item => item.id === target.id ? { ...item, generatedCover: next.generatedCover } : item) }))
+      setNotice('已提交封面重试，完成后自动更新。')
+    } catch (reason) {
+      if (operation.current()) setError(userFacingError(reason, '封面重试失败，请稍后再试。'))
+      throw reason
+    } finally { operation.finish() }
+  }
+  const coverScope = `${userId ?? ''}:${companyId ?? ''}`
+  const coverSources = id ? article ? [article] : [] : list.items
+  useCaseCoverPolling<CaseArticle | CaseList>({
+    scopeKey: JSON.stringify([coverScope, id, search, category, coverSources.map(item => [item.id, caseCoverIdentity(item.generatedCover)])]),
+    pending: !loading && !busy && !editing && coverSources.some(item => caseCoverPending(item.generatedCover)),
+    refresh: signal => id ? casesApi.detail(id, signal) : casesApi.list(search, category, signal),
+    receive: value => {
+      if (useAuth.getState().activeCompanyId !== companyId || useAuth.getState().user?.id !== userId) return false
+      if ('items' in value) {
+        const incoming = new Map(value.items.map(item => [item.id, item]))
+        setList(current => ({ ...current, items: current.items.map(item => incoming.has(item.id) ? mergeCaseCoverMetadata(item, incoming.get(item.id)!) : item) }))
+        return coverSources.some(item => incoming.has(item.id) && caseCoverPending(mergeCaseCoverMetadata(item, incoming.get(item.id)!).generatedCover))
+      }
+      if (!article || article.id !== value.id) return false
+      setArticle(current => current ? mergeCaseCoverMetadata(current, value) : current)
+      return caseCoverPending(mergeCaseCoverMetadata(article, value).generatedCover)
+    },
+  })
   const uploadAsset = async (file: File, cover = false): Promise<string> => {
     if (!input.title.trim()) throw new Error('请先填写案例标题。')
     if (file.size > 8 * 1024 * 1024) throw new Error('附件最大为 8 MB。')
@@ -150,47 +196,104 @@ export function CasesPage() {
     try { const cover = await uploadAsset(file, true); setInput(value => ({ ...value, cover })) }
     catch (reason) { setError(userFacingError(reason, '封面上传失败，请重试。')) }
   }
+
   const canManage = article?.canManage ?? list.canManage
-  return <main aria-label="组织案例库" className="h-full overflow-y-auto overscroll-contain">
-    <div className="mx-auto max-w-5xl px-4 py-5 sm:px-8">
-      <header className="mb-5 flex min-h-9 flex-wrap items-center justify-between gap-3 border-b pb-4">
-        <h1 ref={heading} tabIndex={-1} className="text-xl font-semibold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring">案例库</h1>
-        {!id && !editing && list.canManage && <Button size="sm" onClick={beginEdit}><Plus className="size-4" />新建案例</Button>}
-        {(id || editing) && <Button variant="ghost" size="sm" disabled={busy} onClick={() => navigate()}><ArrowLeft className="size-4" />返回案例库</Button>}
+  const content = editing ? input : article
+  const detail = Boolean(id || editing)
+  const invalid = busy || !input.title.trim() || input.body.length > 200000 || input.summary.length > 2000
+  const date = (value: CaseArticle) => new Date(value.publishedAt ?? value.createdAt ?? value.updatedAt).toLocaleDateString('zh-CN').replaceAll('/', '.')
+  const body = (value: CaseInput) => usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument}/> : <Markdown body={value.body}/>
+  const hero = content && <div data-case-hero className="case-hero">
+    <div className="case-cover">
+      {article?.generatedCover && !editing ? <CaseCover cover={article.generatedCover} fallbackUrl={content.cover} title={content.title} scopeKey={`${coverScope}:${article.id}`}
+        className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRetry={article.canManage ? () => retryCover(article) : undefined}/>
+        : content.cover ? <img src={content.cover} alt={editing ? '案例封面预览' : ''}/> : <div className="case-no-cover"><BookImage aria-hidden="true"/><span>{editing ? '添加案例封面' : '暂无封面'}</span></div>}
+      {editing && !preview && <div className="case-cover-actions">
+        {input.cover && <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setInput(value => ({...value, cover: null}))}>移除封面</Button>}
+        <label className="case-cover-upload" aria-disabled={busy || !input.title.trim()}>
+          <ImagePlus aria-hidden="true" className="size-4"/>{input.cover ? '更换封面' : '上传封面'}
+          <input className="sr-only" aria-label="上传封面" type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || !input.title.trim()} onChange={event => { void uploadCover(event.target.files?.[0]); event.target.value = '' }}/>
+        </label>
+      </div>}
+    </div>
+    <div className="case-hero-copy">
+      {editing && <div hidden={preview}>
+        <label><span className="sr-only">标题</span><Textarea required maxLength={200} disabled={busy} className="case-title-input" placeholder="案例标题" rows={1} value={input.title} onChange={event => setInput(value => ({...value, title: event.target.value}))}/></label>
+        <div className="case-summary case-inline-editor"><ContentEditor legacyFormat="markdown" label="摘要" compact value={input.summary} document={input.summaryDocument} maxLength={2000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(summary, summaryDocument) => setInput(value => ({...value, summary, summaryDocument}))}/></div>
+      </div>}
+      {(!editing || preview) && <div><h2 className="case-title">{content.title}</h2><div className="case-summary">{usableDocument(content.summaryDocument, content.summary) ? <ContentDocumentView document={content.summaryDocument}/> : <p>{content.summary}</p>}</div></div>}
+      {editing && !preview ? <div className="case-edit-metadata">
+        <label className="flex items-center gap-2 text-sm"><span>分类</span><Input list="case-categories" aria-label="分类" maxLength={80} className="w-28" value={input.category} onChange={event => setInput(value => ({...value, category: event.target.value}))}/></label>
+        <datalist id="case-categories">{list.categories.map(value => <option key={value} value={value}/>)}</datalist>
+        <label className="flex min-w-0 flex-1 items-center gap-2 text-sm"><span className="shrink-0">标签</span><Input aria-label="标签（逗号分隔）" placeholder="用逗号分隔" value={input.tags.join(',')} onChange={event => setInput(value => ({...value, tags: event.target.value.split(/[,，]/)}))}/></label>
+        <span className="flex items-center gap-2 text-sm text-muted-foreground"><LockKeyhole aria-hidden="true" className="size-4"/>{article?.status === 'published' ? '未发布修改仅教师可见' : '草稿仅教师可见'}</span>
+      </div> : <div className="case-metadata">
+        {article && <time dateTime={article.publishedAt ?? article.createdAt ?? article.updatedAt}>{date(article)}</time>}
+        <span>{content.category || '未分类'}</span>
+        {content.tags.map(tag => <span key={tag}>{tag}</span>)}
+        {article?.authorName && <span className="case-author"><Avatar size="sm"><AvatarImage src={article.authorAvatarUrl ?? undefined} alt=""/><AvatarFallback>{article.authorName.slice(0, 1)}</AvatarFallback></Avatar>{article.authorName}</span>}
+        <span className="case-status">{editing && preview ? '草稿预览' : statusLabels[article?.status ?? 'draft']}</span>
+      </div>}
+    </div>
+  </div>
+  return <main aria-label="组织案例库" className="cases-page">
+    <div className={detail ? 'case-detail-shell' : 'case-library-shell'}>
+      <header className={'case-toolbar ' + (detail ? 'case-detail-toolbar' : '')}>
+        <h1 ref={heading} tabIndex={-1} className={detail ? 'sr-only' : 'case-library-title'}>案例库</h1>
+        {detail && <Button variant="ghost" disabled={busy} onClick={() => navigate()}><ArrowLeft className="size-4"/>返回案例库</Button>}
+        <div className="ms-auto flex flex-wrap items-center justify-end gap-3">
+          {!detail && list.canManage && <Button onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>}
+          {editing && canManage ? <>
+            <span className="text-sm text-muted-foreground">草稿</span>
+            <Button type="submit" form="case-edit-form" variant="outline" disabled={invalid}>保存草稿</Button>
+            <Button type="button" variant="outline" aria-pressed={preview} disabled={busy} onClick={() => setPreview(value => !value)}>{preview ? '继续编辑' : '预览'}</Button>
+            <Button type="button" disabled={invalid || !input.body.trim()} onClick={() => void save(true)}>发布</Button>
+            <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="编辑选项" disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => setEditing(false)}>取消编辑</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+          </> : article?.canManage && <>
+            <Button variant="outline" onClick={beginEdit}><Pencil className="size-4"/>编辑案例</Button>
+            <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="更多案例操作" disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
+              {article.status === 'published' && <DropdownMenuItem onSelect={() => void action('unpublish')}>下架案例</DropdownMenuItem>}
+              {article.indexStatus === 'failed' && <DropdownMenuItem onSelect={() => void action('retry-index')}>重试索引</DropdownMenuItem>}
+              <DropdownMenuItem disabled>知识索引：{article.indexStatus === 'ready' ? '已同步' : article.indexStatus === 'failed' ? '同步失败' : article.indexStatus ? '正在同步' : '未发布'}</DropdownMenuItem>
+            </DropdownMenuContent></DropdownMenu>
+          </>}
+        </div>
       </header>
-      {error && <div role="alert" className="mb-4 flex flex-wrap items-center gap-2 border-s-2 border-destructive px-3 text-sm text-destructive">{error}<Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button></div>}
-      {notice && <p role="status" className="mb-4 text-sm text-muted-foreground">{notice}</p>}
-      {!id && !editing && <div className="mb-3 flex flex-wrap items-center gap-3">
-        <label className="relative min-w-40 flex-1"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)} /></label>
-        <label><span className="sr-only">分类</span><select value={category} onChange={event => setCategory(event.target.value)} className="h-9 max-w-48 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring"><option value="">全部分类</option>{list.categories.map(value => <option key={value}>{value}</option>)}</select></label>
+      {error && <div role="alert" className="case-notice text-destructive">{error}<Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button></div>}
+      {notice && <p role="status" className="case-notice">{notice}</p>}
+      {!detail && <div className="case-library-filters">
+        <nav aria-label="案例分类" className="case-category-tabs">
+          {['', ...list.categories].map(value => <button key={value} type="button" aria-pressed={category === value} onClick={() => setCategory(value)}>{value || '全部'}</button>)}
+        </nav>
+        <label className="relative w-full sm:w-72"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
         {(search || category) && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setCategory('') }}>清除筛选</Button>}
       </div>}
-      {editing && canManage ? <form onSubmit={event => { event.preventDefault(); void save(false) }} className="mx-auto max-w-3xl"><fieldset disabled={busy} className="min-w-0 space-y-4">
-        <p className="text-sm text-muted-foreground">{article?.status === 'published' ? '修改保存为草稿，发布后更新读者版本。' : '草稿仅教师可见。发布后，组织内学生可阅读。'}</p>
-        <label className="block space-y-1.5 text-sm font-medium">标题<Input required maxLength={200} value={input.title} onChange={event => setInput({ ...input, title: event.target.value })} /></label>
-        <div className="space-y-1.5"><p className="text-sm font-medium">摘要</p><ContentEditor legacyFormat="markdown" label="摘要" compact value={input.summary} document={input.summaryDocument} maxLength={2000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(summary, summaryDocument) => setInput(value => ({ ...value, summary, summaryDocument }))}/></div>
-        <div className="grid gap-3 sm:grid-cols-2"><label className="block space-y-1.5 text-sm font-medium">分类<Input maxLength={80} value={input.category} onChange={event => setInput({ ...input, category: event.target.value })} /></label><label className="block space-y-1.5 text-sm font-medium">标签（逗号分隔）<Input value={input.tags.join(',')} onChange={event => setInput({ ...input, tags: event.target.value.split(/[,，]/) })} /></label></div>
-        <details className="border-y py-3" open={Boolean(input.cover)}><summary className="cursor-pointer text-sm focus-visible:outline-2">封面图片</summary><div className="space-y-2 pt-3"><label className="block space-y-1.5 text-sm">上传封面<Input type="file" accept="image/png,image/jpeg,image/webp,image/gif" disabled={busy || !input.title.trim()} onChange={event => { void uploadCover(event.target.files?.[0]); event.target.value = '' }} /></label>{input.cover && <><img src={input.cover} alt="案例封面预览" className="max-h-48 rounded-md object-contain"/><Button variant="ghost" size="sm" type="button" onClick={() => setInput({ ...input, cover: null })}>移除封面</Button></>}<p className="text-xs text-muted-foreground">先填写标题。图片上限 8 MB。</p></div></details>
-        <div className="space-y-1.5"><p className="text-sm font-medium">正文</p><ContentEditor legacyFormat="markdown" label="正文" value={input.body} document={input.editorDocument} maxLength={200000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(body, editorDocument) => setInput(value => ({ ...value, body, editorDocument }))}/></div>
-        <Button type="button" size="sm" variant="ghost" aria-expanded={preview} onClick={() => setPreview(!preview)}>{preview ? '收起预览' : '预览正文'}</Button>
-        {preview && <section aria-label="正文预览" className="border-t py-4">{usableDocument(input.editorDocument, input.body) ? <ContentDocumentView document={input.editorDocument}/> : <Markdown body={input.body}/>}</section>}
-        <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-background py-3"><Button type="submit" variant="outline" disabled={busy || input.body.length > 200000 || input.summary.length > 2000}>保存草稿</Button><Button type="button" disabled={busy || !input.title.trim() || !input.body.trim() || input.body.length > 200000 || input.summary.length > 2000} onClick={() => void save(true)}>保存并发布</Button><Button type="button" variant="ghost" disabled={busy} onClick={() => setEditing(false)}>取消编辑</Button></div>
-      </fieldset></form> : loading ? <p role="status" className="py-8 text-sm text-muted-foreground">正在加载案例…</p> : article ? <article className="mx-auto max-w-3xl">
-        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><span>{article.category || '未分类'}</span>{article.canManage && <><span>· {statusLabels[article.status]}</span>{article.hasUnpublishedChanges && <span>· 有未发布修改</span>}</>}</div>
-        <h2 className="break-words text-2xl font-semibold leading-tight sm:text-3xl">{article.title}</h2>
-        <div className="my-4 text-sm leading-7 text-muted-foreground">{usableDocument(article.summaryDocument, article.summary) ? <ContentDocumentView document={article.summaryDocument}/> : article.summary}</div>
-        {article.canManage && <div className="mb-5 space-y-2 border-y py-3"><div className="flex flex-wrap gap-2"><Button size="sm" onClick={beginEdit}>编辑案例</Button>{article.status === 'published' && <Button size="sm" variant="outline" disabled={busy} onClick={() => void action('unpublish')}>下架案例</Button>}{article.indexStatus === 'failed' && <Button size="sm" variant="outline" disabled={busy} onClick={() => void action('retry-index')}>重试索引</Button>}</div>{article.hasUnpublishedChanges && <p className="text-xs text-muted-foreground">读者仍看到上次发布版本。</p>}{article.indexStatus && <p className="text-xs text-muted-foreground">知识索引：{article.indexStatus === 'failed' ? '同步失败，请重试' : article.indexStatus === 'ready' ? '已同步' : '正在同步'}</p>}</div>}
-        {article.cover && <img src={article.cover} alt="" className="mb-6 max-h-96 w-full rounded-md object-contain"/>}
-        {usableDocument(article.editorDocument, article.body) ? <ContentDocumentView document={article.editorDocument}/> : <Markdown body={article.body}/>}
-        <div className="mt-6 flex flex-wrap gap-3 border-t pt-3 text-xs text-muted-foreground">{article.tags.map(tag => <span key={tag}>#{tag}</span>)}</div>
-      </article> : !id ? <div className="divide-y">{list.items.map(item => <article key={item.id} className="min-w-0">
-        <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="group flex items-start gap-4 rounded-sm py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
-          <div className="min-w-0 flex-1"><h2 className="break-words text-base font-semibold leading-6 group-hover:text-primary">{item.title}</h2><p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{markdownText(item.summary)}</p><div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground"><span>{item.category || '未分类'}</span>{list.canManage && <span>· {statusLabels[item.status]}</span>}{item.tags.slice(0,3).map(tag=><span key={tag}>#{tag}</span>)}</div></div>
-          {item.cover && <img src={item.cover} alt="" loading="lazy" className="h-20 w-24 shrink-0 rounded-md object-cover sm:w-32"/>}
-        </a>
-      </article>)}
+      {editing && canManage ? <form id="case-edit-form" onSubmit={event => { event.preventDefault(); void save(false) }}>
+        <fieldset disabled={busy} className="min-w-0">
+          <section aria-label={preview ? '案例预览' : '编辑案例'}>{hero}
+            <div className="case-body-divider"><div data-case-body className="case-body">
+              <div hidden={preview} className="case-inline-editor"><ContentEditor legacyFormat="markdown" label="正文" value={input.body} document={input.editorDocument} maxLength={200000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(body, editorDocument) => setInput(value => ({...value, body, editorDocument}))}/></div>
+              {preview && body(input)}
+            </div></div>
+          </section>
+          {!input.title.trim() && <p className="case-notice text-xs">填写标题后可上传封面与附件，单个文件最大 8 MB。</p>}
+        </fieldset>
+      </form> : loading ? <p role="status" className="case-notice py-8">正在加载案例…</p> : article ? <article>
+        {hero}
+        {article.canManage && article.hasUnpublishedChanges && <p className="case-notice">当前显示教师草稿；读者仍看到上次发布版本。</p>}
+        <div className="case-body-divider"><div data-case-body className="case-body">{body(article)}</div></div>
+      </article> : !id ? <>
+        <div data-case-grid className="case-grid">{list.items.map(item => <article key={item.id}>
+          <div className="case-grid-cover relative">{item.generatedCover ? <CaseCover cover={item.generatedCover} fallbackUrl={item.cover} title={item.title} scopeKey={`${coverScope}:${item.id}`}
+            className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRetry={item.canManage ? () => retryCover(item) : undefined}/>
+            : item.cover ? <img src={item.cover} alt="" loading="lazy"/> : <div className="case-no-cover"><BookImage aria-hidden="true"/><span>暂无封面</span></div>}</div>
+          <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="case-grid-link">
+            <div className="case-grid-meta"><time dateTime={item.publishedAt ?? item.createdAt ?? item.updatedAt}>{date(item)}</time><span>·</span><span>{item.category || '未分类'}</span>{list.canManage && item.status !== 'published' && <span>{statusLabels[item.status]}</span>}</div>
+            <h2>{item.title}</h2><p>{markdownText(item.summary)}</p>
+          </a>
+        </article>)}</div>
         {!list.items.length && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '没有找到匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : list.canManage ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
-      </div> : null}
+      </> : null}
     </div>
   </main>
 }

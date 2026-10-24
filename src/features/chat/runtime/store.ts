@@ -5,6 +5,7 @@ import { projectMessageGroups } from './converter'
 import { isRunMessage, isOlderRun } from './harness'
 import { nativeText } from '@/lib/nativeMessage'
 import { activityAnnotation } from '@/lib/runActivity'
+import { appendedContent, sameValue } from './text-update'
 
 export const CHAT_HISTORY_PAGE_SIZE = 80
 
@@ -61,10 +62,43 @@ export function messageKey(message: ThreadMessage): string {
     : isRunMessage(value) ? runKey(value) : value.clientMessageId || message.id
 }
 
+// Only arrays produced by the full canonical merge have a trusted order/identity index.
+const canonicalIndexes = new WeakMap<readonly ThreadMessage[], { byKey: Map<string, number>; unresolvedQuotes: Set<string> }>()
+function rememberCanonical(messages: ThreadMessage[]): ThreadMessage[] {
+  canonicalIndexes.set(messages, { byKey: new Map(messages.map((message, index) => [messageKey(message), index])),
+    unresolvedQuotes: new Set(messages.flatMap(message => {
+      const value = metadata(message)
+      return value.quotedMessageId && !value.quote?.text ? [value.quotedMessageId] : []
+    })) })
+  return messages
+}
+function appendCanonical(current: readonly ThreadMessage[], incoming: readonly ThreadMessage[]): ThreadMessage[] | undefined {
+  const index = canonicalIndexes.get(current)
+  if (!index || incoming.length !== 1) return
+  const next = incoming[0], at = index.byKey.get(messageKey(next))
+  if (at === undefined) return
+  const previous = current[at], before = metadata(previous), after = metadata(next)
+  const oldRun = before.harness, nextRun = after.harness
+  if (previous.role !== 'assistant' || next.role !== 'assistant' || previous.id !== next.id
+    || previous.createdAt.getTime() !== next.createdAt.getTime() || !oldRun || !nextRun
+    || oldRun.lifecycle !== 'leased' || nextRun.lastSeq < oldRun.lastSeq || oldRun.resultId || nextRun.resultId
+    || !sameValue(previous.status, next.status)
+    || !sameValue(previous.metadata, { ...next.metadata, custom: { ...after, harness: { ...nextRun, lastSeq: oldRun.lastSeq } } })
+    || [previous.id, before.clientMessageId, before.imMessageId].some(id => id && index.unresolvedQuotes.has(id))) return
+  const content = appendedContent(previous.content, next.content)
+  if (!content) return
+  const messages = current.slice()
+  messages[at] = { ...next, content } as ThreadMessage
+  canonicalIndexes.set(messages, index)
+  return messages
+}
+
 export function mergeCanonicalMessages(
   current: readonly ThreadMessage[],
   incoming: readonly ThreadMessage[],
 ): ThreadMessage[] {
+  const appended = appendCanonical(current, incoming)
+  if (appended) return appended
   const byId = new Map<string, ThreadMessage>()
   for (const message of [...current, ...incoming]) {
     const key = messageKey(message), previous = byId.get(key)
@@ -136,13 +170,14 @@ export function mergeCanonicalMessages(
     sorted.splice(index >= 0 ? index + 1 : fallback < 0 ? sorted.length : fallback, 0, message)
     tails.set(anchor, messageKey(message))
   }
-  return projectMessageGroups(sorted)
+  return rememberCanonical(projectMessageGroups(sorted))
 }
 
 function patchMetadata(
   message: ThreadMessage,
   patch: Partial<LingxiMessageMetadata>,
 ): ThreadMessage {
+  if (Object.entries(patch).every(([key, value]) => metadata(message)[key] === value)) return message
   return {
     ...message,
     metadata: {

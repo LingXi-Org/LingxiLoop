@@ -1,0 +1,19 @@
+TAP version 13
+# (node:487926) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# AUTHORIZED_PREPARATION_SAMPLES [{"sample":0,"elapsedMs":280.75142800000003,"calls":[{"kind":"resource-start","at":2.059346000000005},{"kind":"resource-end","at":122.92298000000005},{"kind":"state-start","at":158.06532000000004},{"kind":"state-end","at":278.024505}]},{"sample":1,"elapsedMs":241.42202299999985,"calls":[{"kind":"resource-start","at":0.416533999999956},{"kind":"resource-end","at":119.995859},{"kind":"state-start","at":120.77967799999999},{"kind":"state-end","at":241.22767599999997}]},{"sample":2,"elapsedMs":242.97076300000003,"calls":[{"kind":"resource-start","at":0.28375499999992826},{"kind":"resource-end","at":120.96058199999993},{"kind":"state-start","at":121.74304899999993},{"kind":"state-end","at":242.2945850000001}]}]
+# Subtest: record the current authorized-page resource/state critical path
+ok 1 - record the current authorized-page resource/state critical path
+  ---
+  duration_ms: 768.156471
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1415.45733

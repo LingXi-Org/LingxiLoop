@@ -8,12 +8,13 @@ import { RunStreamProjection } from '../../../../server/src/agent-runtime/assist
 
 test('run notifications and discovery subscribe before blocked history, deduplicate and recover closed streams', async () => {
   let receive!: (event: WsEvent) => void
-  const opened: Array<{ runId: string; signal: AbortSignal; close(): void; receive(event: RunStreamEvent): void }> = []
+  const opened: Array<{ runId: string; signal: AbortSignal; close(): void; receive(event: RunStreamEvent): void; snapshot(): AgentRunSnapshot; defer(snapshot: AgentRunSnapshot): void; flush(): void }> = []
   let settled = 0
   const timers = new Set<number>()
   let nextTimer = 0
   const listed: Array<{ conversationId: string; agentId: string; runId: string; status: string }> = []
   let reads = 0
+  let durable: AgentRunSnapshot | undefined
   const retries: Array<() => void> = []
   const answer = (text: string) => [{ type: 'text', text, providerMetadata: { lingxiloop: {
     activity: { version: 1, id: 'answer:1:0', kind: 'answer', label: '答复' },
@@ -36,12 +37,17 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     list: async () => listed,
     read: async () => {
       reads++
+      if (durable) return durable
       throw new Error('Active streams must not read HTTP snapshots')
     },
-    subscribe: (target: { runId: string }, listener: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal) => new Promise<void>(resolve => {
+    subscribe: (target: { runId: string }, listener: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal, publication?: { flush?: () => void; observed?: () => void }) => new Promise<void>(resolve => {
       const projection = new RunStreamProjection(target.runId, true)
-      opened.push({ runId: target.runId, signal, close: resolve, receive: event => listener(projection.apply(event)) })
-      signal.addEventListener('abort', () => resolve(), { once: true })
+      let pending: AgentRunSnapshot | undefined
+      const flush = () => { const value = pending; pending = undefined; if (value && !signal.aborted) listener(value) }
+      if (publication) publication.flush = flush
+      opened.push({ runId: target.runId, signal, close: resolve, receive: event => { publication?.observed?.(); listener(projection.apply(event)) },
+        snapshot: () => projection.snapshot, defer: value => { publication?.observed?.(); pending = value }, flush })
+      signal.addEventListener('abort', () => { if (publication?.flush === flush) delete publication.flush; resolve() }, { once: true })
     }).then(() => { settled++ }),
   } } })
   Object.defineProperty(globalThis, 'window', { configurable: true, value: {
@@ -71,6 +77,19 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 2, fromSeq: 1, delta: '，' } })
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 3, fromSeq: 2, delta: '世界' } })
     assert.deepEqual(useChatThreadStore.getState().conversations.room.messages[0].content, answer('你好，世界'))
+    const buffered = opened[0].snapshot()
+    if (buffered.message.role !== 'assistant') throw new Error('assistant fixture required')
+    durable = { message: { ...buffered.message, metadata: { ...buffered.message.metadata,
+      custom: { ...buffered.message.metadata.custom, harnessControl: false } } } }
+    opened[0].defer(buffered)
+    retries[0]!() // the original durable polling timer
+    await setImmediate()
+    assert.equal(reads, 1)
+    opened[0].flush() // an old scheduled callback after the durable read
+    assert.equal(useChatThreadStore.getState().conversations.room.messages[0].metadata.custom.harnessControl, false,
+      'same-seq durable permission refresh must follow earlier buffered text')
+    durable = undefined
+
     opened[0].receive({ type: 'preview', preview: { ...delta, seq: 4, fromSeq: 3, delta: '已撤回' } })
     opened[0].receive({ type: 'reset', runId: 'run', reason: 'superseded' })
     assert.equal(useChatThreadStore.getState().conversations.room.messages[0].content.some(part => part.type === 'text' && part.text.includes('已撤回')), false)
@@ -104,7 +123,7 @@ test('run notifications and discovery subscribe before blocked history, deduplic
     assert.equal(timers.size, 0, 'cancellation must release every recovery timer')
     assert.equal(opened.length, subscriptionCount, 'disconnect must not schedule another subscription')
     assert.deepEqual(useChatThreadStore.getState().conversations, {})
-    assert.equal(reads, 0)
+    assert.equal(reads, 1)
     Reflect.deleteProperty(globalThis, 'window')
   }
 })

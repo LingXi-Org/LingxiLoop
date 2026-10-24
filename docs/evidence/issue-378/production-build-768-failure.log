@@ -1,0 +1,44 @@
+vite v5.4.21 building for production...
+transforming...
+Found 2 warnings while optimizing generated CSS:
+
+Issue #1:
+[2m│   background: var(--app);[22m
+[2m│ }[22m
+[2m│[22m ::highlight(lingxi-find-match) {
+[2m┆[22m             [33m[2m^--[22m 'highlight' is not recognized as a valid pseudo-element. Did you mean ':highlight' (pseudo-class) or is this a typo?[39m
+[2m┆[22m
+[2m│   color: inherit;[22m
+[2m│   background: var(--gold);[22m
+
+Issue #2:
+[2m│   }[22m
+[2m│ }[22m
+[2m│[22m ::highlight(lingxi-find-current) {
+[2m┆[22m             [33m[2m^--[22m 'highlight' is not recognized as a valid pseudo-element. Did you mean ':highlight' (pseudo-class) or is this a typo?[39m
+[2m┆[22m
+[2m│   color: inherit;[22m
+[2m│   background: var(--gold);[22m
+
+
+<--- Last few GCs --->
+
+[502034:0x19d6b000]    13712 ms: Mark-Compact 764.2 (784.5) -> 762.1 (784.7) MB, pooled: 1 MB, 454.55 / 0.02 ms  (average mu = 0.194, current mu = 0.032) allocation failure; scavenge might not succeed
+[502034:0x19d6b000]    14248 ms: Mark-Compact 764.3 (784.7) -> 763.3 (785.7) MB, pooled: 0 MB, 518.81 / 0.00 ms  (average mu = 0.111, current mu = 0.033) allocation failure; scavenge might not succeed
+
+
+<--- JS stacktrace --->
+
+FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 0xe46bbe node::OOMErrorHandler(char const*, v8::OOMDetails const&) [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+ 2: 0x1245390 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+ 3: 0x1245667 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+ 4: 0x1474575  [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+ 5: 0x148de09 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+ 6: 0x1462508 v8::internal::HeapAllocator::AllocateRawWithLightRetrySlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+ 7: 0x1463435 v8::internal::HeapAllocator::AllocateRawWithRetryOrFailSlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+ 8: 0x143c03e v8::internal::Factory::NewFillerObject(int, v8::internal::AllocationAlignment, v8::internal::AllocationType, v8::internal::AllocationOrigin) [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+ 9: 0x189e94c v8::internal::Runtime_AllocateInYoungGeneration(int, unsigned long*, v8::internal::Isolate*) [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]
+10: 0x1dfee49  [/workspace/.tools/node-v22.23.3-linux-x64/bin/node]

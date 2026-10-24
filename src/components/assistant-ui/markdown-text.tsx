@@ -148,8 +148,8 @@ function rehypeConfidence({ claims, offset, inlineCitations }: {
 }
 
 const CitationBlocks = createContext<{
-  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean
-}>({ offsets: [], claims: [], inlineCitations: false, mentionTargets: [], agent: false })
+  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean; animate: boolean
+}>({ offsets: [], claims: [], inlineCitations: false, mentionTargets: [], agent: false, animate: false })
 
 function CitationBlock(props: BlockProps) {
   const { offsets, ...context } = useContext(CitationBlocks)
@@ -157,14 +157,14 @@ function CitationBlock(props: BlockProps) {
 }
 
 // New tail offsets must not reparse every already completed citation block.
-const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, agent, ...props }: BlockProps & {
-  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean
+const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, agent, animate, ...props }: BlockProps & {
+  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean; animate: boolean
 }) {
   const { isAnimating } = useContext(StreamdownContext)
   const [initialContent] = useState(props.content)
   const [decorated, setDecorated] = useState(agent && isAnimating)
   if (!decorated && agent && isAnimating && props.content !== initialContent) setDecorated(true)
-  const streamingBlock = useStreamingBlock(props.index, agent && isAnimating, decorated)
+  const streamingBlock = useStreamingBlock(props.index, agent && isAnimating, decorated && animate)
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
     [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
@@ -191,9 +191,9 @@ const MarkdownTextImpl = ({
   // smooth queue and our Markdown leaf lifetime the actual text-part identity.
   const partKey = useAuiState(state => JSON.stringify([state.message.id,
     activityAnnotation(state.part)?.id ?? state.message.parts.indexOf(state.part)]))
-  // The SDK marks non-last Text parts complete when their message is stopped.
-  // Preserve normal completion draining, but settle every interrupted part now.
-  const messageInterrupted = useAuiState(state => state.message.status?.type === 'incomplete')
+  // Terminal messages expose all received text immediately. The independent
+  // StreamingText color exit can finish without keeping a text reveal queue.
+  const messageSettled = useAuiState(state => state.message.status?.type === 'complete' || state.message.status?.type === 'incomplete')
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion)
   const [motionLifetime, setMotionLifetime] = useState({ partKey, settled: reducedMotion })
   // Once this part has displayed its full text under reduced motion, never
@@ -213,7 +213,7 @@ const MarkdownTextImpl = ({
     let offset = textOffset
     return blocks.map(block => { const start = offset; offset += block.length; return start })
   }, [blocks, textOffset])
-  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, mentionTargets, agent }), [offsets, confidenceClaims, inlineCitations, mentionTargets, agent])
+  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, mentionTargets, agent, animate: !motionSettled }), [offsets, confidenceClaims, inlineCitations, mentionTargets, agent, motionSettled])
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...Object.values(defaultRehypePlugins),
     [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
@@ -224,7 +224,7 @@ const MarkdownTextImpl = ({
         <StreamingPart key={partKey} offset={textOffset}>
         <StreamdownTextPrimitive
           key={partKey}
-          smooth={agent && typeof window !== 'undefined' && !motionSettled && !messageInterrupted && part.status.type !== 'incomplete' ? smooth : false}
+          smooth={agent && typeof window !== 'undefined' && !motionSettled && !messageSettled && part.status.type !== 'incomplete' ? smooth : false}
           animated={false}
           containerClassName="im-markdown-host"
           plugins={plugins}

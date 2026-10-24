@@ -1,18 +1,11 @@
-import { type ThreadMessage, useAuiState } from '@assistant-ui/react'
+import { useAuiState } from '@assistant-ui/react'
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { ConversationMap } from '@/components/vendor/assistant-ui/elements/conversation-map'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { questionGeometry } from './question-geometry'
 
-function questionPreview(message: ThreadMessage) {
-  const text = message.content.flatMap(part => part.type === 'text' ? [part.text] : []).join(' ').replace(/\s+/g, ' ').trim()
-  const attachments = [
-    ...(message.role === 'user' ? message.attachments.map(attachment => attachment.name) : []),
-    ...message.content.flatMap(part => part.type === 'image' ? [part.filename || '图片'] : part.type === 'file' ? [part.filename || '文件'] : []),
-  ]
-  const summary = text || (attachments.length ? `附件：${attachments.join('、')}` : '无文字提问')
-  return summary.length > 100 ? `${summary.slice(0, 100)}…` : summary
-}
+import { createQuestionSelector } from './thread-chrome'
 
 export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoadingOlder, onLoadOlder, onNavigate }: {
   viewportRef: RefObject<HTMLDivElement | null>
@@ -24,10 +17,8 @@ export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoading
   const isMobile = useIsMobile()
   // Streaming assistant tokens must not rebuild the question list. Use the same
   // canonical runtime messages as MessageByIndex, and stable IM client IDs.
-  const questionKey = useAuiState(state => JSON.stringify(state.thread.messages
-    .filter(message => message.role === 'user' && message.metadata.custom.schema === 'lingxiloop.thread-message.v2')
-    .map(message => ({ id: String(message.metadata.custom.clientMessageId), preview: questionPreview(message) }))))
-  const questions = useMemo(() => JSON.parse(questionKey) as { id: string; preview: string }[], [questionKey])
+  const selectQuestions = useMemo(createQuestionSelector, [])
+  const questions = useAuiState(state => selectQuestions(state.thread.messages))
   const [activeId, setActiveId] = useState<string | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
   const [visibleIds, setVisibleIds] = useState<string[]>([])
@@ -37,30 +28,43 @@ export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoading
     const viewport = viewportRef.current
     if (!viewport || isMobile) return
     let frame = 0
+    let register = true
+    let nodes: { id: string; element: HTMLElement }[] = []
+    const questionIds = new Set(questions.map(question => question.id))
     const update = () => {
       frame = 0
-      const bounds = viewport.getBoundingClientRect()
-      const readingLine = bounds.top + 24
-      const visible: string[] = []
-      let current: string | null = questions[0]?.id ?? null
-      for (const question of questions) {
-        const element = viewport.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(question.id)}"]`)
-        if (!element) continue
-        const rect = element.getBoundingClientRect()
-        if (rect.top <= readingLine) current = question.id
-        if (rect.bottom > bounds.top && rect.top < bounds.bottom) visible.push(question.id)
+      if (register) {
+        nodes = questions.flatMap(question => {
+          const element = viewport.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(question.id)}"]`)
+          return element ? [{ id: question.id, element }] : []
+        })
+        register = false
       }
-      if (viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop <= 1) current = questions.at(-1)?.id ?? null
-      setActiveId(current)
-      setVisibleIds(previous => previous.join() === visible.join() ? previous : visible)
+      const atBottom = viewport.scrollHeight - viewport.clientHeight - viewport.scrollTop <= 1
+      const result = questionGeometry(nodes.length, index => nodes[index]!.element.getBoundingClientRect(),
+        viewport.getBoundingClientRect(), atBottom)
+      setActiveId((atBottom ? questions.at(-1)?.id : nodes[result.active]?.id ?? questions[0]?.id) ?? null)
+      const visible = result.visible.map(index => nodes[index]!.id)
+      setVisibleIds(previous => previous.length === visible.length && previous.every((id, index) => id === visible[index]) ? previous : visible)
     }
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    // Token/text mutations do not re-register historical nodes. Only inserted,
+    // removed or replaced question roots invalidate this DOM identity cache.
+    const containsQuestion = (node: Node) => node instanceof Element &&
+      [node, ...node.querySelectorAll('[data-msg-id]')].some(element => questionIds.has(element.getAttribute('data-msg-id') ?? ''))
+    const mutations = new MutationObserver(records => {
+      if (records.some(record => [...record.addedNodes, ...record.removedNodes].some(containsQuestion))) {
+        register = true
+        schedule()
+      }
+    })
+    mutations.observe(viewport, { childList: true, subtree: true })
     const observer = new ResizeObserver(schedule)
     observer.observe(viewport)
     if (viewport.firstElementChild) observer.observe(viewport.firstElementChild)
     viewport.addEventListener('scroll', schedule, { passive: true })
     schedule()
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); viewport.removeEventListener('scroll', schedule) }
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); mutations.disconnect(); viewport.removeEventListener('scroll', schedule) }
   }, [questions, viewportRef, isMobile])
 
   useEffect(() => {

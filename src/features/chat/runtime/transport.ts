@@ -37,7 +37,7 @@ import {
   useChatThreadStore,
   type ConversationChatState,
 } from './store'
-import { harnessApi, type AgentRunTarget, type RunHistoryAnchors } from './harness-api'
+import { harnessApi, type AgentRunTarget, type RunHistoryAnchors, type RunStreamPublication } from './harness-api'
 import { applyRunSnapshot, needsRunStream } from './run-updates'
 import { canCancelRun, isOlderRun, isRunMessage } from './harness'
 import { attachmentMessage, uploadedAttachment } from './attachment-messages'
@@ -172,6 +172,7 @@ export class ChatTransport {
   private booted = false
   private readonly typingTimers = new Map<string, number>()
   private readonly runStreams = new Map<string, AbortController>()
+  private readonly runPublications = new Map<string, { conversationId: string; publication: RunStreamPublication }>()
   private subscriptions: (() => void)[] = []
   private discovering: RequestContext | undefined
   private readonly messageListeners = new Set<(message: ThreadMessage) => void>()
@@ -338,6 +339,7 @@ export class ChatTransport {
         // Unconfirmed running rows wait for reconciliation so a stopped run cannot
         // flash as active. Already-live store messages remain untouched.
         // Merge against the latest store so live deliveries cannot be overwritten.
+        this.flushRunPublications(conversationId)
         updateConversation(conversationId, state => ({ ...state,
           messages: mergeCanonicalMessages(state.messages, preserveLiveRuns(state, messages.filter(message => !deferredIds.has(message.id) || message.content.length > 0))
             .map(message => deferredIds.has(message.id) ? withRunConnection(message, 'checking') : message)),
@@ -349,6 +351,7 @@ export class ChatTransport {
         const recovery = await this.readRunRecovery(conversationId, request, historyAnchors(envelopes))
         if (!request.current()) return
         if (deferred.length || recovery.snapshots.length || recovery.error()) {
+          this.flushRunPublications(conversationId)
           updateConversation(conversationId, state => restoreRunHistory({ ...state, isRecovering: false }, deferred, recovery))
         }
         this.syncRunStreams(conversationId)
@@ -385,6 +388,7 @@ export class ChatTransport {
       if (!request.current()) return
       const messages = convertEnvelopeBatch(envelopes, conversionContext())
         .filter((message) => (messageMetadata(message).sequence ?? Number.MAX_SAFE_INTEGER) < before)
+      this.flushRunPublications(conversationId)
       updateConversation(conversationId, (state) => restoreRunHistory({
         ...state,
         isLoadingOlder: false,
@@ -421,6 +425,7 @@ export class ChatTransport {
       if (!Number.isSafeInteger(next) || next <= 1 || (before > 0 && next >= before)) break
       before = next
     }
+    this.flushRunPublications(conversationId)
     setConversationMessages(conversationId, convertEnvelopeBatch(envelopes, conversionContext()))
   }
 
@@ -601,6 +606,7 @@ export class ChatTransport {
       const metadata = messageMetadata(message)
       if (metadata.isMine && envelope.messageSeq > 0) forgetChatOutbox(envelope.clientMsgNo || metadata.clientMessageId)
       let accepted = true
+      this.flushRunPublications(envelope.channelId)
       updateConversation(envelope.channelId, (state) => {
         const messages = mergeCanonicalMessages(state.messages, [message])
         const merged = messages.find(value => messageKey(value) === messageKey(message))
@@ -641,6 +647,14 @@ export class ChatTransport {
     }
   }
 
+  /** Order validated SSE received before a durable input ahead of that input.
+   * Always invoke outside a store updater, so flushing cannot nest setState. */
+  private flushRunPublications(conversationId: string): void {
+    for (const entry of this.runPublications.values()) {
+      if (entry.conversationId === conversationId) entry.publication.flush?.()
+    }
+  }
+
   private async readRunRecovery(conversationId: string, request: RequestContext, anchors?: RunHistoryAnchors): Promise<RunRecovery> {
     const observations = new Map<string, number>()
     let discoveryFailed = false
@@ -659,6 +673,9 @@ export class ChatTransport {
       })
       recovery.targets = [...new Map([...recent,...historical].map(target => [target.runId,target])).values()]
       if (!request.current()) return recovery
+      // Drain pre-existing text before capturing freshness. Later validated SSE
+      // advances observations even while its UI publication is still pending.
+      this.flushRunPublications(conversationId)
       // Stopped runs may have no committed IM message. Hydrate their durable
       // snapshot without holding already-readable messages behind diagnostics.
       const snapshots = await Promise.all(recovery.targets.map(async target => {
@@ -690,6 +707,7 @@ export class ChatTransport {
   private async discoverConversationRuns(conversationId: string, request: RequestContext): Promise<void> {
     const recovery = await this.readRunRecovery(conversationId, request)
     if (!request.current()) return
+    this.flushRunPublications(conversationId)
     updateConversation(conversationId, state => restoreStoppedRuns(state, recovery))
     this.subscribeDiscoveredRuns(conversationId, recovery.targets)
   }
@@ -736,6 +754,14 @@ export class ChatTransport {
     const request = this.captureRequest(), controller = new AbortController()
     const signal = AbortSignal.any([controller.signal, request.signal])
     this.runStreams.set(target.runId, controller)
+    const publication: RunStreamPublication = { observed: () => {
+      if (!signal.aborted && request.current()) this.runObservations.set(target.runId, (this.runObservations.get(target.runId) ?? 0) + 1)
+    } }
+    const registration = { conversationId: target.conversationId, publication }
+    this.runPublications.set(target.runId, registration)
+    signal.addEventListener('abort', () => {
+      if (this.runPublications.get(target.runId) === registration) this.runPublications.delete(target.runId)
+    }, { once: true })
     let confirmedAt = Date.now(), released = false, waitTimer: number | undefined
     const clearWait = () => { if (waitTimer !== undefined) window.clearTimeout(waitTimer); waitTimer = undefined }
     signal.addEventListener('abort', clearWait, { once: true })
@@ -796,7 +822,12 @@ export class ChatTransport {
         await waitForRecovery(RUN_RECOVERY.pollMs, signal)
         if (signal.aborted || !request.current()) return
         try {
-          receive(await harnessApi.read(target, AbortSignal.any([signal, AbortSignal.timeout(RUN_RECOVERY.requestMs)])))
+          const snapshot = await harnessApi.read(target, AbortSignal.any([signal, AbortSignal.timeout(RUN_RECOVERY.requestMs)]))
+          if (signal.aborted || !request.current()) return
+          // A durable read may refresh control/receipts at the same event seq.
+          // Earlier buffered text must publish before that authoritative read.
+          publication.flush?.()
+          receive(snapshot)
         } catch (error) { failed(error) }
       }
     })()
@@ -816,7 +847,7 @@ export class ChatTransport {
             if (view.resultId && !previous?.resultId) chatLatency.completed(target.runId)
             latest = snapshot
             receive(snapshot)
-          }, signal)
+          }, signal, publication)
           if (!signal.aborted) throw new Error('运行流提前结束')
         } catch (error) { failed(error) }
         if (signal.aborted || !request.current()) return

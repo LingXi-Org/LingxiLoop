@@ -38,7 +38,11 @@ test('run API consumes only assistant transport and reads the same projected sna
   const { harnessApi } = await import('./harness-api')
   const target = { conversationId: 'room', agentId: 'agent', runId: 'run' }
   const states: AgentRunSnapshot[] = []
-  await harnessApi.subscribe(target, state => states.push(state), new AbortController().signal)
+  let observations = 0
+  const publication: { flush?: () => void; observed(): void } = { observed: () => { observations++ } }
+  await harnessApi.subscribe(target, state => states.push(state), new AbortController().signal, publication)
+  assert.equal(observations, 2, 'validated arrivals advance freshness independently of publication')
+  assert.equal(publication.flush, undefined, 'closed subscription unregisters only its own flush handle')
   assert.deepEqual(states.map(state => state.message.content), [[{ type: 'text', text: '第一段' }], [{ type: 'text', text: '第一段继续' }]])
   assert.equal(reads, 0)
   assert.deepEqual(await harnessApi.read(target), snapshot)

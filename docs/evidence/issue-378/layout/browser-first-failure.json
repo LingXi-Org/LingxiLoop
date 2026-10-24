@@ -1,0 +1,224 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a16cb4-ef70-77f0-afc8-63a7faa22c1f",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-24T06:59:20.311Z",
+    "finishedAt": "2026-10-24T06:59:29.770Z",
+    "project": {
+      "id": "lingxiloop-layout-performance",
+      "configDigest": "31ffb14daeb5c39cf403fe035d7762125ee262b8f6c7edc5b1c69d5c6bd0ab40"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "42d889f85600a6b192b139134821e6f4e8b5e092",
+      "branch": "perf/378-layout",
+      "dirty": false
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5196",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "651100cdbc51d2cfd46ef3e91ffce2acd99d1c77899241b8290188a7bb8c0c1d",
+        "testId": "e2e/web/layout-performance.e2e.ts::Question%20geometry%20and%20retained%20trace%20lifecycle::tail%20growth%20keeps%20reading%20decisions%20and%20iframe%20identity%20while%20hidden%20trace%20clocks%20stop",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "Question geometry and retained trace lifecycle",
+          "tail growth keeps reading decisions and iframe identity while hidden trace clocks stop"
+        ],
+        "file": "e2e/web/layout-performance.e2e.ts",
+        "source": {
+          "file": "e2e/web/layout-performance.e2e.ts",
+          "line": 10,
+          "column": 3
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a16cb4-f788-7c23-b457-4f04a15e71a3",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-24T06:59:21.608Z",
+            "durationMs": 8106,
+            "artifacts": [
+              {
+                "id": "01a16cb4-f788-7c23-b457-4f04a15e71a3:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_web_layout-performance.e2e.ts__Question_20geometry_20and_20retained_20trace_20lifecycle__tail_20growth_20ke-6c0f5571/default/attempt-0/failure/screen.txt",
+                "size": 16038,
+                "sha256": "2b9690f964432d96fd0ec4348678cabf01050bd1fed03b72816052bc69208f35"
+              },
+              {
+                "id": "01a16cb4-f788-7c23-b457-4f04a15e71a3:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_web_layout-performance.e2e.ts__Question_20geometry_20and_20retained_20trace_20lifecycle__tail_20growth_20ke-6c0f5571/default/attempt-0/screenshots/001-failure.png",
+                "size": 13309,
+                "sha256": "8cefdd3816affbae09f518bf817a01eb572999fa451fc9f930f80d4ed1b6c488"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expected false to be true",
+              "retryable": false,
+              "phase": "body",
+              "source": {
+                "file": "e2e/web/layout-performance.e2e.ts",
+                "line": 113,
+                "column": 35
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5196/e2e/layout-performance/index.html",
+              "screen": "01a16cb4-f788-7c23-b457-4f04a15e71a3:artifact:0",
+              "screenshot": "01a16cb4-f788-7c23-b457-4f04a15e71a3:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a16cb4-f788-7c23-b457-4f04a15e71a3:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/layout-performance/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:59:21.768Z",
+                "durationMs": 1007,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/layout-performance.e2e.ts",
+                  "line": 11,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a16cb4-f788-7c23-b457-4f04a15e71a3:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-slot=\\\"conversation-map-tick\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:59:22.778Z",
+                "durationMs": 757,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/layout-performance.e2e.ts",
+                  "line": 12,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a16cb4-f788-7c23-b457-4f04a15e71a3:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T06:59:23.535Z",
+                "durationMs": 5189,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/web/layout-performance.e2e.ts",
+                  "line": 13,
+                  "column": 34
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 1,
+      "selected": 1,
+      "executed": 1,
+      "passed": 0,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 1,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 29347,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

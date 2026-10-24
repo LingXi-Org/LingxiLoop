@@ -13,6 +13,7 @@ export interface CasesInfrastructure {
   putObject(key: string, body: Buffer, contentType: string): Promise<void>
 }
 interface CaseRow {
+  created_by: string; author_name: string; author_avatar_url: string | null
   id: string; company_id: string; draft: CaseContent; published: CaseContent | null
   status: 'draft' | 'published' | 'unpublished'; version: number; published_version: number | null
   source_id: string | null; created_at: string; updated_at: string; published_at: string | null
@@ -26,8 +27,9 @@ async function access(db: Queryable, scope: CaseScope, manage = false, lock = fa
   })
 }
 async function row(db: Queryable, scope: CaseScope, id: string, lock = false): Promise<CaseRow> {
-  const { rows } = await db.query<CaseRow>(`SELECT c.*,s.status AS index_status,s.error AS index_error
+  const { rows } = await db.query<CaseRow>(`SELECT c.*,u.display_name AS author_name,u.avatar_url AS author_avatar_url,s.status AS index_status,s.error AS index_error
     FROM organization_cases c LEFT JOIN knowledge_sources s ON s.id=c.source_id AND s.deleted_at IS NULL
+    JOIN users u ON u.id=c.created_by
     WHERE c.id=$1 AND c.company_id=$2 ${lock ? 'FOR UPDATE OF c' : ''}`, [id,scope.companyId])
   if (!rows[0]) throw new HttpError(404, 'case not found')
   return rows[0]
@@ -35,6 +37,7 @@ async function row(db: Queryable, scope: CaseScope, id: string, lock = false): P
 function payload(c: CaseRow, canManage: boolean) {
   if (!canManage && (c.status !== 'published' || !c.published)) throw new HttpError(404, 'case not found')
   return { ...(canManage ? c.draft : c.published!), id: c.id, companyId: c.company_id,
+    authorId: c.created_by, authorName: c.author_name, authorAvatarUrl: c.author_avatar_url,
     status: c.status, version: c.version, publishedVersion: c.published_version,
     indexStatus: c.index_status, indexError: canManage ? c.index_error : null,
     hasUnpublishedChanges: canManage && JSON.stringify(c.draft) !== JSON.stringify(c.published),
@@ -103,8 +106,9 @@ export class CasesApplication {
   async list(scope: CaseScope, query = '', category = '') {
     const context = await access(this.db,scope)
     const canManage = context.companyMembership.role === 'TEACHER'
-    const { rows } = await this.db.query<CaseRow>(`SELECT c.*,s.status AS index_status,s.error AS index_error
+    const { rows } = await this.db.query<CaseRow>(`SELECT c.*,u.display_name AS author_name,u.avatar_url AS author_avatar_url,s.status AS index_status,s.error AS index_error
       FROM organization_cases c LEFT JOIN knowledge_sources s ON s.id=c.source_id AND s.deleted_at IS NULL
+      JOIN users u ON u.id=c.created_by
       WHERE c.company_id=$1 AND ($2 OR c.status='published') ORDER BY c.updated_at DESC`, [scope.companyId,canManage])
     const covers = await listCaseCoverDescriptors(this.db,scope.companyId,rows.map(c => c.id),canManage?'draft':'published',canManage)
     const all = rows.map(c => ({ ...payload(c,canManage), generatedCover:covers.get(c.id) ?? null }))

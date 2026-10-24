@@ -10,9 +10,10 @@ import { conversationCardSize, paper } from "./surfaces";
 
 // Adapted from assistant-ui Elements ApprovalCard for product approvals.
 export function ApprovalCard({
-  approved, title, summary, context = [], busy = false, onApprove, onDeny, className, ...props
+  approved, statusLabel, title, summary, context = [], busy = false, onApprove, onDeny, className, ...props
 }: Omit<ComponentProps<"div">, "children"> & {
   approved?: boolean;
+  statusLabel?: string;
   title: string;
   summary: string;
   context?: { label: string; value: string }[];
@@ -56,8 +57,8 @@ export function ApprovalCard({
         <CheckIcon aria-hidden="true" />批准并继续
       </Button>}
     </div> : <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground">
-      {approved ? <CheckIcon aria-hidden="true" className="size-3.5 text-primary" /> : <XIcon aria-hidden="true" className="size-3.5" />}
-      {approved ? "已批准" : "已拒绝"}
+      {approved ? <CheckIcon aria-hidden="true" className="size-3.5" /> : <XIcon aria-hidden="true" className="size-3.5" />}
+      {statusLabel ?? (approved ? "已批准" : "已拒绝")}
     </p>}
     {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
     </MessageFooterContents>

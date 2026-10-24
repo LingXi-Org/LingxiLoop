@@ -1,0 +1,391 @@
+{
+  "baseline": true,
+  "baselineHost": "0d1271a0cf92b22e01b456c7473f4e446027bd28",
+  "candidateHead": "7e713ab4c94facb6c83d779792f6030cdd1aea73",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.0.0 Safari/537.36",
+    "dpr": 1,
+    "width": 1280,
+    "height": 900
+  },
+  "generation": "not measured",
+  "scope": "open already saved and delivered synthetic content",
+  "samples": [
+    {
+      "id": "first-visible-of-three",
+      "kind": "interactive",
+      "count": 3,
+      "resourceMs": 300,
+      "stateMs": 300,
+      "retained": false,
+      "observation": {
+        "paintMs": 2174.599853515625,
+        "readyMs": 2223,
+        "initializations": 3,
+        "frameId": "19f6a181-0576-4b46-a1e0-76b185a0345e",
+        "kind": "interactive",
+        "count": 0,
+        "resourceHashes": {
+          "visualize.css": "f75125ca6efcf855d8f354984f603f81a4cfc758b476698be1cc665630c00a41",
+          "visualize.html": "42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf",
+          "gen-ui.js": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+          "calendar.js": "19f40e0a15ae7a9b9a4e17bc53c5bb47c5b21e6d32317d80cf030f9e012c221b",
+          "vendor/d3-7.9.0.min.js": "f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539",
+          "vendor/floating-ui-core-1.7.3.min.js": "6985ce661153c01d97f6be9babb6a9566f923c716c2b7fbead48fbb09f419ba8",
+          "vendor/floating-ui-dom-1.7.4.min.js": "b8199f76adccb9b17b3ab57124c42585dc19197127d1a5d19307d1983f80bd89",
+          "vendor/lucide-1.17.0.js": "fde878a4f7aebe548b071eaaf343d898f66d275e93970abe95d8ca5fda290b51"
+        },
+        "button": {
+          "x": 355.984375,
+          "y": 313.5
+        },
+        "serverRequests": [
+          {
+            "stage": "create",
+            "method": "POST",
+            "start": 4261.350802,
+            "end": 4272.441306
+          },
+          {
+            "stage": "create",
+            "method": "POST",
+            "start": 4263.728504,
+            "end": 4272.471554
+          },
+          {
+            "stage": "create",
+            "method": "POST",
+            "start": 4270.088614,
+            "end": 4274.759139
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "visualize.css",
+            "start": 4284.786337,
+            "end": 4586.607913
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "visualize.html",
+            "start": 4288.169194,
+            "end": 4591.233511
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "gen-ui.js",
+            "start": 4290.253682,
+            "end": 4591.763622
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "visualize.css",
+            "start": 4290.615997,
+            "end": 4591.425229
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "visualize.html",
+            "start": 4291.288098,
+            "end": 4591.604777
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "gen-ui.js",
+            "start": 4291.644747,
+            "end": 4597.89711
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "visualize.css",
+            "start": 4588.221475,
+            "end": 4889.912122
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "visualize.html",
+            "start": 4594.901953,
+            "end": 4912.017818
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "gen-ui.js",
+            "start": 4595.237072,
+            "end": 4913.807223
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/floating-ui-core-1.7.3.min.js",
+            "start": 4596.919846,
+            "end": 4912.587305
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/floating-ui-dom-1.7.4.min.js",
+            "start": 4597.254807,
+            "end": 4913.156647
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/lucide-1.17.0.js",
+            "start": 4599.97501,
+            "end": 4915.172939
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/floating-ui-core-1.7.3.min.js",
+            "start": 4891.840404,
+            "end": 5192.863882
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/floating-ui-dom-1.7.4.min.js",
+            "start": 4931.089784,
+            "end": 5232.428972
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/floating-ui-core-1.7.3.min.js",
+            "start": 4931.87989,
+            "end": 5232.956543
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/lucide-1.17.0.js",
+            "start": 4932.531439,
+            "end": 5235.284358
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/floating-ui-dom-1.7.4.min.js",
+            "start": 4935.329193,
+            "end": 5236.68542
+          },
+          {
+            "stage": "resources",
+            "method": "GET",
+            "name": "vendor/lucide-1.17.0.js",
+            "start": 4935.659446,
+            "end": 5238.244566
+          },
+          {
+            "stage": "state",
+            "method": "GET",
+            "start": 5195.944415,
+            "end": 5497.872351
+          },
+          {
+            "stage": "state",
+            "method": "GET",
+            "start": 5243.098507,
+            "end": 5546.048397
+          },
+          {
+            "stage": "state",
+            "method": "GET",
+            "start": 5247.917843,
+            "end": 5549.751594
+          }
+        ],
+        "longtasks": [
+          {
+            "event": "longtask",
+            "at": 1792824955738.1,
+            "duration": 110
+          }
+        ],
+        "resources": [
+          {
+            "name": "pages",
+            "page": null,
+            "start": 216.599853515625,
+            "end": 235.099853515625,
+            "bytes": 2794
+          },
+          {
+            "name": "pages",
+            "page": null,
+            "start": 222.300048828125,
+            "end": 235.199951171875,
+            "bytes": 2794
+          },
+          {
+            "name": "pages",
+            "page": null,
+            "start": 229.89990234375,
+            "end": 236.599853515625,
+            "bytes": 2794
+          },
+          {
+            "name": "visualize.css",
+            "page": 1,
+            "start": 244.599853515625,
+            "end": 548.5,
+            "bytes": 30909
+          },
+          {
+            "name": "visualize.html",
+            "page": 1,
+            "start": 244.89990234375,
+            "end": 554.800048828125,
+            "bytes": 17807
+          },
+          {
+            "name": "gen-ui.js",
+            "page": 1,
+            "start": 245.199951171875,
+            "end": 556.099853515625,
+            "bytes": 506505
+          },
+          {
+            "name": "visualize.css",
+            "page": 2,
+            "start": 245.800048828125,
+            "end": 555.199951171875,
+            "bytes": 30909
+          },
+          {
+            "name": "visualize.html",
+            "page": 2,
+            "start": 245.89990234375,
+            "end": 555.39990234375,
+            "bytes": 17807
+          },
+          {
+            "name": "gen-ui.js",
+            "page": 2,
+            "start": 246.199951171875,
+            "end": 560.300048828125,
+            "bytes": 506505
+          },
+          {
+            "name": "visualize.css",
+            "page": 3,
+            "start": 246.5,
+            "end": 851.699951171875,
+            "bytes": 30909
+          },
+          {
+            "name": "visualize.html",
+            "page": 3,
+            "start": 246.800048828125,
+            "end": 882,
+            "bytes": 17807
+          },
+          {
+            "name": "gen-ui.js",
+            "page": 3,
+            "start": 247.099853515625,
+            "end": 894.39990234375,
+            "bytes": 506505
+          },
+          {
+            "name": "vendor/floating-ui-core-1.7.3.min.js",
+            "page": 1,
+            "start": 556.89990234375,
+            "end": 887.5,
+            "bytes": 12829
+          },
+          {
+            "name": "vendor/floating-ui-dom-1.7.4.min.js",
+            "page": 1,
+            "start": 557.199951171875,
+            "end": 888.099853515625,
+            "bytes": 10551
+          },
+          {
+            "name": "vendor/lucide-1.17.0.js",
+            "page": 1,
+            "start": 557.5,
+            "end": 895.699951171875,
+            "bytes": 601980
+          },
+          {
+            "name": "vendor/floating-ui-core-1.7.3.min.js",
+            "page": 2,
+            "start": 563.89990234375,
+            "end": 1154.800048828125,
+            "bytes": 12829
+          },
+          {
+            "name": "vendor/floating-ui-dom-1.7.4.min.js",
+            "page": 2,
+            "start": 564.099853515625,
+            "end": 1195.199951171875,
+            "bytes": 10551
+          },
+          {
+            "name": "vendor/lucide-1.17.0.js",
+            "page": 2,
+            "start": 564.300048828125,
+            "end": 1197.599853515625,
+            "bytes": 601980
+          },
+          {
+            "name": "vendor/floating-ui-core-1.7.3.min.js",
+            "page": 3,
+            "start": 888.099853515625,
+            "end": 1195.5,
+            "bytes": 12829
+          },
+          {
+            "name": "vendor/floating-ui-dom-1.7.4.min.js",
+            "page": 3,
+            "start": 888.699951171875,
+            "end": 1198.5,
+            "bytes": 10551
+          },
+          {
+            "name": "vendor/lucide-1.17.0.js",
+            "page": 3,
+            "start": 889.39990234375,
+            "end": 1200.39990234375,
+            "bytes": 601980
+          },
+          {
+            "name": "state",
+            "page": 1,
+            "start": 905.300048828125,
+            "end": 1459,
+            "bytes": 327
+          },
+          {
+            "name": "state",
+            "page": 2,
+            "start": 1200.699951171875,
+            "end": 1508.099853515625,
+            "bytes": 327
+          },
+          {
+            "name": "state",
+            "page": 3,
+            "start": 1206.89990234375,
+            "end": 1512.39990234375,
+            "bytes": 327
+          }
+        ]
+      },
+      "interaction": {
+        "fromOpenMs": 2390.5,
+        "operationMs": 18.300048828125,
+        "count": 1
+      }
+    }
+  ]
+}

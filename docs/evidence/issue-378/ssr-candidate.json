@@ -1,0 +1,34 @@
+{
+  "node": "v22.23.3",
+  "component": "src/components/assistant-ui/elements/streaming-text.tsx",
+  "results": [
+    {
+      "characters": 1000,
+      "inputSha256": "2e295d08d9d2ed38f4d05be0a228a1eb324e97333f11fbcd9669fd4d6403d27e",
+      "measured": "SSR render + serialization; presegmented text; first sample excluded",
+      "samplesMs": [
+        8.610357000000022,
+        10.779691999999955,
+        6.405372000000057
+      ],
+      "animationWords": 128,
+      "freshWords": 2,
+      "carets": 1,
+      "htmlBytes": 32583
+    },
+    {
+      "characters": 10000,
+      "inputSha256": "6ecf9508ee89473c43b3b345f77115df6295806ab2f52ef5024a96dcd39a5bba",
+      "measured": "SSR render + serialization; presegmented text; first sample excluded",
+      "samplesMs": [
+        9.771113000000014,
+        10.173162000000048,
+        12.200659000000087
+      ],
+      "animationWords": 128,
+      "freshWords": 2,
+      "carets": 1,
+      "htmlBytes": 59583
+    }
+  ]
+}

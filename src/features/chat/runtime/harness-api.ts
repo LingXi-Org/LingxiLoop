@@ -1,5 +1,3 @@
-import { nativeMessageSchema } from '@/lib/nativeMessage'
-import type { RunDisplayState } from '@/lib/agentRunSnapshot'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import type { ResponseEnvelope, RunState } from '@lyyzka/lingxios/ui'
 import { API, http } from '@/api/core/http'
@@ -11,8 +9,10 @@ import { memoryActivitySchema } from '@/lib/memoryActivity'
 import { z } from 'zod'
 import { parseActivityPage } from './runActivityHistory'
 import { RUN_RECOVERY } from './recovery'
+import { createSnapshotPublisher, decodeRunSnapshot } from './snapshot-publication'
 
 export interface AgentRunTarget { conversationId: string; agentId: string; runId: string; threadId?: string }
+export interface RunStreamPublication { flush?: () => void; observed?: () => void }
 export interface RunHistoryAnchors { sourceClientMsgNos: string[]; runIds: string[] }
 const runHistoryPageSchema = z.object({ runs: z.array(z.object({ conversationId: z.string(),agentId: z.string(),runId: z.string(),threadId: z.string().optional(),
   requestVersion: z.number().int().nonnegative(),fence: z.number().int().nonnegative(),status: z.enum(['queued','leased','waiting','succeeded','failed','cancelled']),
@@ -61,7 +61,7 @@ export const harnessApi = {
     }
     return [...runs.values()]
   },
-  async subscribe(target: AgentRunTarget, receive: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal): Promise<void> {
+  async subscribe(target: AgentRunTarget, receive: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal, publication?: RunStreamPublication): Promise<void> {
     const company = getActiveCompanyId()
     if (!company) throw new Error('请先选择工作空间')
     const workspace = getWorkspaceSession()
@@ -77,6 +77,8 @@ export const harnessApi = {
       if (!response.body || !response.headers.get('content-type')?.startsWith('text/event-stream')) throw new Error('运行流协议不正确')
       const streamReader = AssistantStream.fromResponse(response, new AssistantTransportDecoder()).getReader()
       const state = new AssistantTransportDeltaTracker()
+      const publisher = createSnapshotPublisher(receive, bounded, error => connection.abort(error))
+      if (publication) publication.flush = publisher.flush
       const cancel = () => { void streamReader.cancel().catch(() => {}) }
       bounded.addEventListener('abort', cancel, { once: true })
       try {
@@ -89,18 +91,19 @@ export const harnessApi = {
           if (value.type !== 'update-state') throw new Error('运行流包含不支持的消息')
           if (!value.operations.length) continue
           state.append(value.operations)
-          const snapshot = state.state as unknown as AgentRunSnapshot
-          const message = nativeMessageSchema.parse(snapshot?.message)
-          const view = message.metadata.custom.harness as RunDisplayState
-          if (message.id !== `run-${target.runId}` || message.metadata.custom.runId !== target.runId || view?.runId !== target.runId
-            || ![view.requestVersion,view.fence,view.messageFence,view.lastSeq].every(value => Number.isSafeInteger(value) && value >= 0)) throw new Error('运行流消息身份或内容不正确')
+          const snapshot = decodeRunSnapshot(state.state as unknown as AgentRunSnapshot, target)
           clearTimeout(timer)
-          receive(snapshot)
+          publication?.observed?.()
+          publisher.push(snapshot)
         }
       } finally {
-        bounded.removeEventListener('abort', cancel)
-        await streamReader.cancel().catch(() => {})
-        streamReader.releaseLock()
+        try { publisher.flush() } finally {
+          publisher.dispose()
+          if (publication?.flush === publisher.flush) delete publication.flush
+          bounded.removeEventListener('abort', cancel)
+          await streamReader.cancel().catch(() => {})
+          streamReader.releaseLock()
+        }
       }
     } finally { clearTimeout(timer) }
   },

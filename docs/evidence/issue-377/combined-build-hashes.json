@@ -1,0 +1,71 @@
+{
+  "base": "d3227695c7ae1bb89356dc9135821a1a276ae65d",
+  "candidate": "3120616bc9cd0cd3a6345deb7936ff61432b1f2a",
+  "nodeHeapMiB": 512,
+  "checks": [
+    {
+      "name": "visualize.css",
+      "path": "third_party/zcode/skills/visualize/assets/visualize.css",
+      "bytes": 30609,
+      "manifestSha256": "f75125ca6efcf855d8f354984f603f81a4cfc758b476698be1cc665630c00a41",
+      "actualSha256": "f75125ca6efcf855d8f354984f603f81a4cfc758b476698be1cc665630c00a41",
+      "match": true
+    },
+    {
+      "name": "visualize.html",
+      "path": "third_party/zcode/skills/visualize/assets/visualize.html",
+      "bytes": 17507,
+      "manifestSha256": "42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf",
+      "actualSha256": "42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf",
+      "match": true
+    },
+    {
+      "name": "calendar.js",
+      "path": "third_party/zcode/skills/visualize/assets/calendar.js",
+      "bytes": 13497,
+      "manifestSha256": "19f40e0a15ae7a9b9a4e17bc53c5bb47c5b21e6d32317d80cf030f9e012c221b",
+      "actualSha256": "19f40e0a15ae7a9b9a4e17bc53c5bb47c5b21e6d32317d80cf030f9e012c221b",
+      "match": true
+    },
+    {
+      "name": "vendor/floating-ui-core-1.7.3.min.js",
+      "path": "third_party/zcode/skills/visualize/assets/vendor/floating-ui-core-1.7.3.min.js",
+      "bytes": 12529,
+      "manifestSha256": "6985ce661153c01d97f6be9babb6a9566f923c716c2b7fbead48fbb09f419ba8",
+      "actualSha256": "6985ce661153c01d97f6be9babb6a9566f923c716c2b7fbead48fbb09f419ba8",
+      "match": true
+    },
+    {
+      "name": "vendor/floating-ui-dom-1.7.4.min.js",
+      "path": "third_party/zcode/skills/visualize/assets/vendor/floating-ui-dom-1.7.4.min.js",
+      "bytes": 10251,
+      "manifestSha256": "b8199f76adccb9b17b3ab57124c42585dc19197127d1a5d19307d1983f80bd89",
+      "actualSha256": "b8199f76adccb9b17b3ab57124c42585dc19197127d1a5d19307d1983f80bd89",
+      "match": true
+    },
+    {
+      "name": "vendor/lucide-1.17.0.js",
+      "path": "third_party/zcode/skills/visualize/assets/vendor/lucide-1.17.0.js",
+      "bytes": 601680,
+      "manifestSha256": "fde878a4f7aebe548b071eaaf343d898f66d275e93970abe95d8ca5fda290b51",
+      "actualSha256": "fde878a4f7aebe548b071eaaf343d898f66d275e93970abe95d8ca5fda290b51",
+      "match": true
+    },
+    {
+      "name": "vendor/d3-7.9.0.min.js",
+      "path": "third_party/zcode/skills/visualize/assets/vendor/d3-7.9.0.min.js",
+      "bytes": 279706,
+      "manifestSha256": "f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539",
+      "actualSha256": "f2094bbf6141b359722c4fe454eb6c4b0f0e42cc10cc7af921fc158fceb86539",
+      "match": true
+    },
+    {
+      "name": "gen-ui.js",
+      "path": "server/assets/visualize-runtime/gen-ui.js",
+      "bytes": 506205,
+      "manifestSha256": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+      "actualSha256": "78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494",
+      "match": true
+    }
+  ]
+}

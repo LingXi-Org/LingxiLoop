@@ -10,6 +10,8 @@ import { homeworkAssessmentSchema, homeworkDraftSchema } from './homework-contra
 import { homeworkRow, homeworkScope, homeworkState, studentHomeworkView } from './homework-repository.js'
 import { learnerHomeworkRead, teacherHomeworkDraftReceipt, teacherHomeworkOverview } from './homework-reporting.js'
 import { resolveTeacherScope } from './teacher-agent-application.js'
+import { loadHomeworkHelpState } from './homework-help-state.js'
+import { homeworkEvidenceAvailable } from './homework-effects.js'
 
 const id=z.string().trim().min(1).max(200)
 const teacherHomeworkDraftSchema=z.strictObject(homeworkDraftSchema.shape).omit({editorDocument:true,criteriaDocument:true}).extend({homeworkId:id.optional(),expectedRevision:z.number().int().min(1).optional()})
@@ -36,12 +38,13 @@ async function homeworkBinding(work:AgentActionContext,db:Queryable) {
   return binding
 }
 
-export async function loadHomeworkTurnContext(work:AgentActionContext,db:Queryable=pool):Promise<unknown|null> {
+export async function loadHomeworkTurnContext(work:AgentActionContext,db:Queryable=pool,withHelp=false) {
   const binding=await homeworkBinding(work,db)
   if(!binding) return null
   const scope={companyId:work.companyId,userId:binding.learner_id},hw=await homeworkRow(db,scope,binding.course_id,binding.homework_id)
   const state=await homeworkState(db,hw,binding.learner_id),view=await studentHomeworkView(db,hw,state)
-  return {homework:{id:hw.id,title:hw.title,instructions:hw.instructions,criteria:hw.criteria,dueAt:hw.due_at,status:hw.status},
+  const help=withHelp?await loadHomeworkHelpState(db,hw,state,materials=>homeworkEvidenceAvailable(db,scope,state,materials)):undefined
+  return {help,homework:{id:hw.id,title:hw.title,instructions:hw.instructions,criteria:hw.criteria,dueAt:hw.due_at,status:hw.status},
     materialReading:{available:Boolean(hw.links.length||hw.attachments.length),tool:'learning.get_homework',section:'materials',
       instruction:'Read the complete requirements and material text with learning.get_homework before tutoring about them. Follow nextOffset until null and keep sourceVersion consistent; file names alone are not material evidence.'},
     progress:{status:view.status,criteria:view.criteria,unlocked:view.unlocked,hasLearningRecord:view.hasLearningRecord,canSubmit:view.canSubmit,feedback:view.feedback},answerRevision:state.answer_revision,evidenceRevision:state.evidence_revision}

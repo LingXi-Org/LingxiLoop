@@ -191,6 +191,7 @@ function fromApi(c: ApiConversation): Conversation {
     preview,
     tag: (c.tag ?? undefined) as Conversation['tag'],
     pulledBy: c.pulledBy ?? undefined,
+    runSummary: c.runSummary ?? null,
   }
 }
 
@@ -382,7 +383,7 @@ export function bootConversations(load = true) {
       void useConversations.getState().reload()
       return
     }
-    if (e.type === 'message.new' || e.type === 'group.pulled') {
+    if (e.type === 'message.new' || e.type === 'group.pulled' || e.type === 'agent.run.available') {
       // Read cursors advance only from the visible-range observer in the
       // message store. Arrival alone is not proof that a message was seen.
       void useConversations.getState().reload()

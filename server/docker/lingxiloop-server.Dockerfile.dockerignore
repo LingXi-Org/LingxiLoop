@@ -12,6 +12,20 @@
 !bin/**
 # Frontend sources needed to build the SPA bundle inside the image.
 !src/**
+# The SPA needs the preview/session/worker and five shared VM inputs. Build
+# probes and the already-bundled guest sources are not image inputs.
+src/features/cases/cover-vm/**
+!src/features/cases/cover-vm/runtime.ts
+!src/features/cases/cover-vm/protocol.ts
+!src/features/cases/cover-vm/program.ts
+!src/features/cases/cover-vm/guest-source.ts
+!src/features/cases/cover-vm/svg.ts
+!src/features/cases/cover-vm/session.ts
+!src/features/cases/cover-vm/worker.ts
+!src/features/cases/cover-vm/CaseCoverPreview.tsx
+!shared
+shared/**
+!shared/visualize-public-resources.ts
 !public/**
 !index.html
 !vite.config.ts

@@ -1,0 +1,25 @@
+<main data-perf-scene="interactive">
+  <h2>网络地址分配</h2>
+  <svg role="img" aria-label="两个教室连接到路由器的拓扑图" viewBox="0 0 500 140" style="display:block;width:100%;height:140px">
+    <path d="M250 35L100 100M250 35L400 100" stroke="currentColor" fill="none"/>
+    <text x="220" y="25">路由器</text><text x="50" y="125">教室 A</text><text x="350" y="125">教室 B</text>
+  </svg>
+  <button id="perf-action" type="button">保存我的判断</button>
+  <output id="perf-result" data-count="0" role="status">还没有提交判断</output>
+</main>
+<style>main{box-sizing:border-box;padding:20px;min-height:300px}button{padding:10px;border:1px solid currentColor;border-radius:6px}output{display:block;margin-top:12px}</style>
+<script>
+{
+  let count = window.zcode?.widgetState?.modelContent?.count ?? 0;
+  const output = document.querySelector('#perf-result');
+  const render = () => { output.dataset.count = String(count); output.textContent = count ? `判断已保存 ${count} 次` : '还没有提交判断'; };
+  const update = next => { if (next !== count) { count = next; render(); } };
+  render();
+  window.addEventListener('zcode:set_globals', () => update(Math.max(count, window.zcode?.widgetState?.modelContent?.count ?? 0)));
+  document.querySelector('#perf-action').onclick = async () => {
+    const next = count + 1;
+    await window.zcode.setWidgetState({modelContent:{count:next}});
+    update(Math.max(count,next));
+  };
+}
+</script>

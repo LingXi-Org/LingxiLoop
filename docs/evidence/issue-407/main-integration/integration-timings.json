@@ -1,0 +1,32 @@
+{
+  "mode": "selected",
+  "availableFiles": 119,
+  "selectedFiles": [
+    "runtime-reliability.test.ts",
+    "message-mentions.test.ts"
+  ],
+  "executedFiles": [
+    "runtime-reliability.test.ts",
+    "message-mentions.test.ts"
+  ],
+  "records": [
+    {
+      "files": [
+        "runtime-reliability.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 11077,
+      "exitCode": 0
+    },
+    {
+      "files": [
+        "message-mentions.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 4669,
+      "exitCode": 0
+    }
+  ],
+  "durationMs": 15746,
+  "exitCode": 0
+}

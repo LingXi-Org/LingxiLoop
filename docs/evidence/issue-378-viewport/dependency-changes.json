@@ -1,0 +1,332 @@
+[
+  {
+    "path": "node_modules/@assistant-ui/core",
+    "before": "0.3.15",
+    "after": "0.3.31"
+  },
+  {
+    "path": "node_modules/@assistant-ui/core/node_modules/assistant-stream",
+    "before": null,
+    "after": "0.3.54"
+  },
+  {
+    "path": "node_modules/@assistant-ui/core/node_modules/nanoid",
+    "before": "6.0.1",
+    "after": "6.0.2"
+  },
+  {
+    "path": "node_modules/@assistant-ui/react",
+    "before": "0.15.16",
+    "after": "0.15.31"
+  },
+  {
+    "path": "node_modules/@assistant-ui/react/node_modules/assistant-stream",
+    "before": null,
+    "after": "0.3.54"
+  },
+  {
+    "path": "node_modules/@assistant-ui/react/node_modules/nanoid",
+    "before": null,
+    "after": "6.0.2"
+  },
+  {
+    "path": "node_modules/@assistant-ui/store",
+    "before": "0.3.10",
+    "after": "0.3.22"
+  },
+  {
+    "path": "node_modules/@assistant-ui/tap",
+    "before": "0.9.14",
+    "after": "0.9.24"
+  },
+  {
+    "path": "node_modules/@radix-ui/primitive",
+    "before": "1.1.7",
+    "after": "1.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-accessible-icon",
+    "before": "1.1.15",
+    "after": "1.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-accordion",
+    "before": "1.2.20",
+    "after": "1.3.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-alert-dialog",
+    "before": "1.1.23",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-arrow",
+    "before": "1.1.15",
+    "after": "1.1.17"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-aspect-ratio",
+    "before": "1.1.15",
+    "after": "1.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-avatar",
+    "before": "1.2.6",
+    "after": "1.3.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-checkbox",
+    "before": "1.3.11",
+    "after": "1.4.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-collapsible",
+    "before": "1.1.20",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-collection",
+    "before": "1.1.15",
+    "after": "1.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-context",
+    "before": "1.2.2",
+    "after": "1.3.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-context-menu",
+    "before": "2.3.7",
+    "after": "2.4.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-dialog",
+    "before": "1.1.23",
+    "after": "1.3.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-direction",
+    "before": "1.1.4",
+    "after": "1.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-dismissable-layer",
+    "before": "1.1.19",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-dropdown-menu",
+    "before": "2.1.24",
+    "after": "2.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-focus-guards",
+    "before": "1.1.6",
+    "after": "1.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-focus-scope",
+    "before": "1.1.16",
+    "after": "1.3.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-form",
+    "before": "0.1.16",
+    "after": "0.3.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-hover-card",
+    "before": "1.1.23",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-label",
+    "before": "2.1.15",
+    "after": "2.1.17"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-menu",
+    "before": "2.1.24",
+    "after": "2.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-menubar",
+    "before": "1.1.24",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-navigation-menu",
+    "before": "1.2.22",
+    "after": "1.4.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-one-time-password-field",
+    "before": "0.1.16",
+    "after": "0.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-password-toggle-field",
+    "before": "0.1.11",
+    "after": "0.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-popover",
+    "before": "1.1.23",
+    "after": "1.3.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-popper",
+    "before": "1.3.7",
+    "after": "1.4.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-portal",
+    "before": "1.1.17",
+    "after": "1.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-presence",
+    "before": "1.1.10",
+    "after": "1.1.11"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-primitive",
+    "before": "2.1.10",
+    "after": "2.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-progress",
+    "before": "1.1.16",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-radio-group",
+    "before": "1.4.7",
+    "after": "1.5.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-roving-focus",
+    "before": "1.1.19",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-scroll-area",
+    "before": "1.2.18",
+    "after": "1.4.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-select",
+    "before": "2.3.7",
+    "after": "2.4.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-separator",
+    "before": "1.1.15",
+    "after": "1.2.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-slider",
+    "before": "1.4.7",
+    "after": "1.6.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-slot",
+    "before": "1.3.3",
+    "after": "1.5.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-switch",
+    "before": "1.3.7",
+    "after": "1.4.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-tabs",
+    "before": "1.1.21",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-toast",
+    "before": "1.2.23",
+    "after": "1.3.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-toggle",
+    "before": "1.1.18",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-toggle-group",
+    "before": "1.1.19",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-toolbar",
+    "before": "1.1.19",
+    "after": "1.2.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-tooltip",
+    "before": "1.2.16",
+    "after": "1.4.1"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-use-callback-ref",
+    "before": "1.1.4",
+    "after": "1.1.5"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-use-controllable-state",
+    "before": "1.2.6",
+    "after": "1.3.0"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-use-escape-keydown",
+    "before": "1.1.5",
+    "after": "1.1.6"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-use-size",
+    "before": "1.1.4",
+    "after": "1.1.5"
+  },
+  {
+    "path": "node_modules/@radix-ui/react-visually-hidden",
+    "before": "1.2.11",
+    "after": "1.2.13"
+  },
+  {
+    "path": "node_modules/assistant-cloud",
+    "before": "0.1.41",
+    "after": "0.2.8"
+  },
+  {
+    "path": "node_modules/assistant-cloud/node_modules/assistant-stream",
+    "before": null,
+    "after": "0.3.54"
+  },
+  {
+    "path": "node_modules/assistant-cloud/node_modules/nanoid",
+    "before": null,
+    "after": "6.0.2"
+  },
+  {
+    "path": "node_modules/radix-ui",
+    "before": "1.6.7",
+    "after": "1.8.1"
+  },
+  {
+    "path": "node_modules/safe-content-frame",
+    "before": "0.0.27",
+    "after": "0.0.34"
+  },
+  {
+    "path": "node_modules/secure-json-parse",
+    "before": "4.1.0",
+    "after": "4.1.1"
+  },
+  {
+    "path": "node_modules/zod",
+    "before": "4.4.3",
+    "after": "4.6.7"
+  }
+]

@@ -1,0 +1,36 @@
+TAP version 13
+# (node:513745) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: each message render classifies its parts once and still places exactly one final footer
+not ok 1 - each message render classifies its parts once and still places exactly one final footer
+  ---
+  duration_ms: 976.207608
+  type: 'test'
+  location: '/tmp/loop-378-layout/src/features/chat/components/ConversationMessage.test.tsx:1:26749'
+  failureType: 'testCodeFailure'
+  error: |-
+    footer consumers reuse their message owner classification
+    
+    81 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 81
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-378-layout/src/features/chat/components/ConversationMessage.test.tsx:447:10)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7994.275312

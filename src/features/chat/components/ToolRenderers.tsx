@@ -109,10 +109,13 @@ export function RecommendationTool({ args, result, addResult }: CardProps) {
     onAlternatives={() => addResult({ next_step: 'alternatives' })}>{value.explanation} {value.items[0].prompt}</RecommendationCard>
 }
 
-export function ElicitationFormTool({ args, result, addResult }: CardProps) {
+export function ElicitationFormTool({ args, result, addResult, initialAnswers = {}, onAnswersChange }: CardProps & {
+  initialAnswers?: Record<string, string | string[]>
+  onAnswersChange?: (answers: Record<string, string | string[]>) => void
+}) {
   const value = args as { id?: string; title?: string; items?: ElicitationItem[]; submitLabel?: string; acceptedLabel?: string }
   const items = Array.isArray(value.items) ? value.items : []
-  const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>(initialAnswers)
   if (items.length === 0) throw new Error('信息补充表单协议没有问题项')
   const submitted = result && typeof result === 'object' ? result as Record<string, string | string[]> : null
   const values = submitted ?? answers
@@ -137,10 +140,11 @@ export function ElicitationFormTool({ args, result, addResult }: CardProps) {
       acceptLabel={value.submitLabel ?? '提交'}
       acceptedLabel={value.acceptedLabel}
       acceptDisabled={missingRequired}
-      onFieldChange={(name: string, answer: ElicitationValue) => setAnswers((current) => ({
-        ...current,
-        [name]: Array.isArray(answer) ? [...answer] : answer as string,
-      }))}
+      onFieldChange={(name: string, answer: ElicitationValue) => {
+        const next = { ...answers, [name]: Array.isArray(answer) ? [...answer] : answer as string }
+        setAnswers(next)
+        onAnswersChange?.(next)
+      }}
       onAccept={() => {
         if (!missingRequired) addResult(answers)
       }}

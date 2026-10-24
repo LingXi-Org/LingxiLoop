@@ -62,6 +62,7 @@ COPY package.json package-lock.json .npmrc ./
 RUN --mount=type=secret,id=npm_token \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
 COPY src ./src
+COPY shared/visualize-public-resources.ts ./shared/
 COPY public ./public
 COPY index.html ./
 COPY vite.config.ts ./
@@ -78,9 +79,6 @@ RUN npm run build
 # ─── stage 3: runtime ───────────────────────────────────────────────
 FROM ${NODE_BASE_IMAGE}
 ARG APT_MIRROR
-# Hairline first-frame renderer: official Debian security package, fail closed
-# when this exact version is unavailable; no installer or npm browser downloads.
-ARG CASE_COVER_CHROMIUM_VERSION=156.0.8078.47-1~deb12u1
 ARG LINGXILOOP_VERSION=0.0.0-dev
 ARG LINGXILOOP_COMMIT_SHA=dev
 
@@ -91,8 +89,6 @@ RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g; s|https://deb.debian.org|${
        ca-certificates \
        python3 \
        bubblewrap \
-       chromium=${CASE_COVER_CHROMIUM_VERSION} \
-       chromium-common=${CASE_COVER_CHROMIUM_VERSION} \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -102,6 +98,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
 COPY server ./server
+COPY shared/visualize-public-resources.ts ./shared/
 # Canvas service deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into
@@ -110,6 +107,12 @@ COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilit
 COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
 COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
 COPY src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts ./src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts
+# The renderer shares only these five dependency-light VM inputs with Web.
+COPY src/features/cases/cover-vm/runtime.ts ./src/features/cases/cover-vm/runtime.ts
+COPY src/features/cases/cover-vm/protocol.ts ./src/features/cases/cover-vm/protocol.ts
+COPY src/features/cases/cover-vm/program.ts ./src/features/cases/cover-vm/program.ts
+COPY src/features/cases/cover-vm/guest-source.ts ./src/features/cases/cover-vm/guest-source.ts
+COPY src/features/cases/cover-vm/svg.ts ./src/features/cases/cover-vm/svg.ts
 # Keep the complete skill (including Python exports, vendor assets and licenses).
 # The full upstream source is a SPA build input; only this served script is read
 # by the server at runtime. Retain the pinned source inventory and attribution.
