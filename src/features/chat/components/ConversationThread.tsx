@@ -48,8 +48,6 @@ export function ConversationThread({
   const viewportRef = useRef<HTMLDivElement>(null)
   const [readingHistory, setReadingHistory] = useState(false)
   const scope = `${conversationId}:${threadRootId ?? ''}`
-  const scopeRef = useRef(scope)
-  scopeRef.current = scope
   useEffect(() => { setReadingHistory(false) }, [scope])
   const runtimeMessages = useAuiState(state => state.thread.messages)
   const entranceTail = useRef<{ scope: string; id: string | null } | null>(null)
@@ -114,20 +112,14 @@ export function ConversationThread({
     const viewport = viewportRef.current
     if (!viewport || loadingOlderRef.current || !snapshot.hasMoreOlder) return true
     loadingOlderRef.current = true
-    const requestedScope = scopeRef.current
     const before = useChatThreadStore.getState().conversations[conversationId]?.messages
-    const anchor = viewport.querySelector<HTMLElement>('[data-msg-id]')
-    const anchorId = anchor?.dataset.msgId
-    const anchorTop = anchor?.getBoundingClientRect().top ?? 0
-    await chatTransport.loadOlder(conversationId)
-    await new Promise<void>(resolve => window.requestAnimationFrame(() => {
-      if (anchorId && scopeRef.current === requestedScope) {
-        const restored = viewport.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(anchorId)}"]`)
-        if (restored) viewport.scrollTop += restored.getBoundingClientRect().top - anchorTop
-      }
+    try {
+      // The official viewport controller preserves the reader's message anchor
+      // through prepend and subsequent image/font growth in the loaded history.
+      await chatTransport.loadOlder(conversationId)
+    } finally {
       loadingOlderRef.current = false
-      resolve()
-    }))
+    }
     const after = useChatThreadStore.getState().conversations[conversationId]
     return !after?.hasMoreOlder || (after.messages[0] && messageKey(after.messages[0])) !== (before?.[0] && messageKey(before[0]))
   }, [conversationId, snapshot.hasMoreOlder])

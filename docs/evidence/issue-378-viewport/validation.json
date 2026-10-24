@@ -1,0 +1,117 @@
+{
+  "base": "d3c08b994888e95159795950a3394df1d9f0b9df",
+  "environment": {
+    "node": "24.19.0",
+    "chromium": "154",
+    "runner": "e2e 0.17.0 / official @e2e-dev/web via CDP",
+    "fixture": "local synthetic; production Vite bundle; actual ConversationRuntimeProvider"
+  },
+  "runs": [
+    {
+      "id": "01a16d19-f99b-7e98-b97a-341383250588",
+      "startedAt": "2026-10-24T08:49:41.798Z",
+      "finishedAt": "2026-10-24T08:49:57.694Z",
+      "status": "passed",
+      "exitCode": 0,
+      "summary": {
+        "discovered": 11,
+        "selected": 3,
+        "executed": 3,
+        "passed": 3,
+        "failed": 0,
+        "interrupted": 0,
+        "flaky": 0,
+        "skipped": 0
+      },
+      "tests": [
+        {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "title": [
+            "older history retries, preserves position and remains reachable with the keyboard"
+          ],
+          "status": "passed"
+        },
+        {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "title": [
+            "the latest question stays put as its short answer starts streaming"
+          ],
+          "status": "passed"
+        },
+        {
+          "file": "e2e/question-index/viewport.e2e.ts",
+          "title": [
+            "viewport follows intrinsic growth, preserves selection and releases resized content on unmount"
+          ],
+          "status": "passed"
+        }
+      ]
+    },
+    {
+      "id": "01a16d1a-ec35-7825-b496-0747593df5e7",
+      "startedAt": "2026-10-24T08:50:43.775Z",
+      "finishedAt": "2026-10-24T08:51:02.363Z",
+      "status": "failed",
+      "exitCode": 1,
+      "summary": {
+        "discovered": 11,
+        "selected": 1,
+        "executed": 1,
+        "passed": 0,
+        "failed": 1,
+        "interrupted": 0,
+        "flaky": 0,
+        "skipped": 0
+      },
+      "tests": [
+        {
+          "file": "e2e/question-index/navigation.e2e.ts",
+          "title": [
+            "question previews, navigation, streaming and conversation scope (1440, light)"
+          ],
+          "status": "failed"
+        }
+      ]
+    },
+    {
+      "id": "01a16d1c-004d-7a44-a641-4ff8321e11e8",
+      "startedAt": "2026-10-24T08:51:54.498Z",
+      "finishedAt": "2026-10-24T08:51:58.672Z",
+      "status": "passed",
+      "exitCode": 0,
+      "summary": {
+        "discovered": 11,
+        "selected": 1,
+        "executed": 1,
+        "passed": 1,
+        "failed": 0,
+        "interrupted": 0,
+        "flaky": 0,
+        "skipped": 0
+      },
+      "tests": [
+        {
+          "file": "e2e/question-index/viewport.e2e.ts",
+          "title": [
+            "viewport follows intrinsic growth, preserves selection and releases resized content on unmount"
+          ],
+          "status": "passed"
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "package.json": "e54c811c0f75cb763dc8e73c8bb8da678a6e2099e99f6269f975de1770028951",
+    "package-lock.json": "1f634792641c7bfa2580bb6105f540207c20bc2bc0c47443124065bc8de03e4f",
+    "src/features/chat/components/ConversationThread.tsx": "1139f34c35529bd59d8d78a150244171d56118f56ec40aa50e4b8253b71a3d73",
+    "e2e/question-index/fixture.tsx": "3281fc1efb27e5d61188f295a6d70a1d437cb7a256fd334d167e3bd512e2bd3c",
+    "e2e/question-index/viewport.e2e.ts": "c683c0960bae9fd8da2dc40044f65225b5766466530d753ff7668b4f2524241c",
+    "e2e.question-index.config.ts": "3e9203d04ff5766a191409869d4c7b8d28c3dfb05a327bedca7552c9bee610f2",
+    "e2e.question-index.vite.config.ts": "b7c08338bbc8579deacde97a4c9b6a38032c27d5d6a3fd2aa9cb0fb1f0226e4b",
+    "node_modules/@assistant-ui/react/src/primitives/thread/useThreadViewportAutoScroll.ts": "7ebc8f88f7c5fbf9cc495a65facf492d525b7c15785f44e03ec9b7eb040471d2",
+    "node_modules/@assistant-ui/store/src/utils/viewport-scroll.ts": "5de7e381f7f2ffd711f9612a6161e5b987d09e70fbaeb4814ffcd2fcaed0f810",
+    "node_modules/@assistant-ui/store/src/utils/thread-viewport-auto-scroll.ts": "0506d4e6c3e87fd8810aadfef7fdb88fd73bd473b6085787facf69a28aa49bc1",
+    ".e2e/viewport-controller-dist/e2e/question-index/index.html": "3a3c266584e3abaeb051b9aeab974eb9def45eb4acdabe974f35e0759baf3cb0",
+    "dist/index.html": "9069c4dcf43822b2532892f3b8f9c8c024cac1d18718ab1b76979434129cff47"
+  }
+}
