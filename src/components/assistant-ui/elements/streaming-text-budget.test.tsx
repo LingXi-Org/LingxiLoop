@@ -66,3 +66,55 @@ test('Markdown token boundaries preserve combining marks, joined emoji and Hangu
   assert.equal(words.map(word => (word.prefix ?? '') + word.word + word.separator).join(''), text)
   for (const token of ['中́', '👨‍👩‍👧‍👦', 'café', '한']) assert.ok(words.some(word => word.word === token), token)
 })
+
+// Failure modes: append mutates committed tokens, split Unicode changes the
+// preceding boundary, a mode switch reuses incompatible tokens, or a rebuilt
+// plugin/changed leaf accidentally inherits another leaf's words.
+test('incremental words match full tokenization for every Unicode append and replacement', async () => {
+  const { createStreamingWordTokenizer } = await import('../markdown-streaming')
+  const tokenize = createStreamingWordTokenizer()
+  const samples = [
+    '  中文\tLatin words\r\n👨‍👩‍👧‍👦 café 中́ 한 字',
+    '中🇦🇧🇨🇩🇪🇫文👩🏽‍💻 字\r\n\t', '中\u200d👩\u200d💻 cafe\u0301',
+    '中\u0301\u0300\u200d👩  \n', ' \t\n', '', 'replacement 正文',
+    '中́\n\n 🏽 ',
+  ]
+  for (const sample of samples) {
+    for (let length = 0; length <= sample.length; length++) {
+      const text = sample.slice(0, length)
+      const actual = tokenize(text, 0)
+      assert.deepEqual(actual, streamingWords(text), JSON.stringify(text))
+      if (actual.length) assert.equal(actual.map(token => (token.prefix ?? '') + token.word + token.separator).join(''), text)
+    }
+  }
+  for (const text of ['same text', 'same text', 'short', '完全替换́', '', '新文本']) {
+    assert.deepEqual(tokenize(text, 0), streamingWords(text))
+  }
+  const previous = tokenize('中́文 test ', 1)
+  const frozen = structuredClone(previous)
+  const next = tokenize('中́文 test more', 1)
+  assert.deepEqual(previous, frozen)
+  assert.equal(next[0], previous[0])
+  assert.deepEqual(next, streamingWords('中́文 test more'))
+  assert.deepEqual(tokenize('other leaf', 0), streamingWords('other leaf'))
+})
+
+test('rebuilt streaming plugins reuse a block tokenizer and preserve leaf text and positions', async () => {
+  const { createStreamingWordTokenizer } = await import('../markdown-streaming')
+  const tokenize = createStreamingWordTokenizer()
+  function transform(text: string) {
+    const position = { start: { line: 1, column: 1, offset: 0 }, end: { line: 1, column: text.length + 1, offset: text.length } }
+    const tree: Root = { type: 'root', children: [{ type: 'element', tagName: 'p', properties: {}, children: [{ type: 'text', value: text, position }] }] }
+    rehypeStreamingText({ tokenize })(tree)
+    const paragraph = tree.children[0]
+    assert.equal(paragraph.type, 'element')
+    if (paragraph.type !== 'element' || paragraph.children[0].type !== 'element') throw new Error('missing streaming leaf')
+    const leaf = paragraph.children[0]
+    assert.deepEqual(leaf.children[0], { type: 'text', value: text, position })
+    return leaf.data!.streamingText!.words
+  }
+  const first = transform('中́文 tail')
+  const second = transform('中́文 tail continues')
+  assert.equal(first[0], second[0])
+  assert.deepEqual(second, streamingWords('中́文 tail continues'))
+})

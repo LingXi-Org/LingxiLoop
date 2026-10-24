@@ -16,12 +16,16 @@ declare module 'hast' {
 
 const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 const cjk = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u
+const complexText = /\p{M}|[\u1100-\u11ff\u200d]/u
 export function streamingWords(text: string): StreamingWord[] {
+  return tokenizeWords(text, complexText.test(text))
+}
+
+function tokenizeWords(text: string, complex: boolean): StreamingWord[] {
   const result: StreamingWord[] = []
   let prefix = ''
   // Stable single CJK characters keep an unspaced paragraph from becoming one
   // blue word. Preserve Latin words, Unicode characters and every whitespace.
-  const complex = /\p{M}|[\u1100-\u11ff\u200d]/u.test(text)
   const segments = complex ? [...graphemes.segment(text)].map(item => item.segment)
     : text.match(/\s+|[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]|[^\s\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]+/gu) ?? []
   for (const word of segments) {
@@ -38,7 +42,28 @@ export function streamingWords(text: string): StreamingWord[] {
   return result
 }
 
-export function rehypeStreamingText() {
+// Owned by one React block, rather than the processor (which may be rebuilt).
+// Only the last token can change on append: retokenize its prefix, word and
+// separator together so split graphemes and whitespace retain full context.
+export function createStreamingWordTokenizer() {
+  const leaves: { text: string; words: StreamingWord[]; complex: boolean; tailStart: number }[] = []
+  return (text: string, index: number): StreamingWord[] => {
+    const previous = leaves[index]
+    if (previous?.text === text) return previous.words
+    // Completing a split surrogate can change the preceding grapheme (for
+    // example a whitespace followed by an emoji modifier). Use the reference.
+    const append = previous && text.startsWith(previous.text) && !/[\ud800-\udbff]$/.test(previous.text)
+    const complex = append ? previous.complex || complexText.test(text.slice(previous.text.length)) : complexText.test(text)
+    const words = append && complex === previous.complex && previous.words.length
+      ? [...previous.words.slice(0, -1), ...tokenizeWords(text.slice(previous.tailStart), complex)]
+      : streamingWords(text)
+    const last = words.at(-1)
+    leaves[index] = { text, words, complex, tailStart: last ? text.length - (last.prefix?.length ?? 0) - last.word.length - (last.separator?.length ?? 0) : 0 }
+    return words
+  }
+}
+
+export function rehypeStreamingText({ tokenize = streamingWords }: { tokenize?: (text: string, index: number) => StreamingWord[] } = {}) {
   return (tree: Root) => {
     const leaves: Element[] = []
     let opaqueTail: { parent: Root | Element; index: number } | undefined
@@ -55,7 +80,7 @@ export function rehypeStreamingText() {
       opaqueTail = undefined
       const leaf: Element = {
         type: 'element', tagName: 'span', properties: {},
-        data: { streamingText: { words: streamingWords(node.value), trailing: 0, caret: false } },
+        data: { streamingText: { words: tokenize(node.value, leaves.length), trailing: 0, caret: false } },
         children: [node],
       }
       leaves.push(leaf)

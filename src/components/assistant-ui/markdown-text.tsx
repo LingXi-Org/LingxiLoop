@@ -15,7 +15,7 @@ import {
   ConfidenceMarker, ConfidenceMarkerInline,
 } from '@/components/assistant-ui/elements/confidence-marker'
 
-import { StreamingLeaf, rehypeStreamingText } from './markdown-streaming'
+import { StreamingLeaf, createStreamingWordTokenizer, rehypeStreamingText } from './markdown-streaming'
 import { StreamingBlock, StreamingPart, useStreamingBlock } from './streaming-tail'
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
@@ -181,14 +181,15 @@ const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, m
 }) {
   const { isAnimating } = useContext(StreamdownContext)
   const [initialContent] = useState(props.content)
+  const [tokenize] = useState(createStreamingWordTokenizer)
   const [decorated, setDecorated] = useState(agent && isAnimating)
   if (!decorated && agent && isAnimating && props.content !== initialContent) setDecorated(true)
   const streamingBlock = useStreamingBlock(props.index, agent && isAnimating, decorated && animate)
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
     [rehypeMentionNames, { targets: mentionTargets }],
-    ...decorated ? [rehypeStreamingText] : [],
-  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets, agent, decorated])
+    ...decorated ? [[rehypeStreamingText, { tokenize }]] satisfies NonNullable<StreamdownTextPrimitiveProps['rehypePlugins']> : [],
+  ], [props.rehypePlugins, claims, offset, inlineCitations, mentionTargets, agent, decorated, tokenize])
   return <StreamingBlock.Provider value={streamingBlock}><Block {...props} rehypePlugins={rehypePlugins} /></StreamingBlock.Provider>
 })
 
