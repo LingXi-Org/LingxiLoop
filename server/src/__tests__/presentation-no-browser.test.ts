@@ -22,13 +22,26 @@ test('presentation generation and validation never launch a real browser', () =>
 
   assert.doesNotMatch(moduleSource, /(?:puppeteer|chromium|launchPersistentContext)/i)
   assert.equal(productionDependencies.puppeteer, undefined)
-  // Presentation generation stays browser-free. Hairline covers now need a
-  // separately isolated first-frame renderer in this shared Worker image.
-  assert.doesNotMatch(serverImage, /puppeteer/i)
-  assert.match(serverImage, /ARG CASE_COVER_CHROMIUM_VERSION=156\.0\.8078\.47-1~deb12u1/)
-  assert.match(serverImage, /chromium=\$\{CASE_COVER_CHROMIUM_VERSION\}/)
+  // Both product utilities stay browser-free; cover source runs in the pinned
+  // QuickJS/WASM guest, with a disposable Worker owning resource termination.
+  assert.doesNotMatch(serverImage, /puppeteer|chromium/i)
+  assert.equal(productionDependencies['quickjs-emscripten-core'], '0.32.0')
+  assert.equal(productionDependencies['@jitl/quickjs-wasmfile-release-sync'], '0.32.0')
   const coverRenderer = readFileSync(path.join(repositoryRoot, 'server/src/modules/case-covers/cover-renderer.ts'), 'utf8')
-  assert.match(coverRenderer, /--unshare-all/)
-  assert.match(coverRenderer, /--clearenv/)
+  const coverWorker = readFileSync(path.join(repositoryRoot, 'server/src/modules/case-covers/cover-vm-worker.ts'), 'utf8')
+  const coverVm = readFileSync(path.join(repositoryRoot, 'src/features/cases/cover-vm/runtime.ts'), 'utf8')
+  assert.match(coverRenderer, /new Worker\(new URL\('\.\/cover-vm-worker\.mjs'/)
+  assert.match(coverRenderer, /env:\s*\{\},\s*execArgv:\s*\[\],\s*resourceLimits:\s*COVER_WORKER_LIMITS/)
+  assert.match(coverRenderer, /parseCoverProgram\(program\)/)
+  assert.match(coverRenderer, /worker\.terminate\(\)/)
+  assert.match(coverVm, /runtime\.setMemoryLimit\(VM_BUDGET\.heap\)/)
+  assert.match(coverVm, /runtime\.setMaxStackSize\(VM_BUDGET\.stack\)/)
+  assert.match(coverVm, /runtime\.setInterruptHandler\(/)
+  assert.match(coverVm, /runtime\.removeModuleLoader\(\)/)
+  assert.match(coverVm, /context\.evalCode\(/)
+  assert.doesNotMatch(coverVm, /\b(?:newFunction|setModuleLoader)\s*\(/)
+  assert.doesNotMatch(coverRenderer + coverWorker, /\beval\s*\(|\bnew\s+Function\s*\(/)
+  assert.match(coverWorker, /postMessage\(\{ type: 'frame', frame \}\)/)
+  assert.match(coverRenderer, /coverFrameSvg\(/)
   assert.doesNotMatch(coverRenderer, /--no-sandbox|--disable-setuid-sandbox/)
 })
