@@ -60,6 +60,16 @@ for text leaves removed by a later Markdown pass. These changes bound renderer
 token reads and remove stale cache references; they do not establish a total
 heap reduction or an end-to-end frame-time improvement.
 
+The block tokenizer's append path now shares an append-only stable-word array.
+Each read-only snapshot retains its own length and separately owned final word,
+so later appends preserve old text, token identities and global word indexes.
+The renderer reads `length`, `at` and `slice` from either this snapshot or an
+ordinary standalone token array; it still slices only the animation window.
+Text replacement or segmentation-mode changes start a new backing array.
+There is no snapshot chain or shifted tail index. This removes explicit full
+prefix `slice`/spread work; prefix validation, tail segmentation, Markdown
+parsing, React text updates and engine-managed array growth remain separate.
+
 ## Reproduction
 
 Use the repository's official `tester-army/e2e` / `@e2e-dev/web` engine:

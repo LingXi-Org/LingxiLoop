@@ -14,17 +14,18 @@ export interface Segment {
 }
 
 export interface StreamingWord { word: string; mono?: boolean; separator?: string; prefix?: string; start?: number }
+export type StreamingWordTokens = Pick<ReadonlyArray<StreamingWord>, 'length' | 'at' | 'slice'>;
 
 export const STREAMING_WORD_BUDGET = 128;
 const colorSettleMs = 700;
 const tokenText = ({ word, separator = " ", prefix = "" }: StreamingWord) => prefix + word + separator;
-function staticWords(words: StreamingWord[], start: number, end: number, sourceText?: string): ReactNode {
+function staticWords(words: StreamingWordTokens, start: number, end: number, sourceText?: string): ReactNode {
   if (start === end) return '';
   // Markdown provides exact UTF-16 boundaries, including the token's prefix
   // and separator. Read only the endpoints instead of copying/joining history.
   if (sourceText !== undefined) {
-    const from = words[start]?.start;
-    const to = end === words.length ? sourceText.length : words[end]?.start;
+    const from = words.at(start)?.start;
+    const to = end === words.length ? sourceText.length : words.at(end)?.start;
     if (from !== undefined && to !== undefined) return sourceText.slice(from, to);
   }
   const selected = words.slice(start, end);
@@ -56,7 +57,7 @@ export function StreamingText({
   count: number;
   streaming: boolean;
   // Markdown supplies lossless text leaves and their distance from the tail.
-  tokens?: StreamingWord[];
+  tokens?: StreamingWordTokens;
   // The Markdown leaf's original text, paired with token.start boundaries.
   sourceText?: string;
   trailing?: number;
@@ -64,7 +65,7 @@ export function StreamingText({
   inline?: boolean;
   animate?: boolean;
 }) {
-  const words = useMemo<StreamingWord[]>(
+  const words = useMemo<StreamingWordTokens>(
     () =>
       tokens ?? segments.flatMap((segment) =>
         segment.text
