@@ -333,6 +333,7 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
       pushContext();
     },
     focus: () => plane.focus(),
+    sendFollowUp: (prompt, title) => followUp(prompt, title, true),
     async copyImage() {
       assertCurrent();
       if (!platform.copyImage)

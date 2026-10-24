@@ -6,7 +6,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Copy, Loader2, Maximize2, SlidersHorizontal, X } from "lucide-react";
+import { Copy, Loader2, Maximize2, MessageCircle, SlidersHorizontal, X } from "lucide-react";
 import type { GenUiReference } from "@/features/chat/visualize/zcode/shared/gen-ui";
 import { Button } from "@/features/chat/visualize/zcode/components/ui/button.js";
 import {
@@ -76,6 +76,11 @@ export function GenUiCard({
     [tweaks, setTweaks] = useState(false),
     [retry, setRetry] = useState(0);
   const [draft, setDraft] = useState<string | null>(null);
+  const [question, setQuestion] = useState<string | null>(null);
+  const questionDraft = useRef("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [questionError, setQuestionError] = useState("");
   const [copying, setCopying] = useState(false),
     [error, setError] = useState("");
   const expandButton = useRef<HTMLButtonElement>(null);
@@ -172,6 +177,10 @@ export function GenUiCard({
           <SlidersHorizontal />
         </Button>
       )}
+      <Button variant="ghost" size="icon-sm" title={label("ask")} aria-label={label("ask")}
+        onClick={() => { setQuestion(questionDraft.current); setQuestionError(""); setSent(false); }}>
+        <MessageCircle />
+      </Button>
       <Button
         ref={preview ? undefined : expandButton}
         variant="ghost"
@@ -217,6 +226,7 @@ export function GenUiCard({
           {error}
         </p>
       )}
+      {sent && <p role="status" className="py-1 text-ui-sm text-foreground-subtle">{label("submitted")}</p>}
       <Dialog open={expanded} onOpenChange={setExpanded} modal={false}>
         {expanded && (
           <DialogPortal>
@@ -240,9 +250,34 @@ export function GenUiCard({
         >
           {controls(true)}
           {page && (
-            <PreviewAnchor page={page} suspended={draft !== null} hasPanel={panel !== null} />
+            <PreviewAnchor page={page} suspended={draft !== null || question !== null} hasPanel={panel !== null} />
           )}
           {panel}
+        </DialogContent>
+      </Dialog>
+      <Dialog open={question !== null} onOpenChange={(open) => { if (!open && !sending) setQuestion(null); }}>
+        <DialogContent className="w-[min(32rem,calc(100vw-2rem))]" showCloseButton={!sending} onEscapeKeyDown={(event) => { if (sending) event.preventDefault(); }}
+          onInteractOutside={(event) => { if (sending) event.preventDefault(); }}>
+          <DialogHeader>
+            <DialogTitle>{label("ask")}</DialogTitle>
+            <DialogDescription>{title}</DialogDescription>
+          </DialogHeader>
+          <Textarea aria-label={label("question")} value={question ?? ""} maxLength={4000} rows={5} disabled={sending}
+            placeholder={label("questionPlaceholder")} onChange={(event) => { questionDraft.current = event.target.value; setQuestion(event.target.value); }} />
+          {questionError && <p role="alert" className="text-ui-sm text-destructive">{questionError}</p>}
+          <DialogFooter>
+            <Button variant="ghost" disabled={sending} onClick={() => setQuestion(null)}>{label("cancel")}</Button>
+            <Button disabled={!question?.trim() || sending || snapshot.phase !== "ready" || !online} aria-busy={sending} onClick={async () => {
+              if (!page || !question?.trim() || sending) return;
+              setSending(true); setQuestionError("");
+              try {
+                await page.sendFollowUp(question.trim(), title);
+                questionDraft.current = ""; setQuestion(null); setSent(true);
+              } catch {
+                setQuestionError(label("sendFailed"));
+              } finally { setSending(false); }
+            }}>{sending ? label("sending") : label("send")}</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog

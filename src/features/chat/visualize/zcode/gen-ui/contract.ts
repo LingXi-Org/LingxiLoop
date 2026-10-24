@@ -33,6 +33,7 @@ export interface GenUiPage {
   preview(node: HTMLElement | null): void;
   focus(): void;
   copyImage(): Promise<void>;
+  sendFollowUp(prompt: string, title?: string): Promise<void>;
   setTweaks(values: GenUiTweakValues): void;
   previewTweaks(original: boolean): void;
   submitTweaks(values: GenUiTweakValues): Promise<void>;

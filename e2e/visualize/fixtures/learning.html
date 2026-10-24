@@ -1,0 +1,31 @@
+<main id="network">
+  <h2>校园网络划分</h2>
+  <p>网络 192.0.2.0/24，两个教室各有 25 台设备。</p>
+  <svg role="img" aria-label="路由器连接教室 A 和教室 B" viewBox="0 0 500 140" style="width:100%;max-height:180px">
+    <path d="M250 40L120 100M250 40L380 100" stroke="currentColor" fill="none"/>
+    <text x="220" y="30">路由器</text><text x="70" y="125">教室 A · 25 台</text><text x="330" y="125">教室 B · 25 台</text>
+  </svg>
+  <p id="plan"></p>
+  <button type="button" id="save">保存我的判断</button>
+  <output id="status" role="status"></output>
+</main>
+<style>main{padding:20px}button{padding:10px;border:1px solid currentColor;border-radius:6px}output{display:block;margin-top:12px}</style>
+<script>
+{
+  const plan = { addresses: 32 };
+  let restored;
+  const render = () => { document.querySelector('#plan').textContent = `我的方案：每个子网 ${plan.addresses} 个地址`; };
+  const restore = () => {
+    const saved = window.zcode?.widgetState?.modelContent?.addresses;
+    if (typeof saved === 'number' && saved !== restored) { plan.addresses = saved; restored = saved; }
+    render();
+  };
+  restore(); window.addEventListener('zcode:set_globals', restore);
+  document.querySelector('#save').onclick = async () => {
+    try { await window.zcode.setWidgetState({ modelContent: { addresses: plan.addresses } }); document.querySelector('#status').textContent = '判断已保存，等待核对'; }
+    catch { document.querySelector('#status').textContent = '保存未确认'; }
+  };
+  if (globalThis.Tweak) new Tweak({ container: document.querySelector('#network'), onChange: render })
+    .addSlider(plan, 'addresses', { label: '每个子网地址数', min: 16, max: 64, step: 16 });
+}
+</script>

@@ -54,7 +54,7 @@ export function visualizeFixtureApi(): Plugin {
           if(failOnce){failOnce=false;reply({error:'Deterministic first acquisition failure'},503);return}
           for(const page of pages.values())if(page.channel===channel&&page.instanceKey===input.instanceKey)page.active=false
           const pageId=randomUUID(),initId=randomUUID(),page:Page={channel,path:input.path,instanceKey:input.instanceKey,initId,active:true,stale:false,gestures:new Set()};pages.set(pageId,page)
-          const fixture=input.path==='/fixture/corners.html'?'corners':input.path==='/fixture/bridge.html'?'bridge':'acceptance'
+          const fixture=input.path.startsWith('/fixture/learning')?'learning':input.path==='/fixture/corners.html'?'corners':input.path==='/fixture/bridge.html'?'bridge':'acceptance'
           reply({pageId,initId,path:input.path,html:input.path==='/fixture/window.html'?windowFixture():await readFile(`e2e/visualize/fixtures/${fixture}.html`,'utf8'),state:states.get(stateKey(page))??null,stateRevision:revisions.get(stateKey(page))??0});return
         }
         const page=pages.get(id)

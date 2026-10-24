@@ -164,6 +164,7 @@ function createOwner(
     preview: (node) => core?.preview(node),
     focus: () => core?.focus(),
     copyImage: () => (core ? core.copyImage() : Promise.reject(new Error("Gen UI is not ready"))),
+    sendFollowUp: (prompt, title) => core ? core.sendFollowUp(prompt, title) : Promise.reject(new Error("Gen UI is not ready")),
     setTweaks: (values) => core?.setTweaks(values),
     previewTweaks: (original) => core?.previewTweaks(original),
     submitTweaks: (values) =>
