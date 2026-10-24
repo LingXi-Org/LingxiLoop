@@ -1,0 +1,231 @@
+✖ admission preserves contiguous answer slices (process=false, parts=["第一段。\n\n","成员 @milo / @sage / @nova。"]) (20.343312ms)
+✖ admission preserves contiguous answer slices (process=false, parts=["🙂中文 @sage。\n","| 成员 | 分工 |\n| @milo | 核对 |\n","中文紧邻@sage检查、＠　司南核对。"]) (3.299084ms)
+✖ admission preserves contiguous answer slices (process=false, parts=["第一段。","@明理请核对。[证据](#cite-S1)","\n@砺思检查。"]) (3.315583ms)
+✖ admission preserves contiguous answer slices (process=false, parts=["检查 @sa","ge 和 @明","理的出处。"]) (1.949879ms)
+✖ admission preserves contiguous answer slices (process=true, parts=["第一段。\n\n","成员 @milo / @sage / @nova。"]) (4.02795ms)
+✖ admission preserves contiguous answer slices (process=true, parts=["🙂中文 @sage。\n","| 成员 | 分工 |\n| @milo | 核对 |\n","中文紧邻@sage检查、＠　司南核对。"]) (2.137871ms)
+✖ admission preserves contiguous answer slices (process=true, parts=["第一段。","@明理请核对。[证据](#cite-S1)","\n@砺思检查。"]) (2.129618ms)
+✖ admission preserves contiguous answer slices (process=true, parts=["检查 @sa","ge 和 @明","理的出处。"]) (1.264597ms)
+✖ legacy separators and citation ranges share the exact transformed text coordinates (4.321133ms)
+✔ unknown and prefix-like handles cannot be repaired into authorized peers (2.534439ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 1
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 512.634523
+
+✖ failing tests:
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:1782
+✖ admission preserves contiguous answer slices (process=false, parts=["第一段。\n\n","成员 @milo / @sage / @nova。"]) (20.343312ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '第一段。\n\n成员@miloo /@sagee /@novaa。'
+  - '第一段。\n\n成员 @milo / @sage / @nova。'
+               ^
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '第一段。\n\n成员@miloo /@sagee /@novaa。',
+    expected: '第一段。\n\n成员 @milo / @sage / @nova。',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:1782
+✖ admission preserves contiguous answer slices (process=false, parts=["🙂中文 @sage。\n","| 成员 | 分工 |\n| @milo | 核对 |\n","中文紧邻@sage检查、＠　司南核对。"]) (3.299084ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '🙂中文 @sage。\n| 成员 | 分工 |\n|@miloo | 核对 |\n\n中文@sagege检@nova司南核对。'
+  - '🙂中文 @sage。\n| 成员 | 分工 |\n| @milo | 核对 |\n中文紧邻@sage检查、@nova核对。'
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '🙂中文 @sage。\n| 成员 | 分工 |\n|@miloo | 核对 |\n\n中文@sagege检@nova司南核对。',
+    expected: '🙂中文 @sage。\n| 成员 | 分工 |\n| @milo | 核对 |\n中文紧邻@sage检查、@nova核对。',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:1782
+✖ admission preserves contiguous answer slices (process=false, parts=["第一段。","@明理请核对。[证据](#cite-S1)","\n@砺思检查。"]) (3.315583ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '第一段。@明理请核对。[证据](#cite-S1)\n@砺思检查。'
+  - '第一段。@sage请核对。[证据](#cite-S1)\n@milo检查。'
+          ^
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '第一段。@明理请核对。[证据](#cite-S1)\n@砺思检查。',
+    expected: '第一段。@sage请核对。[证据](#cite-S1)\n@milo检查。',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:1782
+✖ admission preserves contiguous answer slices (process=false, parts=["检查 @sa","ge 和 @明","理的出处。"]) (1.949879ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '检查 @sa\nge 和@sage\n理的出处。'
+  - '检查 @sage 和 @sage的出处。'
+           ^
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '检查 @sa\nge 和@sage\n理的出处。',
+    expected: '检查 @sage 和 @sage的出处。',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:1782
+✖ admission preserves contiguous answer slices (process=true, parts=["第一段。\n\n","成员 @milo / @sage / @nova。"]) (4.02795ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '第一段。\n\n成员 @m@nova @sage / @nova。'
+  - '第一段。\n\n成员 @milo / @sage / @nova。'
+                  ^
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '第一段。\n\n成员 @m@nova @sage / @nova。',
+    expected: '第一段。\n\n成员 @milo / @sage / @nova。',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:1782
+✖ admission preserves contiguous answer slices (process=true, parts=["🙂中文 @sage。\n","| 成员 | 分工 |\n| @milo | 核对 |\n","中文紧邻@sage检查、＠　司南核对。"]) (2.137871ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '🙂中文 @sage。\n@milo| 分工 |\n| @mi@sage核对 |\n中文紧邻@sage检查、＠　司南核对。'
+  - '🙂中文 @sage。\n| 成员 | 分工 |\n| @milo | 核对 |\n中文紧邻@sage检查、@nova核对。'
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '🙂中文 @sage。\n@milo| 分工 |\n| @mi@sage核对 |\n中文紧邻@sage检查、＠　司南核对。',
+    expected: '🙂中文 @sage。\n| 成员 | 分工 |\n| @milo | 核对 |\n中文紧邻@sage检查、@nova核对。',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:1782
+✖ admission preserves contiguous answer slices (process=true, parts=["第一段。","@明理请核对。[证据](#cite-S1)","\n@砺思检查。"]) (2.129618ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '第一段。\n@明理请核对。[@milo(#cite-S1)\n\n@砺思检查。'
+  - '第一段。@sage请核对。[证据](#cite-S1)\n@milo检查。'
+         ^
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '第一段。\n@明理请核对。[@milo(#cite-S1)\n\n@砺思检查。',
+    expected: '第一段。@sage请核对。[证据](#cite-S1)\n@milo检查。',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:1782
+✖ admission preserves contiguous answer slices (process=true, parts=["检查 @sa","ge 和 @明","理的出处。"]) (1.264597ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + '检查 @sage 和 @明理的出处。'
+  - '检查 @sage 和 @sage的出处。'
+                 ^
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:34:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '检查 @sage 和 @明理的出处。',
+    expected: '检查 @sage 和 @sage的出处。',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at server/src/__tests__/.message-mentions-baseline.test.ts:1:2941
+✖ legacy separators and citation ranges share the exact transformed text coordinates (4.321133ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+
+  + ' [出处](#cite-S1'
+  - '[出处](#cite-S1)'
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__tests__/.message-mentions-baseline.test.ts:58:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: ' [出处](#cite-S1',
+    expected: '[出处](#cite-S1)',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
