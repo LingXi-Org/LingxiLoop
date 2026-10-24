@@ -59,8 +59,7 @@ returns and the first visible of three cards. An injected observer checks actual
 SVG geometry and two animation frames; native clicks must produce a real SDK
 state acknowledgement and rendered result. Handshake alone is not paint.
 
-The browser baseline is queued after the current shared slots. Production code
-is unchanged. Absolute browser budgets and improvement targets will be fixed in
-the draft PR after that baseline and before connecting the candidate. No target
-is reported as an observed result. Small sample counts will remain raw values,
-with no invented P50/P95 or production improvement claim.
+The browser baseline and frozen budgets landed in commit `65caec30` before the
+host/server connection in `7e713ab4`. Results, the original full-suite failure
+and the one permitted narrow diagnostic are recorded in `RESULTS.md`. Small
+sample counts remain raw values, with no P50/P95 or production improvement claim.

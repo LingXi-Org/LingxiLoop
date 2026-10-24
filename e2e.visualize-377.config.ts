@@ -9,5 +9,5 @@ export default {
         ...(process.env.E2E_VISUALIZE_ASSET_ROOT ? { E2E_VISUALIZE_ASSET_ROOT: process.env.E2E_VISUALIZE_ASSET_ROOT } : {}),
         ...(process.env.E2E_VISUALIZE_RUNTIME_ROOT ? { E2E_VISUALIZE_RUNTIME_ROOT: process.env.E2E_VISUALIZE_RUNTIME_ROOT } : {}) } } } }],
   workers: 1, retries: 0, timeout: 180000, assertionTimeout: 18000, video: 'off', trace: 'off',
-  output: process.env.E2E_VISUALIZE_377_BASELINE === '1' ? '.e2e/377-before' : '.e2e/377-after', reporters: ['list', 'junit', 'markdown'],
+  output: (process.env.E2E_VISUALIZE_377_BASELINE === '1' ? '.e2e/377-before' : '.e2e/377-after') + (process.env.E2E_VISUALIZE_377_THREE_ONLY === '1' ? '-three' : ''), reporters: ['list', 'junit', 'markdown'],
 } satisfies E2EConfig

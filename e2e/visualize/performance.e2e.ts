@@ -4,11 +4,13 @@ import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 
 test('measure saved static, interactive, fresh-page, retained and first-visible-card startup', async ({app,browser}) => {
+  const threeOnly = process.env.E2E_VISUALIZE_377_THREE_ONLY === '1'
   await browser.addInitScript(() => {
     const now = () => performance.timeOrigin + performance.now()
     if (window === window.top) {
       const events: unknown[] = []
       Object.assign(window,{visualizePerfEvents:events})
+      new PerformanceObserver(list=>{for(const entry of list.getEntries())events.push({event:'longtask',at:performance.timeOrigin+entry.startTime,duration:entry.duration})}).observe({type:'longtask',buffered:true})
       addEventListener('message',event => {
         if(event.data?.visualizePerf === true) events.push(event.data)
         if(event.data?.method==='ui/initialize')events.push({event:'sdk-initialize',at:now()})
@@ -66,7 +68,7 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
     const observation=await browser.evaluate(async ({start,eventStart,requestStart,retained})=>{
       const frame=Array.from(document.querySelectorAll<HTMLIFrameElement>('iframe[data-visualize-guest]')).find(frame=>frame.checkVisibility())
       if(!frame?.contentWindow)throw new Error('Visible frame missing')
-      const events=(window as unknown as {visualizePerfEvents:{event:string;token?:string;at:number;frameId:string;button:{x:number;y:number}|null;kind:string;count:number}[]}).visualizePerfEvents
+      const events=(window as unknown as {visualizePerfEvents:{event:string;token?:string;duration?:number;at:number;frameId:string;button:{x:number;y:number}|null;kind:string;count:number}[]}).visualizePerfEvents
       const token=crypto.randomUUID()
       frame.contentWindow.postMessage({visualizePerfProbe:token},'*')
       const deadline=performance.now()+8000
@@ -82,11 +84,12 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
       return {paintMs:paint.at-start,readyMs:events.slice(eventStart).find(event=>event.event==='ready')!.at-start,initializations:events.slice(eventStart).filter(event=>event.event==='sdk-initialize').length,frameId:probe.frameId,kind:probe.kind,count:probe.count,resourceHashes:server.resourceHashes,
         button:probe.button?{x:rectangle.x+probe.button.x,y:rectangle.y+probe.button.y}:null,
         serverRequests:server.requests.slice(requestStart),
+        longtasks:events.slice(eventStart).filter(event=>event.event==='longtask').map(event=>({at:event.at,duration:event.duration??0})),
         resources:performance.getEntriesByType('resource').filter(item=>item.startTime+performance.timeOrigin>=start && item.name.includes('/visualize/pages')).map(item=>{
           const value=item as PerformanceResourceTiming,url=new URL(value.name)
           const page=/\/pages\/([^/]+)/.exec(url.pathname)?.[1]
           if(page&&!pageLabels.has(page))pageLabels.set(page,pageLabels.size+1)
-          return {name:url.searchParams.get('name')??url.pathname.split('/').at(-1)??'',page:page?pageLabels.get(page):null,start:value.startTime+performance.timeOrigin-start,end:value.responseEnd+performance.timeOrigin-start,bytes:value.transferSize}
+          return {name:url.searchParams.get('name')??url.pathname.split('/').at(-1)??'',page:page?(pageLabels.get(page)??null):null,start:value.startTime+performance.timeOrigin-start,end:value.responseEnd+performance.timeOrigin-start,bytes:value.transferSize}
         })}
     },{...entry,retained})
     let interaction:unknown=null
@@ -97,8 +100,8 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
         const deadline=performance.now()+8000
         let click:typeof events[number]|undefined,result:typeof events[number]|undefined
         while(true){
-          click=events.slice(eventStart).findLast(event=>event.frameId===frameId&&event.event==='click')
-          result=events.slice(eventStart).findLast(event=>event.frameId===frameId&&event.event==='operation'&&event.at>=(click?.at??Infinity))
+          click=events.slice(eventStart).reverse().find(event=>event.frameId===frameId&&event.event==='click')
+          result=events.slice(eventStart).reverse().find(event=>event.frameId===frameId&&event.event==='operation'&&event.at>=(click?.at??Infinity))
           if(click&&result)break
           if(performance.now()>deadline)throw new Error('Actual control did not save state')
           await new Promise(requestAnimationFrame)
@@ -111,6 +114,7 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
     console.log('SAVED_VISUALIZE_SAMPLE',JSON.stringify(sample))
     return observation
   }
+  if (!threeOnly) {
   for(const [resourceMs,stateMs] of [[0,0],[300,300]])for(const kind of ['static','interactive'] as const)for(const sample of [0,1]){
     await app.open(`/e2e/visualize/performance.html?case=${resourceMs}-${kind}-${sample}`)
     await select(`${resourceMs}-${kind}-${sample}`,kind,1,resourceMs,stateMs)
@@ -121,9 +125,10 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
   expect(reopened.frameId).toBe(original.frameId)
   expect(reopened.count).toBe(1)
   expect(reopened.resources.filter(resource=>resource.name==='pages'||resource.name.includes('.'))).toHaveLength(0)
+  }
   await app.open('/e2e/visualize/performance.html?case=three-cold')
   await select('first-visible-of-three','interactive',3,300,300)
-  const output=process.env.E2E_VISUALIZE_377_BASELINE==='1'?'.e2e/377-before':'.e2e/377-after'
+  const output=(process.env.E2E_VISUALIZE_377_BASELINE==='1'?'.e2e/377-before':'.e2e/377-after')+(threeOnly?'-three':'')
   await mkdir(output,{recursive:true})
   const environment=await browser.evaluate(()=>({userAgent:navigator.userAgent,dpr:devicePixelRatio,width:innerWidth,height:innerHeight}))
   await writeFile(`${output}/timings.json`,JSON.stringify({baseline:process.env.E2E_VISUALIZE_377_BASELINE==='1',baselineHost:'0d1271a0cf92b22e01b456c7473f4e446027bd28',candidateHead:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),environment,generation:'not measured',scope:'open already saved and delivered synthetic content',samples},null,2))
