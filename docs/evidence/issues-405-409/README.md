@@ -4,7 +4,7 @@ Owner: this resumed cloud task, explicitly reassigned by the user through parent
 
 ## Behavior
 
-- A member list or ordinary mention has no dispatch effect. The shared `conversationHandoffMentions` parser recognizes an explicit unquoted prose line, `协作交接：@中文显示名 具体任务`. Each line has one recipient and non-empty task text. Repair deferral and delivery use that same contract. Code, quotes, self mentions, humans, unknown/ambiguous names and broadcasts cannot implicitly assign work. Stable-ID mentions remain readable for accepted/history compatibility.
+- A member list or ordinary mention has no dispatch effect. The shared `conversationHandoffMentions` parser recognizes an explicit unquoted prose line, `协作交接：@中文显示名 具体任务`. Each line has one recipient and non-empty task text. Repair deferral and delivery use that same contract; new preset personas and the Canvas collaboration skill reuse the same current rule rather than instructing bare @id dispatch. Code, quotes, self mentions, humans, unknown/ambiguous names and broadcasts cannot implicitly assign work. Stable-ID mentions remain readable for accepted/history compatibility.
 - Delivery still commits the native answer before ingesting assignments. Existing frozen audience, current channel membership, recipient capabilities, policy version, result causality, binding, depth/run budgets and replay idempotency remain in their existing owners. #407 terminal classification/feedback and #408 current-speaker binding are retained; formal 3.8.12 correction replacement and #404 admission coordinates are unchanged.
 - `participantDisplayName` remains the single six-preset mapping. Participant loading and WS additions project names for member lists, profiles and accessible labels while retaining the stored name as an internal alias. Built-in aliases survive rename and resolve only in the supplied roster. Human names and all stable IDs are unchanged.
 - Markdown displays Chinese names in prose, tables, quoted history and standalone formatted mentions. Partial/unknown English handles show `@未识别成员` without a recipient ID, so no raw English handle flashes during streaming and no fuzzy dispatch occurs. Member-ID table columns display member names; official Streamdown table copy/download uses those DOM cells. Actual program code, URLs and email addresses keep their literal content.
@@ -18,6 +18,7 @@ All checks use synthetic users/messages and local disposable PostgreSQL/Redis wi
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Targeted mentions, handoff, name contract, participant state, Markdown and copy tests | 66/66 | `unit.txt` |
+| Compiled native-answer and explicit handoff prompt contract | 2/2 | `prompt-contract.txt` |
 | Preserved current-agent identity and terminal feedback regressions | 9/9 | `preserved.txt` |
 | Real Worker/PG/recording IM group integration | 4/4 | `integration.txt`, `causal/` |
 | Official Chromium, Chinese presentation and admission history at 1440/390px | 4/4 | `browser-report.json.gz`, PNGs |
