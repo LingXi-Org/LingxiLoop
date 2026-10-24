@@ -67,7 +67,7 @@ class RealtimeClient {
     }
     socket.onclose = (event) => {
       if (this.socket !== socket || generation !== this.generation) return
-      if (event.code === 4403) { useAuth.getState().clear(); return }
+      if (event.code === 4403) { useAuth.getState().clear('session-rejected'); return }
       this.socket = null
       if (!this.intentionalClose) this.scheduleReconnect()
     }
