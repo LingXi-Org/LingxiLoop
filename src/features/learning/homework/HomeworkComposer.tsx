@@ -31,9 +31,9 @@ export function HomeworkComposer({ courseId,onClose,onPublished }: { courseId:st
       try {
         const detail=await homeworkApi.createDraft(courseId,draft.creationId,{title:draft.title,instructions:draft.body,editorDocument:draft.editorDocument,
           criteria:draft.criteria.split('\n').map(value=>value.trim()).filter(Boolean),links:contentLinks(draft.links),attachments:draft.attachments,dueAt:draft.dueAt?new Date(draft.dueAt).toISOString():null})
-        // Persist the receipt in this exact draft scope even if navigation has
-        // unmounted it; do not navigate or update the next course's UI.
-        setDraft(previous=>({...previous,homeworkId:detail.homework.id}))
+        // The stable creation ID is already in the scoped local draft. A late
+        // receipt must not overwrite a newer instance's edits after navigation.
+        if(mounted.current)setDraft(previous=>({...previous,homeworkId:detail.homework.id}))
       } catch(reason){if(mounted.current)setError(userFacingError(reason,'草稿未能保存，输入和附件已保留，请重试。'))}
       finally{saving.current=false;if(mounted.current)setBusy(false)}
     }}>
@@ -45,7 +45,7 @@ export function HomeworkComposer({ courseId,onClose,onPublished }: { courseId:st
       <div className="space-y-2"><Label htmlFor={`${id}-due`}>截止时间（可选）</Label><Input id={`${id}-due`} className="max-w-xs" type="datetime-local" value={draft.dueAt} disabled={disabled} onChange={event=>setDraft(previous=>({...previous,dueAt:event.target.value}))}/></div>
       {error&&<div role="alert" className="space-y-2 text-sm text-destructive"><p>{error}</p><Button type="button" variant="outline" disabled={disabled} onClick={async()=>{
         setBusy(true)
-        try{const detail=await homeworkApi.detail(courseId,draft.creationId);setDraft(previous=>({...previous,homeworkId:detail.homework.id}))}
+        try{const detail=await homeworkApi.detail(courseId,draft.creationId);if(mounted.current)setDraft(previous=>({...previous,homeworkId:detail.homework.id}))}
         catch(reason){if(mounted.current)setError(userFacingError(reason,'暂未找到已保存草稿，请保留输入并重试保存。'))}
         finally{if(mounted.current)setBusy(false)}
       }}>找回已保存草稿</Button><p className="text-xs">找回后显示服务器保存的内容。</p></div>}

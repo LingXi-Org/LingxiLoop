@@ -103,3 +103,45 @@ test('381 authoring cancels late assistant navigation and isolates course drafts
   expect(await browser.evaluate(()=>document.activeElement?.tagName ?? null)).toBe('INPUT')
   await app.screenshot('381-course-scoped-keyboard-draft')
 })
+
+test('381 late creation receipt cannot overwrite newer edits after returning to the same course',async({app,browser,screen})=>{
+  await app.open('/');await browser.evaluate(async()=>(await fetch('/api/fixture-role/teacher')).ok)
+  await app.open('/?project=e2e-classroom&view=forum')
+  await expect(screen.getByLabel('搜索学习论坛')).toBeVisible({timeout:120000})
+  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  const form=screen.getByRole('region','创建课程作业')
+  await form.getByLabel('作业标题',{exact:true}).fill('381 原请求草稿')
+  await form.getByLabel('作业要求',{exact:true}).fill('说明计算过程。')
+  await form.getByLabel('验收标准',{exact:true}).fill('独立说明每一步。')
+  await browser.evaluate(async()=>{
+    const original=window.fetch.bind(window)
+    const state=window as unknown as {issue381CreationCompleted:boolean};state.issue381CreationCompleted=false
+    window.fetch=async(...args)=>{
+      const result=await original(...args)
+      if(args[1]?.method==='PUT'&&String(args[0]).endsWith('/draft')){await result.clone().text();state.issue381CreationCompleted=true}
+      return result
+    }
+    return (await fetch('/api/fixture-teacher-draft/hold',{method:'POST'})).ok
+  })
+  await form.getByRole('button','保存并检查草稿',{exact:true}).tap()
+  await expect.poll(()=>browser.evaluate(async()=>fetch('/api/fixture-teacher-entry').then(response=>response.json()).then(result=>result.pendingDrafts))).toBe(1)
+  const navigate=async(project:string)=>browser.evaluate(project=>{history.pushState({},'',`/?project=${project}&view=forum`);dispatchEvent(new PopStateEvent('popstate'));return true},project)
+  await navigate('forum-other')
+  await expect(screen.getByText('Other Forum Course',{exact:true}).first()).toBeVisible()
+  await navigate('e2e-classroom')
+  await expect(screen.getByLabel('搜索学习论坛')).toBeVisible()
+  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await form.getByLabel('作业标题',{exact:true}).fill('381 返回后新的未保存编辑')
+  await expect.poll(()=>browser.evaluate(()=>{
+    const key=Object.keys(localStorage).find(key=>key.endsWith(':create-homework:e2e-course'))
+    return key?JSON.parse(localStorage.getItem(key)??'null')?.value?.title??null:null
+  })).toBe('381 返回后新的未保存编辑')
+  await browser.evaluate(async()=>(await fetch('/api/fixture-teacher-draft/release',{method:'POST'})).ok)
+  await expect.poll(()=>browser.evaluate(()=>(window as unknown as {issue381CreationCompleted:boolean}).issue381CreationCompleted)).toBe(true)
+  await browser.evaluate(async()=>{await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));return true})
+  await browser.reload()
+  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await expect(form.getByLabel('作业标题',{exact:true})).toHaveValue('381 返回后新的未保存编辑')
+  await expect(form.getByRole('button','保存并检查草稿',{exact:true})).toBeEnabled()
+  await app.screenshot('381-late-receipt-preserves-newer-edit')
+})

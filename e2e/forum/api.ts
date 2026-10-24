@@ -53,14 +53,14 @@ const app = express()
 // #325 only: deterministic transport failures around the real room and publish
 // transactions. These routes exist only in this disposable loopback fixture.
 if (process.env.FORUM_ISSUE325 === '1' || process.env.FORUM_ISSUE381 === '1') {
-  let mode = 'pass', requests = 0, completed = 0, failChannels = false, losePublish = false, loseDraft = false
-  const pending = new Set<() => void>()
+  let mode = 'pass', requests = 0, completed = 0, failChannels = false, losePublish = false, loseDraft = false, holdDraft = false
+  const pending = new Set<() => void>(), pendingDrafts = new Set<() => void>()
   app.get('/api/fixture-teacher-entry', async (_req,res) => {
     const counts = (await pool.query(`SELECT
       (SELECT COUNT(*)::int FROM learning_course_teacher_rooms WHERE course_id='e2e-course') AS rooms,
       (SELECT COUNT(*)::int FROM homeworks WHERE course_id='e2e-course') AS homeworks,
       (SELECT COUNT(*)::int FROM homeworks WHERE course_id='e2e-course' AND title='Issue325 教师发布回归' AND status='PUBLISHED') AS published`)).rows[0]
-    res.json({ ...counts, requests, completed, pending: pending.size })
+    res.json({ ...counts, requests, completed, pending: pending.size, pendingDrafts: pendingDrafts.size })
   })
   app.post('/api/fixture-teacher-entry/:mode', (req,res) => {
     if (!['hold','pass','lost','fail-list'].includes(req.params.mode)) { res.sendStatus(400); return }
@@ -69,6 +69,8 @@ if (process.env.FORUM_ISSUE325 === '1' || process.env.FORUM_ISSUE381 === '1') {
     if (mode === 'pass') { for (const release of pending) release(); pending.clear() }
     res.sendStatus(200)
   })
+  app.post('/api/fixture-teacher-draft/hold', (_req,res) => { holdDraft = true; res.sendStatus(200) })
+  app.post('/api/fixture-teacher-draft/release', (_req,res) => { for(const release of pendingDrafts)release();pendingDrafts.clear();res.sendStatus(200) })
   app.post('/api/fixture-teacher-draft/lost', (_req,res) => { loseDraft = true; res.sendStatus(200) })
   app.post('/api/fixture-teacher-publish/lost', (_req,res) => { losePublish = true; res.sendStatus(200) })
   app.use((req,res,next) => {
@@ -88,6 +90,11 @@ if (process.env.FORUM_ISSUE325 === '1' || process.env.FORUM_ISSUE381 === '1') {
           return json(value)
         }
       }
+    }
+    if (req.method === 'PUT' && req.path.endsWith('/draft') && holdDraft) {
+      holdDraft=false
+      const json=res.json.bind(res)
+      res.json=value=>{if(res.statusCode!==200)return json(value);pendingDrafts.add(()=>{json(value)});return res}
     }
     if (req.method === 'PUT' && req.path.endsWith('/draft') && loseDraft) {
       loseDraft=false
