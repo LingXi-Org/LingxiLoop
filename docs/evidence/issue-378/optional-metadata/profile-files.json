@@ -1,0 +1,46 @@
+{
+  "fixture.tsx": {
+    "bytes": 7829,
+    "sha256": "cf6f94a854a4c8ce359787d088bc7a729791f0b06dd65504d0d3b9d97dcd3c1b"
+  },
+  "monitor.js": {
+    "bytes": 3799,
+    "sha256": "54fb056d519b949aca9b63c86a3a63746e99b3341051784451296c7bd7b3cc0c"
+  },
+  "profile.e2e.ts": {
+    "bytes": 3697,
+    "sha256": "867703e76e8d4ff8b080fa70b3b11abeb0a682590f21eedabfc89a261b513dd7"
+  },
+  "cdp.mjs": {
+    "bytes": 2712,
+    "sha256": "5b501986c8753d35d57ad2de5741cca4686d0ff4e45d02d44d9a961b98e57bf0"
+  },
+  "build.mjs": {
+    "bytes": 1061,
+    "sha256": "5a6637c1ec4af903e11931f6e58d69288fdbb81255cc40f7b79ed80aed87f5d7"
+  },
+  "e2e.config.ts": {
+    "bytes": 730,
+    "sha256": "8b5d8d0e94ca8e5bbfe6c590237a54c30e0450f78c9af354fb9feeb91639da1b"
+  },
+  "serve.mjs": {
+    "bytes": 1004,
+    "sha256": "d6707ca077b857b471f8a0e6bfce8f870c80e9fc79365bc74e475bd91385084a"
+  },
+  "/workspace/diagnose-378-build/baseline/e2e/native-streaming.html": {
+    "bytes": 313,
+    "sha256": "2f55367b103b41bd72a2ae914fd52bd9d923242380b58ceb5b291a42b2b88369"
+  },
+  "/workspace/diagnose-378-build/baseline/assets/native-streaming-CWUGDqhD.js": {
+    "bytes": 3711518,
+    "sha256": "88e86675be7dbc338f0320b9a32d8649cd4a5b298c3b6ce9df0b528b7ee86966"
+  },
+  "/workspace/diagnose-378-build/candidate/e2e/native-streaming.html": {
+    "bytes": 313,
+    "sha256": "0a54c81244564183dab88ed9de02f2e7675b1e3d6abc60f46d6a977bd40b0db4"
+  },
+  "/workspace/diagnose-378-build/candidate/assets/native-streaming-Czuw4G9c.js": {
+    "bytes": 3718275,
+    "sha256": "21efccff4456cd89e5fb5ec365c3b69d4ddaa7086f87ae6e2fd2aaffae017551"
+  }
+}
