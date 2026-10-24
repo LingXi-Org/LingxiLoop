@@ -1,0 +1,39 @@
+✖ simultaneous cold pages share one verified public resource load (8.158131ms)
+✔ only complete public bytes with matching version hashes are reused (4.37535ms)
+✔ failure, cancellation and mismatched bytes never create cache entries (1.837119ms)
+✔ bounded LRU eviction and simultaneous readers preserve independent cancellation (1.825331ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 203.06242
+
+✖ failing tests:
+
+test at src/features/chat/visualize/web/public-resource-cache.test.ts:1:424
+✖ simultaneous cold pages share one verified public resource load (8.158131ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    {
+  +   threePages: 3,
+  +   twoPages: 2
+  -   threePages: 1,
+  -   twoPages: 1
+    }
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/src/features/chat/visualize/web/public-resource-cache.test.ts:18:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { twoPages: 2, threePages: 3 },
+    expected: { twoPages: 1, threePages: 1 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
