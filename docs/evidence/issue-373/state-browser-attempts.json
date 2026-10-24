@@ -6,7 +6,7 @@
   "trace": "off",
   "video": "off",
   "syntheticOnly": true,
-  "acceptance": "2/3 scenarios pass; draft thread switch blocked by failed fixture module loading; no full draft scenario pass",
+  "acceptance": "All three planned scenarios have complete passing runs: questionnaire and approval in space-recovered run; unchanged draft scenario in static-fixture run. Synthetic Chromium only.",
   "runs": [
     {
       "id": "01a16c72-f392-7c16-8589-dbcf084cc95f",
@@ -254,6 +254,39 @@
         "return to original scope: not reached"
       ],
       "retryPolicy": "One root-authorized retry after material disk recovery; no additional retry."
+    },
+    {
+      "id": "01a16c8b-ddcd-76c7-9405-a050690f4f30",
+      "status": "passed",
+      "exitCode": 0,
+      "startedAt": "2026-10-24T06:14:28.926Z",
+      "finishedAt": "2026-10-24T06:14:35.567Z",
+      "report": ".e2e/state373-static-draft/report.json",
+      "results": [
+        {
+          "title": [
+            "scoped draft text and uploaded references survive reload without leaking across account/course/thread"
+          ],
+          "status": "passed"
+        },
+        {
+          "title": [
+            "incomplete questionnaire survives reload and the server receipt replaces the draft"
+          ],
+          "status": "skipped"
+        },
+        {
+          "title": [
+            "approval public context distinguishes unknown and failed effects from successful execution"
+          ],
+          "status": "skipped"
+        }
+      ],
+      "fixture": "Same real provider/components, original test unchanged; two entrypoints prebuilt and served with Vite preview + original synthetic HTTP middleware",
+      "resources": ".e2e/state373-static-draft/resources-summary.json",
+      "http": ".e2e/state373-static-draft/http.json",
+      "build": ".e2e/state373-static-draft/build.log",
+      "diagnosticConclusion": "Static serving succeeds; previous dev-module failure root cause remains unknown. No failed scenario assertion removed."
     }
   ]
 }
