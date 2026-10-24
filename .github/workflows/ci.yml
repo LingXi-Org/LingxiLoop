@@ -36,6 +36,7 @@ jobs:
     outputs:
       admin_build: ${{ steps.scope.outputs.admin_build }}
       integration_files: ${{ steps.scope.outputs.integration_files }}
+      integration_mode: ${{ steps.scope.outputs.integration_mode }}
       deep_integration: ${{ steps.scope.outputs.deep_integration }}
       open_notebook: ${{ steps.scope.outputs.open_notebook }}
       deployment: ${{ steps.scope.outputs.deployment }}
@@ -157,6 +158,11 @@ jobs:
               - 'server/src/__integration__/*.test.ts'
             integration_runner:
               - 'server/run-integration-tests.mjs'
+              - 'server/integration-suite.mjs'
+              - 'server/run-historical-migration-tests.mjs'
+              - 'server/fixtures/**'
+              - 'scripts/ci-scope.mjs'
+              - '.github/workflows/ci.yml'
               - 'server/src/__integration__/**'
               - '!server/src/__integration__/*.test.ts'
             server_docker:
@@ -234,6 +240,8 @@ jobs:
         shell: bash
         env:
           INTEGRATION_FILES: ${{ steps.paths.outputs.integration_tests_files }}
+          SERVER_SOURCE_FILES: ${{ steps.paths.outputs.server_source_files }}
+          INTEGRATION_RUNNER_FILES: ${{ steps.paths.outputs.integration_runner_files }}
           EVENT: ${{ github.event_name }}
           MANUAL_SCOPE: ${{ inputs.scope }}
           SHARED_FRONTEND: ${{ steps.paths.outputs.shared_frontend }}
@@ -268,7 +276,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.changes.outputs.check_jobs) }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 8
     services:
       redis:
         image: ${{ matrix.component == 'server' && 'redis:7-alpine' || '' }}
@@ -373,7 +381,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.integration == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: ${{ needs.changes.outputs.deep_integration == 'true' && 30 || 8 }}
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -412,8 +420,16 @@ jobs:
         run: node --test scripts/test-selectors.test.mjs
       - run: npm run test:integration
         env:
+          INTEGRATION_TEST_MODE: ${{ needs.changes.outputs.integration_mode }}
           INTEGRATION_TEST_FILES: ${{ needs.changes.outputs.integration_files }}
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-timings-${{ github.sha }}
+          path: artifacts/ci-integration/timings.json
+          if-no-files-found: warn
+          retention-days: 7
       - if: needs.changes.outputs.deep_integration == 'true'
         name: Distributed SSE with a real Redis restart
         run: node --import tsx scripts/test-distributed-realtime.mjs
