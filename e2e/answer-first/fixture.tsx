@@ -14,7 +14,7 @@ import { setWorkspaceSession } from '@/lib/workspaceSession'
 import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
 import '@/styles/globals.css'
 
-if (!import.meta.env.DEV) throw new Error('Local synthetic fixture only')
+if (!import.meta.env.DEV && !(import.meta.env.MODE === 'questionnaire-test' && location.hostname === '127.0.0.1')) throw new Error('Local synthetic fixture only')
 const conversationId = 'answer-first-room', agentId = 'answer-first-agent'
 const params = new URLSearchParams(location.search)
 const draftUser = params.get('draftUser') ?? 'fixture-human', draftProject = params.get('draftProject') ?? 'fixture-project'

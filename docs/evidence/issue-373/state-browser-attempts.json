@@ -211,17 +211,23 @@
       "report": ".e2e/state373-space-recovered/report.json",
       "results": [
         {
-          "title": null,
+          "title": [
+            "scoped draft text and uploaded references survive reload without leaking across account/course/thread"
+          ],
           "status": "failed",
-          "errorCode": null
+          "errorCode": "ASSERTION_FAILED"
         },
         {
-          "title": null,
+          "title": [
+            "incomplete questionnaire survives reload and the server receipt replaces the draft"
+          ],
           "status": "passed",
           "errorCode": null
         },
         {
-          "title": null,
+          "title": [
+            "approval public context distinguishes unknown and failed effects from successful execution"
+          ],
           "status": "passed",
           "errorCode": null
         }
