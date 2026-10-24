@@ -82,3 +82,36 @@ creation→save→delivery timing; real production/device/network distribution. 
 single paired synthetic improvement does not establish cold-start or end-to-end
 production improvement. This is a draft PR with explicit incomplete performance
 gates, not an issue-closing performance claim.
+
+## Clean mainline combination
+
+The original stacked record remains on `perf/377-visualize-loading` at
+`80919f32`. Only the four #377 commits were copied to the new branch
+`perf/377-public-resource-cache`, based on merged mainline
+`d3227695c7ae1bb89356dc9135821a1a276ae65d`; no #373 changes were duplicated.
+The corresponding source connection is `8e3cc891`, and the evidence freeze is
+`3120616bc9cd0cd3a6345deb7936ff61432b1f2a`.
+
+The existing fixed-runtime build passed once with Node heap512MiB. All eight
+hashes returned by the actual server manifest loader matched the actual fixed
+asset bytes (`combined-build-hashes.json`). The newly built `gen-ui.js` was506,205
+bytes with SHA256 `78dfe495e3a5398a0cbc4123ccc23631dc203ac9da51b4bfd915879513e36494`,
+the same digest as the measured build; the production map is read from generated
+manifests, never copied from fixture constants. No generated bundle is committed.
+The clean combination passed the same11 focused tests and12-file lint. Owning
+fixture/config TypeScript passed at the earlier evidence freeze. Clean-combination
+web/server typechecks and exact remote CI are reported in the draft PR/checks,
+without claiming an unrun browser combination.
+
+Independent reviewer `cover_render` read the exact `3120616b`/`d3227695` delta and
+confirmed no new P1/P2, all five cache production files byte-identical to the
+reviewed source, and the raw failed/full versus passed/narrow evidence correctly
+reported. That review is a source boundary assessment; it is not a full performance
+acceptance or release approval.
+
+Local clean-combination web typecheck was attempted with the requested768MiB heap
+limit and exited134 with V8 heap exhaustion before a TypeScript result; its raw
+log is retained. It was not retried with a larger heap. The server typecheck was
+not run locally on this combination while another owner held the serialized
+build slot. The earlier stacked web/server typecheck passes are not substituted
+for these new-combination checks. Exact remote CI remains required.
