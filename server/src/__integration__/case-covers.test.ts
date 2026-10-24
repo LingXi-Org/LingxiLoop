@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import type { QueryResultRow } from 'pg'
 import { once } from 'node:events'
 import { after, afterEach, before, beforeEach, test } from 'node:test'
 import { pool } from '../db/pool.js'
@@ -204,4 +205,28 @@ test('authorized teacher in another organization cannot read case assets; revoke
   assert.equal(await claim(),null)
   const status=(await pool.query('SELECT status FROM organization_case_cover_jobs WHERE case_id=$1',[another.id])).rows[0].status
   assert.equal(status,'cancelled')
+})
+
+
+test('claim candidate authorization cannot cancel or admit a newer teacher retry generation',async()=>{
+  const draft=await app.create(teacher,content()),cover=draft.generatedCover!
+  const colleague={companyId:teacher.companyId,userId:'cover-claim-colleague'}
+  await seedUserMembership(colleague.userId,colleague.companyId,{role:'TEACHER',isAdmin:false})
+  await makeDue()
+  let replaced=false
+  const result=await withTransaction(pool,async db=>claimCaseCover({query:async<T extends QueryResultRow>(text:string,params?:readonly unknown[])=>{
+    const rows=await db.query<T>(text,params?[...params]:undefined)
+    if(!replaced && text.includes('SELECT j.* FROM organization_case_cover_jobs j')) {
+      replaced=true
+      await app.retryCover(colleague,draft.id,'draft',cover.fingerprint,cover.generation,'new-teacher')
+      await pool.query("UPDATE company_memberships SET status='SUSPENDED' WHERE company_id=$1 AND user_id=$2",[teacher.companyId,teacher.userId])
+    }
+    return rows
+  }},'stale-candidate-worker',2))
+  assert.equal(replaced,true)
+  assert.equal(result,null)
+  assert.equal((await app.detail(colleague,draft.id)).generatedCover!.status,'pending')
+  const next=await claim();assert.ok(next)
+  assert.equal(next.requested_by,colleague.userId)
+  assert.equal(next.generation,cover.generation+1)
 })

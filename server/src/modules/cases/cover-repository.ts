@@ -86,18 +86,18 @@ export async function claimCaseCover(db: Queryable, workerId: string, concurrenc
     if (!await lockCurrentCase(db,candidate,true)) continue
     if (!authorized || candidate.rules_version!==CASE_COVER_RULES_VERSION) {
       await db.query(`UPDATE organization_case_cover_jobs SET status='cancelled',lease_token=NULL,leased_until=NULL,
-        failure_category=$2,updated_at=NOW() WHERE id=$1 AND status IN ('pending','generating')`, [candidate.id,authorized?'rules_changed':'authorization_revoked'])
+        failure_category=$2,updated_at=NOW() WHERE id=$1 AND generation=$3 AND requested_by=$4 AND status IN ('pending','generating')`, [candidate.id,authorized?'rules_changed':'authorization_revoked',candidate.generation,candidate.requested_by])
       continue
     }
     if (candidate.attempts>=maxAttempts) {
       await db.query(`UPDATE organization_case_cover_jobs SET status='failed',lease_token=NULL,leased_until=NULL,
-        failure_category='lease_expired',updated_at=NOW() WHERE id=$1 AND status='generating' AND leased_until<=NOW()`,[candidate.id])
+        failure_category='lease_expired',updated_at=NOW() WHERE id=$1 AND generation=$2 AND requested_by=$3 AND status='generating' AND leased_until<=NOW()`,[candidate.id,candidate.generation,candidate.requested_by])
       continue
     }
     const { rows } = await db.query<CaseCoverClaim>(`UPDATE organization_case_cover_jobs j SET status='generating',attempts=attempts+1,
       lease_token=$2,leased_until=NOW()+interval '3 minutes',updated_at=NOW()
-      WHERE id=$1 AND ${wanted} AND ((status='pending' AND available_at<=NOW()) OR (status='generating' AND leased_until<=NOW())) RETURNING *`,
-      [candidate.id,`${workerId}:${randomUUID()}`])
+      WHERE id=$1 AND generation=$3 AND requested_by=$4 AND ${wanted} AND ((status='pending' AND available_at<=NOW()) OR (status='generating' AND leased_until<=NOW())) RETURNING *`,
+      [candidate.id,`${workerId}:${randomUUID()}`,candidate.generation,candidate.requested_by])
     if (rows[0]) return rows[0]
   }
   return null
@@ -127,5 +127,13 @@ export async function failCaseCover(db: Queryable, claim: CaseCoverClaim, catego
   await db.query(`UPDATE organization_case_cover_jobs SET status=$2,lease_token=NULL,leased_until=NULL,failure_category=$3,
     available_at=NOW()+($4::integer*interval '1 second'),updated_at=NOW() WHERE id=$1`,
     [claim.id,claim.attempts>=maxAttempts?'failed':'pending',category,Math.min(300,10*2**Math.min(claim.attempts,5))])
+  return true
+}
+
+/** Admission completed after process shutdown; no model call consumed this attempt. */
+export async function releaseCaseCover(db: Queryable, claim: CaseCoverClaim): Promise<boolean> {
+  if (!await lockClaim(db,claim)) return false
+  await db.query(`UPDATE organization_case_cover_jobs SET status='pending',attempts=GREATEST(attempts-1,0),
+    lease_token=NULL,leased_until=NULL,available_at=NOW(),updated_at=NOW() WHERE id=$1`, [claim.id])
   return true
 }

@@ -1,7 +1,7 @@
 import type { Queryable } from '../../db/queryable.js'
 import type { WorkerTaskHandle } from '../../runtime/lifecycle.js'
 import type { CaseCoverGenerationInput, CaseCoverGenerationResult } from './cover-contracts.js'
-import { claimCaseCover, completeCaseCover, failCaseCover, renewCaseCoverLease } from './cover-repository.js'
+import { claimCaseCover, completeCaseCover, failCaseCover, releaseCaseCover, renewCaseCoverLease } from './cover-repository.js'
 
 export interface CaseCoverWorkerInfrastructure {
   db: Queryable
@@ -24,10 +24,15 @@ export function createCaseCoverWorker(infrastructure: CaseCoverWorkerInfrastruct
   const timeoutMs = bounded(infrastructure.timeoutMs,120_000,100,300_000)
   const maxAttempts = bounded(infrastructure.maxAttempts,3,1,5)
   const controllers = new Set<AbortController>()
+  let stopped = false
   async function runOnce(workerId = `case-cover-${process.pid}`): Promise<boolean> {
-    if (!infrastructure.enabled()) return false
+    if (stopped || !infrastructure.enabled()) return false
     const claim = await infrastructure.transaction(db => claimCaseCover(db,workerId,concurrency,maxAttempts))
     if (!claim) return false
+    if (stopped) {
+      await infrastructure.transaction(db => releaseCaseCover(db,claim))
+      return true
+    }
     const controller = new AbortController()
     controllers.add(controller)
     const abort = (code: string) => controller.abort(Object.assign(new Error(code),{code}))
@@ -57,8 +62,8 @@ export function createCaseCoverWorker(infrastructure: CaseCoverWorkerInfrastruct
     return true
   }
   function start(intervalMs = 2_000): WorkerTaskHandle | null {
-    if (!infrastructure.enabled()) return null
-    let stopped = false, running = false
+    if (stopped || !infrastructure.enabled()) return null
+    let running = false
     const tick = async () => {
       if (stopped || running) return
       running = true
