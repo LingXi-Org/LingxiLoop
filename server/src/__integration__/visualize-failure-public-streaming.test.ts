@@ -108,13 +108,14 @@ test('visualization failure retains real public content through provider, durabl
     // Prompt alignment must not turn an optional useful progress report into an
     // extra call for every tool. The gated SSE assertions above still require
     // actual public content, the failed receipt and a single final answer.
-    assert.ok(instructions.includes('Use the public answer channel specified by the trusted model driver; that driver alone determines wire encoding and tool-turn versus terminal response framing'), 'substantive answers must use the driver-owned public channel and framing')
+    assert.ok(instructions.includes('The trusted model driver owns public answer delivery and wire encoding'), 'substantive answers must use the driver-owned public channel and framing')
     assert.equal(instructions.includes('Use the declared public `answer` field, never unframed prose'), false, 'product guidance must not impose a wire-level answer field')
     assert.equal(instructions.includes('using the complete native object and outcome:null'), false, 'product guidance must not impose a tool-turn response envelope')
-    assert.ok(instructions.includes('same response as a necessary native tool call'), 'known explanations must not wait for every tool to finish')
-    assert.ok(instructions.includes('Native lifecycle events already show tool activity; do not report each tool separately'), 'ordinary tool activity must not require duplicate progress calls')
-    assert.ok(instructions.includes('Use chat.report_progress only for an independent useful plan, material progress or a failure needing attention, preserving task identity'), 'useful plans and failures retain the explicit progress path')
-    assert.ok(instructions.includes('If a call fails, report the observed failure only when user attention is needed; do not repeat a complete answer or claim the view is ready'), 'failures needing attention must remain visible and truthful')
+    assert.ok(instructions.includes('Publish supported explanations through that channel'), 'known explanations use the public channel')
+    assert.equal(instructions.includes('same response as a necessary native tool call'), false, 'product rules leave native call scheduling to the driver')
+    assert.ok(instructions.includes('Native lifecycle events show routine tool activity'), 'ordinary tool activity must not require duplicate progress calls')
+    assert.ok(instructions.includes('Use chat.report_progress for a useful plan, material progress or a failure needing attention'), 'useful plans and failures retain the explicit progress path')
+    assert.ok(instructions.includes('completion requires the verified saved reference or a truthful non-delivery outcome'), 'failures needing attention must remain visible and truthful')
     assert.equal(calls, 2, 'the read and truthful failed-read answer need no extra process-report round')
     await mkdir('artifacts/feedback261', { recursive: true })
     await writeFile('artifacts/feedback261/visualize-failure-public-streaming.json', JSON.stringify({ passed: true, runtime: releaseVersions.runtime,

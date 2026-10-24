@@ -4,7 +4,7 @@ import { assembleHarness, buildPromptContext, skillIndex, type SkillDefinition, 
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
 import { selectedSkillRules } from '../agent-runtime/skill-context.js'
 import { createProductHarness, productSkills } from '../agent-runtime/harness.js'
-import { visualizeHostInstructions, visualizeSkill, visualizeSkillAdaptations } from '../agent-runtime/visualize-skill.js'
+import { visualizeHostInstructions, visualizeSkill } from '../agent-runtime/visualize-skill.js'
 import { visualizeTools } from '../agent-runtime/visualize-tools.js'
 
 // Failure model: docs/evidence/feedback-272/FAILURE-MODEL.md (written first).
@@ -32,8 +32,8 @@ test('only the requested system skill enters the next prompt completely without 
   assert.ok(prompt.systemInstructions.includes(visualizeSkill.body))
   assert.equal(prompt.systemInstructions.split(visualizeSkill.body).length, 2)
   assert.ok(prompt.systemInstructions.includes(skillIndex(visualizeSkill).hash))
-  assert.match(prompt.systemInstructions, /do not reload or paginate/i)
-  assert.match(prompt.systemInstructions, /public explanation/i)
+  assert.match(prompt.systemInstructions, /registered bodies remain complete.*after compaction/i)
+  assert.match(prompt.systemInstructions, /Publish supported explanations/i)
   const rule = prompt.blocks!.find(block => block.source === 'product:rules')!
   assert.equal(rule.truncated, false)
   const restored = buildPromptContext({ ...current, promptContextCandidate: prompt }, policy, 2)
@@ -57,12 +57,69 @@ test('explicit authoring selects the complete current skill without a preceding 
   assert.equal(selectedSkillRules(current), '')
 })
 
-test('first-turn authoring route precedes documentation reads while load-only stays read-only', () => {
+test('optional explanation selection requires a successful current activation and exact declaration shape', () => {
+  const current = context(), index = skillIndex(visualizeSkill)
+  const explanation = { explanationQuote: 'Explain the two stages.', authoringQuote: 'Create an interactive view.', factQuotes: ['Gather then Check.'], languageQuote: 'Use English.' }
+  current.grants!.push({ name: 'skills', methods: ['activate'] })
+  current.tools!.push({ ...tools[0], name: 'skills__activate', action: 'skills.activate' })
+  const step = current.executionSteps![0]
+  step.kind = 'skills__activate'
+  const args = { name: index.name, version: index.version, hash: index.hash, explanation }
+  step.input.arguments = JSON.stringify(args)
+  step.output = JSON.stringify({ receipts: [{ action: 'skills.activate', result: { ok: true, value: { activation: {
+    id: 'native-activation', tenantId: current.work.tenantId, runId: current.work.id, requestVersion: 1,
+    skill: { name: index.name, version: index.version, hash: index.hash }, checker: 'product:visualize-delivery',
+  } } } }] })
+  const successful = step.output
+  assert.ok(selectedSkillRules(current).includes(visualizeSkill.body))
+  for (const invalid of [{ ...args, extra: true }, { ...args, explanation: { ...explanation, extra: true } },
+    { ...args, explanation: { ...explanation, factQuotes: [] } }, { ...args, explanation: { ...explanation, explanationQuote: '' } }]) {
+    step.input.arguments = JSON.stringify(invalid)
+    assert.equal(selectedSkillRules(current), '')
+  }
+  step.input.arguments = JSON.stringify(args)
+  for (const output of [undefined, '{}', '{"receipts":[{"action":"skills.activate","result":{"ok":false}}]}',
+    successful.replace('"runId":"fixture"', '"runId":"other"'), successful.replace('"requestVersion":1', '"requestVersion":2')]) {
+    step.output = output
+    assert.equal(selectedSkillRules(current), '')
+  }
+  step.output = successful
+  step.kind = 'skills__load'
+  assert.equal(selectedSkillRules(current), '', 'load never accepts the activation-only declaration')
+})
+
+test('truncated activation keeps full skill only through exact native stage provenance', () => {
+  const current = context(), { name, version, hash } = skillIndex(visualizeSkill)
+  const explanation = { explanationQuote: 'Explain.', authoringQuote: 'Create.', factQuotes: ['Gather then Check.'] }
+  current.grants!.push({ name: 'skills', methods: ['activate'] })
+  current.tools!.push({ ...tools[0], name: 'skills__activate', action: 'skills.activate' })
+  const step = current.executionSteps![0]
+  step.kind = 'skills__activate'
+  step.input.arguments = JSON.stringify({ name, version, hash, explanation })
+  step.output = '{"truncated":true,"preview":"not authority"}'
+  const quote = (text: string) => ({ sourceRef: 'source', start: 0, end: text.length, text })
+  const stage: NonNullable<TurnContext['explanationStage']> = { version: 1, id: 'native-stage', activationId: 'native-activation', runId: current.work.id, requestVersion: 1,
+    sourceRef: 'source', requestHash: 'native-current-request-hash', skill: { name, version, hash },
+    quotes: { explanation: quote(explanation.explanationQuote), authoring: quote(explanation.authoringQuote), facts: explanation.factQuotes.map(quote) },
+    authoringActions: ['visualize.save', 'visualize.chart', 'visualize.diagram', 'visualize.sliding_window'], status: 'pending' }
+  assert.equal(selectedSkillRules(current), '')
+  current.explanationStage = stage
+  assert.ok(selectedSkillRules(current).includes(visualizeSkill.body))
+  for (const patch of [{ runId: 'other' }, { requestVersion: 2 }, { stale: true }, { skill: { name, version, hash: 'old' } },
+    { quotes: { ...stage.quotes, explanation: quote('Different request.') } }]) {
+    current.explanationStage = { ...stage, ...patch }
+    assert.equal(selectedSkillRules(current), '')
+  }
+  current.explanationStage = { ...stage, status: 'provided', provided: { partId: 'native-part', bodyHash: 'native-body-hash' } }
+  assert.ok(selectedSkillRules(current).includes(visualizeSkill.body), 'provided stage still retains complete guidance')
+  assert.equal(selectedSkillRules({ ...current, grants: [] }), '', 'stage proof never grants permission')
+})
+
+test('authoring activation and reference-only selection retain distinct obligations', () => {
   const instructions = visualizeHostInstructions('/authorized/output')
-  assert.match(instructions, /explicitly requests.*skills\.activate/i)
-  assert.match(instructions, /before.*(?:loading|reference)/i)
-  assert.match(instructions, /promise.*(?:delivery|completion)/i)
-  assert.match(instructions, /(?:read.only|Loading references).*do not activate/i)
+  assert.match(instructions, /skills\.activate.*requested authoring/i)
+  assert.match(instructions, /skills\.load for documentation or existing-view reads and exports/i)
+  assert.match(instructions, /completion requires the verified saved reference or a truthful non-delivery outcome/i)
   assert.match(createProductHarness(tools).rules!, /skills\.activate/)
   for (const action of ['visualize.save', 'visualize.read_reference']) {
     assert.match(visualizeTools.find(tool => tool.action === action)!.description, /skills\.activate/)
@@ -93,59 +150,25 @@ test('duplicate literal readback is conditional on visible current original and 
   assert.notEqual(createProductHarness(tools).version, '3.8.6-on-demand-evidence-1')
 })
 
-// Failure model: docs/evidence/issue-366/NATIVE-ANSWER-TURN-CONTRACT-FAILURE-MODEL.md.
-test('initial and selected visualization guidance leave answer and tool sequencing to the driver without requiring a preamble', () => {
+// Failure model: docs/evidence/issue-366/CONDITIONAL-STAGE-FAILURE-MODEL.md.
+test('initial, selected and restored prompts retain one driver-owned channel contract', () => {
   const selected = context(), initial = context(undefined, false)
   const previous = buildPromptContext(selected, policy, 0)
   const restored = buildPromptContext({ ...selected, promptContextCandidate: previous }, policy, 2)
+  const channel = 'The trusted model driver owns public answer delivery and wire encoding.'
   for (const instructions of [buildPromptContext(initial, policy, 0).systemInstructions, previous.systemInstructions, restored.systemInstructions]) {
-    assert.match(instructions, /public answer channel specified by the trusted model driver/)
-    assert.match(instructions, /publish substantive answers through the messages and tool turns permitted by that driver/)
-    assert.match(instructions, /Do not add status-only preambles/)
-    assert.doesNotMatch(instructions, /same response as a necessary native tool call|including alongside necessary tools|Do not add a separate preamble turn/)
-    assert.match(instructions, /do not repeat already delivered answer text/)
-    assert.match(instructions, /Do not claim a future tool result/)
-    assert.match(instructions, /Plain companion prose.*not.*public answer/)
-    assert.match(instructions, /When the request or trusted workflow restricts the answer to supplied facts, use only supplied facts and verified tool results/)
-    assert.match(instructions, /Otherwise established general knowledge remains available without mandatory retrieval/)
-    assert.match(instructions, /label any necessary inference/)
-    assert.match(instructions, /Do not add unsolicited review invitations or assign work to yourself/)
-    assert.match(instructions, /Native lifecycle events already show tool activity/)
-    assert.match(instructions, /do not report each tool separately/)
-    assert.doesNotMatch(instructions, /streaming in ordinary response text/)
-    assert.equal(instructions.split('Do not add status-only preambles').length, 2, 'Complete channel guidance occurs once')
+    assert.equal(instructions.split(channel).length, 2)
+    assert.match(instructions, /Publish supported explanations through that channel/)
+    assert.match(instructions, /companion text and private reasoning are internal/)
+    assert.match(instructions, /supplied facts and verified tool results for source-restricted tasks/)
+    assert.match(instructions, /otherwise established general knowledge with inferences labelled/)
+    assert.match(instructions, /Describe completed tool results from their receipts/)
+    assert.match(instructions, /Native lifecycle events show routine tool activity/)
+    assert.doesNotMatch(instructions, /same response as a necessary native tool call|including alongside necessary tools|Do not add status-only preambles|final response must be your first user-facing message|overrides the upstream/)
+    assert.doesNotMatch(instructions, /complete native object|outcome\s*:\s*null|Follow its field order|product harness governs response framing/)
   }
-  for (const instructions of [visualizeHostInstructions('/authorized/output'), visualizeSkillAdaptations]) {
-    assert.match(instructions, /public answer channel specified by the trusted model driver/)
-    assert.match(instructions, /using the messages and tool turns that driver permits/)
-    assert.match(instructions, /do not delay known explanation until saving finishes/)
-    assert.doesNotMatch(instructions, /same response as a necessary native tool call|including alongside necessary tools/)
-    assert.doesNotMatch(instructions, /streaming in ordinary response text/)
-    assert.doesNotMatch(instructions, /Do not add a separate preamble turn/)
-  }
-  assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-readback-2')
-  assert.notEqual(createProductHarness(tools).version, '3.8.6-conditional-readback-2')
-  assert.notEqual(createProductHarness(tools).version, '3.8.11-driver-owned-framing-1')
-  assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-driver-framing-4')
-})
-
-// Failure model: docs/evidence/issue-366/DRIVER-FRAMING-CONSISTENCY.md (written first).
-test('product and visualization instructions defer wire encoding and branch selection to the trusted driver', () => {
-  const selected = context(), previous = buildPromptContext(selected, policy, 0)
-  const instructions = [
-    createProductHarness(tools).rules!,
-    buildPromptContext(context(undefined, false), policy, 0).systemInstructions,
-    previous.systemInstructions,
-    buildPromptContext({ ...selected, promptContextCandidate: previous }, policy, 2).systemInstructions,
-    visualizeHostInstructions('/authorized/output'),
-    visualizeSkillAdaptations,
-  ]
-  for (const text of instructions) {
-    assert.doesNotMatch(text, /complete native object|outcome\s*:\s*null|Follow its field order|tools remain native tool_calls|product harness governs response framing/i)
-    assert.match(text, /trusted model driver.*(?:wire|encoding)/i)
-  }
-  assert.notEqual(createProductHarness(tools).version, '3.8.9-public-answer-channel-1')
-  assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-answer-channel-3')
+  assert.notEqual(createProductHarness(tools).version, '3.8.11-driver-owned-framing-2')
+  assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-driver-framing-5')
 })
 
 test('body and version independently invalidate the compiled full-skill identity', () => {
@@ -163,8 +186,8 @@ test('body and version independently invalidate the compiled full-skill identity
 
 test('selected public progress skill keeps plan identity while using native answer framing', () => {
   const skill = productSkills.find(item => item.name === 'public-task-progress')!
-  assert.match(skill.body, /declared public `answer` field/)
-  assert.match(skill.body, /native response framing/)
+  assert.match(skill.body, /trusted model driver's public channel/)
+  assert.match(skill.body, /user's language/)
   assert.doesNotMatch(skill.body, /ordinary answer/)
   assert.match(skill.body, /preserve each public item id/)
   assert.match(skill.body, /stable step ids and activeIndex/)
@@ -179,7 +202,7 @@ test('long skills preserve the last constraint and reject over-budget or empty b
   assert.ok(Buffer.byteLength(current.productRules) <= 64000)
   const prompt = buildPromptContext(current, policy, 0)
   assert.ok(prompt.systemInstructions.includes(long.body))
-  const crowded = { ...visualizeSkill, body: 'x'.repeat(63000) + '\nFINAL_CONSTRAINT' }
+  const crowded = { ...visualizeSkill, body: 'x'.repeat(63900) + '\nFINAL_CONSTRAINT' }
   assert.throws(() => selectedSkillRules(context(crowded), [crowded]), /complete-context budget/)
   assert.throws(() => selectedSkillRules(context(), [{ ...visualizeSkill, body: 'x'.repeat(64001) }]), /invalid authored skill/)
   assert.throws(() => selectedSkillRules(context(), [{ ...visualizeSkill, body: '' }]), /invalid authored skill/)
