@@ -9,4 +9,13 @@
 .content-editor .bn-block-content, .content-document .bn-block-content { overflow-wrap: anywhere; }
 /* Keep every upstream button. Its native horizontal scrolling remains intact. */
 .content-editor .bn-toolbar { max-width: calc(100vw - 16px); }
+:is(.content-editor, .content-document) .bn-block-content[data-content-type="codeBlock"] { display: block; min-width: 0; }
+:is(.content-editor, .content-document) [data-content-type="codeBlock"] > pre { padding-top: 44px; }
+:is(.content-editor, .content-document) [data-content-type="codeBlock"] > div > select { opacity: 1; max-width: calc(100% - 100px); }
+.content-code-copy { position: absolute; top: 8px; right: 12px; padding: 2px 8px; border-radius: 4px; font: inherit; font-size: 12px; color: white; cursor: pointer; }
+.content-code-copy:hover { background: #ffffff20; }
+.content-code-copy:focus-visible, :is(.content-editor, .content-document) [data-content-type="codeBlock"] > div > select:focus-visible { outline: 2px solid white !important; outline-offset: 2px; }
+.content-code-status { display: block; padding-inline: 24px; font-size: 12px; }
+.content-code-status:empty { display: none; }
+.content-code-status[data-success] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; padding: 0; }
 @media (max-width: 640px) { .content-editor .bn-editor { padding-inline: 28px 12px; font-size: 16px; } }
