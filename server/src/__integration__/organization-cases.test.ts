@@ -18,6 +18,9 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, 
 // draft content/search/image disclosure, shared-teacher lost updates, source version
 // reuse, failed publication invalidating live content, stale upstream search hits,
 // reader membership revocation, and widened private/course source authorization.
+// Explicit views must also prevent teacher reader sessions from receiving drafts,
+// draft edits from changing reader metadata/order, and read-only teachers from
+// bypassing cases:manage through case content or direct draft asset URLs.
 const companyId = 'cases-school'
 const teacher = { companyId, userId: 'cases-teacher' }
 const colleague = { companyId, userId: 'cases-colleague' }
@@ -70,6 +73,9 @@ async function api(userId: string) {
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   })
 }
+async function caseJson<Method extends 'list' | 'detail'>(response: Response) {
+  return await response.json() as Awaited<ReturnType<CasesApplication[Method]>>
+}
 async function sourceOf(id: string) {
   return (await pool.query<{ id: string; external_source_id: string | null; deleted_at: string | null; case_version: number; status: string; storage_key: string | null }>(
     'SELECT s.* FROM knowledge_sources s JOIN organization_cases c ON c.source_id=s.id WHERE c.id=$1', [id])).rows[0]!
@@ -95,8 +101,26 @@ test('[integration] cases enforce organization teacher writes and published-only
     ['POST', `/cases/${draft.id}/images`, { mime: 'image/png', data: png }],
   ] as [string, string, unknown][]) assert.ok([403, 404].includes((await request(path, method, input)).status), path)
   assert.equal((await request(`/cases/${draft.id}`)).status, 404)
+  const manager = await api(teacher.userId)
+  const readerList = await caseJson<'list'>(await manager('/cases'))
+  assert.equal(readerList.items.length, 0, 'teacher default view must exclude drafts')
+  assert.equal(readerList.view, 'reader')
+  assert.equal(readerList.canManage, true)
+  assert.equal((await manager(`/cases/${draft.id}`)).status, 404)
+  const managedList = await caseJson<'list'>(await manager('/cases?view=manage'))
+  assert.deepEqual(managedList.items.map(item => item.id), [draft.id])
+  assert.equal(managedList.view, 'manage')
+  const managedDetail = await caseJson<'detail'>(await manager(`/cases/${draft.id}?view=manage`))
+  assert.equal(managedDetail.view, 'manage')
+  assert.equal(managedDetail.version, draft.version)
+  assert.equal((await request('/cases?view=manage')).status, 403)
+  assert.equal((await request(`/cases/${draft.id}?view=manage`)).status, 403)
+  for (const path of ['/cases?view=invalid', `/cases/${draft.id}?view=invalid`]) {
+    assert.equal((await manager(path)).status, 400)
+  }
   const foreign = await api(outsider.userId)
   assert.equal((await foreign(`/cases/${draft.id}`, 'GET', undefined, outsider.companyId)).status, 404)
+  assert.equal((await foreign(`/cases/${draft.id}?view=manage`, 'GET', undefined, outsider.companyId)).status, 404)
   assert.ok([403, 404].includes((await foreign('/cases', 'GET', undefined, companyId)).status))
   // The colleague has no membership in either course. Organization role owns maintenance.
   const edited = await application.save(colleague, draft.id, content('Colleague article'), draft.version)
@@ -114,13 +138,38 @@ test('[integration] cases enforce organization teacher writes and published-only
 
 test('[integration] draft edits do not alter public article, search, categories, or active index until explicit publication', async () => {
   const live = await publish()
+  const newer = await publish('Later publication')
+  // Fixed publication times keep order assertions deterministic without timers.
+  await pool.query(`UPDATE organization_cases SET published_at=$2,updated_at=$2 WHERE id=$1`, [live.id,'2025-01-01T00:00:00Z'])
+  await pool.query(`UPDATE organization_cases SET published_at=$2,updated_at=$2 WHERE id=$1`, [newer.id,'2025-01-02T00:00:00Z'])
+  const before = await application.detail(student, live.id)
   const originalSource = await sourceOf(live.id)
   const edited = await application.save(colleague, live.id, { ...content('Secret draft title'), body: 'Secret draft body', category: 'Secret category' }, live.version)
   assert.equal(edited.hasUnpublishedChanges, true)
-  assert.equal((await application.detail(student, live.id)).title, 'Geometry')
-  assert.equal((await application.list(student, 'Secret')).items.length, 0)
-  assert.deepEqual((await application.list(student)).categories, ['Mathematics'])
-  assert.equal((await application.list(student, '', 'Secret category')).items.length, 0)
+  for (const scope of [student, teacher]) {
+    const reader = await application.detail(scope, live.id)
+    assert.equal(reader.title, 'Geometry')
+    assert.equal(reader.version, before.publishedVersion)
+    assert.deepEqual(reader.updatedAt, before.publishedAt)
+    assert.equal(reader.view, 'reader')
+    assert.equal(reader.canManage, scope === teacher)
+    assert.equal(reader.hasUnpublishedChanges, false)
+    assert.equal(reader.indexError, null)
+    assert.equal((await application.list(scope, 'Secret')).items.length, 0)
+    const listed = await application.list(scope)
+    assert.deepEqual(listed.items.map(item => item.id), [newer.id, live.id])
+    assert.deepEqual(listed.items.find(item => item.id === live.id)?.updatedAt, before.publishedAt)
+    assert.deepEqual(listed.categories, ['Mathematics'])
+    assert.equal((await application.list(scope, '', 'Secret category')).items.length, 0)
+  }
+  assert.equal(edited.view, 'manage')
+  const managed = await application.detail(teacher, live.id, 'manage')
+  assert.equal(managed.title, 'Secret draft title')
+  assert.equal(managed.version, edited.version)
+  assert.equal(managed.hasUnpublishedChanges, true)
+  const managedList = await application.list(teacher, 'Secret', 'Secret category', 'manage')
+  assert.deepEqual(managedList.items.map(item => item.id), [live.id])
+  assert.ok(managedList.categories.includes('Secret category'))
   assert.equal((await sourceOf(live.id)).id, originalSource.id)
   const next = await application.publish(teacher, live.id, edited.version)
   const newSource = await sourceOf(live.id)
@@ -131,9 +180,29 @@ test('[integration] draft edits do not alter public article, search, categories,
   assert.equal((await pool.query('SELECT status FROM knowledge_source_jobs WHERE source_id=$1', [originalSource.id])).rows[0].status, 'failed')
   const off = await application.unpublish(colleague, live.id, next.version)
   assert.equal(off.status, 'unpublished')
-  assert.equal((await application.list(student)).items.length, 0)
+  assert.deepEqual((await application.list(student)).items.map(item => item.id), [newer.id])
   await assert.rejects(application.detail(student, live.id))
   await assert.rejects(application.retry(teacher, live.id, off.version), { status: 409 })
+})
+
+test('[integration] read-only teachers retain published access without draft or draft attachment access', async () => {
+  const draft = await application.create(teacher, content())
+  const publishedImage = await application.uploadImage(teacher, draft.id, 'image/png', png)
+  const saved = await application.save(teacher, draft.id, { ...content(), cover: publishedImage.url }, draft.version)
+  const live = await application.publish(teacher, draft.id, saved.version)
+  const draftImage = await application.uploadImage(teacher, draft.id, 'image/png', png)
+  await application.save(teacher, draft.id, { ...content('Private draft'), cover: draftImage.url }, live.version)
+  const request = await api(teacher.userId)
+  await pool.query("UPDATE companies SET status='READ_ONLY' WHERE id=$1", [companyId])
+  assert.equal(await canReadCaseFile(pool, draftImage.key, teacher.userId), false)
+  assert.equal(await canReadCaseFile(pool, publishedImage.key, teacher.userId), true)
+  assert.equal((await request(draftImage.url.slice('/api'.length))).status, 404)
+  assert.equal((await request(publishedImage.url.slice('/api'.length))).status, 200)
+  const reader = await caseJson<'detail'>(await request(`/cases/${draft.id}`))
+  assert.equal(reader.title, 'Geometry')
+  assert.equal(reader.canManage, false)
+  assert.equal((await request('/cases?view=manage')).status, 403)
+  assert.equal((await request(`/cases/${draft.id}?view=manage`)).status, 403)
 })
 
 test('[integration] managed case images follow the published snapshot, organization and current role even with generic upload grants', async () => {

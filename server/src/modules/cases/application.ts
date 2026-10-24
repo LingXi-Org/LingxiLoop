@@ -6,7 +6,7 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import type { Queryable } from '../../db/queryable.js'
 import { HttpError } from '../../http/errors.js'
 import { createPermissionService } from '../access/public.js'
-import type { CaseContent, CaseScope } from './contracts.js'
+import type { CaseContent, CaseScope, CaseView } from './contracts.js'
 
 export interface CasesInfrastructure {
   transaction<T>(work: (db: Queryable) => Promise<T>): Promise<T>
@@ -26,6 +26,12 @@ async function access(db: Queryable, scope: CaseScope, manage = false, lock = fa
     actorUserId: scope.userId, companyId: scope.companyId, action: manage ? 'cases:manage' : 'cases:read',
   })
 }
+async function accessView(db: Queryable, scope: CaseScope, view: CaseView) {
+  await access(db,scope,view==='manage')
+  return view==='manage' || (await createPermissionService(db).can({
+    actorUserId:scope.userId,companyId:scope.companyId,action:'cases:manage',
+  })).allowed
+}
 async function row(db: Queryable, scope: CaseScope, id: string, lock = false): Promise<CaseRow> {
   const { rows } = await db.query<CaseRow>(`SELECT c.*,u.display_name AS author_name,u.avatar_url AS author_avatar_url,s.status AS index_status,s.error AS index_error
     FROM organization_cases c LEFT JOIN knowledge_sources s ON s.id=c.source_id AND s.deleted_at IS NULL
@@ -34,14 +40,15 @@ async function row(db: Queryable, scope: CaseScope, id: string, lock = false): P
   if (!rows[0]) throw new HttpError(404, 'case not found')
   return rows[0]
 }
-function payload(c: CaseRow, canManage: boolean) {
-  if (!canManage && (c.status !== 'published' || !c.published)) throw new HttpError(404, 'case not found')
-  return { ...(canManage ? c.draft : c.published!), id: c.id, companyId: c.company_id,
+function payload(c: CaseRow, view: CaseView, canManage: boolean) {
+  const manage = view==='manage'
+  if (!manage && (c.status !== 'published' || !c.published)) throw new HttpError(404, 'case not found')
+  return { ...(manage ? c.draft : c.published!), id: c.id, companyId: c.company_id, view,
     authorId: c.created_by, authorName: c.author_name, authorAvatarUrl: c.author_avatar_url,
-    status: c.status, version: c.version, publishedVersion: c.published_version,
-    indexStatus: c.index_status, indexError: canManage ? c.index_error : null,
-    hasUnpublishedChanges: canManage && JSON.stringify(c.draft) !== JSON.stringify(c.published),
-    canManage, createdAt: c.created_at, updatedAt: c.updated_at, publishedAt: c.published_at }
+    status: c.status, version: manage ? c.version : c.published_version!, publishedVersion: c.published_version,
+    indexStatus: c.index_status, indexError: manage ? c.index_error : null,
+    hasUnpublishedChanges: manage && JSON.stringify(c.draft) !== JSON.stringify(c.published),
+    canManage, createdAt: c.created_at, updatedAt: manage ? c.updated_at : c.published_at!, publishedAt: c.published_at }
 }
 function checkVersion(c: CaseRow, version: number) {
   if (c.version !== version) throw new HttpError(409, '案例已被其他教师更新，请刷新后重试')
@@ -103,24 +110,25 @@ async function invalidate(db: Queryable, sourceId: string | null) {
 }
 export class CasesApplication {
   constructor(private readonly db: Queryable, private readonly infrastructure: CasesInfrastructure) {}
-  async list(scope: CaseScope, query = '', category = '') {
-    const context = await access(this.db,scope)
-    const canManage = context.companyMembership.role === 'TEACHER'
+  async list(scope: CaseScope, query = '', category = '', view: CaseView = 'reader') {
+    const canManage = await accessView(this.db,scope,view)
+    const manage = view==='manage'
     const { rows } = await this.db.query<CaseRow>(`SELECT c.*,u.display_name AS author_name,u.avatar_url AS author_avatar_url,s.status AS index_status,s.error AS index_error
       FROM organization_cases c LEFT JOIN knowledge_sources s ON s.id=c.source_id AND s.deleted_at IS NULL
       JOIN users u ON u.id=c.created_by
-      WHERE c.company_id=$1 AND ($2 OR c.status='published') ORDER BY c.updated_at DESC`, [scope.companyId,canManage])
-    const covers = await listCaseCoverDescriptors(this.db,scope.companyId,rows.map(c => c.id),canManage?'draft':'published',canManage)
-    const all = rows.map(c => ({ ...payload(c,canManage), generatedCover:covers.get(c.id) ?? null }))
+      WHERE c.company_id=$1 AND ($2 OR c.status='published')
+      ORDER BY CASE WHEN $2 THEN c.updated_at ELSE c.published_at END DESC`, [scope.companyId,manage])
+    const covers = await listCaseCoverDescriptors(this.db,scope.companyId,rows.map(c => c.id),manage?'draft':'published',manage)
+    const all = rows.map(c => ({ ...payload(c,view,canManage), generatedCover:covers.get(c.id) ?? null }))
     const q = query.trim().toLocaleLowerCase()
     return { items: all.filter(c => (!category || c.category === category) && (!q || [c.title,c.summary,c.body,c.category,...c.tags].join(' ').toLocaleLowerCase().includes(q))),
-      categories: [...new Set(all.map(c => c.category).filter(Boolean))].sort(), canManage }
+      categories: [...new Set(all.map(c => c.category).filter(Boolean))].sort(), canManage, view }
   }
-  async detail(scope: CaseScope, id: string) {
-    const context = await access(this.db,scope)
-    const canManage = context.companyMembership.role === 'TEACHER'
-    const c = payload(await row(this.db,scope,id),canManage)
-    const covers = await listCaseCoverDescriptors(this.db,scope.companyId,[id],canManage?'draft':'published',canManage)
+  async detail(scope: CaseScope, id: string, view: CaseView = 'reader') {
+    const canManage = await accessView(this.db,scope,view)
+    const manage = view==='manage'
+    const c = payload(await row(this.db,scope,id),view,canManage)
+    const covers = await listCaseCoverDescriptors(this.db,scope.companyId,[id],manage?'draft':'published',manage)
     return { ...c,generatedCover:covers.get(id) ?? null }
   }
   async create(scope: CaseScope, content: CaseContent) {
@@ -131,7 +139,7 @@ export class CasesApplication {
       await db.query(`INSERT INTO organization_cases(id,company_id,created_by,draft) VALUES($1,$2,$3,$4::jsonb)`, [id,scope.companyId,scope.userId,JSON.stringify(content)])
       await queueCaseCover(db,scope,id,'draft',content)
     })
-    return this.detail(scope,id)
+    return this.detail(scope,id,'manage')
   }
   async save(scope: CaseScope, id: string, content: CaseContent, version: number) {
     await this.infrastructure.transaction(async db => {
@@ -142,7 +150,7 @@ export class CasesApplication {
       await queueCaseCover(db,scope,id,'draft',content)
       await cancelUnneededCaseCovers(db,scope.companyId,id)
     })
-    return this.detail(scope,id)
+    return this.detail(scope,id,'manage')
   }
   async publish(scope: CaseScope, id: string, version: number) {
     await this.infrastructure.transaction(async db => {
@@ -165,7 +173,7 @@ export class CasesApplication {
       await queueCaseCover(db,scope,id,'published',c.draft)
       await cancelUnneededCaseCovers(db,scope.companyId,id)
     })
-    return this.detail(scope,id)
+    return this.detail(scope,id,'manage')
   }
   async unpublish(scope: CaseScope, id: string, version: number) {
     await this.infrastructure.transaction(async db => {
@@ -175,7 +183,7 @@ export class CasesApplication {
       await db.query(`UPDATE organization_cases SET status='unpublished',source_id=NULL,version=version+1,updated_at=NOW() WHERE id=$1`, [id])
       await cancelUnneededCaseCovers(db,scope.companyId,id,true)
     })
-    return this.detail(scope,id)
+    return this.detail(scope,id,'manage')
   }
   async retry(scope: CaseScope, id: string, version: number) {
     await this.infrastructure.transaction(async db => {
@@ -196,7 +204,7 @@ export class CasesApplication {
         [c.source_id],
       )
     })
-    return this.detail(scope,id)
+    return this.detail(scope,id,'manage')
   }
   async retryCover(scope: CaseScope, id: string, kind: CoverSnapshotKind, fingerprint: string, expectedGeneration: number, idempotencyKey = `${fingerprint}:${expectedGeneration}`) {
     await this.infrastructure.transaction(async db => {
@@ -217,7 +225,7 @@ export class CasesApplication {
         available_at=NOW(),lease_token=NULL,leased_until=NULL,failure_category=NULL,requested_by=$2,retry_key=$3,
         retry_expected_generation=$4,updated_at=NOW() WHERE id=$1`, [job.id,scope.userId,idempotencyKey,expectedGeneration])
     })
-    return this.detail(scope,id)
+    return this.detail(scope,id,'manage')
   }
   async backfillCovers(scope: CaseScope, afterId = '', limit = 25) {
     const boundedLimit = Math.max(1,Math.min(50,Math.trunc(limit)||25))
@@ -242,10 +250,12 @@ export class CasesApplication {
     // Hold membership and case locks through the bounded read so revocation,
     // unpublish and publication cannot race the asset authorization decision.
     return this.infrastructure.transaction(async db => {
-      const context = await access(db,scope,false,true)
+      await access(db,scope,false,true)
+      if (snapshot==='draft' && !(await createPermissionService(db,{lockDependencies:true}).can({
+        actorUserId:scope.userId,companyId:scope.companyId,action:'cases:manage',
+      })).allowed) throw new HttpError(404,'cover not found')
       const c = await row(db,scope,id,true)
-      const teacher = context.companyMembership.role==='TEACHER'
-      if (snapshot==='draft' && !teacher || snapshot==='published' && (c.status!=='published' || !c.published)) throw new HttpError(404,'cover not found')
+      if (snapshot==='published' && (c.status!=='published' || !c.published)) throw new HttpError(404,'cover not found')
       const { rows } = await db.query<{ preview_svg:string; interactive_html:string }>(`
         SELECT a.preview_svg,a.interactive_html FROM organization_case_cover_targets t
         JOIN organization_case_cover_assets a ON a.job_id=t.asset_job_id AND a.generation=t.asset_generation
@@ -296,7 +306,9 @@ export async function canReadCaseFile(db: Queryable, key: string, userId: string
   const { rows } = await db.query<CaseRow>(`SELECT c.* FROM organization_case_images i JOIN organization_cases c ON c.id=i.case_id AND c.company_id=i.company_id WHERE i.storage_key=$1`, [key])
   const c = rows[0]
   if (!c) return false
-  const decision = await createPermissionService(db).can({ actorUserId:userId,companyId:c.company_id,action:'cases:read' })
+  const permissions = createPermissionService(db)
+  const decision = await permissions.can({ actorUserId:userId,companyId:c.company_id,action:'cases:read' })
   if (!decision.allowed) return false
-  return decision.context?.companyMembership.role === 'TEACHER' || (c.status==='published' && !!c.published && references(c.published,caseImageUrl(key)))
+  if (c.status==='published' && c.published && references(c.published,caseImageUrl(key))) return true
+  return (await permissions.can({ actorUserId:userId,companyId:c.company_id,action:'cases:manage' })).allowed
 }
