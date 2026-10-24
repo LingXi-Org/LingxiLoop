@@ -24,7 +24,7 @@ test.describe('Memory public streaming', { tags: ['memory-public-streaming'],
       return true
     }, stage)
     await send(1)
-    await expect(screen.getByText('我先查看你授权的记忆。', { exact: true })).toBeVisible()
+    await expect(browser.locator('[data-slot="run-activity"] button').first()).toContainText('我先查看你授权的记忆。')
     await browser.locator('[data-slot="run-activity"] button').first().tap()
     await send(2)
     await expect(browser.locator('[data-native-part="tool-call"]')).toBeVisible()
@@ -32,7 +32,7 @@ test.describe('Memory public streaming', { tags: ['memory-public-streaming'],
     await send(3)
     await expect(screen.getByText('已查到目录，正在核对相关条目。', { exact: true })).toBeVisible()
     await expect(screen.getByText('我先查看你授权的记忆。', { exact: true })).toBeVisible()
-    expect(await browser.evaluate(() => [...document.querySelectorAll('[data-slot="run-activity"] [data-native-part]')].map(node => node.getAttribute('data-native-part')))).toEqual(['text', 'text'])
+    expect(await browser.evaluate(() => [...document.querySelectorAll('[data-slot="run-activity"] [data-native-part]')].map(node => node.getAttribute('data-native-part')))).toEqual(['text', 'tool-call', 'text'])
     expect(await browser.locator('[data-native-part="tool-call"]').count()).toBe(1)
     expect(await browser.evaluate(() => /查看全部活动|查看需要注意的记录|PRIVATE_REASONING/.test(document.body.textContent ?? ''))).toBe(false)
     await app.screenshot('memory-interleaved-before-final')
