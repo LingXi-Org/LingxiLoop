@@ -3,7 +3,8 @@
 // Adapted from assistant-ui Elements (MIT). Source and local changes:
 // third_party/assistant-ui-elements/README.md
 
-import { type ReactNode, useId, useRef } from "react";
+import { type ReactNode, useId, useRef, useState } from "react";
+import { TraceActivity } from "@/components/trace-waterfall/trace-activity";
 import { ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -73,6 +74,7 @@ export function RunActivity({
 }: RunActivityProps) {
   const anchorPrefix = useId();
   const details = useRef<HTMLDetailsElement>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const entryAnchor = (id: string) => `${anchorPrefix}-${encodeURIComponent(id)}`;
   const latestActivity =
     status === "running"
@@ -122,12 +124,12 @@ export function RunActivity({
               ))}
             </ol>}
             {historyControls && <div className="min-w-0 pt-3" data-slot="run-activity-history">{historyControls}</div>}
-            {trace && <details ref={details} data-slot="run-activity-details" className="group/details min-w-0 pt-3">
+            {trace && <details ref={details} onToggle={event => setDetailsOpen(event.currentTarget.open)} data-slot="run-activity-details" className="group/details min-w-0 pt-3">
               <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 flex w-fit max-w-full cursor-pointer list-none items-center gap-1.5 rounded-md py-1 text-sm outline-none focus-visible:ring-[3px] [&::-webkit-details-marker]:hidden">
                 <ChevronRightIcon aria-hidden="true" className="size-3.5 shrink-0 transition-transform duration-200 group-open/details:rotate-90 motion-reduce:transition-none" />
                 运行详情
               </summary>
-              <div className="min-w-0 pt-2">{trace}</div>
+              <TraceActivity.Provider value={open && detailsOpen}><div className="min-w-0 pt-2">{trace}</div></TraceActivity.Provider>
             </details>}
           </CollapsibleContent>
         </Collapsible>

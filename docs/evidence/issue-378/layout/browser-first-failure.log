@@ -1,0 +1,36 @@
+
+ RUN  e2e v0.17.0 /tmp/loop-378-layout
+      run 01a16cb4-ef70-77f0-afc8-63a7faa22c1f · targets: web
+
+ ✓ target "web" command ready 414ms
+ ❯ |web| e2e/web/layout-performance.e2e.ts (1 test | 1 failed) 8.11s
+   × Question geometry and retained trace lifecycle > tail growth keeps reading decisions and iframe identity while hidden trace clocks stop 8.11s
+     → expected false to be true
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| e2e/web/layout-performance.e2e.ts > Question geometry and retained trace lifecycle > tail growth keeps reading decisions and iframe identity while hidden trace clocks stop
+ASSERTION_FAILED: expected false to be true
+ ❯ e2e/web/layout-performance.e2e.ts:113:35
+    111|     expect(result.maxReadsPerStep).toBeLessThanOrEqual(64)
+    112|     expect(result.queries).toBe(0)
+    113|     expect(result.iframeRetained).toBe(true)
+       |                                   ^
+    114|     expect(result.iframeReloads).toBe(0)
+    115|     expect(result.selectedText).toBe('Question 128')
+ ❯ at http://127.0.0.1:5196/e2e/layout-performance/index.html
+ ❯ screen .e2e/layout-performance-browser/artifacts/web/e2e_web_layout-performance.e2e.ts__Question_20geometry_20and_20retained_20trace_20lifecycle__tail_20growth_20ke-6c0f5571/default/attempt-0/failure/screen.txt
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 0 passed (1)
+      Tests  1 failed | 0 passed (1)
+   Start at  06:59:20
+   Duration  9.46s (startup 414ms)
+     Report  .e2e/layout-performance-browser/report.json
+
+   Markdown  .e2e/layout-performance-browser/summary.md
+   Failures  .e2e/layout-performance-browser/failures/ (1 page)
+      JUnit  .e2e/layout-performance-browser/junit.xml
+

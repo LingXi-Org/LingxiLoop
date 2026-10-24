@@ -1,0 +1,288 @@
+TAP version 13
+# Subtest: public activity precedes secondary runtime details within the same disclosure
+ok 1 - public activity precedes secondary runtime details within the same disclosure
+  ---
+  duration_ms: 34.358353
+  type: 'test'
+  ...
+# Subtest: controlled open state is retained across running and terminal renders without fabricated timing
+ok 2 - controlled open state is retained across running and terminal renders without fabricated timing
+  ---
+  duration_ms: 38.873514
+  type: 'test'
+  ...
+# Subtest: history controls belong to the sole process disclosure even with no live entries
+ok 3 - history controls belong to the sole process disclosure even with no live entries
+  ---
+  duration_ms: 2.225599
+  type: 'test'
+  ...
+# Subtest: task diagnostics use the same secondary disclosure and archives do not replace the current summary
+ok 4 - task diagnostics use the same secondary disclosure and archives do not replace the current summary
+  ---
+  duration_ms: 7.693157
+  type: 'test'
+  ...
+# Subtest: the latest step shares the compact status row so completion does not retract a body-leading line
+ok 5 - the latest step shares the compact status row so completion does not retract a body-leading line
+  ---
+  duration_ms: 1.585812
+  type: 'test'
+  ...
+# Subtest: closed, offscreen and hidden-page running traces have no periodic clock; reopening catches up and disposal stops it
+ok 6 - closed, offscreen and hidden-page running traces have no periodic clock; reopening catches up and disposal stops it
+  ---
+  duration_ms: 2.129468
+  type: 'test'
+  ...
+# Subtest: CNY embedding rows, totals and selected price are explicit RMB and preserve tiny nonzero amounts
+ok 7 - CNY embedding rows, totals and selected price are explicit RMB and preserve tiny nonzero amounts
+  ---
+  duration_ms: 43.773723
+  type: 'test'
+  ...
+# Subtest: ended partial is labelled honestly without restarting its clock
+ok 8 - ended partial is labelled honestly without restarting its clock
+  ---
+  duration_ms: 36.537141
+  type: 'test'
+  ...
+# Subtest: ended blocked is labelled honestly without restarting its clock
+ok 9 - ended blocked is labelled honestly without restarting its clock
+  ---
+  duration_ms: 3.370981
+  type: 'test'
+  ...
+# Subtest: duration-only historical calls have no fabricated axis or positioned timeline bars
+ok 10 - duration-only historical calls have no fabricated axis or positioned timeline bars
+  ---
+  duration_ms: 39.655237
+  type: 'test'
+  ...
+# Subtest: anchored intervals keep their timeline while duration-only calls remain unpositioned
+ok 11 - anchored intervals keep their timeline while duration-only calls remain unpositioned
+  ---
+  duration_ms: 5.47059
+  type: 'test'
+  ...
+# Subtest: a task can select only a span already present in the authorized trace
+ok 12 - a task can select only a span already present in the authorized trace
+  ---
+  duration_ms: 9.928084
+  type: 'test'
+  ...
+# Subtest: real work types have separate sections without a collapsible catch-all run or synthetic spans
+ok 13 - real work types have separate sections without a collapsible catch-all run or synthetic spans
+  ---
+  duration_ms: 10.486719
+  type: 'test'
+  ...
+# (node:513991) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: connection recovery keeps reply text and exposes no diagnostic card
+ok 14 - connection recovery keeps reply text and exposes no diagnostic card
+  ---
+  duration_ms: 175.167217
+  type: 'test'
+  ...
+# Subtest: the real conversation thread displays native v2 messages
+ok 15 - the real conversation thread displays native v2 messages
+  ---
+  duration_ms: 33.610581
+  type: 'test'
+  ...
+# Subtest: tool terminal and approval states are visible without requiring a result
+ok 16 - tool terminal and approval states are visible without requiring a result
+  ---
+  duration_ms: 85.210041
+  type: 'test'
+  ...
+# Subtest: unclassified legacy tools and retired records stay visible
+ok 17 - unclassified legacy tools and retired records stay visible
+  ---
+  duration_ms: 28.99434
+  type: 'test'
+  ...
+# Subtest: native run parts have one process disclosure while answers and current decisions stay outside
+ok 18 - native run parts have one process disclosure while answers and current decisions stay outside
+  ---
+  duration_ms: 36.437065
+  type: 'test'
+  ...
+# Subtest: run activity retains cancelled, error and incomplete outcomes
+ok 19 - run activity retains cancelled, error and incomplete outcomes
+  ---
+  duration_ms: 103.9905
+  type: 'test'
+  ...
+# Subtest: existing data names render descriptive cards without dumping JSON
+ok 20 - existing data names render descriptive cards without dumping JSON
+  ---
+  duration_ms: 20.502335
+  type: 'test'
+  ...
+# Subtest: memory metadata does not expose summaries in conversation messages
+ok 21 - memory metadata does not expose summaries in conversation messages
+  ---
+  duration_ms: 17.251963
+  type: 'test'
+  ...
+# Subtest: all senders omit bubble timestamps and only outgoing messages show delivery
+ok 22 - all senders omit bubble timestamps and only outgoing messages show delivery
+  ---
+  duration_ms: 56.875479
+  type: 'test'
+  ...
+# Subtest: attachments retain delivery feedback without a timestamp
+ok 23 - attachments retain delivery feedback without a timestamp
+  ---
+  duration_ms: 20.692901
+  type: 'test'
+  ...
+# Subtest: running and completed replies omit timestamps and completion labels
+ok 24 - running and completed replies omit timestamps and completion labels
+  ---
+  duration_ms: 28.053669
+  type: 'test'
+  ...
+# Subtest: mixed content and cards omit timestamps
+ok 25 - mixed content and cards omit timestamps
+  ---
+  duration_ms: 62.492906
+  type: 'test'
+  ...
+# Subtest: agent replies have one complete action row after all message parts
+ok 26 - agent replies have one complete action row after all message parts
+  ---
+  duration_ms: 62.763172
+  type: 'test'
+  ...
+# Subtest: failed streamed replies retain prose and show the official error banner with retry
+ok 27 - failed streamed replies retain prose and show the official error banner with retry
+  ---
+  duration_ms: 20.181576
+  type: 'test'
+  ...
+# Subtest: terminal feedback shares the run error or cancellation display and retains retry context
+ok 28 - terminal feedback shares the run error or cancellation display and retains retry context
+  ---
+  duration_ms: 32.15315
+  type: 'test'
+  ...
+# Subtest: sender kind owns bubble chrome and agent avatars align at the top
+ok 29 - sender kind owns bubble chrome and agent avatars align at the top
+  ---
+  duration_ms: 29.107384
+  type: 'test'
+  ...
+# Subtest: explicit public process uses RunActivity across memory tools without legacy history controls
+ok 30 - explicit public process uses RunActivity across memory tools without legacy history controls
+  ---
+  duration_ms: 43.428292
+  type: 'test'
+  ...
+# Subtest: RunActivity contains process on both sides of a streaming answer without hiding the answer or restoring old controls
+ok 31 - RunActivity contains process on both sides of a streaming answer without hiding the answer or restoring old controls
+  ---
+  duration_ms: 19.741607
+  type: 'test'
+  ...
+# Subtest: interrupt and awaiting_input share one form and read-only history has none
+ok 32 - interrupt and awaiting_input share one form and read-only history has none
+  ---
+  duration_ms: 26.129044
+  type: 'test'
+  ...
+# Subtest: legacy unclassified content stays visible and the answer region is stable across ordering
+ok 33 - legacy unclassified content stays visible and the answer region is stable across ordering
+  ---
+  duration_ms: 43.191754
+  type: 'test'
+  ...
+# Subtest: partial and blocked replies retain delivered results and always expose one recovery status
+ok 34 - partial and blocked replies retain delivered results and always expose one recovery status
+  ---
+  duration_ms: 272.466622
+  type: 'test'
+  ...
+# Subtest: incomplete recovery honors lifecycle and version protections
+ok 35 - incomplete recovery honors lifecycle and version protections
+  ---
+  duration_ms: 36.972217
+  type: 'test'
+  ...
+# Subtest: knowledge results use one compact tool row while preserving source and terminal states
+ok 36 - knowledge results use one compact tool row while preserving source and terminal states
+  ---
+  duration_ms: 120.996824
+  type: 'test'
+  ...
+# Subtest: each message render classifies its parts once and still places exactly one final footer
+ok 37 - each message render classifies its parts once and still places exactly one final footer
+  ---
+  duration_ms: 660.297712
+  type: 'test'
+  ...
+# Subtest: only the unique current interrupt owns input; ambiguous interrupts fall back to the run
+ok 38 - only the unique current interrupt owns input; ambiguous interrupts fall back to the run
+  ---
+  duration_ms: 4.432132
+  type: 'test'
+  ...
+# Subtest: one current matching approval owns controls and resolved/old requests cannot submit
+ok 39 - one current matching approval owns controls and resolved/old requests cannot submit
+  ---
+  duration_ms: 0.549082
+  type: 'test'
+  ...
+# Subtest: explicit process is exclusive and legacy structured results are visible
+ok 40 - explicit process is exclusive and legacy structured results are visible
+  ---
+  duration_ms: 0.556937
+  type: 'test'
+  ...
+# Subtest: recovered errors join process while unresolved current failures remain visible
+ok 41 - recovered errors join process while unresolved current failures remain visible
+  ---
+  duration_ms: 0.345807
+  type: 'test'
+  ...
+# Subtest: stable trusted answer identity survives index movement but resets on new request
+ok 42 - stable trusted answer identity survives index movement but resets on new request
+  ---
+  duration_ms: 0.328931
+  type: 'test'
+  ...
+# Subtest: known event order stays ordered while unknown legacy entries retain their server slots
+ok 43 - known event order stays ordered while unknown legacy entries retain their server slots
+  ---
+  duration_ms: 8.041608
+  type: 'test'
+  ...
+# Subtest: unavailable knowledge stays in attention until recovery without promoting cancelled or unrelated calls
+ok 44 - unavailable knowledge stays in attention until recovery without promoting cancelled or unrelated calls
+  ---
+  duration_ms: 0.542557
+  type: 'test'
+  ...
+# Subtest: question reading-line/visible/bottom choices match the original scan across scroll, reflow and prepend
+ok 45 - question reading-line/visible/bottom choices match the original scan across scroll, reflow and prepend
+  ---
+  duration_ms: 5.315598
+  type: 'test'
+  ...
+# Subtest: a long history tail resize reads logarithmic geometry instead of every historical question
+ok 46 - a long history tail resize reads logarithmic geometry instead of every historical question
+  ---
+  duration_ms: 0.314801
+  type: 'test'
+  ...
+1..46
+# tests 46
+# suites 0
+# pass 46
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13706.086205
