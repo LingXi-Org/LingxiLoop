@@ -24,7 +24,7 @@ test('case code blocks survive native paste, preview, real API save, reload and 
   const readCodes = (selector: string) => browser.evaluate(selector => Array.from(document.querySelectorAll(`${selector} pre code`)).map(node => node.textContent), selector)
   await expect.poll(() => readCodes('[aria-label="正文"]')).toEqual(samples.map(sample => sample.code))
   await screen.getByRole('button', '预览', { exact: true }).tap()
-  await expect.poll(() => readCodes('[aria-label="案例预览"]')).toEqual(samples.map(sample => sample.code))
+  await expect.poll(() => readCodes('[aria-label="案例预览"] .content-document')).toEqual(samples.map(sample => sample.code))
   await app.screenshot('code-preview-light')
   await screen.getByRole('button', '发布', { exact: true }).tap()
   await expect(screen.getByRole('status').first()).toContainText('案例已发布')
