@@ -10,8 +10,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-24T07:32:26.914Z",
-      "finishedAt": "2026-10-24T07:32:28.624Z",
+      "startedAt": "2026-10-24T07:53:48.439Z",
+      "finishedAt": "2026-10-24T07:54:21.923Z",
       "exitCode": 0
     },
     {
@@ -21,8 +21,8 @@
         "tsx",
         "server/src/migrate-bin.ts"
       ],
-      "startedAt": "2026-10-24T07:32:28.624Z",
-      "finishedAt": "2026-10-24T07:32:29.713Z",
+      "startedAt": "2026-10-24T07:54:21.924Z",
+      "finishedAt": "2026-10-24T07:54:30.699Z",
       "exitCode": 0
     },
     {
@@ -33,8 +33,8 @@
         "--config",
         "e2e.forum.config.ts"
       ],
-      "startedAt": "2026-10-24T07:32:53.407Z",
-      "finishedAt": "2026-10-24T07:33:39.700Z",
+      "startedAt": "2026-10-24T07:55:23.027Z",
+      "finishedAt": "2026-10-24T07:57:51.906Z",
       "exitCode": 0
     }
   ],

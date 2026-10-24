@@ -6,16 +6,24 @@
 
 | 检查 | 结果 | 证据 |
 | --- | --- | --- |
-| 案例浏览器回归 | 3 / 3 通过 | [报告](cases-report.json)、[JUnit](cases-junit.xml)、[驱动结果](cases-results.json) |
+| 案例浏览器回归 | 6 / 7 通过；1 项剪贴板写入失败 | [报告](cases-report.json)、[JUnit](cases-junit.xml)、[驱动结果](cases-results.json) |
 | 论坛完整流程 | 1 / 1 通过 | [报告](forum-core-report.json)、[JUnit](forum-core-junit.xml) |
 | 论坛布局与详情入口 | 1 / 1 通过 | [报告](forum-layout-report.json)、[JUnit](forum-layout-junit.xml) |
+| 教师助手与独立发布 | 3 / 3 通过 | [报告](forum-teacher-report.json)、[JUnit](forum-teacher-junit.xml) |
 | 案例服务端集成 | 11 / 11 通过 | [完整 TAP](cases-integration.txt) |
 | 改动生产 TS/TSX 定向 lint | 通过，6 文件 | [输出](lint.txt) |
 | 前端 typecheck | 通过 | 根 tsconfig 与 tsconfig.node.json 均退出 0 |
 | 服务端 typecheck | 未通过 | [错误](server-typecheck.txt) |
 | E2E typecheck | 未通过 | [错误](e2e-typecheck.txt) |
 
-服务端类型错误位于未改动的 `callback-deadlines.test.ts`、`runtime-model-context.test.ts`、`activity-tool.ts` 和 `im/router.ts`。E2E 检查还报告 `e2e/forum/api.ts` 的根目录／server OpenAI 类型身份冲突。Zod 错误指向 4.4／4.5 类型不一致。本次未修改依赖锁或绕过类型检查；完整错误保留在上面的文件中。
+合并主线 f8b452fd 后，依赖按锁重新安装为 LingxiOS 3.8.11，旧的本轮隔离测试库重命名保留，再由仓库驱动创建新库。前端 typecheck 与生产文件 lint 再次通过。
+
+服务端类型错误位于未改动的 `callback-deadlines.test.ts`、`runtime-model-context.test.ts`、`activity-tool.ts` 和 `im/router.ts`。E2E 检查还报告 `e2e/forum/api.ts` 的根目录／server OpenAI 类型身份冲突，以及主线 `e2e/react-delivery/recovery.e2e.ts` 与聊天 runtime 的别名／类型错误。Zod 错误指向 4.4／4.5 类型不一致。本次未修改依赖锁或绕过类型检查；完整错误保留在上面的文件中。
+
+## 已观察到的失败与复跑
+
+- 案例 7 个场景中，原有 3 个页面流程、旧 Markdown／原生文档兼容、VS Code 原样粘贴和草稿隔离共 6 个通过。剩余代码块流程已完成粘贴、预览、发布、重开和二次修改的断言，随后点击原生复制时显示“复制失败，请选择代码后复制。”，因此“已复制”断言失败，其后的模拟失败／成功断言未执行。串行运行仍失败，不能归因于并行浏览器。[失败屏幕](case-clipboard-failure-screen.txt)、[截图](screenshots/failure.png)；[首次报告](cases-initial-clipboard-failure.json)。
+- 论坛完整流程首次因自动化清空未删除恢复的旧草稿而失败；改为真实键盘全选、删除并断言为空后，完整流程通过。[首次报告](forum-initial-draft-clear-failure.json)与最终报告均保留。
 
 ## 覆盖范围
 
@@ -47,9 +55,10 @@ docker compose -f e2e/server/compose.yaml up -d --wait
 node e2e/server/cases.mjs --browser-only
 node e2e/server/forum.mjs --browser-only --core-only
 node e2e/server/forum.mjs --browser-only --issue187
+node e2e/server/forum.mjs --browser-only --issue325
 ```
 
-两个论坛驱动使用同一隔离测试库及端口，必须串行运行。驱动会初始化测试数据，不能指向开发或生产数据库。浏览器报告重生于 `artifacts/cases/browser`、`artifacts/forum/core/browser` 和 `artifacts/issue-187/forum/browser`。
+论坛驱动使用同一隔离测试库及端口，必须串行运行。案例剪贴板失败已单独串行复现，未通过更改浏览器权限或替换原生写入绕过。驱动会初始化测试数据，不能指向开发或生产数据库。浏览器报告重生于 `artifacts/cases/browser`、`artifacts/forum/core/browser` 和 `artifacts/issue-187/forum/browser`。
 
 作者集成使用另建的 `lingxiloop_visual_integration_test` 数据库，连接到同一 compose 的 `127.0.0.1:55432`。使用 compose 的本地测试账号；设置 `DATABASE_URL` 和 `INTEGRATION_DATABASE_URL` 为该专用库，`REDIS_URL=redis://127.0.0.1:56379/9`、`NODE_ENV=test`、`DOTENV_CONFIG_PATH` 为不存在的测试路径、`OPENAI_API_KEY=isolated-visual-test`、`OPENAI_BASE_URL=http://127.0.0.1:1/v1`、`OPENAI_EMBEDDING_MODEL=disabled`、`LINGXILOOP_DISABLE_EMBEDDINGS=1`、`OPEN_NOTEBOOK_ENABLED=false`，并提供合成 `WUKONG_USER_TOKEN_SECRET`、`LINGXILOOP_GATEWAY_HMAC_SECRET` 和 `LINGXILOOP_INVITE_BASE_URL=http://127.0.0.1:53108`。清空 `RESEND_API_KEY`、`ALERT_WEBHOOK_URL` 后运行：
 

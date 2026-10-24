@@ -1,8 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="120.971">
-  <testsuite name="e2e/cases/browser.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="120.971">
-    <testcase name="case loading, retry and empty filters retain reachable controls [cases]" classname="e2e/cases/browser.e2e.ts" time="27.968"/>
-    <testcase name="organization case publication, cross-course access, isolation and responsive navigation [cases]" classname="e2e/cases/browser.e2e.ts" time="68.277"/>
-    <testcase name="teacher authors and publishes cover and body images through the UI [cases]" classname="e2e/cases/browser.e2e.ts" time="24.726"/>
+<testsuites name="e2e" tests="7" failures="1" errors="0" skipped="0" time="177.691">
+  <testsuite name="e2e/cases/browser.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="95.671">
+    <testcase name="case loading, retry and empty filters retain reachable controls [cases]" classname="e2e/cases/browser.e2e.ts" time="27.611"/>
+    <testcase name="organization case publication, cross-course access, isolation and responsive navigation [cases]" classname="e2e/cases/browser.e2e.ts" time="52.809"/>
+    <testcase name="teacher authors and publishes cover and body images through the UI [cases]" classname="e2e/cases/browser.e2e.ts" time="15.251"/>
+  </testsuite>
+  <testsuite name="e2e/cases/code-blocks.e2e.ts" tests="3" failures="1" errors="0" skipped="0" time="62.454">
+    <testcase name="case code blocks survive native paste, preview, real API save, reload and second edit [cases]" classname="e2e/cases/code-blocks.e2e.ts" time="45.013">
+      <failure message="expect.toBeVisible failed&#10;locator: getByRole(&quot;button&quot;, name: &quot;已复制&quot;)&#10;expected: visible&#10;observed: no node (match count 0)" type="ASSERTION_FAILED">ASSERTION_FAILED (body): expect.toBeVisible failed
+locator: getByRole(&quot;button&quot;, name: &quot;已复制&quot;)
+expected: visible
+observed: no node (match count 0)</failure>
+    </testcase>
+    <testcase name="legacy Markdown reading and editing share code semantics, including an unclosed fence [cases]" classname="e2e/cases/code-blocks.e2e.ts" time="11.439"/>
+    <testcase name="VS Code clipboard preserves HTML-like source as literal code [cases]" classname="e2e/cases/code-blocks.e2e.ts" time="6.002"/>
+  </testsuite>
+  <testsuite name="e2e/cases/draft-visibility.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="19.566">
+    <testcase name="saved drafts stay private in reader lists and direct links; published snapshots stay unchanged [cases]" classname="e2e/cases/draft-visibility.e2e.ts" time="19.566"/>
   </testsuite>
 </testsuites>

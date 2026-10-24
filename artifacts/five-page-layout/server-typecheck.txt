@@ -1,6 +1,6 @@
 server/src/__integration__/callback-deadlines.test.ts(134,44): error TS2345: Argument of type 'string | number' is not assignable to parameter of type 'number'.
   Type 'string' is not assignable to type 'number'.
-server/src/__integration__/runtime-model-context.test.ts(91,52): error TS2769: No overload matches this call.
+server/src/__integration__/runtime-model-context.test.ts(173,52): error TS2769: No overload matches this call.
   Overload 1 of 2, '(actual: unknown, expected: "succeeded", message?: Error | AssertMessageFunction | undefined): asserts actual is "succeeded"', gave the following error.
     Argument of type 'string | undefined' is not assignable to parameter of type 'Error | AssertMessageFunction | undefined'.
       Type 'string' is not assignable to type 'Error | AssertMessageFunction | undefined'.

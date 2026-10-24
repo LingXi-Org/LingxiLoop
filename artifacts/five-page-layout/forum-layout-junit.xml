@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="38.402">
-  <testsuite name="e2e/forum/resources.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="38.402">
-    <testcase name="forum offers only assignments and discussions on desktop and mobile [forum]" classname="e2e/forum/resources.e2e.ts" time="38.402"/>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="130.800">
+  <testsuite name="e2e/forum/resources.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="130.800">
+    <testcase name="forum offers only assignments and discussions on desktop and mobile [forum]" classname="e2e/forum/resources.e2e.ts" time="130.800"/>
   </testsuite>
 </testsuites>

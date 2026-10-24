@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="77.790">
+  <testsuite name="e2e/forum/issue325.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="77.790">
+    <testcase name="325 explicit teacher-assistant entry repairs missing and hidden rooms, retries the entry, and preserves body/files [forum]" classname="e2e/forum/issue325.e2e.ts" time="41.991"/>
+    <testcase name="325 a pending teacher-assistant entry cannot navigate after switching course, and students remain denied [forum]" classname="e2e/forum/issue325.e2e.ts" time="12.755"/>
+    <testcase name="325 actual draft card keeps files on failed publication and retries one homework [forum]" classname="e2e/forum/issue325.e2e.ts" time="23.044"/>
+  </testsuite>
+</testsuites>

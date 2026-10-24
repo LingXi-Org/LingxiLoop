@@ -1,69 +1,69 @@
-[integration] selected 1/110 file(s): organization-cases.test.ts
+[integration selected] selected 1/117 file(s): organization-cases.test.ts
 TAP version 13
 # Subtest: [integration] cases enforce organization teacher writes and published-only student reads at HTTP boundaries
 ok 1 - [integration] cases enforce organization teacher writes and published-only student reads at HTTP boundaries
   ---
-  duration_ms: 7685.1847
+  duration_ms: 10425.0844
   type: 'test'
   ...
 # Subtest: [integration] draft edits do not alter public article, search, categories, or active index until explicit publication
 ok 2 - [integration] draft edits do not alter public article, search, categories, or active index until explicit publication
   ---
-  duration_ms: 4870.0416
+  duration_ms: 7802.1221
   type: 'test'
   ...
 # Subtest: [integration] managed case images follow the published snapshot, organization and current role even with generic upload grants
 ok 3 - [integration] managed case images follow the published snapshot, organization and current role even with generic upload grants
   ---
-  duration_ms: 5103.7617
+  duration_ms: 8601.9133
   type: 'test'
   ...
 # Subtest: [integration] failed publish keeps the prior public version and concurrent teacher saves cannot overwrite each other
 ok 4 - [integration] failed publish keeps the prior public version and concurrent teacher saves cannot overwrite each other
   ---
-  duration_ms: 4515.2391
+  duration_ms: 6809.9605
   type: 'test'
   ...
 # Subtest: [integration] organization retrieval uses only the current published source and rejects retained vectors after update or unpublish
 ok 5 - [integration] organization retrieval uses only the current published source and rejects retained vectors after update or unpublish
   ---
-  duration_ms: 4767.9037
+  duration_ms: 7158.4126
   type: 'test'
   ...
 # Subtest: [integration] case retrieval preserves course/private audience intersection and revocation across external search
 ok 6 - [integration] case retrieval preserves course/private audience intersection and revocation across external search
   ---
-  duration_ms: 5183.5136
+  duration_ms: 7790.6117
   type: 'test'
   ...
 # Subtest: [integration] cases use existing worker ingestion, bounded failure/retry and invalidated lease fencing
 ok 7 - [integration] cases use existing worker ingestion, bounded failure/retry and invalidated lease fencing
   ---
-  duration_ms: 4912.3237
+  duration_ms: 14359.1194
   type: 'test'
   ...
 # Subtest: [integration] publication, removal and retry share worker job-before-source lock order
 ok 8 - [integration] publication, removal and retry share worker job-before-source lock order
   ---
-  duration_ms: 4936.3589
+  duration_ms: 10520.1016
   type: 'test'
   ...
 # Subtest: [integration] real Agent knowledge tools consume published case evidence without widening generic source writes
 ok 9 - [integration] real Agent knowledge tools consume published case evidence without widening generic source writes
   ---
-  duration_ms: 5651.1978
+  duration_ms: 10981.391
   type: 'test'
   ...
 # Subtest: [integration] Agent case evidence is rejected after republish, unpublish and audience revocation
 ok 10 - [integration] Agent case evidence is rejected after republish, unpublish and audience revocation
   ---
-  duration_ms: 5969.0489
+  duration_ms: 17951.8354
   type: 'test'
   ...
 # Subtest: [integration] context reauthorizes current case source versions independently of course knowledge resources
 ok 11 - [integration] context reauthorizes current case source versions independently of course knowledge resources
   ---
-  duration_ms: 4876.5073
+  duration_ms: 19587.7113
   type: 'test'
   ...
 1..11
@@ -74,4 +74,6 @@ ok 11 - [integration] context reauthorizes current case source versions independ
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 66858.2664
+# duration_ms 172849.8209
+[integration file] organization-cases.test.ts duration_ms=173148 exit=0
+[integration result] mode=selected files=1 duration_ms=173153 exit=0

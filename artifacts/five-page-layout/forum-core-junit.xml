@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="99.856">
-  <testsuite name="e2e/forum/browser.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="99.856">
-    <testcase name="inline Memos lifecycle, drafts, moderation, assignments and private history [forum]" classname="e2e/forum/browser.e2e.ts" time="99.856"/>
+<testsuites name="e2e" tests="1" failures="0" errors="0" skipped="0" time="99.010">
+  <testsuite name="e2e/forum/browser.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="99.010">
+    <testcase name="inline Memos lifecycle, drafts, moderation, assignments and private history [forum]" classname="e2e/forum/browser.e2e.ts" time="99.010"/>
   </testsuite>
 </testsuites>
