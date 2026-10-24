@@ -20,6 +20,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
  const phases=new Map(plan.stacks.map(r=>[r.stack,'source'])),configs=new Map(),identities=new Map(),images=new Map(),containerPolicies=new Map()
  const stoppedWriters=new Set()
  let restoringSource=false
+ let bindingChecked=false
  let patchSubmitted=false,patchChecked=false,migrationSubmitted=false,backupSubmitted=false,backupVerified=false,seedSubmitted=false,seedVerified=false
  const rowFor=stack=>{const r=plan.stacks.find(r=>r.stack===stack);check(r,'Unexpected stack');return r}
  const imageKey=(which,server)=>which+':'+server
@@ -142,6 +143,11 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
   await guard([stack])
   return parseMarker(await t.execute('RunStackService',oneOff(stack,'db-migrate',{command:['timeout','-k','5','30','node',...(publicText?['--import','tsx']:[]),'--input-type=module','-e',METADATA_CODE+(publicText?PUBLIC_METADATA_CODE:'')+(trace?TRACE_METADATA_CODE:'')+`console.log('SCHEMA_UPGRADE_METADATA='+JSON.stringify(metadata));`]})),'METADATA')
  }
+ async function readBindingBarrier(){
+  const code=METADATA_CODE+PUBLIC_METADATA_CODE+TRACE_METADATA_CODE+`import{readRuntimePatchBarrier}from'./server/src/db/runtime-patch.ts';import{pool}from'./server/src/db/pool.ts';const c=await pool.connect();try{await c.query('BEGIN READ ONLY');await c.query("SET LOCAL statement_timeout='5s'; SET LOCAL lock_timeout='1s'");const b=await readRuntimePatchBarrier(c);await c.query('COMMIT');console.log('SCHEMA_UPGRADE_PATCH_READ='+JSON.stringify(b));}finally{c.release();await pool.end();}`;
+  const value=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{command:['timeout','-k','5','30','node','--import','tsx','--input-type=module','-e',code]})),'PATCH_READ');
+  return value
+ }
  return {assertIdle,inspect,verifyImages,stage,state,metadata,
   async prepareSourceRestoration(boundary){
    check([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)&&!restoringSource&&configs.size===0&&boundary.original?.length===4,'Source restoration may initialize only once')
@@ -213,11 +219,17 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    const value=parseMarker(u,'METADATA');assertSeedEquality(value);seedVerified=true;
    return {...value,native:{id:u._id?.$oid,operation:u.operation,target:u.target,status:u.status,success:u.success,startTs:u.start_ts,endTs:u.end_ts}};
   },
+  async bindingPrecheck(){
+   check([CASE_COVER55_FORMAT,SAME55_FORMAT].includes(plan.format)&&!bindingChecked&&!migrationSubmitted
+    &&APPS.every(stack=>phases.get(stack)==='target'&&['worker','lingxiloop'].every(service=>stoppedWriters.has(stack+':'+service))),'One fully drained product55 binding check required');
+   await guard();await verifyImages('target');const value=await readBindingBarrier();
+   check(['prepared','liveWork','liveSession','liveAttempts','liveCapture','liveOutbox','incompatibleRuns'].every(k=>value?.[k]===0),'Changed Worker closure requires zero live leases and no bound/checkpoint runs');
+   bindingChecked=true;return value;
+  },
   async patchPrecheck(){
    check(plan.format===RUNTIME_PATCH_FORMAT&&!patchChecked&&!patchSubmitted&&APPS.every(stack=>phases.get(stack)==='target'),'One qualified runtime patch precheck required');
    await guard();await verifyImages('target');
-   const code=METADATA_CODE+PUBLIC_METADATA_CODE+TRACE_METADATA_CODE+`import{readRuntimePatchBarrier}from'./server/src/db/runtime-patch.ts';import{pool}from'./server/src/db/pool.ts';const c=await pool.connect();try{await c.query('BEGIN READ ONLY');await c.query("SET LOCAL statement_timeout='5s'; SET LOCAL lock_timeout='1s'");const b=await readRuntimePatchBarrier(c);await c.query('COMMIT');console.log('SCHEMA_UPGRADE_PATCH_READ='+JSON.stringify(b));}finally{c.release();await pool.end();}`;
-   const value=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{command:['timeout','-k','5','30','node','--import','tsx','--input-type=module','-e',code]})),'PATCH_READ');
+   const value=await readBindingBarrier();
    check(value?.incompatibleRuns===0,'Unfinished bound/checkpoint runs must complete under their original runtime');patchChecked=true;return value;
   },
   async patchProvenance(){
@@ -233,7 +245,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    check(equal(receipt,{source:plan.source.runtime,target:plan.target.runtime,schema:14,product:54,updated:1}),'Runtime patch receipt mismatch');
   },
   async migrate(){
-   check([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,CASE_COVER55_FORMAT].includes(plan.format)&&!migrationSubmitted&&(!needsBackup||backupVerified)&&(!provenanceUpgrade||seedVerified)
+   check([PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,CASE_COVER55_FORMAT].includes(plan.format)&&!migrationSubmitted&&(!needsBackup||backupVerified)&&(!provenanceUpgrade||seedVerified)&&(plan.format!==CASE_COVER55_FORMAT||bindingChecked)
     &&APPS.every(stack=>phases.get(stack)==='target'&&(needsBackup||provenanceUpgrade?['worker','lingxiloop']:['worker']).every(service=>stoppedWriters.has(stack+':'+service))),'Only one staged, drained and backup-qualified migration may submit')
    await guard()
    const rows=await inspect()
@@ -248,7 +260,7 @@ export function createHostReleaseOperations({plan,files,apiKey,apiSecret,signal,
    const receipt=parseMarker(await t.execute('RunStackService',oneOff(APPS[0],'db-migrate',{...(native?{env:{LINGXIOS_SCHEMA_UPGRADE_DRAINED:'true'}}:{}),command:['timeout','-k','30','300','node','--import','tsx','--input-type=module','-e',code]})),'MIGRATED')
    check(equal(receipt,{sha:plan.target.sha,schema:plan.target.schema,product:plan.target.productVersion}),'Migration marker mismatch')
   },
-  async deploy(stack,service){check(APPS.includes(stack)&&['lingxiloop','worker'].includes(service)&&phases.get(stack)===(restoringSource?'source':'target'),'Only qualified app services may deploy');await guard([stack]);if([SAME54_FORMAT,RUNTIME_PATCH_FORMAT,CASE_COVER55_FORMAT,SAME55_FORMAT].includes(plan.format))await onProgress({phase:'service-action',action:'DeployStack',stack,service});return t.execute('DeployStack',{stack,services:[service]})},
+  async deploy(stack,service){check(APPS.includes(stack)&&['lingxiloop','worker'].includes(service)&&phases.get(stack)===(restoringSource?'source':'target')&&(![CASE_COVER55_FORMAT,SAME55_FORMAT].includes(plan.format)||bindingChecked),'Only qualified app services may deploy');await guard([stack]);if([SAME54_FORMAT,RUNTIME_PATCH_FORMAT,CASE_COVER55_FORMAT,SAME55_FORMAT].includes(plan.format))await onProgress({phase:'service-action',action:'DeployStack',stack,service});return t.execute('DeployStack',{stack,services:[service]})},
   async verifyHealthy(stack,service,observedIdentity){
    check(![SAME54_FORMAT,RUNTIME_PATCH_FORMAT,CASE_COVER55_FORMAT,SAME55_FORMAT].includes(plan.format)||hex.test(observedIdentity?.id??'')&&/^sha256:[a-f0-9]{64}$/.test(observedIdentity.imageId??''),'Observed same54 container identity required')
    const deadline=Date.now()+180000

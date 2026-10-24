@@ -64,6 +64,7 @@ function fixture(fault={}){
   async verifyImages(which='target'){trace.push('images:'+which);if(fault.image&&which==='target')throw Error('missing image')},
   async stage(stack){trace.push('stage:'+stack);staged++;if(fault.stage&&staged===2)throw Object.assign(Error('unknown'),{uncertain:true})},
   async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...((fault.reader||fault.producer||fault.trace)?{publicText:fault.wrongV3Capability?2:releasePlan.publicText.target.reader,deployment:{...releasePlan.publicText.target,...(fault.producerLeak?{producer:'purpose-json-v1'}:{})},configurationSha256:releasePlan.publicText.targetConfigurationSha256,modelOptions:fault.producerV2?{publicTextProtocol:fault.wrongV2Options?'purpose-json-v1':releasePlan.publicText.target.producer}:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:1}:{})}:{}),...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
+  async bindingPrecheck(){trace.push('binding-precheck');if(fault.bound)throw Error('bound/checkpoint runs');return {incompatibleRuns:0}},
   async patchPrecheck(){trace.push('patch-precheck');if(fault.bound)throw Error('incompatible old runs');return {incompatibleRuns:0}},
   async patchProvenance(){trace.push('patch');if(fault.patchUnknown)throw Object.assign(Error('unknown patch'),{uncertain:true});if(fault.patchFailed)throw Error('patch failed');migrated=true;if(fault.patchCommittedFailure)throw Error('patch committed before failure')},
   async seedPrecheck(){trace.push('seed');if(fault.seedUnknown)throw Object.assign(Error('unknown seed'),{uncertain:true});if(fault.seed)throw Error('seed drift');return {equal:true}},
@@ -500,16 +501,17 @@ test('cover55 upgrade prepares online, expires leases, backs up once, migrates o
  await f.prepare();assert.equal(f.trace.some(x=>x.startsWith('stop:')),false);f.trace.length=0;f.events.length=0;
  const result=await f.run();assert.equal(result.state.product,55);assert.equal(result.state.runtime,'3.8.12');assert.equal(result.runTrace,1);
  assert.equal(f.trace.filter(x=>x==='backup').length,1);assert.equal(f.trace.filter(x=>x==='migrate').length,1);assert.equal(f.trace.includes('seed'),false);
- assert.ok(f.trace.indexOf('backup')<f.trace.indexOf('migrate'));assert.equal(f.events.filter(e=>e.status==='waiting-for-lease-expiry').length,2);
+ assert.ok(f.trace.indexOf('binding-precheck')<f.trace.indexOf('backup'));assert.ok(f.trace.indexOf('binding-precheck')>f.trace.findLastIndex(x=>x.startsWith('stop:')));assert.ok(f.trace.indexOf('backup')<f.trace.indexOf('migrate'));assert.equal(f.events.filter(e=>e.status==='waiting-for-lease-expiry').length,2);
  const backup=f.events.findIndex(e=>e.phase==='backup');assert.equal(f.events.slice(0,backup).filter(e=>e.status==='zero-leases').length,2);
  assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)));
  assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)));
  assert.equal(f.events.filter(e=>e.status==='observed').length,4);
 });
 test('cover55 backup/unknown failures never migrate or replay; committed55 is fix-forward and refuses54 retry',async()=>{
- for(const fault of [{badBackup:true},{backupUnknown:true},{migrationUnknown:true},{migrationCommittedFailure:true}]){
+ for(const fault of [{bound:true},{badBackup:true},{backupUnknown:true},{migrationUnknown:true},{migrationCommittedFailure:true}]){
   const f=fixture({cover55:true,...fault});await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);
-  if(fault.badBackup||fault.backupUnknown)assert.equal(f.trace.includes('migrate'),false);
+  if(fault.bound||fault.badBackup||fault.backupUnknown)assert.equal(f.trace.includes('migrate'),false);
+  if(fault.bound)assert.equal(f.trace.includes('backup'),false);
   if(fault.migrationUnknown){assert.equal(f.trace.at(-1),'migrate');assert.equal(f.events.at(-1).recovery,'unknown')}
   if(fault.migrationCommittedFailure){assert.equal(f.events.at(-1).recovery,'fix-forward');f.trace.length=0;await assert.rejects(restoreImageSource({plan:f.plan,receipt:{mode:f.plan.format,planHash:f.plan.planHash,complete:false,events:f.events},ops:f.ops}));assert.deepEqual(f.trace,[]);await assert.rejects(f.run());assert.equal(f.trace.includes('migrate'),false)}
  }

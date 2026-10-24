@@ -176,6 +176,7 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
    await record({phase:'drain',status:'zero-leases',state})
   }
   await barrier([CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT,CASE_COVER55_FORMAT,SAME55_FORMAT].includes(plan.format));await ops.wait(2000);await barrier()
+  if([CASE_COVER55_FORMAT,SAME55_FORMAT].includes(plan.format)){const receipt=await ops.bindingPrecheck();await record({phase:'binding-precheck',status:'verified',receipt})}
   if(needsBackup){
    await ops.assertIdle();const receipt=await ops.backup();assertNativeBackupReceipt(plan,receipt)
    await record({phase:'backup',status:'verified',receipt})

@@ -403,6 +403,7 @@ test('cover55 native calls require a fresh backup and keep full configuration, r
 test('cover55 rejects source configuration drift and backup ambiguity before migration',async()=>{
  const f=fixture({cover55:true});f.configs.get(APPS[0]).config.environment='changed';await assert.rejects(f.run());
  assert.equal(f.calls.some(c=>['StopStack','DeployStack','SnapshotRestore','WriteStackFileContents','UpdateStack'].includes(c.op)),false);
+ const bound=fixture({cover55:true,bound:true});await assert.rejects(bound.run());assert.equal(bound.calls.some(c=>c.op==='SnapshotRestore'||JSON.stringify(c.command??[]).includes('migrate-bin')),false);
  const backup=fixture({cover55:true,backupUnknown:true});await assert.rejects(backup.run(),e=>e.uncertain);assert.equal(backup.calls.some(c=>JSON.stringify(c.command??[]).includes('migrate-bin')),false);assert.equal(backup.events.at(-1).recovery,'unknown');
  const unknown=fixture({cover55:true,migrationUnknown:true});await assert.rejects(unknown.run(),e=>e.uncertain);
  assert.equal(unknown.events.at(-1).recovery,'unknown');assert.equal(unknown.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin')).length,1);
