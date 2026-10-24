@@ -147,7 +147,7 @@ export function buildMentionExtension() {
   return Mention.configure({
     HTMLAttributes: { class: 'mention' },
     renderText: ({ node }) => `@${name(node.attrs.id,node.attrs.label)}`,
-    renderHTML({options,node}) { return ['span',mergeAttributes(this.HTMLAttributes,options.HTMLAttributes),`@${name(node.attrs.id,node.attrs.label)}`] },
+    renderHTML({options,node}) { return ['span',mergeAttributes(this.HTMLAttributes??{},options.HTMLAttributes??{}),`@${name(node.attrs.id,node.attrs.label)}`] },
     suggestion: makeSuggestion() as never,
   })
 }
