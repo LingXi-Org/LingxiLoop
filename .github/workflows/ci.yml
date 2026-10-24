@@ -16,6 +16,10 @@ on:
         description: Verify and publish immutable images without changing production manifests or deploying
         type: boolean
         default: false
+      deploy_admin_control:
+        description: Deploy only the admin and control-plane Worker from main with scope admin-control
+        type: boolean
+        default: false
 
 concurrency:
   group: lingxiloop-${{ github.ref }}
@@ -545,7 +549,10 @@ jobs:
   deploy:
     if: >-
       always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
-      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' ||
+       (github.event_name == 'workflow_dispatch' && inputs.scope == 'admin-control' &&
+        inputs.deploy_admin_control && !inputs.publish_only)) &&
       needs.changes.outputs.control_deploy == 'true' && needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
     needs: [changes, checks, integration]
@@ -563,12 +570,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - name: Build Refine before production changes
-        if: needs.changes.outputs.admin_build != 'true'
+        if: needs.changes.outputs.admin_build != 'true' || github.event_name == 'workflow_dispatch'
         run: npm run admin:build
         env:
           VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
           VITE_TURNSTILE_SITE_KEY: 0x4AAAAAAEsX5eyOl1nAe5i9
-      - if: needs.changes.outputs.admin_build == 'true'
+      - if: needs.changes.outputs.admin_build == 'true' && github.event_name != 'workflow_dispatch'
         uses: actions/download-artifact@v4
         with:
           name: admin-dist-${{ github.sha }}
