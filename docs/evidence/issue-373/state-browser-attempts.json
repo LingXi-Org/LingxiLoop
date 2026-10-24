@@ -6,7 +6,7 @@
   "trace": "off",
   "video": "off",
   "syntheticOnly": true,
-  "acceptance": "blocked; no scenario has a complete passing run",
+  "acceptance": "2/3 scenarios pass; draft thread switch blocked by failed fixture module loading; no full draft scenario pass",
   "runs": [
     {
       "id": "01a16c72-f392-7c16-8589-dbcf084cc95f",
@@ -201,6 +201,53 @@
           ]
         }
       ]
+    },
+    {
+      "id": "01a16c7e-9548-770c-81fc-faa2d3bac56f",
+      "status": "failed",
+      "exitCode": 1,
+      "startedAt": "2026-10-24T05:59:58.749Z",
+      "finishedAt": "2026-10-24T06:00:56.157Z",
+      "report": ".e2e/state373-space-recovered/report.json",
+      "results": [
+        {
+          "title": null,
+          "status": "failed",
+          "errorCode": null
+        },
+        {
+          "title": null,
+          "status": "passed",
+          "errorCode": null
+        },
+        {
+          "title": null,
+          "status": "passed",
+          "errorCode": null
+        }
+      ],
+      "resources": {
+        "before": ".e2e/state373-space-recovered/resources-before.json",
+        "during": ".e2e/state373-space-recovered/resources-during.json",
+        "after": ".e2e/state373-space-recovered/resources-after.json",
+        "beforeTmpAvailableBytes": 1601249280,
+        "observedLowestTmpAvailable": "16 MiB (df -h tool observation)",
+        "afterTmpAvailableBytes": 1445187584,
+        "afterOwnCacheCleanupTmpAvailableBytes": 1615265792,
+        "oomKillBefore": 5,
+        "oomKillAfter": 5
+      },
+      "completedDraftSteps": [
+        "text and uploaded file-ID reference restore",
+        "edit and reload",
+        "account isolation",
+        "course isolation"
+      ],
+      "blockedDraftSteps": [
+        "thread isolation: fixture.tsx module failed to load",
+        "return to original scope: not reached"
+      ],
+      "retryPolicy": "One root-authorized retry after material disk recovery; no additional retry."
     }
   ]
 }
