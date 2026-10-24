@@ -1,19 +1,11 @@
-import { type ThreadMessage, useAuiState } from '@assistant-ui/react'
+import { useAuiState } from '@assistant-ui/react'
 import { type RefObject, useEffect, useMemo, useRef, useState } from 'react'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { questionGeometry } from './question-geometry'
-import { useIsMobile } from '@/hooks/use-mobile'
 import { ConversationMap } from '@/components/vendor/assistant-ui/elements/conversation-map'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { questionGeometry } from './question-geometry'
 
-function questionPreview(message: ThreadMessage) {
-  const text = message.content.flatMap(part => part.type === 'text' ? [part.text] : []).join(' ').replace(/\s+/g, ' ').trim()
-  const attachments = [
-    ...(message.role === 'user' ? message.attachments.map(attachment => attachment.name) : []),
-    ...message.content.flatMap(part => part.type === 'image' ? [part.filename || '图片'] : part.type === 'file' ? [part.filename || '文件'] : []),
-  ]
-  const summary = text || (attachments.length ? `附件：${attachments.join('、')}` : '无文字提问')
-  return summary.length > 100 ? `${summary.slice(0, 100)}…` : summary
-}
+import { createQuestionSelector } from './thread-chrome'
 
 export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoadingOlder, onLoadOlder, onNavigate }: {
   viewportRef: RefObject<HTMLDivElement | null>
@@ -25,10 +17,8 @@ export function ConversationQuestionIndex({ viewportRef, hasMoreOlder, isLoading
   const isMobile = useIsMobile()
   // Streaming assistant tokens must not rebuild the question list. Use the same
   // canonical runtime messages as MessageByIndex, and stable IM client IDs.
-  const questionKey = useAuiState(state => JSON.stringify(state.thread.messages
-    .filter(message => message.role === 'user' && message.metadata.custom.schema === 'lingxiloop.thread-message.v2')
-    .map(message => ({ id: String(message.metadata.custom.clientMessageId), preview: questionPreview(message) }))))
-  const questions = useMemo(() => JSON.parse(questionKey) as { id: string; preview: string }[], [questionKey])
+  const selectQuestions = useMemo(createQuestionSelector, [])
+  const questions = useAuiState(state => selectQuestions(state.thread.messages))
   const [activeId, setActiveId] = useState<string | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
   const [visibleIds, setVisibleIds] = useState<string[]>([])

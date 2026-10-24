@@ -1,33 +1,29 @@
-import { ThreadPrimitive, useAuiState } from '@assistant-ui/react'
+import { ThreadPrimitive, useAui, useAuiState } from '@assistant-ui/react'
 import { ArrowDown01Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
+import { useShallow } from 'zustand/react/shallow'
 import { Button } from '@/components/ui/button'
-import { useConversationUi } from '@/stores/conversationUi'
 import { useConversations } from '@/features/conversations/store'
+import { useConversationUi } from '@/stores/conversationUi'
 import { messagesApi } from '../api'
-import { chatTransport } from '../runtime/transport'
-import { useConversationThreadSnapshot } from '../runtime/runtime'
-import { ConversationComposer } from './ConversationComposer'
-import { ConversationMessage } from './ConversationMessage'
-import { ConversationStart } from './ConversationStart'
-import { ConversationLoadState } from './ConversationLoadState'
-import { messageKey, useChatThreadStore } from '../runtime/store'
-import { ConversationQuestionIndex } from './ConversationQuestionIndex'
 import { chatLatency } from '../runtime/latency'
 import type { LingxiMessageMetadata } from '../runtime/model'
+import { messageKey, useChatThreadStore } from '../runtime/store'
+import { chatTransport } from '../runtime/transport'
+import { ConversationComposer } from './ConversationComposer'
+import { ConversationLoadState } from './ConversationLoadState'
+import { ConversationMessage } from './ConversationMessage'
+import { ConversationQuestionIndex } from './ConversationQuestionIndex'
+import { ConversationStart } from './ConversationStart'
+import { createThreadChromeSelector } from './thread-chrome'
 
 const MESSAGE_COMPONENTS = { Message: ConversationMessage }
 
-function ConversationMessages() {
-  // Indices must come from the runtime itself: external snapshots can be one
-  // render ahead while history or a canonical delivery is being reconciled.
-  const messages = useAuiState(state => state.thread.messages)
-  return messages.map((message, index) => message.metadata.custom.schema === 'lingxiloop.thread-message.v2' ? (
-    <ThreadPrimitive.MessageByIndex key={messageKey(message)} index={index} components={MESSAGE_COMPONENTS} />
-  ) : null)
-}
+const ConversationMessages = memo(function ConversationMessages({ rows }: { rows: ReturnType<ReturnType<typeof createThreadChromeSelector>>['rows'] }) {
+  return rows.map(row => <ThreadPrimitive.MessageByIndex key={row.key} index={row.index} components={MESSAGE_COMPONENTS} />)
+})
 
 export function ConversationThread({
   conversationId,
@@ -40,16 +36,20 @@ export function ConversationThread({
   compact?: boolean
   readOnly?: boolean
 }) {
-  const snapshot = useConversationThreadSnapshot(conversationId, threadRootId)
-  const readReceiptKey = useAuiState(state => JSON.stringify(state.thread.messages.flatMap(message => {
-    const metadata = message.metadata.custom
-    return typeof metadata.sequence === 'number' ? [[metadata.clientMessageId, metadata.sequence]] : []
-  })))
+  const snapshot = useChatThreadStore(useShallow(state => {
+    const value = state.conversations[conversationId]
+    return { isLoading: !value || value.isLoading || (!value.loaded && !value.error), isLoadingOlder: value?.isLoadingOlder ?? false,
+      hasMoreOlder: value?.hasMoreOlder ?? true, error: value?.error ?? null, isRecovering: value?.isRecovering,
+      isRunning: Object.values(value?.activeRuns ?? {}).some(run => run.state === 'queued' || run.state === 'running') }
+  }))
+  const aui = useAui()
+  const selectChrome = useMemo(() => createThreadChromeSelector(messageKey), [conversationId, threadRootId])
+  const chrome = useAuiState(state => selectChrome(state.thread.messages))
+  const readReceiptKey = chrome.readReceiptKey
   const viewportRef = useRef<HTMLDivElement>(null)
   const [readingHistory, setReadingHistory] = useState(false)
   const scope = `${conversationId}:${threadRootId ?? ''}`
   useEffect(() => { setReadingHistory(false) }, [scope])
-  const runtimeMessages = useAuiState(state => state.thread.messages)
   const entranceTail = useRef<{ scope: string; id: string | null } | null>(null)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const loadingOlderRef = useRef(false)
@@ -59,29 +59,28 @@ export function ConversationThread({
   const selectReplyBranch = useConversationUi(state => state.selectReplyBranch)
   useEffect(() => {
     const scope = `${conversationId}:${threadRootId ?? ''}`
-    const messages = runtimeMessages.filter(message => message.metadata.custom.schema === 'lingxiloop.thread-message.v2')
+    const messages = chrome.rows
     if (snapshot.isLoading || snapshot.isLoadingOlder) {
       entranceTail.current = null
       return
     }
-    if (messages.length !== snapshot.messages.length) return
     const previous = entranceTail.current
     const last = messages.at(-1)
-    entranceTail.current = { scope, id: last ? messageKey(last) : null }
+    entranceTail.current = { scope, id: last ? last.key : null }
     // Establish a baseline after history reconciliation; only appended live messages enter.
     if (!previous || previous.scope !== scope) return
-    const anchor = previous.id === null ? -1 : messages.findIndex(message => messageKey(message) === previous.id)
+    const anchor = previous.id === null ? -1 : messages.findIndex(message => message.key === previous.id)
     if (previous.id !== null && anchor < 0) return
     for (const message of messages.slice(anchor + 1)) {
-      const id = String(message.metadata.custom.clientMessageId)
+      const id = message.id
       viewportRef.current?.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(id)}"]`)?.classList.add('ui-enter')
     }
-  }, [conversationId, threadRootId, runtimeMessages, snapshot.isLoading, snapshot.isLoadingOlder, snapshot.messages.length])
+  }, [conversationId, threadRootId, chrome.rows, snapshot.isLoading, snapshot.isLoadingOlder])
   useEffect(() => {
     const viewport = viewportRef.current
-    if (!viewport || threadRootId || snapshot.isLoading || snapshot.error || (!snapshot.messages.length && snapshot.hasMoreOlder)) return
+    if (!viewport || threadRootId || snapshot.isLoading || snapshot.error || (!chrome.messageCount && snapshot.hasMoreOlder)) return
     return chatLatency.ready(conversationId, 'history_visible', viewport)
-  }, [conversationId, threadRootId, snapshot.isLoading, snapshot.error, snapshot.messages.length, snapshot.hasMoreOlder])
+  }, [conversationId, threadRootId, snapshot.isLoading, snapshot.error, chrome.messageCount, snapshot.hasMoreOlder])
 
   useEffect(() => {
     const viewport = viewportRef.current
@@ -200,7 +199,7 @@ export function ConversationThread({
     const viewport = viewportRef.current
     const element = viewport?.querySelector<HTMLElement>(`[data-msg-id="${CSS.escape(pendingJumpId)}"]`)
     if (!element) {
-      const branch = snapshot.messages.map(message => (message.metadata.custom as LingxiMessageMetadata).replyBranches)
+      const branch = aui.thread().getState().messages.map(message => (message.metadata.custom as LingxiMessageMetadata).replyBranches)
         .find(branch => branch?.clientIds.includes(pendingJumpId))
       if (branch) selectReplyBranch(branch.key, branch.ids[branch.clientIds.indexOf(pendingJumpId)], branch.ids.at(-1)!)
       return
@@ -211,7 +210,7 @@ export function ConversationThread({
     element.classList.add('quote-jump-flash')
     window.setTimeout(() => element.classList.remove('quote-jump-flash'), 1_100)
     clearPendingJump()
-  }, [clearPendingJump, pendingJumpId, readingHistory, selectReplyBranch, snapshot.messages])
+  }, [clearPendingJump, pendingJumpId, readingHistory, selectReplyBranch, chrome.branchKey, chrome.rows, aui])
 
   return (
     <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread data-density="comfortable">
@@ -223,14 +222,14 @@ export function ConversationThread({
             {!threadRootId && (
               <div ref={sentinelRef} className="flex h-10 w-full shrink-0 items-center justify-center px-3 text-xs text-muted-foreground sm:px-4">
                 {snapshot.isLoadingOlder ? '正在加载更早的消息…' : !snapshot.hasMoreOlder && !snapshot.isLoading && (
-                  <ConversationStart createdAt={snapshot.messages[0]?.createdAt} timestampMissing={snapshot.messages[0]?.metadata.custom.timestampMissing === true} />
+                  <ConversationStart createdAt={chrome.first?.createdAt} timestampMissing={chrome.first?.timestampMissing === true} />
                 )}
               </div>
             )}
-            <ConversationLoadState loading={snapshot.isLoading} empty={runtimeMessages.length === 0}
+            <ConversationLoadState loading={snapshot.isLoading} empty={chrome.messageCount === 0}
               running={snapshot.isRunning} recovering={snapshot.isRecovering} error={snapshot.error} thread={Boolean(threadRootId)}
               onRetry={() => void chatTransport.reloadConversation(conversationId)} />
-            <ConversationMessages />
+            <ConversationMessages rows={chrome.rows} />
           </div>
         </ThreadPrimitive.Viewport>
       {readingHistory ? <Button type="button" variant="outline" size="icon"
