@@ -1,0 +1,102 @@
+TAP version 13
+# (node:503525) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: streamed prose and incomplete Markdown blocks appear before completion
+ok 1 - streamed prose and incomplete Markdown blocks appear before completion
+  ---
+  duration_ms: 357.53546
+  type: 'test'
+  ...
+# Subtest: mixed message text keeps global citation positions and copy across non-text parts
+ok 2 - mixed message text keeps global citation positions and copy across non-text parts
+  ---
+  duration_ms: 19.54735
+  type: 'test'
+  ...
+# Subtest: lists and paragraphs retain their semantic layout without bubble wrappers
+ok 3 - lists and paragraphs retain their semantic layout without bubble wrappers
+  ---
+  duration_ms: 175.18328
+  type: 'test'
+  ...
+# Subtest: unfinished structural blocks remain visible during streaming and interruption
+ok 4 - unfinished structural blocks remain visible during streaming and interruption
+  ---
+  duration_ms: 96.701258
+  type: 'test'
+  ...
+# Subtest: only live agent text enables the streaming tail; settled and interrupted text is static
+ok 5 - only live agent text enables the streaming tail; settled and interrupted text is static
+  ---
+  duration_ms: 21.859361
+  type: 'test'
+  ...
+# Subtest: committed citations preserve Markdown and normal links, with one shared basis slot
+ok 6 - committed citations preserve Markdown and normal links, with one shared basis slot
+  ---
+  duration_ms: 32.316734
+  type: 'test'
+  ...
+# Subtest: only the active occurrence describes its fixed, accessible basis region
+ok 7 - only the active occurrence describes its fixed, accessible basis region
+  ---
+  duration_ms: 3.848098
+  type: 'test'
+  ...
+# Subtest: copying and quoting strip only supplied citation spans
+ok 8 - copying and quoting strip only supplied citation spans
+  ---
+  duration_ms: 5.436351
+  type: 'test'
+  ...
+# Subtest: citation excerpts render safe compact Markdown while source titles remain literal
+ok 9 - citation excerpts render safe compact Markdown while source titles remain literal
+  ---
+  duration_ms: 9.952025
+  type: 'test'
+  ...
+# Subtest: new citations underline answer wording and consume internal links before Link rendering
+ok 10 - new citations underline answer wording and consume internal links before Link rendering
+  ---
+  duration_ms: 32.29536
+  type: 'test'
+  ...
+# Subtest: new drafts show only body text and never activate citation navigation or stale confidence
+ok 11 - new drafts show only body text and never activate citation navigation or stale confidence
+  ---
+  duration_ms: 84.02177
+  type: 'test'
+  ...
+# Subtest: cached Markdown processors keep each message and regenerated claim identity separate
+ok 12 - cached Markdown processors keep each message and regenerated claim identity separate
+  ---
+  duration_ms: 23.17853
+  type: 'test'
+  ...
+# Subtest: the formal remend boundary scan bounds delimiter searches to the input size
+ok 13 - the formal remend boundary scan bounds delimiter searches to the input size
+  ---
+  duration_ms: 3.018023
+  type: 'test'
+  ...
+# Subtest: settled numeric/comparison text keeps its meaning after a new paragraph begins
+ok 14 - settled numeric/comparison text keeps its meaning after a new paragraph begins
+  ---
+  duration_ms: 4.094086
+  type: 'test'
+  ...
+# Subtest: math normalization preserves code examples and emits valid multiline math boundaries
+ok 15 - math normalization preserves code examples and emits valid multiline math boundaries
+  ---
+  duration_ms: 2.041867
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4740.84097

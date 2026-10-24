@@ -1,0 +1,207 @@
+[
+  {
+    "name": "@assistant-ui/react-streamdown",
+    "version": "0.3.12",
+    "license": "MIT",
+    "gitHead": null,
+    "dependencies": {
+      "remend": "^1.3.0",
+      "rehype-raw": "^7.0.0",
+      "streamdown": "^2.6.0",
+      "@types/hast": "^3.0.5",
+      "rehype-harden": "^1.1.8",
+      "rehype-sanitize": "^6.0.0",
+      "@assistant-ui/react-markdown": "^0.14.13"
+    },
+    "peerDependencies": {
+      "react": "^18 || ^19",
+      "@types/react": "*",
+      "@streamdown/cjk": "^1.0.0",
+      "@streamdown/code": "^1.0.0",
+      "@streamdown/math": "^1.0.0",
+      "@assistant-ui/react": "^0.15.0",
+      "@streamdown/mermaid": "^1.0.0"
+    },
+    "peerDependenciesMeta": {
+      "@types/react": {
+        "optional": true
+      },
+      "@streamdown/cjk": {
+        "optional": true
+      },
+      "@streamdown/code": {
+        "optional": true
+      },
+      "@streamdown/math": {
+        "optional": true
+      },
+      "@streamdown/mermaid": {
+        "optional": true
+      }
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "scripts": {
+      "test": "vitest run",
+      "build": "aui-build",
+      "test:watch": "vitest"
+    },
+    "tarball": "https://registry.npmjs.org/@assistant-ui/react-streamdown/-/react-streamdown-0.3.12.tgz",
+    "integrity": "sha512-t3zADjnX/vuBy8Ng3jgoT+Bfp6cKWvYbLFNS56sUP7qmsGUHTApcP5h2drhFYuwXfn/B0xPsIysU1iYoVA/T1A==",
+    "bytes": 48910,
+    "sha256": "1b3ef75144ac051607eda1a2cb2a4b939946d697a79098f99d44dff030bb22bc"
+  },
+  {
+    "name": "@assistant-ui/react-streamdown",
+    "version": "0.3.14",
+    "license": "MIT",
+    "gitHead": null,
+    "dependencies": {
+      "remend": "^1.3.1",
+      "rehype-raw": "^7.0.0",
+      "streamdown": "^2.6.0",
+      "@types/hast": "^3.0.5",
+      "rehype-harden": "^1.1.8",
+      "rehype-sanitize": "^6.0.0",
+      "@assistant-ui/react-markdown": "^0.14.15"
+    },
+    "peerDependencies": {
+      "react": "^18 || ^19",
+      "@types/react": "*",
+      "@streamdown/cjk": "^1.0.0",
+      "@streamdown/code": "^1.0.0",
+      "@streamdown/math": "^1.0.0",
+      "@assistant-ui/react": "^0.15.0",
+      "@streamdown/mermaid": "^1.0.0"
+    },
+    "peerDependenciesMeta": {
+      "@types/react": {
+        "optional": true
+      },
+      "@streamdown/cjk": {
+        "optional": true
+      },
+      "@streamdown/code": {
+        "optional": true
+      },
+      "@streamdown/math": {
+        "optional": true
+      },
+      "@streamdown/mermaid": {
+        "optional": true
+      }
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "scripts": {
+      "test": "vitest run",
+      "bench": "vitest bench --run",
+      "build": "aui-build",
+      "test:watch": "vitest"
+    },
+    "tarball": "https://registry.npmjs.org/@assistant-ui/react-streamdown/-/react-streamdown-0.3.14.tgz",
+    "integrity": "sha512-0u4ksyP09jp2ySSs/iTmV311CbbAXMDDM/UxJM5aIpi9RsAbufYuAutBjV+I/oW3DCuSbbJIMyP9V3ysGGzwTA==",
+    "bytes": 71027,
+    "sha256": "00c05f86a206e33a571bc2d1dd7088bff25b1b1404a3bc5cea99521f5e2584b2"
+  },
+  {
+    "name": "@assistant-ui/react-markdown",
+    "version": "0.14.13",
+    "license": "MIT",
+    "gitHead": null,
+    "dependencies": {
+      "classnames": "^2.5.1",
+      "@types/hast": "^3.0.5",
+      "react-markdown": "^10.1.0",
+      "@radix-ui/react-primitive": "^2.1.10",
+      "@radix-ui/react-use-callback-ref": "^1.1.4"
+    },
+    "peerDependencies": {
+      "react": "^18 || ^19",
+      "@types/react": "*",
+      "@assistant-ui/react": "^0.15.0"
+    },
+    "peerDependenciesMeta": {
+      "@types/react": {
+        "optional": true
+      }
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./code-fence": {
+        "types": "./dist/code-fence.d.ts",
+        "default": "./dist/code-fence.js"
+      },
+      "./styles/dot.css": {
+        "style": "./styles/dot.css",
+        "default": "./styles/dot.css"
+      }
+    },
+    "scripts": {
+      "test": "vitest run",
+      "build": "aui-build",
+      "test:watch": "vitest"
+    },
+    "tarball": "https://registry.npmjs.org/@assistant-ui/react-markdown/-/react-markdown-0.14.13.tgz",
+    "integrity": "sha512-ov/IC2h+/Ry1jKzxe6dlgG3jlZB9zUN35WMWFn6L7QLSvRY/PEMC0pg/hDxbiBVzxtIuitYhjwWVwnNknUcQrg==",
+    "bytes": 30535,
+    "sha256": "2a51cca160cfdc2715dad1778b3ddd6775248f950dc5e5f5a2eb603360c78f2d"
+  },
+  {
+    "name": "@assistant-ui/react-markdown",
+    "version": "0.14.15",
+    "license": "MIT",
+    "gitHead": null,
+    "dependencies": {
+      "classnames": "^2.5.1",
+      "@types/hast": "^3.0.5",
+      "react-markdown": "^10.1.0",
+      "@radix-ui/react-primitive": "^2.1.10",
+      "@radix-ui/react-use-callback-ref": "^1.1.4"
+    },
+    "peerDependencies": {
+      "react": "^18 || ^19",
+      "@types/react": "*",
+      "@assistant-ui/react": "^0.15.0"
+    },
+    "peerDependenciesMeta": {
+      "@types/react": {
+        "optional": true
+      }
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./code-fence": {
+        "types": "./dist/code-fence.d.ts",
+        "default": "./dist/code-fence.js"
+      },
+      "./styles/dot.css": {
+        "style": "./styles/dot.css",
+        "default": "./styles/dot.css"
+      }
+    },
+    "scripts": {
+      "test": "vitest run",
+      "build": "aui-build",
+      "test:watch": "vitest"
+    },
+    "tarball": "https://registry.npmjs.org/@assistant-ui/react-markdown/-/react-markdown-0.14.15.tgz",
+    "integrity": "sha512-Hte+MSs8RZNx9+mbTqTRJcT0z4Vs54fNxPwEUrAd01+Qc9Dkx3wpgV6lG1gbDkiLkMVNPXRy6rQqett4xZ0cQw==",
+    "bytes": 46032,
+    "sha256": "b12755f57c99b631917d98869a12c961e3fbdca298044ecb0b72c7fc97fd8bb3"
+  }
+]
