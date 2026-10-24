@@ -118,9 +118,9 @@ async function seedCompany(companyId = 'co-courses'): Promise<void> {
 }
 
 
-async function createCourse(name: string, companyId = 'co-courses') {
+async function createCourse(name: string, companyId = 'co-courses', kind: 'TEACHING' | 'INSTITUTIONAL_COURSE' = 'TEACHING') {
   const id = randomUUID(), projectId = randomUUID(), roomId = randomUUID()
-  await insertCourse(pool, { companyId, userId: OWNER, courseId: id, projectId, roomId, kind: 'TEACHING', planId: 'plan-education',
+  await insertCourse(pool, { companyId, userId: OWNER, courseId: id, projectId, roomId, kind, planId: 'plan-education',
     input: { name, description: `${name} description`, color: '#5266d6' } })
   return await findCourse(pool,id,companyId,OWNER) as { id: string; projectId: string; projectKind: string; studyRoomId: string }
 
@@ -347,3 +347,73 @@ test('[integration] course settings persist metadata and reject learner or cross
   })
   assert.ok([403, 404].includes(crossTenant.status))
 })
+
+
+// LL-088: both public metadata writers must agree with the capabilities shown
+// in the UI. A rejected write must preserve the row and its durable effects.
+for (const kind of ['TEACHING', 'INSTITUTIONAL_COURSE'] as const) {
+  test(`[integration] ${kind} settings enforce student, teacher and administrator boundaries`, async (t) => {
+    await seedCompany()
+    const course = await createCourse('Authorization matrix', 'co-courses', kind)
+    await inviteAndAccept(course.projectId)
+    await pool.query("UPDATE company_memberships SET is_admin=FALSE WHERE user_id=$1", [OWNER])
+    const adminId = 'u-settings-admin', outsiderId = 'u-settings-outsider'
+    await seedUserMembership(adminId, 'co-courses', { role: 'TEACHER', isAdmin: true })
+    await seedUserMembership(outsiderId, 'co-courses', { role: 'TEACHER', isAdmin: false })
+    const admin = await listen(adminId), outsider = await listen(outsiderId)
+    t.after(async () => {
+      await Promise.all([admin.server, outsider.server].map(server => new Promise<void>(resolve => server.close(() => resolve()))))
+    })
+    const headers = { 'content-type': 'application/json', 'x-company-id': 'co-courses', 'x-project-id': course.projectId }
+    const writers = [
+      { path: `/api/courses/${course.id}`, method: 'PATCH' },
+      { path: `/api/projects/${course.projectId}`, method: 'PUT' },
+    ]
+    const snapshot = async () => ({
+      project: (await pool.query('SELECT name,description,color,avatar_url,avatar_seed,updated_at FROM projects WHERE id=$1', [course.projectId])).rows,
+      audit: (await pool.query("SELECT id FROM audit_events WHERE kind='course_update' AND detail->>'courseId'=$1 ORDER BY id", [course.id])).rows,
+      effects: (await pool.query("SELECT id,generation,queued_generation,payload FROM learning_effects WHERE course_id=$1 AND kind='course_metadata.sync' ORDER BY id", [course.id])).rows,
+    })
+    const write = async (url: string, writer: typeof writers[number], description: string, extraHeaders = {}) => {
+      const response = await fetch(`${url}${writer.path}`, {
+        method: writer.method, headers: { ...headers, ...extraHeaders }, body: JSON.stringify({ description }),
+      })
+      await response.text()
+      return response.status
+    }
+    const studentIdentity = (await pool.query(`SELECT cm.role,cm.is_admin,pm.role AS project_role
+      FROM company_memberships cm JOIN project_memberships pm ON pm.company_id=cm.company_id AND pm.user_id=cm.user_id
+      WHERE cm.user_id=$1 AND pm.project_id=$2`, [LEARNER, course.projectId])).rows[0]
+    assert.deepEqual(studentIdentity, { role: 'STUDENT', is_admin: false, project_role: 'STUDENT' })
+    const spacesResponse = await fetch(`${learnerUrl}/api/learning/spaces`, { headers })
+    assert.equal(spacesResponse.status, 200)
+    const spaces = await spacesResponse.json() as { data: Array<{ projectId: string; perspective: string; canManage: boolean; canUpdateCourse: boolean }> }
+    const space = spaces.data.find(item => item.projectId === course.projectId)
+    assert.equal(space?.perspective, 'learner')
+    assert.equal(space?.canManage, false)
+    assert.equal(space?.canUpdateCourse, false)
+    for (const writer of writers) {
+      const initial = await snapshot()
+      // Browser-supplied roles/user IDs cannot replace the authenticated actor.
+      assert.equal(await write(learnerUrl, writer, 'Student attempt', { 'x-user-id': OWNER, 'x-role': 'teacher' }), 403)
+      assert.equal(await write(outsider.url, writer, 'Unassigned teacher attempt'), 404)
+      assert.deepEqual(await snapshot(), initial)
+      assert.equal(await write(ownerUrl, writer, `Teacher via ${writer.method}`), 200)
+      assert.equal((await snapshot()).project[0].description, `Teacher via ${writer.method}`)
+      // Organization administrators legitimately manage courses without a grant.
+      assert.equal(await write(admin.url, writer, `Admin via ${writer.method}`), 200)
+      assert.equal((await snapshot()).project[0].description, `Admin via ${writer.method}`)
+      const allowed = await snapshot()
+      assert.equal(await write(ownerUrl, writer, 'Forged company', { 'x-company-id': 'co-other-settings' }), 404)
+      assert.deepEqual(await snapshot(), allowed)
+    }
+    await pool.query("UPDATE project_memberships SET status='SUSPENDED' WHERE project_id=$1 AND user_id=$2", [course.projectId, OWNER])
+    const beforeRevoked = await snapshot()
+    for (const writer of writers) assert.equal(await write(ownerUrl, writer, 'Revoked teacher attempt'), 403)
+    assert.deepEqual(await snapshot(), beforeRevoked)
+    await pool.query("UPDATE projects SET status='READ_ONLY' WHERE id=$1", [course.projectId])
+    const beforeReadonly = await snapshot()
+    for (const writer of writers) assert.equal(await write(admin.url, writer, 'Read-only admin attempt'), 403)
+    assert.deepEqual(await snapshot(), beforeReadonly)
+  })
+}
