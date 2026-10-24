@@ -72,7 +72,8 @@ test('325 a pending teacher-assistant entry cannot navigate after switching cour
   await expect.poll(async () => (await snapshot(browser)).requests).toBe(count + 1)
   // Same-document navigation keeps the original request pending.
   await browser.evaluate(() => { history.pushState({}, '', '/?project=forum-other&view=forum'); window.dispatchEvent(new PopStateEvent('popstate')); return true })
-  await expect(screen.getByText('Other Forum Course', { exact: true }).first()).toBeVisible()
+  await expect(screen.getByRole('heading', '学习论坛', { exact: true })).toBeVisible()
+  expect(await browser.evaluate(() => location.search)).toBe('?project=forum-other&view=forum')
   await fixture(browser, '/api/fixture-teacher-entry/pass')
   await expect.poll(async () => (await snapshot(browser)).completed).toBe(count + 1)
   expect(await browser.evaluate(() => location.search)).toBe('?project=forum-other&view=forum')

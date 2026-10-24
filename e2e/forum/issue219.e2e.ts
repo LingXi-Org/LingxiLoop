@@ -106,6 +106,9 @@ test('native forum menus, table, task state, scoped draft, upload retry, publish
   await expect(screen.getByText('原生评论：已经核对资料。',{exact:true})).toBeVisible()
   await screen.getByRole('link','返回学习论坛',{exact:true}).tap()
   await screen.getByLabel('搜索学习论坛').fill('Issue219 原生编辑')
+  await screen.getByRole('button','内容流显示设置',{exact:true}).tap()
+  await screen.getByRole('switch','紧凑显示').uncheck()
+  await browser.keyboard.press('Escape')
   await screen.getByRole('checkbox','未完成事项',{exact:true}).tap()
   await expect(screen.getByRole('checkbox','已完成事项',{exact:true})).toBeChecked()
   await expect.poll(async()=>{
