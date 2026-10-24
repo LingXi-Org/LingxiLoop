@@ -31,4 +31,16 @@ Reproduce from the desired checkout: `node --import tsx /absolute/path/to/benchm
 
 Existing native message, converter, store, run-update and transport tests remain. New cases cover first body, 1,000 chunk bounded publication, v2/v3 server projections, final tails, failure/cancellation/fence/control changes, same-length replacement, hidden/visible resume, stale callbacks, same-sequence durable control refresh, reconnect/reload/older-page recovery overtaken by pending SSE, decoded/untrusted validation boundaries, nested privacy stripping, cumulative length limits, unresolved quotes, participant/branch invalidation and unchanged row/part identity.
 
-Browser/build and exact-head CI results are recorded in the PR after execution. #378 remains open for the other workstreams and integrated browser acceptance.
+## Integrated browser acceptance
+
+Application source `b8394f7c2e25cfdb8d373d4e9498a18d3ef1b35b` combines the D/E change with frozen main `d3227695c7ae1bb89356dc9135821a1a276ae65d`. Its complete package lock equals the verified official dependency overlay; `dependencies.json` records installed versions and integrity. The earlier CPU table intentionally remains the original baseline/dependency comparison, not a new combined-runtime benchmark.
+
+Official `e2e` 0.17.0 / `@e2e-dev/web` 0.12.0, existing Chrome CDP, local Vite synthetic fixture, one worker and zero retries: run `01a16cc5-df62-7892-af74-df03d9a484ea` passed **2/2** in 15.09 seconds. The report's dirty bit corresponds to the two fixture assertion updates captured by hashes in `browser.json`; application source did not change during the run.
+
+- Native streaming: 29 observed visible lengths; maximum sampled event-loop interval **140 ms**, under the unchanged **500 ms** assertion; at most **128** animated wrappers, zero after completion; input, tool update continuity, final answer and no-alert assertions passed.
+- Memory streaming: public text → one tool → public text order, final answer, and existing privacy/legacy-control assertions passed.
+- Fixture alignment follows existing accepted contracts: the collapsed RunActivity button includes a status prefix; ordinary memory tools now belong inside RunActivity; streaming animation has the existing global 128-wrapper bound (`streaming-budget.e2e.ts`), with zero after settlement. No timing threshold or privacy assertion was relaxed.
+
+Previous failures remain evidence rather than being overwritten: initial pre-merge candidate run `01a16cba-c51a-7757-906d-32b0ad381f89` stopped at the stale collapsed-text selector and a 3380.5 ms interval; the one valid old-base run stopped at that selector and 664.8 ms. Two earlier baseline setup attempts (port collision, then omitted sparse `third_party` source) are invalid comparisons. After the dependency/base merge, run `01a16cc4-e58d-7bb8-a09a-c15b9db866d5` passed the timing check at 176.4 ms but stopped at the two stale DOM-structure assertions. The corrected complete run above is the only final combined acceptance run.
+
+This is functional browser acceptance and a local responsiveness guard, not a production-build FPS claim, statistical A/B performance result, or production deployment receipt. The combined source/dependency candidate also passed 37 focused pure regressions (25.61 seconds) and changed-source lint. Raw reports, screenshots, traces, failure logs and setup exclusions are retained in the task workspace. Exact final CI and independent review are linked from the PR. Refs #378. Only D/E; overall acceptance remains pending.
