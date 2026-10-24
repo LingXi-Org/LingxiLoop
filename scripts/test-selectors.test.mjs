@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import test from 'node:test'
 import { SMOKE_FILES, parseIntegrationArgs, selectIntegrationFiles } from '../server/integration-suite.mjs'
-import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact } from '../server/run-historical-migration-tests.mjs'
+import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact, copyProduct54FixtureSource, assertProduct54FixtureTarget } from '../server/run-historical-migration-tests.mjs'
 import { createHash } from 'node:crypto'
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -18,13 +18,15 @@ test('historical fixture isolates pinned display leaves while retaining current 
  const root=await mkdtemp(join(tmpdir(),'historical-source-owner-'))
  try {
   const source=join(root,'source'),fixture=join(root,'fixture')
-  const retained=['server/src/db/migrate.ts','server/src/agent-runtime/identity.ts',
+  const retained=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/migrate.ts','server/src/agent-runtime/identity.ts',
    'server/src/__integration__/run-presentation-contract.test.ts','src/lib/runActivity.ts']
   const pinned=['server/src/agent-runtime/message-projection.ts','src/lib/nativeMessage.ts']
   for(const path of [...retained,...pinned]){
    await mkdir(join(source,path,'..'),{recursive:true})
    await writeFile(join(source,path),'current source: '+path)
   }
+  await mkdir(join(source,'server/src/db/migrations'),{recursive:true})
+  for(let i=1;i<=55;i++)await writeFile(join(source,'server/src/db/migrations',String(i).padStart(4,'0')+'_fixture.sql'),'-- migration '+i+'\n')
   const snapshots='server/fixtures/historical-projection-3.8.2'
   await cp(new URL('../'+snapshots,import.meta.url),join(source,snapshots),{recursive:true})
   const receipt=await copyHistoricalFixtureSource(source,fixture)
@@ -48,12 +50,34 @@ test('historical migration routing retains every requested file and adds current
  const historical=['migration.test.ts','conversation-repair-provenance-migration.test.ts','public-purpose-reader-migration.test.ts','run-trace-provenance-migration.test.ts','run-presentation-contract.test.ts']
  const result=partitionMigrationTests([...historical,'closed-education.test.ts'])
  assert.deepEqual(result.historical,historical)
- assert.deepEqual(result.current,['closed-education.test.ts','runtime-patch-provenance.test.ts'])
- assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:['runtime-patch-provenance.test.ts'],historical:[]})
+ assert.deepEqual(result.current,['closed-education.test.ts'])
+ assert.deepEqual(result.patch54,['runtime-patch-provenance.test.ts'])
+ assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:[],patch54:['runtime-patch-provenance.test.ts'],historical:[]})
 })
+test('product54 fixture copies the exact contiguous prefix and four current manifests without mutating55 source',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'product54-source-owner-'))
+ try{
+  const source=join(root,'source'),fixture=join(root,'fixture')
+  const paths=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/runtime-patch.ts','src/lib/nativeMessage.ts']
+  for(const path of paths){await mkdir(join(source,path,'..'),{recursive:true});await writeFile(join(source,path),'exact current bytes '+path)}
+  const migrations=join(source,'server/src/db/migrations');await mkdir(migrations,{recursive:true})
+  for(let i=1;i<=55;i++)await writeFile(join(migrations,String(i).padStart(4,'0')+'_fixture.sql'),'-- migration '+i+'\n')
+  const result=await copyProduct54FixtureSource(source,fixture);assert.equal(result.migrations.length,54)
+  for(const [i,row] of result.migrations.entries()){
+   const name=String(i+1).padStart(4,'0')+'_fixture.sql',bytes=await readFile(join(migrations,name));assert.deepEqual(await readFile(join(fixture,'server/src/db/migrations',name)),bytes);assert.equal(row.checksum,createHash('sha256').update(bytes).digest('hex'))
+  }
+  await assert.rejects(readFile(join(fixture,'server/src/db/migrations/0055_fixture.sql')),{code:'ENOENT'});assert.match(await readFile(join(migrations,'0055_fixture.sql'),'utf8'),/55/)
+  for(const path of paths)assert.deepEqual(await readFile(join(fixture,path)),await readFile(join(source,path)))
+  await rm(join(migrations,'0030_fixture.sql'));await assert.rejects(copyProduct54FixtureSource(source,join(root,'gap')),/contiguous/)
+ }finally{await rm(root,{recursive:true,force:true})}
+})
+
 test('historical fixture rejects nonlocal/non-test targets, arbitrary files and altered pinned package bytes',()=>{
  const env={NODE_ENV:'test',INTEGRATION_DATABASE_URL:'postgres://postgres:fixture@127.0.0.1:5432/runtime_test'}
  assert.doesNotThrow(()=>assertHistoricalFixtureTarget(['migration.test.ts'],env))
+ assert.doesNotThrow(()=>assertProduct54FixtureTarget(['runtime-patch-provenance.test.ts'],env))
+ assert.throws(()=>assertProduct54FixtureTarget(['migration.test.ts'],env))
+ assert.throws(()=>assertProduct54FixtureTarget(['runtime-patch-provenance.test.ts'],{...env,INTEGRATION_DATABASE_URL:'postgres://external.test/runtime_test'}))
  for(const value of [{...env,NODE_ENV:'production'},{...env,INTEGRATION_DATABASE_URL:'postgres://localhost/main'},
   {...env,INTEGRATION_DATABASE_URL:'postgres://external.test/runtime_test'}, {...env,INTEGRATION_DATABASE_URL:env.INTEGRATION_DATABASE_URL+'?host=remote.test'},
   {...env,INTEGRATION_DATABASE_URL:env.INTEGRATION_DATABASE_URL+'?hostaddr=203.0.113.10'}]){
