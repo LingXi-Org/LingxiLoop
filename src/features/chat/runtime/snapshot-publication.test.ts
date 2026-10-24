@@ -4,6 +4,8 @@ import { createRunView } from '@lyyzka/lingxios/ui'
 import { createNativeMessage, nativeMessageSchema, nativeText } from '@/lib/nativeMessage'
 import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
 import { createSnapshotPublisher, decodeRunSnapshot, snapshotDisplay } from './snapshot-publication'
+import { applyRunSnapshot } from './run-updates'
+import { EMPTY_CONVERSATION_CHAT_STATE } from './store'
 
 const target = { conversationId: 'room', agentId: 'agent', runId: 'run' }
 function snapshot(text: string, seq = 0): AgentRunSnapshot {
@@ -12,10 +14,10 @@ function snapshot(text: string, seq = 0): AgentRunSnapshot {
       harness: { ...createRunView('run'), lifecycle: 'leased', lastSeq: seq, artifacts: [] } } }) }
 }
 function harness(value: AgentRunSnapshot) { return value.message.metadata.custom.harness as unknown as RunDisplayState }
-function setup() {
+function setup(onReceive?: (snapshot: AgentRunSnapshot) => void) {
   const controller = new AbortController(), received: AgentRunSnapshot[] = [], callbacks: (() => void)[] = []
   let pending = 0, maxPending = 0
-  const publisher = createSnapshotPublisher(value => received.push(value), controller.signal, error => { throw error }, publish => {
+  const publisher = createSnapshotPublisher(value => { received.push(value); onReceive?.(value) }, controller.signal, error => { throw error }, publish => {
     callbacks.push(publish); pending++; maxPending = Math.max(maxPending, pending)
     return () => { pending-- }
   })
@@ -139,4 +141,19 @@ test('a pending visible animation frame switches to the bounded hidden-tab timer
       else Reflect.deleteProperty(globalThis, name)
     })
   }
+})
+
+
+test('flushing buffered SSE before a same-sequence durable read preserves its control refresh', () => {
+  let state = EMPTY_CONVERSATION_CHAT_STATE
+  const s = setup(snapshot => { state = applyRunSnapshot(state, target, snapshot) })
+  s.push(snapshot('A', 1)); s.push(snapshot('AB', 2))
+  const durable = snapshot('AB', 2)
+  durable.message.metadata.custom.harnessControl = false
+  s.publisher.flush()
+  state = applyRunSnapshot(state, target, durable)
+  s.callbacks.forEach(callback => { callback() })
+  assert.equal(nativeText(state.messages[0]), 'AB')
+  assert.equal(state.messages[0].metadata.custom.harnessControl, false)
+  s.publisher.dispose()
 })

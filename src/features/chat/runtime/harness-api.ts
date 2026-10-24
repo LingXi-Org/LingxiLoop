@@ -12,6 +12,7 @@ import { RUN_RECOVERY } from './recovery'
 import { createSnapshotPublisher, decodeRunSnapshot } from './snapshot-publication'
 
 export interface AgentRunTarget { conversationId: string; agentId: string; runId: string; threadId?: string }
+export interface RunStreamPublication { flush?: () => void; observed?: () => void }
 export interface RunHistoryAnchors { sourceClientMsgNos: string[]; runIds: string[] }
 const runHistoryPageSchema = z.object({ runs: z.array(z.object({ conversationId: z.string(),agentId: z.string(),runId: z.string(),threadId: z.string().optional(),
   requestVersion: z.number().int().nonnegative(),fence: z.number().int().nonnegative(),status: z.enum(['queued','leased','waiting','succeeded','failed','cancelled']),
@@ -60,7 +61,7 @@ export const harnessApi = {
     }
     return [...runs.values()]
   },
-  async subscribe(target: AgentRunTarget, receive: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal): Promise<void> {
+  async subscribe(target: AgentRunTarget, receive: (snapshot: AgentRunSnapshot) => void, signal: AbortSignal, publication?: RunStreamPublication): Promise<void> {
     const company = getActiveCompanyId()
     if (!company) throw new Error('请先选择工作空间')
     const workspace = getWorkspaceSession()
@@ -77,6 +78,7 @@ export const harnessApi = {
       const streamReader = AssistantStream.fromResponse(response, new AssistantTransportDecoder()).getReader()
       const state = new AssistantTransportDeltaTracker()
       const publisher = createSnapshotPublisher(receive, bounded, error => connection.abort(error))
+      if (publication) publication.flush = publisher.flush
       const cancel = () => { void streamReader.cancel().catch(() => {}) }
       bounded.addEventListener('abort', cancel, { once: true })
       try {
@@ -91,11 +93,13 @@ export const harnessApi = {
           state.append(value.operations)
           const snapshot = decodeRunSnapshot(state.state as unknown as AgentRunSnapshot, target)
           clearTimeout(timer)
+          publication?.observed?.()
           publisher.push(snapshot)
         }
       } finally {
         try { publisher.flush() } finally {
           publisher.dispose()
+          if (publication?.flush === publisher.flush) delete publication.flush
           bounded.removeEventListener('abort', cancel)
           await streamReader.cancel().catch(() => {})
           streamReader.releaseLock()
