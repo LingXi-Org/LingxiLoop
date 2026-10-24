@@ -5,6 +5,7 @@ import { expect } from 'e2e'
 
 test('measure saved static, interactive, fresh-page, retained and first-visible-card startup', async ({app,browser}) => {
   const threeOnly = process.env.E2E_VISUALIZE_377_THREE_ONLY === '1'
+  const startupOnly = process.env.E2E_VISUALIZE_377_STARTUP_ONLY === '1'
   await browser.addInitScript(() => {
     const now = () => performance.timeOrigin + performance.now()
     if (window === window.top) {
@@ -114,7 +115,7 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
     console.log('SAVED_VISUALIZE_SAMPLE',JSON.stringify(sample))
     return observation
   }
-  if (!threeOnly) {
+  if (!threeOnly && !startupOnly) {
   for(const [resourceMs,stateMs] of [[0,0],[300,300]])for(const kind of ['static','interactive'] as const)for(const sample of [0,1]){
     await app.open(`/e2e/visualize/performance.html?case=${resourceMs}-${kind}-${sample}`)
     await select(`${resourceMs}-${kind}-${sample}`,kind,1,resourceMs,stateMs)
@@ -126,12 +127,36 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
   expect(reopened.count).toBe(1)
   expect(reopened.resources.filter(resource=>resource.name==='pages'||resource.name.includes('.'))).toHaveLength(0)
   }
+  if (startupOnly) {
+    await app.open('/e2e/visualize/performance.html?case=normal-static')
+    await select('0-static-startup','static',1,0,0)
+  }
   await app.open('/e2e/visualize/performance.html?case=three-cold')
-  await select('first-visible-of-three','interactive',3,300,300)
-  const output=(process.env.E2E_VISUALIZE_377_BASELINE==='1'?'.e2e/377-before':'.e2e/377-after')+(threeOnly?'-three':'')
+  const first = await select('first-visible-of-three','interactive',3,300,300)
+  if (startupOnly) {
+    // Retention below is for fully initialized pages. A page abandoned while
+    // still loading is allowed to cancel and rebuild; keep that outside the
+    // already-recorded first visible card's paint/interaction clock.
+    await expect.poll(()=>browser.evaluate(()=>document.querySelectorAll('[data-gen-ui-phase="ready"]').length)).toBe(3)
+    Object.assign(first,{settled:await browser.evaluate(async()=>{
+      const evidence=await fetch('/__visualize_fixture/performance').then(response=>response.json())
+      const events=(window as unknown as {visualizePerfEvents:{event:string}[]}).visualizePerfEvents
+      const resources=performance.getEntriesByType('resource').filter(item=>item.name.includes('/visualize/pages')&&new URL(item.name).searchParams.has('name')) as PerformanceResourceTiming[]
+      return {initializations:events.filter(event=>event.event==='sdk-initialize').length,
+        assetRequests:evidence.requests.filter((item:{stage:string})=>item.stage==='resources'),
+        assetTransferredBytes:resources.reduce((sum,item)=>sum+item.transferSize,0)}
+    })})
+    await select('warm-new-page','interactive',1,300,300)
+    const reopened=await select('first-visible-of-three','interactive',3,300,300,true)
+    expect(reopened.frameId).toBe(first.frameId)
+    expect(reopened.count).toBe(1)
+    expect(reopened.initializations).toBe(0)
+    expect(reopened.resources.filter(resource=>resource.name==='pages'||resource.name.includes('.'))).toHaveLength(0)
+  }
+  const output=process.env.E2E_VISUALIZE_OUTPUT??(process.env.E2E_VISUALIZE_377_BASELINE==='1'?'.e2e/377-before':'.e2e/377-after')+(threeOnly?'-three':'')
   await mkdir(output,{recursive:true})
   const environment=await browser.evaluate(()=>({userAgent:navigator.userAgent,dpr:devicePixelRatio,width:innerWidth,height:innerHeight}))
-  await writeFile(`${output}/timings.json`,JSON.stringify({baseline:process.env.E2E_VISUALIZE_377_BASELINE==='1',baselineHost:'0d1271a0cf92b22e01b456c7473f4e446027bd28',candidateHead:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),environment,generation:'not measured',scope:'open already saved and delivered synthetic content',samples},null,2))
+  await writeFile(`${output}/timings.json`,JSON.stringify({baseline:process.env.E2E_VISUALIZE_377_BASELINE==='1',baselineHost:process.env.E2E_VISUALIZE_377_BASELINE_REF??'0d1271a0cf92b22e01b456c7473f4e446027bd28',candidateHead:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),environment,generation:'not measured',scope:'open already saved and delivered synthetic content',samples},null,2))
   await app.screenshot('saved-visualization-usable')
   if(process.env.E2E_VISUALIZE_377_BASELINE!=='1')for(const value of samples){
     const sample=value as {id:string;retained:boolean;observation:{paintMs:number;readyMs:number;initializations:number;resources:{name:string;bytes:number}[]};interaction:{fromOpenMs:number;operationMs:number}|null}

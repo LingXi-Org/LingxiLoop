@@ -1,0 +1,149 @@
+{
+  "baseline": "b682fdc95c379500e3f46fcb886c617a6390e110",
+  "productFiles": {
+    "src/features/chat/visualize/web/public-resource-cache.ts": "38691d3e1dd5cc823f2025d40306213a49ebd67a53ef6690b1ccd1b48323c6bc",
+    "src/features/chat/visualize/zcode/gen-ui/adapters/retainedPage.ts": "e10cceeedaa2a4e13c58f5904d9264a066fc6c9d86f71da9a6c7d3f88e86e2aa"
+  },
+  "samples": {
+    "before": [
+      {
+        "scenario": "0-static-startup",
+        "retained": false,
+        "paintMs": 276.199951171875,
+        "readyMs": 288.900146484375,
+        "interaction": null,
+        "initializations": 1,
+        "pageCreates": 1,
+        "stateGets": 1,
+        "completedAssetGets": 6,
+        "settledAssetGets": null,
+        "settledAssetBytes": null,
+        "originalBudgetsPassed": true
+      },
+      {
+        "scenario": "first-visible-of-three",
+        "retained": false,
+        "paintMs": 1403.300048828125,
+        "readyMs": 1391.300048828125,
+        "interaction": {
+          "fromOpenMs": 1561.599853515625,
+          "operationMs": 17,
+          "count": 1
+        },
+        "initializations": 3,
+        "pageCreates": 3,
+        "stateGets": 3,
+        "completedAssetGets": 18,
+        "settledAssetGets": 18,
+        "settledAssetBytes": 3922161,
+        "originalBudgetsPassed": true
+      },
+      {
+        "scenario": "warm-new-page",
+        "retained": false,
+        "paintMs": 454.300048828125,
+        "readyMs": 443.800048828125,
+        "interaction": {
+          "fromOpenMs": 592,
+          "operationMs": 17.300048828125,
+          "count": 1
+        },
+        "initializations": 1,
+        "pageCreates": 1,
+        "stateGets": 1,
+        "completedAssetGets": 0,
+        "settledAssetGets": null,
+        "settledAssetBytes": null,
+        "originalBudgetsPassed": true
+      },
+      {
+        "scenario": "first-visible-of-three",
+        "retained": true,
+        "paintMs": 60.800048828125,
+        "readyMs": 19.900146484375,
+        "interaction": {
+          "fromOpenMs": 115.800048828125,
+          "operationMs": 17.10009765625,
+          "count": 2
+        },
+        "initializations": 0,
+        "pageCreates": 0,
+        "stateGets": 0,
+        "completedAssetGets": 0,
+        "settledAssetGets": null,
+        "settledAssetBytes": null,
+        "originalBudgetsPassed": true
+      }
+    ],
+    "after": [
+      {
+        "scenario": "0-static-startup",
+        "retained": false,
+        "paintMs": 295.400146484375,
+        "readyMs": 307.300048828125,
+        "interaction": null,
+        "initializations": 1,
+        "pageCreates": 1,
+        "stateGets": 1,
+        "completedAssetGets": 6,
+        "settledAssetGets": null,
+        "settledAssetBytes": null,
+        "originalBudgetsPassed": true
+      },
+      {
+        "scenario": "first-visible-of-three",
+        "retained": false,
+        "paintMs": 1104.300048828125,
+        "readyMs": 1132.699951171875,
+        "interaction": {
+          "fromOpenMs": 1282.300048828125,
+          "operationMs": 20.5,
+          "count": 1
+        },
+        "initializations": 3,
+        "pageCreates": 3,
+        "stateGets": 3,
+        "completedAssetGets": 6,
+        "settledAssetGets": 6,
+        "settledAssetBytes": 1307387,
+        "originalBudgetsPassed": true
+      },
+      {
+        "scenario": "warm-new-page",
+        "retained": false,
+        "paintMs": 473.300048828125,
+        "readyMs": 471.10009765625,
+        "interaction": {
+          "fromOpenMs": 625.60009765625,
+          "operationMs": 19.800048828125,
+          "count": 1
+        },
+        "initializations": 1,
+        "pageCreates": 1,
+        "stateGets": 1,
+        "completedAssetGets": 0,
+        "settledAssetGets": null,
+        "settledAssetBytes": null,
+        "originalBudgetsPassed": true
+      },
+      {
+        "scenario": "first-visible-of-three",
+        "retained": true,
+        "paintMs": 80.400146484375,
+        "readyMs": 26.699951171875,
+        "interaction": {
+          "fromOpenMs": 131.60009765625,
+          "operationMs": 18.800048828125,
+          "count": 2
+        },
+        "initializations": 0,
+        "pageCreates": 0,
+        "stateGets": 0,
+        "completedAssetGets": 0,
+        "settledAssetGets": null,
+        "settledAssetBytes": null,
+        "originalBudgetsPassed": true
+      }
+    ]
+  }
+}
