@@ -24,7 +24,8 @@ export function approvalView(approval: ApprovalSnapshot) {
     case 'knowledge.set_source_enabled': {
       const source = object(preview.source)
       field('课程资料', source.title)
-      field('可见范围', source.visibility_scope === 'PRIVATE' ? '个人私有资料' : source.visibility_scope === 'PROJECT' ? '当前课程共享资料' : undefined)
+      field('可见范围', source.visibilityScope === 'PRIVATE' ? '个人私有资料' : source.visibilityScope === 'PROJECT' ? '当前课程共享资料' : undefined)
+      if (typeof source.version === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(source.version)) field('核准版本', source.version)
       field('具体变化', approval.action === 'knowledge.delete_source' ? '删除资料并清理关联资源'
         : typeof preview.enabled === 'boolean' ? preview.enabled ? '在当前对话中启用资料' : '在当前对话中停用资料' : undefined)
       break

@@ -24,8 +24,8 @@ test('approval public view separates granted decisions from execution and strips
 
 test('reviewed producers publish scope and effect without inventing unknown business fields', () => {
   const source = approvalView(approval({ action: 'knowledge.set_source_enabled', preview: { enabled: false,
-    source: { title: '网络资料', visibility_scope: 'PROJECT', external_source_id: 'PRIVATE' } } }))
-  assert.deepEqual(source.context.map(item => item.value), ['网络资料', '当前课程共享资料', '在当前对话中停用资料'])
+    source: { title: '网络资料', visibilityScope: 'PROJECT', version: '2026-10-24T00:00:00.000Z', ownerUserId: 'PRIVATE' } } }))
+  assert.deepEqual(source.context.map(item => item.value), ['网络资料', '当前课程共享资料', '2026-10-24T00:00:00.000Z', '在当前对话中停用资料'])
   const routine = approvalView(approval({ action: 'routines.create', preview: { title: '复习', schedule: { time: '08:00' },
     timezone: 'Asia/Shanghai', instructions: 'PRIVATE', principalId: 'PRIVATE' } }))
   assert.match(JSON.stringify(routine.context), /暂停状态/)
