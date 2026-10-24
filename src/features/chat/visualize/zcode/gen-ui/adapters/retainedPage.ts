@@ -86,6 +86,7 @@ function createOwner(
       }
       core = createGenUiPage({
         ...input,
+        tweakSubmission: snapshot.tweakSubmission,
         confirm: (prompt) => [...confirmations.values()].at(-1)?.(prompt) ?? Promise.resolve(null),
         onVisibility: (visible) => {
           if (owner.visible !== visible) sandboxPages.visibility(owner, visible);
@@ -119,7 +120,9 @@ function createOwner(
       anchor.off?.();
       anchor.off = undefined;
     }
-    snapshot = { ...EMPTY_GEN_UI_SNAPSHOT, height: snapshot.height };
+    const receipt = snapshot.tweakSubmission;
+    snapshot = { ...EMPTY_GEN_UI_SNAPSHOT, height: snapshot.height,
+      tweakSubmission: receipt?.status === "sending" ? { ...receipt, status: "unconfirmed" } : receipt };
     notify();
     releasing = Promise.all([releasing, previous?.dispose()]).finally(() =>
       sandboxPages.released(owner),

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { AppBridge } from '@modelcontextprotocol/ext-apps/app-bridge'
 import { GEN_UI_STATE_CONTEXT_KEY as stateKey, GEN_UI_TWEAK_CONTEXT_KEY as tweakKey } from '../../shared/gen-ui'
-import { publishGenUiContext } from './context'
+import { publishGenUiContext, bindGenUiDisplayMode } from './context'
 
 test('complete GenUI notifications preserve preview through state ACK and restore the registered original', () => {
   const initial = { [stateKey]: 32, [tweakKey]: { changes: [] as number[] } }
@@ -34,4 +34,16 @@ test('complete GenUI notifications preserve preview through state ACK and restor
   for (const context of [changed, saved, original]) publishGenUiContext(after.bridge, context, error => { throw error })
   assert.equal(after.value(), 32)
   assert.equal(after.notifications.every(context => Object.hasOwn(context, stateKey) && Object.hasOwn(context, tweakKey)), true)
+})
+
+test('public display-mode handler returns the current host mode without granting a guest change', async () => {
+  const bridge = new AppBridge(null, { name: 'display-mode-regression', version: '1' }, {}, { hostContext: { displayMode: 'inline' } })
+  let mode: 'inline' | 'fullscreen' = 'inline'
+  let checks = 0
+  bindGenUiDisplayMode(bridge, () => ({ displayMode: mode }), () => { checks++ })
+  mode = 'fullscreen'
+  const result = await bridge.onrequestdisplaymode!({ mode: 'pip' }, {} as never)
+  assert.equal(result.mode, 'fullscreen')
+  assert.equal(mode, 'fullscreen')
+  assert.equal(checks, 1)
 })

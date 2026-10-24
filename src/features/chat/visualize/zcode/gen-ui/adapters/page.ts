@@ -22,10 +22,10 @@ import {
   getPluginUiSessionActions,
 } from "@/features/chat/visualize/zcode/plugin-ui/hostPrimitives.js";
 import type { GenUiCardTarget, GenUiPage, GenUiPageSnapshot } from "../contract.js";
-import { EMPTY_GEN_UI_SNAPSHOT } from "../contract.js";
+import { EMPTY_GEN_UI_SNAPSHOT, tweakFingerprint } from "../contract.js";
 import { readGenUiStyleContext } from "./theme.js";
 import { createGenUiTweakRegistry } from "../app/tweaks.js";
-import { publishGenUiContext } from "./context";
+import { publishGenUiContext, bindGenUiDisplayMode } from "./context";
 
 export interface GenUiPageInput {
   target: GenUiCardTarget;
@@ -36,6 +36,7 @@ export interface GenUiPageInput {
   confirm(prompt: string): Promise<string | null>;
   onVisibility?(visible: boolean): void;
   onSettled?(): void;
+  tweakSubmission?: GenUiPageSnapshot["tweakSubmission"];
 }
 export function createGenUiPage(input: GenUiPageInput): GenUiPage {
   const tweaks = createGenUiTweakRegistry();
@@ -47,7 +48,7 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
     path: target.path,
   };
   const listeners = new Set<() => void>();
-  let snapshot: GenUiPageSnapshot = { ...EMPTY_GEN_UI_SNAPSHOT };
+  let snapshot: GenUiPageSnapshot = { ...EMPTY_GEN_UI_SNAPSHOT, tweakSubmission: input.tweakSubmission ?? null };
   let disposed = false,
     visible = false,
     sending = false;
@@ -155,6 +156,7 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
     const current = () => {
       if (disposed || bridge !== active) throw new Error("Gen UI instance was closed");
     };
+    bindGenUiDisplayMode(active, () => context, current);
     active.onopenlink = async ({ url }) => {
       current();
       assertCurrent();
@@ -352,7 +354,9 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
       }
     },
     setTweaks(values) {
-      update({ tweakValues: { ...snapshot.tweakValues, ...values }, previewOriginal: false });
+      const next = { ...snapshot.tweakValues, ...values };
+      update({ tweakValues: next, previewOriginal: false,
+        ...(snapshot.tweakSubmission?.status === "accepted" && tweakFingerprint(next) !== snapshot.tweakSubmission.fingerprint ? { tweakSubmission: null } : {}) });
       projectTweaks();
     },
     previewTweaks(original) {
@@ -360,6 +364,10 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
       projectTweaks();
     },
     async submitTweaks(values: GenUiTweakValues) {
+      const fingerprint = tweakFingerprint(values);
+      if (snapshot.tweakSubmission?.status === "sending") throw new Error("Design changes are already pending");
+      if (snapshot.tweakSubmission?.status === "accepted" && snapshot.tweakSubmission.fingerprint === fingerprint) return;
+      update({ tweakSubmission: { fingerprint, status: "sending" } });
       const groups = snapshot.groups.map((group) => ({
         title: group.title,
         controls: group.controls
@@ -372,11 +380,16 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
             ...(control.type === "slider" ? { unit: control.unit } : {}),
           })),
       }));
-      await followUp(
+      try { await followUp(
         `Update the Gen UI file ${stateTarget.path} with these design settings:\n${JSON.stringify(groups)}`,
         snapshot.tweak?.title,
         true,
       );
+        update({ tweakSubmission: { fingerprint, status: "accepted" } });
+      } catch (error) {
+        update({ tweakSubmission: { fingerprint, status: "unconfirmed" } });
+        throw error;
+      }
     },
     isBusy: () => preparing || sending || operations > 0,
     async dispose() {

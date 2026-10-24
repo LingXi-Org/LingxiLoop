@@ -6,6 +6,7 @@ export interface GenUiCardTarget extends GenUiStateTarget {
   sourceMessageId?: string;
 }
 export interface GenUiPageSnapshot {
+  tweakSubmission: { fingerprint: string; status: "sending" | "accepted" | "unconfirmed" } | null;
   phase: "loading" | "ready" | "error";
   height: number;
   error?: string;
@@ -17,6 +18,7 @@ export interface GenUiPageSnapshot {
   escapeSequence: number;
 }
 export const EMPTY_GEN_UI_SNAPSHOT: GenUiPageSnapshot = {
+  tweakSubmission: null,
   phase: "loading",
   height: 240,
   tweak: null,
@@ -26,6 +28,7 @@ export const EMPTY_GEN_UI_SNAPSHOT: GenUiPageSnapshot = {
   hovered: false,
   escapeSequence: 0,
 };
+export const tweakFingerprint = (values: GenUiTweakValues) => JSON.stringify(Object.entries(values).sort(([left], [right]) => left.localeCompare(right)));
 export interface GenUiPage {
   subscribe(listener: () => void): () => void;
   getSnapshot(): GenUiPageSnapshot;

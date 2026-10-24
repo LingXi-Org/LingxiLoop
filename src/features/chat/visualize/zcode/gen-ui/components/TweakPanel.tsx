@@ -1,19 +1,16 @@
-import { useState } from "react";
-
 import { Button } from "@/features/chat/visualize/zcode/components/ui/button.js";
 import { useZCodeIntl } from "@/features/chat/visualize/zcode/i18n/IntlProvider.js";
-import type { GenUiPage, GenUiPageSnapshot } from "../contract.js";
+import { tweakFingerprint, type GenUiPage, type GenUiPageSnapshot } from "../contract.js";
 export function TweakPanel({ snapshot, page }: { snapshot: GenUiPageSnapshot; page: GenUiPage }) {
   const { groups, tweakValues: values, previewOriginal: preview } = snapshot;
   const { intl } = useZCodeIntl();
   const original = Object.fromEntries(
     groups.flatMap((group) => group.controls).map((control) => [control.id, control.value]),
   );
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const busy = snapshot.tweakSubmission?.status === "sending";
+  const submitted = snapshot.tweakSubmission?.status === "accepted" && snapshot.tweakSubmission.fingerprint === tweakFingerprint(values);
+  const error = snapshot.tweakSubmission?.status === "unconfirmed" ? intl.formatMessage({ id: "genUi.changesFailed" }) : "";
   const change = (id: string, value: string | number | boolean) => {
-    setSubmitted(false);
     const next = { ...values, [id]: value };
     page.setTweaks(next);
   };
@@ -86,7 +83,6 @@ export function TweakPanel({ snapshot, page }: { snapshot: GenUiPageSnapshot; pa
           size="sm"
           disabled={busy}
           onClick={() => {
-            setSubmitted(false);
             page.setTweaks(original);
           }}
         >
@@ -107,16 +103,10 @@ export function TweakPanel({ snapshot, page }: { snapshot: GenUiPageSnapshot; pa
           size="sm"
           disabled={busy || submitted}
           onClick={async () => {
-            setBusy(true);
-            setError("");
-            setSubmitted(false);
             try {
               await page.submitTweaks(values);
-              setSubmitted(true);
             } catch {
-              setError(intl.formatMessage({ id: "genUi.changesFailed" }));
-            } finally {
-              setBusy(false);
+              // The retained page owns uncertain delivery and retry identity.
             }
           }}
         >
