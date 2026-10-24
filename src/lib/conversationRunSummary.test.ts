@@ -17,3 +17,12 @@ test('unknown or unproven actors never become personal next actions', () => {
   assert.equal(conversationRunSummaryLabel({ kind: 'waiting_approval', actor: 'unknown' }), '等待审批进度')
   assert.equal(conversationRunSummaryLabel({ kind: 'unknown', actor: 'unknown' }), '任务状态待刷新')
 })
+
+test('a same-fence local durable wait supersedes an older processing list snapshot', () => {
+  const summary: ConversationRunSummary = { kind: 'processing', actor: 'system', runId: 'run', requestVersion: 2, fence: 3 }
+  assert.equal(conversationListRunLabel(summary, { runId: 'run', requestVersion: 2, fence: 3, lifecycle: 'waiting', label: '等你回答' }), '等你回答')
+  assert.equal(conversationListRunLabel({ ...summary, kind: 'queued' }, { runId: 'run', requestVersion: 2, fence: 3, lifecycle: 'waiting', label: '等你回答' }), '排队中', 'after a decision, queued is newer than waiting within this fence')
+})
+test('an unidentifiable optional summary failure does not conceal known loaded state', () => {
+  assert.equal(conversationListRunLabel({ kind: 'unknown', actor: 'unknown' }, undefined, '等你审批'), '等你审批')
+})

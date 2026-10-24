@@ -13,10 +13,10 @@
         "channel-run-summary.test.ts"
       ],
       "runtime": "current",
-      "durationMs": 6260,
+      "durationMs": 12893,
       "exitCode": 0
     }
   ],
-  "durationMs": 6260,
+  "durationMs": 12894,
   "exitCode": 0
 }

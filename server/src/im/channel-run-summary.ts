@@ -82,7 +82,7 @@ export async function readChannelRunSummaries(scope: Scope, channelIds: readonly
     // All remaining pages are older than every selected latest-active run.
     if (candidates.size === visible.size) {
       const floor = Math.min(...[...candidates.values()].map(run => Date.parse(run.createdAt)))
-      for (const page of pages) if (page.frontier <= floor) page.done = true
+      for (const page of pages) if (page.frontier < floor) page.done = true
     }
   }
   const incompleteFrontier = Math.max(-Infinity, ...pages.filter(page => !page.done).map(page => page.frontier))
@@ -91,7 +91,7 @@ export async function readChannelRunSummaries(scope: Scope, channelIds: readonly
   for (const channelId of visible) {
     if (!await can(channelId, 'conversation:read')) continue
     const candidate = candidates.get(channelId)
-    if (!candidate || Date.parse(candidate.createdAt) < incompleteFrontier) {
+    if (!candidate || Date.parse(candidate.createdAt) <= incompleteFrontier) {
       if (incompleteFrontier > -Infinity) result[channelId] = { kind: 'unknown', actor: 'unknown' }
       continue
     }

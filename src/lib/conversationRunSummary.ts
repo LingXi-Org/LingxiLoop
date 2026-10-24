@@ -29,11 +29,13 @@ export function conversationRunSummaryLabel(summary: ConversationRunSummary | nu
  * a terminal result from a different loaded run cannot hide an unopened wait. */
 export function conversationListRunLabel(summary: ConversationRunSummary, local?: {
   runId: string; requestVersion: number; fence: number; lifecycle: string; label: string | null
-}): string | null {
+}, loadedLabel?: string | null): string | null {
+  if (summary.kind === 'unknown' && !summary.runId) return loadedLabel ?? conversationRunSummaryLabel(summary)
   if (local && summary.runId === local.runId && summary.requestVersion !== undefined && summary.fence !== undefined
     && (local.requestVersion > summary.requestVersion || local.requestVersion === summary.requestVersion && local.fence > summary.fence
       || local.requestVersion === summary.requestVersion && local.fence === summary.fence
-        && ['waiting_input', 'waiting_approval', 'submitted', 'processing', 'queued', 'delegated', 'unknown'].includes(summary.kind)
-        && ['cancelled', 'failed', 'succeeded', 'partial', 'blocked'].includes(local.lifecycle))) return local.label
+        && (summary.kind === 'processing' && local.lifecycle === 'waiting'
+          || ['waiting_input', 'waiting_approval', 'submitted', 'processing', 'queued', 'delegated', 'unknown'].includes(summary.kind)
+            && ['cancelled', 'failed', 'succeeded', 'partial', 'blocked'].includes(local.lifecycle)))) return local.label
   return conversationRunSummaryLabel(summary)
 }

@@ -57,7 +57,7 @@ appears in a response.
 
 ## Recorded checks
 
-Node22.23.3, existing immutable dependency symlink. The13 owning helper, row,
+Node22.23.3, existing immutable dependency symlink. On the initial candidate,13 owning helper, row,
 label/identity, existing removal-scope and parallel-startup regressions passed.
 They cover tenant/principal/session/binding exclusion; cancellation/revision;
 resolved approval; unknown actor; pagination hard cap and early stop; repeat
@@ -66,7 +66,7 @@ Focused lint on12 files, the standalone helper check, full `npm run server:typec
 and full `npm run typecheck` passed. Independent review and exact-head CI are
 reported on the draft PR.
 
-One real HTTP/PostgreSQL/formal-runtime integration passed **1/1** in3.061s
+The initial real HTTP/PostgreSQL/formal-runtime integration passed **1/1** in3.061s
 (owning runner6.260s). It used only synthetic data in a new dedicated
 `373_list_20261024_test`, explicitly migrated through54, recording WuKong and an
 in-process deterministic fake model. That fake ran once to produce a real
@@ -108,3 +108,52 @@ state/authorization behavior, not user-device latency, browser performance,
 all #373 acceptance areas or production deployment. The snapshot can age until
 the next existing list reload/event; it does not silently poll or wake work.
 Rollback reverts these source additions together; no durable data/schema rollback.
+
+## Independent-review corrections
+
+Read-only review of `ffbbecef` found three P2 defects; that exact head's successful
+CI40075052537 does not override those findings. Four newly added assertions failed
+on it (same-fence local wait, unknown fallback, equal-time continuation and cap).
+Their red output is retained in `review-regressions-red.tap` (trailing whitespace
+only normalized; the original local TAP remains unchanged).
+
+- Within one request/fence, native processing→waiting does not bump the fence.
+  A matching local durable waiting receipt now supersedes the older processing
+  read. Unknown without a run identity falls back to known loaded state. A queue
+  after a decision is later than waiting within that fence, so it is not rolled
+  back to the old local wait. Different-run terminal history and old versions
+  remain ineligible; an explicit submitted receipt is still not another action.
+- The native cursor sorts `(created_at,id)`, whereas public dates are milliseconds.
+  Pagination may stop only when its time frontier is strictly older; equality
+  continues or remains unknown at the12-page cap. No private cursor format is
+  parsed. The same-time cross-status counterexample now passes.
+- `goal.waiting` / `approval.pending` events themselves precede native `waitWork`.
+  The existing DeliveryPort callback therefore ignores inline events and uses
+  only its original native **event outbox** delivery context. A public run read
+  must observe the same request/fence after the durable transition. If still
+  leased, an ordinary delivery error retains the original bounded outbox retry;
+  no new queue/timer/poll or native SQL is added. Only then does the existing
+  `notifyRunAvailable` authorize and invalidate through the original WS path.
+
+The helper/label/frontier focused regressions and the standalone helper types
+passed after these corrections. The final full owning checks/CI and re-review
+are tracked against the new PR head; local heavy typechecks were paused for the
+integrator's higher-priority performance measurement window.
+
+The expanded real integration passed **1/1**,9.357s scenario /12.894s runner.
+Before the actual `waitWork`, a real channel-list reload observed **processing**;
+an early outbox callback refused acknowledgement. The actual existing native
+background event outbox subsequently published one existing Redis hint after a
+public snapshot observed **waiting**. This establishes reliable post-park
+continuation under the tested conditions, not just an event fired before commit.
+Two authorized sessions in the current course plus another same-principal course
+exercise the real multiple-session batch/binding SQL path. The measured list
+still used3 native pages +1 selected-wait read, and the in-process fake ran once.
+No external provider or browser ran. The new test DB again had0 sessions before
+drop. `review-integration-result.json` and the new integration timings record it;
+`initial-integration-timings.json` preserves the earlier narrower run.
+
+The native retry emitted an expected events warning while waiting was not yet
+committed. A terminal-outbox acknowledgement warning occurred during fixture
+shutdown after membership removal; the test did not claim every outbox drained.
+These warnings are retained as boundaries, not described as a warning-free run.

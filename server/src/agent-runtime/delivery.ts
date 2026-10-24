@@ -4,8 +4,9 @@ import { createHash } from 'node:crypto'
 import { NoEffectError, type createLingxiOS, type DeliveryPort } from '@lyyzka/lingxios'
 import { sendAgentChannelMessage, sendSystemChannelMessage } from '../im/public.js'
 import { loadRuntimeBinding } from './context.js'
-import { productConversationId, assertFrozenAudience, bindProductRun } from './identity.js'
+import { productConversationId, assertFrozenAudience, bindProductRun, notifyRunAvailable } from './identity.js'
 import { runProductCallback } from './product-callbacks.js'
+import { createRunListInvalidation } from './run-list-invalidation.js'
 import { syncConversationPolicy } from './conversations.js'
 import { createNativeMessage, nativeMessageSchema, nativeText } from '../im/message-types.js'
 import { getSendAcceptance } from '../im/messages-repository.js'
@@ -16,7 +17,7 @@ export { approvalView } from './approval-public-view.js'
 
 export function createProductDelivery(control: () => ReturnType<typeof createLingxiOS>): DeliveryPort {
   return {
-    async onEvent() { /* Native SSE owns replay and preview delivery. */ },
+    onEvent: createRunListInvalidation(control, notifyRunAvailable),
     async deliverTerminal(work, feedback, inputContext) {
       return runProductCallback(inputContext, async scope => {
         const { database } = scope, context = { ...inputContext, ...scope }

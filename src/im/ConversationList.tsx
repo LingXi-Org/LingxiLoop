@@ -100,7 +100,7 @@ export function ConversationListItemContent({
   const runStatus = conversation.runSummary ? conversationListRunLabel(conversation.runSummary, localRun && localView ? {
     runId: String(localRun.metadata.custom.runId), requestVersion: localView.requestVersion, fence: localView.fence,
     lifecycle: localView.lifecycle ?? '', label: conversationRunStatus([localRun]),
-  } : undefined) : loadedRunStatus
+  } : undefined, loadedRunStatus) : loadedRunStatus
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const muted = isMuted(conversation)

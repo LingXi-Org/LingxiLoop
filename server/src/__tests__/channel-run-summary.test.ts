@@ -79,7 +79,7 @@ test('pagination has a request-wide hard bound and does not fetch message or eve
 })
 
 test('a later relevant active page is found, then older pages stop early', async () => {
-  const f = fixture({ channels: ['room'], pages: [[run('unbound', 'elsewhere')], [run('run')], [run('unneeded')]] })
+  const f = fixture({ channels: ['room'], pages: [[run('unbound', 'elsewhere')], [run('run'), run('older-unbound', 'elsewhere', { createdAt: '2026-10-23T00:00:00Z' })], [run('unneeded')]] })
   const result = await readChannelRunSummaries(scope, f.channels, f.infrastructure as never)
   assert.equal(result.room?.kind, 'waiting_input')
   assert.equal(f.calls.length, 4, 'three first pages plus the one necessary waiting continuation')
@@ -97,4 +97,27 @@ test('no proven control means no guessed approval actor; repeat reads do not ret
   assert.equal(second.room?.kind, 'submitted')
   assert.equal(f.calls.length, 6, 'each request reads current metadata; no persistent summary cache')
   assert.equal(f.reads.length, 6, 'each approval checks current run, actual receipt and run again')
+})
+
+for (const exhaust of [false, true]) test(`equal-time cross-status frontier ${exhaust ? 'stays unknown at the cap' : 'continues to the later bound run'}`, async () => {
+  const calls: object[] = []
+  const a = run('a'), b = run('b', 'room', { status: 'queued', goalOutcome: null })
+  const infrastructure = {
+    db: { async query(sql: string, values: unknown[]) {
+      if (sql.includes('DISTINCT')) return { rows: [{ conversation_id: 'room', session_id: 'room' }] }
+      if (sql.includes('im_questionnaires')) return { rows: [{ question_id: 'question', principal_id: 'human', submission_nonce: null }] }
+      return { rows: (values[3] as string[]).filter(id => ['a', 'b'].includes(id)).map(run_id => ({ run_id, conversation_id: 'room', session_id: 'room', agent_id: 'agent', principal_id: 'human', thread_id: null })) }
+    } },
+    runtime: { async listRuns(query: { status: string; cursor?: string }) {
+      calls.push(query)
+      if (query.status === 'waiting') return { items: [a], nextCursor: null }
+      if (query.status === 'leased') return { items: [], nextCursor: null }
+      return !exhaust && query.cursor ? { items: [b], nextCursor: null }
+        : { items: Array.from({ length: 100 }, (_, n) => run(`unbound-${n}`, 'room', { status: 'queued', goalOutcome: null })), nextCursor: `${calls.length}` }
+    }, async readRun() { return a }, async readApproval() { return null } },
+    can: async () => true,
+  }
+  const result = await readChannelRunSummaries(scope, ['room'], infrastructure as never)
+  assert.equal(result.room?.kind, exhaust ? 'unknown' : 'queued')
+  assert.ok(calls.length <= 12)
 })
