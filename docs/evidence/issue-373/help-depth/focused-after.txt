@@ -1,0 +1,72 @@
+TAP version 13
+# (node:536677) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: the real authorized homework context carries adaptive help and preserves teacher task/feedback without changing learning status
+ok 1 - the real authorized homework context carries adaptive help and preserves teacher task/feedback without changing learning status
+  ---
+  duration_ms: 5.566684
+  type: 'test'
+  ...
+# Subtest: capability checks and ordinary chat do not read assessment history or add a tutoring rule
+ok 2 - capability checks and ordinary chat do not read assessment history or add a tutoring rule
+  ---
+  duration_ms: 0.676852
+  type: 'test'
+  ...
+# Subtest: the bounded reader scopes existing assessments and checks attachment availability before summarizing new work
+ok 3 - the bounded reader scopes existing assessments and checks attachment availability before summarizing new work
+  ---
+  duration_ms: 7.032097
+  type: 'test'
+  ...
+# Subtest: no assessment schedules no read or assessment; a pending current assessment cannot reuse an older READY result
+ok 4 - no assessment schedules no read or assessment; a pending current assessment cannot reuse an older READY result
+  ---
+  duration_ms: 0.518941
+  type: 'test'
+  ...
+# Subtest: a first supported gap gets a brief clue, repeated supported work gets explanation and an independent next step
+ok 5 - a first supported gap gets a brief clue, repeated supported work gets explanation and an independent next step
+  ---
+  duration_ms: 4.343107
+  type: 'test'
+  ...
+# Subtest: same receipt, reused quotes and older work never become repeated attempts
+ok 6 - same receipt, reused quotes and older work never become repeated attempts
+  ---
+  duration_ms: 0.659
+  type: 'test'
+  ...
+# Subtest: old epochs, pending/invalid results, missing evidence and default unmet criteria remain unknown
+ok 7 - old epochs, pending/invalid results, missing evidence and default unmet criteria remain unknown
+  ---
+  duration_ms: 1.028322
+  type: 'test'
+  ...
+# Subtest: only an unresolved exact criterion in both current and prior assessed work increases depth
+ok 8 - only an unresolved exact criterion in both current and prior assessed work increases depth
+  ---
+  duration_ms: 0.856099
+  type: 'test'
+  ...
+# Subtest: ordinary turns get no tutoring rule; editable requests can ask for style within the teacher task
+ok 9 - ordinary turns get no tutoring rule; editable requests can ask for style within the teacher task
+  ---
+  duration_ms: 0.386894
+  type: 'test'
+  ...
+# Subtest: selecting help preserves a student attempt and adds only the requested guidance
+ok 10 - selecting help preserves a student attempt and adds only the requested guidance
+  ---
+  duration_ms: 1.685174
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2843.769518
