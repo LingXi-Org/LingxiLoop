@@ -62,6 +62,7 @@ COPY package.json package-lock.json .npmrc ./
 RUN --mount=type=secret,id=npm_token \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
 COPY src ./src
+COPY shared/visualize-public-resources.ts ./shared/
 COPY public ./public
 COPY index.html ./
 COPY vite.config.ts ./
@@ -97,6 +98,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/package-lock.json ./
 COPY server ./server
+COPY shared/visualize-public-resources.ts ./shared/
 # Canvas service deliberately shares these dependency-free domain helpers with
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into

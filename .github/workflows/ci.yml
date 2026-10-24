@@ -77,6 +77,7 @@ jobs:
               - 'scripts/run-tests.mjs'
               - 'scripts/test-selectors.test.mjs'
             web:
+              - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
               - 'third_party/assistant-ui/streaming-text/**'
               - 'third_party/assistant-ui-elements/**'
@@ -124,6 +125,7 @@ jobs:
               - '!server/src/__integration__/**'
             # Include shared sources loaded by the server runtime and copied by its image.
             server_source:
+              - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'

@@ -115,3 +115,18 @@ log is retained. It was not retried with a larger heap. The server typecheck was
 not run locally on this combination while another owner held the serialized
 build slot. The earlier stacked web/server typecheck passes are not substituted
 for these new-combination checks. Exact remote CI remains required.
+
+## First exact CI and packaging correction
+
+Exact head `bed939db` CI [40072523162](https://github.com/LingXi-Org/LingxiLoop/actions/runs/40072523162)
+completed with server and integration success, but web and deploy-contract failed
+the existing SPA source-graph contract: the new shared allowlist was omitted
+from the explicit image COPY/context. That was a change-specific packaging bug.
+The minimal correction copies only that file into both SPA and final server
+stages and admits only that file in the image context. The server graph and
+workflow-owner regressions now include root shared imports; the exact path
+triggers web, server and existing bounded visualization integration checks.
+No gate was weakened or skipped. The before packaging regressions failed2/2;
+the corrected source-graph/context/owner regressions passed3/3. Both raw logs
+remain. No cache, SDK, renderer asset or browser behavior changed in this fix.
+The corrected exact head requires fresh CI; the first run is not treated as green.
