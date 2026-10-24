@@ -24,7 +24,7 @@ export function visualizeFixtureApi(): Plugin {
       if(url.pathname==='/__visualize_fixture/fault') {fault=url.searchParams.get('stage')??'';if(url.searchParams.has('release')){for(const release of held)release();held.clear()}reply({});return}
       if(url.pathname==='/__visualize_fixture/resource-fault') {resourceFault=url.searchParams.get('mode')??'';reply({});return}
       if(url.pathname==='/__visualize_fixture/resource-evidence') {reply({attempts:resourceAttempts});return}
-      if(url.pathname==='/__visualize_fixture/evidence') {reply({follows,external,denied,externalHits,acceptedSaves,activePages:[...pages.values()].filter(page=>page.active).length,closedPages,blocked,aborted});return}
+      if(url.pathname==='/__visualize_fixture/evidence') {reply({follows,external,denied,externalHits,acceptedSaves,savedStates:Object.fromEntries(states),activePages:[...pages.values()].filter(page=>page.active).length,closedPages,blocked,aborted});return}
       if(url.pathname==='/__visualize_fixture/reset') {fault='';resourceFault='';resourceAttempts.length=0;for(const release of held)release();held.clear();blocked.length=aborted.length=0;pages.clear();states.clear();revisions.clear();follows.length=external.length=denied.length=0;closedPages=externalHits=acceptedSaves=0;failOnce=url.searchParams.get('failOnce')==='1';reply({});return}
       if(url.pathname==='/__visualize_fixture/invalidate') {for(const page of pages.values())if(page.active)page.stale=true;reply({});return}
       if(url.pathname==='/__visualize_fixture/external') {externalHits++;res.setHeader('content-type','text/plain');res.end('Local fictional visualization link');return}
@@ -66,7 +66,8 @@ export function visualizeFixtureApi(): Plugin {
           const allowed=['visualize.css','visualize.html','calendar.js','gen-ui.js','vendor/d3-7.9.0.min.js','vendor/floating-ui-core-1.7.3.min.js','vendor/floating-ui-dom-1.7.4.min.js','vendor/lucide-1.17.0.js']
           if(!allowed.includes(name)){reply({},404);return}
           if(fault.split(',').includes('handshake')&&name==='gen-ui.js'){res.setHeader('content-type','text/plain');res.end('/* fault fixture: runtime unavailable */');return}
-          const file=name==='gen-ui.js'?'server/assets/visualize-runtime/gen-ui.js':path.join('third_party/zcode/skills/visualize/assets',name)
+          const file=name==='gen-ui.js'?path.join(process.env.E2E_VISUALIZE_RUNTIME_ROOT??'server/assets/visualize-runtime','gen-ui.js')
+            :path.join(process.env.E2E_VISUALIZE_ASSET_ROOT??'third_party/zcode/skills/visualize/assets',name)
           const attempt = resourceAttempts.filter(item=>item.name===name).length + 1
           const entry: typeof resourceAttempts[number] = {name,attempt,start:performance.now()}
           resourceAttempts.push(entry)

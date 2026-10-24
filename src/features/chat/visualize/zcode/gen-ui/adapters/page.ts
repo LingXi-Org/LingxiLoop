@@ -25,6 +25,7 @@ import type { GenUiCardTarget, GenUiPage, GenUiPageSnapshot } from "../contract.
 import { EMPTY_GEN_UI_SNAPSHOT } from "../contract.js";
 import { readGenUiStyleContext } from "./theme.js";
 import { createGenUiTweakRegistry } from "../app/tweaks.js";
+import { publishGenUiContext } from "./context";
 
 export interface GenUiPageInput {
   target: GenUiCardTarget;
@@ -89,7 +90,7 @@ export function createGenUiPage(input: GenUiPageInput): GenUiPage {
     ...readGenUiStyleContext(),
   };
   const pushContext = () => {
-    bridge?.setHostContext({ ...context });
+    publishGenUiContext(bridge, context, fail);
   };
   const assertCurrent = () => {
     if (disposed || !visible || !handle || snapshot.phase !== "ready")
