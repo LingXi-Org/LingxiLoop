@@ -1,0 +1,23 @@
+{
+  "snapshot": "fe61654b76c6cc47f70351ad04f2c4819d9111b8",
+  "model": "gpt-6.1-sol",
+  "reasoningEffort": "medium",
+  "source": "https://github.com/LingXi-Org/LingxiLoop/pull/237",
+  "taskKind": "bounded verification replay reconstructed from public PR",
+  "limits": {
+    "toolCalls": 8,
+    "seconds": 180
+  },
+  "agentsSha256": {
+    "a": "8e7e1c7335f50d7c0efdf83df2cb4648fe6f850963f3902c0583cd39c1a781db",
+    "b": "20ec3babe80703dd950f65c0d370fe25f217e293516359e53085672ea4351116"
+  },
+  "observed": {
+    "aToolCalls": 6,
+    "bToolCalls": 6,
+    "tokens": null,
+    "cost": null,
+    "fullRuntimeSeconds": null
+  },
+  "unavailableReason": "The collaboration runner does not expose token/billing totals; no complete wall-clock interval was recorded."
+}
