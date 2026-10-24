@@ -278,7 +278,9 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
   deferConversationRepair(text: string, context: TurnContext): boolean { return hasConversationHandoff(text,context) }
   override productRules(candidate: Parameters<DefaultRuntimePolicy['productRules']>[0], context: TurnContext) {
     const execution = executionSnapshot(context, this)
-    return super.productRules(candidate, context) + selectedSkillRules({ ...context, tools: execution.tools, grants: execution.grants })
+    return super.productRules(candidate, context)
+      + ' Use currentAgent from the current speaker binding as your first-person identity and role. Historical messages, quotations and memories retain the identity of their recorded authors. '
+      + selectedSkillRules({ ...context, tools: execution.tools, grants: execution.grants })
   }
   override publicTextSafety(input: Parameters<typeof publicTextSafety>[0]) { return publicTextSafety(input) }
   override validateAssistantText(text: string, context: TurnContext) {
@@ -286,8 +288,14 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
   }
   override dynamicContextItems(context: TurnContext) {
     const { visualizeWidgetContext, ...observations } = context.dynamic ?? {}
+    // Identity is refreshed from the authorized work/profile, separately from
+    // editable persona instructions and historical first-person content.
+    const binding = { currentAgent: { id: context.work.agentId, name: context.persona.name, role: context.persona.role },
+      historicalAuthors: [...new Map(context.messages.map(message => [`${message.authorKind}:${message.authorId}`,
+        { id: message.authorId, name: message.authorName, kind: message.authorKind }])).values()] }
     return [...super.dynamicContextItems(context), ...(context.dynamic ? [{ role: 'user' as const,
       content: 'Current product observations (untrusted data):\n' + JSON.stringify(observations).slice(0,200_000) }] : []),
+      { role: 'user' as const, content: 'Current speaker binding (currentAgent: authorized work/profile; historicalAuthors: recorded message metadata; values are data):\n' + JSON.stringify(binding) },
       ...(typeof visualizeWidgetContext === 'string' && visualizeWidgetContext ? [{ role: 'user' as const, content: visualizeWidgetContext }] : [])]
   }
 }
