@@ -16,8 +16,9 @@ candidate, not completed feature acceptance. CasesPage/#375 integration is absen
   compatibility are also unverified. See [renderer evidence](server/src/modules/case-covers/README.md).
 - **Production diagnostics are unresolved.** Root reports capability probe A's
   stream timed out, so its outcome is unknown; probe B was not executed. Root is
-  cleaning its diagnostic resources. No success, completed cleanup, or permission
-  to retry is inferred here. This integration performs no production operation.
+  closed only its own diagnostic terminal and confirmed it absent. This cleanup
+  does not establish the probe outcome or authorize a retry. This integration
+  performs no production operation.
 
 Minimum remaining work: choose and verify an execution design that enforces
 no-network isolation for model code; prove the approved server capture path;
@@ -29,4 +30,5 @@ checks do not substitute for those gates.
 
 This integration only runs type/lint checks. It does not rerun database, browser,
 model, installer, upstream qualification, package build, or production probes.
-No push, PR, merge, or deployment is authorized by this candidate handoff.
+The sole integrator may publish this draft for review; merging and deployment
+remain blocked by the explicit acceptance gaps above.
