@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { runInNewContext } from 'node:vm'
+import type { GeneratedCaseCover } from '../api'
 import { CASE_COVER_CSP, coverAssetPath, coverSandboxDocument, createCoverBudget, isCoverMessage, MAX_CASE_COVER_HTML } from './sandbox'
 import { startCoverPolling } from './polling'
 
@@ -98,7 +99,7 @@ test('an absolute deadline aborts a hung read and prevents even abort-ignoring l
 // versions, or an older generation/snapshot installs after a retry/save.
 test('cover refresh adopts only matching snapshot metadata and preserves article content and versions', async () => {
   const { mergeCaseCoverMetadata } = await import('./polling')
-  const generatedCover = { schemaVersion: 1 as const, status: 'pending' as const, fingerprint: 'draft-a', generation: 2, alt: null, previewUrl: null, interactiveUrl: null, canRetry: false }
+  const generatedCover: GeneratedCaseCover = { schemaVersion: 1 as const, status: 'pending' as const, fingerprint: 'draft-a', generation: 2, alt: null, previewUrl: null, interactiveUrl: null, canRetry: false }
   const current = { id: 'case-a', body: 'Current native projection', title: 'Draft title', version: 9, generatedCover }
   const fresh = { ...current, body: 'Remote body', title: 'Remote title', version: 10, generatedCover: { ...generatedCover, status: 'ready' as const, previewUrl: '/ready.svg' } }
   const adopted = mergeCaseCoverMetadata(current, fresh)
