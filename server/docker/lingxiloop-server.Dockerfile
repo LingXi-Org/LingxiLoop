@@ -78,6 +78,9 @@ RUN npm run build
 # ─── stage 3: runtime ───────────────────────────────────────────────
 FROM ${NODE_BASE_IMAGE}
 ARG APT_MIRROR
+# Hairline first-frame renderer: official Debian security package, fail closed
+# when this exact version is unavailable; no installer or npm browser downloads.
+ARG CASE_COVER_CHROMIUM_VERSION=156.0.8078.47-1~deb12u1
 ARG LINGXILOOP_VERSION=0.0.0-dev
 ARG LINGXILOOP_COMMIT_SHA=dev
 
@@ -88,6 +91,8 @@ RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g; s|https://deb.debian.org|${
        ca-certificates \
        python3 \
        bubblewrap \
+       chromium=${CASE_COVER_CHROMIUM_VERSION} \
+       chromium-common=${CASE_COVER_CHROMIUM_VERSION} \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

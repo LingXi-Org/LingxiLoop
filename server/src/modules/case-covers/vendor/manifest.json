@@ -1,0 +1,18 @@
+{
+  "repository": "https://github.com/lucasmarkes/hairline",
+  "commit": "37d2e78dcb333ab30c3338e28ed4a690364ea014",
+  "license": "MIT",
+  "files": {
+    "LICENSE": "948d56f0bc8c383c04c453136dcfb78407f97de65ff8bb4fabff2b79ddd17f59",
+    "skills/hairline-create/SKILL.md": "8675ceec106ec227aec00cd6a4ec883333e1acc16da5cc96e8e10a3c758ea841",
+    "skills/hairline-create/bench.html": "0870fd54e137be0f7635cd309b48a4703a791cfca5915bf22d46b941ebc33278",
+    "skills/hairline-create/build.mjs": "7907c722890a9758ed4b479e819f9f8c12b9df3c4a59fa050577b235eee233e7",
+    "skills/hairline-create/concepts.md": "af001b0859cb98cfaeb6411dd6a7d815bfde5a9a107954b9aec31b2daeae0d63",
+    "skills/hairline-create/examples/riffle.js": "f54ee2de62ac4161291dfd0f4c2cb6646e1289adb286cecad23a7356d97cc4d1",
+    "skills/hairline-create/examples/terrain.js": "7755307a1ddb023ed7e119c5c89e549116f1068f0c0a15b96e692fed5e93014b",
+    "skills/hairline-create/kernel.js": "47ebec7647174e04e4f59c0305277c2a1dab83a763676946b17fa1694e7952fe",
+    "skills/hairline-create/look.md": "72e44b7c373284fa6aca2f83dd405230c8680af018a4801d2f1869cd13375eaf",
+    "skills/hairline-create/rules.md": "01c7880d75beac8bb222519c10bda4d44151bdfc17d07563b9b8e2d19fc7de09",
+    "skills/hairline-create/validate.mjs": "a60ad12271cdf3faf0ee4b84131d2474481ab9196360956ba8383c17928378ff"
+  }
+}
