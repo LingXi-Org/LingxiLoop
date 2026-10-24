@@ -20,10 +20,25 @@ Base: `2686f475eac075bc9033f13714d5d6bbfa5078eb`. Node 22.23.3, installed publis
 - Independent review by `cover_ui` found a knowledge preview field mismatch: the actual producer uses `visibilityScope`, not the repository row's `visibility_scope`. Corrected with a failing-before/passing-after producer-shaped regression and an explicitly reviewed ISO version field in `3910d200`; reviewer reran four focused files (5/5 pass) and closed the finding with no additional P1/P2.
 - Artifact question drafts share this cache through the `artifact-question` namespace (consumer owned by the learning workstream).
 - Three focused browser scenarios and configuration are committed in `e2e/answer-first/state373.e2e.ts` and `e2e.state373.config.ts`; their focused TypeScript check passed. The broad existing E2E config has unrelated recovery-test JsonValue/Promise<void> and alias-resolution failures, so it is not reported as passed.
-- Browser acceptance is separate and still pending: inspect approval public context and grant/execute/unknown receipts; reload a text+uploaded-reference draft; switch account/course/thread and verify isolation; reload an incomplete questionnaire, submit, then confirm server receipt wins. Verify no second pending message on failed send/reconnect using the original outbox.
+- The original browser acceptance checklist was: inspect approval public context and grant/execute/unknown receipts; reload a text+uploaded-reference draft; switch account/course/thread and verify isolation; reload an incomplete questionnaire, submit, then confirm server receipt wins. Verify no second pending message on failed send/reconnect using the original outbox.
 
 ## Boundaries and rollback
 
 The public preview intentionally omits unreviewed fields and does not invent counts or course names. Recovered image references use file-ID attachments and have no persisted thumbnail URL. Draft caching is optional when browser storage is disabled/full; the active input and existing pending-send outbox retain their prior behavior. No claim of cross-device draft sync, storage durability on browser eviction, or recovery of uploads that never finished.
 
 Rollback: revert the issue commits; no migration or native contract change. V2 local cache can remain unused. Final production/deployed behavior requires the integrator's independent review, browser verification and exact release checks.
+
+
+## Browser execution (2026-10-24)
+
+The three official-engine scenarios were attempted with the actual product runtime/provider and the two isolated synthetic HTTP pages. All reports are retained in the worktree under `.e2e/state373-run`, `.e2e/state373-diagnostic`, and `.e2e/state373-restarted`; see [attempt metadata](state-browser-attempts.json). Trace/video were disabled. **No scenario has a complete passing run.**
+
+The first run passed the initial text+uploaded-reference restore/reload steps, incomplete questionnaire reload+submission, and pending/granted approval labels. Subsequent navigation/reload produced blank pages. A fixture-only error display was added; the next run explicitly reported `ENGINE_FAILURE: Target crashed` for all three scenarios. The integrator then authorized exactly one restart of the batch-owned CDP9337 browser with its original arguments and no security-setting changes. The last three-scenario run still failed, including a target crash and failed fixture module loading. No further retries were made.
+
+During the last run `/tmp` free space fell from roughly 439–481 MiB to 9.8 MiB and recovered after test contexts closed; the cgroup OOM-kill counter stayed at its pre-run value of five. This suggests temporary browser storage pressure, but the root cause is not established. Do not classify the failed browser acceptance as a product pass or infer a specific business-state regression from these crashed/blank targets.
+
+Cleanup: Vite53124 stopped, no own fixture pages remained, and only `/tmp/loop-state373-vite-cache` (163 MiB) was removed. Reports/screenshots remain. Controlled CDP9337 was handed to the learning workstream, PID475439 / exec session38900, retaining the original profile and flags. No production, private API, model, install, or deployment action occurred.
+
+## PR #380 compatibility review
+
+Read-only review of exact `84909cb8508313bf0ed28424d5ff9759692eaece` found no additional P1/P2 or conflict with this batch. All nine `docs/evidence/issue-375/checks.json` source hashes match the commit's actual bytes. Existing regressions were not rerun. The integrator must preserve `components={{ pre: CaseCodeBlock }}` when integrating the #376 CasesPage cover changes. The shared Memos renderer retains its Mermaid dispatch; changes concern exported source rendering, real newline text nodes and dark token colors. ContentEditor/schema and scoped content CSS do not change chat draft, approval, or cover contracts. Existing Chromium-only and broad-E2E-typecheck limitations remain. CI40066611141 success was supplied by the parent, not independently queried here.

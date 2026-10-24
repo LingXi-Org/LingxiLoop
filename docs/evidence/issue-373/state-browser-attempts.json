@@ -1,0 +1,206 @@
+{
+  "runtime": "Node22.23.3",
+  "runner": "e2e0.17.0",
+  "engine": "@e2e-dev/web0.12.0",
+  "browser": "Chrome153.0.8010.12",
+  "trace": "off",
+  "video": "off",
+  "syntheticOnly": true,
+  "acceptance": "blocked; no scenario has a complete passing run",
+  "runs": [
+    {
+      "id": "01a16c72-f392-7c16-8589-dbcf084cc95f",
+      "status": "failed",
+      "exitCode": 1,
+      "startedAt": "2026-10-24T05:47:16.067Z",
+      "finishedAt": "2026-10-24T05:48:34.849Z",
+      "report": ".e2e/state373-run/report.json",
+      "results": [
+        {
+          "title": [
+            "scoped draft text and uploaded references survive reload without leaking across account/course/thread"
+          ],
+          "status": "failed",
+          "errorCode": "ASSERTION_FAILED",
+          "passedSteps": [
+            "/e2e/questionnaire.html?mode=waiting",
+            "browser.evaluate",
+            "/e2e/answer-first.html",
+            "locator(\"[contenteditable=\\\"true\\\"]\")",
+            "getByText(\"topology.txt\")",
+            "locator(\"[contenteditable=\\\"true\\\"]\")",
+            "browser.reload",
+            "locator(\"[contenteditable=\\\"true\\\"]\")",
+            "getByText(\"topology.txt\")",
+            "/e2e/answer-first.html?draftUser=other-student"
+          ]
+        },
+        {
+          "title": [
+            "incomplete questionnaire survives reload and the server receipt replaces the draft"
+          ],
+          "status": "failed",
+          "errorCode": "ASSERTION_FAILED",
+          "passedSteps": [
+            "/e2e/questionnaire.html?mode=waiting",
+            "getByLabel(\"学习目标\")",
+            "browser.reload",
+            "getByLabel(\"学习目标\")",
+            "locator(\"[data-posts]\")",
+            "getByRole(\"button\", name: \"提交\")",
+            "getByText(\"已提交\")",
+            "browser.reload"
+          ]
+        },
+        {
+          "title": [
+            "approval public context distinguishes unknown and failed effects from successful execution"
+          ],
+          "status": "failed",
+          "errorCode": "ASSERTION_FAILED",
+          "passedSteps": [
+            "/e2e/answer-first.html",
+            "getByText(\"合成网络方案\")",
+            "getByText(\"需要你的审批\")",
+            "getByRole(\"button\", name: \"批准并继续\")",
+            "/e2e/answer-first.html",
+            "getByText(\"合成网络方案\")",
+            "getByText(\"已批准 · 等待执行\")",
+            "getByRole(\"button\", name: \"批准并继续\")",
+            "/e2e/answer-first.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "01a16c75-2c9b-70d2-9259-d8923b4ae316",
+      "status": "error",
+      "exitCode": 3,
+      "startedAt": "2026-10-24T05:49:41.707Z",
+      "finishedAt": "2026-10-24T05:50:04.504Z",
+      "report": ".e2e/state373-diagnostic/report.json",
+      "results": [
+        {
+          "title": [
+            "scoped draft text and uploaded references survive reload without leaking across account/course/thread"
+          ],
+          "status": "failed",
+          "errorCode": "ENGINE_FAILURE",
+          "passedSteps": [
+            "/e2e/questionnaire.html?mode=waiting",
+            "browser.evaluate",
+            "/e2e/answer-first.html",
+            "locator(\"[contenteditable=\\\"true\\\"]\")",
+            "getByText(\"topology.txt\")",
+            "locator(\"[contenteditable=\\\"true\\\"]\")",
+            "browser.reload"
+          ]
+        },
+        {
+          "title": [
+            "incomplete questionnaire survives reload and the server receipt replaces the draft"
+          ],
+          "status": "failed",
+          "errorCode": "ENGINE_FAILURE",
+          "passedSteps": [
+            "/e2e/questionnaire.html?mode=waiting",
+            "getByLabel(\"学习目标\")",
+            "browser.reload",
+            "getByLabel(\"学习目标\")",
+            "locator(\"[data-posts]\")",
+            "getByRole(\"button\", name: \"提交\")",
+            "getByText(\"已提交\")",
+            "browser.reload"
+          ]
+        },
+        {
+          "title": [
+            "approval public context distinguishes unknown and failed effects from successful execution"
+          ],
+          "status": "failed",
+          "errorCode": "ENGINE_FAILURE",
+          "passedSteps": [
+            "/e2e/answer-first.html",
+            "getByText(\"合成网络方案\")",
+            "getByText(\"需要你的审批\")",
+            "getByRole(\"button\", name: \"批准并继续\")",
+            "/e2e/answer-first.html",
+            "getByText(\"合成网络方案\")",
+            "getByText(\"已批准 · 等待执行\")",
+            "getByRole(\"button\", name: \"批准并继续\")",
+            "/e2e/answer-first.html",
+            "getByText(\"合成网络方案\")",
+            "getByText(\"结果待核对 · 请先刷新进度，避免重复执行\")",
+            "getByRole(\"button\", name: \"批准并继续\")",
+            "/e2e/answer-first.html"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "01a16c77-5465-71c2-bced-8b6a2f4dbeef",
+      "status": "error",
+      "exitCode": 3,
+      "startedAt": "2026-10-24T05:52:03.067Z",
+      "finishedAt": "2026-10-24T05:52:51.611Z",
+      "report": ".e2e/state373-restarted/report.json",
+      "results": [
+        {
+          "title": [
+            "scoped draft text and uploaded references survive reload without leaking across account/course/thread"
+          ],
+          "status": "failed",
+          "errorCode": "ASSERTION_FAILED",
+          "passedSteps": [
+            "/e2e/questionnaire.html?mode=waiting",
+            "browser.evaluate",
+            "/e2e/answer-first.html",
+            "locator(\"[contenteditable=\\\"true\\\"]\")",
+            "getByText(\"topology.txt\")",
+            "locator(\"[contenteditable=\\\"true\\\"]\")",
+            "browser.reload"
+          ]
+        },
+        {
+          "title": [
+            "incomplete questionnaire survives reload and the server receipt replaces the draft"
+          ],
+          "status": "failed",
+          "errorCode": "ENGINE_FAILURE",
+          "passedSteps": [
+            "/e2e/questionnaire.html?mode=waiting",
+            "getByLabel(\"学习目标\")",
+            "browser.reload",
+            "getByLabel(\"学习目标\")",
+            "locator(\"[data-posts]\")",
+            "getByRole(\"button\", name: \"提交\")",
+            "getByText(\"已提交\")",
+            "browser.reload"
+          ]
+        },
+        {
+          "title": [
+            "approval public context distinguishes unknown and failed effects from successful execution"
+          ],
+          "status": "failed",
+          "errorCode": "ASSERTION_FAILED",
+          "passedSteps": [
+            "/e2e/answer-first.html",
+            "getByText(\"合成网络方案\")",
+            "getByText(\"需要你的审批\")",
+            "getByRole(\"button\", name: \"批准并继续\")",
+            "/e2e/answer-first.html",
+            "getByText(\"合成网络方案\")",
+            "getByText(\"已批准 · 等待执行\")",
+            "getByRole(\"button\", name: \"批准并继续\")",
+            "/e2e/answer-first.html",
+            "getByText(\"合成网络方案\")",
+            "getByText(\"结果待核对 · 请先刷新进度，避免重复执行\")",
+            "getByRole(\"button\", name: \"批准并继续\")",
+            "/e2e/answer-first.html"
+          ]
+        }
+      ]
+    }
+  ]
+}
