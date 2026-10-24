@@ -12,7 +12,7 @@ test('inline events cannot invalidate before waitWork; the existing durable outb
   } }), (...args) => notifications.push(args))
   const work = { id: 'run', fence: 3, requestVersion: 2, tenantId: 'company', agentId: 'agent', sessionId: 'native-session', principalId: 'human',
     conversation: { conversationId: 'room', internal: false } } as Parameters<DeliveryPort['onEvent']>[0]
-  const event = { runId: 'run', kind: 'goal.waiting', visibility: 'user', data: { goalOutcome: { status: 'awaiting_input', requestVersion: 2, verification: 'not_run', question: 'Synthetic question' } } } as Parameters<DeliveryPort['onEvent']>[1]
+  const event = { runId: 'run', seq: 1, stage: 'completed', kind: 'goal.waiting', visibility: 'user', data: { goalOutcome: { status: 'awaiting_input', requestVersion: 2, verification: 'not_run', question: 'Synthetic question' } } } as Parameters<DeliveryPort['onEvent']>[1]
   const context = { signal: AbortSignal.timeout(1000), deadlineAt: new Date(Date.now() + 1000).toISOString() }
   await callback(work, event)
   assert.equal(states.length, 0, 'inline delivery returns before work can park')
@@ -28,7 +28,7 @@ test('stale request/fence and internal events never publish a run-list hint', as
   let notifications = 0
   const callback = createRunListInvalidation(async () => ({ async readRun() { return { id: 'run', fence: 4, requestVersion: 3, status: 'waiting' } as never } }), () => { notifications++ })
   const work = { id: 'run', fence: 3, requestVersion: 2, tenantId: 'company', agentId: 'agent', sessionId: 'session', principalId: 'human', conversation: { conversationId: 'room' } } as Parameters<DeliveryPort['onEvent']>[0]
-  const event = { runId: 'run', kind: 'goal.waiting', visibility: 'user', data: { goalOutcome: { status: 'awaiting_input', requestVersion: 2, verification: 'not_run', question: 'Synthetic' } } } as Parameters<DeliveryPort['onEvent']>[1]
+  const event = { runId: 'run', seq: 1, stage: 'completed', kind: 'goal.waiting', visibility: 'user', data: { goalOutcome: { status: 'awaiting_input', requestVersion: 2, verification: 'not_run', question: 'Synthetic' } } } as Parameters<DeliveryPort['onEvent']>[1]
   const context = { signal: AbortSignal.timeout(1000), deadlineAt: new Date(Date.now() + 1000).toISOString() }
   await callback(work, event, context)
   await callback(work, { ...event, visibility: 'internal' }, context)

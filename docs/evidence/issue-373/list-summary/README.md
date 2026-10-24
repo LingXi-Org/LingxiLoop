@@ -157,3 +157,8 @@ The native retry emitted an expected events warning while waiting was not yet
 committed. A terminal-outbox acknowledgement warning occurred during fixture
 shutdown after membership removal; the test did not claim every outbox drained.
 These warnings are retained as boundaries, not described as a warning-free run.
+
+Exact8a2 CI40076109149 caught two missing required `RunEvent` fixture fields
+(`seq`/`stage`) in the new invalidation unit test. Both synthetic events were
+completed before the final CI retry; product implementation did not change.
+This is a real new test typing failure, not an environment/setup failure.
