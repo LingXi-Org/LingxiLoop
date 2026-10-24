@@ -52,13 +52,13 @@ test('activating a third cover disposes the oldest animation and releases do not
 
 function clock() {
   let timestamp = 0
-  const timers = new Map<number, () => void>()
+  const timers = new Map<number, { callback: () => void; at: number }>()
   let sequence = 0
   return {
     now: () => timestamp,
-    schedule: ((callback: () => void, delay: number) => { timestamp += delay; timers.set(++sequence, callback); return sequence }) as unknown as typeof setTimeout,
+    schedule: ((callback: () => void, delay: number) => { timers.set(++sequence, { callback, at: timestamp + delay }); return sequence }) as unknown as typeof setTimeout,
     cancel: ((id: number) => timers.delete(id)) as unknown as typeof clearTimeout,
-    tick: async () => { const next = timers.entries().next().value; if (next) { timers.delete(next[0]); next[1](); await new Promise(resolve => setImmediate(resolve)) } },
+    tick: async () => { const next = [...timers.entries()].sort((a, b) => a[1].at - b[1].at)[0]; if (next) { timers.delete(next[0]); timestamp = next[1].at; next[1].callback(); await new Promise(resolve => setImmediate(resolve)) } },
     get size() { return timers.size },
   }
 }
@@ -80,4 +80,16 @@ test('polling is bounded by elapsed time and three consecutive read failures', a
     for (let attempt = 0; attempt < 30; attempt++) await timer.tick()
     assert.equal(timer.size, 0); assert.ok(calls <= 24); if (fail) assert.equal(calls, 3)
   }
+})
+
+test('an absolute deadline aborts a hung read and prevents even abort-ignoring late results from adoption', async () => {
+  const timer = clock(); let requestSignal: AbortSignal | undefined
+  let finish: (value: string) => void = () => undefined; let received = false
+  startCoverPolling({ ...timer, signal: new AbortController().signal,
+    refresh: signal => { requestSignal = signal; return new Promise<string>(resolve => { finish = resolve }) },
+    receive: () => { received = true; return true } })
+  await timer.tick(); assert.equal(requestSignal?.aborted, false)
+  await timer.tick(); assert.equal(requestSignal?.aborted, true)
+  finish('too late'); await new Promise(resolve => setImmediate(resolve))
+  assert.equal(received, false); assert.equal(timer.size, 0)
 })

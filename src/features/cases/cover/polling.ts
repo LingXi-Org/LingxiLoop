@@ -16,8 +16,9 @@ export function startCoverPolling<T>({ refresh, receive, signal, now = Date.now,
   let failures = 0
   let stopped = signal.aborted
   let timer: ReturnType<typeof setTimeout> | undefined
+  let deadline: ReturnType<typeof setTimeout> | undefined
   const request = new AbortController()
-  const stop = () => { stopped = true; if (timer !== undefined) cancel(timer); request.abort(); signal.removeEventListener('abort', stop) }
+  const stop = () => { stopped = true; if (timer !== undefined) cancel(timer); if (deadline !== undefined) cancel(deadline); request.abort(); signal.removeEventListener('abort', stop) }
   const queue = () => {
     if (stopped || attempts >= COVER_POLL_LIMIT || now() - startedAt >= COVER_POLL_WINDOW_MS) { stop(); return }
     timer = schedule(() => { void poll() }, coverPollDelay(attempts))
@@ -27,7 +28,7 @@ export function startCoverPolling<T>({ refresh, receive, signal, now = Date.now,
     attempts += 1
     try {
       const value = await refresh(request.signal)
-      if (stopped) return
+      if (stopped || now() - startedAt >= COVER_POLL_WINDOW_MS) { stop(); return }
       failures = 0
       if (!receive(value)) { stop(); return }
     } catch {
@@ -38,6 +39,7 @@ export function startCoverPolling<T>({ refresh, receive, signal, now = Date.now,
     queue()
   }
   signal.addEventListener('abort', stop, { once: true })
+  if (!stopped) deadline = schedule(stop, COVER_POLL_WINDOW_MS)
   queue()
   return stop
 }
