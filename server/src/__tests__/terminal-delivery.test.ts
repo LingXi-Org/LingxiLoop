@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 import type { DeliveryPort, RunState, TerminalFeedback } from '@lyyzka/lingxios'
-import { nativeText } from '../../../src/lib/nativeMessage.js'
+import { nativeText, type NativeMessage } from '../../../src/lib/nativeMessage.js'
 
 test('terminal port preserves accepted feedback, fences stale versions and never wakes agents', async () => {
-  type Payload = Parameters<typeof nativeText>[0]
+  type Payload = NativeMessage
   const receipts = new Map<string, Payload>(), sent: Payload[] = []
   const checks: string[] = []
   const feedback: TerminalFeedback = { id: 'synthetic-feedback', rootWorkId: 'synthetic-root', requestVersion: 1, status: 'failed', reason: 'execution_failed',
