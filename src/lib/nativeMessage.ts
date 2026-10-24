@@ -124,7 +124,15 @@ export function serializeMessage(message: ThreadMessage): NativeMessage {
   return nativeMessageSchema.parse(JSON.parse(JSON.stringify(message, (key, value) => key === 'file' && typeof File !== 'undefined' && value instanceof File ? undefined : value)))
 }
 export function deserializeMessage(value: unknown): ThreadMessage {
-  const parsed = nativeMessageSchema.parse(value)
+  return decodeNativeMessage(value).display
+}
+
+/** Decode external input once, then project that validated clone for display. */
+export function decodeNativeMessage(value: unknown): { message: NativeMessage; display: ThreadMessage } {
+  const message = nativeMessageSchema.parse(value)
+  return { message, display: projectValidatedMessage(message) }
+}
+function projectValidatedMessage(parsed: NativeMessage): ThreadMessage {
   // Old IM records and browser caches may still contain private memory projections.
   const { memory: _memory, ...custom } = parsed.metadata.custom
   return { ...parsed, metadata: { ...parsed.metadata, custom }, createdAt: new Date(parsed.createdAt),
@@ -141,7 +149,7 @@ export function deserializeMessage(value: unknown): ThreadMessage {
           memory: memoryActivitySchema.optional(), display: toolDisplaySchema.optional() }).safeParse(part.result)
         part = { ...part, args: {}, argsText: '', ...(part.result === undefined ? {} : { result: result.success ? result.data : {} }) }
       }
-      return part.messages ? { ...part, messages: part.messages.map(deserializeMessage) } : part
+      return part.messages ? { ...part, messages: part.messages.map(projectValidatedMessage) } : part
     }) } as ThreadMessage
 }
 export function createNativeMessage(input: { id: string; role: ThreadMessage['role']; content: ThreadMessage['content'] | NativeMessage['content'];

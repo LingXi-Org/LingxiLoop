@@ -13,10 +13,9 @@ import type { ConversationThreadSnapshot } from './model'
 import { EMPTY_CONVERSATION_CHAT_STATE, useChatThreadStore } from './store'
 import { chatTransport, filterThreadMessages } from './transport'
 import { uploadedAttachment } from './attachment-messages'
-import { projectReplyBranches } from './reply-branches'
+import { createThreadProjector } from './thread-projection'
 import { useConversationUi } from '@/stores/conversationUi'
 import { useParticipants } from '@/features/agents/state'
-import type { LingxiMessageMetadata } from './model'
 import { conversationRunStatus } from './conversation-status'
 import { useAuth } from '@/stores/auth'
 import { useWorkspace } from '@/features/knowledge/workspace'
@@ -47,6 +46,8 @@ const attachmentAdapter: AttachmentAdapter = {
   async remove() {},
 }
 
+const projectThread = createThreadProjector(filterThreadMessages)
+
 export function useConversationThreadSnapshot(
   conversationId: string,
   threadRootId: string | null = null,
@@ -56,19 +57,8 @@ export function useConversationThreadSnapshot(
   ))
   const selectedReplyBranches = useConversationUi(state => state.selectedReplyBranches)
   const participants = useParticipants(state => state.byId)
-  const messages = useMemo(() => {
-    const enriched = state.messages.map(message => {
-      const metadata = message.metadata.custom as LingxiMessageMetadata
-      if (message.role === 'system' || metadata.senderKind === 'system') return message
-      const participant = participants[metadata.senderId]
-      if (!participant || (participant.name === metadata.senderName && participant.kind === metadata.senderKind
-        && (participant.avatarUrl ?? null) === metadata.senderAvatarUrl)) return message
-      return { ...message, metadata: { ...message.metadata, custom: { ...metadata,
-        senderName: participant.name, senderKind: participant.kind, senderAvatarUrl: participant.avatarUrl ?? null,
-      } } } as ThreadMessage
-    })
-    return filterThreadMessages(projectReplyBranches(enriched, selectedReplyBranches), threadRootId)
-  }, [state.messages, participants, selectedReplyBranches, threadRootId])
+  const messages = useMemo(() => projectThread(state.messages, participants, selectedReplyBranches, threadRootId),
+    [state.messages, participants, selectedReplyBranches, threadRootId])
   const activeRuns = useMemo(
     () => Object.values(state.activeRuns).filter((run) => run.state === 'queued' || run.state === 'running'),
     [state.activeRuns],
