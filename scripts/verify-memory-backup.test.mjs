@@ -194,3 +194,16 @@ test('cover55 source backup pins formal3.8.12 and full54 while preserving the sn
   await assert.rejects(buildMemoryBackupPlan({sourceSha,profile:'native14-product54',attempt:'synthetic-wrong-runtime'}));
  }finally{globalThis.fetch=original}
 });
+
+test('homework56 source backup binds exact formal3.8.12 full55 and verifies the restored55 receipt',async()=>{
+ const original=globalThis.fetch;globalThis.fetch=()=>assert.fail('offline backup planning used network');
+ try{
+  const plan=await buildMemoryBackupPlan({sourceSha:'9116dcb05eba30c76c81511e64ac9026730e6135',profile:'native14-product55',attempt:'synthetic-homework56-unit',nonce:'0123456789abcdef'});
+  assert.equal(plan.format,2);assert.equal(plan.profile,'native14-product55');assert.equal(plan.source.productVersion,55);assert.equal(plan.source.migrations.length,55);assert.equal(plan.source.runtime.runtime,'3.8.12');assert.equal(plan.source.runtime.schema,14);assert.equal(plan.source.runtime.protocol,11);
+  assert.match(plan.command,/--snapshot=/);assert.match(plan.command,/--no-owner --no-privileges --exit-on-error/);assert.doesNotMatch(plan.command,/migrate-bin/);await validateMemoryBackupPlan(plan);
+  const changed=structuredClone(plan);changed.source.migrations[54].checksum='0'.repeat(64);await assert.rejects(validateMemoryBackupPlan(changed));
+  const update=completed(plan);update.logs[0].stdout=update.logs[0].stdout.replaceAll('["public","schema_migrations",46]','["public","schema_migrations",55]');assert.equal(parseMemoryBackupReceipt(plan,update).source.productVersion,55);
+  update.logs[0].stdout=update.logs[0].stdout.replace('"restoreProvenanceEqual":true','"restoreProvenanceEqual":false');assert.throws(()=>parseMemoryBackupReceipt(plan,update));
+  await assert.rejects(buildMemoryBackupPlan({sourceSha:'213fb25312c81dfdeff12dea072d433c4de92f7a',profile:'native14-product55',attempt:'synthetic-wrong-product'}));
+ }finally{globalThis.fetch=original}
+});
