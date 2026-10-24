@@ -6,23 +6,33 @@
 
 import { type ComponentProps, type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { take } from "../../../../third_party/assistant-ui/streaming-text/upstream/utils/range";
+import { clamp } from "../../../../third_party/assistant-ui/streaming-text/upstream/utils/range";
 
 export interface Segment {
   text: string;
   mono?: boolean;
 }
 
-export interface StreamingWord { word: string; mono?: boolean; separator?: string; prefix?: string }
+export interface StreamingWord { word: string; mono?: boolean; separator?: string; prefix?: string; start?: number }
+export type StreamingWordTokens = Pick<ReadonlyArray<StreamingWord>, 'length' | 'at' | 'slice'>;
 
 export const STREAMING_WORD_BUDGET = 128;
 const colorSettleMs = 700;
 const tokenText = ({ word, separator = " ", prefix = "" }: StreamingWord) => prefix + word + separator;
-function staticWords(words: StreamingWord[]): ReactNode {
+function staticWords(words: StreamingWordTokens, start: number, end: number, sourceText?: string): ReactNode {
+  if (start === end) return '';
+  // Markdown provides exact UTF-16 boundaries, including the token's prefix
+  // and separator. Read only the endpoints instead of copying/joining history.
+  if (sourceText !== undefined) {
+    const from = words.at(start)?.start;
+    const to = end === words.length ? sourceText.length : words.at(end)?.start;
+    if (from !== undefined && to !== undefined) return sourceText.slice(from, to);
+  }
+  const selected = words.slice(start, end);
   // The Markdown adapter already owns inline-code styling. Preserve the
   // standalone upstream component's optional mono segments as well.
-  if (!words.some(word => word.mono)) return words.map(tokenText).join("");
-  return words.map((token, index) => token.mono
+  if (!selected.some(word => word.mono)) return selected.map(tokenText).join("");
+  return selected.map((token, index) => token.mono
     ? <span key={index}>{token.prefix}<span className="bg-foreground/[0.06] rounded-md px-1.5 py-0.5 font-mono text-[0.85em]">{token.word}</span>{token.separator ?? " "}</span>
     : tokenText(token));
 }
@@ -33,6 +43,7 @@ export function StreamingText({
   streaming,
   className,
   tokens,
+  sourceText,
   trailing = 0,
   caret = true,
   inline = false,
@@ -46,13 +57,15 @@ export function StreamingText({
   count: number;
   streaming: boolean;
   // Markdown supplies lossless text leaves and their distance from the tail.
-  tokens?: StreamingWord[];
+  tokens?: StreamingWordTokens;
+  // The Markdown leaf's original text, paired with token.start boundaries.
+  sourceText?: string;
   trailing?: number;
   caret?: boolean;
   inline?: boolean;
   animate?: boolean;
 }) {
-  const words = useMemo<StreamingWord[]>(
+  const words = useMemo<StreamingWordTokens>(
     () =>
       tokens ?? segments.flatMap((segment) =>
         segment.text
@@ -61,20 +74,20 @@ export function StreamingText({
       ),
     [segments, tokens],
   );
-  const shown = take(words, count);
+  const shownCount = Math.floor(clamp(count, 0, words.length));
   const root = useRef<HTMLElement | null>(null);
   const [settled, setSettled] = useState(!streaming);
   const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
-  const previousRange = useRef({ start: shown.length, end: shown.length });
+  const previousRange = useRef({ start: shownCount, end: shownCount });
   useEffect(() => {
     if (streaming) { setSettled(false); return; }
     const timer = setTimeout(() => setSettled(true), colorSettleMs);
     return () => clearTimeout(timer);
   }, [streaming]);
-  const start = animate && !settled ? Math.max(0, shown.length - Math.max(0, STREAMING_WORD_BUDGET - trailing)) : shown.length;
+  const start = animate && !settled ? Math.max(0, shownCount - Math.max(0, STREAMING_WORD_BUDGET - trailing)) : shownCount;
   // Keep selected DOM nodes in place. New text remains immediately readable,
   // but gets no extra animation wrappers until selection leaves this leaf.
-  const range = selection && selection.end <= shown.length ? selection : { start, end: shown.length };
+  const range = selection && selection.end <= shownCount ? selection : { start, end: shownCount };
   useLayoutEffect(() => { previousRange.current = range; });
   useEffect(() => {
     if (range.start === range.end && !selection) return;
@@ -101,10 +114,10 @@ export function StreamingText({
 
       {...props}
     >
-      {staticWords(shown.slice(0, range.start))}
-      {shown.slice(range.start, range.end).map(({ word, mono: isMono, separator = " ", prefix = "" }, index) => {
+      {staticWords(words, 0, range.start, sourceText)}
+      {words.slice(range.start, range.end).map(({ word, mono: isMono, separator = " ", prefix = "" }, index) => {
         const i = range.start + index;
-        const fresh = streaming && shown.length - 1 - i + trailing < 2;
+        const fresh = streaming && shownCount - 1 - i + trailing < 2;
         return (
           <span
             key={i}
@@ -126,8 +139,8 @@ export function StreamingText({
           </span>
         );
       })}
-      {staticWords(shown.slice(range.end))}
-      {caret && streaming && shown.length > 0 && (
+      {staticWords(words, range.end, shownCount, sourceText)}
+      {caret && streaming && shownCount > 0 && (
         <span
           aria-hidden
           data-streaming-caret=""

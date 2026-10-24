@@ -1,0 +1,40 @@
+{
+  "base": "11dd55d0f166e060369de323b7c1333447876f45",
+  "run": "01a16eab-f447-790d-ade7-48694e80def6",
+  "build": "production Vite 5.4.21",
+  "sourceState": "uncommitted candidate, source digests retained",
+  "files": [
+    {
+      "path": "src/components/assistant-ui/elements/streaming-text.tsx",
+      "sha256": "4b41cd1894fe3c1c9ef1910057540089179858dfee6c93139a57894cd7a2a4be"
+    },
+    {
+      "path": "src/components/assistant-ui/markdown-streaming.tsx",
+      "sha256": "d9c948e59bdf30638af36263f5f6f550bd393596c1911ab7735a1d93c87ff482"
+    },
+    {
+      "path": "e2e/web/streaming-budget.e2e.ts",
+      "sha256": "b5840be79a21c58b48deaeadbb2535cec9786d97dbd93cab32471ecf2f7ed597"
+    },
+    {
+      "path": "scripts/streaming-browser-check.tsx",
+      "sha256": "6df42e8b0d06e496c00c711c88bd31274edd1e16886453059cc735660daabed9"
+    },
+    {
+      "path": "e2e.streaming-budget.config.ts",
+      "sha256": "363a65199e24cbf7ada354ca6ee4fb5fe5a371eb510ab67c5cb69b02f519bde0"
+    },
+    {
+      "path": "e2e.streaming-budget.vite.config.ts",
+      "sha256": "40061d23df83e9ec9c7901d3ee9055faad87f940555303a549e296b582f2f4dc"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "1eddee9ac0e19a25c87ed2307b12b4290f9f84b4985914fa0e083078504b7ece"
+    },
+    {
+      "path": ".e2e/streaming-budget-dist/scripts/streaming-browser-check.html",
+      "sha256": "e7872c4038616c49f41c107f04952454ad0c1a38b88412d941837c228ad19ad5"
+    }
+  ]
+}

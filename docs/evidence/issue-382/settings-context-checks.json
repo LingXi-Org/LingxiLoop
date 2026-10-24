@@ -1,0 +1,146 @@
+{
+  "initialBaseCommit": "11dd55d0f166e060369de323b7c1333447876f45",
+  "runtime": "3.8.12",
+  "sourceSha256": {
+    "src/features/learning/dashboard/CourseProfileSettings.tsx": "228b9460ed7e42e7a0f0c5fbaab115fc1d6eef452f19a5f54c8432d05f70ca09",
+    "src/features/learning/dashboard/CourseSettingsSection.tsx": "f4f550e78016c1bda2718992ff6ffe3b1dba48b36af1d5833d178304ae5718ec",
+    "src/features/learning/dashboard/CourseProfileSettings.test.tsx": "a115e9844a97f01a0cff989ede088bad3581819a7e39cd16a8de0b8f26a13509",
+    "src/features/learning/dashboard/CourseSettingsSection.test.tsx": "4e31699e9ea115135020ec1176dc7ac4e5836406240bff258efa2a021a6684c1",
+    "server/src/__integration__/courses.test.ts": "1fc5600737cea2d96e123898b3baf57bcdf395f592b9acfb95762c82dea4b002",
+    "e2e.course-settings.config.ts": "1f652246a447b31268276c1be69e30c060a14c9b1ff9c18d83ae9f36d93e676d",
+    "e2e/course-settings/index.html": "5efb20042b24c50640ea2d74d7b7c9fb943d90ef104598b11b5bba352b276749",
+    "e2e/course-settings/main.tsx": "11a5d202864402a91c399091d023527c2e66a7a2bdce69ca01661245e97b5d96",
+    "e2e/course-settings/settings.e2e.ts": "eaae9e467d9c78dd32f094f41fa4664099fb2a9399fd4163e68ef42525f74466",
+    "e2e/course-settings/tsconfig.json": "878975779ad46cb6caa2bb4ffbd3bad84dffdf8e33ebc7e6282fc439bf8b71c1",
+    "e2e/course-settings/vite.config.ts": "ae0506b623233c771c5c98225eb537e8d55b4b11a3b4387c158714d83475a1f5"
+  },
+  "focusedUnits": [
+    {
+      "name": "profile_callbacks",
+      "command": "node --import tsx --experimental-test-module-mocks --test --test-force-exit src/features/learning/dashboard/CourseProfileSettings.test.tsx",
+      "exitCode": 0,
+      "tests": 5,
+      "pass": 5,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logSha256": "6b7f342d002afd82c8ae031cf195e39cff2ba8dc643f9247abe2873d42213fde"
+    },
+    {
+      "name": "settings_live_projection_red",
+      "command": "node --import tsx --experimental-test-module-mocks --test --test-force-exit src/features/learning/dashboard/CourseSettingsSection.test.tsx",
+      "exitCode": 1,
+      "tests": 7,
+      "pass": 4,
+      "fail": 3,
+      "cancelled": 0,
+      "skipped": 0,
+      "logSha256": "dbe328c8942a29785847bee619f5a64f830f44f3e6e50138a45add72c9d7e973"
+    },
+    {
+      "name": "settings_context",
+      "command": "node --import tsx --experimental-test-module-mocks --test --test-force-exit src/features/learning/dashboard/CourseSettingsSection.test.tsx",
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "logSha256": "766a191c537727d678febd449168ccd200a654fc30041d831a2fd7758a291fe9"
+    }
+  ],
+  "browser": {
+    "command": "E2E_TELEMETRY_DISABLED=1 E2E_CDP_URL=http://127.0.0.1:19382 npx e2e run --config e2e.course-settings.config.ts",
+    "engine": "official @e2e-dev/web 0.12.0, e2e 0.17.0, installed Chromium over loopback CDP",
+    "attempts": 1,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "report": "settings-context-browser.md"
+  },
+  "integration": {
+    "mode": "selected",
+    "availableFiles": 122,
+    "selectedFiles": [
+      "courses.test.ts"
+    ],
+    "executedFiles": [
+      "courses.test.ts"
+    ],
+    "records": [
+      {
+        "files": [
+          "courses.test.ts"
+        ],
+        "runtime": "current",
+        "durationMs": 15535,
+        "exitCode": 0
+      }
+    ],
+    "durationMs": 15535,
+    "exitCode": 0
+  },
+  "integrationCounts": {
+    "tests": 8,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0
+  },
+  "environmentRecovery": [
+    {
+      "stage": "initial migration",
+      "outcome": "refused stale root runtime 3.5.2; no tests ran"
+    },
+    {
+      "stage": "npm ci",
+      "outcome": "default cache path ENOENT; used task-owned /tmp cache"
+    },
+    {
+      "stage": "npm ci with existing identity",
+      "outcome": "401; one same-identity retry succeeded, exit 0"
+    },
+    {
+      "stage": "second migration",
+      "outcome": "refused stale nested server runtime 3.5.2; no tests ran"
+    },
+    {
+      "stage": "server lock install",
+      "outcome": "restored 3.8.12, exit 0; sole selected integration run then passed"
+    },
+    {
+      "stage": "server typecheck with nested dependency tree",
+      "outcome": "exit 2; duplicate root/server Zod identities and unrelated typing errors; restored root-only CI dependency layout"
+    },
+    {
+      "stage": "server typecheck with root-only CI dependency layout",
+      "outcome": "exit 0"
+    }
+  ],
+  "checks": [
+    {
+      "command": "npm run build",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run server:typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "npx tsc -p e2e/course-settings/tsconfig.json --noEmit",
+      "exitCode": 0
+    },
+    {
+      "command": "npx biome lint <all changed TypeScript files>",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "limitations": [
+    "Original production LL-088 student edit root cause remains unconfirmed.",
+    "Browser API responses are local synthetic fixtures; integration injects synthetic authenticated identities.",
+    "No production writes, private student data, independent review or additional role matrices."
+  ]
+}

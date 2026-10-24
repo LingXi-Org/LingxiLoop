@@ -161,7 +161,14 @@ function createOwner(
         anchor.off?.();
         anchors.delete(id);
         if (![...anchors.values()].some((item) => item.node === node)) intersection.unobserve(node);
-        if (!anchors.size) sandboxPages.visibility(owner, false);
+        if (!anchors.size) {
+          sandboxPages.visibility(owner, false);
+          // A layout cleanup/setup may replace the anchor in the same commit.
+          // Only abandon an unfinished startup when the card stays unbound.
+          queueMicrotask(() => {
+            if (!disposed && !anchors.size && snapshot.phase === "loading") void suspend(true);
+          });
+        }
       };
     },
     preview: (node) => core?.preview(node),

@@ -1,7 +1,7 @@
 import { useContext, useLayoutEffect } from 'react'
 import type { Element, Root } from 'hast'
 import { SKIP, visit } from 'unist-util-visit'
-import { STREAMING_WORD_BUDGET, StreamingText, type StreamingWord } from './elements/streaming-text'
+import { STREAMING_WORD_BUDGET, StreamingText, type StreamingWord, type StreamingWordTokens } from './elements/streaming-text'
 import { StreamingBlock } from './streaming-tail'
 
 // Only the Markdown/text boundary lives here. Rendering and animation remain
@@ -10,7 +10,7 @@ const emptySegments: [] = []
 
 declare module 'hast' {
   interface ElementData {
-    streamingText?: { words: StreamingWord[]; trailing: number; caret: boolean; caretOnly?: boolean; blockWords?: number }
+    streamingText?: { words: StreamingWordTokens; trailing: number; caret: boolean; caretOnly?: boolean; blockWords?: number }
   }
 }
 
@@ -21,9 +21,10 @@ export function streamingWords(text: string): StreamingWord[] {
   return tokenizeWords(text, complexText.test(text))
 }
 
-function tokenizeWords(text: string, complex: boolean): StreamingWord[] {
+function tokenizeWords(text: string, complex: boolean, offset = 0): StreamingWord[] {
   const result: StreamingWord[] = []
   let prefix = ''
+  let cursor = offset
   // Stable single CJK characters keep an unspaced paragraph from becoming one
   // blue word. Preserve Latin words, Unicode characters and every whitespace.
   const segments = complex ? [...graphemes.segment(text)].map(item => item.segment)
@@ -35,35 +36,72 @@ function tokenizeWords(text: string, complex: boolean): StreamingWord[] {
     } else if (complex && result.length && !result.at(-1)!.separator && !cjk.test(word) && !cjk.test(result.at(-1)!.word)) {
       result.at(-1)!.word += word
     } else {
-      result.push({ word, separator: '', prefix })
+      result.push({ word, separator: '', prefix, start: cursor - prefix.length })
       prefix = ''
     }
+    cursor += word.length
   }
   return result
+}
+
+// Stable words are append-only. Each snapshot owns its visible length and last
+// (still editable) word, so later appends cannot change an earlier render's
+// tokens or indexes. Snapshots share one array, not a chain of prior snapshots.
+function wordSnapshot(stable: StreamingWord[], last: StreamingWord | undefined): StreamingWordTokens {
+  const length = stable.length + (last ? 1 : 0)
+  const at = (index: number) => {
+    index = Math.trunc(index) || 0
+    if (index < 0) index += length
+    return index < 0 || index >= length ? undefined : index === length - 1 ? last : stable[index]
+  }
+  const boundary = (index: number) => {
+    index = Math.trunc(index) || 0
+    return Math.min(length, Math.max(0, index < 0 ? length + index : index))
+  }
+  return { length, at, slice(start = 0, end = length) {
+    const result: StreamingWord[] = []
+    const to = boundary(end)
+    for (let index = boundary(start); index < to; index++) result.push(at(index)!)
+    return result
+  } }
 }
 
 // Owned by one React block, rather than the processor (which may be rebuilt).
 // Only the last token can change on append: retokenize its prefix, word and
 // separator together so split graphemes and whitespace retain full context.
 export function createStreamingWordTokenizer() {
-  const leaves: { text: string; words: StreamingWord[]; complex: boolean; tailStart: number }[] = []
-  return (text: string, index: number): StreamingWord[] => {
+  const leaves: { text: string; words: StreamingWordTokens; stable: StreamingWord[]; complex: boolean; tailStart: number }[] = []
+  const tokenize = (text: string, index: number): StreamingWordTokens => {
     const previous = leaves[index]
     if (previous?.text === text) return previous.words
     // Completing a split surrogate can change the preceding grapheme (for
     // example a whitespace followed by an emoji modifier). Use the reference.
     const append = previous && text.startsWith(previous.text) && !/[\ud800-\udbff]$/.test(previous.text)
     const complex = append ? previous.complex || complexText.test(text.slice(previous.text.length)) : complexText.test(text)
-    const words = append && complex === previous.complex && previous.words.length
-      ? [...previous.words.slice(0, -1), ...tokenizeWords(text.slice(previous.tailStart), complex)]
-      : streamingWords(text)
-    const last = words.at(-1)
-    leaves[index] = { text, words, complex, tailStart: last ? text.length - (last.prefix?.length ?? 0) - last.word.length - (last.separator?.length ?? 0) : 0 }
+    let stable: StreamingWord[], tail: StreamingWord[]
+    if (append && complex === previous.complex && previous.words.length) {
+      stable = previous.stable
+      tail = tokenizeWords(text.slice(previous.tailStart), complex, previous.tailStart)
+    } else {
+      stable = []
+      tail = streamingWords(text)
+    }
+    const last = tail.pop()
+    for (const word of tail) stable.push(word)
+    const words = wordSnapshot(stable, last)
+    leaves[index] = { text, words, stable, complex, tailStart: last ? text.length - (last.prefix?.length ?? 0) - last.word.length - (last.separator?.length ?? 0) : 0 }
     return words
   }
+  return Object.assign(tokenize, {
+    // Markdown completion/replacement can reduce the text-leaf count. Release
+    // stale text and words after the full pass, retaining active leaf identity.
+    finishPass: (leafCount: number) => { leaves.length = leafCount },
+  })
 }
 
-export function rehypeStreamingText({ tokenize = streamingWords }: { tokenize?: (text: string, index: number) => StreamingWord[] } = {}) {
+type StreamingWordTokenizer = ((text: string, index: number) => StreamingWordTokens) & { finishPass?: (leafCount: number) => void }
+
+export function rehypeStreamingText({ tokenize = streamingWords }: { tokenize?: StreamingWordTokenizer } = {}) {
   return (tree: Root) => {
     const leaves: Element[] = []
     let opaqueTail: { parent: Root | Element; index: number } | undefined
@@ -102,6 +140,7 @@ export function rehypeStreamingText({ tokenize = streamingWords }: { tokenize?: 
       type: 'element', tagName: 'span', properties: {}, children: [],
       data: { streamingText: { words: [{ word: '', separator: '' }], trailing: 0, caret: true, caretOnly: true, blockWords: Math.min(STREAMING_WORD_BUDGET, trailing) } },
     })
+    tokenize.finishPass?.(leaves.length)
   }
 }
 
@@ -113,5 +152,6 @@ export function StreamingLeaf({ node }: { node: Element }) {
   useLayoutEffect(() => blockWords === undefined ? undefined : register(blockWords), [register, blockWords])
   if (caretOnly && !streaming) return null
   return <StreamingText segments={emptySegments} tokens={words} count={words.length}
+    sourceText={node.children[0]?.type === 'text' ? node.children[0].value : undefined}
     streaming={streaming} animate={animate && !caretOnly} trailing={trailing + after} caret={caret && isTail} inline />
 }

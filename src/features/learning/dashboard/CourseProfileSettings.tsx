@@ -1,7 +1,7 @@
 import { AvatarEditor, type AvatarInput } from '@/features/settings/AvatarEditor'
 import { getCourseAvatarUrl } from '../courseAvatar'
 import { useWorkspace } from '@/features/knowledge/workspace'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -22,10 +22,20 @@ export function CourseProfileSettings({
   onUpdated(course: ApiCourse): void
 }) {
   const [busy, setBusy] = useState(false)
+  const scope = JSON.stringify([course.companyId, course.projectId, course.id])
+  const mounted = useRef(true)
+  const current = useRef({ scope, canEdit, busy })
+  current.current = { scope, canEdit, busy }
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false }
+  }, [])
+  const isCurrentCourse = () => mounted.current && current.current.scope === scope
+  const canSave = () => isCurrentCourse() && current.current.canEdit
 
   const updateCourse = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (busy || !canEdit) return
+    if (current.current.busy || !canSave()) return
     const data = new FormData(event.currentTarget)
     const name = String(data.get('name') ?? '').trim()
     const description = String(data.get('description') ?? '').trim()
@@ -35,7 +45,7 @@ export function CourseProfileSettings({
       confirmLabel: '保存更改',
       tone: 'warning',
     })
-    if (!confirmed) return
+    if (!confirmed || current.current.busy || !canSave()) return
     setBusy(true)
     try {
       const updated = await toastAction(
@@ -46,19 +56,21 @@ export function CourseProfileSettings({
           error: '保存课程设置失败，请稍后重试',
         },
       )
+      if (!canSave()) return
       onUpdated({ ...course, name, description, ...updated })
       void useWorkspace.getState().load()
       window.dispatchEvent(new Event('lingxiloop:learning-spaces-updated'))
     } catch {
       /* Toast owns the visible error state. */
     } finally {
-      setBusy(false)
+      if (isCurrentCourse()) setBusy(false)
     }
   }
 
   const saveAvatar = async (avatar: AvatarInput) => {
-    if (!canEdit || busy) throw new Error('当前课程不能修改头像。')
+    if (!canSave() || current.current.busy) throw new Error('当前课程不能修改头像。')
     const updated = await learningApi.updateCourse(course.id, { avatar })
+    if (!canSave()) return
     onUpdated({ ...course, ...updated })
     void useWorkspace.getState().load()
     window.dispatchEvent(new Event('lingxiloop:learning-spaces-updated'))

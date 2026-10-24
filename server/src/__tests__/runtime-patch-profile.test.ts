@@ -53,3 +53,11 @@ test('case-cover product55 accepts empty, complete54 upgrade and55 no-op only',(
   for(const count of [1,10,49,53,56]) assert.throws(()=>assertFull54InstallBoundary(count,'3.8.11',55),/historical package/)
   assert.throws(()=>assertFull54InstallBoundary(55,'3.8.11'),/historical package/)
 })
+
+test('homework product56 accepts complete55 without weakening historical or runtime patch boundaries',()=>{
+  for(const count of [0,54,55,56]) assert.doesNotThrow(()=>assertFull54InstallBoundary(count,'3.8.12',56))
+  for(const count of [1,10,49,53,57]) assert.throws(()=>assertFull54InstallBoundary(count,'3.8.12',56),/historical package/)
+  assert.throws(()=>assertFull54InstallBoundary(56,'3.8.12',55),/historical package/)
+  assert.throws(()=>assertFull54InstallBoundary(56,'3.8.12',54),/historical package/)
+  assert.throws(()=>assertMigrationRuntime(true,true,{...current,runtime:'3.8.12',publicText:3},PUBLIC_PURPOSE_SCHEMA_HASH,true,true),/0053 requires/)
+})

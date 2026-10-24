@@ -17,21 +17,13 @@ import { casesApi, type CaseArticle, type CaseInput, type CaseList } from './api
 import { CaseCover, caseCoverIdentity, caseCoverPending } from './CaseCover'
 import { mergeCaseCoverMetadata } from './cover/polling'
 import { useCaseCoverPolling } from './cover/useCaseCoverPolling'
+import { caseArticleUrl, caseViewFromSearch, canManageCaseView, type CaseView } from './case-view'
 
 const empty: CaseInput = { title: '', summary: '', body: '', cover: null, category: '', tags: [] }
 const statusLabels = { draft: '草稿', published: '已发布', unpublished: '已下架' }
 function routeId() {
   const match = /^\/cases\/([^/]+)$/.exec(window.location.pathname)
   try { return match ? decodeURIComponent(match[1]) : new URLSearchParams(window.location.search).get('case') } catch { return '__invalid_case_url__' }
-}
-function articleUrl(id?: string) {
-  const query = new URLSearchParams(window.location.search)
-  query.set('view', 'cases')
-  const company = useAuth.getState().activeCompanyId
-  if (company) query.set('company', company)
-  query.delete('case')
-  query.delete('conversation')
-  return `/cases${id ? `/${encodeURIComponent(id)}` : ''}?${query}`
 }
 function Markdown({ body }: { body: string }) {
   return <div className="case-markdown space-y-5 break-words text-base leading-8 [&_h2]:mt-8 [&_h2]:text-2xl [&_h2]:font-semibold [&_h3]:text-xl [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_a]:focus-visible:outline-2 [&_img]:my-6 [&_img]:max-h-[36rem] [&_img]:rounded-xl [&_img]:object-contain [&_ul]:list-disc [&_ul]:ps-6 [&_ol]:list-decimal [&_ol]:ps-6 [&_pre]:overflow-auto [&_pre]:rounded-lg [&_pre]:bg-muted [&_pre]:p-0 [&_blockquote]:border-s-2 [&_blockquote]:ps-4"><ReactMarkdown remarkPlugins={[remarkGfm]} components={{pre: CaseCodeBlock, table: ({children}) => <div className="overflow-x-auto"><table>{children}</table></div>}}>{body}</ReactMarkdown></div>
@@ -41,7 +33,8 @@ export function CasesPage() {
   const companyId = useAuth(state => state.activeCompanyId)
   const userId = useAuth(state => state.user?.id)
   const [id, setId] = useState(routeId)
-  const [list, setList] = useState<CaseList>({ items: [], categories: [], canManage: false })
+  const [view, setView] = useState(() => caseViewFromSearch(window.location.search))
+  const [list, setList] = useState<CaseList>({ items: [], categories: [], canManage: false, view })
   const [article, setArticle] = useState<CaseArticle | null>(null)
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
@@ -61,21 +54,34 @@ export function CasesPage() {
   const adoptedId = useRef<string | null>(null)
   const skipFocus = useRef(false)
   const currentScope = useRef(companyId)
+  const currentView = useRef(view)
+  currentView.current = view
+  const articleUrl = (next?: string, nextView = view) => caseArticleUrl(window.location.search, companyId, next, nextView)
   useEffect(() => {
     currentScope.current = companyId
     mutationPending.current = false; setBusy(false); setEditing(false); setPreview(false); setInput(empty)
     setBackfillCursor(''); setNotice('')
-    setArticle(null); setList({ items: [], categories: [], canManage: false })
+    setArticle(null); setList({ items: [], categories: [], canManage: false, view: currentView.current })
     return () => { currentScope.current = null; operationEpoch.current += 1 }
   }, [companyId, userId])
-  const navigate = (next?: string) => {
+  const changePage = (next: string | null, nextView: CaseView) => {
+    const viewChanged = currentView.current !== nextView
     operationEpoch.current += 1
+    readRequest.current?.abort()
+    adoptedId.current = null
+    currentView.current = nextView
     mutationPending.current = false; setBusy(false)
-    window.history.pushState(null, '', articleUrl(next))
-    setId(next ?? null); setRevision(value => value + 1); setEditing(false); setNotice(''); setError('')
+    setArticle(null)
+    if (viewChanged) { setList({ items: [], categories: [], canManage: false, view: nextView }); setBackfillCursor('') }
+    setId(next); setView(nextView); setRevision(value => value + 1)
+    setLoading(true); setEditing(false); setPreview(false); setNotice(''); setError('')
+  }
+  const navigate = (next?: string, nextView = view) => {
+    window.history.pushState(null, '', articleUrl(next, nextView))
+    changePage(next ?? null, nextView)
   }
   useEffect(() => {
-    const restore = () => { operationEpoch.current += 1; mutationPending.current = false; setBusy(false); setId(routeId()); setRevision(value => value + 1); setEditing(false); setNotice('') }
+    const restore = () => changePage(routeId(), caseViewFromSearch(window.location.search))
     window.addEventListener('popstate', restore)
     return () => window.removeEventListener('popstate', restore)
   }, [])
@@ -83,26 +89,30 @@ export function CasesPage() {
     if (adoptedId.current === id && id) { adoptedId.current = null; setLoading(false); return }
     const abort = new AbortController()
     readRequest.current = abort
+    const epoch = operationEpoch.current
+    const current = () => !abort.signal.aborted && operationEpoch.current === epoch && currentView.current === view
     const requestedCompany = new URLSearchParams(window.location.search).get('company')
-    if (requestedCompany && requestedCompany !== companyId) { setLoading(false); setArticle(null); setList({ items: [], categories: [], canManage: false }); setError('此案例属于其他组织，当前账号无权访问。'); return }
+    if (requestedCompany && requestedCompany !== companyId) { setLoading(false); setArticle(null); setList({ items: [], categories: [], canManage: false, view: currentView.current }); setError('此案例属于其他组织，当前账号无权访问。'); return }
     setLoading(true); setError(''); if (!editing) setArticle(null)
     const timer = window.setTimeout(() => {
-      const request = id ? casesApi.detail(id, abort.signal).then(value => { if (!abort.signal.aborted) setArticle(value) }) : casesApi.list(search, category, abort.signal).then(value => { if (!abort.signal.aborted) setList(value) })
-      void request.catch(reason => { if (!abort.signal.aborted) { setError(userFacingError(reason, '案例暂时无法加载，请重试。')); if (!id) setList(value => ({ ...value, items: [] })) } }).finally(() => { if (!abort.signal.aborted) setLoading(false) })
+      const request = id ? casesApi.detail(id, view, abort.signal).then(value => { if (current() && value.view === view) setArticle(value) }) : casesApi.list(search, category, view, abort.signal).then(value => { if (current() && value.view === view) setList(value) })
+      void request.catch(reason => { if (current()) { setError(userFacingError(reason, '案例暂时无法加载，请重试。')); if (!id) setList(value => ({ ...value, items: [] })) } }).finally(() => { if (current()) setLoading(false) })
     }, id ? 0 : 200)
     return () => { abort.abort(); window.clearTimeout(timer) }
-  }, [id, search, category, revision, companyId, userId])
+  }, [id, view, search, category, revision, companyId, userId])
   useEffect(() => { if (skipFocus.current) { skipFocus.current = false; return }; heading.current?.focus({ preventScroll: true }) }, [id])
-  const beginEdit = () => { setInput(article ? { title: article.title, summary: article.summary, body: article.body, editorDocument: article.editorDocument, summaryDocument: article.summaryDocument, cover: article.cover, category: article.category, tags: article.tags } : { ...empty }); setEditing(true); setPreview(false); setNotice(''); setError('') }
+  const canManage = article?.canManage ?? list.canManage
+  const managing = canManageCaseView(view, canManage)
+  const beginEdit = () => { if (!managing || (article && article.view !== 'manage')) return; setInput(article ? { title: article.title, summary: article.summary, body: article.body, editorDocument: article.editorDocument, summaryDocument: article.summaryDocument, cover: article.cover, category: article.category, tags: article.tags } : { ...empty }); setEditing(true); setPreview(false); setNotice(''); setError('') }
   // Navigation invalidates completions; a settled request must never mutate a new page.
   const startMutation = () => {
-    if (mutationPending.current || currentScope.current !== companyId || useAuth.getState().activeCompanyId !== companyId || !useAuth.getState().user) return null
+    if (!managing || currentView.current !== 'manage' || mutationPending.current || currentScope.current !== companyId || useAuth.getState().activeCompanyId !== companyId || !useAuth.getState().user) return null
     mutationPending.current = true
     readRequest.current?.abort()
     setLoading(false); setBusy(true); setError(''); setNotice('')
     const epoch = ++operationEpoch.current
     const userId = useAuth.getState().user?.id
-    const current = () => operationEpoch.current === epoch && currentScope.current === companyId
+    const current = () => operationEpoch.current === epoch && currentView.current === 'manage' && currentScope.current === companyId
       && useAuth.getState().activeCompanyId === companyId && useAuth.getState().user?.id === userId
     return { current, finish: () => { if (current()) { mutationPending.current = false; setBusy(false) } } }
   }
@@ -133,7 +143,7 @@ export function CasesPage() {
     } finally { operation.finish() }
   }
   const action = async (kind: 'unpublish' | 'retry-index') => {
-    if (!article) return
+    if (!article || article.view !== 'manage') return
     const operation = startMutation()
     if (!operation) return
     try { const next = await casesApi.action(article, kind); if (!operation.current()) return; setArticle(next); setNotice(kind === 'unpublish' ? '案例已下架，学生不可阅读或检索。' : '已提交索引重试。') }
@@ -141,6 +151,7 @@ export function CasesPage() {
     finally { operation.finish() }
   }
   const retryCover = async (target: CaseArticle) => {
+    if (target.view !== 'manage') return
     const operation = startMutation()
     if (!operation) return
     try {
@@ -155,7 +166,7 @@ export function CasesPage() {
     } finally { operation.finish() }
   }
   const backfillCovers = async () => {
-    if (id || editing || !list.canManage) return
+    if (id || editing || !managing) return
     const operation = startMutation()
     if (!operation) return
     try {
@@ -168,14 +179,14 @@ export function CasesPage() {
       if (operation.current()) setError(userFacingError(reason, '历史封面检查失败，请稍后再试。'))
     } finally { operation.finish() }
   }
-  const coverScope = `${userId ?? ''}:${companyId ?? ''}`
+  const coverScope = `${userId ?? ''}:${companyId ?? ''}:${view}`
   const coverSources = id ? article ? [article] : [] : list.items
   useCaseCoverPolling<CaseArticle | CaseList>({
     scopeKey: JSON.stringify([coverScope, id, search, category, coverSources.map(item => [item.id, caseCoverIdentity(item.generatedCover)])]),
     pending: !loading && !busy && !editing && coverSources.some(item => caseCoverPending(item.generatedCover)),
-    refresh: signal => id ? casesApi.detail(id, signal) : casesApi.list(search, category, signal),
+    refresh: signal => id ? casesApi.detail(id, view, signal) : casesApi.list(search, category, view, signal),
     receive: value => {
-      if (useAuth.getState().activeCompanyId !== companyId || useAuth.getState().user?.id !== userId) return false
+      if (value.view !== view || currentView.current !== view || useAuth.getState().activeCompanyId !== companyId || useAuth.getState().user?.id !== userId) return false
       if ('items' in value) {
         const incoming = new Map(value.items.map(item => [item.id, item]))
         setList(current => ({ ...current, items: current.items.map(item => incoming.has(item.id) ? mergeCaseCoverMetadata(item, incoming.get(item.id)!) : item) }))
@@ -213,7 +224,6 @@ export function CasesPage() {
     catch (reason) { setError(userFacingError(reason, '封面上传失败，请重试。')) }
   }
 
-  const canManage = article?.canManage ?? list.canManage
   const content = editing ? input : article
   const detail = Boolean(id || editing)
   const invalid = busy || !input.title.trim() || input.body.length > 200000 || input.summary.length > 2000
@@ -222,7 +232,7 @@ export function CasesPage() {
   const hero = content && <div data-case-hero className="case-hero">
     <div className="case-cover">
       {article?.generatedCover && !editing ? <CaseCover cover={article.generatedCover} fallbackUrl={content.cover} title={content.title} scopeKey={`${coverScope}:${article.id}`}
-        className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRetry={article.canManage ? () => retryCover(article) : undefined}/>
+        className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRetry={managing && article.view === 'manage' ? () => retryCover(article) : undefined}/>
         : content.cover ? <img src={content.cover} alt={editing ? '案例封面预览' : ''}/> : <div className="case-no-cover"><BookImage aria-hidden="true"/><span>{editing ? '添加案例封面' : '暂无封面'}</span></div>}
       {editing && !preview && <div className="case-cover-actions">
         {input.cover && <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setInput(value => ({...value, cover: null}))}>移除封面</Button>}
@@ -242,7 +252,7 @@ export function CasesPage() {
         <label className="flex items-center gap-2 text-sm"><span>分类</span><Input list="case-categories" aria-label="分类" maxLength={80} className="w-28" value={input.category} onChange={event => setInput(value => ({...value, category: event.target.value}))}/></label>
         <datalist id="case-categories">{list.categories.map(value => <option key={value} value={value}/>)}</datalist>
         <label className="flex min-w-0 flex-1 items-center gap-2 text-sm"><span className="shrink-0">标签</span><Input aria-label="标签（逗号分隔）" placeholder="用逗号分隔" value={input.tags.join(',')} onChange={event => setInput(value => ({...value, tags: event.target.value.split(/[,，]/)}))}/></label>
-        <span className="flex items-center gap-2 text-sm text-muted-foreground"><LockKeyhole aria-hidden="true" className="size-4"/>{article?.status === 'published' ? '未发布修改仅教师可见' : '草稿仅教师可见'}</span>
+        <span className="flex items-center gap-2 text-sm text-muted-foreground"><LockKeyhole aria-hidden="true" className="size-4"/>{article?.status === 'published' ? '未发布修改仅案例管理者可见' : '草稿仅案例管理者可见'}</span>
       </div> : <div className="case-metadata">
         {article && <time dateTime={article.publishedAt ?? article.createdAt ?? article.updatedAt}>{date(article)}</time>}
         <span>{content.category || '未分类'}</span>
@@ -258,17 +268,18 @@ export function CasesPage() {
         <h1 ref={heading} tabIndex={-1} className={detail ? 'sr-only' : 'case-library-title'}>案例库</h1>
         {detail && <Button variant="ghost" disabled={busy} onClick={() => navigate()}><ArrowLeft className="size-4"/>返回案例库</Button>}
         <div className="ms-auto flex flex-wrap items-center justify-end gap-3">
-          {!detail && list.canManage && <>
+          {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(id ?? undefined, 'manage')}>管理案例</Button> : <Button variant="outline" disabled={busy} onClick={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</Button>}
+          {!detail && managing && <>
             <Button variant="outline" disabled={busy || loading} aria-describedby="case-backfill-help" onClick={() => void backfillCovers()}>{backfillCursor === null ? '重新检查封面' : backfillCursor ? '继续补齐' : '补齐历史封面'}</Button>
             <Button disabled={busy} onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>
           </>}
-          {editing && canManage ? <>
+          {editing && managing ? <>
             <span className="text-sm text-muted-foreground">草稿</span>
             <Button type="submit" form="case-edit-form" variant="outline" disabled={invalid}>保存草稿</Button>
             <Button type="button" variant="outline" aria-pressed={preview} disabled={busy} onClick={() => setPreview(value => !value)}>{preview ? '继续编辑' : '预览'}</Button>
             <Button type="button" disabled={invalid || !input.body.trim()} onClick={() => void save(true)}>发布</Button>
             <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="编辑选项" disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => setEditing(false)}>取消编辑</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
-          </> : article?.canManage && <>
+          </> : managing && article?.view === 'manage' && <>
             <Button variant="outline" onClick={beginEdit}><Pencil className="size-4"/>编辑案例</Button>
             <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon-sm" aria-label="更多案例操作" disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger><DropdownMenuContent align="end">
               {article.status === 'published' && <DropdownMenuItem onSelect={() => void action('unpublish')}>下架案例</DropdownMenuItem>}
@@ -278,7 +289,7 @@ export function CasesPage() {
           </>}
         </div>
       </header>
-      {!detail && list.canManage && <p id="case-backfill-help" className="case-notice text-sm text-muted-foreground">每批检查 25 篇历史案例，新封面在后台生成。</p>}
+      {!detail && managing && <p id="case-backfill-help" className="case-notice text-sm text-muted-foreground">每批检查 25 篇历史案例，新封面在后台生成。</p>}
       {error && <div role="alert" className="case-notice text-destructive">{error}<Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button></div>}
       {notice && <p role="status" className="case-notice">{notice}</p>}
       {!detail && <div className="case-library-filters">
@@ -288,7 +299,7 @@ export function CasesPage() {
         <label className="relative w-full sm:w-72"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
         {(search || category) && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setCategory('') }}>清除筛选</Button>}
       </div>}
-      {editing && canManage ? <form id="case-edit-form" onSubmit={event => { event.preventDefault(); void save(false) }}>
+      {editing && managing ? <form id="case-edit-form" onSubmit={event => { event.preventDefault(); void save(false) }}>
         <fieldset disabled={busy} className="min-w-0">
           <section aria-label={preview ? '案例预览' : '编辑案例'}>{hero}
             <div className="case-body-divider"><div data-case-body className="case-body">
@@ -300,19 +311,19 @@ export function CasesPage() {
         </fieldset>
       </form> : loading ? <p role="status" className="case-notice py-8">正在加载案例…</p> : article ? <article>
         {hero}
-        {article.canManage && article.hasUnpublishedChanges && <p className="case-notice">当前显示教师草稿；读者仍看到上次发布版本。</p>}
+        {managing && article.hasUnpublishedChanges && <p className="case-notice">{article.status === 'published' ? '当前显示管理草稿；阅读视图仍显示上次发布版本。' : '当前为未发布草稿，仅案例管理者可见。'}</p>}
         <div className="case-body-divider"><div data-case-body className="case-body">{body(article)}</div></div>
       </article> : !id ? <>
         <div data-case-grid className="case-grid">{list.items.map(item => <article key={item.id}>
           <div className="case-grid-cover relative">{item.generatedCover ? <CaseCover cover={item.generatedCover} fallbackUrl={item.cover} title={item.title} scopeKey={`${coverScope}:${item.id}`}
-            className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRetry={item.canManage ? () => retryCover(item) : undefined}/>
+            className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRetry={managing && item.view === 'manage' && item.canManage ? () => retryCover(item) : undefined}/>
             : item.cover ? <img src={item.cover} alt="" loading="lazy"/> : <div className="case-no-cover"><BookImage aria-hidden="true"/><span>暂无封面</span></div>}</div>
           <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="case-grid-link">
-            <div className="case-grid-meta"><time dateTime={item.publishedAt ?? item.createdAt ?? item.updatedAt}>{date(item)}</time><span>·</span><span>{item.category || '未分类'}</span>{list.canManage && item.status !== 'published' && <span>{statusLabels[item.status]}</span>}</div>
+            <div className="case-grid-meta"><time dateTime={item.publishedAt ?? item.createdAt ?? item.updatedAt}>{date(item)}</time><span>·</span><span>{item.category || '未分类'}</span>{managing && item.status !== 'published' && <span>{statusLabels[item.status]}</span>}</div>
             <h2>{item.title}</h2><p>{markdownText(item.summary)}</p>
           </a>
         </article>)}</div>
-        {!list.items.length && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '没有找到匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : list.canManage ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
+        {!list.items.length && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '没有找到匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : managing ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
       </> : null}
     </div>
   </main>

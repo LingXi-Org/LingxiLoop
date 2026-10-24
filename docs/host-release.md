@@ -6,6 +6,40 @@ instructions in [Product54 image release](product54-image-release.md). This is
 separate from53-to54 and never invokes the migrator. Existing historical
 same-schema profiles below are unchanged.
 
+## Product 55 → 56 homework validation
+
+`homework56-host-release/v1` permits only an accepted full55 source and full56
+target on the identical formally published LingxiOS3.8.12 package, native14,
+control11, reader3 and `purpose-json-v3`. The full first55 migration inventory
+and deployment leaf remain identical. Its only migration addition is
+`0056_homework_validation_status.sql`, SHA256
+`88f7078980c26b4d9658c805bc27fec8b4b4c7199a58c51a8b11201d65c4217a`.
+The SQL expands the homework validation-status constraint and validates existing
+rows; it does not upgrade the runtime, replay old migrations or backfill data.
+
+First obtain the actual successful product55 acceptance, image/config audits,
+four source identities and source/configuration hashes. Bind those bytes and a
+successful exact-target CI to the new plan. The mandatory backup uses format2,
+profile `native14-product55`, built by `buildMemoryBackupPlan` with the exact
+accepted source SHA and a new attempt. Planning does not execute a backup.
+
+The existing image preparation remains separate. The release stops Worker A,
+Worker B, Web A and Web B; waits for naturally expiring leases; records two zero
+barriers separated by the existing wait; and requires zero bound/checkpoint
+work. It then takes one fresh source snapshot with verified isolated restore,
+submits the single product56 migration and confirms exact full56 provenance.
+Web A, Web B, Worker A and Worker B then deploy in order, retaining each first
+container/image identity through health verification. Native update receipts
+must be `Complete` with `success:true`; public HTTPS and audited assets remain
+separate final acceptance evidence. The canonical seed checks remain read-only.
+
+Unknown submissions/readbacks stop without retry. Once56 is committed, recovery
+is classified `fix-forward`: never restart a55 binary, remove the constraint or
+ledger row, or restore the old writable database. This classification does not
+execute recovery. No56→56 image or automatic recovery profile is added; do not
+replay the55→56 plan against an installed56 database. This path is independent
+of the preceding cover55 release and does not certify its production state.
+
 Use `scripts/host-release.mjs` only after the preceding production release has a sealed successful acceptance. This path keeps Komodo's native host-file source, leaves core-state and app B's gateway unchanged, and does not call the legacy rollout procedure. The normal trigger still rejects unexplained host/pinned state.
 
 The same-schema format supports native13/product48 or product49, and the explicit formal3.6.0/native14/product50 profile. Source and target must have identical runtime version, published package tarball/integrity, protocol, native schema/hash and every product migration name/checksum (all50 rows for native14). It never imports the application migrator or performs a backup. Both old Workers stop; Web A, Web B, Worker A, Worker B are the only deploy targets. Native14 same-schema releases retain the ordinary8 preparation plus26 release native actions, without seed or migration actions.

@@ -12,6 +12,23 @@ test.describe('Bounded streaming animation', {
     const result = await browser.evaluate(async () => {
       const body = document.querySelector('#body')!
       const text = '中文流式正文'.repeat(1700)
+      // Keep one bounded production replay observable without changing its
+      // behavior assertions or treating these samples as a frame-rate gate.
+      const longTasks: number[] = []
+      const observeLongTasks = PerformanceObserver.supportedEntryTypes.includes('longtask')
+      const observer = new PerformanceObserver(list => {
+        for (const entry of list.getEntries()) longTasks.push(entry.duration)
+      })
+      if (observeLongTasks) observer.observe({ entryTypes: ['longtask'] })
+      const frameIntervals: number[] = []
+      let previousFrame = performance.now()
+      let frameId = 0
+      const sampleFrame = (timestamp: number) => {
+        frameIntervals.push(timestamp - previousFrame)
+        previousFrame = timestamp
+        frameId = requestAnimationFrame(sampleFrame)
+      }
+      frameId = requestAnimationFrame(sampleFrame)
       const frame = () => new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
       const step = (text: string, done = false) => window.dispatchEvent(new CustomEvent('streaming-text-step', { detail: { text, done } }))
       const wait = async (predicate: () => boolean) => {
@@ -46,8 +63,13 @@ test.describe('Bounded streaming animation', {
       const completeText = body.textContent
       selection.removeAllRanges(); document.dispatchEvent(new Event('selectionchange'))
       await wait(() => body.querySelectorAll('[data-streaming-word]').length === 0)
+      for (const entry of observer.takeRecords()) longTasks.push(entry.duration)
+      observer.disconnect()
+      cancelAnimationFrame(frameId)
       return { wrappers, fresh, selected, selectedAfter, completeText, expected: next,
-        staticWrappers: body.querySelectorAll('[data-streaming-word]').length }
+        staticWrappers: body.querySelectorAll('[data-streaming-word]').length,
+        observation: { longTaskSupported: observeLongTasks, longTasks,
+          frameCount: frameIntervals.length, maxFrameIntervalMs: Math.max(0, ...frameIntervals) } }
     })
     expect(result.wrappers).toBeLessThanOrEqual(128)
     expect(result.fresh).toBe(2)
@@ -57,6 +79,7 @@ test.describe('Bounded streaming animation', {
     expect(result.staticWrappers).toBe(0)
     console.log('Bounded streaming structure:', JSON.stringify({ wrappers: result.wrappers, fresh: result.fresh,
       characters: result.completeText?.length, selectionPreserved: result.selectedAfter === result.selected, staticWrappers: result.staticWrappers }))
+    console.log('Bounded streaming observation (not a performance gate):', JSON.stringify(result.observation))
     await app.screenshot('streaming-budget-complete')
   })
 })

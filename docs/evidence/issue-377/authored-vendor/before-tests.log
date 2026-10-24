@@ -1,0 +1,82 @@
+(node:2129) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2129) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+✔ known fixed kit dependencies start before the kit completes, once and in original output order (2.290508ms)
+✖ authored D3 starts alongside pinned dependencies before the kit completes (2.268165ms)
+✖ an unknown kit starts authored vendors and calendar while its own dependencies await discovery (1.731879ms)
+✔ a fixed dependency failure rejects preparation while the kit remains pending (0.480141ms)
+✖ a authored dependency failure rejects preparation while the kit remains pending (100.782625ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 2
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 303.98574
+
+✖ failing tests:
+
+test at src/features/chat/visualize/web/document-preparation.test.ts:1:1873
+✖ authored D3 starts alongside pinned dependencies before the kit completes (2.268165ms)
+  AssertionError [ERR_ASSERTION]: authored D3 should not wait for the kit response
+  
+  false !== true
+  
+      at TestContext.<anonymous> (/workspace/LingxiLoop/src/features/chat/visualize/web/document-preparation.test.ts:40:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at src/features/chat/visualize/web/document-preparation.test.ts:1:2826
+✖ an unknown kit starts authored vendors and calendar while its own dependencies await discovery (1.731879ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'vendor/floating-ui-core-1.7.3.min.js',
+  -   'vendor/d3-7.9.0.min.js'
+  - ]
+  
+      at TestContext.<anonymous> (/workspace/LingxiLoop/src/features/chat/visualize/web/document-preparation.test.ts:56:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'vendor/floating-ui-core-1.7.3.min.js', 'vendor/d3-7.9.0.min.js' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at src/features/chat/visualize/web/document-preparation.test.ts:1:4190
+✖ a authored dependency failure rejects preparation while the kit remains pending (100.782625ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /fixture resource denied/. Input:
+  
+  'still waiting for kit'
+  
+      at TestContext.<anonymous> (/workspace/LingxiLoop/src/features/chat/visualize/web/document-preparation.test.ts:79:12)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'still waiting for kit',
+    expected: /fixture resource denied/,
+    operator: 'match',
+    diff: 'simple'
+  }

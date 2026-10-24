@@ -80,6 +80,7 @@ function persistSidebarWidth(width: number): void {
 export function DesktopApp() {
   const { theme } = useTheme()
   const companyId = useAuth((state) => state.activeCompanyId)
+  const companyRole = useAuth((state) => state.companies.find(company => company.id === state.activeCompanyId)?.role)
   const isMobile = useIsMobile()
   const learningSpaces = useLearningSpaces()
   const workspaces = useWorkspace((state) => state.list)
@@ -233,6 +234,7 @@ export function DesktopApp() {
             <Suspense fallback={<DashboardSkeleton view={view} perspective={learningSpaces.activeSpace?.perspective} />}>
               <PersonalDashboard
                 view={view}
+                companyRole={companyRole}
                 space={learningSpaces.activeSpace}
                 loading={learningSpaces.loading && !learningSpaces.activeSpace}
                 error={learningSpaces.error}

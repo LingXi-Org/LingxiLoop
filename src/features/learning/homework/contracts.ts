@@ -18,11 +18,15 @@ export interface Homework {
   revision: number
   visibleHash: string
   createdBy: string
-  validation: { status: 'PENDING' | 'READY' | 'INVALID'; revision: number | null; feedback: string }
+  validation: { status: 'PENDING' | 'READY' | 'INVALID' | 'MATERIAL_ERROR' | 'ERROR'; revision: number | null; feedback: string }
   canPublish: boolean
   canEditDraft: boolean
 }
 export type HomeworkFields = Pick<Homework, 'title' | 'instructions' | 'editorDocument' | 'criteriaDocument' | 'criteria' | 'links' | 'attachments' | 'dueAt'>
+export function canPublishHomeworkDraft(homework: Homework, dirty: boolean): boolean {
+  return !dirty && homework.status === 'DRAFT' && homework.canPublish
+    && homework.validation.status === 'READY' && homework.validation.revision === homework.revision
+}
 export interface HomeworkReport {
   id: string
   answerRevision: number

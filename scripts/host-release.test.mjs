@@ -26,7 +26,7 @@ const targetRef={commit:next,branch:'release/target',sha256:'d'.repeat(64),autoP
 const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:hash,qualification:{commit:next,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/123'},stacks:[...apps,core].map((stack,i)=>({stack,server:i===1?'shanghai-b':'shanghai-a',source:sourceRef,target:i===2?sourceRef:targetRef,...(i!==2?{preparation:{commit:next,sha256:'e'.repeat(64)}}:{})}))})
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
- if(fault.cover55||fault.same55)fault={...fault,producerV3:true};
+ if(fault.cover55||fault.same55||fault.homework56)fault={...fault,producerV3:true};
  if(fault.producerV3)fault={...fault,producerV2:true};
  fault={...fault,image54:fault.image54||fault.runtimePatch||fault.producerV2}
  fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
@@ -46,13 +46,14 @@ function fixture(fault={}){
  if(fault.runtimePatch||fault.producerV2){const p=structuredClone(releasePlan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');releasePlan=sealHostPlan(p)}
  if(fault.producerV2){const p=structuredClone(releasePlan);p.source.runtime='3.8.3';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.runtime='3.8.5';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.publicText.target.producer='purpose-json-v2';p.publicText.targetConfigurationSha256='d'.repeat(64);releasePlan=sealHostPlan(p)}
  if(fault.producerV3){const p=structuredClone(releasePlan);p.source.runtime='3.8.5';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.target.runtime='3.8.7';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.7/fixture';p.publicText.source.producer='purpose-json-v2';p.publicText.target={reader:3,producer:'purpose-json-v3'};releasePlan=sealHostPlan(p)}
- if(fault.cover55||fault.same55){
+ if(fault.cover55||fault.same55||fault.homework56){
   const p=structuredClone(releasePlan);p.format=fault.same55?'product55-image-host-release/v1':'case-cover55-host-release/v1';
   for(const d of [p.source,p.target])Object.assign(d,CASE_COVER_PACKAGE)
   p.publicText.source=p.publicText.target={reader:3,producer:'purpose-json-v3'};p.publicText.sourceConfigurationSha256=p.publicText.targetConfigurationSha256;
   p.target.productVersion=55;p.target.migrations.push({version:55,name:'case_covers',checksum:'609100abaddceeaba19d363962d6defbfae3276450a2fd660777d7efd4a66160'});
   if(fault.same55){p.source.productVersion=55;p.source.migrations=structuredClone(p.target.migrations)}
   else p.backup={...nativeBackup(),format:2,profile:'native14-product54',source:{sha:p.source.sha,productVersion:54,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,p.source[k]])),migrations:p.source.migrations}};
+  if(fault.homework56){p.format='homework56-host-release/v1';p.source.productVersion=55;p.source.migrations=structuredClone(p.target.migrations);p.target.productVersion=56;p.target.migrations.push({version:56,name:'homework_validation_status',checksum:'88f7078980c26b4d9658c805bc27fec8b4b4c7199a58c51a8b11201d65c4217a'});p.backup.profile='native14-product55';p.backup.source.productVersion=55;p.backup.source.migrations=structuredClone(p.source.migrations)}
   releasePlan=sealHostPlan(p);
  }
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
@@ -68,7 +69,7 @@ function fixture(fault={}){
   async patchPrecheck(){trace.push('patch-precheck');if(fault.bound)throw Error('incompatible old runs');return {incompatibleRuns:0}},
   async patchProvenance(){trace.push('patch');if(fault.patchUnknown)throw Object.assign(Error('unknown patch'),{uncertain:true});if(fault.patchFailed)throw Error('patch failed');migrated=true;if(fault.patchCommittedFailure)throw Error('patch committed before failure')},
   async seedPrecheck(){trace.push('seed');if(fault.seedUnknown)throw Object.assign(Error('unknown seed'),{uncertain:true});if(fault.seed)throw Error('seed drift');return {equal:true}},
-  async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...(fault.cover55?{source:releasePlan.backup.source,attempt:releasePlan.backup.attempt,commandHash:releasePlan.backup.commandHash}:{}),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
+  async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...((fault.cover55||fault.homework56)?{source:releasePlan.backup.source,attempt:releasePlan.backup.attempt,commandHash:releasePlan.backup.commandHash}:{}),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
   async migrate(){trace.push('migrate');if(fault.migrationUnknown)throw Object.assign(Error('unknown migration'),{uncertain:true});if(fault.migrationFailed)throw Error('migration failed');migrated=true;if(fault.migrationCommittedFailure)throw Error('migration committed before failure')},
   async stop(stack,service){trace.push('stop:'+stack+':'+service);stops++;if(fault.stopUnknown)throw Object.assign(Error('unknown'),{uncertain:true});const row=rows.find(x=>x.stack===stack&&x.service===service);if(!fault.stillRunning){row.running=false;row.pid=0}},
   async deploy(stack,service){trace.push('deploy:'+stack+':'+service);deployed++;if(fault.deployUnknown)throw Object.assign(Error('unknown'),{uncertain:true});const row=rows.find(x=>x.stack===stack&&x.service===service);Object.assign(row,{source:next,id:'f'+row.id.slice(1),running:true,pid:2});if(fault.policy)row.policy.readOnly=!row.policy.readOnly},
@@ -520,4 +521,36 @@ test('same55 followup retains full inventory and observed first identities witho
  const f=fixture({same55:true});await f.run();assert.equal(f.trace.some(x=>['migrate','backup','patch','seed'].includes(x)),false);assert.equal(f.events.filter(e=>e.status==='observed').length,4);
  const bad=structuredClone(f.plan);bad.target.migrations[54].checksum='0'.repeat(64);assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)));
  const replaced=fixture({same55:true,replacedTarget:true});await assert.rejects(replaced.run());assert.equal(replaced.trace.filter(x=>x.startsWith('deploy:')).length,1);
+});
+
+test('homework56 requires exact55 source, unchanged formal package/v3 and the precise56 checksum',async()=>{
+ const p=fixture({homework56:true}).plan;assert.doesNotThrow(()=>validateHostPlanShape(p));
+ const {readFile}=await import('node:fs/promises');
+ assert.equal(createHash('sha256').update(await readFile(new URL('../server/src/db/migrations/0056_homework_validation_status.sql',import.meta.url))).digest('hex'),p.target.migrations[55].checksum);
+ for(const change of [q=>q.source.productVersion=54,q=>q.source.migrations.pop(),q=>q.target.productVersion=55,q=>q.target.runtime='3.8.13',q=>q.target.schema=15,q=>q.target.protocol=12,q=>q.target.integrity+='a',q=>q.target.tarball+='changed',q=>q.target.migrations[55].checksum='0'.repeat(64),q=>q.target.migrations[55].name='other',q=>q.target.migrations[54].checksum='0'.repeat(64),q=>q.target.migrations[0].checksum='0'.repeat(64),q=>q.publicText.target.reader=2,q=>q.publicText.target.producer='purpose-json-v2',q=>q.publicText.targetConfigurationSha256='0'.repeat(64),q=>q.backup.profile='native14-product54',q=>q.backup.source.productVersion=54,q=>q.format='product55-image-host-release/v1']){
+  const q=structuredClone(p);change(q);assert.throws(()=>validateHostPlanShape(sealHostPlan(q)),String(change));
+ }
+});
+test('homework56 drains four writers, proves two zero barriers, binds, restores fresh55 then migrates once before four identities',async()=>{
+ const f=fixture({homework56:true}),read=f.ops.state;let leases=0;
+ f.ops.state=async()=>{const s=await read();return f.trace.filter(x=>x.startsWith('stop:')).length===4&&!f.trace.includes('backup')&&leases++<2?{...s,liveWork:1}:s};
+ await f.prepare();assert.equal(f.trace.some(x=>x.startsWith('stop:')),false);f.trace.length=0;f.events.length=0;
+ const result=await f.run();assert.equal(result.state.product,56);assert.equal(result.state.runtime,'3.8.12');assert.equal(result.publicText.reader,3);
+ assert.equal(f.trace.filter(x=>x==='backup').length,1);assert.equal(f.trace.filter(x=>x==='migrate').length,1);
+ assert.equal(f.trace.some(x=>['patch','seed'].includes(x)),false);
+ const backup=f.events.findIndex(e=>e.phase==='backup');assert.equal(f.events.slice(0,backup).filter(e=>e.status==='zero-leases').length,2);
+ assert.ok(f.trace.indexOf('binding-precheck')>f.trace.findLastIndex(x=>x.startsWith('stop:')));assert.ok(f.trace.indexOf('binding-precheck')<f.trace.indexOf('backup'));assert.ok(f.trace.indexOf('backup')<f.trace.indexOf('migrate'));
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)));
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)));
+ assert.equal(f.events.filter(e=>e.status==='observed').length,4);
+});
+test('homework56 stops at bound work or invalid backup, never replays unknown migration and fixes committed56 forward',async()=>{
+ for(const fault of [{bound:true},{badBackup:true},{backupUnknown:true},{migrationUnknown:true},{migrationCommittedFailure:true}]){
+  const f=fixture({homework56:true,...fault});await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);
+  if(fault.bound||fault.badBackup||fault.backupUnknown)assert.equal(f.trace.includes('migrate'),false);
+  if(fault.bound)assert.equal(f.trace.includes('backup'),false);
+  if(fault.migrationUnknown){assert.equal(f.trace.at(-1),'migrate');assert.equal(f.events.at(-1).recovery,'unknown')}
+  if(fault.migrationCommittedFailure){assert.equal(f.events.at(-1).recovery,'fix-forward');f.trace.length=0;await assert.rejects(f.run());assert.equal(f.trace.includes('migrate'),false)}
+ }
+ const replaced=fixture({homework56:true,replacedTarget:true});await assert.rejects(replaced.run());assert.equal(replaced.trace.filter(x=>x.startsWith('deploy:')).length,1);
 });

@@ -16,7 +16,7 @@ test('case code blocks survive native paste, preview, real API save, reload and 
   await browser.addInitScript(() => { localStorage.setItem('lingxiloop-theme', 'light') })
   await app.open('/')
   await browser.evaluate(async () => (await fetch('/api/fixture-role/teacher')).ok)
-  await app.open('/cases?project=cases-classroom&view=cases')
+  await app.open('/cases?project=cases-classroom&view=cases&caseView=manage')
   await screen.getByRole('button', '新建案例', { exact: true }).tap()
   await screen.getByLabel('标题', { exact: true }).fill('代码块往返验收')
   await nativePaste(browser, screen, '正文', markdown)
@@ -29,8 +29,8 @@ test('case code blocks survive native paste, preview, real API save, reload and 
   await screen.getByRole('button', '发布', { exact: true }).tap()
   await expect(screen.getByRole('status').first()).toContainText('案例已发布')
   const saved = await browser.evaluate(async () => {
-    const list = await fetch('/api/cases?q=代码块往返验收', { headers: { 'x-company-id': 'cases-school' } }).then(response => response.json())
-    return fetch(`/api/cases/${list.items[0].id}`, { headers: { 'x-company-id': 'cases-school' } }).then(response => response.json())
+    const list = await fetch('/api/cases?view=manage&q=代码块往返验收', { headers: { 'x-company-id': 'cases-school' } }).then(response => response.json())
+    return fetch(`/api/cases/${list.items[0].id}?view=manage`, { headers: { 'x-company-id': 'cases-school' } }).then(response => response.json())
   })
   expect(saved.editorDocument.blocks.filter((block: { type: string }) => block.type === 'codeBlock').map((block: { props: { language: string } }) => block.props.language)).toEqual(['python', 'json', 'text', 'javascript', 'text', 'text'])
   expect(saved.body).toContain(samples[2].code)
@@ -87,7 +87,7 @@ test('legacy Markdown reading and editing share code semantics, including an unc
     return { status: response.status, data: await response.json() }
   }, body)
   expect(article.status).toBe(201)
-  await app.open(`/cases/${article.data.id}?project=cases-classroom&view=cases`)
+  await app.open(`/cases/${article.data.id}?project=cases-classroom&view=cases&caseView=manage`)
   const codes = () => browser.evaluate(() => Array.from(document.querySelectorAll('main pre code')).map(node => node.textContent))
   await app.screenshot('legacy-code-reading')
   await expect.poll(codes).toEqual(['print("<hello> &lt;")', '``ticks``\n\nlast line'])
@@ -109,7 +109,7 @@ test('legacy Markdown reading and editing share code semantics, including an unc
     return { status: response.status, data: await response.json() }
   })
   expect(native.status).toBe(201)
-  await app.open(`/cases/${native.data.id}?project=cases-classroom&view=cases`)
+  await app.open(`/cases/${native.data.id}?project=cases-classroom&view=cases&caseView=manage`)
   await expect.poll(codes).toEqual(['const value = 1', '<original>'])
   await expect(screen.getByRole('button', '复制代码', { exact: true })).toHaveCount(2)
 })
@@ -117,7 +117,7 @@ test('legacy Markdown reading and editing share code semantics, including an unc
 test('VS Code clipboard preserves HTML-like source as literal code', async ({ app, browser, screen }) => {
   await app.open('/')
   await browser.evaluate(async () => (await fetch('/api/fixture-role/teacher')).ok)
-  await app.open('/cases?project=cases-classroom&view=cases')
+  await app.open('/cases?project=cases-classroom&view=cases&caseView=manage')
   await screen.getByRole('button', '新建案例', { exact: true }).tap()
   const source = '<em>literal</em> &lt; &amp;\n</code><script>window.caseCodeExecuted = true</script>\n\t  final  '
   await screen.getByLabel('正文', { exact: true }).fill('')
