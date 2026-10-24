@@ -1,0 +1,17 @@
+✔ current work/profile identity is distinct from recorded historical authors and spoofed observations (8.303669ms)
+✔ restored prompt candidates and edited persona text cannot supply the current binding or become instructions (4.130014ms)
+✔ empty history still carries the current identity and author kinds retain distinct sources (1.060775ms)
+✔ root delivery and failed successors have separate scope without negating an existing answer (2.68075ms)
+✔ only the matching delivered result permits an already-sent claim (0.27317ms)
+✔ a delivered root retains the actual follow-up stop reason and not-started count (2.901312ms)
+✔ protocol, timeout and ordinary provider failures keep distinct safe wording (0.98554ms)
+✔ structured terminal failure belongs to the current request and fence; raw text is never classification (0.645194ms)
+✔ diagnostic pagination is bounded and the same callback operation is propagated (1.276045ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12103.97805

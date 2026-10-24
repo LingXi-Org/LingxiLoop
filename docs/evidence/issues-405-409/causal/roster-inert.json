@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "authors": [
+    "a-ffbe6b3a"
+  ],
+  "runs": [
+    {
+      "agent_id": "a-ffbe6b3a",
+      "principal_id": "test-owner",
+      "internal": false
+    }
+  ],
+  "checks": [
+    "five-specialists",
+    "commit-before-dispatch",
+    "one-reply-each",
+    "examples-inert",
+    "shared-human"
+  ]
+}

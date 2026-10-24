@@ -1,0 +1,15 @@
+
+ RUN  e2e v0.17.0 /workspace/LingxiLoop
+      run 01a16e58-1471-7ad7-ad82-e90e24117aeb · targets: web
+
+ ✓ |web| e2e/web/mentions-admission.e2e.ts (2 tests) 5.13s
+ ✓ |web| e2e/web/mentions-chinese.e2e.ts (2 tests) 7.12s
+
+ Test Files  2 passed (2)
+      Tests  4 passed (4)
+   Start at  14:37:09
+   Duration  13.07s
+     Report  .e2e/web/report.json
+
+      JUnit  .e2e/web/junit.xml
+   Markdown  .e2e/web/summary.md
