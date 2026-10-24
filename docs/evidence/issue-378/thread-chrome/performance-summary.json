@@ -1,0 +1,74 @@
+{
+  "at": "2026-10-24T12:47:25.012796+00:00",
+  "baselineCommit": "a6b54673b6821c8489a654e2966235035844f861",
+  "browser": "official @e2e-dev/web Chromium via existing CDP9337",
+  "scope": "actual ConversationThread and question-index fixture,80messages,3x40body updates plus initial runStart",
+  "mode": "Vite production builds with same locked assistant-ui closure and build-only shell render counter",
+  "samples": {
+    "baseline": {
+      "updatesVisible": 121,
+      "selectionPreserved": true,
+      "catchupMs": 0.19999998807907104,
+      "samples": [
+        {
+          "elapsedMs": 2889.800000011921,
+          "threadChromeRenders": 80,
+          "longTasksMs": []
+        },
+        {
+          "elapsedMs": 2951.199999988079,
+          "threadChromeRenders": 80,
+          "longTasksMs": [
+            119,
+            120,
+            51,
+            168
+          ]
+        },
+        {
+          "elapsedMs": 3133.0999999940395,
+          "threadChromeRenders": 80,
+          "longTasksMs": [
+            110,
+            139
+          ]
+        }
+      ]
+    },
+    "candidate": {
+      "updatesVisible": 121,
+      "selectionPreserved": true,
+      "catchupMs": 0.09999999403953552,
+      "samples": [
+        {
+          "elapsedMs": 3752.5,
+          "threadChromeRenders": 0,
+          "longTasksMs": [
+            136,
+            70,
+            74,
+            63,
+            76
+          ]
+        },
+        {
+          "elapsedMs": 3183.300000011921,
+          "threadChromeRenders": 0,
+          "longTasksMs": [
+            94,
+            95,
+            53,
+            52
+          ]
+        },
+        {
+          "elapsedMs": 2036.4000000059605,
+          "threadChromeRenders": 0,
+          "longTasksMs": [
+            51
+          ]
+        }
+      ]
+    }
+  }
+}

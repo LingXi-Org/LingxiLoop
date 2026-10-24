@@ -35,3 +35,47 @@ packages and their dependency closure were prepared using registry bytes checked
 against lock integrity, without changing project manifests or locks. A 2048MiB
 comparison build exhausted V8 heap; that resource failure is retained separately
 from source tests. None of those attempts is counted as a successful browser run.
+
+## Bounded browser result
+
+The final official Chromium cases passed on both sides (raw reports retained in the selected environment). Three samples each used the same80-message history,40 body updates
+per sample and the same production-mode dependency closure. Both retained the
+selection established during the active run and displayed all121 increments.
+
+| Sample | Baseline shell renders | Candidate shell renders | Baseline replay ms | Candidate replay ms |
+|---|---:|---:|---:|---:|
+| 1 | 80 | 0 | 2889.8 | 3752.5 |
+| 2 | 80 | 0 | 2951.2 | 3183.3 |
+| 3 | 80 | 0 | 3133.1 | 2036.4 |
+
+This confirms removal of shell render work, not an overall rendering-latency or
+FPS win. Total replay timing did not show consistent improvement; long tasks
+remain (6 baseline/10 candidate across these short samples). The reference-device
+frame/paint budgets and production distribution therefore remain unmet evidence,
+and #378 must stay open. The question-preview cache has focused getter/invalidation
+coverage; its private build counter was not successfully instrumented on both
+sides and is not used as a browser performance claim.
+
+The first browser baseline lost its selection because the fixture selected text
+before initiating a run. The pinned react-lexical0.2.11 FocusPlugin intentionally
+focuses the composer on runStart; both sides showed that behavior. The final
+scenario establishes the active run first and then selects historical text. No
+product focus rule or selection assertion was weakened. An earlier candidate
+read118/121 increments before its existing smooth queue caught up; the final
+scenario explicitly waits at most2s for received running text to display and
+retains exact121 equality. Final catch-up was0.2ms/0.1ms after sampling, not a
+terminal-event latency measurement. Original failed logs remain local.
+
+The 3072MiB comparison builds passed on both sides. Initial missing-dependency,
+CLI usage and 2048MiB-heap failures remain local setup/resource records. No real
+provider call or private production conversation was used.
+
+## External delivery blocker
+
+The product changes are locally committed. The first source push succeeded, but
+the later fast-forward push could not read Git credentials. A read-only identity/
+repository check then returned HTTP401 Bad credentials using the existing configured
+identity. No alternate identity/route, PR creation, merge, image build or production
+release was attempted after that failure. Existing GitHub authentication must be
+restored and the current remote branch reconciled before normal CI and release.
+Production remains accepted a6b54673 /3.8.12; neither issue is closed by this work.
