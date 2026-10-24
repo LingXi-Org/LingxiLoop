@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="3" failures="0" errors="0" skipped="0" time="120.971">
+  <testsuite name="e2e/cases/browser.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="120.971">
+    <testcase name="case loading, retry and empty filters retain reachable controls [cases]" classname="e2e/cases/browser.e2e.ts" time="27.968"/>
+    <testcase name="organization case publication, cross-course access, isolation and responsive navigation [cases]" classname="e2e/cases/browser.e2e.ts" time="68.277"/>
+    <testcase name="teacher authors and publishes cover and body images through the UI [cases]" classname="e2e/cases/browser.e2e.ts" time="24.726"/>
+  </testsuite>
+</testsuites>

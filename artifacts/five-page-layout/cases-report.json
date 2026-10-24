@@ -1,0 +1,4345 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a16cce-f490-7ab9-b173-7879c5046d1f",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-24T07:27:46.560Z",
+    "finishedAt": "2026-10-24T07:29:51.678Z",
+    "project": {
+      "id": "lingxiloop-cases",
+      "configDigest": "1a8f93d722e524270b6160f700eaa6be0500363734ed900ac6dea696fe664c61"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "win32 10.0.22621",
+      "arch": "x64",
+      "runtime": "node v22.22.2"
+    },
+    "vcs": {
+      "commit": "41f8267f9cb2054229f8dc7773ae4148860f0dcd",
+      "branch": "codex/five-page-layout",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "cases",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53108",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "308c30452d2b4d5580ce5a91ec0efb9df1c0f498ad091366c8ae8cbfd6c6f974",
+        "testId": "e2e/cases/browser.e2e.ts::case%20loading%2C%20retry%20and%20empty%20filters%20retain%20reachable%20controls",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "case loading, retry and empty filters retain reachable controls"
+        ],
+        "file": "e2e/cases/browser.e2e.ts",
+        "source": {
+          "file": "e2e/cases/browser.e2e.ts",
+          "line": 8,
+          "column": 1
+        },
+        "targetId": "cases",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-24T07:27:48.797Z",
+            "durationMs": 27968,
+            "artifacts": [
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:4"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__case_20loading_2C_20retry_20and_20empty_20filters_20retain_20reachable_20controls-f22d163d/default/attempt-0/screenshots/001-cases-loading.png",
+                "size": 17966,
+                "sha256": "5c3cf5db5b613519a37f3fa60e7cf07cb7b6551ce2f2390370ec031065b45788"
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:10"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__case_20loading_2C_20retry_20and_20empty_20filters_20retain_20reachable_20controls-f22d163d/default/attempt-0/screenshots/002-cases-retry.png",
+                "size": 27213,
+                "sha256": "14d99c37442b8eae67aeb23764b94dd9f33e3bbdb32329c591fa6b7432378ebe"
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:16"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__case_20loading_2C_20retry_20and_20empty_20filters_20retain_20reachable_20controls-f22d163d/default/attempt-0/screenshots/003-cases-empty-mobile.png",
+                "size": 21263,
+                "sha256": "8efd1afd0c1c98d720a5ecfcc37176bc879bb23135ce436783f18fc11acce7f5"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:27:49.194Z",
+                "durationMs": 12116,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:01.312Z",
+                "durationMs": 710,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:2",
+                "index": 2,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:02.022Z",
+                "durationMs": 695,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:02.719Z",
+                "durationMs": 10073,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:4",
+                "index": 4,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "cases-loading",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:12.793Z",
+                "durationMs": 221,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:13.016Z",
+                "durationMs": 88,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"status\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:13.105Z",
+                "durationMs": 293,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:13.398Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:13.427Z",
+                "durationMs": 129,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:13.558Z",
+                "durationMs": 266,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:10",
+                "index": 10,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "cases-retry",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:13.824Z",
+                "durationMs": 164,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:artifact:1"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:11",
+                "index": 11,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重新加载\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:13.990Z",
+                "durationMs": 176,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:14.167Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"没有找到匹配的案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:14.200Z",
+                "durationMs": 401,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:14.601Z",
+                "durationMs": 138,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:14.739Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:16",
+                "index": 16,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "cases-empty-mobile",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:14.752Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:artifact:2"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:17",
+                "index": 17,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"清除筛选\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:14.833Z",
+                "durationMs": 143,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-043d-78f8-92c8-b15d8e5ee1d0:18",
+                "index": 18,
+                "kind": "assertion",
+                "api": "expect.toHaveValue",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:14.978Z",
+                "durationMs": 42,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "06709e889e4b501dffea372a5280b74e88cd681e6457424e1c20c506f6e28811",
+        "testId": "e2e/cases/browser.e2e.ts::organization%20case%20publication%2C%20cross-course%20access%2C%20isolation%20and%20responsive%20navigation",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "organization case publication, cross-course access, isolation and responsive navigation"
+        ],
+        "file": "e2e/cases/browser.e2e.ts",
+        "source": {
+          "file": "e2e/cases/browser.e2e.ts",
+          "line": 30,
+          "column": 1
+        },
+        "targetId": "cases",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-24T07:28:16.767Z",
+            "durationMs": 68277,
+            "artifacts": [
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:29"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/001-student-editorial-grid-light.png",
+                "size": 55587,
+                "sha256": "c367d62019d438de90a283f77e71d52aa36bcee652d56a90cf4101035f44100f"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:33"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/002-case-grid-1440.png",
+                "size": 53935,
+                "sha256": "a1fa0ada3b79edbab850017361897e8ebfbe4f6e779780f984d12c780854a490"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:37"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/003-case-grid-768.png",
+                "size": 50681,
+                "sha256": "e1c4b305156dcc1539c83bb6df4732a967de9c26df92c3b8dbf625333a1f0a5e"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:3",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:41"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/004-case-grid-390.png",
+                "size": 42326,
+                "sha256": "e083d24cf3b31e7a939ed965919e84f348c3c9b0a4eabe216da56f55e5fe1157"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:4",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:56"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/005-student-article-images.png",
+                "size": 41451,
+                "sha256": "7740fb6e4b7921ff7619d8ef7fe42c4e747559e672b99129fb0d3ce553949462"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:5",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:59"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/006-case-reading-1440.png",
+                "size": 40229,
+                "sha256": "b45b31015eb8fa36f393ce3cf2121e81c16a22062a3947499c2b950a6ec2bd5c"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:6",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:62"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/007-case-reading-768.png",
+                "size": 34570,
+                "sha256": "4fd3ec97063ea7269db23f7b6866bee8b6b910032f6d1c22b0383798c4a83eba"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:7",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:65"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/008-case-reading-390.png",
+                "size": 31660,
+                "sha256": "60fdbf0b7907f9fa32704e32126f26d4f7cb7e68d2fcd150f02944586fe90643"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:8",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:88"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/009-case-inline-editor-1774.png",
+                "size": 50868,
+                "sha256": "5190aec4c5d23d661188dc9c538fe261f7f417c42662e7bf9047fe66fb3ab95c"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:9",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:91"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/010-case-editing-1440.png",
+                "size": 49012,
+                "sha256": "15e41a7b944ef60d8b591dcd8a03363a0af90669ef5b7ef8f9df7d74799f48ed"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:10",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:94"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/011-case-editing-768.png",
+                "size": 40177,
+                "sha256": "c927e50cc7c111b4cf8bd2a9f5c5e260c41408873f0b4212273c6af107e8df96"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:11",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:97"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/012-case-editing-390.png",
+                "size": 39518,
+                "sha256": "c72be6117af93b1f56d01dcb3ba120b2ac775bc8b5060dbc00bdbe8e3d6947bc"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:12",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:105"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/013-other-teacher-unpublished-draft.png",
+                "size": 49713,
+                "sha256": "c454b76b21c03b16221e05e4e1e52268f4a1680ed0c489ee2f6f6a18edd24ca6"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:13",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:129"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/014-mobile-dark-single-column-keyboard.png",
+                "size": 43458,
+                "sha256": "3a857b433027b53ecbe6156d182ed054da119683256aa6f0f6186cefff17cfd7"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:14",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:138"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/015-cross-organization-deep-link-denied.png",
+                "size": 15062,
+                "sha256": "657da7a23c2889a60606e82ae81f7e17ea0aadbe1fb4419b1a70dac8c91ce695"
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:15",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16ccf-717f-7a84-8f0c-d20440e17df4:156"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__organization_20case_20publication_2C_20cross-course_20access_2C_20isolation_20and_20r-fbc7ebba/default/attempt-0/screenshots/016-sidebar-independent-case-library.png",
+                "size": 51595,
+                "sha256": "14631f751ae33629740aa71d18c3a84b31f29ab7f193c3839791b1d493c48f78"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:16.796Z",
+                "durationMs": 634,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:17.430Z",
+                "durationMs": 86,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:17.517Z",
+                "durationMs": 436,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:17.955Z",
+                "durationMs": 523,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:18.479Z",
+                "durationMs": 279,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:18.760Z",
+                "durationMs": 548,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:6",
+                "index": 6,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:19.309Z",
+                "durationMs": 1363,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:20.673Z",
+                "durationMs": 648,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:21.323Z",
+                "durationMs": 352,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:9",
+                "index": 9,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:21.677Z",
+                "durationMs": 117,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:21.794Z",
+                "durationMs": 124,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:21.920Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:21.946Z",
+                "durationMs": 82,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.028Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.104Z",
+                "durationMs": 74,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.179Z",
+                "durationMs": 78,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.258Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.335Z",
+                "durationMs": 78,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.413Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.488Z",
+                "durationMs": 74,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.563Z",
+                "durationMs": 75,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.639Z",
+                "durationMs": 249,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:22",
+                "index": 22,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:22.888Z",
+                "durationMs": 3238,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:23",
+                "index": 23,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"新建案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.128Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.166Z",
+                "durationMs": 234,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.401Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.419Z",
+                "durationMs": 60,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1774,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.482Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.500Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:29",
+                "index": 29,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "student-editorial-grid-light",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.515Z",
+                "durationMs": 357,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.872Z",
+                "durationMs": 45,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.917Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.949Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:33",
+                "index": 33,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-grid-1440",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:26.971Z",
+                "durationMs": 211,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:1"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:34",
+                "index": 34,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.182Z",
+                "durationMs": 78,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 768,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:35",
+                "index": 35,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.260Z",
+                "durationMs": 26,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:36",
+                "index": 36,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.287Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:37",
+                "index": 37,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-grid-768",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.308Z",
+                "durationMs": 196,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:2"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:38",
+                "index": 38,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.504Z",
+                "durationMs": 180,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:39",
+                "index": 39,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.685Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:40",
+                "index": 40,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.718Z",
+                "durationMs": 44,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:41",
+                "index": 41,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-grid-390",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.764Z",
+                "durationMs": 117,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:3"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:42",
+                "index": 42,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:27.881Z",
+                "durationMs": 204,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1774,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:43",
+                "index": 43,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:28.086Z",
+                "durationMs": 206,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:44",
+                "index": 44,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"社区口述历史\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:28.293Z",
+                "durationMs": 293,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:45",
+                "index": 45,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:28.587Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:46",
+                "index": 46,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:28.619Z",
+                "durationMs": 211,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:47",
+                "index": 47,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"navigation\", name: \"案例分类\") >> getByRole(\"button\", name: \"自然科学\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:28.831Z",
+                "durationMs": 252,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:48",
+                "index": 48,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:29.084Z",
+                "durationMs": 516,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:49",
+                "index": 49,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"heading\", name: \"社区口述历史\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:29.600Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:50",
+                "index": 50,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"link\", name: /河流生态调查/)",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:29.625Z",
+                "durationMs": 237,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:51",
+                "index": 51,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:29.862Z",
+                "durationMs": 380,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:52",
+                "index": 52,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"编辑案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:30.244Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:53",
+                "index": 53,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"link\", name: \"调查资料\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:30.295Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:54",
+                "index": 54,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:30.340Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:55",
+                "index": 55,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:30.376Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:56",
+                "index": 56,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "student-article-images",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:30.400Z",
+                "durationMs": 284,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:4"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:57",
+                "index": 57,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:30.687Z",
+                "durationMs": 111,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:58",
+                "index": 58,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:30.798Z",
+                "durationMs": 35,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:59",
+                "index": 59,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-reading-1440",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:30.833Z",
+                "durationMs": 275,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:5"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:60",
+                "index": 60,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:31.109Z",
+                "durationMs": 58,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 768,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:61",
+                "index": 61,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:31.168Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:62",
+                "index": 62,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-reading-768",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:31.185Z",
+                "durationMs": 182,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:6"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:63",
+                "index": 63,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:31.367Z",
+                "durationMs": 207,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:64",
+                "index": 64,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:31.575Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:65",
+                "index": 65,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-reading-390",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:31.595Z",
+                "durationMs": 170,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:7"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:66",
+                "index": 66,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:31.767Z",
+                "durationMs": 157,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1774,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:67",
+                "index": 67,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:31.924Z",
+                "durationMs": 343,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:68",
+                "index": 68,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:32.267Z",
+                "durationMs": 3196,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:69",
+                "index": 69,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"返回案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:35.465Z",
+                "durationMs": 229,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:70",
+                "index": 70,
+                "kind": "resource",
+                "api": "browser.back",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:35.694Z",
+                "durationMs": 34,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:71",
+                "index": 71,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:35.729Z",
+                "durationMs": 148,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:72",
+                "index": 72,
+                "kind": "resource",
+                "api": "browser.forward",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:35.877Z",
+                "durationMs": 32,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:73",
+                "index": 73,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:35.910Z",
+                "durationMs": 38,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:74",
+                "index": 74,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-0da2de8c-bf0c-4910-b838-db1fc835603b?project=cases-other-course&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:35.950Z",
+                "durationMs": 234,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:75",
+                "index": 75,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:36.184Z",
+                "durationMs": 2711,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:76",
+                "index": 76,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:38.895Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:77",
+                "index": 77,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-0da2de8c-bf0c-4910-b838-db1fc835603b?project=cases-other-course&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:38.941Z",
+                "durationMs": 318,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:78",
+                "index": 78,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"编辑案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:39.260Z",
+                "durationMs": 3439,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:79",
+                "index": 79,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:42.700Z",
+                "durationMs": 3718,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:80",
+                "index": 80,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Control+Alt+0",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:46.419Z",
+                "durationMs": 141,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:81",
+                "index": 81,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:46.561Z",
+                "durationMs": 444,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:82",
+                "index": 82,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "2 chars",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:47.005Z",
+                "durationMs": 398,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:83",
+                "index": 83,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /二级标题/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:47.404Z",
+                "durationMs": 44,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:84",
+                "index": 84,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:47.450Z",
+                "durationMs": 103,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:85",
+                "index": 85,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "6 chars",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:47.553Z",
+                "durationMs": 359,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:86",
+                "index": 86,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:47.913Z",
+                "durationMs": 84,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:87",
+                "index": 87,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "13 chars",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:47.997Z",
+                "durationMs": 513,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:88",
+                "index": 88,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-inline-editor-1774",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:48.510Z",
+                "durationMs": 191,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:8"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:89",
+                "index": 89,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:48.702Z",
+                "durationMs": 102,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:90",
+                "index": 90,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:48.804Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:91",
+                "index": 91,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-editing-1440",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:48.820Z",
+                "durationMs": 191,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:9"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:92",
+                "index": 92,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:49.013Z",
+                "durationMs": 91,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 768,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:93",
+                "index": 93,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:49.104Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:94",
+                "index": 94,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-editing-768",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:49.185Z",
+                "durationMs": 173,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:10"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:95",
+                "index": 95,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:49.358Z",
+                "durationMs": 198,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:96",
+                "index": 96,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:49.556Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:97",
+                "index": 97,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "case-editing-390",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:49.576Z",
+                "durationMs": 158,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:11"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:98",
+                "index": 98,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:49.734Z",
+                "durationMs": 246,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1774,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:99",
+                "index": 99,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:49.982Z",
+                "durationMs": 222,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:100",
+                "index": 100,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"region\", name: \"案例预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:50.205Z",
+                "durationMs": 319,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:101",
+                "index": 101,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"继续编辑\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:50.525Z",
+                "durationMs": 215,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:102",
+                "index": 102,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:50.741Z",
+                "durationMs": 39,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:103",
+                "index": 103,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存草稿\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:50.780Z",
+                "durationMs": 235,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:104",
+                "index": 104,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:51.016Z",
+                "durationMs": 550,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:105",
+                "index": 105,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "other-teacher-unpublished-draft",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:51.567Z",
+                "durationMs": 230,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:12"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:106",
+                "index": 106,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:51.798Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:107",
+                "index": 107,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:51.844Z",
+                "durationMs": 90,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:108",
+                "index": 108,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:51.935Z",
+                "durationMs": 94,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:109",
+                "index": 109,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-0da2de8c-bf0c-4910-b838-db1fc835603b?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:52.031Z",
+                "durationMs": 242,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:110",
+                "index": 110,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"调查方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:52.273Z",
+                "durationMs": 3139,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:111",
+                "index": 111,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"heading\", name: \"新的实地方法\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:55.413Z",
+                "durationMs": 33,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:112",
+                "index": 112,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:55.447Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:113",
+                "index": 113,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-0da2de8c-bf0c-4910-b838-db1fc835603b?project=cases-other-course&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:55.470Z",
+                "durationMs": 334,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:114",
+                "index": 114,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"编辑案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:55.804Z",
+                "durationMs": 3928,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:115",
+                "index": 115,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:28:59.733Z",
+                "durationMs": 681,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:116",
+                "index": 116,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:00.415Z",
+                "durationMs": 592,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:117",
+                "index": 117,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:01.007Z",
+                "durationMs": 28,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:118",
+                "index": 118,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:01.036Z",
+                "durationMs": 313,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:119",
+                "index": 119,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:01.350Z",
+                "durationMs": 222,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:120",
+                "index": 120,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:01.572Z",
+                "durationMs": 355,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 900,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:121",
+                "index": 121,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:01.928Z",
+                "durationMs": 2227,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:122",
+                "index": 122,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:04.156Z",
+                "durationMs": 358,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:123",
+                "index": 123,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:04.514Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:124",
+                "index": 124,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByLabel(\"关键词搜索\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:04.557Z",
+                "durationMs": 250,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:125",
+                "index": 125,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Tab",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:04.807Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:126",
+                "index": 126,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:04.830Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:127",
+                "index": 127,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:04.855Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:128",
+                "index": 128,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:04.885Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:129",
+                "index": 129,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "mobile-dark-single-column-keyboard",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:04.907Z",
+                "durationMs": 131,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:13"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:130",
+                "index": 130,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:05.039Z",
+                "durationMs": 51,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:131",
+                "index": 131,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:05.090Z",
+                "durationMs": 200,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:132",
+                "index": 132,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:05.290Z",
+                "durationMs": 284,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:133",
+                "index": 133,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:05.575Z",
+                "durationMs": 164,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:134",
+                "index": 134,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:05.739Z",
+                "durationMs": 49,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:135",
+                "index": 135,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-0da2de8c-bf0c-4910-b838-db1fc835603b?project=cases-outsider-course&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:05.788Z",
+                "durationMs": 199,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:136",
+                "index": 136,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:05.987Z",
+                "durationMs": 2833,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:137",
+                "index": 137,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"heading\", name: \"河流生态调查\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:08.821Z",
+                "durationMs": 41,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:138",
+                "index": 138,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "cross-organization-deep-link-denied",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:08.863Z",
+                "durationMs": 148,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:14"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:139",
+                "index": 139,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:09.011Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:140",
+                "index": 140,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:09.038Z",
+                "durationMs": 92,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1440,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:141",
+                "index": 141,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases/case-0da2de8c-bf0c-4910-b838-db1fc835603b?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:09.131Z",
+                "durationMs": 208,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:142",
+                "index": 142,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"更多案例操作\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:09.339Z",
+                "durationMs": 3355,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:143",
+                "index": 143,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"menuitem\", name: \"下架案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:12.695Z",
+                "durationMs": 365,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:144",
+                "index": 144,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:13.061Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:145",
+                "index": 145,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:13.093Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:146",
+                "index": 146,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:13.116Z",
+                "durationMs": 62,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:147",
+                "index": 147,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:13.178Z",
+                "durationMs": 67,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:148",
+                "index": 148,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:13.247Z",
+                "durationMs": 49,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:149",
+                "index": 149,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/?project=cases-classroom&view=forum",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:13.296Z",
+                "durationMs": 189,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:150",
+                "index": 150,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByLabel(\"搜索学习论坛\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:13.486Z",
+                "durationMs": 5909,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:151",
+                "index": 151,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"navigation\", name: \"学习论坛版块\") >> getByRole(\"button\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:19.395Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:152",
+                "index": 152,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"navigation\", name: \"学习论坛版块\") >> getByRole(\"button\", name: \"资料\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:19.420Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:153",
+                "index": 153,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:19.445Z",
+                "durationMs": 273,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:154",
+                "index": 154,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:19.720Z",
+                "durationMs": 301,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:155",
+                "index": 155,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"社区口述历史\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:20.021Z",
+                "durationMs": 441,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16ccf-717f-7a84-8f0c-d20440e17df4:156",
+                "index": 156,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "sidebar-independent-case-library",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:20.463Z",
+                "durationMs": 137,
+                "events": [],
+                "artifacts": [
+                  "01a16ccf-717f-7a84-8f0c-d20440e17df4:artifact:15"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "7916031b213f49612e7ad95bc1e198d2df8daa9db1eb77f2d0f6719439cd5f46",
+        "testId": "e2e/cases/browser.e2e.ts::teacher%20authors%20and%20publishes%20cover%20and%20body%20images%20through%20the%20UI",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "teacher authors and publishes cover and body images through the UI"
+        ],
+        "file": "e2e/cases/browser.e2e.ts",
+        "source": {
+          "file": "e2e/cases/browser.e2e.ts",
+          "line": 214,
+          "column": 1
+        },
+        "targetId": "cases",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-24T07:29:25.049Z",
+            "durationMs": 24726,
+            "artifacts": [
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:26"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__teacher_20authors_20and_20publishes_20cover_20and_20body_20images_20through_20the_20U-a7af4f19/default/attempt-0/screenshots/001-teacher-create-image-preview.png",
+                "size": 44481,
+                "sha256": "7659e5cf83b5a1843d309414d47faf78ede509c6f4147ed2e2b7cc68a3d6819f"
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:31"
+                },
+                "path": "cases/e2e_cases_browser.e2e.ts__teacher_20authors_20and_20publishes_20cover_20and_20body_20images_20through_20the_20U-a7af4f19/default/attempt-0/screenshots/002-teacher-authored-published-article.png",
+                "size": 55701,
+                "sha256": "502c733ebb4bc717c76da4c58d8b48e3ee16fed0d4505cb631881605ddc3c54b"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:25.098Z",
+                "durationMs": 570,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:1",
+                "index": 1,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:25.669Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1774,
+                  "height": 887,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:2",
+                "index": 2,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:25.685Z",
+                "durationMs": 44,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:3",
+                "index": 3,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/cases?project=cases-classroom&view=cases",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:25.729Z",
+                "durationMs": 203,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"新建案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:25.933Z",
+                "durationMs": 4982,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"标题\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:30.916Z",
+                "durationMs": 292,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:6",
+                "index": 6,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[aria-label=\\\"摘要\\\"][contenteditable=\\\"true\\\"]:visible\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:31.210Z",
+                "durationMs": 898,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:32.109Z",
+                "durationMs": 164,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:8",
+                "index": 8,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"分类\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:32.274Z",
+                "durationMs": 176,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByLabel(\"标签（逗号分隔）\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:32.451Z",
+                "durationMs": 166,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:10",
+                "index": 10,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "locator(\"[aria-label=\\\"正文\\\"][contenteditable=\\\"true\\\"]:visible\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:32.617Z",
+                "durationMs": 72,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:32.690Z",
+                "durationMs": 187,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:12",
+                "index": 12,
+                "kind": "locator",
+                "api": "locator.setInputFiles",
+                "label": "getByLabel(\"上传封面\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:32.880Z",
+                "durationMs": 533,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:33.413Z",
+                "durationMs": 281,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[aria-label=\\\"正文\\\"] .bn-trailing-block\").last()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:33.732Z",
+                "durationMs": 215,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:15",
+                "index": 15,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "/",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:33.948Z",
+                "durationMs": 452,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.type",
+                "label": "5 chars",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:34.401Z",
+                "durationMs": 749,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"option\", name: /^图片/).first()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:35.151Z",
+                "durationMs": 39,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:35.190Z",
+                "durationMs": 320,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"tab\", name: \"上传\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:35.512Z",
+                "durationMs": 43,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:20",
+                "index": 20,
+                "kind": "locator",
+                "api": "locator.setInputFiles",
+                "label": "locator(\"[role=\\\"tabpanel\\\"] input[type=\\\"file\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:35.555Z",
+                "durationMs": 339,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:35.896Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:36.030Z",
+                "durationMs": 18,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:36.161Z",
+                "durationMs": 80,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:24",
+                "index": 24,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByText(\"预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:36.242Z",
+                "durationMs": 232,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"region\", name: \"案例预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:36.475Z",
+                "durationMs": 66,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:26",
+                "index": 26,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "teacher-create-image-preview",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:36.542Z",
+                "durationMs": 336,
+                "events": [],
+                "artifacts": [
+                  "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:artifact:0"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:27",
+                "index": 27,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:36.880Z",
+                "durationMs": 255,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:37.135Z",
+                "durationMs": 626,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:29",
+                "index": 29,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"从观察到设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:37.762Z",
+                "durationMs": 393,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:30",
+                "index": 30,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByText(\"草稿预览\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:38.155Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:31",
+                "index": 31,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "teacher-authored-published-article",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:38.179Z",
+                "durationMs": 317,
+                "events": [],
+                "artifacts": [
+                  "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:artifact:1"
+                ],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:38.497Z",
+                "durationMs": 161,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:38.659Z",
+                "durationMs": 901,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"heading\", name: \"从观察到设计\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:39.562Z",
+                "durationMs": 6332,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:35",
+                "index": 35,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"编辑案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:45.894Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:36",
+                "index": 36,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"编辑案例\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:45.918Z",
+                "durationMs": 331,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:37",
+                "index": 37,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"正文\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:46.249Z",
+                "durationMs": 533,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:38",
+                "index": 38,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"保存草稿\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:46.783Z",
+                "durationMs": 712,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"status\").first()",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:47.495Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:40",
+                "index": 40,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:47.520Z",
+                "durationMs": 357,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:41",
+                "index": 41,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"返回案例库\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:47.882Z",
+                "durationMs": 208,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:42",
+                "index": 42,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"通过真实图片上传与发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:48.090Z",
+                "durationMs": 304,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              },
+              {
+                "id": "01a16cd0-7c37-7a30-a0ca-7c0ae49194da:43",
+                "index": 43,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByText(\"**通过真实图片上传与发布**\")",
+                "status": "passed",
+                "startedAt": "2026-10-24T07:29:48.395Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "node_modules/e2e/dist/run/steps.js",
+                  "line": 26,
+                  "column": 16
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 3,
+      "selected": 3,
+      "executed": 3,
+      "passed": 3,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 3,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 856466,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
