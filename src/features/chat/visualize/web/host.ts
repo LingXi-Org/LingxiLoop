@@ -246,7 +246,7 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
               return lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',cache:'no-store',headers:headers(page),signal:attemptSignal})
             }, resourceSignal), resourceSignal)
           } finally { pending.delete(name);progress() }
-        })
+        }, result.resourceHashes?.['visualize.html'])
         assertScope()
         signal?.throwIfAborted()
       } catch(error) {
