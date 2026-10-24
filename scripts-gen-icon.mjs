@@ -5,10 +5,12 @@
 // may introduce or preserve separate product artwork.
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync } from 'node:fs'
+import { dirname } from 'node:path'
 
 const source = 'assets/lingxiloop-logo.svg'
 if (!existsSync(source)) throw new Error(`Missing canonical logo: ${source}`)
-for (const directory of ['build', 'public', 'website/assets']) mkdirSync(directory, { recursive: true })
+const faviconsOnly = process.argv.includes('--favicons-only')
+if (process.argv.slice(2).some(argument => argument !== '--favicons-only')) throw new Error('Usage: node scripts-gen-icon.mjs [--favicons-only]')
 
 const pngTargets = [
   ['build/icon.png', 1024],
@@ -27,12 +29,15 @@ function runMagick(args) {
   if (rendered.status !== 0) process.exit(rendered.status ?? 1)
 }
 
-for (const [target, size] of pngTargets) {
-  runMagick([source, '-background', 'none', '-resize', `${size}x${size}`, target])
+const targets = faviconsOnly ? pngTargets.filter(([target]) => /(?:favicon-32|icon-192)\.png$/.test(target) || target === 'public/icon.png') : pngTargets
+for (const [target, size] of targets) {
+  mkdirSync(dirname(target), { recursive: true })
+  // SVG background is a decode setting: apply it before reading the source.
+  runMagick(['-background', 'none', source, '-resize', `${size}x${size}`, target])
 }
 
 for (const target of ['public/favicon.ico', 'website/assets/favicon.ico']) {
-  runMagick([source, '-background', 'none', '-define', 'icon:auto-resize=48,32,16', target])
+  runMagick(['-background', 'none', source, '-define', 'icon:auto-resize=48,32,16', target])
 }
 
-console.log(`Rendered ${pngTargets.length + 2} brand assets from ${source}`)
+console.log(`Rendered ${targets.length + 2} brand assets from ${source}`)
