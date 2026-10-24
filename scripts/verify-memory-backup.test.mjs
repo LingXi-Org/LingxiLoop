@@ -179,3 +179,18 @@ test('native13 backup binds guarded Core identity before submission',async()=>{
  try{await assert.rejects(executeMemoryBackup({plan,apiKey:'fixture',apiSecret:'fixture',expectedStackId:'c'.repeat(24)}),e=>e.uncertain===false);assert.deepEqual(calls,['GetStack'])}
  finally{globalThis.fetch=original}
 })
+
+test('cover55 source backup pins formal3.8.12 and full54 while preserving the snapshot/isolated restore interface',async()=>{
+ const original=globalThis.fetch;globalThis.fetch=()=>assert.fail('offline backup planning used network');
+ try{
+  const plan=await buildMemoryBackupPlan({sourceSha:'213fb25312c81dfdeff12dea072d433c4de92f7a',profile:'native14-product54',attempt:'synthetic-cover55-unit',nonce:'0123456789abcdef'});
+  assert.equal(plan.format,2);assert.equal(plan.source.productVersion,54);assert.equal(plan.source.runtime.runtime,'3.8.12');assert.equal(plan.source.runtime.schema,14);assert.equal(plan.source.migrations.length,54);
+  assert.match(plan.command,/--snapshot=/);assert.match(plan.command,/--no-owner --no-privileges --exit-on-error/);assert.doesNotMatch(plan.command,/migrate-bin/);
+  const decoded=[...plan.command.matchAll(/[A-Za-z0-9+/=]{100,}/g)].map(m=>Buffer.from(m[0],'base64').toString()).join('\n');assert.match(decoded,/REPEATABLE READ READ ONLY/);assert.match(decoded,/runtime_version='3.8.12'/);
+  await validateMemoryBackupPlan(plan);
+  const changed=structuredClone(plan);changed.source.migrations[0].checksum='0'.repeat(64);await assert.rejects(validateMemoryBackupPlan(changed));
+  const update=completed(plan);update.logs[0].stdout=update.logs[0].stdout.replaceAll('["public","schema_migrations",46]','["public","schema_migrations",54]');assert.equal(parseMemoryBackupReceipt(plan,update).source.productVersion,54);
+  update.logs[0].stdout=update.logs[0].stdout.replace('"restoreProvenanceEqual":true','"restoreProvenanceEqual":false');assert.throws(()=>parseMemoryBackupReceipt(plan,update));
+  await assert.rejects(buildMemoryBackupPlan({sourceSha,profile:'native14-product54',attempt:'synthetic-wrong-runtime'}));
+ }finally{globalThis.fetch=original}
+});

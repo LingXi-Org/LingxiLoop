@@ -2,11 +2,12 @@ const presentationFormat='run-presentation-contract-host-release/v1',presentatio
 const traceFormat='run-trace-provenance-host-release/v1',traceMigration={version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'};
 import test from 'node:test'
 import {assertImageFailure,restoreImageSource} from './host-release-image-recovery.mjs'
-import {READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION53,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
+import {CASE_COVER_PACKAGE,READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION53,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
 import {createHostReleaseOperations} from './host-release-komodo.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,hash,sealHostPlan,runHostRelease,runImagePreparation} from './host-release.mjs'
 function fixture(fault={}){
+ if(fault.cover55||fault.same55)fault={...fault,producerV3:true};
  if(fault.producerV3)fault={...fault,producerV2:true};
  fault={...fault,image54:fault.image54||fault.runtimePatch||fault.producerV2}
  fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
@@ -48,6 +49,15 @@ function fixture(fault={}){
  if(fault.runtimePatch||fault.producerV2){const p=structuredClone(plan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');plan=sealHostPlan(p);Object.assign(target,p.target)}
  if(fault.producerV2){const p=structuredClone(plan);p.source.runtime='3.8.3';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.runtime='3.8.5';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.publicText.target.producer='purpose-json-v2';p.publicText.targetConfigurationSha256='d'.repeat(64);plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target)}
  if(fault.producerV3){const p=structuredClone(plan);p.source.runtime='3.8.5';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.target.runtime='3.8.7';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.7/fixture';p.publicText.source.producer='purpose-json-v2';p.publicText.target={reader:3,producer:'purpose-json-v3'};plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target)}
+ if(fault.cover55||fault.same55){
+  const p=structuredClone(plan);p.format=fault.same55?'product55-image-host-release/v1':'case-cover55-host-release/v1';
+  for(const d of [p.source,p.target])Object.assign(d,CASE_COVER_PACKAGE)
+  p.publicText.source=p.publicText.target={reader:3,producer:'purpose-json-v3'};p.publicText.sourceConfigurationSha256=p.publicText.targetConfigurationSha256;
+  p.target.productVersion=55;p.target.migrations.push({version:55,name:'case_covers',checksum:'609100abaddceeaba19d363962d6defbfae3276450a2fd660777d7efd4a66160'});
+  if(fault.same55){p.source.productVersion=55;p.source.migrations=structuredClone(p.target.migrations)}
+  else p.backup={...backup,format:2,profile:'native14-product54',source:{sha:p.source.sha,productVersion:54,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,p.source[k]])),migrations:p.source.migrations}};
+  plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target);if(fault.cover55)Object.assign(backup,p.backup);
+ }
  const containers=APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({
   stack,service,Id:String(i*2+j+1).repeat(64),Image:'sha256:'+(fault.sourceImageMismatch?'0':'f').repeat(64),
   Config:{Image:IMAGE+a,Env:['LINGXILOOP_COMMIT_SHA='+a,...((fault.reader||fault.producer||fault.trace)?['NODE_VERSION=22.23.4']:[]),'NODE_ENV=production','SECRET=private fixture never persist'],User:'node',Cmd:['npm','run',service==='worker'?'worker:start':'server:start']},
@@ -121,7 +131,7 @@ function fixture(fault={}){
   }
  }
  const sourceConfigurationProof=[...configs].map(([stack,d])=>({stack,id:d._id.$oid,configSha256:hash(JSON.stringify(d.config))}))
- const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,sourceConfigurationProof,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
+ const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,sourceConfigurationProof,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));if(fault.backupUnknown)throw Object.assign(Error('unknown backup'),{uncertain:true});return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
  return {plan,ops,calls,events,configs,actualFiles,files,containers,transport:t,sourceConfigurationProof,updates,run:()=>runHostRelease({plan,ops,onProgress})}
 }
 async function failedImageRelease(partial=false,runtimePatch=false,producerV2=false,producerV3=false){
@@ -140,7 +150,7 @@ for(const [partial,runtimePatch] of [[false,false],[true,false],[false,true]])te
  const calls=f.calls.slice(offset)
  assert.equal(calls.filter(c=>c.op==='StopStack').length,partial?1:0)
  assert.deepEqual(calls.filter(c=>c.op==='DeployStack').map(c=>c.stack+':'+c.services[0]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>a+':'+s)))
- assert.equal(calls.some(c=>c.op==='PullStack'||c.op==='SnapshotRestore'||c.op==='RunStackService'&&JSON.stringify(c.command).includes('migrate-bin')),false)
+ assert.equal(calls.some(c=>c.op==='PullStack'||c.op==='SnapshotRestore'||c.op==='RunStackService'&&JSON.stringify(c.command??[]).includes('migrate-bin')),false)
  assert.ok(APPS.every(s=>f.actualFiles.get(s)===f.files.get(s).source&&f.configs.get(s).config.commit===f.plan.stacks[0].source.commit))
  assert.ok(result.containers.every(c=>c.source===f.plan.source.sha&&c.healthy))
  const after=f.calls.length;await assert.rejects(f.restore());assert.equal(f.calls.slice(after).some(c=>['StopStack','DeployStack','WriteStackFileContents','UpdateStack'].includes(c.op)),false)
@@ -376,4 +386,31 @@ test('v3 pre-CAS source restoration requires the original v2 package, options an
  const committed=await failedImageRelease(true,true,false,true),offset=committed.calls.length;
  await assert.rejects(committed.restore(),/unchanged source provenance/);
  assert.equal(committed.calls.slice(offset).some(c=>['DeployStack','StopStack','WriteStackFileContents','UpdateStack'].includes(c.op)),false);
+});
+
+test('cover55 native calls require a fresh backup and keep full configuration, reader3 and ordered first identities',async()=>{
+ const f=fixture({cover55:true});
+ await assert.rejects(f.ops.migrate());assert.equal(f.calls.some(c=>JSON.stringify(c.command??[]).includes('migrate-bin')),false);
+ const result=await f.run();assert.equal(result.state.product,55);assert.equal(result.publicText.reader,3);
+ const backup=f.calls.findIndex(c=>c.op==='SnapshotRestore'),migration=f.calls.findIndex(c=>JSON.stringify(c.command??[]).includes('migrate-bin'));
+ assert.ok(backup>=0&&migration>backup);assert.equal(f.calls.filter(c=>c.op==='SnapshotRestore').length,1);
+ const job=f.calls[migration];assert.equal(Object.hasOwn(job,'env'),false);assert.match(JSON.stringify(job.command),/\\"publicText\\":3/);
+ assert.equal(f.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin')).length,1);await assert.rejects(f.ops.migrate());
+ assert.deepEqual(f.calls.filter(c=>c.op==='StopStack').map(c=>[c.stack,c.services[0],c.stop_time]),['worker','lingxiloop'].flatMap(s=>APPS.map(a=>[a,s,150])));
+ assert.deepEqual(f.calls.filter(c=>c.op==='DeployStack').map(c=>[c.stack,c.services[0]]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>[a,s])));
+ assert.equal(f.events.filter(e=>e.status==='observed').length,4);assert.equal(f.calls.some(c=>c.op==='PullStack'),false);
+});
+test('cover55 rejects source configuration drift and backup ambiguity before migration',async()=>{
+ const f=fixture({cover55:true});f.configs.get(APPS[0]).config.environment='changed';await assert.rejects(f.run());
+ assert.equal(f.calls.some(c=>['StopStack','DeployStack','SnapshotRestore','WriteStackFileContents','UpdateStack'].includes(c.op)),false);
+ const bound=fixture({cover55:true,bound:true});await assert.rejects(bound.run());assert.equal(bound.calls.some(c=>c.op==='SnapshotRestore'||JSON.stringify(c.command??[]).includes('migrate-bin')),false);
+ const backup=fixture({cover55:true,backupUnknown:true});await assert.rejects(backup.run(),e=>e.uncertain);assert.equal(backup.calls.some(c=>JSON.stringify(c.command??[]).includes('migrate-bin')),false);assert.equal(backup.events.at(-1).recovery,'unknown');
+ const unknown=fixture({cover55:true,migrationUnknown:true});await assert.rejects(unknown.run(),e=>e.uncertain);
+ assert.equal(unknown.events.at(-1).recovery,'unknown');assert.equal(unknown.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin')).length,1);
+ assert.equal(unknown.calls.some(c=>c.op==='DeployStack'),false);
+});
+test('same55 native calls have no backup or migration and require observed health identity',async()=>{
+ const f=fixture({same55:true});await assert.rejects(f.ops.verifyHealthy(APPS[0],'lingxiloop'));
+ await f.run();assert.equal(f.calls.some(c=>c.op==='SnapshotRestore'||JSON.stringify(c.command??[]).includes('migrate-bin')),false);
+ assert.equal(f.events.filter(e=>e.status==='observed').length,4);await assert.rejects(f.ops.migrate());
 });

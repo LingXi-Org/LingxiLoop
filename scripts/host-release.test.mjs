@@ -3,7 +3,7 @@ const traceFormat='run-trace-provenance-host-release/v1',traceMigration={version
 import test from 'node:test'
 import {continueStoppedRelease} from './host-release-stopped-recovery.mjs'
 import {restoreImageSource} from './host-release-image-recovery.mjs'
-import {READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION53,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
+import {CASE_COVER_PACKAGE,READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION53,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
 import {sealHostPlan,assertSameSchema,assertWorkerBarrier,assertImageIdentity,validateHostPlanShape,runHostRelease,runImagePreparation} from './host-release.mjs'
@@ -26,6 +26,7 @@ const targetRef={commit:next,branch:'release/target',sha256:'d'.repeat(64),autoP
 const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:hash,qualification:{commit:next,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/123'},stacks:[...apps,core].map((stack,i)=>({stack,server:i===1?'shanghai-b':'shanghai-a',source:sourceRef,target:i===2?sourceRef:targetRef,...(i!==2?{preparation:{commit:next,sha256:'e'.repeat(64)}}:{})}))})
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
+ if(fault.cover55||fault.same55)fault={...fault,producerV3:true};
  if(fault.producerV3)fault={...fault,producerV2:true};
  fault={...fault,image54:fault.image54||fault.runtimePatch||fault.producerV2}
  fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
@@ -45,6 +46,15 @@ function fixture(fault={}){
  if(fault.runtimePatch||fault.producerV2){const p=structuredClone(releasePlan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');releasePlan=sealHostPlan(p)}
  if(fault.producerV2){const p=structuredClone(releasePlan);p.source.runtime='3.8.3';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.runtime='3.8.5';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.publicText.target.producer='purpose-json-v2';p.publicText.targetConfigurationSha256='d'.repeat(64);releasePlan=sealHostPlan(p)}
  if(fault.producerV3){const p=structuredClone(releasePlan);p.source.runtime='3.8.5';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.target.runtime='3.8.7';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.7/fixture';p.publicText.source.producer='purpose-json-v2';p.publicText.target={reader:3,producer:'purpose-json-v3'};releasePlan=sealHostPlan(p)}
+ if(fault.cover55||fault.same55){
+  const p=structuredClone(releasePlan);p.format=fault.same55?'product55-image-host-release/v1':'case-cover55-host-release/v1';
+  for(const d of [p.source,p.target])Object.assign(d,CASE_COVER_PACKAGE)
+  p.publicText.source=p.publicText.target={reader:3,producer:'purpose-json-v3'};p.publicText.sourceConfigurationSha256=p.publicText.targetConfigurationSha256;
+  p.target.productVersion=55;p.target.migrations.push({version:55,name:'case_covers',checksum:'609100abaddceeaba19d363962d6defbfae3276450a2fd660777d7efd4a66160'});
+  if(fault.same55){p.source.productVersion=55;p.source.migrations=structuredClone(p.target.migrations)}
+  else p.backup={...nativeBackup(),format:2,profile:'native14-product54',source:{sha:p.source.sha,productVersion:54,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,p.source[k]])),migrations:p.source.migrations}};
+  releasePlan=sealHostPlan(p);
+ }
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
  let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0,migrated=false
  const ops={
@@ -54,10 +64,11 @@ function fixture(fault={}){
   async verifyImages(which='target'){trace.push('images:'+which);if(fault.image&&which==='target')throw Error('missing image')},
   async stage(stack){trace.push('stage:'+stack);staged++;if(fault.stage&&staged===2)throw Object.assign(Error('unknown'),{uncertain:true})},
   async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...((fault.reader||fault.producer||fault.trace)?{publicText:fault.wrongV3Capability?2:releasePlan.publicText.target.reader,deployment:{...releasePlan.publicText.target,...(fault.producerLeak?{producer:'purpose-json-v1'}:{})},configurationSha256:releasePlan.publicText.targetConfigurationSha256,modelOptions:fault.producerV2?{publicTextProtocol:fault.wrongV2Options?'purpose-json-v1':releasePlan.publicText.target.producer}:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:1}:{})}:{}),...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
+  async bindingPrecheck(){trace.push('binding-precheck');if(fault.bound)throw Error('bound/checkpoint runs');return {incompatibleRuns:0}},
   async patchPrecheck(){trace.push('patch-precheck');if(fault.bound)throw Error('incompatible old runs');return {incompatibleRuns:0}},
   async patchProvenance(){trace.push('patch');if(fault.patchUnknown)throw Object.assign(Error('unknown patch'),{uncertain:true});if(fault.patchFailed)throw Error('patch failed');migrated=true;if(fault.patchCommittedFailure)throw Error('patch committed before failure')},
   async seedPrecheck(){trace.push('seed');if(fault.seedUnknown)throw Object.assign(Error('unknown seed'),{uncertain:true});if(fault.seed)throw Error('seed drift');return {equal:true}},
-  async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
+  async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...(fault.cover55?{source:releasePlan.backup.source,attempt:releasePlan.backup.attempt,commandHash:releasePlan.backup.commandHash}:{}),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
   async migrate(){trace.push('migrate');if(fault.migrationUnknown)throw Object.assign(Error('unknown migration'),{uncertain:true});if(fault.migrationFailed)throw Error('migration failed');migrated=true;if(fault.migrationCommittedFailure)throw Error('migration committed before failure')},
   async stop(stack,service){trace.push('stop:'+stack+':'+service);stops++;if(fault.stopUnknown)throw Object.assign(Error('unknown'),{uncertain:true});const row=rows.find(x=>x.stack===stack&&x.service===service);if(!fault.stillRunning){row.running=false;row.pid=0}},
   async deploy(stack,service){trace.push('deploy:'+stack+':'+service);deployed++;if(fault.deployUnknown)throw Object.assign(Error('unknown'),{uncertain:true});const row=rows.find(x=>x.stack===stack&&x.service===service);Object.assign(row,{source:next,id:'f'+row.id.slice(1),running:true,pid:2});if(fault.policy)row.policy.readOnly=!row.policy.readOnly},
@@ -477,4 +488,36 @@ test('v3 release refuses stale capability/binding before downtime and retains un
   if(fault.patchUnknown)assert.equal(f.trace.at(-1),'patch');
  }
  const replaced=fixture({producerV3:true,replacedTarget:true});await assert.rejects(replaced.run());assert.equal(replaced.trace.filter(x=>x.startsWith('deploy:')).length,1);
+});
+
+
+test('cover55 upgrade requires the actual55 checksum, exact54 prefix/package, v3 and fresh source backup',()=>{
+ const p=fixture({cover55:true}).plan;assert.doesNotThrow(()=>validateHostPlanShape(p));
+ for(const change of [q=>q.target.runtime='3.8.13',q=>q.target.migrations[54].checksum='0'.repeat(64),q=>q.target.migrations[0].checksum='0'.repeat(64),q=>q.target.productVersion=54,q=>q.target.migrations.pop(),q=>q.target.schema=15,q=>q.target.protocol=12,q=>q.target.integrity+='a',q=>q.publicText.target.reader=2,q=>q.publicText.source.producer='purpose-json-v2',q=>q.publicText.targetConfigurationSha256='0'.repeat(64),q=>q.backup.profile='native13-product49',q=>q.backup.source.productVersion=53,q=>q.format='product54-image-host-release/v1']){const q=structuredClone(p);change(q);assert.throws(()=>validateHostPlanShape(sealHostPlan(q)),String(change))}
+});
+test('cover55 upgrade prepares online, expires leases, backs up once, migrates once then both Webs before Workers',async()=>{
+ const f=fixture({cover55:true}),read=f.ops.state;let leases=0;
+ f.ops.state=async()=>{const s=await read();return f.trace.filter(x=>x.startsWith('stop:')).length===4&&!f.trace.includes('backup')&&leases++<2?{...s,liveWork:1}:s};
+ await f.prepare();assert.equal(f.trace.some(x=>x.startsWith('stop:')),false);f.trace.length=0;f.events.length=0;
+ const result=await f.run();assert.equal(result.state.product,55);assert.equal(result.state.runtime,'3.8.12');assert.equal(result.runTrace,1);
+ assert.equal(f.trace.filter(x=>x==='backup').length,1);assert.equal(f.trace.filter(x=>x==='migrate').length,1);assert.equal(f.trace.includes('seed'),false);
+ assert.ok(f.trace.indexOf('binding-precheck')<f.trace.indexOf('backup'));assert.ok(f.trace.indexOf('binding-precheck')>f.trace.findLastIndex(x=>x.startsWith('stop:')));assert.ok(f.trace.indexOf('backup')<f.trace.indexOf('migrate'));assert.equal(f.events.filter(e=>e.status==='waiting-for-lease-expiry').length,2);
+ const backup=f.events.findIndex(e=>e.phase==='backup');assert.equal(f.events.slice(0,backup).filter(e=>e.status==='zero-leases').length,2);
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)));
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)));
+ assert.equal(f.events.filter(e=>e.status==='observed').length,4);
+});
+test('cover55 backup/unknown failures never migrate or replay; committed55 is fix-forward and refuses54 retry',async()=>{
+ for(const fault of [{bound:true},{badBackup:true},{backupUnknown:true},{migrationUnknown:true},{migrationCommittedFailure:true}]){
+  const f=fixture({cover55:true,...fault});await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);
+  if(fault.bound||fault.badBackup||fault.backupUnknown)assert.equal(f.trace.includes('migrate'),false);
+  if(fault.bound)assert.equal(f.trace.includes('backup'),false);
+  if(fault.migrationUnknown){assert.equal(f.trace.at(-1),'migrate');assert.equal(f.events.at(-1).recovery,'unknown')}
+  if(fault.migrationCommittedFailure){assert.equal(f.events.at(-1).recovery,'fix-forward');f.trace.length=0;await assert.rejects(restoreImageSource({plan:f.plan,receipt:{mode:f.plan.format,planHash:f.plan.planHash,complete:false,events:f.events},ops:f.ops}));assert.deepEqual(f.trace,[]);await assert.rejects(f.run());assert.equal(f.trace.includes('migrate'),false)}
+ }
+});
+test('same55 followup retains full inventory and observed first identities without migration or backup',async()=>{
+ const f=fixture({same55:true});await f.run();assert.equal(f.trace.some(x=>['migrate','backup','patch','seed'].includes(x)),false);assert.equal(f.events.filter(e=>e.status==='observed').length,4);
+ const bad=structuredClone(f.plan);bad.target.migrations[54].checksum='0'.repeat(64);assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)));
+ const replaced=fixture({same55:true,replacedTarget:true});await assert.rejects(replaced.run());assert.equal(replaced.trace.filter(x=>x.startsWith('deploy:')).length,1);
 });

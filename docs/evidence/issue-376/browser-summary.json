@@ -1,0 +1,35 @@
+{
+  "scope": "synthetic saved article, real local signed gateway authentication, API/Postgres assets, production CaseCover component and native WASM Workers",
+  "officialFlow": {
+    "tests": 1,
+    "passed": 1,
+    "durationSeconds": 4.57
+  },
+  "before": {
+    "jobs": 1,
+    "assets": 1,
+    "paidLlmCalls": 2
+  },
+  "after": {
+    "jobs": 1,
+    "assets": 1,
+    "paidLlmCalls": 2
+  },
+  "pointerChangedGeometry": true,
+  "pointerTypes": [
+    "mouse",
+    "touch"
+  ],
+  "workersCreated": 3,
+  "workersTerminated": 3,
+  "actualElementVisibilityStoppedWorker": true,
+  "actualFineHoverVerified": false,
+  "actualBackgroundTabVerified": false,
+  "responsiveReducedMotionWidths": [
+    300,
+    400
+  ],
+  "scopeChangeAndHistoryReopen": true,
+  "newProviderRequests": 0,
+  "productionChanged": false
+}

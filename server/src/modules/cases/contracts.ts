@@ -23,3 +23,10 @@ export const caseFileSchema = z.object({
 }).strict()
 export type CaseContent = z.infer<typeof caseContentSchema>
 export interface CaseScope { companyId: string; userId: string }
+
+export const caseCoverRetrySchema = z.object({
+  snapshot:z.enum(['draft','published']).default('draft'), fingerprint:z.string().regex(/^[a-f0-9]{64}$/),
+  expectedGeneration:z.number().int().positive(),idempotencyKey:z.string().min(1).max(160),
+}).strict()
+export const caseCoverBackfillSchema = z.object({ afterId:z.string().max(200).default(''),limit:z.number().int().min(1).max(50).default(25) }).strict()
+export const caseCoverAssetSchema = z.object({ snapshot:z.enum(['draft','published']),generation:z.coerce.number().int().positive(),kind:z.enum(['preview','interactive']) })

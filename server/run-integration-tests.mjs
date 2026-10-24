@@ -3,7 +3,7 @@
  * Requires a dedicated real Postgres test database and explicit Redis URL.
  * These tests TRUNCATE their database and remain serialized.
  */
-import { partitionMigrationTests, runHistoricalMigrationTests, runTestChild } from './run-historical-migration-tests.mjs'
+import { partitionMigrationTests, runHistoricalMigrationTests, runProduct54MigrationTests, runTestChild } from './run-historical-migration-tests.mjs'
 import { readdirSync, mkdirSync, writeFileSync } from 'node:fs'
 import { parseIntegrationArgs, selectIntegrationFiles } from './integration-suite.mjs'
 import { fileURLToPath } from 'node:url'
@@ -103,11 +103,18 @@ for (const name of groups.current) {
   console.log(`[integration file] ${name} duration_ms=${durationMs} exit=${exitCode}`)
   if (exitCode !== 0) { code = exitCode; break }
 }
+if (!code && groups.patch54.length) {
+  const begin = performance.now()
+  console.log(`[integration product54] ${groups.patch54.length} file(s) using the actual current formal package and frozen54 prefix`)
+  try { code = await runProduct54MigrationTests(join(here, '..'), groups.patch54) }
+  catch (error) { console.error('[integration product54] '+String(error.message).split('\n')[0].slice(0,240)); code = 1 }
+  records.push({ files: groups.patch54, runtime: 'current', productFixture: 54, durationMs: Math.round(performance.now() - begin), exitCode: code })
+}
 if (!code && groups.historical.length) {
   const begin = performance.now()
   console.log(`[integration historical] ${groups.historical.length} file(s) using the exact formal 3.8.2 fixture`)
   try { code = await runHistoricalMigrationTests(join(here, '..'), groups.historical) }
-  catch { console.error('[integration historical] fixture execution failed; tests were not skipped'); code = 1 }
+  catch (error) { console.error('[integration historical] '+String(error.message).split('\n')[0].slice(0,240)); code = 1 }
   records.push({ files: groups.historical, runtime: '3.8.2', durationMs: Math.round(performance.now() - begin), exitCode: code })
 }
 const report = {

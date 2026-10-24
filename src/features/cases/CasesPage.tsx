@@ -14,6 +14,9 @@ import { ContentEditor, ContentDocumentView } from '@/features/content-editor'
 import { useAuth } from '@/stores/auth'
 import { userFacingError } from '@/lib/userFacingError'
 import { casesApi, type CaseArticle, type CaseInput, type CaseList } from './api'
+import { CaseCover, caseCoverIdentity, caseCoverPending } from './CaseCover'
+import { mergeCaseCoverMetadata } from './cover/polling'
+import { useCaseCoverPolling } from './cover/useCaseCoverPolling'
 
 const empty: CaseInput = { title: '', summary: '', body: '', cover: null, category: '', tags: [] }
 const statusLabels = { draft: '草稿', published: '已发布', unpublished: '已下架' }
@@ -36,6 +39,7 @@ function Markdown({ body }: { body: string }) {
 
 export function CasesPage() {
   const companyId = useAuth(state => state.activeCompanyId)
+  const userId = useAuth(state => state.user?.id)
   const [id, setId] = useState(routeId)
   const [list, setList] = useState<CaseList>({ items: [], categories: [], canManage: false })
   const [article, setArticle] = useState<CaseArticle | null>(null)
@@ -48,6 +52,7 @@ export function CasesPage() {
   const [editing, setEditing] = useState(false)
   const [input, setInput] = useState<CaseInput>(empty)
   const [busy, setBusy] = useState(false)
+  const [backfillCursor, setBackfillCursor] = useState<string | null>('')
   const [preview, setPreview] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const operationEpoch = useRef(0)
@@ -56,7 +61,13 @@ export function CasesPage() {
   const adoptedId = useRef<string | null>(null)
   const skipFocus = useRef(false)
   const currentScope = useRef(companyId)
-  useEffect(() => { currentScope.current = companyId; return () => { currentScope.current = null; operationEpoch.current += 1 } }, [companyId])
+  useEffect(() => {
+    currentScope.current = companyId
+    mutationPending.current = false; setBusy(false); setEditing(false); setPreview(false); setInput(empty)
+    setBackfillCursor(''); setNotice('')
+    setArticle(null); setList({ items: [], categories: [], canManage: false })
+    return () => { currentScope.current = null; operationEpoch.current += 1 }
+  }, [companyId, userId])
   const navigate = (next?: string) => {
     operationEpoch.current += 1
     mutationPending.current = false; setBusy(false)
@@ -80,7 +91,7 @@ export function CasesPage() {
       void request.catch(reason => { if (!abort.signal.aborted) { setError(userFacingError(reason, '案例暂时无法加载，请重试。')); if (!id) setList(value => ({ ...value, items: [] })) } }).finally(() => { if (!abort.signal.aborted) setLoading(false) })
     }, id ? 0 : 200)
     return () => { abort.abort(); window.clearTimeout(timer) }
-  }, [id, search, category, revision])
+  }, [id, search, category, revision, companyId, userId])
   useEffect(() => { if (skipFocus.current) { skipFocus.current = false; return }; heading.current?.focus({ preventScroll: true }) }, [id])
   const beginEdit = () => { setInput(article ? { title: article.title, summary: article.summary, body: article.body, editorDocument: article.editorDocument, summaryDocument: article.summaryDocument, cover: article.cover, category: article.category, tags: article.tags } : { ...empty }); setEditing(true); setPreview(false); setNotice(''); setError('') }
   // Navigation invalidates completions; a settled request must never mutate a new page.
@@ -129,6 +140,52 @@ export function CasesPage() {
     catch (reason) { if (operation.current()) setError(userFacingError(reason, '操作失败，请重试。')) }
     finally { operation.finish() }
   }
+  const retryCover = async (target: CaseArticle) => {
+    const operation = startMutation()
+    if (!operation) return
+    try {
+      const next = await casesApi.retryCover(target)
+      if (!operation.current()) return
+      setArticle(current => current?.id === target.id ? { ...current, generatedCover: next.generatedCover } : current)
+      setList(current => ({ ...current, items: current.items.map(item => item.id === target.id ? { ...item, generatedCover: next.generatedCover } : item) }))
+      setNotice('已提交封面重试，完成后自动更新。')
+    } catch (reason) {
+      if (operation.current()) setError(userFacingError(reason, '封面重试失败，请稍后再试。'))
+      throw reason
+    } finally { operation.finish() }
+  }
+  const backfillCovers = async () => {
+    if (id || editing || !list.canManage) return
+    const operation = startMutation()
+    if (!operation) return
+    try {
+      const result = await casesApi.backfillCovers(backfillCursor ?? '', 25)
+      if (!operation.current()) return
+      setBackfillCursor(result.nextAfterId)
+      setNotice(`本批检查 ${result.scanned} 篇，后台待生成 ${result.pending} 项。${result.nextAfterId ? '下一批请手动继续补齐。' : '历史案例已检查完成，可重新检查封面。'}`)
+      setRevision(value => value + 1)
+    } catch (reason) {
+      if (operation.current()) setError(userFacingError(reason, '历史封面检查失败，请稍后再试。'))
+    } finally { operation.finish() }
+  }
+  const coverScope = `${userId ?? ''}:${companyId ?? ''}`
+  const coverSources = id ? article ? [article] : [] : list.items
+  useCaseCoverPolling<CaseArticle | CaseList>({
+    scopeKey: JSON.stringify([coverScope, id, search, category, coverSources.map(item => [item.id, caseCoverIdentity(item.generatedCover)])]),
+    pending: !loading && !busy && !editing && coverSources.some(item => caseCoverPending(item.generatedCover)),
+    refresh: signal => id ? casesApi.detail(id, signal) : casesApi.list(search, category, signal),
+    receive: value => {
+      if (useAuth.getState().activeCompanyId !== companyId || useAuth.getState().user?.id !== userId) return false
+      if ('items' in value) {
+        const incoming = new Map(value.items.map(item => [item.id, item]))
+        setList(current => ({ ...current, items: current.items.map(item => incoming.has(item.id) ? mergeCaseCoverMetadata(item, incoming.get(item.id)!) : item) }))
+        return coverSources.some(item => incoming.has(item.id) && caseCoverPending(mergeCaseCoverMetadata(item, incoming.get(item.id)!).generatedCover))
+      }
+      if (!article || article.id !== value.id) return false
+      setArticle(current => current ? mergeCaseCoverMetadata(current, value) : current)
+      return caseCoverPending(mergeCaseCoverMetadata(article, value).generatedCover)
+    },
+  })
   const uploadAsset = async (file: File, cover = false): Promise<string> => {
     if (!input.title.trim()) throw new Error('请先填写案例标题。')
     if (file.size > 8 * 1024 * 1024) throw new Error('附件最大为 8 MB。')
@@ -164,7 +221,9 @@ export function CasesPage() {
   const body = (value: CaseInput) => usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument}/> : <Markdown body={value.body}/>
   const hero = content && <div data-case-hero className="case-hero">
     <div className="case-cover">
-      {content.cover ? <img src={content.cover} alt={editing ? '案例封面预览' : ''}/> : <div className="case-no-cover"><BookImage aria-hidden="true"/><span>{editing ? '添加案例封面' : '暂无封面'}</span></div>}
+      {article?.generatedCover && !editing ? <CaseCover cover={article.generatedCover} fallbackUrl={content.cover} title={content.title} scopeKey={`${coverScope}:${article.id}`}
+        className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRetry={article.canManage ? () => retryCover(article) : undefined}/>
+        : content.cover ? <img src={content.cover} alt={editing ? '案例封面预览' : ''}/> : <div className="case-no-cover"><BookImage aria-hidden="true"/><span>{editing ? '添加案例封面' : '暂无封面'}</span></div>}
       {editing && !preview && <div className="case-cover-actions">
         {input.cover && <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setInput(value => ({...value, cover: null}))}>移除封面</Button>}
         <label className="case-cover-upload" aria-disabled={busy || !input.title.trim()}>
@@ -199,7 +258,10 @@ export function CasesPage() {
         <h1 ref={heading} tabIndex={-1} className={detail ? 'sr-only' : 'case-library-title'}>案例库</h1>
         {detail && <Button variant="ghost" disabled={busy} onClick={() => navigate()}><ArrowLeft className="size-4"/>返回案例库</Button>}
         <div className="ms-auto flex flex-wrap items-center justify-end gap-3">
-          {!detail && list.canManage && <Button onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>}
+          {!detail && list.canManage && <>
+            <Button variant="outline" disabled={busy || loading} aria-describedby="case-backfill-help" onClick={() => void backfillCovers()}>{backfillCursor === null ? '重新检查封面' : backfillCursor ? '继续补齐' : '补齐历史封面'}</Button>
+            <Button disabled={busy} onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>
+          </>}
           {editing && canManage ? <>
             <span className="text-sm text-muted-foreground">草稿</span>
             <Button type="submit" form="case-edit-form" variant="outline" disabled={invalid}>保存草稿</Button>
@@ -216,6 +278,7 @@ export function CasesPage() {
           </>}
         </div>
       </header>
+      {!detail && list.canManage && <p id="case-backfill-help" className="case-notice text-sm text-muted-foreground">每批检查 25 篇历史案例，新封面在后台生成。</p>}
       {error && <div role="alert" className="case-notice text-destructive">{error}<Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button></div>}
       {notice && <p role="status" className="case-notice">{notice}</p>}
       {!detail && <div className="case-library-filters">
@@ -241,8 +304,10 @@ export function CasesPage() {
         <div className="case-body-divider"><div data-case-body className="case-body">{body(article)}</div></div>
       </article> : !id ? <>
         <div data-case-grid className="case-grid">{list.items.map(item => <article key={item.id}>
+          <div className="case-grid-cover relative">{item.generatedCover ? <CaseCover cover={item.generatedCover} fallbackUrl={item.cover} title={item.title} scopeKey={`${coverScope}:${item.id}`}
+            className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" onRetry={item.canManage ? () => retryCover(item) : undefined}/>
+            : item.cover ? <img src={item.cover} alt="" loading="lazy"/> : <div className="case-no-cover"><BookImage aria-hidden="true"/><span>暂无封面</span></div>}</div>
           <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="case-grid-link">
-            <div className="case-grid-cover">{item.cover ? <img src={item.cover} alt="" loading="lazy"/> : <div className="case-no-cover"><BookImage aria-hidden="true"/><span>暂无封面</span></div>}</div>
             <div className="case-grid-meta"><time dateTime={item.publishedAt ?? item.createdAt ?? item.updatedAt}>{date(item)}</time><span>·</span><span>{item.category || '未分类'}</span>{list.canManage && item.status !== 'published' && <span>{statusLabels[item.status]}</span>}</div>
             <h2>{item.title}</h2><p>{markdownText(item.summary)}</p>
           </a>

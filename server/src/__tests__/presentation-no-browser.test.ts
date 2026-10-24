@@ -22,5 +22,13 @@ test('presentation generation and validation never launch a real browser', () =>
 
   assert.doesNotMatch(moduleSource, /(?:puppeteer|chromium|launchPersistentContext)/i)
   assert.equal(productionDependencies.puppeteer, undefined)
-  assert.doesNotMatch(serverImage, /(?:puppeteer|chromium)/i)
+  // Presentation generation stays browser-free. Hairline covers now need a
+  // separately isolated first-frame renderer in this shared Worker image.
+  assert.doesNotMatch(serverImage, /puppeteer/i)
+  assert.match(serverImage, /ARG CASE_COVER_CHROMIUM_VERSION=156\.0\.8078\.47-1~deb12u1/)
+  assert.match(serverImage, /chromium=\$\{CASE_COVER_CHROMIUM_VERSION\}/)
+  const coverRenderer = readFileSync(path.join(repositoryRoot, 'server/src/modules/case-covers/cover-renderer.ts'), 'utf8')
+  assert.match(coverRenderer, /--unshare-all/)
+  assert.match(coverRenderer, /--clearenv/)
+  assert.doesNotMatch(coverRenderer, /--no-sandbox|--disable-setuid-sandbox/)
 })

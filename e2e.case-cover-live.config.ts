@@ -1,0 +1,3 @@
+import {web} from '@e2e-dev/web'
+import type {E2EConfig} from 'e2e'
+export default{projectId:'376-real-saved-cover',tests:['e2e/case-cover/live-assets.e2e.ts'],targets:[{name:'web',engine:web({browser:'chromium',viewport:{width:400,height:900},locale:'zh-CN',connect:{cdpEndpoint:()=>process.env.E2E_CASE_COVER_CDP_URL??'http://127.0.0.1:9337'}}),app:{url:'http://127.0.0.1:5290/scripts/case-cover-live-fixture.html',command:{executable:'python3',args:['scripts/run-case-cover-live-fixture.py'],startupTimeout:30000,log:'.e2e/cover-live/server.log'}}}],workers:1,retries:0,timeout:60000,assertionTimeout:10000,output:'.e2e/cover-live/results',trace:'off',video:'off',reporters:['list','markdown','junit']} satisfies E2EConfig

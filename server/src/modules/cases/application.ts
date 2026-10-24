@@ -1,3 +1,5 @@
+import { queueCaseCover, cancelUnneededCaseCovers, listCaseCoverDescriptors } from './cover-repository.js'
+import type { CoverSnapshotKind } from './cover-contracts.js'
 import { documentFileUrls } from '../content-editor/contracts.js'
 import { randomUUID } from 'node:crypto'
 import { fromMarkdown } from 'mdast-util-from-markdown'
@@ -108,14 +110,18 @@ export class CasesApplication {
       FROM organization_cases c LEFT JOIN knowledge_sources s ON s.id=c.source_id AND s.deleted_at IS NULL
       JOIN users u ON u.id=c.created_by
       WHERE c.company_id=$1 AND ($2 OR c.status='published') ORDER BY c.updated_at DESC`, [scope.companyId,canManage])
-    const all = rows.map(c => payload(c,canManage))
+    const covers = await listCaseCoverDescriptors(this.db,scope.companyId,rows.map(c => c.id),canManage?'draft':'published',canManage)
+    const all = rows.map(c => ({ ...payload(c,canManage), generatedCover:covers.get(c.id) ?? null }))
     const q = query.trim().toLocaleLowerCase()
     return { items: all.filter(c => (!category || c.category === category) && (!q || [c.title,c.summary,c.body,c.category,...c.tags].join(' ').toLocaleLowerCase().includes(q))),
       categories: [...new Set(all.map(c => c.category).filter(Boolean))].sort(), canManage }
   }
   async detail(scope: CaseScope, id: string) {
     const context = await access(this.db,scope)
-    return payload(await row(this.db,scope,id),context.companyMembership.role === 'TEACHER')
+    const canManage = context.companyMembership.role === 'TEACHER'
+    const c = payload(await row(this.db,scope,id),canManage)
+    const covers = await listCaseCoverDescriptors(this.db,scope.companyId,[id],canManage?'draft':'published',canManage)
+    return { ...c,generatedCover:covers.get(id) ?? null }
   }
   async create(scope: CaseScope, content: CaseContent) {
     const id = `case-${randomUUID()}`
@@ -123,6 +129,7 @@ export class CasesApplication {
       await access(db,scope,true,true)
       await validateImages(db,scope,id,content)
       await db.query(`INSERT INTO organization_cases(id,company_id,created_by,draft) VALUES($1,$2,$3,$4::jsonb)`, [id,scope.companyId,scope.userId,JSON.stringify(content)])
+      await queueCaseCover(db,scope,id,'draft',content)
     })
     return this.detail(scope,id)
   }
@@ -132,6 +139,8 @@ export class CasesApplication {
       const c = await row(db,scope,id,true); checkVersion(c,version)
       await validateImages(db,scope,id,content)
       await db.query(`UPDATE organization_cases SET draft=$2::jsonb,version=version+1,updated_at=NOW() WHERE id=$1`, [id,JSON.stringify(content)])
+      await queueCaseCover(db,scope,id,'draft',content)
+      await cancelUnneededCaseCovers(db,scope.companyId,id)
     })
     return this.detail(scope,id)
   }
@@ -152,6 +161,9 @@ export class CasesApplication {
         [sourceId,scope.companyId,id,nextVersion,c.draft.title,Buffer.byteLength(text),key,`/cases/${encodeURIComponent(id)}?company=${encodeURIComponent(scope.companyId)}`,scope.userId])
       await db.query(`INSERT INTO knowledge_source_jobs(id,source_id) VALUES($1,$2)`, [`ksj-${randomUUID()}`,sourceId])
       await db.query(`UPDATE organization_cases SET published=draft,status='published',published_version=$2,version=$2,source_id=$3,published_at=NOW(),updated_at=NOW() WHERE id=$1`, [id,nextVersion,sourceId])
+      await queueCaseCover(db,scope,id,'draft',c.draft)
+      await queueCaseCover(db,scope,id,'published',c.draft)
+      await cancelUnneededCaseCovers(db,scope.companyId,id)
     })
     return this.detail(scope,id)
   }
@@ -161,6 +173,7 @@ export class CasesApplication {
       const c = await row(db,scope,id,true); checkVersion(c,version)
       await invalidate(db,c.source_id)
       await db.query(`UPDATE organization_cases SET status='unpublished',source_id=NULL,version=version+1,updated_at=NOW() WHERE id=$1`, [id])
+      await cancelUnneededCaseCovers(db,scope.companyId,id,true)
     })
     return this.detail(scope,id)
   }
@@ -184,6 +197,68 @@ export class CasesApplication {
       )
     })
     return this.detail(scope,id)
+  }
+  async retryCover(scope: CaseScope, id: string, kind: CoverSnapshotKind, fingerprint: string, expectedGeneration: number, idempotencyKey = `${fingerprint}:${expectedGeneration}`) {
+    await this.infrastructure.transaction(async db => {
+      await access(db,scope,true,true)
+      const c = await row(db,scope,id,true)
+      if (kind==='published' && c.status!=='published') throw new HttpError(404,'case not found')
+      const { rows } = await db.query<{ id:string; fingerprint:string; generation:number; retry_key:string|null; retry_expected_generation:number|null }>(`
+        SELECT j.* FROM organization_case_cover_targets t JOIN organization_case_cover_jobs j ON j.id=t.job_id
+        WHERE t.case_id=$1 AND t.company_id=$2 AND t.snapshot_kind=$3 FOR UPDATE OF j`, [id,scope.companyId,kind])
+      const job = rows[0]
+      if (!job || job.fingerprint!==fingerprint) throw new HttpError(409,'封面内容已更新，请刷新后重试')
+      if (job.retry_key===idempotencyKey) {
+        if (job.retry_expected_generation===expectedGeneration && job.generation===expectedGeneration+1) return
+        throw new HttpError(409,'封面重试请求已过期，请刷新后重试')
+      }
+      if (job.generation!==expectedGeneration) throw new HttpError(409,'封面已更新，请刷新后重试')
+      await db.query(`UPDATE organization_case_cover_jobs SET generation=generation+1,status='pending',attempts=0,
+        available_at=NOW(),lease_token=NULL,leased_until=NULL,failure_category=NULL,requested_by=$2,retry_key=$3,
+        retry_expected_generation=$4,updated_at=NOW() WHERE id=$1`, [job.id,scope.userId,idempotencyKey,expectedGeneration])
+    })
+    return this.detail(scope,id)
+  }
+  async backfillCovers(scope: CaseScope, afterId = '', limit = 25) {
+    const boundedLimit = Math.max(1,Math.min(50,Math.trunc(limit)||25))
+    return this.infrastructure.transaction(async db => {
+      await access(db,scope,true,true)
+      const { rows } = await db.query<CaseRow>(`SELECT * FROM organization_cases WHERE company_id=$1 AND id>$2 ORDER BY id LIMIT $3 FOR UPDATE`, [scope.companyId,afterId,boundedLimit])
+      for (const c of rows) {
+        await queueCaseCover(db,scope,c.id,'draft',c.draft)
+        if (c.status==='published' && c.published) await queueCaseCover(db,scope,c.id,'published',c.published)
+        await cancelUnneededCaseCovers(db,scope.companyId,c.id)
+      }
+      const counts = await db.query<{ pending:string; succeeded:string; failed:string; cancelled:string }>(`
+        SELECT COUNT(*) FILTER(WHERE status IN ('pending','generating'))::text AS pending,
+          COUNT(*) FILTER(WHERE status='ready')::text AS succeeded, COUNT(*) FILTER(WHERE status='failed')::text AS failed,
+          COUNT(*) FILTER(WHERE status='cancelled')::text AS cancelled FROM organization_case_cover_jobs WHERE company_id=$1`, [scope.companyId])
+      const count = counts.rows[0]!
+      return { scanned:rows.length,nextAfterId:rows.length===boundedLimit?rows.at(-1)!.id:null,
+        pending:Number(count.pending),succeeded:Number(count.succeeded),failed:Number(count.failed),cancelled:Number(count.cancelled) }
+    })
+  }
+  async coverAsset(scope: CaseScope, id: string, jobId: string, generation: number, assetKind: 'preview'|'interactive', snapshot: CoverSnapshotKind) {
+    // Hold membership and case locks through the bounded read so revocation,
+    // unpublish and publication cannot race the asset authorization decision.
+    return this.infrastructure.transaction(async db => {
+      const context = await access(db,scope,false,true)
+      const c = await row(db,scope,id,true)
+      const teacher = context.companyMembership.role==='TEACHER'
+      if (snapshot==='draft' && !teacher || snapshot==='published' && (c.status!=='published' || !c.published)) throw new HttpError(404,'cover not found')
+      const { rows } = await db.query<{ preview_svg:string; interactive_html:string }>(`
+        SELECT a.preview_svg,a.interactive_html FROM organization_case_cover_targets t
+        JOIN organization_case_cover_assets a ON a.job_id=t.asset_job_id AND a.generation=t.asset_generation
+          AND a.case_id=t.case_id AND a.company_id=t.company_id
+        WHERE t.case_id=$1 AND t.company_id=$2 AND t.snapshot_kind=$3 AND a.job_id=$4 AND a.generation=$5`, [id,scope.companyId,snapshot,jobId,generation])
+      if (!rows[0]) throw new HttpError(404,'cover not found')
+      return assetKind==='preview'?rows[0].preview_svg:rows[0].interactive_html
+    })
+  }
+  async coverAssetScope(userId: string, id: string): Promise<CaseScope> {
+    const { rows } = await this.db.query<{ company_id:string }>('SELECT company_id FROM organization_cases WHERE id=$1',[id])
+    if (!rows[0]) throw new HttpError(404,'cover not found')
+    return { userId,companyId:rows[0].company_id }
   }
   async uploadImage(scope: CaseScope, id: string, mime: string, data: string) {
     if (!/^[A-Za-z0-9+/]*={0,2}$/.test(data)) throw new HttpError(400,'invalid image data')

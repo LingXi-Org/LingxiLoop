@@ -30,6 +30,8 @@ export interface MentionOptions {
 const WORD = /[\p{L}\p{N}_-]/u
 const HAN = /\p{Script=Han}/u
 const HORIZONTAL = /[\p{Zs}\t]/u
+// These are the only Unicode scalars whose NFKC form contains an at-sign.
+const MENTION_MARKER = /[@﹫＠]/u
 const GRAPHEMES = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 const NON_PROSE = new Set(['code', 'inlineCode', 'link', 'image', 'linkReference', 'imageReference', 'definition', 'blockquote', 'html'])
 
@@ -82,6 +84,7 @@ function normalized(input: string): { text: string; starts: number[]; ends: numb
 }
 
 function scanProseMentions(input: string, targets: readonly MentionTarget[]): MentionRange[] {
+  if (!MENTION_MARKER.test(input)) return []
   const { text, starts, ends } = normalized(input)
   const names = targets.map(target => [...new Set(participantMentionNames(target)
     .map(name => normalized(name).text.trim()).filter(Boolean))])
@@ -126,6 +129,7 @@ export function standaloneMention(input: string, targets: readonly MentionTarget
 
 /** IDs and unique names resolve against the current roster; ranges refer to the original text. */
 export function scanMentions(input: string, targets: readonly MentionTarget[], options: MentionOptions = {}): MentionRange[] {
+  if (!MENTION_MARKER.test(input)) return []
   return scanProseMentions(maskNonMentionText(input, options.allowInlineCodeMentions ? targets : undefined), targets)
 }
 
@@ -153,6 +157,8 @@ export function memberIdTarget(text: string, targets: readonly MentionTarget[]):
 /** Presentation is separate from addressing: quotes can display names without dispatching.
  * Program code, URLs and email addresses retain their original text. */
 export function scanVisibleMentions(input: string, targets: readonly MentionTarget[], plainText = false): VisibleMention[] {
+  // Bare IDs in Markdown member tables still need their presentation projection.
+  if (!MENTION_MARKER.test(input) && (plainText || !input.includes('|'))) return []
   const chars = input.split('')
   const mask = (start: number, end: number) => chars.fill(' ',start,end)
   const tableMentions: VisibleMention[] = []
@@ -183,6 +189,7 @@ export function scanVisibleMentions(input: string, targets: readonly MentionTarg
     for(const match of input.matchAll(re)) mask(match.index,match.index+match[0].length)
   }
   const masked = chars.join('')
+  if (!MENTION_MARKER.test(masked)) return tableMentions.sort((a,b)=>a.start-b.start)
   const known: VisibleMention[] = scanProseMentions(masked,targets).map(range => ({ ...range,
     label: range.id === 'all' ? '所有人' : participantDisplayName(targets.find(target => target.id === range.id)!),
   }))

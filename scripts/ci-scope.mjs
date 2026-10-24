@@ -14,6 +14,7 @@ const HISTORICAL_FILES = [
   'run-presentation-contract.test.ts', 'runtime-patch-provenance.test.ts',
 ]
 const OWNERS = [
+  [/^server\/src\/modules\/(?:cases|case-covers)\/|^src\/features\/cases\/cover-vm\/(?:runtime|protocol|program|guest-source|svg)\.ts$/, ['case-covers.test.ts']],
   [/^server\/(?:src\/db\/|src\/migrate-bin\.ts$|package(?:-lock)?\.json$|fixtures\/|run-historical-migration-tests\.mjs$)/, HISTORICAL_FILES],
   [/^server\/src\/(?:auth\.ts|tenant\.ts|http\/|domain\/(?:access|entitlement|identity|tenancy)\/|modules\/(?:access|identity|entitlements|trust)\/)/, ['trust-bff.test.ts']],
   [/^server\/src\/(?:agent-runtime\/|runtime\/|worker\.ts|bin\/worker\.ts)/, ['runtime-chat-recovery.test.ts', 'native-authorization-faults.test.ts']],

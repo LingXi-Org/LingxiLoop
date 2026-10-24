@@ -1,6 +1,7 @@
 // Source-state backup only. Default: local plan. Execute requires the exact saved
 // plan and existing injected Komodo authorization. No target migration is run.
 import { createHash, randomBytes } from 'node:crypto'
+import {CASE_COVER_PACKAGE,assertFull54RuntimeInventory} from './public-text-release.mjs'
 import { readFile, writeFile } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -26,6 +27,8 @@ const native13 = {runtime:'3.5.8',schema:13,protocol:11,productVersion:49,
   schemaHash:'2bb265989aa2e4f5cf7686d9108e70ab970688a112a8baaa8f03b97f998bdc41',
   integrity:'sha512-myAXN35TI9RoCnvI7J6/obSz6sd5K0pH92k0RlWEu7Diy9bKZlBOqskL88rKumERYwNl316j2ZCS0gDmgjJYjQ==',
   tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.5.8/8e2f7b670f326466c0c9e1e8755d4c947c2065d8'}
+// Source-only full54 snapshot for the product55 migration, using the same restore path.
+const native14={...CASE_COVER_PACKAGE,productVersion:54}
 const maxResponse = 512 * 1024
 const exactKeys = (value, keys) => value && typeof value === 'object' && !Array.isArray(value)
   && Object.keys(value).sort().join() === [...keys].sort().join()
@@ -55,18 +58,19 @@ async function sourceDescriptor(sourceSha,baseline) {
 }
 
 export async function buildMemoryBackupPlan({sourceSha,attempt,nonce=randomBytes(8).toString('hex'),profile='native12-product46'}) {
-  if(!['native12-product46','native13-product49'].includes(profile))throw new Error('Unsupported source backup profile')
+  if(!['native12-product46','native13-product49','native14-product54'].includes(profile))throw new Error('Unsupported source backup profile')
   if(!/^[a-f0-9]{40}$/.test(sourceSha ?? '') || !/^[a-z0-9][a-z0-9-]{0,79}$/.test(attempt ?? '') || !/^[a-f0-9]{16}$/.test(nonce))
     throw new Error('Concrete source SHA, safe attempt and nonce required')
-  const source=await sourceDescriptor(sourceSha,profile==='native13-product49'?native13:baseline)
-  const plan={format:profile==='native13-product49'?2:1,...(profile==='native13-product49'?{profile}:{}),source,attempt,nonce,isolatedDatabase:`memory_verify_${sourceSha.slice(0,12)}_${nonce}`,
+  const source=await sourceDescriptor(sourceSha,profile==='native14-product54'?native14:profile==='native13-product49'?native13:baseline)
+  if(profile==='native14-product54')assertFull54RuntimeInventory({...source.runtime,productVersion:source.productVersion,migrations:source.migrations})
+  const plan={format:profile==='native12-product46'?1:2,...(profile!=='native12-product46'?{profile}:{}),source,attempt,nonce,isolatedDatabase:`memory_verify_${sourceSha.slice(0,12)}_${nonce}`,
     backupDir:`/var/lib/postgresql/data/memory-upgrade-backups/${sourceSha}/${attempt}`,migrationRehearsal:'not-performed'}
   const command=renderCommand(plan)
   return {...plan,command,commandHash:sha256(command)}
 }
 
 export async function validateMemoryBackupPlan(plan) {
-  if(![1,2].includes(plan?.format)||plan.format===2&&plan.profile!=='native13-product49'||!exactKeys(plan,['format','source','attempt','nonce','isolatedDatabase','backupDir','migrationRehearsal','command','commandHash',...(plan.format===2?['profile']:[])]))
+  if(![1,2].includes(plan?.format)||plan.format===2&&!['native13-product49','native14-product54'].includes(plan.profile)||!exactKeys(plan,['format','source','attempt','nonce','isolatedDatabase','backupDir','migrationRehearsal','command','commandHash',...(plan.format===2?['profile']:[])]))
     throw new Error('Invalid reviewed plan')
   const expected=await buildMemoryBackupPlan({sourceSha:plan.source?.sha,attempt:plan.attempt,nonce:plan.nonce,...(plan.format===2?{profile:plan.profile}:{})})
   if(!same(plan,expected)) throw new Error('Reviewed plan differs from exact source or command')
@@ -323,7 +327,7 @@ export async function executeMemoryBackup({plan,apiKey,apiSecret,signal,onProgre
 async function main() {
   const args=process.argv.slice(2), value=flag=>{const index=args.indexOf(flag);return index<0?undefined:args[index+1]}
   if(args.includes('--help')) {
-    console.log('Default/local: --source-sha <40-hex> [--profile native13-product49] --attempt <unique-id> --output <new-absolute-plan.json>\nExplicit execution: --execute --plan-file <reviewed-plan.json> --output <new-absolute-receipt.json>. Existing injected Komodo credentials only. Source backup/restore only; target migration is NOT performed.')
+    console.log('Default/local: --source-sha <40-hex> [--profile native13-product49|native14-product54] --attempt <unique-id> --output <new-absolute-plan.json>\nExplicit execution: --execute --plan-file <reviewed-plan.json> --output <new-absolute-receipt.json>. Existing injected Komodo credentials only. Source backup/restore only; target migration is NOT performed.')
     return
   }
   const allowed=new Set(['--execute','--plan','--source-sha','--attempt','--output','--plan-file','--profile'])

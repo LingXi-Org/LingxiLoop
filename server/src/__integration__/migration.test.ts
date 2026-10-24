@@ -1,3 +1,4 @@
+// Historical3.8.2 fixtures end at product54; current product55 has case-cover-migration coverage.
 import assert from 'node:assert/strict'
 import { copyFile, readFile, readdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'

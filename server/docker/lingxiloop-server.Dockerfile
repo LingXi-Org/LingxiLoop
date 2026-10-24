@@ -107,6 +107,12 @@ COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilit
 COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
 COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
 COPY src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts ./src/features/chat/visualize/zcode/lib/assistantDirectiveParser.ts
+# The renderer shares only these five dependency-light VM inputs with Web.
+COPY src/features/cases/cover-vm/runtime.ts ./src/features/cases/cover-vm/runtime.ts
+COPY src/features/cases/cover-vm/protocol.ts ./src/features/cases/cover-vm/protocol.ts
+COPY src/features/cases/cover-vm/program.ts ./src/features/cases/cover-vm/program.ts
+COPY src/features/cases/cover-vm/guest-source.ts ./src/features/cases/cover-vm/guest-source.ts
+COPY src/features/cases/cover-vm/svg.ts ./src/features/cases/cover-vm/svg.ts
 # Keep the complete skill (including Python exports, vendor assets and licenses).
 # The full upstream source is a SPA build input; only this served script is read
 # by the server at runtime. Retain the pinned source inventory and attribution.
