@@ -1,0 +1,12 @@
+(node:28112) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:28112) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ terminal port preserves accepted feedback, fences stale versions and never wakes agents (1383.453081ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1777.521161
