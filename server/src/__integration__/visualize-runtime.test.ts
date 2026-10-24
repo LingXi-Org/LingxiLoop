@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { test } from 'node:test'
 import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
@@ -8,10 +9,12 @@ import { renderVisualizeStandalone } from '../agent-runtime/visualize-export.js'
 import { projectVisualizeText, visualizeReferences, assertVisualizeCitationSpans } from '../agent-runtime/visualize-projection.js'
 
 // Failure inventory: artifacts/visualize/runtime/failure-model.md precedes implementation.
-test('the native skill and reference tool preserve the pinned upstream authoring contract', async () => {
+test('the native skill and reference tool preserve pinned upstream bytes and the reviewed host contract', async () => {
   const expected = await readFile(fileURLToPath(new URL('../../../third_party/zcode/skills/visualize/SKILL.md', import.meta.url)), 'utf8')
-  assert.equal(visualizeSkill.body, expected)
-  assert.equal(await readVisualizeReference('SKILL.md'), expected)
+  // Pin the immutable vendor source separately from its reviewed Web host adaptation.
+  assert.equal(createHash('sha256').update(expected).digest('hex'), '395662af568069f2ac2daf639037c70da2fde15cedb291b4b774f60abd1a7037')
+  assert.equal(createHash('sha256').update(visualizeSkill.body).digest('hex'), '80977103b09edba6166120f539ded864e6701a4e8bb3de10bb6c6911ff32961f')
+  assert.equal(await readVisualizeReference('SKILL.md'), visualizeSkill.body)
   assert.match(await readVisualizeReference('references/api.md'), /setWidgetState/)
   await assert.rejects(readVisualizeReference('../LICENSE'))
   await assert.rejects(readVisualizeReference('/etc/passwd'))

@@ -59,7 +59,20 @@ test('production workers always expose full tools and disable thinking even with
         return
       }
       res.writeHead(200, { 'content-type': 'text/event-stream' })
-      assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v3\)/)
+      const systems = request.messages.filter((message: { role: string }) => message.role === 'system')
+      assert.equal(systems.length, 1)
+      assert.equal(systems[0].content.split('Public output wire contract (').length - 1, 1, 'Exactly one current driver contract')
+      assert.ok(systems[0].content.includes('Public output wire contract (purpose-json-v3; publicAnswerTool native-v1):'))
+      assert.equal(request.tool_choice, 'auto'); assert.equal(request.parallel_tool_calls, false)
+      assert.equal(request.enable_thinking, false)
+      const outputTools = request.tools.filter((tool: { function: { name: string } }) => tool.function.name === 'public_answer')
+      assert.equal(outputTools.length, 1)
+      const outputSchema = outputTools[0].function.parameters
+      assert.equal(outputSchema.additionalProperties, false)
+      assert.deepEqual(Object.keys(outputSchema.properties).sort(), ['answer', 'commentary', 'operation', 'outcome'])
+      assert.deepEqual(outputSchema.required, ['operation', 'answer', 'outcome'])
+      assert.deepEqual(outputSchema.properties.operation.required, ['kind', 'supersedes'])
+      assert.deepEqual(outputSchema.properties.answer, { type: ['string', 'null'] })
       const send = (delta: unknown, finish_reason: string | null = null) =>
         res.write(`data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason }] })}\n\n`)
       assert.ok(!request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'response__upgrade'))
@@ -75,9 +88,11 @@ test('production workers always expose full tools and disable thinking even with
         const framed = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: body, outcome: { status: 'satisfied', gaps: [] } })
         const split = framed.indexOf('第一段') + '第一段'.length
         send({ role: 'assistant', reasoning_content: privateText })
-        send({ content: framed.slice(0, split) })
+        send({ tool_calls: [{ index: 0, id: `public-answer-${mode}`, type: 'function',
+          function: { name: 'public_answer', arguments: framed.slice(0, split) } }] })
         await gate
-        send({ reasoning_content: privateText, content: framed.slice(split) }, 'stop')
+        send({ reasoning_content: privateText, tool_calls: [{ index: 0,
+          function: { arguments: framed.slice(split) } }] }, 'tool_calls')
       res.end(`data: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
     })
     await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
@@ -259,10 +274,15 @@ test('unavailable visualization references are repaired before durable delivery'
       res.end(JSON.stringify({ choices: [{ message: { role: 'assistant', content: '{"missing":[]}' }, finish_reason: 'stop' }], usage }))
       return
     }
-    if (calls === 0) {
-      assert.match(JSON.stringify(request.messages), /Gen UI is available/)
-    }
-    assert.match(JSON.stringify(request.messages), /Public output wire contract \(purpose-json-v3\)/)
+    // The localhost profile intentionally retains the legacy v3 JSON channel.
+    // Authoring availability is a tool contract, not obsolete product prompt text.
+    assert.ok(request.tools.some((tool: { function: { name: string } }) => tool.function.name === 'visualize__save'))
+    assert.ok(!request.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'))
+    assert.equal(request.tool_choice, 'auto'); assert.equal(request.parallel_tool_calls, false)
+    const systems = request.messages.filter((message: { role: string }) => message.role === 'system')
+    assert.equal(systems.length, 1)
+    assert.equal(systems[0].content.split('Public output wire contract (').length - 1, 1, 'Exactly one current driver contract')
+    assert.ok(systems[0].content.includes('Public output wire contract (purpose-json-v3):'))
     correction ||= JSON.stringify(request.messages).includes('visualization path is unavailable')
     const replacing = calls > 0
     const sourceContexts = request.messages.flatMap((message: { content?: unknown }) => {

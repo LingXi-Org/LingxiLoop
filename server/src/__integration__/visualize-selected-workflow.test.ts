@@ -77,9 +77,15 @@ test('selected visual creation gets one focused review while reads and ordinary 
       worker = createWorker(options)
       const signal = AbortSignal.timeout(25000)
       while (!await worker.runNext()) { signal.throwIfAborted(); await delay(10) }
-      let state = await api.readRunState(identity)
-      while (state?.delivery === 'pending') { signal.throwIfAborted(); await delay(10); state = await api.readRunState(identity) }
+      // A synthetic driver assertion must not be hidden by the delivery wait.
       if (driverError) throw driverError
+      let state = await api.readRunState(identity)
+      while (state?.delivery === 'pending') {
+        if (signal.aborted) throw new Error(`selected workflow delivery wait expired: ${JSON.stringify({ scenario,
+          calls, reviews, saves, reads, status: state.run.status, delivery: state.delivery,
+          resultPresent: !!state.run.resultId, messagePresent: !!state.message })}`, { cause: signal.reason })
+        await delay(10); state = await api.readRunState(identity)
+      }
       const activationCount = (await pool.query('SELECT count(*)::int n FROM lingxios.agent_skill_activations WHERE work_id=$1', [identity.runId])).rows[0].n
       const documents = await pool.query('SELECT version FROM im_visualize_documents WHERE run_id=$1', [identity.runId])
       if (scenario === 'disabled') {
