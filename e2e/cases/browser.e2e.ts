@@ -130,7 +130,7 @@ test('organization case publication, cross-course access, isolation and responsi
   await expect(screen.getByRole('heading','调查方法',{exact:true})).toBeVisible()
 
   await role('teacher2')
-  await app.open(`/cases/${id}?project=cases-other-course&view=cases`)
+  await app.open(`/cases/${id}?project=cases-other-course&view=cases&caseView=manage`)
   await screen.getByRole('button','编辑案例',{exact:true}).tap()
   await nativeHeading(browser,screen,'正文','新的实地方法','未发布修订：新增水质观察。')
   await app.screenshot('case-inline-editor-1774')
@@ -155,7 +155,7 @@ test('organization case publication, cross-course access, isolation and responsi
   await expect(screen.getByRole('heading','调查方法',{exact:true})).toBeVisible()
   await expect(screen.getByRole('heading','新的实地方法',{exact:true})).toHaveCount(0)
   await role('teacher2')
-  await app.open(`/cases/${id}?project=cases-other-course&view=cases`)
+  await app.open(`/cases/${id}?project=cases-other-course&view=cases&caseView=manage`)
   await screen.getByRole('button','编辑案例',{exact:true}).tap()
   await screen.getByRole('button','发布',{exact:true}).tap()
   await expect(screen.getByRole('status').first()).toContainText('案例已发布')
@@ -192,7 +192,7 @@ test('organization case publication, cross-course access, isolation and responsi
 
   await role('teacher')
   await browser.setViewport({width:1440,height:1000})
-  await app.open(`/cases/${id}?project=cases-classroom&view=cases`)
+  await app.open(`/cases/${id}?project=cases-classroom&view=cases&caseView=manage`)
   await screen.getByRole('button','更多案例操作',{exact:true}).tap()
   await screen.getByRole('menuitem','下架案例',{exact:true}).tap()
   await expect(screen.getByRole('status').first()).toContainText('案例已下架')
@@ -215,7 +215,7 @@ test('teacher authors and publishes cover and body images through the UI',async(
   await app.open('/')
   await browser.setViewport({width:1774,height:887})
   await browser.evaluate(async()=>{localStorage.setItem('lingxiloop-theme','light');return(await fetch('/api/fixture-role/teacher')).ok})
-  await app.open('/cases?project=cases-classroom&view=cases')
+  await app.open('/cases?project=cases-classroom&view=cases&caseView=manage')
   await screen.getByRole('button','新建案例',{exact:true}).tap()
   await screen.getByLabel('标题',{exact:true}).fill('教师图文创作验收')
   await nativePaste(browser,screen,'摘要','**通过真实图片上传与发布**')
@@ -234,7 +234,7 @@ test('teacher authors and publishes cover and body images through the UI',async(
   await expect(screen.getByText('草稿预览',{exact:true})).toHaveCount(0)
   await app.screenshot('teacher-authored-published-article')
   const saved = await browser.evaluate(async()=>{
-    const result=await fetch('/api/cases?q=教师图文创作验收',{headers:{'x-company-id':'cases-school'}}).then(r=>r.json())
+    const result=await fetch('/api/cases?view=manage&q=教师图文创作验收',{headers:{'x-company-id':'cases-school'}}).then(r=>r.json())
     const item=result.items[0]
     return {id:item.id,document:item.editorDocument,summary:item.summaryDocument,body:item.body}
   })
@@ -250,7 +250,7 @@ test('teacher authors and publishes cover and body images through the UI',async(
   await expect(screen.getByLabel('正文',{exact:true})).toContainText('这篇图文案例由教师主动编写。')
   await screen.getByRole('button','保存草稿',{exact:true}).tap()
   await expect(screen.getByRole('status').first()).toContainText('草稿已保存')
-  const reopened=await browser.evaluate(async id=>(await fetch(`/api/cases/${id}`,{headers:{'x-company-id':'cases-school'}}).then(r=>r.json())).editorDocument,saved.id)
+  const reopened=await browser.evaluate(async id=>(await fetch(`/api/cases/${id}?view=manage`,{headers:{'x-company-id':'cases-school'}}).then(r=>r.json())).editorDocument,saved.id)
   expect(reopened).toEqual(saved.document)
   await screen.getByRole('button','返回案例库',{exact:true}).tap()
   await expect(screen.getByText('通过真实图片上传与发布',{exact:true})).toBeVisible()

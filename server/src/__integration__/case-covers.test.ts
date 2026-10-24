@@ -11,6 +11,8 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedUserMembership, 
 
 // Owning boundary: real transaction identity, published/draft isolation, expired
 // leases, regeneration fences, revocation, bounded retries and resumable backfill.
+// Reader view always selects the published cover, including for teachers; direct
+// draft asset access also requires cases:manage after an organization turns read-only.
 const teacher = { companyId: 'covers-school', userId: 'covers-teacher' }
 const student = { companyId: teacher.companyId, userId: 'covers-student' }
 const app = new CasesApplication(pool, { transaction: work => withTransaction(pool, work), putObject: async () => {} })
@@ -49,7 +51,7 @@ test('cover jobs reuse content across saves/publication and completion never cha
   const ready = await app.detail(student, live.id)
   assert.equal(ready.generatedCover?.status, 'ready')
   assert.equal(ready.version, live.version)
-  assert.equal((await app.detail(teacher, live.id)).hasUnpublishedChanges, false)
+  assert.equal((await app.detail(teacher, live.id, 'manage')).hasUnpublishedChanges, false)
   assert.equal((await pool.query('SELECT * FROM knowledge_source_jobs')).rows.length, 1)
   const asset = ready.generatedCover!.previewUrl!
   assert.ok(asset)
@@ -63,12 +65,15 @@ test('draft B cannot leak to published A; stale, expired and manually retried wo
   const edited = await app.save(teacher, live.id, content('B'), live.version)
   const b = await claim(); assert.ok(b)
   assert.equal((await app.detail(student, live.id)).generatedCover?.fingerprint, a.fingerprint)
+  const teacherReader = await app.detail(teacher, live.id)
+  assert.equal(teacherReader.generatedCover?.fingerprint, a.fingerprint)
+  assert.equal(teacherReader.generatedCover?.canRetry, false)
   await pool.query("UPDATE organization_case_cover_jobs SET leased_until=NOW()-interval '1 second' WHERE id=$1", [b.id])
   assert.equal(await complete(b), false)
   const replacement = await claim(); assert.ok(replacement)
   assert.equal(await complete(b), false)
   await complete(replacement)
-  const current = await app.detail(teacher, edited.id)
+  const current = await app.detail(teacher, edited.id, 'manage')
   await app.retryCover(teacher, edited.id, 'draft', current.generatedCover!.fingerprint, current.generatedCover!.generation)
   assert.equal(await complete(replacement), false)
   assert.equal((await app.detail(student, edited.id)).generatedCover?.fingerprint, a.fingerprint)
@@ -100,7 +105,7 @@ test('failure retries are bounded and teacher retry advances generation while re
     await pool.query('UPDATE organization_case_cover_jobs SET available_at=NOW()')
   }
   assert.equal(await claim(), null)
-  const failed = await app.detail(teacher, draft.id)
+  const failed = await app.detail(teacher, draft.id, 'manage')
   assert.equal(failed.generatedCover?.status, 'failed')
   assert.equal(failed.generatedCover?.canRetry, true)
 })
@@ -127,9 +132,25 @@ test('asset HTTP boundary works without company header and exposes only selected
   assert.equal((await reader(cover.previewUrl!)).status,403)
 })
 
+test('read-only teachers can read published covers but cannot read direct draft assets', async () => {
+  const draft = await app.create(teacher, content('Published cover'))
+  const live = await app.publish(teacher, draft.id, draft.version)
+  const publishedJob = await claim(); assert.ok(publishedJob); await complete(publishedJob)
+  const publishedCover = (await app.detail(student, live.id)).generatedCover!
+  await app.save(teacher, live.id, content('Draft cover'), live.version)
+  const draftJob = await claim(); assert.ok(draftJob); await complete(draftJob)
+  const draftCover = (await app.detail(teacher, live.id, 'manage')).generatedCover!
+  const request = await api(teacher.userId)
+  assert.equal((await request(draftCover.previewUrl!)).status, 200)
+  await pool.query("UPDATE companies SET status='READ_ONLY' WHERE id=$1", [teacher.companyId])
+  assert.equal((await request(draftCover.previewUrl!)).status, 404)
+  assert.equal((await request(publishedCover.previewUrl!)).status, 200)
+  assert.equal((await app.detail(teacher, live.id)).generatedCover?.fingerprint, publishedCover.fingerprint)
+})
+
 test('duplicate retry requests advance exactly once and old generations cease access after replacement', async () => {
   const draft=await app.create(teacher,content()), first=await claim(); assert.ok(first); await complete(first)
-  const old=await app.detail(teacher,draft.id), cover=old.generatedCover!
+  const old=await app.detail(teacher,draft.id,'manage'), cover=old.generatedCover!
   const outcomes=await Promise.all([
     app.retryCover(teacher,draft.id,'draft',cover.fingerprint,cover.generation,'same-request'),
     app.retryCover(teacher,draft.id,'draft',cover.fingerprint,cover.generation,'same-request'),
@@ -169,7 +190,7 @@ test('worker timeout settles and persists bounded retry without accepting late g
   await makeDue(); await worker.runOnce()
   assert.equal(signal?.aborted,true)
   finish(artifact)
-  assert.equal((await app.detail(teacher,draft.id)).generatedCover!.status,'failed')
+  assert.equal((await app.detail(teacher,draft.id,'manage')).generatedCover!.status,'failed')
   assert.equal((await pool.query('SELECT * FROM organization_case_cover_assets')).rows.length,0)
 })
 
@@ -189,8 +210,8 @@ test('new draft B supersedes A and late A cannot overwrite B; reads enqueue noth
   const b=await app.save(teacher,a.id,content('B'),a.version),bJob=await claim();assert.ok(bJob)
   await complete(bJob)
   assert.equal(await complete(aJob),false)
-  assert.equal((await app.detail(teacher,b.id)).generatedCover!.fingerprint,bJob.fingerprint)
-  for(let index=0;index<3;index++){await app.detail(teacher,b.id);await app.list(teacher)}
+  assert.equal((await app.detail(teacher,b.id,'manage')).generatedCover!.fingerprint,bJob.fingerprint)
+  for(let index=0;index<3;index++){await app.detail(teacher,b.id,'manage');await app.list(teacher,'','','manage')}
   assert.equal((await pool.query('SELECT * FROM organization_case_cover_jobs')).rows.length,2)
   assert.equal((await pool.query('SELECT * FROM organization_case_cover_assets')).rows.length,1)
 })
@@ -225,7 +246,7 @@ test('claim candidate authorization cannot cancel or admit a newer teacher retry
   }},'stale-candidate-worker',2))
   assert.equal(replaced,true)
   assert.equal(result,null)
-  assert.equal((await app.detail(colleague,draft.id)).generatedCover!.status,'pending')
+  assert.equal((await app.detail(colleague,draft.id,'manage')).generatedCover!.status,'pending')
   const next=await claim();assert.ok(next)
   assert.equal(next.requested_by,colleague.userId)
   assert.equal(next.generation,cover.generation+1)

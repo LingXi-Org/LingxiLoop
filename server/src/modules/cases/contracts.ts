@@ -23,6 +23,8 @@ export const caseFileSchema = z.object({
 }).strict()
 export type CaseContent = z.infer<typeof caseContentSchema>
 export interface CaseScope { companyId: string; userId: string }
+export const caseViewSchema = z.enum(['reader', 'manage']).default('reader')
+export type CaseView = z.infer<typeof caseViewSchema>
 
 export const caseCoverRetrySchema = z.object({
   snapshot:z.enum(['draft','published']).default('draft'), fingerprint:z.string().regex(/^[a-f0-9]{64}$/),

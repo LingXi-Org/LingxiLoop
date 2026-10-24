@@ -1,0 +1,10 @@
+{
+  "e2e/cases/draft-visibility.e2e.ts": "ba1948b33c7a7845f6cbf0fe3e8fcfbe5dab9694db4c2b729117c623775d8088",
+  "e2e/cases/browser.e2e.ts": "0e4ceda1a2c87f6eae4c3501f187240783e06536835431e53762af6c2fe91b22",
+  "e2e/cases/code-blocks.e2e.ts": "f3fc77c398a0bef57a607b46004e9607385f1c1c532930e5092fc2a52e4d80f6",
+  "e2e.cases-draft-visibility.config.ts": "03cb6ebd316780b0cac9010dfd934e39d7ef7d121c9b444b7d1795e211fdf043",
+  "docs/evidence/issue-389/run-browser.mjs": "5144da3f6b6c69cc1eb66009a13b07cf08cdd7a825c302eb860899eaa3b9148d",
+  "docs/evidence/issue-389/integration-env.sh": "f5bc09f9b407a224b40a09734cc570f3c6c6ddcb4cbb284554defd871873f0ca",
+  "docs/evidence/issue-389/tsconfig.e2e-focused.json": "8ff919fd336cfeb6e23bc0f2d49edd534241d854fa07d042c109224b97693788",
+  "artifacts/issue-389/run-browser-attempt.mjs": "6eed30791c0fa5c69fc686d31f3701c580d1cd5eb3404292a7a698711b53263e"
+}
