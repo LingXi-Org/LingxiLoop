@@ -74,15 +74,19 @@
   --brand-bubble-ink: var(--foreground);
   --brand-bubble-muted: var(--muted-foreground);
   --accent-ink: var(--primary-foreground);
+  --reading-line-height: 1.7;
+  --reading-gap: 0.75rem;
+  --density-row-padding: 0.75rem;
+  --density-control-height: 2.5rem;
   --selection-bg: color-mix(in srgb, var(--primary) 22%, transparent);
   --code-bg: var(--muted);
   /* Shared detail-panel theme contract. Component structure remains untouched;
      these aliases connect its semantic tokens to LingxiLoop's existing theme. */
-  --background: oklch(1 0 0);
+  --background: oklch(0.982 0.002 155);
   --foreground: oklch(0.141 0.005 285.823);
-  --border: oklch(0.92 0.004 286.32);
+  --border: oklch(0.88 0.006 155);
   --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+  --ring: var(--primary);
   --primary: oklch(0.527 0.154 150.069);
   --primary-foreground: oklch(0.982 0.018 155.826);
   --secondary: oklch(0.967 0.001 286.375);
@@ -120,6 +124,25 @@
   --aui-warning: var(--chart-1);
 
 }
+
+/* Density is scoped to the activity: comfortable prose and compact review tables.
+ * Nested scopes reset every token, so a table never makes a learning reply dense. */
+[data-density='comfortable'] {
+  --reading-line-height: 1.7;
+  --reading-gap: 0.75rem;
+  --density-row-padding: 0.75rem;
+  --density-control-height: 2.5rem;
+}
+[data-density='compact'] {
+  --reading-line-height: 1.55;
+  --reading-gap: 0.5rem;
+  --density-row-padding: 0.5rem;
+  --density-control-height: 2.25rem;
+}
+[data-density] :where([data-slot='table-cell'], [data-slot='table-head']) {
+  padding-block: var(--density-row-padding);
+}
+[data-density] :where([data-slot='table-head']) { height: var(--density-control-height); }
 
 /* assistant-ui inherits the same canonical Luma tokens as every feature. */
 .assistant-ui-scope {
@@ -1120,7 +1143,7 @@ input, textarea { font: inherit; }
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  --ring: var(--primary);
   --chart-1: oklch(0.837 0.128 66.29);
   --chart-2: oklch(0.705 0.213 47.604);
   --chart-3: oklch(0.646 0.222 41.116);

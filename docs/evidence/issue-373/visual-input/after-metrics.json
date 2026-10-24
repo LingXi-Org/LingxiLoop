@@ -1,0 +1,87 @@
+{
+  "after229Submissions": "0",
+  "afterPaint": [
+    {
+      "runId": "synthetic-run",
+      "sourceRef": "synthetic-run",
+      "stage": "preview",
+      "resets": 0,
+      "disconnects": 0,
+      "sinceSendMs": 0.29999999701976776,
+      "sincePreviewMs": 0,
+      "seq": 1,
+      "characters": 13
+    },
+    {
+      "runId": "synthetic-run",
+      "sourceRef": "synthetic-run",
+      "stage": "body_painted",
+      "resets": 0,
+      "disconnects": 0,
+      "sinceSendMs": 110.79999999701977,
+      "sincePreviewMs": 110.5,
+      "durationMs": 110.5
+    },
+    {
+      "runId": "synthetic-run",
+      "sourceRef": "synthetic-run",
+      "stage": "first_body_visible",
+      "resets": 0,
+      "disconnects": 0,
+      "sinceSendMs": 110.8999999910593,
+      "sincePreviewMs": 110.59999999403954
+    },
+    {
+      "runId": "synthetic-run",
+      "sourceRef": "synthetic-run",
+      "stage": "body_painted",
+      "resets": 0,
+      "disconnects": 0,
+      "sinceSendMs": 220.19999998807907,
+      "sincePreviewMs": 219.8999999910593,
+      "durationMs": 93.29999999701977
+    },
+    {
+      "runId": "synthetic-run",
+      "sourceRef": "synthetic-run",
+      "stage": "completed",
+      "resets": 0,
+      "disconnects": 0,
+      "sinceSendMs": 758.5,
+      "sincePreviewMs": 758.2000000029802,
+      "paintSamples": 2,
+      "receiveToPaintP95Ms": 110.5
+    }
+  ],
+  "afterBodyIdentity": true,
+  "afterStyle": {
+    "page": "oklch(0.982 0.002 155)",
+    "panel": "oklch(1 0 0)",
+    "proseLineHeight": "27.2px",
+    "tablePadding": "8px"
+  },
+  "selectionBefore": {
+    "top": 1037,
+    "height": 660,
+    "anchor": 255.0625,
+    "selected": "第10步：保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。"
+  },
+  "selectionAfter": {
+    "top": 1053,
+    "height": 660,
+    "anchor": 239.0625,
+    "selected": "第10步：保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。保留自己的推导和学习阅读位置。"
+  },
+  "focusAndSelection": {
+    "outline": "oklch(0.723 0.219 149.579) solid 2px",
+    "selection": "color(srgb -0.194455 0.787188 0.315656 / 0.22)"
+  },
+  "darkNarrow": {
+    "width": 390,
+    "scrollWidth": 390
+  },
+  "reducedMotion": {
+    "matches": true,
+    "animation": "none"
+  }
+}
