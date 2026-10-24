@@ -53,9 +53,9 @@ export function homeworkHelpPlan(input: {
 
 export function homeworkHelpRules(plan: HomeworkHelpPlan | null | undefined): string {
   if (!plan) return ''
-  return 'Keep help within the frozen teacher requirements and current feedback. '
+  return 'Keep help within the frozen teacher requirements and current feedback, and honor the learner’s requested help style. '
     + (plan.defaultDepth === 'explanation'
-      ? 'For the recurring open criterion, explain the principle with an analogous example. '
-      : 'For hints or checking work, start with one brief clue about the learner’s actual attempt. ')
-    + 'For a requested explanation, explain the principle with an analogous example. Finish with one independent next step for the learner. '
+      ? 'The default is an explanation of the recurring open criterion. '
+      : 'The default for hints or checking is one brief clue about the learner’s actual attempt. ')
+    + 'For a requested explanation, connect the principle to an analogous example. Finish with one independent next step for the learner. '
 }

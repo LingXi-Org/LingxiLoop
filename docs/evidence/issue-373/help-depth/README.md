@@ -35,7 +35,7 @@ pending current one. A criterion marked met with independence still uncertain is
 not treated as an error and does not cause any mastery update.
 
 Short positive response rules keep frozen teacher requirements and current
-feedback first. Hints/checking begin with one clue; recurring assessed gaps or
+feedback first, and explicitly honor the learner’s requested help style. Hints/checking begin with one clue; recurring assessed gaps or
 requested explanation get a principle and analogous example, followed by one
 independent next step. Actual user requests control style within the task scope;
 they do not authorize a complete homework answer. The existing answer, report,

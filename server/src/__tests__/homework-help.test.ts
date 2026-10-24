@@ -69,6 +69,7 @@ test('ordinary turns get no tutoring rule; editable requests can ask for style w
   const unknown = homeworkHelpPlan({ criteria, ...state, assessments: [] })
   const rules = homeworkHelpRules(unknown)
   assert.match(rules, /requested explanation/)
+  assert.match(rules, /honor the learner’s requested help style/)
   assert.match(rules, /teacher requirements and current feedback/)
   assert.match(rules, /one brief clue/)
   assert.doesNotMatch(rules, /judge|assessment tool|effort|reasoning|budget|retry|verification|acceptance/i)
