@@ -1,16 +1,15 @@
-import { useState } from "react";
-
 import { Button } from "@/features/chat/visualize/zcode/components/ui/button.js";
 import { useZCodeIntl } from "@/features/chat/visualize/zcode/i18n/IntlProvider.js";
-import type { GenUiPage, GenUiPageSnapshot } from "../contract.js";
+import { tweakFingerprint, type GenUiPage, type GenUiPageSnapshot } from "../contract.js";
 export function TweakPanel({ snapshot, page }: { snapshot: GenUiPageSnapshot; page: GenUiPage }) {
   const { groups, tweakValues: values, previewOriginal: preview } = snapshot;
   const { intl } = useZCodeIntl();
   const original = Object.fromEntries(
     groups.flatMap((group) => group.controls).map((control) => [control.id, control.value]),
   );
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const busy = snapshot.tweakSubmission?.status === "sending";
+  const submitted = snapshot.tweakSubmission?.status === "accepted" && snapshot.tweakSubmission.fingerprint === tweakFingerprint(values);
+  const error = snapshot.tweakSubmission?.status === "unconfirmed" ? intl.formatMessage({ id: "genUi.changesFailed" }) : "";
   const change = (id: string, value: string | number | boolean) => {
     const next = { ...values, [id]: value };
     page.setTweaks(next);
@@ -21,7 +20,7 @@ export function TweakPanel({ snapshot, page }: { snapshot: GenUiPageSnapshot; pa
       data-testid="gen-ui-tweaks"
     >
       {groups.map((tweak, groupIndex) => (
-        <fieldset key={groupIndex} className="space-y-3">
+        <fieldset key={groupIndex} disabled={busy} className="space-y-3">
           <legend className="font-medium">{tweak.title}</legend>
           <div className="grid gap-3 sm:grid-cols-2">
             {tweak.controls.map((control) => (
@@ -82,6 +81,7 @@ export function TweakPanel({ snapshot, page }: { snapshot: GenUiPageSnapshot; pa
         <Button
           variant="ghost"
           size="sm"
+          disabled={busy}
           onClick={() => {
             page.setTweaks(original);
           }}
@@ -91,6 +91,7 @@ export function TweakPanel({ snapshot, page }: { snapshot: GenUiPageSnapshot; pa
         <Button
           variant="ghost"
           size="sm"
+          disabled={busy}
           aria-pressed={preview}
           onClick={() => {
             page.previewTweaks(!preview);
@@ -100,22 +101,19 @@ export function TweakPanel({ snapshot, page }: { snapshot: GenUiPageSnapshot; pa
         </Button>
         <Button
           size="sm"
-          disabled={busy}
+          disabled={busy || submitted}
           onClick={async () => {
-            setBusy(true);
-            setError("");
             try {
               await page.submitTweaks(values);
-            } catch (reason) {
-              setError(String(reason));
-            } finally {
-              setBusy(false);
+            } catch {
+              // The retained page owns uncertain delivery and retry identity.
             }
           }}
         >
           {intl.formatMessage({ id: "genUi.submit" })}
         </Button>
       </div>
+      {submitted && <p role="status">{intl.formatMessage({ id: "genUi.changesSubmitted" })}</p>}
       {error && (
         <p role="alert" className="text-destructive">
           {error}

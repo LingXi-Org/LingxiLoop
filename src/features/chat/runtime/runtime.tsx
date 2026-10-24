@@ -7,7 +7,7 @@ import {
   type ThreadMessage,
   useExternalStoreRuntime,
 } from '@assistant-ui/react'
-import { type ReactNode, useCallback, useEffect, useMemo } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { uploadsApi } from '@/features/platform/api'
 import type { ConversationThreadSnapshot } from './model'
 import { EMPTY_CONVERSATION_CHAT_STATE, useChatThreadStore } from './store'
@@ -17,6 +17,10 @@ import { projectReplyBranches } from './reply-branches'
 import { useConversationUi } from '@/stores/conversationUi'
 import { useParticipants } from '@/features/agents/state'
 import type { LingxiMessageMetadata } from './model'
+import { conversationRunStatus } from './conversation-status'
+import { useAuth } from '@/stores/auth'
+import { useWorkspace } from '@/features/knowledge/workspace'
+import { readComposerDraft, saveComposerDraft, type ComposerDraftScope } from '../drafts'
 
 type UploadedAttachment = PendingAttachment & {
   apiAttachment: Awaited<ReturnType<typeof uploadsApi.uploadFile>>
@@ -89,11 +93,12 @@ export function useConversationPresence(conversationId: string) {
     store.conversations[conversationId] ?? EMPTY_CONVERSATION_CHAT_STATE
   ))
   return useMemo(() => ({
+    runStatus: conversationRunStatus(state.messages),
     typingAgentIds: state.typingAgentIds,
     activeAgentIds: [...new Set(Object.values(state.activeRuns)
       .filter((run) => run.state === 'queued' || run.state === 'running')
       .map((run) => run.agentId))],
-  }), [state.activeRuns, state.typingAgentIds])
+  }), [state.activeRuns, state.typingAgentIds, state.messages])
 }
 
 export function useConversationThreadRuntime(
@@ -144,10 +149,43 @@ export function ConversationRuntimeProvider({
   threadRootId?: string | null
   children: ReactNode
 }) {
+  const companyId = useAuth(state => state.activeCompanyId)
+  const userId = useAuth(state => state.user?.id ?? null)
+  const projectId = useWorkspace(state => state.selectedId)
+  const scope = useMemo(() => ({ companyId, userId, projectId, conversationId, threadRootId }), [companyId, userId, projectId, conversationId, threadRootId])
+  // Remount the composer on every scope change: pending uploads and input cannot
+  // migrate into another account, course, conversation or thread.
+  return <ScopedConversationRuntimeProvider key={JSON.stringify(scope)} scope={scope}>{children}</ScopedConversationRuntimeProvider>
+}
+
+function ScopedConversationRuntimeProvider({ scope, children }: { scope: ComposerDraftScope; children: ReactNode }) {
+  const { conversationId, threadRootId } = scope
   const runtime = useConversationThreadRuntime(conversationId, threadRootId)
+  const [restored, setRestored] = useState(false)
+  useEffect(() => {
+    const composer = runtime.thread.composer
+    const draft = readComposerDraft(scope)
+    if (draft && !composer.getState().text && !composer.getState().attachments.length) {
+      composer.setText(draft.text)
+      for (const attachment of draft.attachments) {
+        // Native file-id references are accepted for every uploaded MIME type.
+        // Never persist signed download URLs, raw browser Files or auth material.
+        void composer.addAttachment({ ...attachment, type: 'document', content: [{ type: 'file', sourceType: 'id',
+          data: attachment.id, mimeType: attachment.contentType, filename: attachment.name }] })
+      }
+      setRestored(true)
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const flush = () => { clearTimeout(timer); saveComposerDraft(scope, composer.getState()) }
+    const unsubscribe = composer.subscribe(() => { clearTimeout(timer); timer = setTimeout(flush, 200) })
+    window.addEventListener('pagehide', flush)
+    return () => { unsubscribe(); window.removeEventListener('pagehide', flush); flush() }
+  }, [runtime, scope])
   useEffect(() => {
     if (threadRootId) void chatTransport.ensureThread(conversationId, threadRootId)
     else void chatTransport.loadConversation(conversationId)
   }, [conversationId, threadRootId])
-  return <AssistantRuntimeProvider runtime={runtime}>{children}</AssistantRuntimeProvider>
+  return <AssistantRuntimeProvider runtime={runtime}>{children}
+    {restored && <p role="status" className="px-3 pb-2 text-xs text-muted-foreground">已恢复本设备上的草稿与上传完成的附件引用。未完成的上传需重新添加；发送时会重新核验权限。</p>}
+  </AssistantRuntimeProvider>
 }

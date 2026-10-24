@@ -77,3 +77,35 @@ chat-card ancestor overrides it in the pinned source. This font family is
 therefore restored on the feature scope. The distinct upstream `--font-sans`
 token remains unchanged for guest theme projection. Fixed fixture font packages
 are shared environment inputs; they must not replace the entry's font stack.
+
+### #373 host learning actions
+
+The existing Web adaptation now adds a host question button/dialog and accepted
+question/change receipts. `GenUiPage.sendFollowUp` delegates to its original
+scoped, gesture-checked follow-up; retained owners forward that method. The
+question draft uses the shared bounded account/company/course/conversation/source
+cache, never automatic replay, and clears only after an accepted receipt. Closing
+the question returns focus to its inline or expanded opener. Original-settings
+preview remains a Tweak comparison, distinct from document version history.
+
+These host toolbar/receipt additions deliberately differ from the pinned upstream
+presentation. Historical source comparison/pixel counts above remain dated
+snapshots; they are not current parity claims. No upstream asset, guest permission,
+CSP or service protocol is changed. See `docs/evidence/issue-373/learning.md` for
+actual checks and the nested-frame locator boundary of the existing CDP browser.
+
+The #373 state/save regression also exposed a compatibility boundary: the
+installed AppBridge's `setHostContext` sends partial diffs, while this pinned
+GenUI consumer clears missing annotation. `publishGenUiContext` sends complete
+current snapshots using the public `sendHostContextChange` method, retaining
+Tweak state across unrelated widget-state/theme updates. Bridge construction
+still receives the initial context for the handshake. The real-SDK regression
+reproduces the former loss; final browser replay is tracked separately.
+
+Tweak submission ownership now lives in the retained page snapshot rather than
+remountable panel-local state. Pending/accepted value fingerprints survive panel
+toggle, preview movement and retained-owner reacquisition; unchanged accepted
+submission is a core no-op. Actual changed values clear the accepted stamp, and
+forced suspension marks an in-flight result unconfirmed. A public display-mode
+handler reports the current host mode without changing it on guest request;
+new pages construct a new bridge with current initial context.

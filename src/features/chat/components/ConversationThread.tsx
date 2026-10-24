@@ -85,6 +85,31 @@ export function ConversationThread({
     return chatLatency.ready(conversationId, 'history_visible', viewport)
   }, [conversationId, threadRootId, snapshot.isLoading, snapshot.error, snapshot.messages.length, snapshot.hasMoreOlder])
 
+  useEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport) return
+    const preserveSelection = () => {
+      const selection = window.getSelection()
+      if (selection && !selection.isCollapsed && selection.rangeCount
+        && viewport.contains(selection.getRangeAt(0).commonAncestorContainer)) setReadingHistory(true)
+    }
+    const preserveDisclosure = (event: Event) => {
+      if (event instanceof KeyboardEvent && !['Enter', ' '].includes(event.key)) return
+      const target = event.target
+      if (target instanceof Element && target.closest('[aria-expanded], summary')) {
+        flushSync(() => setReadingHistory(true))
+      }
+    }
+    document.addEventListener('selectionchange', preserveSelection)
+    viewport.addEventListener('click', preserveDisclosure, true)
+    viewport.addEventListener('keydown', preserveDisclosure, true)
+    return () => {
+      document.removeEventListener('selectionchange', preserveSelection)
+      viewport.removeEventListener('click', preserveDisclosure, true)
+      viewport.removeEventListener('keydown', preserveDisclosure, true)
+    }
+  }, [scope])
+
   const loadOlder = useCallback(async () => {
     const viewport = viewportRef.current
     if (!viewport || loadingOlderRef.current || !snapshot.hasMoreOlder) return true
@@ -188,14 +213,16 @@ export function ConversationThread({
       if (branch) selectReplyBranch(branch.key, branch.ids[branch.clientIds.indexOf(pendingJumpId)], branch.ids.at(-1)!)
       return
     }
+    // Commit the primitive's paused state before moving the reading position.
+    if (!readingHistory) { setReadingHistory(true); return }
     element.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' })
     element.classList.add('quote-jump-flash')
     window.setTimeout(() => element.classList.remove('quote-jump-flash'), 1_100)
     clearPendingJump()
-  }, [clearPendingJump, pendingJumpId, selectReplyBranch, snapshot.messages])
+  }, [clearPendingJump, pendingJumpId, readingHistory, selectReplyBranch, snapshot.messages])
 
   return (
-    <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread>
+    <ThreadPrimitive.Root className="assistant-ui-scope aui-thread-root relative flex h-full min-h-0 flex-col bg-background text-foreground" data-lingxi-assistant-thread data-density="comfortable">
       <div className="relative flex min-h-0 flex-1" data-chat-reading-area>
         <ConversationQuestionIndex key={scope} viewportRef={viewportRef} hasMoreOlder={!threadRootId && snapshot.hasMoreOlder}
           isLoadingOlder={snapshot.isLoadingOlder} onLoadOlder={async () => { flushSync(() => setReadingHistory(true)); return loadOlder() }} onNavigate={navigateToQuestion} />

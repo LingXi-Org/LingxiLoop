@@ -33,4 +33,11 @@ Use the current session's authorization and designated integrator. Report comple
 
 ## Maintenance
 
+For chat, approval, recovery, artifact or learning-help UX work, start with
+[assistant-ui](.agents/skills/assistant-ui/SKILL.md) and its
+[learning-experience guide](.agents/skills/assistant-ui/references/learning-experience.md).
+Use [better-layout](.agents/skills/better-layout/SKILL.md) for surfaces/adaptivity,
+[streaming](.agents/skills/streaming/SKILL.md) for delivery/reading continuity and
+[product-copy](.agents/skills/product-copy/SKILL.md) for truthful next-step wording.
+
 For cleanup, dependency/config retirement, CI cost or development-instruction changes, load [repository-maintenance](.agents/skills/repository-maintenance/SKILL.md). Use [repository-review](.agents/skills/repository-review/SKILL.md) for independent read-only review.
