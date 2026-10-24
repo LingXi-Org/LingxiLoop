@@ -23,7 +23,8 @@ checks must still allow both observations.
 
 One supported open criterion selects a brief clue. A second assessment can raise
 the default only when the same criterion remains open and its selected quotation
-contains a newly cited student message with a later canonical sequence. Reusing
+contains a student message absent from the entire previous canonical snapshot,
+with a sequence later than that complete snapshot’s end. Reusing
 an assessment receipt or the same quotes does not create another observation.
 The output counts observed assessments, not all attempts, errors or ability.
 The indicated criterion is a zero-based index into the frozen homework criteria.
@@ -73,3 +74,16 @@ Skill discovery: AGENTS → assistant-ui → learning-experience pedagogy row �
 `homework-help.ts`, `homework-help-state.ts`, context/owning tests. The row gives
 one correct example and a reproducible observable acceptance without claiming
 unrun model behavior.
+
+## Independent-review correction
+
+Review of the initial candidate found a real gap: comparing only prior selected
+quotes could mistake an already-present but previously uncited message for new
+work. The added regression reproduced that failure. The correction compares the
+new selected quote against every message ID and the maximum sequence in the
+previous complete canonical snapshot. It covers previously unquoted work both
+when it was and was not selected, and keeps genuinely later work as a positive
+case. `snapshot-before.txt` retains the failure; `snapshot-after.txt` records all
+11 focused tests passing. Two-file lint also passed. This local selector change
+adds no query, schema, model call or provider setting. Final review/CI use the
+corrected head rather than substituting the earlier candidate’s result.

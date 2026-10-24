@@ -34,6 +34,20 @@ test('same receipt, reused quotes and older work never become repeated attempts'
   assert.equal(homeworkHelpPlan({ criteria, ...state, assessments: [selectedButNotCited] }).basis, 'unknown')
 })
 
+test('reselecting old work already present in the prior full snapshot never counts as a new observation', () => {
+  const previous = assessment('previous', 2, 'quoted-a', 10)
+  previous.messages.push({ messageId: 'old-unquoted-b', role: 'user', text: '我的计算是 32', sequence: 20 },
+    { messageId: 'old-help', role: 'assistant', text: '请核对子网边界', sequence: 30 })
+  for (const selectedMessageIds of [['quoted-a'], ['quoted-a', 'old-unquoted-b']]) {
+    const oldWork = assessment('current', 3, 'old-unquoted-b', 20)
+    const plan = homeworkHelpPlan({ criteria, ...state, assessments: [oldWork, { ...previous, selectedMessageIds }] })
+    assert.equal(plan.defaultDepth, 'brief_clue')
+    assert.equal(plan.observedAssessments, 1)
+  }
+  const newWork = assessment('current', 3, 'genuinely-new', 40)
+  assert.equal(homeworkHelpPlan({ criteria, ...state, assessments: [newWork, previous] }).defaultDepth, 'explanation')
+})
+
 test('old epochs, pending/invalid results, missing evidence and default unmet criteria remain unknown', () => {
   const valid = assessment('current', 3, 'work', 10)
   const invalid: HelpAssessment[] = [

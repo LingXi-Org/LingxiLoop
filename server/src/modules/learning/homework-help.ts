@@ -24,7 +24,8 @@ export function homeworkHelpPlan(input: {
 }): HomeworkHelpPlan {
   const unknown: HomeworkHelpPlan = { defaultDepth: 'brief_clue', basis: 'unknown', criterionIndex: null, observedAssessments: 0 }
   const read = (item: HelpAssessment) => {
-    if (item.status !== 'READY' || !item.available || item.returnEpoch !== input.returnEpoch) return null
+    if (item.status !== 'READY' || !item.available || item.returnEpoch !== input.returnEpoch
+      || item.messages.some(message => !Number.isSafeInteger(message.sequence) || message.sequence < 1)) return null
     const parsed = helpJudgmentSchema.safeParse(item.result)
     if (!parsed.success || parsed.data.criteria.length !== input.criteria.length
       || input.criteria.some(criterion => parsed.data.criteria.filter(value => value.criterion === criterion).length !== 1)) return null
@@ -33,7 +34,8 @@ export function homeworkHelpPlan(input: {
     if (!quotes.length || quotes.some(quote => !quote)) return null
     const selected = quotes.filter(quote => item.selectedMessageIds.includes(quote!.messageId))
     if (!selected.length) return null
-    return { criteria: parsed.data.criteria, quotes: selected.map(quote => quote!) }
+    return { criteria: parsed.data.criteria, quotes: selected.map(quote => quote!),
+      snapshotIds: new Set(item.messages.map(message => message.messageId)), snapshotEnd: Math.max(...item.messages.map(message => message.sequence)) }
   }
   const currentRow = input.assessments.find(item => item.id === input.assessmentId && item.evidenceRevision === input.evidenceRevision)
   const current = currentRow && read(currentRow)
@@ -43,8 +45,7 @@ export function homeworkHelpPlan(input: {
   const previousRow = input.assessments.filter(item => item.id !== currentRow!.id && item.evidenceRevision < currentRow!.evidenceRevision)
     .sort((a, b) => b.evidenceRevision - a.evidenceRevision)[0]
   const previous = previousRow && read(previousRow)
-  const hasNewWork = previous && current.quotes.some(quote => !previous.quotes.some(old => old.messageId === quote.messageId)
-    && quote.sequence > Math.max(...previous.quotes.map(old => old.sequence)))
+  const hasNewWork = previous && current.quotes.some(quote => !previous.snapshotIds.has(quote.messageId) && quote.sequence > previous.snapshotEnd)
   const repeated = hasNewWork ? gaps.find(index => previous!.criteria.some(item => item.criterion === input.criteria[index] && !item.met)) : undefined
   return repeated !== undefined
     ? { defaultDepth: 'explanation', basis: 'repeated_assessed_gap', criterionIndex: repeated, observedAssessments: 2 }

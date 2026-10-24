@@ -1,0 +1,68 @@
+TAP version 13
+# Subtest: a first supported gap gets a brief clue, repeated supported work gets explanation and an independent next step
+ok 1 - a first supported gap gets a brief clue, repeated supported work gets explanation and an independent next step
+  ---
+  duration_ms: 4.402088
+  type: 'test'
+  ...
+# Subtest: same receipt, reused quotes and older work never become repeated attempts
+ok 2 - same receipt, reused quotes and older work never become repeated attempts
+  ---
+  duration_ms: 0.820303
+  type: 'test'
+  ...
+# Subtest: reselecting old work already present in the prior full snapshot never counts as a new observation
+not ok 3 - reselecting old work already present in the prior full snapshot never counts as a new observation
+  ---
+  duration_ms: 2.767495
+  type: 'test'
+  location: '/tmp/loop-373-help/server/src/__tests__/homework-help.test.ts:1:2368'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + 'explanation'
+    - 'brief_clue'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'brief_clue'
+  actual: 'explanation'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-373-help/server/src/__tests__/homework-help.test.ts:44:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: old epochs, pending/invalid results, missing evidence and default unmet criteria remain unknown
+ok 4 - old epochs, pending/invalid results, missing evidence and default unmet criteria remain unknown
+  ---
+  duration_ms: 1.158279
+  type: 'test'
+  ...
+# Subtest: only an unresolved exact criterion in both current and prior assessed work increases depth
+ok 5 - only an unresolved exact criterion in both current and prior assessed work increases depth
+  ---
+  duration_ms: 0.500122
+  type: 'test'
+  ...
+# Subtest: ordinary turns get no tutoring rule; editable requests can ask for style within the teacher task
+ok 6 - ordinary turns get no tutoring rule; editable requests can ask for style within the teacher task
+  ---
+  duration_ms: 0.295071
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 5
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 461.122977
