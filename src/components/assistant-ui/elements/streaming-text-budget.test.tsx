@@ -121,20 +121,20 @@ test('incremental words match full tokenization for every Unicode append and rep
     for (let length = 0; length <= sample.length; length++) {
       const text = sample.slice(0, length)
       const actual = tokenize(text, 0)
-      assert.deepEqual(actual, streamingWords(text), JSON.stringify(text))
-      if (actual.length) assert.equal(actual.map(token => (token.prefix ?? '') + token.word + token.separator).join(''), text)
+      assert.deepEqual(actual.slice(), streamingWords(text), JSON.stringify(text))
+      if (actual.length) assert.equal(actual.slice().map(token => (token.prefix ?? '') + token.word + token.separator).join(''), text)
     }
   }
   for (const text of ['same text', 'same text', 'short', '完全替换́', '', '新文本']) {
-    assert.deepEqual(tokenize(text, 0), streamingWords(text))
+    assert.deepEqual(tokenize(text, 0).slice(), streamingWords(text))
   }
   const previous = tokenize('中́文 test ', 1)
-  const frozen = structuredClone(previous)
+  const frozen = structuredClone(previous.slice())
   const next = tokenize('中́文 test more', 1)
-  assert.deepEqual(previous, frozen)
-  assert.equal(next[0], previous[0])
-  assert.deepEqual(next, streamingWords('中́文 test more'))
-  assert.deepEqual(tokenize('other leaf', 0), streamingWords('other leaf'))
+  assert.deepEqual(previous.slice(), frozen)
+  assert.equal(next.at(0), previous.at(0))
+  assert.deepEqual(next.slice(), streamingWords('中́文 test more'))
+  assert.deepEqual(tokenize('other leaf', 0).slice(), streamingWords('other leaf'))
 })
 
 test('rebuilt streaming plugins reuse a block tokenizer and preserve leaf text and positions', async () => {
@@ -153,6 +153,33 @@ test('rebuilt streaming plugins reuse a block tokenizer and preserve leaf text a
   }
   const first = transform('中́文 tail')
   const second = transform('中́文 tail continues')
-  assert.equal(first[0], second[0])
-  assert.deepEqual(second, streamingWords('中́文 tail continues'))
+  assert.equal(first.at(0), second.at(0))
+  assert.deepEqual(second.slice(), streamingWords('中́文 tail continues'))
+})
+
+test('retained word snapshots keep exact text and original indexes after append and replacement', async () => {
+  const { createStreamingWordTokenizer } = await import('../markdown-streaming')
+  const tokenize = createStreamingWordTokenizer()
+  const snapshots = []
+  let text = '中'.repeat(200) + ' tail'
+  for (const delta of ['', ' grows ', '新'.repeat(140), '\t中́ 👨‍👩‍👧‍👦', '\n한 字']) {
+    text += delta
+    const words = tokenize(text, 0)
+    snapshots.push({ text, words, expected: structuredClone(streamingWords(text)) })
+  }
+  tokenize('whole replacement', 0)
+  tokenize.finishPass(0)
+  for (const { text: sourceText, words, expected } of snapshots) {
+    assert.deepEqual(words.slice(), expected)
+    for (const index of [-1, 0, 127, 128, words.length - 1, words.length, NaN, Infinity]) {
+      assert.deepEqual(words.at(index), expected.at(index))
+    }
+    assert.deepEqual(words.slice(-130, -1), expected.slice(-130, -1))
+    assert.deepEqual(words.slice(NaN, Infinity), expected.slice(NaN, Infinity))
+    const html = renderToStaticMarkup(<StreamingText segments={[]} tokens={words} sourceText={sourceText}
+      count={words.length} streaming inline />)
+    const $ = load(html)
+    assert.equal($('[data-slot="streaming-text"]').text(), sourceText)
+    assert.equal($('[data-streaming-word]').length, STREAMING_WORD_BUDGET)
+  }
 })

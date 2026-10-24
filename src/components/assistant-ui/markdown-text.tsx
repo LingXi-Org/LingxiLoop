@@ -81,6 +81,7 @@ const ConfidenceSpan: NonNullable<StreamdownTextPrimitiveProps['components']>['s
 const confidenceComponents = { span: ConfidenceSpan }
 const emptyClaims: readonly MarkdownConfidenceClaim[] = []
 const emptyMentionTargets: readonly Participant[] = []
+const emptyCitationOffsets: number[] = []
 
 function rehypeMentionNames({ targets }: { targets: readonly Participant[] }) {
   return (tree: Root) => {
@@ -228,8 +229,11 @@ const MarkdownTextImpl = ({
   const textOffset = splitTextOffset ?? nativeTextOffset
   const hasCitations = Boolean(confidenceClaims.length) || inlineCitations && text.includes('#cite-')
   // Complete block starts are identical in the raw text and its revealed prefix.
-  const blocks = useMemo(() => hasCitations ? parseMarkdownIntoBlocks(text) : [], [hasCitations, text])
+  const blocks = useMemo(() => hasCitations ? parseMarkdownIntoBlocks(text) : undefined, [hasCitations, text])
   const offsets = useMemo(() => {
+    // Plain prose appends must keep the block context stable; no citation
+    // consumer uses source offsets until this part actually has citations.
+    if (!blocks?.length) return emptyCitationOffsets
     let offset = textOffset
     return blocks.map(block => { const start = offset; offset += block.length; return start })
   }, [blocks, textOffset])
