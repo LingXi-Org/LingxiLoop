@@ -21,9 +21,10 @@ export function streamingWords(text: string): StreamingWord[] {
   return tokenizeWords(text, complexText.test(text))
 }
 
-function tokenizeWords(text: string, complex: boolean): StreamingWord[] {
+function tokenizeWords(text: string, complex: boolean, offset = 0): StreamingWord[] {
   const result: StreamingWord[] = []
   let prefix = ''
+  let cursor = offset
   // Stable single CJK characters keep an unspaced paragraph from becoming one
   // blue word. Preserve Latin words, Unicode characters and every whitespace.
   const segments = complex ? [...graphemes.segment(text)].map(item => item.segment)
@@ -35,9 +36,10 @@ function tokenizeWords(text: string, complex: boolean): StreamingWord[] {
     } else if (complex && result.length && !result.at(-1)!.separator && !cjk.test(word) && !cjk.test(result.at(-1)!.word)) {
       result.at(-1)!.word += word
     } else {
-      result.push({ word, separator: '', prefix })
+      result.push({ word, separator: '', prefix, start: cursor - prefix.length })
       prefix = ''
     }
+    cursor += word.length
   }
   return result
 }
@@ -47,7 +49,7 @@ function tokenizeWords(text: string, complex: boolean): StreamingWord[] {
 // separator together so split graphemes and whitespace retain full context.
 export function createStreamingWordTokenizer() {
   const leaves: { text: string; words: StreamingWord[]; complex: boolean; tailStart: number }[] = []
-  return (text: string, index: number): StreamingWord[] => {
+  const tokenize = (text: string, index: number): StreamingWord[] => {
     const previous = leaves[index]
     if (previous?.text === text) return previous.words
     // Completing a split surrogate can change the preceding grapheme (for
@@ -55,15 +57,22 @@ export function createStreamingWordTokenizer() {
     const append = previous && text.startsWith(previous.text) && !/[\ud800-\udbff]$/.test(previous.text)
     const complex = append ? previous.complex || complexText.test(text.slice(previous.text.length)) : complexText.test(text)
     const words = append && complex === previous.complex && previous.words.length
-      ? [...previous.words.slice(0, -1), ...tokenizeWords(text.slice(previous.tailStart), complex)]
+      ? [...previous.words.slice(0, -1), ...tokenizeWords(text.slice(previous.tailStart), complex, previous.tailStart)]
       : streamingWords(text)
     const last = words.at(-1)
     leaves[index] = { text, words, complex, tailStart: last ? text.length - (last.prefix?.length ?? 0) - last.word.length - (last.separator?.length ?? 0) : 0 }
     return words
   }
+  return Object.assign(tokenize, {
+    // Markdown completion/replacement can reduce the text-leaf count. Release
+    // stale text and words after the full pass, retaining active leaf identity.
+    finishPass: (leafCount: number) => { leaves.length = leafCount },
+  })
 }
 
-export function rehypeStreamingText({ tokenize = streamingWords }: { tokenize?: (text: string, index: number) => StreamingWord[] } = {}) {
+type StreamingWordTokenizer = ((text: string, index: number) => StreamingWord[]) & { finishPass?: (leafCount: number) => void }
+
+export function rehypeStreamingText({ tokenize = streamingWords }: { tokenize?: StreamingWordTokenizer } = {}) {
   return (tree: Root) => {
     const leaves: Element[] = []
     let opaqueTail: { parent: Root | Element; index: number } | undefined
@@ -102,6 +111,7 @@ export function rehypeStreamingText({ tokenize = streamingWords }: { tokenize?: 
       type: 'element', tagName: 'span', properties: {}, children: [],
       data: { streamingText: { words: [{ word: '', separator: '' }], trailing: 0, caret: true, caretOnly: true, blockWords: Math.min(STREAMING_WORD_BUDGET, trailing) } },
     })
+    tokenize.finishPass?.(leaves.length)
   }
 }
 
@@ -113,5 +123,6 @@ export function StreamingLeaf({ node }: { node: Element }) {
   useLayoutEffect(() => blockWords === undefined ? undefined : register(blockWords), [register, blockWords])
   if (caretOnly && !streaming) return null
   return <StreamingText segments={emptySegments} tokens={words} count={words.length}
+    sourceText={node.children[0]?.type === 'text' ? node.children[0].value : undefined}
     streaming={streaming} animate={animate && !caretOnly} trailing={trailing + after} caret={caret && isTail} inline />
 }
