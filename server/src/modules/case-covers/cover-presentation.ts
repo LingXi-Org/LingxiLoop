@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { CaseCoverGenerationError } from './cover-validation.js'
 /** Trusted presentation wrapper. The original complete bench is validated separately. */
 export const COVER_CSP = "default-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; child-src 'none'; connect-src 'none'; img-src 'none'; font-src 'none'; media-src 'none'; worker-src 'none'; style-src 'unsafe-inline'"
 const escapeAttribute = (value: string) => value.replace(/[&<>"']/g,c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!))
@@ -47,6 +48,10 @@ export function buildCoverPresentation(input: {kernel:string;figure:string;altTe
 
 /** Hash exactly the assembled script bytes; allow no new scripts or eval. */
 export function withCoverScriptPolicy(html: string): string {
+  // HTML input preprocessing normalizes newlines and replaces NUL. Hash the
+  // exact normalized text we emit, and reject NUL rather than silently changing code.
+  if (html.includes('\u0000')) throw new CaseCoverGenerationError('invalid_model_output')
+  html = html.replace(/\r\n?/g,'\n')
   const hashes = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
     .map(match => `'sha256-${createHash('sha256').update(match[1]).digest('base64')}'`)
   const policy = `${COVER_CSP}; script-src ${hashes.length ? hashes.join(' ') : "'none'"}`
