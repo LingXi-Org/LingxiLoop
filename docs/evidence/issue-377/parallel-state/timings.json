@@ -1,0 +1,154 @@
+{
+  "baselineCommit": "a6b54673b6821c8489a654e2966235035844f861",
+  "kind": "synthetic-host-critical-path",
+  "browser": false,
+  "network": "injected 120ms resource response and 120ms fresh-state response",
+  "samplesPerSide": 3,
+  "before": [
+    {
+      "sample": 0,
+      "elapsedMs": 280.01555799999994,
+      "overlap": false,
+      "calls": [
+        {
+          "kind": "resource-start",
+          "at": 3.7098330000000033
+        },
+        {
+          "kind": "resource-end",
+          "at": 125.77068299999996
+        },
+        {
+          "kind": "state-start",
+          "at": 155.61754999999994
+        },
+        {
+          "kind": "state-end",
+          "at": 275.60152300000004
+        }
+      ]
+    },
+    {
+      "sample": 1,
+      "elapsedMs": 245.04388099999994,
+      "overlap": false,
+      "calls": [
+        {
+          "kind": "resource-start",
+          "at": 0.4349970000000667
+        },
+        {
+          "kind": "resource-end",
+          "at": 121.57099100000005
+        },
+        {
+          "kind": "state-start",
+          "at": 123.78425300000004
+        },
+        {
+          "kind": "state-end",
+          "at": 244.80562999999995
+        }
+      ]
+    },
+    {
+      "sample": 2,
+      "elapsedMs": 241.07666399999994,
+      "overlap": false,
+      "calls": [
+        {
+          "kind": "resource-start",
+          "at": 0.17862900000000081
+        },
+        {
+          "kind": "resource-end",
+          "at": 119.88519700000006
+        },
+        {
+          "kind": "state-start",
+          "at": 121.1591800000001
+        },
+        {
+          "kind": "state-end",
+          "at": 240.73822799999994
+        }
+      ]
+    }
+  ],
+  "after": [
+    {
+      "sample": 0,
+      "elapsedMs": 157.14224300000006,
+      "overlap": true,
+      "calls": [
+        {
+          "kind": "resource-start",
+          "at": 6.30378300000001
+        },
+        {
+          "kind": "state-start",
+          "at": 33.15139800000003
+        },
+        {
+          "kind": "resource-end",
+          "at": 127.20504799999998
+        },
+        {
+          "kind": "state-end",
+          "at": 153.74965500000002
+        }
+      ]
+    },
+    {
+      "sample": 1,
+      "elapsedMs": 122.35666700000002,
+      "overlap": true,
+      "calls": [
+        {
+          "kind": "resource-start",
+          "at": 0.4711930000000848
+        },
+        {
+          "kind": "state-start",
+          "at": 0.7900270000000091
+        },
+        {
+          "kind": "resource-end",
+          "at": 121.27523900000006
+        },
+        {
+          "kind": "state-end",
+          "at": 122.20379000000003
+        }
+      ]
+    },
+    {
+      "sample": 2,
+      "elapsedMs": 122.84925099999998,
+      "overlap": true,
+      "calls": [
+        {
+          "kind": "resource-start",
+          "at": 0.2674880000000712
+        },
+        {
+          "kind": "state-start",
+          "at": 0.5614620000000059
+        },
+        {
+          "kind": "resource-end",
+          "at": 121.144451
+        },
+        {
+          "kind": "state-end",
+          "at": 122.63780500000007
+        }
+      ]
+    }
+  ],
+  "beforeMedianMs": 245.04388099999994,
+  "afterMedianMs": 122.84925099999998,
+  "medianReductionPercent": 49.86642780114961,
+  "baselineHostSha256": "0b52fb3eac040b97d520ac2e03be52eb41d28330e0cad056394ec4a2bfdd7706",
+  "candidateHostSha256": "c5e71c5e9cc8a05f12d41974bb1290ec5319243b8401c16e36c1a149af952e21"
+}

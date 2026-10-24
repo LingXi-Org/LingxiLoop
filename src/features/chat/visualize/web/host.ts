@@ -212,6 +212,7 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
   const ownerUserId = useAuth.getState().user?.id ?? null
   const assertScope = () => {const workspace=getWorkspaceSession();if(ownerUserId!==(useAuth.getState().user?.id ?? null)||target.workspaceIdentity!==getActiveCompanyId()||target.workspacePath!==workspace?.projectId||target.workspaceIdentity!==workspace?.companyId)throw new Error("Interactive view session changed")}
   let active: Page | undefined
+  let preparedState: Page | undefined
   let pendingFollowUp: {prompt:string;idempotencyKey:string} | undefined
   const requirePage = () => { if (!active) throw new Error('Interactive view is not ready'); current(active,false); return active }
   const service: IGenUiService = {
@@ -235,7 +236,7 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
         active = page
         const pending = new Set<string>()
         const progress = () => onProgress?.({stage:'resources',pending:[...pending]})
-        page.html = await buildWebDocument(result.html,result.state,async name => {
+        const [html] = await Promise.all([buildWebDocument(result.html,result.state,async name => {
           pending.add(name);progress()
           try {
             return await publicResources.read(name, result.resourceHashes?.[name], () => readWebResource(name, attemptSignal => {
@@ -246,18 +247,30 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
               return lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',cache:'no-store',headers:headers(page),signal:attemptSignal})
             }, resourceSignal), resourceSignal)
           } finally { pending.delete(name);progress() }
-        }, result.resourceHashes?.['visualize.html'])
+        }, result.resourceHashes?.['visualize.html']), refreshState(page,false,resourceSignal)])
         assertScope()
         signal?.throwIfAborted()
+        page.html = html
+        preparedState = page
       } catch(error) {
         resources.abort()
+        if (preparedState === page) preparedState = undefined
         if (active === page) active = undefined
         await webPlatform.disposeSandbox(page.sandboxId,page.initId)
         throw error
       }
       return page
     },
-    async getState(_target, signal) { const page = requirePage(); await refreshState(page,false,signal); return page.state },
+    async getState(_target, signal) {
+      const page = requirePage()
+      signal?.throwIfAborted()
+      // Preparation already awaited this page's authorized fresh GET alongside
+      // its resources. Consume it once before mounting; subsequent reads stay
+      // fresh, and projectState retains any newer same-scope revision.
+      if (preparedState === page) preparedState = undefined
+      else await refreshState(page,false,signal)
+      return page.state
+    },
     async setState({target: stateTarget,state}) {
       const page = requirePage(); current(page)
       const response = await http<StateResponse>(`${pagePath(page)}/state`, {method:'PUT',headers:headers(page),body:JSON.stringify({state})})
