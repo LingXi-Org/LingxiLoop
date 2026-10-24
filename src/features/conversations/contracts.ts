@@ -1,3 +1,5 @@
+import type { ConversationRunSummary } from '@/lib/conversationRunSummary'
+
 export interface ApiConversation {
   id: string
   kind: 'group' | 'direct' | 'email'
@@ -15,6 +17,7 @@ export interface ApiConversation {
   createdAt: string
   updatedAt: string
   unreadCount: number
+  runSummary?: ConversationRunSummary | null
   lastMessage: {
     id: string
     authorId: string

@@ -1,3 +1,7 @@
+import type { LingxiMessageMetadata } from '@/features/chat/runtime/model'
+import { conversationListRunLabel } from '@/lib/conversationRunSummary'
+import { useChatThreadStore } from '@/features/chat/runtime/store'
+import { conversationRunStatus } from '@/features/chat/runtime/conversation-status'
 import { NotificationOff01Icon, PinIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Badge } from '@/components/ui/badge'
@@ -83,7 +87,20 @@ export function ConversationListItemContent({
 }) {
   // Zustand's external-store selector must return a stable snapshot when no
   // one is typing. A fresh `[]` here causes an infinite render loop in React.
-  const { typingAgentIds: typingIds, runStatus } = useConversationPresence(conversation.id)
+  const { typingAgentIds: typingIds, runStatus: loadedRunStatus } = useConversationPresence(conversation.id)
+  const localRun = useChatThreadStore(state => {
+    if (!conversation.runSummary?.runId) return undefined
+    const messages = state.conversations[conversation.id]?.messages ?? []
+    for (let index = messages.length - 1; index >= 0; index--) {
+      if (messages[index].metadata.custom.runId === conversation.runSummary.runId) return messages[index]
+    }
+    return undefined
+  })
+  const localView = (localRun?.metadata.custom as LingxiMessageMetadata | undefined)?.harness
+  const runStatus = conversation.runSummary ? conversationListRunLabel(conversation.runSummary, localRun && localView ? {
+    runId: String(localRun.metadata.custom.runId), requestVersion: localView.requestVersion, fence: localView.fence,
+    lifecycle: localView.lifecycle ?? '', label: conversationRunStatus([localRun]),
+  } : undefined) : loadedRunStatus
   const byId = useParticipants((state) => state.byId)
   const meId = useMe()
   const muted = isMuted(conversation)

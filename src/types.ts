@@ -1,3 +1,5 @@
+import type { ConversationRunSummary } from './lib/conversationRunSummary'
+
 export type AgentRole = 'researcher' | 'designer' | 'engineer' | 'pm' | 'brand' | 'ops'
 export type ParticipantKind = 'agent' | 'human'
 export type Status = 'avail' | 'working' | 'thinking' | 'waiting' | 'resting'
@@ -95,6 +97,8 @@ export interface Conversation {
   /** ISO timestamp when the mute auto-expires; null/undefined = forever. */
   mutedUntil?: string | null
   unread?: number
+  /** Current authorized public run metadata, independent of loaded message history. */
+  runSummary?: ConversationRunSummary | null
   /** Latest persisted message id from the conversation list payload. Used to
    *  detect when the sidebar preview has advanced past the open transcript. */
   lastMessageId?: string | null
