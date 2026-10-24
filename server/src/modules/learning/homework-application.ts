@@ -73,6 +73,23 @@ export class HomeworkApplication {
     return this.detail(scope,courseId,id)
   }
 
+  async validateDraft(scope:LearningScope,courseId:string,id:string,input:z.input<typeof homeworkRevisionSchema>) {
+    const {expectedRevision}=homeworkRevisionSchema.parse(input)
+    await this.transaction(async db=>{
+      await homeworkScope(db,scope,courseId,'manage')
+      const hw=await homeworkRow(db,scope,courseId,id,true)
+      if(hw.created_by!==scope.userId) throw new LearningApplicationError('forbidden','只有发起教师可以重新检查草稿')
+      if(hw.status!=='DRAFT') throw new LearningApplicationError('conflict','已发布的作业不能重新检查草稿')
+      assertHomeworkRevision(hw.revision,expectedRevision)
+      if(hw.validation_status==='PENDING'||hw.validation_status==='READY') return
+      await db.query(`UPDATE homeworks SET validation_status='PENDING',validated_revision=NULL,validation_feedback='',materials='[]',updated_at=NOW()
+        WHERE company_id=$1 AND id=$2`,[scope.companyId,id])
+      await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.validate',effectKey:id,
+        payload:{homeworkId:id,revision:hw.revision,userId:scope.userId}})
+    })
+    return this.detail(scope,courseId,id)
+  }
+
   async publish(scope:LearningScope,courseId:string,id:string,input:z.input<typeof homeworkPublishSchema>) {
     const data=homeworkPublishSchema.parse(input)
     await this.transaction(async db=>{

@@ -24,6 +24,7 @@
     "express": "^5.2.1",
     "ioredis": "^5.10.1",
     "mdast-util-from-markdown": "2.0.3",
+    "officeparser": "8.2.0",
     "openai": "^6.37.0",
     "openlit": "1.15.0",
     "pg": "^8.20.0",

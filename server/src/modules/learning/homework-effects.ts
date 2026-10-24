@@ -15,49 +15,92 @@ import type { LearningEffect } from './effects-repository.js'
 import { homeworkJudgmentSchema, type HomeworkAnswer, type HomeworkJudgment, type HomeworkMaterial, type HomeworkReport } from './homework-contracts.js'
 import { canReadLearningFile } from './submission-attachments.js'
 import { homeworkAnswerText } from './homework-answer.js'
+import { extractHomeworkPresentationText, HomeworkPresentationMaterialError } from './homework-presentation.js'
 import { assertHomeworkConversation, isHomeworkLearningRecord, readHomeworkConversation } from './homework-evidence.js'
 import { homeworkHash, homeworkRow, homeworkScope, homeworkState, independentMastery, manualMastery,
   type HomeworkRow, type HomeworkStateRow } from './homework-repository.js'
 
 type CanonicalMessage = {messageId:string;role:'user'|'assistant';text:string;timestamp:number;sequence:number;materials:HomeworkMaterial[]}
 
+class HomeworkMaterialError extends Error {
+  constructor(message:string,readonly status:'MATERIAL_ERROR'|'ERROR'='MATERIAL_ERROR') { super(message) }
+}
+
+function materialFeedback(label:string,status:NonNullable<HomeworkMaterial['contentStatus']>):string {
+  switch(status) {
+    case 'unsupported': return `${label}的格式暂不支持读取。请转换为 PPTX、含可选中文字的 PDF、Word 文档或纯文本后重新上传。`
+    case 'empty': return `${label}没有提取到文字。请补充文字正文，或上传含可选中文字的 PPTX、PDF 或 Word 文档；图片和扫描页需先转成文字。`
+    case 'failed': return `${label}无法完整提取文字，文件可能损坏、加密或超出读取限额。请重新导出为较短、未加密的 PPTX 或含可选中文字的 PDF 后上传。`
+    case 'too_large': return `${label}超过读取限额（单个文件 16 MiB、提取文字 60000 字符）。请拆分或精简后重新上传。`
+  }
+}
+
 export async function readHomeworkMaterials(db:Queryable,scope:LearningScope,content:Pick<HomeworkAnswer,'links'|'attachments'>,signal:AbortSignal,purpose:'requirements'|'answer'='requirements'):Promise<HomeworkMaterial[]> {
-  for(const file of content.attachments) if(await canReadLearningFile(db,file.key,scope.userId)!==true) throw new Error('材料访问权限已变化')
+  for(const file of content.attachments) if(await canReadLearningFile(db,file.key,scope.userId)!==true) {
+    throw new HomeworkMaterialError(`附件「${file.name}」目前无法访问。请重新上传该文件，或将其从草稿中移除后再检查。`)
+  }
   const materials:HomeworkMaterial[]=[]
-  const append=(material:HomeworkMaterial)=>{
-    if(material.contentStatus&&purpose==='requirements') throw new Error('材料无法完整读取，请提供可读取的正文或较短的文件')
+  const append=(material:HomeworkMaterial,label:string,feedback?:string)=>{
+    if(material.contentStatus&&purpose==='requirements') throw new HomeworkMaterialError(feedback??materialFeedback(label,material.contentStatus))
     materials.push(material)
   }
   for(const url of content.links) {
-    const value=await readResearch(url,signal)
-    append({source:url,hash:value.sha256,text:value.text,...(value.truncated?{contentStatus:'too_large' as const}:!value.text.trim()?{contentStatus:'empty' as const}:{})})
+    let value:Awaited<ReturnType<typeof readResearch>>
+    try { value=await readResearch(url,signal) }
+    catch {
+      signal.throwIfAborted()
+      throw new HomeworkMaterialError(`链接「${url}」暂时无法读取。请重试检查，或将可公开读取的文字作为正文或附件提供。`,'ERROR')
+    }
+    append({source:url,hash:value.sha256,text:value.text,...(value.truncated?{contentStatus:'too_large' as const}:!value.text.trim()?{contentStatus:'empty' as const}:{})},`链接「${url}」`)
   }
   for(const file of content.attachments) {
-    const metadata=await storage.statObject(file.key),mime=metadata.contentType?.split(';')[0].toLowerCase()??''
+    const label=`附件「${file.name}」`
+    let metadata:Awaited<ReturnType<typeof storage.statObject>>
+    try { metadata=await storage.statObject(file.key) }
+    catch { throw new HomeworkMaterialError(`${label}暂时无法读取。请重试检查；若仍失败，请重新上传该文件。`,'ERROR') }
+    const mime=metadata.contentType?.split(';')[0].trim().toLowerCase()??''
     if(metadata.sizeBytes>16*1024*1024) {
+      if(purpose==='requirements') throw new HomeworkMaterialError(materialFeedback(label,'too_large'))
       if(!metadata.etag&&metadata.lastModifiedMs===null) throw new Error('材料缺少可验证的存储版本')
-      append({source:file.key,hash:`metadata:${homeworkHash(metadata)}`,text:'',contentStatus:'too_large'});continue
+      append({source:file.key,hash:`metadata:${homeworkHash(metadata)}`,text:'',contentStatus:'too_large'},label);continue
     }
-    const bytes=await storage.readObjectBounded(file.key,16*1024*1024,signal)
-    if(bytes.length!==metadata.sizeBytes) throw new Error('材料内容发生变化，请重试')
+    let bytes:Buffer
+    try { bytes=await storage.readObjectBounded(file.key,16*1024*1024,signal) }
+    catch {
+      signal.throwIfAborted()
+      throw new HomeworkMaterialError(`${label}暂时无法完整读取。请重试检查；若仍失败，请重新上传该文件。`,'ERROR')
+    }
+    if(bytes.length!==metadata.sizeBytes) throw new HomeworkMaterialError(`${label}在读取时发生变化。请重新上传该文件后再检查。`)
     const hash=createHash('sha256').update(bytes).digest('hex')
-    if(!mime.startsWith('text/')&&!['application/json','application/xml','application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(mime)) {
-      append({source:file.key,hash,text:'',contentStatus:'unsupported'});continue
+    if(mime==='application/vnd.ms-powerpoint') {
+      append({source:file.key,hash,text:'',contentStatus:'unsupported'},label,
+        `${label}为旧版 PPT，暂不支持完整提取。请另存为 PPTX，或导出为含可选中文字的 PDF 后重新上传。`);continue
+    }
+    if(!mime.startsWith('text/')&&!['application/json','application/xml','application/pdf','application/vnd.openxmlformats-officedocument.wordprocessingml.document','application/vnd.openxmlformats-officedocument.presentationml.presentation'].includes(mime)) {
+      append({source:file.key,hash,text:'',contentStatus:'unsupported'},label);continue
     }
     let text:string
     try {
       text=mime==='application/pdf'?await extractDocumentText(Uint8Array.from(bytes),'pdf',signal)
-        :mime==='application/vnd.openxmlformats-officedocument.wordprocessingml.document'?await extractDocumentText(Uint8Array.from(bytes),'docx',signal):decodeSourceText(Uint8Array.from(bytes))
-    } catch {
+        :mime==='application/vnd.openxmlformats-officedocument.wordprocessingml.document'?await extractDocumentText(Uint8Array.from(bytes),'docx',signal)
+        :mime==='application/vnd.openxmlformats-officedocument.presentationml.presentation'?await extractHomeworkPresentationText(Uint8Array.from(bytes),'pptx',signal)
+        :decodeSourceText(Uint8Array.from(bytes))
+    } catch(error) {
       signal.throwIfAborted()
-      append({source:file.key,hash,text:'',contentStatus:'failed'});continue
+      if(mime==='application/vnd.openxmlformats-officedocument.presentationml.presentation'&&!(error instanceof HomeworkPresentationMaterialError)) {
+        throw new HomeworkMaterialError(`${label}的读取服务暂时未能完成检查。请重试检查，已上传的文件会保留。`,'ERROR')
+      }
+      append({source:file.key,hash,text:'',contentStatus:error instanceof HomeworkPresentationMaterialError?error.contentStatus:'failed'},label);continue
     }
-    append({source:file.key,hash,text:text.slice(0,60000),...(text.length>60000?{contentStatus:'too_large' as const}:!text.trim()?{contentStatus:'empty' as const}:{})})
+    append({source:file.key,hash,text:text.slice(0,60000),...(text.length>60000?{contentStatus:'too_large' as const}:!text.trim()?{contentStatus:'empty' as const}:{})},label)
   }
   let remaining=100000
   for(const material of materials) {
     if(material.text.length>remaining) {
-      if(purpose==='requirements') throw new Error('材料总量过大，请精简后重试')
+      if(purpose==='requirements') {
+        const file=content.attachments.find(item=>item.key===material.source)
+        throw new HomeworkMaterialError(`${file?`附件「${file.name}」`:`链接「${material.source}」`}使材料总文字超过 100000 字符。请精简或移除部分材料后重新检查。`)
+      }
       material.text=material.text.slice(0,remaining);material.contentStatus='too_large'
     }
     remaining-=material.text.length
@@ -186,13 +229,20 @@ export async function runHomeworkEffect(effect:LearningEffect):Promise<void> {
   if(effect.kind==='homework.validate') {
     if(hw.status!=='DRAFT'||hw.revision!==effect.payload.revision) return
     await homeworkScope(pool,scope,effect.courseId,'manage')
-    let materials:HomeworkMaterial[]=[],valid=false,feedback=''
+    let materials:HomeworkMaterial[]=[],status:HomeworkRow['validation_status']='ERROR',feedback=''
+    let stage:'materials'|'model'='materials'
     try {
       materials=await readHomeworkMaterials(pool,scope,hw,AbortSignal.timeout(90000))
-      const result=z.object({valid:z.boolean(),feedback:z.string().max(4000)}).strict().parse(await modelJson(scope,null,'homework.validate',validationPrompt,
+      stage='model'
+      const result=z.object({valid:z.boolean(),feedback:z.string().trim().min(1).max(4000)}).strict().parse(await modelJson(scope,null,'homework.validate',validationPrompt,
         {title:hw.title,instructions:hw.instructions,criteria:hw.criteria,materials}))
-      valid=result.valid;feedback=result.feedback
-    } catch { feedback='无法验证作业要求或完整读取材料，请检查内容、提供可读取的文字材料后重试。' }
+      status=result.valid?'READY':'INVALID';feedback=result.feedback
+    } catch(error) {
+      status=error instanceof HomeworkMaterialError?error.status:'ERROR'
+      feedback=error instanceof HomeworkMaterialError?error.message
+        :stage==='materials'?'材料读取服务暂时未能完成检查，请重试检查。草稿内容和附件已保留。'
+          :'要求校验服务暂时未能完成检查，请重试检查。草稿内容和附件已保留。'
+    }
     await withTransaction(pool,async db=>{
       await homeworkScope(db,scope,effect.courseId,'manage')
       const current=await homeworkRow(db,scope,effect.courseId,id,true)
@@ -200,7 +250,7 @@ export async function runHomeworkEffect(effect:LearningEffect):Promise<void> {
       await leaseCurrent(db,effect)
       await db.query(`UPDATE homeworks SET validated_revision=$3,validation_status=$4,validation_feedback=$5,materials=$6::jsonb,updated_at=NOW()
         WHERE company_id=$1 AND id=$2 AND status='DRAFT' AND revision=$3 AND created_by=$7`,
-      [scope.companyId,id,hw.revision,valid?'READY':'INVALID',feedback,JSON.stringify(materials),scope.userId])
+      [scope.companyId,id,hw.revision,status,feedback,JSON.stringify(materials),scope.userId])
     })
     return
   }

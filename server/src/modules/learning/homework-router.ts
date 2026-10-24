@@ -43,6 +43,10 @@ homeworkRouter.patch(`${path}/draft`,safe(async(req,res)=>{
   const scope=await requireCompany(req),input=parse(homeworkEditSchema.safeParse(req.body))
   res.json(await respond(()=>homework.updateDraft(scope,String(req.params.courseId),String(req.params.homeworkId),input)))
 }))
+homeworkRouter.post(`${path}/validate`,safe(async(req,res)=>{
+  const scope=await requireCompany(req),input=parse(homeworkRevisionSchema.safeParse(req.body))
+  res.json(await respond(()=>homework.validateDraft(scope,String(req.params.courseId),String(req.params.homeworkId),input)))
+}))
 homeworkRouter.post(`${path}/publish`,safe(async(req,res)=>{
   const scope=await requireCompany(req),input=parse(homeworkPublishSchema.safeParse(req.body))
   res.json(await respond(()=>homework.publish(scope,String(req.params.courseId),String(req.params.homeworkId),input)))
