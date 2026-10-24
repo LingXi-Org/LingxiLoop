@@ -22,6 +22,7 @@ import { DEMI_VIEWBOX, RAYON } from '@/lib/bloub/repere'
 import { COLOR_BY_ID, SHAPE_BY_ID } from '@/lib/bloub/skins'
 import { STATE_BY_ID, type StateId } from '@/lib/bloub/states'
 import { getBloubClockTime, subscribeBloubClock } from '@/lib/bloub/clock'
+import { sampleStaticPointerFrame } from '@/lib/bloub/interaction'
 
 type BloubParticipant = Pick<Participant, 'id' | 'name' | 'role' | 'status' | 'statusUpdatedAt'>
 
@@ -191,10 +192,9 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
       engine.setState(state, localNow)
       setFrame(engine.sample(localNow))
     } else {
-      engine.reset(state, localNow - phase)
-      setFrame(engine.sample(localNow))
+      setFrame(sampleStaticPointerFrame(engine, state, phase, null))
     }
-  }, [engine, motionEnabled, motionOffset, phase, state])
+  }, [engine, motionEnabled, motionOffset, phase, state, reducedMotion, visible])
 
   useEffect(() => {
     if (!motionEnabled) return
@@ -210,16 +210,21 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
   }, [engine, motionEnabled, motionOffset, size])
 
   const pointEyesAtPointer = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!motionEnabled || size < 36) return
+    if (mode !== 'chat' || !visible || reducedMotion || size < 36) return
     const rect = event.currentTarget.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0) return
     const x = Math.max(-1, Math.min(1, (event.clientX - rect.left - rect.width / 2) / (rect.width / 2)))
     const y = Math.max(-1, Math.min(1, (event.clientY - rect.top - rect.height / 2) / (rect.height / 2)))
-    engine.setLook({ yaw: x * 46, pitch: -y * 34, mix: 0.86, spin: 0, wander: 0.16 }, getBloubClockTime() + motionOffset, 0.12)
+    const look = { yaw: x * 46, pitch: -y * 34, mix: 0.86, spin: 0, wander: 0.16 }
+    const now = getBloubClockTime() + motionOffset
+    if (motionEnabled) engine.setLook(look, now, 0.12)
+    else setFrame(sampleStaticPointerFrame(engine, state, phase, look))
   }
   const releasePointerLook = () => {
-    if (!motionEnabled || size < 36) return
-    engine.setLook(null, getBloubClockTime() + motionOffset, 0.38)
+    if (mode !== 'chat' || !visible || reducedMotion || size < 36) return
+    const now = getBloubClockTime() + motionOffset
+    if (motionEnabled) engine.setLook(null, now, 0.38)
+    else setFrame(sampleStaticPointerFrame(engine, state, phase, null))
   }
 
   const dots = size < 40 && frame.dots.length > 8 ? frame.dots.slice(0, 8) : frame.dots

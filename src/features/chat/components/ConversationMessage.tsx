@@ -7,7 +7,7 @@ import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckCheck, LoaderCircle } from 'lucide-react'
 import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Avatar } from '@/components/Avatar'
+import { ConversationMessageAvatar } from './ConversationMessageAvatar'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
 import { MarkdownText } from '@/components/assistant-ui/markdown-text'
 import { TwEmoji } from '@/components/TwEmoji'
@@ -276,19 +276,8 @@ export function ConversationMessage() {
         custom.isMine ? 'grid-cols-[minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >
-      <div data-message-avatar className={cn(
-        'row-start-2 flex',
-        custom.senderKind === 'agent' ? 'self-start' : 'self-center',
-        isMobile ? 'w-8' : 'w-10',
-        custom.isMine ? 'col-start-2' : 'col-start-1',
-        custom.groupStart && participant?.kind === 'agent' && 'chat-message-avatar',
-        custom.groupStart && participant?.kind === 'agent' && participant.status === 'thinking' && 'bloub-activity-thinking',
-        custom.groupStart && participant?.kind === 'agent' && participant.status === 'working' && 'bloub-activity-working',
-      )}>
-        {(custom.isMine ? custom.groupEnd : custom.groupStart) && participant && (
-          <Avatar p={participant} size={isMobile ? 32 : 38} ringColor="var(--background)" mode="chat" className="transition-[width,height] duration-200" />
-        )}
-      </div>
+      <ConversationMessageAvatar participant={participant} isMobile={isMobile} isMine={custom.isMine}
+        groupStart={custom.groupStart} groupEnd={custom.groupEnd} />
       <div className={cn('contents', custom.isMine ? '[&>div]:col-start-1' : '[&>div]:col-start-2')}>
         {custom.groupStart && !custom.isMine && (
           <div className="row-start-1 mb-1 flex items-center gap-2 px-1 text-xs text-muted-foreground">
