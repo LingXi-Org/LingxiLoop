@@ -20,7 +20,7 @@ test('a failed product verification stays hidden throughout retry until the new 
     acceptSession() {}, clear() {} }
   const useAuth = Object.assign((select: (state: typeof auth) => unknown) => select(auth), { getState: () => auth })
   mock.module('@/api/core/http', { namedExports: { ApiError: class extends Error { status = 401 } } })
-  mock.module('@/auth/api', { namedExports: { authClient: { useSession: () => session }, authApi: { me: () => pending } } })
+  mock.module('@/auth/api', { namedExports: { authClient: { useSession: () => session }, authApi: { verifySession: () => pending } } })
   mock.module('@/stores/auth', { namedExports: { useAuth } })
   mock.module('./AuthScreen', { namedExports: { AuthScreen: () => React.createElement('p', null, 'signed-out') } })
   mock.module('./WorkspaceSkeleton', { namedExports: { WorkspaceSkeleton: () => React.createElement('p', null, 'checking-session') } })

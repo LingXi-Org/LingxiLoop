@@ -10,7 +10,7 @@ test('session observations gate old authorized content before effects can reconc
   }
   const auth = { authenticated: true, ready: true, sessionKey: key, setAuthenticated() {}, setMe() {}, setServerCapabilities() {}, clear() {} }
   mock.module('@/api/core/http', { namedExports: { ApiError: class extends Error { status = 401 } } })
-  mock.module('@/auth/api', { namedExports: { authClient: { useSession: () => session }, authApi: { me: async () => { throw new Error('SSR must not read sessions') } } } })
+  mock.module('@/auth/api', { namedExports: { authClient: { useSession: () => session }, authApi: { verifySession: async () => { throw new Error('SSR must not read sessions') } } } })
   mock.module('@/stores/auth', { namedExports: { useAuth: (select: (state: typeof auth) => unknown) => select(auth) } })
   mock.module('./AuthScreen', { namedExports: { AuthScreen: () => createElement('p', null, 'signed-out') } })
   mock.module('./WorkspaceSkeleton', { namedExports: { WorkspaceSkeleton: () => createElement('p', null, 'checking-session') } })

@@ -73,3 +73,16 @@ test('trusted external invalidation fences an in-flight success before effect cl
   assert.equal(failures, 0)
   cancel()
 })
+
+test('current acceptance rejection remains recoverable when its own validation clears the identity', async () => {
+  let epoch = 1
+  const failures: string[] = []
+  synchronizeProductSession('same-session', {
+    currentKey: () => 'same-session', currentEpoch: () => epoch,
+    read: async () => me('invalid-membership'), clear() {},
+    accept: () => { epoch++; throw new Error('Active company membership required') },
+    failed: error => failures.push(error.message),
+  })
+  await flush()
+  assert.deepEqual(failures, ['Active company membership required'])
+})

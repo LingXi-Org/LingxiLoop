@@ -59,4 +59,6 @@ export const authApi = {
   sendVerification: (email: string) => authClient.emailOtp.sendVerificationOtp({ email, type: 'email-verification' }),
   verifyEmail: (email: string, otp: string) => authClient.emailOtp.verifyEmail({ email, otp }),
   me: (signal?: AbortSignal) => http<AuthMeResponse>('/session', { signal }),
+  // AuthGate owns this check's failure; invitation and login reads keep the default.
+  verifySession: (signal: AbortSignal) => http<AuthMeResponse>('/session', { signal }, { sessionRejection: 'caller' }),
 }

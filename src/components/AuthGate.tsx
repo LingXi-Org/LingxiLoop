@@ -26,7 +26,7 @@ export function AuthGate({ children, unauthFallback }: { children: ReactNode; un
     return synchronizeProductSession(key, {
       currentKey: () => useAuth.getState().sessionKey,
       currentEpoch: () => useAuth.getState().authorizationEpoch,
-      read: signal => authApi.me(signal),
+      read: signal => authApi.verifySession(signal),
       clear: () => useAuth.getState().clear(),
       accept: (me, sessionKey) => {
         useAuth.getState().acceptSession(me, sessionKey)

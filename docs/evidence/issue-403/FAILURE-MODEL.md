@@ -33,3 +33,9 @@ The correction latches a current resource401 revalidation request until a truste
 CI40077033989 on e5c144ca failed at web lint/tests. Its annotations only supplied exit1. A single attempt to retrieve that job's raw log returned Forbidden with zero bytes; no alternate path or retry was used. Local full lint reproduced noChildrenProp in the final SSR test typing adjustment. Ordinary JSX fixes that test-only error without changing assertions.
 
 Corrected owning web run: 137/137 PASS in 29.99s (the normal web smoke plus changed auth tests); full web lint passed. After the final snapshot-dependency delta, the two Gate tests and official Better Auth observation test passed 3/3. Original red, missing-fixture-export attempts, CI failure and earlier 9-test result remain distinct; they are not recast as one successful run. Exact new CI and independent real two-context browser verification are still pending. No local browser or production session was run.
+
+### Rejection ownership follow-up
+
+The second review also covered two callers beyond the initial gate: current WebSocket4403 now passes the existing `session-rejected` reason to the same bounded reconciliation path (no authorization/close-code rule changed), and only `authApi.verifySession` opts into caller-owned `/session` rejection. Ordinary `authApi.me`, including invitation acceptance/login fallback, retains global current401 cleanup. Both boundaries failed their new assertions before the correction.
+
+A current synchronous membership-validation rejection can itself clear the identity before throwing. That current failure still reaches the recoverable error UI; epoch fencing continues to discard responses invalidated externally. The additional negative failed before this correction. Final affected suite: 12/12 PASS; prior 137/137 owning web result remains a separate run. New exact CI and independent browser evidence remain pending.

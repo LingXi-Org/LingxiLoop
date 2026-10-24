@@ -9,7 +9,7 @@ export class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly code?: string) { super(message) }
 }
 
-export async function http<T>(path: string, init?: RequestInit): Promise<T> {
+export async function http<T>(path: string, init?: RequestInit, options?: { sessionRejection: 'caller' }): Promise<T> {
   const headers: Record<string, string> = { 'content-type': 'application/json' }
   const company = getActiveCompanyId()
   const user = useAuth.getState().user
@@ -17,8 +17,9 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const workspace = getWorkspaceSession()
   if (workspace && workspace.companyId === company) headers['x-project-id'] = workspace.projectId
   const response = await lingxiApiFetch(`${API}${path}`, { ...init, credentials: 'include', headers: mergeRequestHeaders(headers, init?.headers) })
-  // The product-session synchronizer owns /session failure and its bounded recovery.
-  if (response.status === 401 && path !== '/session' && !init?.signal?.aborted && !path.startsWith('/auth/')
+  // Only the explicit product-session synchronizer owns its bounded recovery.
+  const callerOwnsRejection = path === '/session' && options?.sessionRejection === 'caller'
+  if (response.status === 401 && !callerOwnsRejection && !init?.signal?.aborted && !path.startsWith('/auth/')
     && useAuth.getState().user === user && getActiveCompanyId() === company) {
     useAuth.getState().clear('session-rejected')
   }

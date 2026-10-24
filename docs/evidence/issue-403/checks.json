@@ -39,6 +39,22 @@
     "final-gate-delta.log": {
       "sha256": "433ac0d2a39054efe6f2f8e5e1e701d51dd1ad3dc8802edd24b154d94e892d59",
       "bytes": 1300
+    },
+    "rejection-owner-red.log": {
+      "sha256": "cc9cdfda8a03db6c68255291e9ec96117db01b23e29a0b0d0dc91a7ad18a6e0f",
+      "bytes": 2333
+    },
+    "rejection-owner-green.log": {
+      "sha256": "5ea967112d1cc6d39da6283e91fdcdb06fe65471994fa55b3aa8c14849aacf91",
+      "bytes": 3820
+    },
+    "acceptance-red.log": {
+      "sha256": "18c94d7daef7576827b9f60e8f58dbc81a709a8cdc6c87ba54a794233fc363d5",
+      "bytes": 1961
+    },
+    "final-focused.log": {
+      "sha256": "4608768e20cca8bd53a1c80a938f66346407eff95de3b41fc091514da2abe5f4",
+      "bytes": 4348
     }
   },
   "browser": "pending independent synthetic two-context validation",
