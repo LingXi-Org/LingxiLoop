@@ -1,0 +1,114 @@
+TAP version 13
+# Subtest: Chinese animation wrappers stay bounded as received text grows without losing text
+ok 1 - Chinese animation wrappers stay bounded as received text grows without losing text
+  ---
+  duration_ms: 216.254948
+  type: 'test'
+  ...
+# Subtest: historical and reduced animation text has no character wrappers or caret
+ok 2 - historical and reduced animation text has no character wrappers or caret
+  ---
+  duration_ms: 9.095715
+  type: 'test'
+  ...
+# Subtest: the animation budget is shared across blocks and unregisters the exact owner
+ok 3 - the animation budget is shared across blocks and unregisters the exact owner
+  ---
+  duration_ms: 3.495559
+  type: 'test'
+  ...
+# Subtest: opaque tails count earlier prose toward the block animation budget without decorating code
+ok 4 - opaque tails count earlier prose toward the block animation budget without decorating code
+  ---
+  duration_ms: 7.752371
+  type: 'test'
+  ...
+# Subtest: Markdown token boundaries preserve combining marks, joined emoji and Hangul graphemes
+ok 5 - Markdown token boundaries preserve combining marks, joined emoji and Hangul graphemes
+  ---
+  duration_ms: 5.464997
+  type: 'test'
+  ...
+# (node:486683) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: streamed prose and incomplete Markdown blocks appear before completion
+ok 6 - streamed prose and incomplete Markdown blocks appear before completion
+  ---
+  duration_ms: 921.568968
+  type: 'test'
+  ...
+# Subtest: mixed message text keeps global citation positions and copy across non-text parts
+ok 7 - mixed message text keeps global citation positions and copy across non-text parts
+  ---
+  duration_ms: 57.515912
+  type: 'test'
+  ...
+# Subtest: lists and paragraphs retain their semantic layout without bubble wrappers
+ok 8 - lists and paragraphs retain their semantic layout without bubble wrappers
+  ---
+  duration_ms: 192.756327
+  type: 'test'
+  ...
+# Subtest: unfinished structural blocks remain visible during streaming and interruption
+ok 9 - unfinished structural blocks remain visible during streaming and interruption
+  ---
+  duration_ms: 93.928236
+  type: 'test'
+  ...
+# Subtest: only live agent text enables the streaming tail; settled and interrupted text is static
+ok 10 - only live agent text enables the streaming tail; settled and interrupted text is static
+  ---
+  duration_ms: 15.515487
+  type: 'test'
+  ...
+# Subtest: committed citations preserve Markdown and normal links, with one shared basis slot
+ok 11 - committed citations preserve Markdown and normal links, with one shared basis slot
+  ---
+  duration_ms: 30.63464
+  type: 'test'
+  ...
+# Subtest: only the active occurrence describes its fixed, accessible basis region
+ok 12 - only the active occurrence describes its fixed, accessible basis region
+  ---
+  duration_ms: 5.083212
+  type: 'test'
+  ...
+# Subtest: copying and quoting strip only supplied citation spans
+ok 13 - copying and quoting strip only supplied citation spans
+  ---
+  duration_ms: 6.520174
+  type: 'test'
+  ...
+# Subtest: citation excerpts render safe compact Markdown while source titles remain literal
+ok 14 - citation excerpts render safe compact Markdown while source titles remain literal
+  ---
+  duration_ms: 10.300476
+  type: 'test'
+  ...
+# Subtest: new citations underline answer wording and consume internal links before Link rendering
+ok 15 - new citations underline answer wording and consume internal links before Link rendering
+  ---
+  duration_ms: 38.520443
+  type: 'test'
+  ...
+# Subtest: new drafts show only body text and never activate citation navigation or stale confidence
+ok 16 - new drafts show only body text and never activate citation navigation or stale confidence
+  ---
+  duration_ms: 24.352838
+  type: 'test'
+  ...
+# Subtest: cached Markdown processors keep each message and regenerated claim identity separate
+ok 17 - cached Markdown processors keep each message and regenerated claim identity separate
+  ---
+  duration_ms: 22.458097
+  type: 'test'
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 15973.114198

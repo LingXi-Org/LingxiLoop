@@ -5,7 +5,7 @@ import { syntaxHighlighter } from '@blocknote/code-block'
 import { NativeView } from './NativeView'
 import { contentSchema, contentDictionary } from './schema'
 import { importLegacy } from './legacy'
-import { pasteCode } from './code-block'
+import { pasteContent } from './paste'
 import { useCreateBlockNote } from '@blocknote/react'
 import { forwardRef, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
@@ -34,7 +34,7 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
   const last = useRef<{ value: string; document?: ContentDocument | null; legacyParagraphKey?: string } | null>(null)
   const original = useRef(document?.legacyMarkdown ?? value)
   const editor = useCreateBlockNote({
-    schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter], pasteHandler: pasteCode,
+    schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter], pasteHandler: context => pasteContent(context, legacyFormat),
     domAttributes: { editor: { 'aria-label': label, role: 'textbox', 'aria-multiline': 'true' } },
     uploadFile: async file => {
       if (!current.current.uploadFile) throw new Error('此内容不支持上传附件，请使用链接。')

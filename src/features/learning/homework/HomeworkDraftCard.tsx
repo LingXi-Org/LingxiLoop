@@ -28,7 +28,7 @@ export function HomeworkDraftTool({ result, status, isError, readOnly = false }:
   return <HomeworkDraftCard key={parsed.data.value.result.homeworkId} {...parsed.data.value.result} readOnly={readOnly} preparing={preparing} />
 }
 
-function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing }: { courseId: string; homeworkId: string; readOnly: boolean; preparing: boolean }) {
+export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, onViewForum }: { courseId: string; homeworkId: string; readOnly: boolean; preparing: boolean; onViewForum?(): void }) {
   const id = useId()
   const [editorDocument,setEditorDocument]=useState<ContentDocument | null>(null)
   const [criteriaItems,setCriteriaItems]=useState<string[]>([])
@@ -68,7 +68,7 @@ function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing }: { cour
       {homework && homework.status !== 'DRAFT' ? <>
         <Badge variant="secondary">{homework.status === 'CLOSED' ? '已关闭' : '已发布'}</Badge><h3 className="font-medium">{homework.title}</h3>
         <ForumBody content={homework.instructions} document={homework.editorDocument} />{homework.criteriaDocument ? <ForumBody content={criteriaSource(homework.criteria,homework.criteriaDocument)} document={homework.criteriaDocument}/> : <ul className="list-disc space-y-1 ps-5 text-sm">{homework.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}
-        <ForumFiles links={homework.links} attachments={homework.attachments} /><Button variant="outline" onClick={() => useApp.getState().setView('forum')}>在论坛查看作业</Button>
+        <ForumFiles links={homework.links} attachments={homework.attachments} /><Button variant="outline" onClick={() => onViewForum ? onViewForum() : useApp.getState().setView('forum')}>在论坛查看作业</Button>
       </> : homework && <form className="space-y-4" onSubmit={async event => {
         event.preventDefault()
         if (disabled || !dirty) return

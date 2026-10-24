@@ -1,0 +1,88 @@
+TAP version 13
+# (node:482152) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: title emphasis follows the actual pin value and retains semantic markers in selected/unread/long rows
+not ok 1 - title emphasis follows the actual pin value and retains semantic markers in selected/unread/long rows
+  ---
+  duration_ms: 35.097749
+  type: 'test'
+  location: '/tmp/loop-379/src/im/ConversationList.test.tsx:1:1019'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-379/src/im/ConversationList.test.tsx:20:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: actual app tab and manifest PNGs retain transparent rounded corners at each size
+not ok 2 - actual app tab and manifest PNGs retain transparent rounded corners at each size
+  ---
+  duration_ms: 10.19833
+  type: 'test'
+  location: '/tmp/loop-379/src/lib/favicon-assets.test.ts:1:2120'
+  failureType: 'testCodeFailure'
+  error: |-
+    public/favicon-32.png: corner 0,0 must be transparent
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    rounded (/tmp/loop-379/src/lib/favicon-assets.test.ts:41:99)
+    TestContext.<anonymous> (/tmp/loop-379/src/lib/favicon-assets.test.ts:50:5)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: every fallback ICO frame has transparent corners and an intact center
+not ok 3 - every fallback ICO frame has transparent corners and an intact center
+  ---
+  duration_ms: 0.90398
+  type: 'test'
+  location: '/tmp/loop-379/src/lib/favicon-assets.test.ts:1:2464'
+  failureType: 'testCodeFailure'
+  error: |-
+    favicon.ico 48: corner 0,0 must be transparent
+    
+    1 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 1
+  operator: 'strictEqual'
+  stack: |-
+    rounded (/tmp/loop-379/src/lib/favicon-assets.test.ts:41:99)
+    TestContext.<anonymous> (/tmp/loop-379/src/lib/favicon-assets.test.ts:64:5)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..3
+# tests 3
+# suites 0
+# pass 0
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3362.558033

@@ -1,0 +1,89 @@
+{
+  "commit": "af7466155560aa3ff364abf57e89c7209882ab0d",
+  "files": [
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/primitives/StreamdownText.tsx",
+      "sha256": "6dd08eb783d39542c51a343461df2c57e2690c22559aec098edeec077a7ec594",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/remend.ts",
+      "sha256": "4503f32586760d291d1d6edc3b13024606071ea7ce8ffa25f24e8dc6a4d45479",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/preprocess.ts",
+      "sha256": "4312d59d55307089373e4c063f620eb7c3d8015333f0261af3d9da95b4ecc421",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/types.ts",
+      "sha256": "a3466f5fed2f29c1c10528765e5c9898794fa6611a2fcab51034edcdce6d1118",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/adapters/code-adapter.tsx",
+      "sha256": "f1c073ab348d1494c53e8ad9dc84f13aebecd6a0ae7a20b40db8334256f2519a",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/adapters/components-adapter.ts",
+      "sha256": "a386adcd8a639c2883a88407bae3e6a8e25b3f4cf04d0b7476de3d25d9c640c1",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/adapters/PreOverride.tsx",
+      "sha256": "bd66c9a2a91fb2ff4d32503694fd2d01edcb8218c0657caddc844a20afa47ece",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/memoization.ts",
+      "sha256": "2ab839fcebfa059a620437aa33ecfaaf61f10b65eef3377c4f23a65ab781d429",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-streamdown",
+      "version": "0.3.14",
+      "file": "src/useCallbackRef.ts",
+      "sha256": "a6c65483697bc7df796cc85320a74791d783c6af59e5dac238fba9c5c9323bd6",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-markdown",
+      "version": "0.14.15",
+      "file": "src/primitives/MarkdownText.tsx",
+      "sha256": "085f1acc0dd799ec3b198f91c5ab5df4794307f39733df783dd22fe007c95f2f",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-markdown",
+      "version": "0.14.15",
+      "file": "src/preprocess.ts",
+      "sha256": "d0bc77a9d121bed17cae55ff8ada62938ac3c11e35cb479f292b46c5e107112f",
+      "matchesFixedSource": true
+    },
+    {
+      "package": "react-markdown",
+      "version": "0.14.15",
+      "file": "src/overrides/CodeOverride.tsx",
+      "sha256": "aac86563501f13c95c93b5b35efb02e03b233ce1f5d6ee29f31ce56ec0f2ea45",
+      "matchesFixedSource": true
+    }
+  ]
+}
