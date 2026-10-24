@@ -93,8 +93,8 @@ pass. `tsc -p e2e/favicon-pinned/tsconfig.json --noEmit` passes, covering all we
 source and the new fixture/config. Its first attempt failed because the sparse
 checkout omitted existing server modules imported by web tests; materializing
 the tracked4.7MB `server/src` resolved those errors without code changes. The
-serialized official browser scenario, independent final review and exact PR CI
-will be recorded after they run.
+serialized official browser scenario and independent final review passed as
+recorded below. Exact PR CI is tracked on the final pushed head.
 The browser fixture uses the real row renderer, API client and store reload/map
 with a deterministic localhost API; its two pin controls are fixture affordances,
 not evidence of changed production menu behavior. It also copies the actual
@@ -104,3 +104,23 @@ existing installed-PWA icon refresh cannot be established by a Chromium fixture.
 No production deployment or issue closure is authorized by this workstream;
 root remains the sole release owner. Rollback reverts this branch's icon files,
 reference revision and pinned-title line together, with no schema/data change.
+
+## Final browser and independent review
+
+Independent read-only review of product commit
+`123e93cb8a04125fe83419ea6974fed420603fd2` found noP1/P2; subsequent source
+changes were fixture/check/evidence only. Official e2e0.17.0 +@e2e-dev/web0.12.0
+run `01a16c9b-0574-7a07-85ae-887c64a0dc13` passed1/1 in13.46s (15.51s total)
+on Node22.23.3 and the existing batch Chrome153 over CDP9337. The actual API
+client and store reload/map yielded computed title weights
+`500 → 600 → 600 after reload → 500 after unpin → 500 after reload`. Selection
+and hover retained the pinned600 weight. The served32px PNG decoded with corner
+alpha0; actual document favicon links all carried the new revision. At900px,
+document scrollWidth was900px. The retained screenshot shows actual SVG/PNG/ICO
+assets on light/dark backgrounds and both title states. It does not represent
+browser-chrome capture, Edge/Safari execution or installed-PWA refresh.
+
+The own Vite5196 process stopped with the successful runner; socket inspection
+confirmed no listener. Its13MiB generated cache was removed and the browser slot
+was handed to378. No browser installation, provider, API production access,
+merge or deployment took place.
