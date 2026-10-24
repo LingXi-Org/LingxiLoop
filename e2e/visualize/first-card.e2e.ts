@@ -6,7 +6,7 @@ import { expect } from 'e2e'
 // official SDK initialization and actual content paint. Failure model is in
 // perf/issue-259/FAILURE-MODEL.md.
 // Keep runner screen collection outside the timed interval.
-test('first visible card overlaps declared vendors with slow runtime', async ({ app, browser }) => {
+test('first visible card overlaps authored vendors with kit and slow runtime', async ({ app, browser }) => {
   // Test-only, cross-frame timestamps. No product protocol, capability or
   // transport is changed. Record document creation before author/runtime code.
   await browser.addInitScript(() => {
@@ -101,7 +101,10 @@ test('first visible card overlaps declared vendors with slow runtime', async ({ 
   expect(result.resources.filter(item => item.name.includes('.'))).toHaveLength(8)
   expect(new Set(vendors.map(item => item.name)).size).toBe(4)
   for (const vendor of vendors) {
-    expect(vendor.start).toBeGreaterThanOrEqual(kit.end)
+    // The authored D3 import is known before the kit returns. This legacy
+    // fixture omits its kit hash, so the other vendors still need discovery.
+    if (vendor.name === 'vendor/d3-7.9.0.min.js') expect(vendor.start).toBeLessThan(kit.end)
+    else expect(vendor.start).toBeGreaterThanOrEqual(kit.end)
     if (!process.env.E2E_VISUALIZE_SLOW_KIT) expect(vendor.start).toBeLessThan(runtime.end)
   }
   expect(result.paint).toBeGreaterThan(result.initialized)

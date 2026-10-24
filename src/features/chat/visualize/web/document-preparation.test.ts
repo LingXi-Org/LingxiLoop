@@ -10,8 +10,8 @@ const kitHash = createHash('sha256').update(kit).digest('hex')
 const required = ['vendor/floating-ui-core-1.7.3.min.js', 'vendor/floating-ui-dom-1.7.4.min.js', 'vendor/lucide-1.17.0.js']
 const source = (name: string) => name === 'visualize.html' ? kit : `/* resource:${name} */`
 
-// Failure model: waiting for the pinned kit serializes its already-known vendor
-// reads; speculative work for an unknown kit or duplicated reads would be waste.
+// Failure model: waiting for the kit serializes known dependencies and vendors
+// already declared by the fragment; unrelated or duplicated reads would be waste.
 test('known fixed kit dependencies start before the kit completes, once and in original output order', async () => {
   const calls: string[] = []
   let finishKit!: (value: string) => void
@@ -30,28 +30,50 @@ test('known fixed kit dependencies start before the kit completes, once and in o
   } finally { finishKit(kit); await pending }
 })
 
-test('an unknown kit keeps demand-based dependencies, including optional authored D3 and calendar', async () => {
+test('authored D3 starts alongside pinned dependencies before the kit completes', async () => {
   const calls: string[] = []
   let finishKit!: (value: string) => void
   const kitReady = new Promise<string>(resolve => { finishKit = resolve })
-  const fragment = '<viz-calendar/><script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>'
-  const pending = buildWebDocument(fragment, null, async name => { calls.push(name); return name === 'visualize.html' ? kitReady : source(name) }, 'unknown-kit')
-  assert.equal(calls.some(name => name.startsWith('vendor/')), false)
-  finishKit(kit)
-  const result = await pending
-  assert.equal(calls.filter(name => name === 'calendar.js').length, 1)
-  assert.equal(calls.filter(name => name === 'vendor/d3-7.9.0.min.js').length, 1)
-  assert.ok(result.includes(source('calendar.js')))
-  assert.ok(result.includes(source('vendor/d3-7.9.0.min.js')))
+  const fragment = '<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script><script src="https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js"></script>'
+  const pending = buildWebDocument(fragment, null, async name => { calls.push(name); return name === 'visualize.html' ? kitReady : source(name) }, kitHash)
+  try {
+    assert.equal(calls.includes('vendor/d3-7.9.0.min.js'), true, 'authored D3 should not wait for the kit response')
+    finishKit(kit)
+    const result = await pending
+    assert.equal(result, await buildWebDocument(fragment, null, async name => source(name)))
+    for (const name of [...required, 'vendor/d3-7.9.0.min.js']) assert.equal(calls.filter(value => value === name).length, 1)
+    assert.equal(calls.includes('calendar.js'), false)
+  } finally { finishKit(kit); await pending }
 })
 
-test('a fixed dependency failure rejects preparation while the kit remains pending', async () => {
+test('an unknown kit starts authored vendors and calendar while its own dependencies await discovery', async () => {
+  const calls: string[] = []
   let finishKit!: (value: string) => void
   const kitReady = new Promise<string>(resolve => { finishKit = resolve })
-  const pending = buildWebDocument('<svg/>', null, async name => {
-    if (name === required[0]) throw new Error('fixture resource denied')
+  const fragment = '<viz-calendar/><script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script><script src="https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js"></script>'
+  const pending = buildWebDocument(fragment, null, async name => { calls.push(name); return name === 'visualize.html' ? kitReady : source(name) }, 'unknown-kit')
+  try {
+    assert.deepEqual(calls.filter(name => name.startsWith('vendor/')), [required[0], 'vendor/d3-7.9.0.min.js'])
+    assert.equal(calls.includes('calendar.js'), true)
+    finishKit(kit)
+    const result = await pending
+    assert.equal(result, await buildWebDocument(fragment, null, async name => source(name)))
+    for (const name of ['calendar.js', ...required, 'vendor/d3-7.9.0.min.js']) assert.equal(calls.filter(value => value === name).length, 1)
+    assert.ok(result.includes(source('calendar.js')))
+    assert.ok(result.includes(source('vendor/d3-7.9.0.min.js')))
+  } finally { finishKit(kit); await pending }
+})
+
+for (const dependency of [
+  { name: 'fixed', fragment: '<svg/>', resource: required[0], hash: kitHash },
+  { name: 'authored', fragment: '<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>', resource: 'vendor/d3-7.9.0.min.js', hash: 'unknown-kit' },
+]) test(`${dependency.name} dependency failure rejects preparation while the kit remains pending`, async () => {
+  let finishKit!: (value: string) => void
+  const kitReady = new Promise<string>(resolve => { finishKit = resolve })
+  const pending = buildWebDocument(dependency.fragment, null, async name => {
+    if (name === dependency.resource) throw new Error('fixture resource denied')
     return name === 'visualize.html' ? kitReady : source(name)
-  }, kitHash)
+  }, dependency.hash)
   try {
     const result = await Promise.race([pending.then(() => 'resolved', error => String(error)), new Promise(resolve => setTimeout(() => resolve('still waiting for kit'), 100))])
     assert.match(String(result), /fixture resource denied/)
