@@ -128,4 +128,15 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
   const environment=await browser.evaluate(()=>({userAgent:navigator.userAgent,dpr:devicePixelRatio,width:innerWidth,height:innerHeight}))
   await writeFile(`${output}/timings.json`,JSON.stringify({baseline:process.env.E2E_VISUALIZE_377_BASELINE==='1',baselineHost:'0d1271a0cf92b22e01b456c7473f4e446027bd28',candidateHead:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim(),environment,generation:'not measured',scope:'open already saved and delivered synthetic content',samples},null,2))
   await app.screenshot('saved-visualization-usable')
+  if(process.env.E2E_VISUALIZE_377_BASELINE!=='1')for(const value of samples){
+    const sample=value as {id:string;retained:boolean;observation:{paintMs:number;readyMs:number;initializations:number;resources:{name:string;bytes:number}[]};interaction:{fromOpenMs:number;operationMs:number}|null}
+    const limits=sample.retained?[180,100,300]:sample.id==='first-visible-of-three'?[2400,2600,2800]:sample.id.startsWith('0-')?[900,950,1150]:sample.id.startsWith('300-')?[1950,2000,2200]:[850,850,1050]
+    expect(sample.observation.paintMs).toBeLessThanOrEqual(limits[0]);expect(sample.observation.readyMs).toBeLessThanOrEqual(limits[1])
+    if(sample.interaction){expect(sample.interaction.fromOpenMs).toBeLessThanOrEqual(limits[2]);expect(sample.interaction.operationMs).toBeLessThanOrEqual(100)}
+    if(sample.retained||sample.id==='warm-new-page'||sample.id==='retained-original'){
+      expect(sample.observation.resources.filter(resource=>resource.name.includes('.'))).toHaveLength(0)
+      if(!sample.retained){expect(sample.observation.resources.filter(resource=>resource.name==='pages')).toHaveLength(1);expect(sample.observation.resources.filter(resource=>resource.name==='state')).toHaveLength(1)}
+    }
+    if(sample.id==='warm-new-page'){expect(sample.observation.paintMs).toBeLessThanOrEqual(1210.5*.75);expect(sample.observation.readyMs).toBeLessThanOrEqual(1192.8*.75)}
+  }
 })

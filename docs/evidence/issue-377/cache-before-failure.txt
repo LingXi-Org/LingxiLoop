@@ -10,9 +10,9 @@ not ok 1 - completed public bytes are reused while each page keeps its own HTML,
   failureType: 'testCodeFailure'
   error: |-
     same immutable runtime bytes should not transfer again
-    
+
     2 !== 1
-    
+
   code: 'ERR_ASSERTION'
   name: 'AssertionError'
   expected: 1
