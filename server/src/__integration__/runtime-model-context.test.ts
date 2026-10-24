@@ -13,6 +13,53 @@ import { nativeText } from '../im/message-types.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
+type ContextCall = { call_id: string; purpose: string; operation: string | null; status: string; measured: boolean;
+  input_tokens: number; output_tokens: number; cost_usd: string; error: string | null }
+type Publication = { purpose: string; operation: string; statuses: number[] }
+
+function preProviderPublicationFailures(calls: ContextCall[], publications: Map<string, Publication>): Set<string> {
+  assert.equal(new Set(calls.map(call => call.call_id)).size, calls.length, 'each native callId must be billed exactly once')
+  const unsent = new Set<string>()
+  for (const call of calls) {
+    assert.ok(call.call_id, 'every ledger row must retain its native callId')
+    const publication = publications.get(call.call_id), status = publication?.statuses.at(-1)
+    if (status === undefined || status >= 200 && status < 300) continue
+    // The public started event is awaited after reservation, before the provider
+    // operation. Its final failure proves this exact call did not enter I/O.
+    // A recovered publication, quota cancellation, or adjacent DB error does not.
+    assert.equal(publication?.purpose, 'structured')
+    assert.equal(publication?.operation, 'memory-synthesis')
+    assert.equal(call.purpose, 'lingxios.structured')
+    assert.equal(call.operation, 'memory-synthesis')
+    assert.equal(call.status, 'failed')
+    assert.equal(call.measured, true)
+    assert.equal(call.input_tokens, 0)
+    assert.equal(call.output_tokens, 0)
+    assert.equal(Number(call.cost_usd), 0)
+    unsent.add(call.call_id)
+  }
+  return unsent
+}
+
+// Failure model: a reserved call fails event publication before provider I/O;
+// retries recover publication; unrelated or nonzero failures must not be hidden.
+test('context ledger only excludes an exact failed pre-provider publication', () => {
+  const call = { call_id: 'reserved', purpose: 'lingxios.structured', operation: 'memory-synthesis',
+    status: 'failed', measured: true, input_tokens: 0, output_tokens: 0, cost_usd: '0', error: 'Model request failed (unknown)' }
+  const failed = { purpose: 'structured', operation: 'memory-synthesis', statuses: [400] }
+  const publications = new Map([['reserved', failed]])
+  assert.deepEqual(preProviderPublicationFailures([call], publications), new Set(['reserved']))
+  for (const replacement of [{ ...call, measured: false }, { ...call, input_tokens: 1 },
+    { ...call, output_tokens: 1 }, { ...call, cost_usd: '0.01' }, { ...call, status: 'succeeded' },
+    { ...call, operation: 'content-review' }]) {
+    assert.throws(() => preProviderPublicationFailures([replacement], publications))
+  }
+  assert.deepEqual(preProviderPublicationFailures([call], new Map()), new Set())
+  assert.deepEqual(preProviderPublicationFailures([call], new Map([['other', failed]])), new Set())
+  assert.deepEqual(preProviderPublicationFailures([call], new Map([['reserved', { ...failed, statuses: [500, 200] }]])), new Set())
+  assert.throws(() => preProviderPublicationFailures([call, call], publications))
+})
+
 // Failures: fixed product context alone exceeds the old 128K window; retained
 // multilingual history cannot fit; repeated compaction loses a prior fact; delivery
 // duplicates; completed summaries disappear; calls escape the shared ledger.
@@ -35,11 +82,31 @@ test('production GLM worker preserves conversation continuity across repeated co
   env.OPENAI_MODEL = 'zai-org/GLM-5.3-Flash'; env.OPENAI_BASE_URL = 'https://api.siliconflow.cn/v1'
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
   const requests: { bytes: number; stream: boolean; purpose: 'agent-turn' | 'structured' | 'compaction' | 'memory-proposal' | 'memory-verification' }[] = [], results: { status: string; delivered: boolean }[] = []
-  let calls: { purpose: string; operation: string | null; status: string; measured: boolean; input_tokens: number; error: string | null }[] = []
+  let calls: ContextCall[] = [], providerNotStarted = new Set<string>()
+  const publications = new Map<string, Publication>()
+  let injectedPublicationFailure: string | undefined
   const checkpoints: { epoch: number; historyBytes: number }[] = []
   const turnIds = ['initial', 'followup', ...Array.from({ length: live ? 6 : 24 }, (_, index) => `soak-${index}`)]
   globalThis.fetch = async (input, init) => {
     const url = input instanceof Request ? input.url : String(input)
+    if (process.env.LINGXIOS_CONTROL_URL && url.startsWith(`${process.env.LINGXIOS_CONTROL_URL}/v5/work/`) && url.endsWith('/events')) {
+      const event = JSON.parse(String(init?.body ?? '{}')).event
+      if (event?.kind === 'model.request.started') {
+        const { callId, purpose, operation } = event.data
+        assert.equal(typeof callId, 'string')
+        const publication: Publication = publications.get(callId) ?? { purpose, operation, statuses: [] }
+        assert.equal(publication.purpose, purpose); assert.equal(publication.operation, operation)
+        publications.set(callId, publication)
+        try {
+          const inject = !live && !injectedPublicationFailure && purpose === 'structured' && operation === 'memory-synthesis'
+          if (inject) injectedPublicationFailure = callId
+          const response = inject ? Response.json({ error: 'Synthetic pre-provider publication failure' }, { status: 400 })
+            : await originalFetch(input, init)
+          publication.statuses.push(response.status)
+          return response
+        } catch (error) { publication.statuses.push(0); throw error }
+      }
+    }
     if (url !== 'https://api.siliconflow.cn/v1/chat/completions') return originalFetch(input, init)
     const body = String(init?.body), request = JSON.parse(body)
     assert.equal(request.model, 'zai-org/GLM-5.3-Flash')
@@ -48,7 +115,7 @@ test('production GLM worker preserves conversation continuity across repeated co
     assert.equal(request.response_format?.type, 'json_object')
     // JSON mode is also required for main public-purpose turns in runtime 3.7.
     const auxiliary = !request.messages.some((message: { role: string; content: string }) =>
-      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v2):'))
+      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v3):'))
     const instructions = String(request.messages[0]?.content)
     const compacting = auxiliary && instructions.includes('observedResults')
     const memoryProposal = auxiliary && instructions.includes('Consolidate durable cognitive memory across the supplied committed interactions.')
@@ -66,7 +133,7 @@ test('production GLM worker preserves conversation continuity across repeated co
         // This continuity fixture does not certify memory extraction coverage.
         // Reject the empty proposal truthfully through the bounded memory path.
         : { approved: false, complete: false, confidence: 0, feedback: 'Synthetic fixture does not approve durable memory extraction.' })
-      : JSON.stringify({ commentary: '', answer: '已收到，蓝宝石47。', outcome: { status: 'satisfied', gaps: [] } })
+      : JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: '已收到，蓝宝石47。', outcome: { status: 'satisfied', gaps: [] } })
     if (request.stream) {
       return new Response(`data: ${JSON.stringify({ choices: [{ index: 0,
         delta: { role: 'assistant', content }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`,
@@ -119,7 +186,7 @@ test('production GLM worker preserves conversation continuity across repeated co
       }
     }
     await worker.stop(); worker = undefined
-    calls = (await pool.query(`SELECT purpose,extras->>'operation' AS operation,status,measured,input_tokens,error
+    calls = (await pool.query(`SELECT extras->>'callId' AS call_id,purpose,extras->>'operation' AS operation,status,measured,input_tokens,output_tokens,cost_usd,error
       FROM llm_calls WHERE company_id=$1 ORDER BY created_at`, [companyId])).rows
     const messages = im.messages.filter(message => message.channelId === conversationId && message.fromUid === agentId)
     assert.equal(messages.length, turnIds.length)
@@ -131,10 +198,16 @@ test('production GLM worker preserves conversation continuity across repeated co
     assert.equal(calls.filter(call => call.operation === 'content-review').length, 0, 'default conversations must not add semantic review calls')
     const memoryCalls = calls.filter(call => call.purpose === 'lingxios.structured')
     assert.ok(memoryCalls.every(call => call.operation === 'memory-synthesis'), 'only explicitly classified memory synthesis may use the auxiliary transport')
-    assert.equal(memoryCalls.length, requests.filter(request => request.purpose === 'memory-proposal' || request.purpose === 'memory-verification').length)
+    providerNotStarted = preProviderPublicationFailures(calls, publications)
+    if (!live) {
+      assert.ok(injectedPublicationFailure, 'must exercise one reserved but unsent memory call')
+      assert.ok(providerNotStarted.has(injectedPublicationFailure), 'the exact publication failure must settle with zero usage')
+    }
+    assert.equal(memoryCalls.length, requests.filter(request => request.purpose === 'memory-proposal' || request.purpose === 'memory-verification').length + providerNotStarted.size)
     assert.ok(requests.filter(request => request.purpose === 'compaction').length >= 2)
-    assert.equal(calls.length, requests.length)
+    assert.equal(calls.length, requests.length + providerNotStarted.size)
     assert.ok(calls.every(call => call.status === 'succeeded' && call.measured
+      || providerNotStarted.has(call.call_id)
       || call.purpose === 'lingxios.compaction' && call.status === 'failed' && call.error === 'compaction candidate no longer needed'))
     assert.ok(calls.filter(call => call.purpose === 'lingxios.compaction' && call.status === 'succeeded').length >= 2)
     assert.ok(checkpoints.at(-1)!.epoch >= 2)
@@ -142,12 +215,14 @@ test('production GLM worker preserves conversation continuity across repeated co
     await mkdir('artifacts/reply-generation', { recursive: true })
     await writeFile(`artifacts/reply-generation/${live ? 'live' : 'scripted'}.json`, JSON.stringify({ passed: true,
       runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, calls, checkpoints,
+      providerNotStarted: [...providerNotStarted], publications: Object.fromEntries(publications), injectedPublicationFailure,
       continuityFactPreserved: true, deliveredOncePerTurn: true, thinkingDisabledRequested: true, transport: 'recording WuKong fixture',
       reproduce: `node e2e/server/model-context.mjs${live ? ' --live-model-context' : ''}` }, null, 2))
   } catch (error) {
     await mkdir('artifacts/reply-generation', { recursive: true })
     await writeFile(`artifacts/reply-generation/${live ? 'live' : 'scripted'}.json`, JSON.stringify({ passed: false,
       runtime: releaseVersions.runtime, model: env.OPENAI_MODEL, realProvider: live, results, requests, calls, checkpoints,
+      providerNotStarted: [...providerNotStarted], publications: Object.fromEntries(publications), injectedPublicationFailure,
       error: error instanceof Error ? error.message : String(error),
       replies: im.messages.filter(message => message.channelId === 'model-context-room' && message.payload.role === 'assistant')
         .map(message => nativeText(message.payload)),

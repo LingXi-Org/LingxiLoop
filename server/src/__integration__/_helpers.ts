@@ -16,6 +16,7 @@
 import type { Queryable } from '../db/queryable.js'
 import { randomUUID } from 'node:crypto'
 import { assertMigrationsCurrent } from '../db/migrate.js'
+import { assertDevelopmentQualification, type DevelopmentRuntimeQualification } from '../db/development-runtime-qualification.js'
 import { closeDatabasePools, pool } from '../db/pool.js'
 import { env } from '../env.js'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
@@ -81,11 +82,20 @@ const integrationStorage: Storage & BoundedStorageReader = {
 installStorageProvider(integrationStorage)
 
 let schemaReady: Promise<void> | null = null
+const developmentSchemaReady=new WeakMap<DevelopmentRuntimeQualification,Promise<void>>()
 
 /** Assert the externally migrated schema exactly once per test process. */
 export function ensureSchemaOnce(): Promise<void> {
   if (!schemaReady) schemaReady = assertMigrationsCurrent()
   return schemaReady
+}
+
+/** Explicit development proof; never populates the ordinary formal cache. */
+export function ensureDevelopmentSchemaOnce(developmentQualification:DevelopmentRuntimeQualification): Promise<void> {
+  assertDevelopmentQualification(developmentQualification,pool,new URL('../db/migrations/',import.meta.url),true)
+  let ready=developmentSchemaReady.get(developmentQualification)
+  if(!ready){ready=assertMigrationsCurrent(pool,undefined,developmentQualification);developmentSchemaReady.set(developmentQualification,ready)}
+  return ready
 }
 
 /** Tables we wipe between tests. Keeping the list explicit makes fixture
@@ -203,7 +213,14 @@ const TABLES_TO_WIPE: readonly string[] = [
 
 /** Wipe every test table. Validate the database name again before TRUNCATE
  *  so directly invoked test files cannot bypass the runner's safety check. */
-export async function resetAllTables(): Promise<void> {
+export function resetAllTables(): Promise<void> { return resetTables() }
+
+/** Explicit development counterpart; the ordinary node:test hook stays formal. */
+export function resetAllTablesForDevelopment(developmentQualification:DevelopmentRuntimeQualification): Promise<void> {
+  return resetTables(developmentQualification)
+}
+
+async function resetTables(developmentQualification?:DevelopmentRuntimeQualification): Promise<void> {
   const target = URL.canParse(env.DATABASE_URL) ? new URL(env.DATABASE_URL) : null
   let databaseName: string
   let databaseHost: string
@@ -220,7 +237,8 @@ export async function resetAllTables(): Promise<void> {
     || /(?:^|[_-])(prod|production|main|live)(?:$|[_-])/i.test(databaseName)) {
     throw new Error('refusing to TRUNCATE — DATABASE_URL must name a dedicated test database')
   }
-  await ensureSchemaOnce()
+  if(developmentQualification===undefined)await ensureSchemaOnce()
+  else await ensureDevelopmentSchemaOnce(developmentQualification)
   storageObjects.clear()
   for (let attempt = 0; attempt < 3; attempt++) {
     try {

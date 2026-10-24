@@ -3,6 +3,45 @@ import { spawnSync } from 'node:child_process'
 import test from 'node:test'
 import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact } from '../server/run-historical-migration-tests.mjs'
 import { createHash } from 'node:crypto'
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+// Failure model: today's projection imports new runtime UI exports which the
+// real historical3.8.2 package cannot expose. Pin only the two display leaves;
+// preserve current migrations, identity, all historical assertions and helpers.
+// Modified/missing snapshots must fail closed, never patch the old runtime.
+test('historical fixture isolates pinned display leaves while retaining current migration coverage', async () => {
+ const { copyHistoricalFixtureSource } = await import('../server/run-historical-migration-tests.mjs')
+ assert.equal(typeof copyHistoricalFixtureSource,'function')
+ const root=await mkdtemp(join(tmpdir(),'historical-source-owner-'))
+ try {
+  const source=join(root,'source'),fixture=join(root,'fixture')
+  const retained=['server/src/db/migrate.ts','server/src/agent-runtime/identity.ts',
+   'server/src/__integration__/run-presentation-contract.test.ts','src/lib/runActivity.ts']
+  const pinned=['server/src/agent-runtime/message-projection.ts','src/lib/nativeMessage.ts']
+  for(const path of [...retained,...pinned]){
+   await mkdir(join(source,path,'..'),{recursive:true})
+   await writeFile(join(source,path),'current source: '+path)
+  }
+  const snapshots='server/fixtures/historical-projection-3.8.2'
+  await cp(new URL('../'+snapshots,import.meta.url),join(source,snapshots),{recursive:true})
+  const receipt=await copyHistoricalFixtureSource(source,fixture)
+  assert.equal(receipt.sourceCommit,'7a255c3fe95d832e77fd29c6db9a506d111d3cf2')
+  assert.deepEqual(receipt.files.map(row=>row.path),pinned)
+  for(const path of retained)assert.equal(await readFile(join(fixture,path),'utf8'),'current source: '+path)
+  for(const row of receipt.files){
+   const bytes=await readFile(join(fixture,row.path))
+   assert.deepEqual(bytes,await readFile(join(source,snapshots,row.path)))
+   assert.equal(createHash('sha256').update(bytes).digest('hex'),row.sha256)
+   assert.equal(await readFile(join(source,row.path),'utf8'),'current source: '+row.path)
+  }
+  await writeFile(join(source,snapshots,pinned[1]),'tampered historical source')
+  await assert.rejects(copyHistoricalFixtureSource(source,join(root,'tampered')),/Historical projection source integrity changed/)
+  await rm(join(source,snapshots,pinned[1]))
+  await assert.rejects(copyHistoricalFixtureSource(source,join(root,'missing')),{code:'ENOENT'})
+ }finally{await rm(root,{recursive:true,force:true})}
+})
 
 test('historical migration routing retains every requested file and adds current-package owning checks',()=>{
  const historical=['migration.test.ts','conversation-repair-provenance-migration.test.ts','public-purpose-reader-migration.test.ts','run-trace-provenance-migration.test.ts','run-presentation-contract.test.ts']

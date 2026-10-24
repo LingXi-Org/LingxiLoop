@@ -5,6 +5,7 @@ import { packageResources, releaseVersions } from '@lyyzka/lingxios'
 import { ensureEducationPlan } from '../modules/entitlements/public.js'
 import { pool } from './pool.js'
 import { assertMigrationRuntime, assertCurrentRuntimeProfile, assertFull54InstallBoundary, loadLockedRuntimePackage } from './runtime-profile.js'
+import { assertDevelopmentQualification, type DevelopmentRuntimeQualification } from './development-runtime-qualification.js'
 
 const MIGRATIONS_URL = new URL('./migrations/', import.meta.url)
 const MIGRATION_FILE = /^(\d{4})_([a-z0-9][a-z0-9_-]*)\.sql$/
@@ -191,6 +192,7 @@ function validateApplied(migrations: Migration[], applied: AppliedMigration[]): 
 export async function migrateDatabase(
   database: Pool = pool,
   migrationsUrl: URL = MIGRATIONS_URL,
+  developmentQualification?: DevelopmentRuntimeQualification,
 ): Promise<readonly string[]> {
   const migrations = await loadMigrations(migrationsUrl)
   const hasDeliveryUpgrade = migrations.some(migration => migration.version===50 && migration.name==='skill_delivery')
@@ -198,7 +200,8 @@ export async function migrateDatabase(
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   const full54=migrations.length===54&&migrations[53]?.name==='run_presentation_contract'
-  if(full54)assertCurrentRuntimeProfile(releaseVersions,(await runtimeSchema(14)).hash,(await loadLockedRuntimePackage()).runtime)
+  const qualifiedRuntime=developmentQualification===undefined ? undefined : assertDevelopmentQualification(developmentQualification,database,migrationsUrl,full54)
+  if(full54)assertCurrentRuntimeProfile(releaseVersions,(await runtimeSchema(14)).hash,qualifiedRuntime??(await loadLockedRuntimePackage()).runtime)
   else assertMigrationRuntime(hasDeliveryUpgrade,hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined,hasRunTrace,hasConversationRepair)
   const client = await database.connect()
   const appliedNow: string[] = []
@@ -329,13 +332,15 @@ export async function migrateDatabase(
 export async function assertMigrationsCurrent(
   database: Pool = pool,
   migrationsUrl: URL = MIGRATIONS_URL,
+  developmentQualification?: DevelopmentRuntimeQualification,
 ): Promise<void> {
   const migrations = await loadMigrations(migrationsUrl)
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
   const full54=migrations.length===54&&migrations[53]?.name==='run_presentation_contract'
-  if(full54)assertCurrentRuntimeProfile(releaseVersions,(await runtimeSchema(14)).hash,(await loadLockedRuntimePackage()).runtime)
+  const qualifiedRuntime=developmentQualification===undefined ? undefined : assertDevelopmentQualification(developmentQualification,database,migrationsUrl,full54)
+  if(full54)assertCurrentRuntimeProfile(releaseVersions,(await runtimeSchema(14)).hash,qualifiedRuntime??(await loadLockedRuntimePackage()).runtime)
   else assertMigrationRuntime(migrations.some(migration => migration.version===50 && migration.name==='skill_delivery'),
     hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined,hasRunTrace,hasConversationRepair)
   const client = await database.connect()

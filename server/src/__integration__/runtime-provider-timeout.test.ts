@@ -5,17 +5,18 @@ import { test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { pool } from '../db/pool.js'
 import { env } from '../env.js'
-import { lingxiOSControl, startLingxiOSWorker } from '../agent-runtime/runtime.js'
+import { lingxiOSControl, runtimeModelConfiguration, startLingxiOSWorker } from '../agent-runtime/runtime.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
+import { installProductionModelTransport } from './_production-model-transport.js'
 
 const acceptanceOutput = process.env.RUNTIME_ACCEPTANCE_OUTPUT_DIR || `.e2e/runtime-acceptance/${Date.now()}-${process.pid}`
 
-test('a nonresponsive provider stops after bounded attempts and settles failed calls', { timeout: 30000 }, async () => {
+test('a nonresponsive provider stops after bounded attempts and settles failed calls', { timeout: 30000 }, async t => {
   await ensureSchemaOnce(); await resetAllTables()
-  const im = await installRecordingWukong(), originalBaseUrl = env.OPENAI_BASE_URL
+  const im = await installRecordingWukong()
   let worker: Awaited<ReturnType<typeof startLingxiOSWorker>> | undefined
   let attempts = 0, disconnected = 0
   const provider = createServer((request, response) => {
@@ -25,7 +26,9 @@ test('a nonresponsive provider stops after bounded attempts and settles failed c
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
   const address = provider.address(); assert.ok(address && typeof address !== 'string')
-  env.OPENAI_BASE_URL = `http://127.0.0.1:${address.port}/v1`
+  const transport = installProductionModelTransport(env, `http://127.0.0.1:${address.port}/v1`)
+  t.after(() => transport.restore())
+  assert.equal(runtimeModelConfiguration({ id: env.OPENAI_MODEL, apiKey: env.OPENAI_API_KEY, baseUrl: env.OPENAI_BASE_URL }, 200).contextWindowTokens, 1_000_000)
   process.env.AGENT_OS_MODEL_REQUEST_TIMEOUT_MS = '200'
   process.env.LINGXIOS_SERVICE_TOKEN = 'provider-timeout-integration-service-token'
   process.env.AGENT_OS_WORKER_PORT = '52995'
@@ -53,6 +56,7 @@ test('a nonresponsive provider stops after bounded attempts and settles failed c
     const elapsedMs = Date.now() - started
     assert.equal(state?.run.status, 'failed')
     assert.equal(attempts, 3)
+    assert.equal(transport.requests, attempts, 'Every model attempt must reach only the local timeout stub')
     assert.equal(disconnected, attempts, 'timed-out requests must release their connections')
     let calls = await pool.query('SELECT status FROM llm_calls WHERE run_id=$1', [run.runId])
     while (calls.rows.length < attempts) { deadline.throwIfAborted(); await delay(20); calls = await pool.query('SELECT status FROM llm_calls WHERE run_id=$1', [run.runId]) }
@@ -69,7 +73,7 @@ test('a nonresponsive provider stops after bounded attempts and settles failed c
     provider.closeAllConnections()
     await worker?.stop(); await teardownAll(); await im.close()
     await new Promise<void>(resolve => provider.close(() => resolve()))
-    env.OPENAI_BASE_URL = originalBaseUrl
+    transport.restore()
     delete process.env.AGENT_OS_MODEL_REQUEST_TIMEOUT_MS
   }
 })

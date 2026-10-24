@@ -20,7 +20,8 @@ import { buildApiTestApp, ensureSchemaOnce, resetAllTables, seedCompanyWithAgent
 // Failure cases: deep-context search blocks until the upstream's 90s timeout;
 // parent cancellation becomes "unavailable"; Redis blocks automatic receipts;
 // a failed outbox insert commits a cursor that can never be announced;
-// independent learning/Canvas reads wait behind history, roster or RAG.
+// independent learning/Canvas reads wait behind history, roster or RAG;
+// authorized search waits behind unrelated roster/visualization work.
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
 after(async () => { await teardownAll(); await im?.close() })
@@ -49,10 +50,34 @@ test('context bounds automatic search and persists Agent receipts before asynchr
   const work = await api.connectWorker({ workerId: 'context-latency', workKinds: ['turn'] }).claimWork()
   assert.ok(work)
   const provider = createProductContext([...learningTools, ...knowledgeTools, ...createCanvasTools(lingxiOSControl)]).contextProvider
-  let searches = 0, disconnected = 0, onSearch: (() => void) | undefined
+  const beforeSearch = openNotebookClient.search, beforeEnabled = process.env.OPEN_NOTEBOOK_ENABLED
+  let unsolicitedSearches = 0
+  openNotebookClient.search = async () => { unsolicitedSearches++; return [] }
+  process.env.OPEN_NOTEBOOK_ENABLED = 'true'
+  try {
+    const ordinary = await provider.loadContext({ ...work, meta: { ...work.meta, text: 'What is 2 + 2?' } })
+    assert.equal(unsolicitedSearches, 0, 'an ordinary answer must not wait for unrequested text/vector retrieval')
+    assert.deepEqual(ordinary.dynamic?.knowledgeRetrieval, { status: 'on_demand' })
+    assert.ok(ordinary.capabilities.includes('knowledge'), 'on-demand preserves authorized evidence tools')
+    assert.deepEqual(ordinary.evidence, [])
+    await provider.loadContext(work, undefined, { responseProfile: 'deep', requestVersion: 2 })
+    assert.equal(unsolicitedSearches, 2, 'a revised request may introduce attachments outside original work metadata')
+    const attached = await provider.loadContext({ ...work, meta: { ...work.meta,
+      attachments: [{ id: JSON.stringify(['input','fixture-attachment']), text: 'A supplied source that requires grounding.' }] } })
+    assert.equal(unsolicitedSearches, 4, 'a supplied attachment retains required source preparation')
+    assert.deepEqual(attached.dynamic?.knowledgeRetrieval, { status: 'no_matches', matchedChunks: 0, processingSources: 0 })
+  } finally {
+    openNotebookClient.search = beforeSearch
+    if (beforeEnabled === undefined) delete process.env.OPEN_NOTEBOOK_ENABLED; else process.env.OPEN_NOTEBOOK_ENABLED = beforeEnabled
+  }
+  // This registered learning workflow keeps its source-dependent preparation.
+  await pool.query(`INSERT INTO context_threads(id,company_id,project_id,context_type,context_id,channel_id,created_by)
+    VALUES('latency-learning-context',$1,$2,'LEARNING','required-learning-sources',$3,'test-owner')`, [companyId, projectId, conversationId])
+  let searches = 0, disconnected = 0, onSearch: (() => void) | undefined, firstSearchAt: number | undefined
   const upstream = createServer(async (req, res) => {
     for await (const _chunk of req) { /* consume the local fixture request */ }
     searches++
+    firstSearchAt ??= performance.now()
     res.once('close', () => { disconnected++ })
     res.writeHead(200, { 'content-type': 'application/json' })
     res.write('{"results":[')
@@ -82,6 +107,8 @@ test('context bounds automatic search and persists Agent receipts before asynchr
     }) as typeof pool.query)
     const began = performance.now()
     const loading = provider.loadContext(work, undefined, { responseProfile: 'deep' })
+    let settled = false
+    void loading.then(() => { settled = true }, () => { settled = true })
     let deep!: Awaited<typeof loading>
     try {
       await rosterStarted
@@ -89,16 +116,42 @@ test('context bounds automatic search and persists Agent receipts before asynchr
       const readDeadline = Date.now() + 2000
       while (!independentReads.has('learning') && Date.now() < readDeadline) await new Promise(resolve => setTimeout(resolve, 10))
       assert.deepEqual([...independentReads].sort(), ['canvas', 'learning'], 'authorized independent reads start while roster is held')
-      assert.equal(searches, 0, 'independent reads do not wait for automatic RAG')
+      const searchDeadline = Date.now() + 2000
+      while (searches < 2 && Date.now() < searchDeadline) await new Promise(resolve => setTimeout(resolve, 10))
+      assert.equal(searches, 2, 'authorized search starts without waiting for the unrelated roster')
+      assert.equal(settled, false, 'early search does not release incomplete context to the model')
     } finally {
+      const rosterReleasedAt = performance.now()
       releaseRoster()
       observer.mock.restore()
       deep = await loading
+      t.diagnostic(JSON.stringify({ contextStartedAt: began, firstSearchAt, rosterReleasedAt,
+        firstSearchAfterContextMs: firstSearchAt === undefined ? null : Math.round(firstSearchAt - began),
+        searchStartedBeforeRosterRelease: firstSearchAt !== undefined && firstSearchAt < rosterReleasedAt }))
     }
     const elapsedMs = Math.round(performance.now() - began)
     assert.deepEqual(deep.dynamic?.knowledgeRetrieval, { status: 'unavailable', matchedChunks: 0 })
     assert.equal(searches, 2)
     assert.ok(elapsedMs >= 4500 && elapsedMs < 12000, `automatic search took ${elapsedMs}ms`)
+    // The public runtime contract derives this hint only after authorizing the
+    // durable request. It skips retrieval, never admission or live context.
+    const stalledSearch = openNotebookClient.search
+    let repeatedSearches = 0
+    openNotebookClient.search = async () => { repeatedSearches++; return [] }
+    try {
+      const frozen = await provider.loadContext(work, undefined, { responseProfile: 'deep', requestVersion: 1,
+        frozenEvidence: { workId: work.id, requestVersion: 1, snapshotId: `${work.id}:evidence:1` } })
+      assert.equal(repeatedSearches, 0, 'the worker already owns authorized frozen evidence; a discarded replacement must not delay its next hop')
+      assert.equal(frozen.dynamic?.knowledgeRetrieval && (frozen.dynamic.knowledgeRetrieval as { status: string }).status, 'frozen')
+      assert.ok(frozen.dynamic?.memoryScopes, 'current independent context still loads')
+      assert.deepEqual(frozen.evidence, [], 'the product neither fabricates nor copies the frozen evidence')
+      for (const options of [
+        { responseProfile: 'deep' as const, requestVersion: 1 },
+        { responseProfile: 'deep' as const, requestVersion: 1, frozenEvidence: { workId: 'previous-work', requestVersion: 1 as const, snapshotId: 'old' } },
+        { responseProfile: 'deep' as const, requestVersion: 2, frozenEvidence: { workId: work.id, requestVersion: 1 as const, snapshotId: 'old' } },
+      ]) await provider.loadContext(work, undefined, options)
+      assert.equal(repeatedSearches, 6, 'new or revised requests still search both authorized channels')
+    } finally { openNotebookClient.search = stalledSearch }
     const parent = new AbortController(), reason = new Error('fixture worker disconnected')
     onSearch = () => parent.abort(reason)
     await assert.rejects(provider.loadContext(work, parent.signal, { responseProfile: 'deep' }), error => error === reason)

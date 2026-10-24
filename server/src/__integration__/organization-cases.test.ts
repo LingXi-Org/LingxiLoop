@@ -363,6 +363,8 @@ test('[integration] real Agent knowledge tools consume published case evidence w
   // Automatic first-turn retrieval must freeze the same publication version as
   // explicit tool results, or the subsequent session authorization rejects it.
   installFakeWukong()
+  await pool.query(`INSERT INTO context_threads(id,company_id,project_id,context_type,context_id,channel_id,created_by)
+    VALUES('case-evidence-context',$1,'cases-course','CASE_DISCUSSION',$2,'cases-room',$3)`, [companyId,live.id,student.userId])
   const automatic = await agent.load()
   assert.equal(automatic.evidence![0].sourceVersion, search.evidence![0].sourceVersion)
   await agent.authorize(agent.request(automatic.evidence!))
