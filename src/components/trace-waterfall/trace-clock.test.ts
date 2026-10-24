@@ -26,7 +26,10 @@ test('closed, offscreen and hidden-page running traces have no periodic clock; r
   closed()
   const dispose = observeTraceClock(element, true, () => ticks++)
   assert.equal(timers.size, 0, 'wait for actual intersection')
-  const intersection = (visible: boolean) => observed!([{ target: element, isIntersecting: visible }] as IntersectionObserverEntry[], {} as IntersectionObserver)
+  const emptyRect: DOMRectReadOnly = { x: 0, y: 0, width: 0, height: 0, top: 0, bottom: 0, left: 0, right: 0, toJSON: () => ({}) }
+  const intersection = (visible: boolean) => observed!([{ target: element, isIntersecting: visible,
+    intersectionRatio: visible ? 1 : 0, time: 0, rootBounds: null, boundingClientRect: emptyRect, intersectionRect: emptyRect,
+  }], {} as IntersectionObserver)
   intersection(true)
   assert.equal(ticks, 1, 'show current elapsed time immediately')
   assert.equal(timers.size, 1)
