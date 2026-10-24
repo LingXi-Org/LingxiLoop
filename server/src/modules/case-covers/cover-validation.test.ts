@@ -27,14 +27,9 @@ test('proposal rejects code breakout, oversized output and missing Chinese acces
     assert.throws(() => parseCoverProposal(JSON.stringify({...proposal,...patch})),CaseCoverGenerationError)
   }
 })
-test('graph-only adapter isolates the original validation claim and supports controlled lifecycle', () => {
-  const html = buildCoverPresentation({kernel:'var HL = {};',figure:'hairline({});',altText:'抽屉柜'})
-  assert.match(html,/Content-Security-Policy/)
-  assert.match(html,/default-src 'none'/)
-  assert.match(html,/case-cover:environment/)
-  assert.match(html,/event.source !== parent/)
-  assert.match(html,/pagehide/)
-  assert.doesNotMatch(html, /id="intensity"|id="play"|id="means"/)
+test('presentation carries strict V2 VM data, not an executable HTML document', () => {
+  const value = JSON.parse(buildCoverPresentation({kernel:'var HL = {};',figure:'hairline({});',altText:'抽屉柜'}))
+  assert.deepEqual(value, {version:2, engine:'quickjs-wasm', kernel:'var HL = {};', figure:'hairline({});'})
 })
 test('renderer preflight fails before model billing, with no successful placeholder', async () => {
   let calls = 0
@@ -70,7 +65,7 @@ test('bounded repair uses original snapshot data, does not retry renderer prefli
   assert.equal(result.metadata.originalTemplateValidated,true)
   assert.equal(result.metadata.presentationIsOriginalTemplate,false)
   assert.equal(result.metadata.validatedOriginalHtml,'<validated-original/>')
-  assert.match(result.html,/script-src 'sha256-/)
+  assert.equal(JSON.parse(result.html).version,2)
   assert.doesNotMatch(result.html,/script-src 'unsafe-inline'/)
 })
 test('two malformed proposals end with a classified failure instead of returning an old/static placeholder',async()=>{
@@ -82,10 +77,7 @@ test('two malformed proposals end with a classified failure instead of returning
     snapshot:{title:'test',summary:'',category:'',tags:[],content:'body'},signal:new AbortController().signal}),/invalid_model_output/)
   assert.equal(calls,2)
 })
-test('browser command requires OS namespaces and never grants session/network/host application access',async()=>{
-  const {coverSandboxArguments}=await import('./cover-renderer.js')
-  const args=coverSandboxArguments('/tmp/one-job',['/usr/bin/true'])
-  assert.ok(args.includes('--unshare-all'));assert.ok(args.includes('--clearenv'))
-  assert.ok(args.includes('--uid'));assert.ok(args.includes('1000'))
-  assert.ok(!args.some(arg=>/no-sandbox|share-net|\/app|\/workspace/.test(arg)))
+test('first-frame Worker has fixed V8 heap and stack budgets',async()=>{
+  const {COVER_WORKER_LIMITS}=await import('./cover-renderer.js')
+  assert.deepEqual(COVER_WORKER_LIMITS,{maxOldGenerationSizeMb:32,maxYoungGenerationSizeMb:8,stackSizeMb:2})
 })

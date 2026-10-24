@@ -1,79 +1,57 @@
-import { spawn } from 'node:child_process'
-import { access,readFile,mkdtemp,writeFile,copyFile,rm } from 'node:fs/promises'
-import { join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { fileURLToPath } from 'node:url'
-import { load } from 'cheerio'
-import { withCoverScriptPolicy } from './cover-presentation.js'
+import { Worker } from 'node:worker_threads'
+import { access } from 'node:fs/promises'
+import { createRequire } from 'node:module'
+import { parseCoverProgram } from '../../../../src/features/cases/cover-vm/program.js'
+import { coverFrameSvg } from '../../../../src/features/cases/cover-vm/svg.js'
 import { CaseCoverGenerationError } from './cover-validation.js'
 
 export interface CoverRenderer {
-  assertAvailable(signal:AbortSignal):Promise<void>
-  render(input:{validatedHtml:string;signal:AbortSignal}):Promise<string>
+  assertAvailable(signal: AbortSignal): Promise<void>
+  render(input: { validatedHtml: string; program: string; signal: AbortSignal }): Promise<string>
 }
-const CHROME = '/usr/lib/chromium/chromium'
-const BWRAP = '/usr/bin/bwrap'
-/** No environment, application tree, home directory, credentials or network are inherited. */
-export function coverSandboxArguments(inputDirectory:string, command:string[]): string[] {
-  return ['--unshare-all','--die-with-parent','--new-session','--uid','1000','--gid','1000','--clearenv',
-    '--ro-bind','/usr','/usr','--ro-bind','/lib','/lib','--symlink','usr/lib64','/lib64',
-    '--proc','/proc','--dev','/dev','--tmpfs','/tmp','--tmpfs','/home',
-    '--ro-bind',inputDirectory,'/input','--chdir','/input',
-    '--setenv','HOME','/tmp','--setenv','LANG','C.UTF-8','--',...command]
-}
-function boundedProcess(args:string[],signal:AbortSignal,timeout:number):Promise<string> {
-  signal.throwIfAborted()
-  return new Promise((resolve,reject) => {
-    const child = spawn(BWRAP,args,{env:{},stdio:['ignore','pipe','pipe'],detached:true})
-    let output = '', overflow = false, settled = false, timedOut = false
-    const kill = () => { if(child.pid) { try { process.kill(-child.pid,'SIGKILL') } catch { child.kill('SIGKILL') } } }
-    const timer = setTimeout(() => { timedOut=true; kill() },timeout)
-    signal.addEventListener('abort',kill,{once:true})
-    if (signal.aborted) kill()
-    const done = (error?:Error) => {
-      if(settled) return; settled=true
-      clearTimeout(timer); signal.removeEventListener('abort',kill)
-      if(signal.aborted) reject(signal.reason)
-      else if(error) reject(error)
-      else resolve(output)
-    }
-    child.stdout.on('data',(chunk:Buffer) => { output+=chunk.toString('utf8'); if(Buffer.byteLength(output)>1_000_000){ overflow=true;kill() } })
-    child.stderr.resume() // Never log generated source or arbitrary browser diagnostics.
-    child.once('error',() => done(new CaseCoverGenerationError('renderer_unavailable')))
-    child.once('close',code => done(code===0&&!overflow&&!timedOut?undefined:new CaseCoverGenerationError('render_failed')))
-  })
-}
-export const isolatedCoverRenderer:CoverRenderer = {
+export const COVER_WORKER_LIMITS = Object.freeze({ maxOldGenerationSizeMb: 32, maxYoungGenerationSizeMb: 8, stackSizeMb: 2 })
+const require = createRequire(import.meta.url)
+/** QuickJS is the generated-code boundary. The Worker supplies termination and
+ * host-heap limits, not OS isolation. The guest has no host callbacks or loader.
+ */
+export const isolatedCoverRenderer: CoverRenderer = {
   async assertAvailable(signal) {
+    signal.throwIfAborted()
     try {
-      await Promise.all([access(BWRAP),access(CHROME),access('/usr/bin/python3')])
-      // Production has an explicit existing cgroup contract. Never remove limits
-      // or fall back to an unsandboxed browser when user namespaces are blocked.
-      const [memory,pids] = await Promise.all([readFile('/sys/fs/cgroup/memory.max','utf8'),readFile('/sys/fs/cgroup/pids.max','utf8')])
-      if(!/^\d+$/.test(memory.trim()) || Number(memory)>1_073_741_824 || !/^\d+$/.test(pids.trim()) || Number(pids)>128) throw Error()
-      const probe = await mkdtemp(join(tmpdir(),'case-cover-probe-'))
-      try { await boundedProcess(coverSandboxArguments(probe,['/usr/bin/true']),signal,3_000) }
-      finally { await rm(probe,{recursive:true,force:true}) }
-    } catch { signal.throwIfAborted(); throw new CaseCoverGenerationError('renderer_unavailable') }
+      await access(require.resolve('@jitl/quickjs-wasmfile-release-sync/wasm'))
+      await access(require.resolve('quickjs-emscripten-core'))
+      await access(new URL('./cover-vm-worker.mjs', import.meta.url))
+    } catch { throw new CaseCoverGenerationError('renderer_unavailable') }
+    signal.throwIfAborted()
   },
-  async render({validatedHtml,signal}) {
-    const dir=await mkdtemp(join(tmpdir(),'case-cover-render-'))
-    try {
-      // Original validated bytes remain separate. This execution wrapper adds
-      // policy only; it is never claimed to pass original template equality.
-      const html=withCoverScriptPolicy(validatedHtml)
-      await writeFile(join(dir,'cover.html'),html,{mode:0o600})
-      await copyFile(fileURLToPath(new URL('./render-limits.py',import.meta.url)),join(dir,'render-limits.py'))
-      const document=await boundedProcess(coverSandboxArguments(dir,[
-        '/usr/bin/python3','/input/render-limits.py',CHROME,'--headless','--disable-gpu','--no-first-run',
-        '--no-default-browser-check','--disable-background-networking','--disable-extensions',
-        '--disable-dev-shm-usage','--user-data-dir=/tmp/profile','--window-size=640,640',
-        '--virtual-time-budget=1500','--run-all-compositor-stages-before-draw','--dump-dom','file:///input/cover.html',
-      ]),signal,15_000)
-      const $=load(document)
-      const svg=$('#stage > svg')
-      if(svg.length!==1 || !svg.find('path,circle,rect,ellipse,line,polygon,polyline').length || !$('#error').is('[hidden]')) throw new CaseCoverGenerationError('render_failed')
-      return $.html(svg)
-    } finally { await rm(dir,{recursive:true,force:true}) }
+  async render({ program, signal }) {
+    signal.throwIfAborted()
+    try { parseCoverProgram(program) } catch { throw new CaseCoverGenerationError('render_failed') }
+    return new Promise<string>((resolve, reject) => {
+      const worker = new Worker(new URL('./cover-vm-worker.mjs', import.meta.url), {
+        workerData: { program }, env: {}, execArgv: [], resourceLimits: COVER_WORKER_LIMITS,
+        stdout: true, stderr: true,
+      })
+      worker.stdout?.resume(); worker.stderr?.resume()
+      let done = false
+      const finish = (error?: unknown, svg?: string) => {
+        if (done) return
+        done = true; clearTimeout(timer); signal.removeEventListener('abort', abort)
+        // Await actual termination before releasing the job/worker budget.
+        void worker.terminate().then(() => error ? reject(error) : resolve(svg!), () => reject(new CaseCoverGenerationError('render_failed')))
+      }
+      const abort = () => finish(signal.reason ?? new CaseCoverGenerationError('render_failed'))
+      const timer = setTimeout(() => finish(new CaseCoverGenerationError('render_failed')), 8000)
+      signal.addEventListener('abort', abort, { once: true })
+      if (signal.aborted) abort()
+      worker.once('message', (message: unknown) => {
+        try {
+          if (!message || typeof message !== 'object' || Object.keys(message).sort().join(',') !== 'frame,type' || (message as { type?: unknown }).type !== 'frame' || typeof (message as { frame?: unknown }).frame !== 'string') throw Error()
+          finish(undefined, coverFrameSvg((message as { frame: string }).frame, 'light', true))
+        } catch { finish(new CaseCoverGenerationError('render_failed')) }
+      })
+      worker.once('error', () => finish(new CaseCoverGenerationError('render_failed')))
+      worker.once('exit', () => { if (!done) finish(new CaseCoverGenerationError('render_failed')) })
+    })
   },
 }

@@ -52,15 +52,15 @@ export function createCaseCoverGenerator(dependencies:GeneratorDependencies) {
       try {
         const proposal=parseCoverProposal(raw)
         const validatedHtml=await (dependencies.assemble??assembleAndValidate)(proposal.figure,signal)
-        const rendered=await dependencies.renderer.render({validatedHtml,signal})
-        const staticSvg=sanitizeCoverSvg(rendered)
         const html=buildCoverPresentation({kernel:resources.kernel,figure:proposal.figure,altText:proposal.altText})
+        const rendered=await dependencies.renderer.render({validatedHtml,program:html,signal})
+        const staticSvg=sanitizeCoverSvg(rendered)
         return {objectName:proposal.objectName,rationale:proposal.rationale,altText:proposal.altText,html,staticSvg,sourceVersion:HAIRLINE_COMMIT,
           metadata:{rulesVersion:CASE_COVER_RULES_VERSION,modelAttempts:attempt,durationMs:Math.round(performance.now()-started),
             originalTemplateSha256:hash(validatedHtml),figureSha256:hash(proposal.figure),previewSha256:hash(staticSvg),
             // Retain the exact complete original for provenance. Never send this in list descriptors.
-            validatedOriginalHtml:validatedHtml,originalTemplateValidated:true,staticPreview:'isolated-browser',
-            presentationAdapter:'graph-only-v1',presentationIsOriginalTemplate:false}}
+            validatedOriginalHtml:validatedHtml,originalTemplateValidated:true,staticPreview:'quickjs-wasm-tick-zero',
+            presentationAdapter:'quickjs-svg-data-v2',presentationIsOriginalTemplate:false}}
       } catch(error) {
         signal.throwIfAborted()
         if(!(error instanceof CaseCoverGenerationError) || error.code==='renderer_unavailable' || error.code==='source_integrity' || attempt===1+maxRepairs) throw error
