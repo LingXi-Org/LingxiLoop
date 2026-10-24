@@ -48,7 +48,7 @@ are recorded/in-memory fixtures; there are no live model or production calls.
 
 ## Validation and failed setup attempts
 
-- New UI + HTTP/PostgreSQL browser journey: **1/1 pass**, Chromium, 14.58 seconds.
+- New UI + HTTP/PostgreSQL browser journey: **1/1 pass**, Chromium, 13.38 seconds.
 - Existing cases integration suite: **11/11 pass**, approximately 9.58 seconds.
 - Focused E2E TypeScript and `git diff --check`: pass. Product build/full web tests
   were not rerun because no product source or dependency changed.
@@ -59,6 +59,9 @@ are recorded/in-memory fixtures; there are no live model or production calls.
 - Integration setup initially lacked `LINGXILOOP_INVITE_BASE_URL`, then encountered
   an unmigrated second test database. Both failed before behavioral assertions.
   The final run used a migrated dedicated database and passed all eleven tests.
+- Review added manager readback to prove the second draft was persisted. A replay
+  initially collided with an earlier published synthetic sentinel; unique body and
+  category sentinels make the final passing test repeatable on the retained fixture.
 
 See [checks.json](checks.json) for runner IDs, exact source hashes and limits.
 The new test is selected by the existing `e2e/cases/*.e2e.ts` glob. Use

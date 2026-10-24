@@ -3,7 +3,8 @@ import { expect, type JsonValue } from 'e2e'
 import { nativePaste } from '../content-editor/native'
 
 const title = '草稿边界验收-' + Date.now()
-const secret = '合成未发布正文：仅管理者可见。'
+const secret = title + '：合成未发布正文。'
+const draftCategory = title + '-草稿分类'
 const headers = { 'content-type':'application/json','x-company-id':'cases-school' }
 const url = '/cases?project=cases-classroom&view=cases'
 async function request(browser: Browser, path: string, method='GET', body: JsonValue=null) {
@@ -22,9 +23,9 @@ test('saved drafts stay private in reader lists and direct links; published snap
   await app.open(url)
   await screen.getByRole('button','新建案例',{exact:true}).tap()
   await screen.getByLabel('标题',{exact:true}).fill(title)
-  await nativePaste(browser,screen,'摘要','合成未发布摘要')
+  await nativePaste(browser,screen,'摘要',title+'-未发布摘要')
   await nativePaste(browser,screen,'正文',secret)
-  await screen.getByLabel('分类',{exact:true}).fill('合成草稿分类')
+  await screen.getByLabel('分类',{exact:true}).fill(draftCategory)
   await screen.getByRole('button','保存草稿',{exact:true}).tap()
   await expect(screen.getByRole('status').first()).toContainText('草稿已保存')
   const draft=(await request(browser,`/api/cases?q=${encodeURIComponent(title)}`)).data.items[0]
@@ -34,12 +35,12 @@ test('saved drafts stay private in reader lists and direct links; published snap
   await role(browser,'teacher2')
   expect((await request(browser,`/api/cases/${draft.id}`)).data.canManage).toBe(true)
   await role(browser,'student')
-  for(const query of ['',`?q=${encodeURIComponent(title)}`,'?category='+encodeURIComponent('合成草稿分类')]) {
+  for(const query of ['',`?q=${encodeURIComponent(title)}`,'?category='+encodeURIComponent(draftCategory)]) {
     const list=(await request(browser,'/api/cases'+query)).data
     expect(list.canManage).toBe(false)
     expect(JSON.stringify(list)).not.toContain(title)
     expect(JSON.stringify(list)).not.toContain(secret)
-    expect(list.categories).not.toContain('合成草稿分类')
+    expect(list.categories).not.toContain(draftCategory)
   }
   expect((await request(browser,`/api/cases/${draft.id}`)).status).toBe(404)
   await app.open(url)
@@ -53,8 +54,11 @@ test('saved drafts stay private in reader lists and direct links; published snap
   await role(browser,'teacher2')
   const published=(await request(browser,`/api/cases/${draft.id}/publish`,'POST',{version:draft.version})).data
   expect(published.status).toBe('published')
-  const nextSecret='修订草稿：尚未发布'
-  expect((await request(browser,`/api/cases/${draft.id}`,'PUT',{title,summary:'修订摘要',body:nextSecret,category:'修订分类',tags:[],cover:null,version:published.version})).status).toBe(200)
+  const nextSecret=title+'-修订草稿：尚未发布'
+  const edited=await request(browser,`/api/cases/${draft.id}`,'PUT',{title,summary:'修订摘要',body:nextSecret,category:'修订分类',tags:[],cover:null,version:published.version})
+  expect(edited.status).toBe(200)
+  expect(edited.data.hasUnpublishedChanges).toBe(true)
+  expect((await request(browser,`/api/cases/${draft.id}`)).data.body).toBe(nextSecret)
   await role(browser,'student')
   expect((await request(browser,`/api/cases/${draft.id}`)).data.body).toBe(published.body)
   expect(JSON.stringify((await request(browser,'/api/cases')).data)).not.toContain(nextSecret)
