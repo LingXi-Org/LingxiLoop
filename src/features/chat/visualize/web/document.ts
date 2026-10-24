@@ -37,9 +37,11 @@ export async function buildWebDocument(fragment: string, state: GenUiWidgetState
       return content
     }),read('gen-ui.js'),
     /\bviz-calendar\b/i.test(fragment) ? read('calendar.js') : Promise.resolve(''),
-    // These reads retain this page's capability and cancellation. They join
-    // the same failure boundary; the later HTML substitution reuses each read.
-    Promise.all(kitHash === PINNED_KIT_SHA256 ? vendors.slice(0, 3).map(([, name]) => read(name)) : []),
+    // Start authored dependencies alongside known kit dependencies, retaining
+    // this page's capability, cancellation and shared failure boundary.
+    // The later HTML discovery/substitution reuses each already-started read.
+    Promise.all(vendors.filter(([url], index) => fragment.includes(url) || (kitHash === PINNED_KIT_SHA256 && index < 3))
+      .map(([, name]) => read(name))),
   ])
   const initial = JSON.stringify(state).replaceAll('<','\\u003c')
   return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="${SANDBOX_CSP}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${script(captureLibrary+'\n;('+trustedBootstrap.toString()+')();')}<style>${css}\n:root{--visualize-paint-gutter:5px;--viz-fg:var(--foreground)}</style><script type="application/json" id="zcode-gen-ui-initial-state">${initial}</script>${script(runtime)}${calendar ? script(calendar) : ''}</head><body>${content}<style id="zcode-gen-ui-document-scrollbar">html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{display:none!important}</style></body></html>`

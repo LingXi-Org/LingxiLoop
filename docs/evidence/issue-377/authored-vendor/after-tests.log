@@ -1,0 +1,16 @@
+(node:2542) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2542) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+✔ known fixed kit dependencies start before the kit completes, once and in original output order (2.060935ms)
+✔ authored D3 starts alongside pinned dependencies before the kit completes (0.755975ms)
+✔ an unknown kit starts authored vendors and calendar while its own dependencies await discovery (1.183016ms)
+✔ fixed dependency failure rejects preparation while the kit remains pending (0.49238ms)
+✔ authored dependency failure rejects preparation while the kit remains pending (0.252549ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 233.697406
