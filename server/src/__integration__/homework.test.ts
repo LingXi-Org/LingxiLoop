@@ -1059,7 +1059,10 @@ test('[integration] worker results cannot install over newer answers or expired 
   assert.equal(state.report!.answerRevision, 2)
 })
 
-test('[integration] unsupported homework materials and model failure never publish, and explicit revalidation can recover', async () => {
+// #424 failure inventory: a readable presentation is rejected before the model;
+// material/provider/invalid-input failures are conflated; retry loses attachments
+// or increments the visible draft; an old validation permits a newer publication.
+test('[integration] 424 material and service failures remain distinct and same-revision retry retains the draft', async () => {
   const { storage } = await import('../storage.js')
   const key = `attachments/${companyId}/scan-only.pdf`
   await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
@@ -1068,21 +1071,133 @@ test('[integration] unsupported homework materials and model failure never publi
   const unreadable = await homework.draft(teacher, courseId, { ...visible, attachments: [{ key, name: 'scan-only.pdf' }] })
   await runLearningEffects()
   let detail = await homework.detail(teacher, courseId, unreadable.homework.id)
-  assert.equal(detail.homework.validation.status, 'INVALID')
+  assert.equal(detail.homework.validation.status, 'MATERIAL_ERROR')
   assert.equal(detail.homework.canPublish, false)
-  assert.ok(detail.homework.validation.feedback.length > 0)
-  detail = await homework.updateDraft(teacher, courseId, unreadable.homework.id, { ...visible, expectedRevision: detail.homework.revision })
+  assert.match(detail.homework.validation.feedback, /scan-only\.pdf/)
+  assert.match(detail.homework.validation.feedback, /重新|转换|导出/)
+  assert.deepEqual(detail.homework.attachments, unreadable.homework.attachments)
+  await storage.put(key, Buffer.from('Two equal triangles form one rectangle.'), 'text/plain')
+  detail = await homework.updateDraft(teacher, courseId, unreadable.homework.id, { ...visible,
+    attachments: unreadable.homework.attachments, expectedRevision: detail.homework.revision })
   modelReplies.push(() => { throw new Error('Fixture provider unavailable') })
   await runLearningEffects()
   detail = await homework.detail(teacher, courseId, unreadable.homework.id)
-  assert.equal(detail.homework.validation.status, 'INVALID')
+  assert.equal(detail.homework.validation.status, 'ERROR')
   assert.equal(detail.homework.canPublish, false)
-  detail = await homework.updateDraft(teacher, courseId, unreadable.homework.id, { ...visible, expectedRevision: detail.homework.revision })
+  const failed = detail.homework
+  assert.match(failed.validation.feedback, /重试/)
+  assert.doesNotMatch(failed.validation.feedback, /Fixture provider unavailable|请检查内容/)
+  const retry = { expectedRevision: failed.revision }
+  for (const other of [colleague, student]) assert.equal((await call(other, path(failed.id, '/validate'), 'POST', retry)).status, 403)
+  assert.equal((await call(teacher, `/courses/homework-other-course/homeworks/${failed.id}/validate`, 'POST', retry)).status, 404)
+  assert.equal((await call(teacher, path(failed.id, '/validate'), 'POST', { expectedRevision: failed.revision - 1 })).status, 409)
+  assert.equal((await call(teacher, path(failed.id, '/publish'), 'POST', {
+    expectedRevision: failed.revision, visibleHash: failed.visibleHash, idempotencyKey: '424-unchecked-draft',
+  })).status, 409)
+  const retried = await call(teacher, path(failed.id, '/validate'), 'POST', retry)
+  assert.equal(retried.status, 200)
+  detail = await retried.json() as Awaited<ReturnType<HomeworkApplication['detail']>>
+  assert.equal(detail.homework.validation.status, 'PENDING')
+  assert.equal(detail.homework.validation.feedback, '')
+  assert.equal(detail.homework.validation.revision, null)
+  for (const field of ['title', 'instructions', 'criteria', 'attachments', 'links', 'revision', 'visibleHash'] as const) {
+    assert.deepEqual(detail.homework[field], failed[field], `retry retains ${field}`)
+  }
+  assert.equal((await call(teacher, path(failed.id, '/validate'), 'POST', retry)).status, 200)
   modelReplies.push({ valid: true, feedback: 'Readable requirements verified.' })
   await runLearningEffects()
   detail = await homework.detail(teacher, courseId, unreadable.homework.id)
   assert.equal(detail.homework.validation.status, 'READY')
   assert.equal(detail.homework.canPublish, true)
+  assert.equal(detail.homework.validation.revision, failed.revision)
+  assert.equal((await homework.publish(teacher, courseId, failed.id, {
+    expectedRevision: failed.revision, visibleHash: failed.visibleHash, idempotencyKey: '424-recovered-draft',
+  })).homework.status, 'PUBLISHED')
+})
+
+test('[integration] 424 input rejection and malformed model responses do not validate a newer draft', async () => {
+  const draft = await homework.draft(teacher, courseId, visible)
+  modelReplies.push({ valid: false, feedback: '请将验收标准中的对话次数改为可独立解释的学习成果。' })
+  await runLearningEffects()
+  let detail = await homework.detail(teacher, courseId, draft.homework.id)
+  assert.equal(detail.homework.validation.status, 'INVALID')
+  assert.match(detail.homework.validation.feedback, /验收标准/)
+  assert.equal(detail.homework.canPublish, false)
+  detail = await homework.updateDraft(teacher, courseId, draft.homework.id, { ...visible, title: 'Corrected triangle task', expectedRevision: 1 })
+  assert.equal(detail.homework.validation.feedback, '')
+  modelReplies.push({ valid: 'yes', feedback: 'Malformed response' })
+  await runLearningEffects()
+  detail = await homework.detail(teacher, courseId, draft.homework.id)
+  assert.equal(detail.homework.validation.status, 'ERROR')
+  assert.equal((await call(teacher, path(draft.homework.id, '/validate'), 'POST', { expectedRevision: 2 })).status, 200)
+  modelReplies.push({ valid: true, feedback: '可以确认发布。' })
+  await runLearningEffects()
+  const ready = (await homework.detail(teacher, courseId, draft.homework.id)).homework
+  assert.equal(ready.validation.revision, 2)
+  assert.equal(ready.canPublish, true)
+  detail = await homework.updateDraft(teacher, courseId, ready.id, { ...visible, instructions: 'A changed task needs its own validation.', expectedRevision: 2 })
+  assert.equal(detail.homework.canPublish, false)
+  assert.equal((await call(teacher, path(ready.id, '/publish'), 'POST', {
+    expectedRevision: detail.homework.revision, visibleHash: detail.homework.visibleHash, idempotencyKey: '424-stale-validation',
+  })).status, 409)
+})
+
+test('[integration] 424 uploaded PPTX text reaches validation and the current draft can be published', async () => {
+  const { storage } = await import('../storage.js')
+  const key = `attachments/${companyId}/chapter.pptx`
+  const bytes = await readFile(new URL('../__tests__/fixtures/homework-presentations/material.pptx', import.meta.url))
+  await storage.put(key, bytes, 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
+  await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
+    SELECT $1,$2,$3,period_id FROM company_memberships WHERE company_id=$2 AND user_id=$3 AND ended_at IS NULL`, [key, companyId, teacher.userId])
+  const draft = await homework.draft(teacher, courseId, { ...visible, title: '合成章节练习',
+    instructions: '独立说明加法，并说明输入和输出的关系。', criteria: ['独立说明加法。', '解释输入输出关系。'], attachments: [{ key, name: 'chapter.pptx' }] })
+  modelReplies.push({ valid: true, feedback: '章节文字已读取，可以确认发布。' })
+  await runLearningEffects()
+  const checked = (await homework.detail(teacher, courseId, draft.homework.id)).homework
+  assert.equal(checked.validation.status, 'READY')
+  assert.equal(checked.validation.revision, checked.revision)
+  const request = lastModelRequest as { messages: Array<{ role: string; content: string }> }
+  const input = JSON.parse(request.messages.find(message => message.role === 'user')!.content) as { materials: Array<{ source: string; text: string; hash: string; contentStatus?: string }> }
+  assert.equal(input.materials[0].source, key)
+  assert.match(input.materials[0].text, /独立说明加法/)
+  assert.match(input.materials[0].text, /Input 输入/)
+  assert.equal(input.materials[0].contentStatus, undefined)
+  assert.equal(input.materials[0].hash.length, 64)
+  const published = await homework.publish(teacher, courseId, checked.id, {
+    expectedRevision: checked.revision, visibleHash: checked.visibleHash, idempotencyKey: '424-pptx-publication',
+  })
+  assert.equal(published.homework.status, 'PUBLISHED')
+  assert.deepEqual(published.homework.attachments, draft.homework.attachments)
+})
+
+test('[integration] 424 unreadable attachments name the file and recovery without calling the validator', async () => {
+  const { storage } = await import('../storage.js')
+  const cases = [
+    { name: 'unsupported.png', mime: 'image/png', bytes: Buffer.from('image fixture'), reason: /格式|暂不支持/ },
+    { name: 'image-only.pptx', mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      bytes: await readFile(new URL('../__tests__/fixtures/homework-presentations/image-only.pptx', import.meta.url)), reason: /没有|未提取|无法提取/ },
+    { name: 'legacy.ppt', mime: 'application/vnd.ms-powerpoint',
+      bytes: await readFile(new URL('../__tests__/fixtures/homework-presentations/material.ppt', import.meta.url)), reason: /旧版 PPT.*另存为 PPTX/ },
+    { name: 'corrupt.pptx', mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', bytes: Buffer.from('not a presentation'), reason: /损坏|格式|无法提取/ },
+    { name: 'long.txt', mime: 'text/plain', bytes: Buffer.from('a'.repeat(60001)), reason: /过大|超出|超过/ },
+    { name: 'large.pptx', mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', bytes: Buffer.alloc(16 * 1024 * 1024 + 1), reason: /16|过大|超出|超过/ },
+  ]
+  for (const item of cases) {
+    const key = `attachments/${companyId}/${item.name}`
+    await storage.put(key, item.bytes, item.mime)
+    await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
+      SELECT $1,$2,$3,period_id FROM company_memberships WHERE company_id=$2 AND user_id=$3 AND ended_at IS NULL`, [key, companyId, teacher.userId])
+    const draft = await homework.draft(teacher, courseId, { ...visible, attachments: [{ key, name: item.name }] })
+    await runLearningEffects()
+    const detail = await homework.detail(teacher, courseId, draft.homework.id)
+    assert.equal(detail.homework.validation.status, 'MATERIAL_ERROR', item.name)
+    assert.ok(detail.homework.validation.feedback.includes(item.name))
+    assert.match(detail.homework.validation.feedback, item.reason)
+    assert.match(detail.homework.validation.feedback, /请/)
+    assert.equal(detail.homework.canPublish, false)
+    assert.deepEqual(detail.homework.attachments, draft.homework.attachments)
+  }
+  assert.equal(lastModelRequest, undefined, 'unreadable materials never reach the model')
 })
 
 test('[integration] homework draft is teacher-owned and absent from learner feeds until explicit validated confirmation', async () => {
