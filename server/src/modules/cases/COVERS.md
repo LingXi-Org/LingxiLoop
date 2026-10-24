@@ -35,10 +35,17 @@ The renderer fails closed if its execution sandbox is unavailable. This records
 `renderer_unavailable` without automatic repeated model calls. Fix the runtime
 prerequisite before a teacher retries a failed target.
 
-A teacher starts/resumes historical generation with
+A teacher or administrator starts historical generation from the case list's
+“补齐历史封面” button, shown only when the list grants `canManage`. Each click
+examines 25 cases and reports the scanned count and company-scoped pending jobs.
+A returned cursor changes the button to “继续补齐”; the next batch requires
+another click. Switching organization or user resets the cursor, and completion
+offers “重新检查封面”. The list refreshes cover metadata and its existing polling
+observes background completion without changing article text or versions.
+The button calls
 `POST /api/cases/covers/backfill` and `{ "afterId": "", "limit": 25 }` using the
-normal authenticated company context. Continue with the returned `nextAfterId`
-until null. At most 50 cases are examined in one transaction; returned counts
+normal authenticated company context, then uses the returned `nextAfterId`
+for a manually requested batch until null. At most 50 cases are examined in one transaction; returned counts
 are company-scoped jobs. Restarting from the beginning reuses existing successful
 jobs and does not reset failures. Failed targets use the explicit retry route.
 There is no generation on list, detail, or asset reads.
@@ -52,8 +59,12 @@ asset URL returns 404. Unpublished reader assets and draft reader requests are
 rejected; membership is checked again on every fetch.
 
 Preview responses are sanitized SVG with private/no-store, nosniff and restrictive
-CSP headers. Interactive responses are JSON `{html}`; only `CaseCover`'s opaque
-sandbox may execute that graph document. No generic upload MIME policy changes.
+CSP headers. Interactive responses retain the JSON `{html}` transport field;
+its value is a strict V2 QuickJS/WASM program JSON containing only the fixed
+engine identity, pinned kernel, and figure source. A dedicated Worker executes
+the program inside QuickJS/WASM with bounded resources and a fixed guest API.
+Only validated, data-only SVG crosses into the page; legacy HTML is rejected
+and never executed. No generic upload MIME policy changes.
 Assets have database size limits and tenant/case foreign keys and are deleted
 with their case. Full code and generation rationale are excluded from article
 list/detail payloads.

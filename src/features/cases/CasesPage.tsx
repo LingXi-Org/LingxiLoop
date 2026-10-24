@@ -52,6 +52,7 @@ export function CasesPage() {
   const [editing, setEditing] = useState(false)
   const [input, setInput] = useState<CaseInput>(empty)
   const [busy, setBusy] = useState(false)
+  const [backfillCursor, setBackfillCursor] = useState<string | null>('')
   const [preview, setPreview] = useState(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const operationEpoch = useRef(0)
@@ -63,6 +64,7 @@ export function CasesPage() {
   useEffect(() => {
     currentScope.current = companyId
     mutationPending.current = false; setBusy(false); setEditing(false); setPreview(false); setInput(empty)
+    setBackfillCursor(''); setNotice('')
     setArticle(null); setList({ items: [], categories: [], canManage: false })
     return () => { currentScope.current = null; operationEpoch.current += 1 }
   }, [companyId, userId])
@@ -150,6 +152,20 @@ export function CasesPage() {
     } catch (reason) {
       if (operation.current()) setError(userFacingError(reason, '封面重试失败，请稍后再试。'))
       throw reason
+    } finally { operation.finish() }
+  }
+  const backfillCovers = async () => {
+    if (id || editing || !list.canManage) return
+    const operation = startMutation()
+    if (!operation) return
+    try {
+      const result = await casesApi.backfillCovers(backfillCursor ?? '', 25)
+      if (!operation.current()) return
+      setBackfillCursor(result.nextAfterId)
+      setNotice(`本批检查 ${result.scanned} 篇，后台待生成 ${result.pending} 项。${result.nextAfterId ? '下一批请手动继续补齐。' : '历史案例已检查完成，可重新检查封面。'}`)
+      setRevision(value => value + 1)
+    } catch (reason) {
+      if (operation.current()) setError(userFacingError(reason, '历史封面检查失败，请稍后再试。'))
     } finally { operation.finish() }
   }
   const coverScope = `${userId ?? ''}:${companyId ?? ''}`
@@ -242,7 +258,10 @@ export function CasesPage() {
         <h1 ref={heading} tabIndex={-1} className={detail ? 'sr-only' : 'case-library-title'}>案例库</h1>
         {detail && <Button variant="ghost" disabled={busy} onClick={() => navigate()}><ArrowLeft className="size-4"/>返回案例库</Button>}
         <div className="ms-auto flex flex-wrap items-center justify-end gap-3">
-          {!detail && list.canManage && <Button onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>}
+          {!detail && list.canManage && <>
+            <Button variant="outline" disabled={busy || loading} aria-describedby="case-backfill-help" onClick={() => void backfillCovers()}>{backfillCursor === null ? '重新检查封面' : backfillCursor ? '继续补齐' : '补齐历史封面'}</Button>
+            <Button disabled={busy} onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>
+          </>}
           {editing && canManage ? <>
             <span className="text-sm text-muted-foreground">草稿</span>
             <Button type="submit" form="case-edit-form" variant="outline" disabled={invalid}>保存草稿</Button>
@@ -259,6 +278,7 @@ export function CasesPage() {
           </>}
         </div>
       </header>
+      {!detail && list.canManage && <p id="case-backfill-help" className="case-notice text-sm text-muted-foreground">每批检查 25 篇历史案例，新封面在后台生成。</p>}
       {error && <div role="alert" className="case-notice text-destructive">{error}<Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button></div>}
       {notice && <p role="status" className="case-notice">{notice}</p>}
       {!detail && <div className="case-library-filters">
