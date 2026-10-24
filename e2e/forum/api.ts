@@ -7,7 +7,7 @@ import { insertCourse } from '../../server/src/modules/learning/courses-reposito
 import { installRecordingWukong } from '../../server/src/__integration__/_recording-wukong'
 import { storage } from '../../server/src/storage'
 
-assert.equal(new URL(process.env.DATABASE_URL!).pathname, '/lingxiloop_forum_test')
+assert.equal(new URL(process.env.DATABASE_URL!).pathname, process.env.FORUM_ISSUE381 === '1' ? '/case_assignment_381_20261024_test' : '/lingxiloop_forum_test')
 assert.equal(process.env.NODE_ENV, 'test')
 // Enable source HTTP operations; no external ingestion worker runs in this fixture.
 process.env.OPEN_NOTEBOOK_ENABLED = 'true'
@@ -52,8 +52,8 @@ await pool.query(`INSERT INTO homework_submissions(id,company_id,project_id,home
 const app = express()
 // #325 only: deterministic transport failures around the real room and publish
 // transactions. These routes exist only in this disposable loopback fixture.
-if (process.env.FORUM_ISSUE325 === '1') {
-  let mode = 'pass', requests = 0, completed = 0, failChannels = false, losePublish = false
+if (process.env.FORUM_ISSUE325 === '1' || process.env.FORUM_ISSUE381 === '1') {
+  let mode = 'pass', requests = 0, completed = 0, failChannels = false, losePublish = false, loseDraft = false
   const pending = new Set<() => void>()
   app.get('/api/fixture-teacher-entry', async (_req,res) => {
     const counts = (await pool.query(`SELECT
@@ -69,6 +69,7 @@ if (process.env.FORUM_ISSUE325 === '1') {
     if (mode === 'pass') { for (const release of pending) release(); pending.clear() }
     res.sendStatus(200)
   })
+  app.post('/api/fixture-teacher-draft/lost', (_req,res) => { loseDraft = true; res.sendStatus(200) })
   app.post('/api/fixture-teacher-publish/lost', (_req,res) => { losePublish = true; res.sendStatus(200) })
   app.use((req,res,next) => {
     if (req.method === 'GET' && req.path === '/api/im/channels' && failChannels) {
@@ -87,6 +88,11 @@ if (process.env.FORUM_ISSUE325 === '1') {
           return json(value)
         }
       }
+    }
+    if (req.method === 'PUT' && req.path.endsWith('/draft') && loseDraft) {
+      loseDraft=false
+      const json=res.json.bind(res)
+      res.json=value=>res.statusCode===200?json((res.status(503),{error:'Synthetic committed creation response loss'})):json(value)
     }
     if (req.method === 'POST' && req.path.endsWith('/publish') && losePublish) {
       losePublish = false
