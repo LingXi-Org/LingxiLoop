@@ -1,4 +1,5 @@
 import { createAuthClient } from 'better-auth/react'
+import { getGlobalBroadcastChannel } from 'better-auth/client'
 import { emailOTPClient } from 'better-auth/client/plugins'
 import { API, http } from '@/api/core/http'
 import type { AuthMeResponse } from './contracts'
@@ -26,6 +27,9 @@ export const authApi = {
       password,
       fetchOptions: { headers: { 'x-captcha-response': captchaToken } },
     })
+    // Better Auth 1.7.2 broadcasts sign-out, but not sign-in. Wake peers using
+    // its public session channel; each tab rechecks its own cookie with the server.
+    if (!result.error) getGlobalBroadcastChannel().post({ event: 'session', data: { trigger: 'getSession' }, clientId: crypto.randomUUID() })
     if (!result.error && invitation) {
       try {
         await authApi.acceptInvitation(invitation.token, invitation.kind)

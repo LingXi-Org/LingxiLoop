@@ -55,9 +55,26 @@
     "final-focused.log": {
       "sha256": "4608768e20cca8bd53a1c80a938f66346407eff95de3b41fc091514da2abe5f4",
       "bytes": 4348
+    },
+    "signin-broadcast-red.log": {
+      "sha256": "bcf9ad70da8e2459c2a8e5874ed1e62242416207b2aabea5d84abc4cb8648ffb",
+      "bytes": 1257
+    },
+    "signin-broadcast-green.log": {
+      "sha256": "2ff4a1956c01ab1e92a401a3a92ab382771421c3f1084a8a432ac3ac3633bc5c",
+      "bytes": 4811
+    },
+    "ci431ce837.json": {
+      "sha256": "bab64c2bd9e20474fa1f610edce0d9404a67d458ecb78d96dba43b6471687209",
+      "bytes": 6344
     }
   },
   "browser": "pending independent synthetic two-context validation",
   "productionActions": 0,
-  "externalProviderCalls": 0
+  "externalProviderCalls": 0,
+  "precedingCi": {
+    "id": 40078104391,
+    "head": "431ce8373c0675a3eac3e10947c51f366f4a952f",
+    "conclusion": "success"
+  }
 }
