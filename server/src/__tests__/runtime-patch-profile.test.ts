@@ -46,3 +46,10 @@ test('v2 to v3 pure patch descriptors preserve native/product inventories and fo
  }
  assert.throws(()=>assertRuntimePatchDescriptors(target,source))
 })
+
+// Product55 adds case tables only; current package provenance remains exact.
+test('case-cover product55 accepts empty, complete54 upgrade and55 no-op only',()=>{
+  for(const count of [0,54,55]) assert.doesNotThrow(()=>assertFull54InstallBoundary(count,'3.8.11',55))
+  for(const count of [1,10,49,53,56]) assert.throws(()=>assertFull54InstallBoundary(count,'3.8.11',55),/historical package/)
+  assert.throws(()=>assertFull54InstallBoundary(55,'3.8.11'),/historical package/)
+})

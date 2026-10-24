@@ -48,7 +48,7 @@ test('product54 migration and persisted host purpose preserve old/new/retry/tena
     assert.equal((await database.query("SELECT 1 FROM information_schema.columns WHERE table_name='agent_run_bindings' AND column_name='presentation_version'")).rowCount,0)
     assert.deepEqual((await database.query('SELECT * FROM schema_migrations ORDER BY version')).rows,history)
     await database.query('DROP TRIGGER reject54 ON schema_migrations; DROP FUNCTION reject54()')
-    assert.deepEqual(await migrateDatabase(database),['0054_run_presentation_contract'])
+    assert.deepEqual(await migrateDatabase(database),['0054_run_presentation_contract','0055_case_covers'])
     assert.deepEqual(await migrateDatabase(database),[])
     await assertMigrationsCurrent(database)
     await assert.rejects(assertMigrationsCurrent(database,oldUrl),/applied migration 54 has no matching file/)

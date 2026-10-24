@@ -199,7 +199,9 @@ export async function migrateDatabase(
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
-  const full54=migrations.length===54&&migrations[53]?.name==='run_presentation_contract'
+  // Product55 is a pure product-table addition on the same formally locked runtime.
+  const full55=migrations.length===55&&migrations[54]?.name==='case_covers'
+  const full54=(migrations.length===54||full55)&&migrations[53]?.name==='run_presentation_contract'
   const qualifiedRuntime=developmentQualification===undefined ? undefined : assertDevelopmentQualification(developmentQualification,database,migrationsUrl,full54)
   if(full54)assertCurrentRuntimeProfile(releaseVersions,(await runtimeSchema(14)).hash,qualifiedRuntime??(await loadLockedRuntimePackage()).runtime)
   else assertMigrationRuntime(hasDeliveryUpgrade,hasPurposeReader,releaseVersions,hasPurposeReader ? (await runtimeSchema(14)).hash : undefined,hasRunTrace,hasConversationRepair)
@@ -226,7 +228,7 @@ export async function migrateDatabase(
 
     const applied = await appliedMigrations(client)
     validateApplied(migrations, applied)
-    if(full54)assertFull54InstallBoundary(applied.length)
+    if(full54)assertFull54InstallBoundary(applied.length,releaseVersions.runtime,full55?55:54)
     const installsRuntime = migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
     const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
@@ -254,6 +256,9 @@ export async function migrateDatabase(
         }
         if (migration.version===54 && migration.name==='run_presentation_contract') {
           await assertRuntimeCurrent(client,14,'3.8.2')
+        }
+        if (migration.version===55 && migration.name==='case_covers') {
+          await assertRuntimeCurrent(client,14,releaseVersions.runtime)
         }
         await client.query(migration.sql)
         // Only the atomic empty-database cutover may stamp the current package.
@@ -338,7 +343,9 @@ export async function assertMigrationsCurrent(
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
-  const full54=migrations.length===54&&migrations[53]?.name==='run_presentation_contract'
+  // Product55 is a pure product-table addition on the same formally locked runtime.
+  const full55=migrations.length===55&&migrations[54]?.name==='case_covers'
+  const full54=(migrations.length===54||full55)&&migrations[53]?.name==='run_presentation_contract'
   const qualifiedRuntime=developmentQualification===undefined ? undefined : assertDevelopmentQualification(developmentQualification,database,migrationsUrl,full54)
   if(full54)assertCurrentRuntimeProfile(releaseVersions,(await runtimeSchema(14)).hash,qualifiedRuntime??(await loadLockedRuntimePackage()).runtime)
   else assertMigrationRuntime(migrations.some(migration => migration.version===50 && migration.name==='skill_delivery'),

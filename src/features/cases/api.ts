@@ -11,7 +11,18 @@ export interface CaseInput {
   category: string
   tags: string[]
 }
+export interface GeneratedCaseCover {
+  schemaVersion: 1
+  status: 'pending' | 'generating' | 'ready' | 'failed' | 'cancelled'
+  fingerprint: string
+  generation: number
+  alt: string | null
+  previewUrl: string | null
+  interactiveUrl: string | null
+  canRetry: boolean
+}
 export interface CaseArticle extends CaseInput {
+  generatedCover?: GeneratedCaseCover | null
   id: string
   companyId: string
   status: 'draft' | 'published' | 'unpublished'
@@ -31,6 +42,13 @@ export const casesApi = {
   detail: (id: string, signal?: AbortSignal) => http<CaseArticle>(base(id), { signal }),
   save: (input: CaseInput, article?: CaseArticle) => http<CaseArticle>(article ? base(article.id) : '/cases', { method: article ? 'PUT' : 'POST', body: JSON.stringify({ ...input, ...(article ? { version: article.version } : {}) }) }),
   action: (article: CaseArticle, action: 'publish' | 'unpublish' | 'retry-index') => http<CaseArticle>(`${base(article.id)}/${action}`, { method: 'POST', body: JSON.stringify({ version: article.version }) }),
+  retryCover: (article: CaseArticle, snapshot: 'draft'|'published' = 'draft') => {
+    const cover = article.generatedCover
+    if (!cover) return Promise.reject(new Error('当前案例没有可重试的封面'))
+    return http<CaseArticle>(`${base(article.id)}/retry-cover`, { method:'POST',body:JSON.stringify({ snapshot,
+      fingerprint:cover.fingerprint,expectedGeneration:cover.generation,idempotencyKey:`${cover.fingerprint}:${cover.generation}` }) })
+  },
+  backfillCovers: (afterId = '', limit = 25) => http<{scanned:number;nextAfterId:string|null;pending:number;succeeded:number;failed:number;cancelled:number}>('/cases/covers/backfill', { method:'POST',body:JSON.stringify({afterId,limit}) }),
   file: (id: string, mime: string, data: string) => http<{ url: string }>(`${base(id)}/files`, { method: 'POST', body: JSON.stringify({ mime, data }) }),
   image: (id: string, mime: string, data: string) => http<{ url: string }>(`${base(id)}/images`, { method: 'POST', body: JSON.stringify({ mime, data }) }),
 }
