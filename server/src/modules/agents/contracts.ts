@@ -1,10 +1,11 @@
 import { DEFAULT_AGENT_CAPABILITIES } from '../../../../src/lib/agentCapabilities.js'
 import { z } from 'zod'
+import { isChineseAgentName } from '../../../../src/lib/participantDisplayName.js'
 
 const capabilitySchema = z.enum(DEFAULT_AGENT_CAPABILITIES)
 
 export const createAgentRequestSchema = z.object({
-  name: z.string().trim().min(1, 'name required').max(80),
+  name: z.string().trim().min(1, '请设置中文显示名').max(80).refine(isChineseAgentName,'显示名请使用一至八十个汉字'),
   role: z.string().trim().max(160).default(''),
   systemPrompt: z.string().trim().min(10, 'systemPrompt required (at least 10 chars — describe the agent\'s style)').max(20_000),
   bio: z.string().max(2_000).default(''),

@@ -48,6 +48,8 @@ export interface Participant {
   kind: ParticipantKind
   name: string
   role?: string
+  /** Original stored Agent name, used only for compatibility parsing and explicit name settings. */
+  sourceName?: string
   initial: string
   /** Human fallback background; agents use the deterministic Bloub renderer. */
   avatarBg: string

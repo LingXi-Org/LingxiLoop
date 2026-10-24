@@ -1,4 +1,5 @@
 import { conversationsApi } from './api'
+import { displayMentionText } from '@/lib/mentions'
 import type { ApiConversation } from './contracts'
 import { create } from 'zustand'
 import { ws } from '@/api/core/realtime'
@@ -130,13 +131,7 @@ function fromApi(c: ApiConversation): Conversation {
     // don't leak participant ids like `@u-27c9522d-3b7`. Mirror the regex
     // used by parseBody() so we tokenize exactly what the chat renderer
     // treats as a mention. `@all` is preserved as-is.
-    const humanizeMentions = (s: string): string =>
-      s.replace(/@[A-Za-z][\w-]*/g, (m) => {
-        const id = m.slice(1)
-        if (id === 'all') return m
-        const name = resolveName(id)
-        return name ? `@${name}` : m
-      })
+    const humanizeMentions = (s: string): string => displayMentionText(s,c.members.flatMap(id => byId[id] ? [byId[id]] : []))
     const trimmedBody = humanizeMentions(last.body?.trim() ?? '')
     if (last.kind === 'tool' && last.tool) {
       const t = last.tool as { name?: string; arg?: string }

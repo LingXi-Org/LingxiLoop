@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { nativeText } from '@/lib/nativeMessage'
+import { displayMentionText, type MentionTarget } from '@/lib/mentions'
 
 export async function copyMessageText(text: string) {
   try {
@@ -64,7 +65,7 @@ export function MessageActions({ isMine, getText, className }: { isMine: boolean
   )
 }
 
-export function useMessageCopyText(bodyRef: RefObject<HTMLElement | null>) {
+export function useMessageCopyText(bodyRef: RefObject<HTMLElement | null>, mentionTargets: readonly MentionTarget[] = []) {
   const inlineCitations = useAuiState(state => Boolean(state.message.metadata.custom.runId))
   const content = useAuiState(state => state.message.content)
   const rawText = useMemo(() => nativeText({ content }), [content])
@@ -85,11 +86,11 @@ export function useMessageCopyText(bodyRef: RefObject<HTMLElement | null>) {
         return link && Number.isSafeInteger(start) && Number.isSafeInteger(end) && end <= rawText.length
           ? [{ start, end, text: node.dataset.citationHidden ? '' : link[1] }] : []
       })
-      return confidenceCopyText(rawText, ranges)
+      return displayMentionText(confidenceCopyText(rawText, ranges),mentionTargets)
     }
     const renderedIds = new Set(Array.from(body?.querySelectorAll<HTMLElement>('[data-confidence-id]') ?? [])
       .filter(node => node.closest('.native-message-content') === messageContent).map(node => node.dataset.confidenceId))
-    return confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id)))
+    return displayMentionText(confidenceCopyText(rawText, confidenceClaims?.filter(claim => renderedIds.has(claim.id))),mentionTargets)
   }
   return { rawText, confidenceClaims, getText }
 }
