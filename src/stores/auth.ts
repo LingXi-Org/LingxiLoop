@@ -7,6 +7,7 @@ import { create } from 'zustand'
 import { runAuthTeardown, type AuthTeardownReason } from './authTeardown'
 interface AuthState {
   sessionKey: string | null
+  sessionRevalidationRequired: boolean
   authorizationEpoch: number
   acceptSession: (me: AuthMeResponse, sessionKey: string) => void
   authenticated: boolean
@@ -35,6 +36,7 @@ function permissionScope(user: AuthUser | null, companies: AuthCompany[], active
 
 export const useAuth = create<AuthState>((set) => ({
   sessionKey: null,
+  sessionRevalidationRequired: false,
   authorizationEpoch: 0,
   acceptSession(me, sessionKey) {
     if (me.companies.length !== 1 || me.companies[0].id !== me.activeCompanyId) {
@@ -47,7 +49,7 @@ export const useAuth = create<AuthState>((set) => ({
     if (changed) runAuthTeardown()
     const authorizationEpoch = previous.authorizationEpoch + Number(changed)
     localStorage.setItem(COMPANY_KEY, me.activeCompanyId)
-    set({ ...me, sessionKey, authenticated: true, ready: true, authorizationEpoch })
+    set({ ...me, sessionKey, sessionRevalidationRequired: false, authenticated: true, ready: true, authorizationEpoch })
     if (changed) void import('@/api/core/realtime').then(({ ws }) => {
       if (useAuth.getState().authorizationEpoch === authorizationEpoch && useAuth.getState().authenticated) ws.reconnect()
     })
@@ -62,7 +64,7 @@ export const useAuth = create<AuthState>((set) => ({
     const previousUserId = useAuth.getState().user?.id
     if (previousUserId && previousUserId !== user.id) runAuthTeardown()
     if (companyId) localStorage.setItem(COMPANY_KEY, companyId)
-    set({ authenticated: true, user, activeCompanyId: companyId, ready: true })
+    set({ sessionRevalidationRequired: false, authenticated: true, user, activeCompanyId: companyId, ready: true })
     // Fresh auth → rebind the WS connection so it carries the new
     // session's ticket instead of staying on whatever it had before.
     void import('@/api/core/realtime').then(({ ws }) => ws.reconnect())
@@ -86,6 +88,8 @@ export const useAuth = create<AuthState>((set) => ({
     localStorage.removeItem(COMPANY_KEY)
     set({
       sessionKey: null,
+      // Latch until a trusted session is accepted. Repeated 401s cannot loop.
+      sessionRevalidationRequired: reason === 'session-rejected' || useAuth.getState().sessionRevalidationRequired,
       authorizationEpoch,
       authenticated: false,
       user: null,

@@ -11,7 +11,7 @@ test('two observed tabs switch teacher → student → teacher without accepting
   const requests: ReturnType<typeof deferred>[] = [], signals: AbortSignal[] = [], accepted: string[] = [], cleared: string[] = [], errors: Error[] = []
   let currentKey: string | null = 'teacher-session-1'
   const sync = (key: string | null) => synchronizeProductSession(key, {
-    currentKey: () => currentKey,
+    currentKey: () => currentKey, currentEpoch: () => 1,
     read: signal => { signals.push(signal); const request = deferred(); requests.push(request); return request.promise },
     clear: () => { cleared.push(currentKey ?? 'none'); currentKey = null },
     accept: (value, nextKey) => { currentKey = nextKey; accepted.push(`${nextKey}:${value.user.id}`) },
@@ -39,7 +39,7 @@ test('same-session product permissions are refreshed; ordinary failures do not c
   const requests: ReturnType<typeof deferred>[] = [], accepted: AuthMeResponse[] = [], errors: Error[] = []
   let clears = 0
   const sync = () => synchronizeProductSession('same-session', {
-    currentKey: () => 'same-session', read: () => { const request = deferred(); requests.push(request); return request.promise },
+    currentKey: () => 'same-session', currentEpoch: () => 1, read: () => { const request = deferred(); requests.push(request); return request.promise },
     clear: () => { clears++ }, accept: value => accepted.push(value), failed: error => errors.push(error),
   })
   sync(); requests[0].resolve(me('same-user')); await flush()
@@ -52,9 +52,24 @@ test('same-session product permissions are refreshed; ordinary failures do not c
 test('unmount and superseded errors cannot mutate the current session', async () => {
   const request = deferred(); let writes = 0
   const cancel = synchronizeProductSession('existing', {
-    currentKey: () => 'existing', read: () => request.promise,
+    currentKey: () => 'existing', currentEpoch: () => 1, read: () => request.promise,
     clear: () => { writes++ }, accept: () => { writes++ }, failed: () => { writes++ },
   })
   cancel(); request.reject(new Error('old network error')); await flush()
   assert.equal(writes, 0)
+})
+
+// This deliberately does not invoke the effect cleanup first: the store may be
+// invalidated in the same microtask as an old response, before React re-renders.
+test('trusted external invalidation fences an in-flight success before effect cleanup', async () => {
+  const request = deferred(); let epoch = 7, accepted = 0, failures = 0
+  const cancel = synchronizeProductSession('same-session', {
+    currentKey: () => 'same-session', currentEpoch: () => epoch, read: () => request.promise,
+    clear() {}, accept: () => { accepted++ }, failed: () => { failures++ },
+  })
+  epoch++
+  request.resolve(me('old-teacher')); await flush()
+  assert.equal(accepted, 0, 'old product session must not undo a trusted 401 invalidation')
+  assert.equal(failures, 0)
+  cancel()
 })

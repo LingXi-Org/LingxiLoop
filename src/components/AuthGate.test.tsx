@@ -9,12 +9,13 @@ test('session observations gate old authorized content before effects can reconc
     data: { user: { id: 'auth-teacher' }, session: { id: 'session-a' } }, isPending: false, isRefetching: false, error: null, refetch: async () => {},
   }
   const auth = { authenticated: true, ready: true, sessionKey: key, setAuthenticated() {}, setMe() {}, setServerCapabilities() {}, clear() {} }
+  mock.module('@/api/core/http', { namedExports: { ApiError: class extends Error { status = 401 } } })
   mock.module('@/auth/api', { namedExports: { authClient: { useSession: () => session }, authApi: { me: async () => { throw new Error('SSR must not read sessions') } } } })
   mock.module('@/stores/auth', { namedExports: { useAuth: (select: (state: typeof auth) => unknown) => select(auth) } })
   mock.module('./AuthScreen', { namedExports: { AuthScreen: () => createElement('p', null, 'signed-out') } })
   mock.module('./WorkspaceSkeleton', { namedExports: { WorkspaceSkeleton: () => createElement('p', null, 'checking-session') } })
   const { AuthGate } = await import('./AuthGate')
-  const render = () => renderToStaticMarkup(createElement(AuthGate, { children: createElement('p', null, 'teacher-private-draft') }))
+  const render = () => renderToStaticMarkup(<AuthGate><p>teacher-private-draft</p></AuthGate>)
   assert.match(render(), /teacher-private-draft/, 'accepted identity is visible')
   session = { ...session, data: null }
   assert.doesNotMatch(render(), /teacher-private-draft/, 'a signed-out observation hides the old subtree immediately')

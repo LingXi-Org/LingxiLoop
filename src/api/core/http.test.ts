@@ -34,6 +34,10 @@ test('a current session rejection stops automatic recovery but a stale rejection
   respond(new Response('{}', { status: 403 }))
   await assert.rejects(forbidden)
   assert.equal(clears.length, 1, 'ordinary permission denial is not global logout')
+  const productSession = http('/session')
+  respond(new Response('{}', { status: 401 }))
+  await assert.rejects(productSession)
+  assert.equal(clears.length, 1, 'product-session verification owns its failure instead of recursively requesting itself')
   const oldCompany=http('/conversations/room/typing')
   company='other'
   respond(new Response('{}',{status:401}))

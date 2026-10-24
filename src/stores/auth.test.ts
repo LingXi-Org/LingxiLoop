@@ -33,6 +33,18 @@ test('accepted session atomically changes principal and invalidates same-user au
     assert.equal(useAuth.getState().sessionKey, 'session-b')
     assert.equal(useAuth.getState().authorizationEpoch, first + 2)
     unsubscribe()
+    const revalidations: boolean[] = []
+    const stopRevalidation = useAuth.subscribe((state, previous) => {
+      if (state.sessionRevalidationRequired !== previous.sessionRevalidationRequired) revalidations.push(state.sessionRevalidationRequired)
+    })
+    useAuth.getState().clear('session-rejected')
+    assert.equal(useAuth.getState().sessionRevalidationRequired, true, 'trusted current 401 asks the gate to recheck the official session')
+    useAuth.getState().clear()
+    useAuth.getState().clear('session-rejected')
+    assert.deepEqual(revalidations, [true], 'repeated product-session 401 does not create an automatic refetch loop')
+    useAuth.getState().acceptSession(student, 'session-b')
+    assert.deepEqual(revalidations, [true, false], 'only a successful product-session acceptance re-arms recovery')
+    stopRevalidation()
     useAuth.getState().clear()
     assert.equal(useAuth.getState().sessionKey, null)
     assert.equal(useAuth.getState().serverCapabilities, null)
