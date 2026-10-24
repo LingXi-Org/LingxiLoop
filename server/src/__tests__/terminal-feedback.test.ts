@@ -33,6 +33,14 @@ test('only the matching delivered result permits an already-sent claim', () => {
   ]) assert.doesNotMatch(terminalFeedbackText(feedback, value, null), /已有答复已发送/)
 })
 
+test('a delivered root retains the actual follow-up stop reason and not-started count', () => {
+  const text = terminalFeedbackText({ ...feedback, reason: 'budget_limit', failedCount: 0, notStartedCount: 2 }, delivered(), null)
+  assert.match(text, /已有答复已发送/)
+  assert.match(text, /本轮预算已达上限/)
+  assert.match(text, /2 项协作未启动/)
+  assert.doesNotMatch(text, /当前答复未能完成|这次任务未能完成/)
+})
+
 test('protocol, timeout and ordinary provider failures keep distinct safe wording', () => {
   assert.match(terminalFeedbackText(feedback, state(), 'protocol'), /答复格式有误/)
   assert.doesNotMatch(terminalFeedbackText(feedback, state(), 'protocol'), /服务.*不可用|PRIVATE_/)

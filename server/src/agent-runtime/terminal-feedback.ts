@@ -47,7 +47,17 @@ export function terminalFeedbackText(
     execution_failed: failure === 'protocol' ? '模型返回的答复格式有误，当前答复未能完成。'
       : failure === 'timeout' ? '模型响应超时，当前答复未能完成。' : '当前执行未能完成。',
   } as const
-  const parts = [delivered ? '已有答复已发送，后续协作未全部完成。' : reasons[feedback.reason]]
+  const followUpReasons = {
+    context_limit: '后续协作超出了可处理的上下文范围，可以缩小材料范围后继续。',
+    budget_limit: '本轮预算已达上限，后续协作未能全部继续。',
+    model_unavailable: '后续协作的模型服务暂时不可用。',
+    permission_denied: '后续协作因权限不足已停止。',
+    dependency_unavailable: '后续协作所需服务暂时不可用。',
+    cancelled: '后续协作已取消。',
+    interrupted: '后续协作在恢复过程中中断。',
+    execution_failed: '后续协作未全部完成。',
+  } as const
+  const parts = [delivered ? `已有答复已发送，${followUpReasons[feedback.reason]}` : reasons[feedback.reason]]
   if (feedback.failedCount) parts.push(`${delivered ? '后续有' : '本轮有'} ${feedback.failedCount} 项${delivered ? '协作' : '执行'}失败。`)
   if (feedback.cancelledCount) parts.push(`${delivered ? '后续有' : '本轮有'} ${feedback.cancelledCount} 项${delivered ? '协作' : '执行'}已取消。`)
   if (feedback.notStartedCount) parts.push(`本轮有 ${feedback.notStartedCount} 项协作未启动${notStartedNames.length ? `（${notStartedNames.join('、')}）` : ''}。`)

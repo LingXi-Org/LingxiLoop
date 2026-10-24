@@ -15,7 +15,7 @@
         "runtime-reliability.test.ts"
       ],
       "runtime": "current",
-      "durationMs": 10239,
+      "durationMs": 11077,
       "exitCode": 0
     },
     {
@@ -23,10 +23,10 @@
         "message-mentions.test.ts"
       ],
       "runtime": "current",
-      "durationMs": 4862,
+      "durationMs": 4669,
       "exitCode": 0
     }
   ],
-  "durationMs": 15102,
+  "durationMs": 15746,
   "exitCode": 0
 }

@@ -9,12 +9,12 @@ test.describe('Durable runtime failure recovery', { timeout: 90_000,
 }, () => {
   for (const [mode,reason,text,calls] of [
     ['runtime-402','model_unavailable','模型服务暂时不可用',1],
-    ['runtime-timeout','model_unavailable','模型服务暂时不可用',3],
-    ['runtime-total-timeout','model_unavailable','模型服务暂时不可用',1],
-    ['runtime-context','context_limit','超出了当前可处理的上下文范围',0],
+    ['runtime-timeout','model_unavailable','模型响应超时',3],
+    ['runtime-total-timeout','model_unavailable','模型响应超时',1],
+    ['runtime-context','context_limit','超出了可处理的上下文范围',0],
     ['runtime-budget','budget_limit','本轮预算已达上限',0],
-    ['runtime-cancel','cancelled','这次任务已取消',0],
-    ['runtime-invalid-tool','execution_failed','这次任务未能完成',3],
+    ['runtime-cancel','cancelled','执行已取消',0],
+    ['runtime-invalid-tool','execution_failed','当前执行未能完成',3],
     ['runtime-fanout-budget','budget_limit','本轮预算已达上限',2],
   ] as const) test(`${mode} persists one notice and permits a new successful turn`, async ({ app,browser,screen }) => {
     await app.open(`/e2e/connection-recovery.html?mode=${mode}`)
