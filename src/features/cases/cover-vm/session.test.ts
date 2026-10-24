@@ -2,9 +2,18 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createCoverSession, type CoverWorkerPort } from './session'
 import { coverFrameSvg } from './svg'
-import { parseCoverProgram, validateCoverEvent } from './program'
+import { classifyCoverVmFailure, isCoverVmFailureCode, parseCoverProgram, validateCoverEvent } from './program'
 const program = JSON.stringify({ version: 2, engine: 'quickjs-wasm', kernel: 'var HL={}', figure: 'hairline({})' })
 const frame = (sequence = 0, attrs = { d: 'M0 0L20 20' }) => JSON.stringify({ version: 1, sequence, root: { id: 1, tag: 'svg', attrs: { viewBox: '0 0 400 320' }, children: [{ id: 2, tag: 'path', attrs, children: [] }] } })
+test('worker diagnostics export only fixed phase/cause codes', () => {
+  assert.equal(classifyCoverVmFailure(new Error('cover_vm_mount_guest_exception'), 'cover_vm_engine_initialization'), 'cover_vm_mount_guest_exception')
+  assert.equal(classifyCoverVmFailure(new Error('invalid_cover_vm_data'), 'cover_vm_engine_initialization'), 'cover_vm_invalid_output')
+  for (const value of ['private source line', 'cover_vm_mount_guest_exception\nsecret', 'cover_vm_mount_eval']) {
+    assert.equal(isCoverVmFailureCode(value), false)
+    assert.equal(classifyCoverVmFailure(new Error(value), 'cover_vm_engine_initialization'), 'cover_vm_engine_initialization')
+  }
+  assert.equal(classifyCoverVmFailure({}, 'arbitrary failure'), 'cover_vm_worker_error')
+})
 function harness(timeoutMs = 1000) {
   const sent: Record<string, unknown>[] = []
   let ended = 0, failed = 0, frames = 0

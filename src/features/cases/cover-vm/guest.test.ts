@@ -7,6 +7,24 @@ import { createCoverClock } from './virtual-clock'
 const frame = (attrs: Record<string, string> = {}, tag = 'path') => JSON.stringify({ version: 1, sequence: 0, root: {
   id: 1, tag: 'svg', attrs: { viewBox: '0 0 400 320' }, children: [{ id: 2, tag, attrs, children: [] }],
 } })
+test('classList add/remove admit only the closed palette and update atomically', () => {
+  const guest = createCoverGuest()
+  const path = guest.globals.document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  guest.svg.appendChild(path)
+  path.setAttribute('class', 'nf lo')
+  path.classList.add('hi', 'hi')
+  assert.equal(path.attrs.class, 'nf lo hi')
+  path.classList.remove('lo')
+  assert.equal(path.attrs.class, 'nf hi')
+  for (const invalid of ['external', 'hi lo', '', 'hi\n']) {
+    assert.throws(() => path.classList.add('dot', invalid))
+    assert.equal(path.attrs.class, 'nf hi')
+    assert.throws(() => path.classList.remove(invalid))
+  }
+  guest.dispose()
+  assert.throws(() => path.classList.add('hi'))
+  assert.throws(() => path.classList.remove('hi'))
+})
 test('terrain marker after() keeps painter order without granting host DOM access', () => {
   const guest = createCoverGuest(), other = createCoverGuest()
   const mk = () => guest.globals.document.createElementNS('http://www.w3.org/2000/svg', 'g')

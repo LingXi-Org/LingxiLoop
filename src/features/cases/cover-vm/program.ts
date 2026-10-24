@@ -1,6 +1,25 @@
 import { invalidCoverData } from './protocol'
 
 export const COVER_PROGRAM_BYTES = 131072
+const failureCodes = new Set([
+  'cover_vm_worker_bootstrap', 'cover_vm_dependency_unavailable', 'cover_vm_binary_integrity',
+  'cover_vm_engine_initialization', 'cover_vm_invalid_output', 'cover_vm_program_invalid',
+  'cover_vm_worker_timeout', 'cover_vm_worker_heap_limit', 'cover_vm_worker_error',
+  'cover_vm_worker_exit', 'cover_vm_worker_protocol', 'cover_vm_worker_termination',
+  'cover_vm_lifetime_exceeded', 'cover_vm_render_output',
+  ...['bootstrap', 'kernel', 'mount', 'snapshot', 'step'].flatMap(phase =>
+    ['cpu_limit', 'guest_exception', 'pending_jobs'].map(reason => `cover_vm_${phase}_${reason}`)),
+])
+export function isCoverVmFailureCode(value: unknown): value is string {
+  return typeof value === 'string' && failureCodes.has(value)
+}
+/** Only fixed public codes cross the Worker boundary; never exception content. */
+export function classifyCoverVmFailure(error: unknown, fallback: string): string {
+  const value: unknown = error instanceof Error ? error.message : error
+  if (isCoverVmFailureCode(value)) return value
+  if (value === 'invalid_cover_vm_data') return 'cover_vm_invalid_output'
+  return isCoverVmFailureCode(fallback) ? fallback : 'cover_vm_worker_error'
+}
 export type CoverProgram = { version: 2; engine: 'quickjs-wasm'; kernel: string; figure: string }
 export function parseCoverProgram(json: string): CoverProgram {
   if (typeof json !== 'string' || json.length > COVER_PROGRAM_BYTES || new TextEncoder().encode(json).length > COVER_PROGRAM_BYTES) invalidCoverData()

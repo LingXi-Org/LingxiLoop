@@ -48,6 +48,23 @@ export function createCoverGuest() {
       this.children.length = 0
     }
     readonly classList = {
+      add: (...names: string[]) => {
+        // Validate the complete update before mutating, using the same closed
+        // palette as setAttribute/toggle. No browser classList object is shared.
+        for (const name of names) if (!name || /\s/.test(name)) invalidCoverData()
+        const values = new Set((this.attrs.class ?? '').split(/\s+/).filter(Boolean))
+        for (const name of names) values.add(name)
+        this.setAttribute('class', [...values].join(' '))
+      },
+      remove: (...names: string[]) => {
+        for (const name of names) {
+          if (!name || /\s/.test(name)) invalidCoverData()
+          validateCoverAttribute('class', name)
+        }
+        const values = new Set((this.attrs.class ?? '').split(/\s+/).filter(Boolean))
+        for (const name of names) values.delete(name)
+        this.setAttribute('class', [...values].join(' '))
+      },
       toggle: (name: string, force?: boolean) => {
         const values = new Set((this.attrs.class ?? '').split(/\s+/).filter(Boolean))
         const enabled = force ?? !values.has(name)
