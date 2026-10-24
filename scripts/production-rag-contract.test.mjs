@@ -620,7 +620,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
 
 test('actual workflow conditions block publishing and deployment after a failed or cancelled gate', () => {
   const workflow = read('.github/workflows/ci.yml')
-  const allows = (job, scope, results = {}, event = 'push', publishOnly = false, message = '') => {
+  const allows = (job, scope, results = {}, event = 'push', publishOnly = false, message = '', options = {}) => {
     const block = workflow.match(new RegExp(`^  ${job}:\\r?\\n([\\s\\S]*?)(?=^  [a-z]|$(?![\\s\\S]))`, 'm'))?.[1]
     const expression = block?.match(/if: >-\r?\n([\s\S]*?)\r?\n    needs:/)?.[1]
     assert.ok(expression, job)
@@ -629,7 +629,7 @@ test('actual workflow conditions block publishing and deployment after a failed 
       needs[name] = { result: results[name] ?? 'success' }
     }
     return Function('github', 'needs', 'always', 'inputs', 'contains', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
-      { ref: 'refs/heads/main', event_name: event, event: { head_commit: { message } } }, needs, () => true, { publish_only: publishOnly }, (value, marker) => String(value ?? '').toLowerCase().includes(marker.toLowerCase()),
+      { ref: options.ref ?? 'refs/heads/main', event_name: event, event: { head_commit: { message } } }, needs, () => true, { publish_only: publishOnly, scope: options.scope, deploy_admin_control: options.deployAdminControl ?? false }, (value, marker) => String(value ?? '').toLowerCase().includes(marker.toLowerCase()),
     )
   }
   const release = computeScope({}, 'release')
@@ -657,6 +657,36 @@ test('actual workflow conditions block publishing and deployment after a failed 
     assert.equal(allows('rollout', release, { 'update-manifests': result }), false)
     assert.equal(allows('rollout', release, { deploy: result }), false)
   }
+  // A manual admin release must opt in, build its own production assets and
+  // leave product images, migrations and Komodo rollout outside its scope.
+  const admin = computeScope({ release: true, controlMigrations: true, serverSource: true }, 'admin-control')
+  const manual = { scope: 'admin-control', deployAdminControl: true }
+  assert.deepEqual(admin.check_jobs, [{ component: 'admin' }, { component: 'control' }])
+  for (const flag of ['integration', 'publish', 'deployment', 'release', 'control_migrations']) assert.equal(admin[flag], false, flag)
+  assert.equal(allows('deploy', admin, { integration: 'skipped' }, 'workflow_dispatch', false, '', manual), true)
+  assert.equal(allows('deploy', admin, {}, 'workflow_dispatch'), false, 'verification remains the default')
+  assert.equal(allows('deploy', admin, {}, 'workflow_dispatch', true, '', manual), false, 'publish-only never deploys')
+  assert.equal(allows('deploy', admin, {}, 'workflow_dispatch', false, '', { ...manual, scope: 'server' }), false)
+  assert.equal(allows('deploy', admin, {}, 'workflow_dispatch', false, '', { ...manual, ref: 'refs/heads/topic' }), false)
+  for (const gate of ['checks', 'integration']) for (const result of ['failure', 'cancelled']) {
+    assert.equal(allows('deploy', admin, { [gate]: result }, 'workflow_dispatch', false, '', manual), false)
+  }
+  for (const job of ['publish', 'update-manifests', 'rollout']) {
+    assert.equal(allows(job, admin, {}, 'workflow_dispatch', false, '', manual), false, job)
+  }
+  assert.match(workflow, /deploy_admin_control:\r?\n[\s\S]*?type: boolean\r?\n\s+default: false/)
+  const deploy = workflow.split('\n  deploy:')[1].split('\n  rollout:')[0]
+  const buildIf = deploy.match(/name: Build Refine before production changes\r?\n\s+if: ([^\r\n]+)/)?.[1]
+  const downloadIf = deploy.match(/- if: ([^\r\n]+)\r?\n\s+uses: actions\/download-artifact@v4/)?.[1]
+  assert.ok(buildIf)
+  assert.ok(downloadIf)
+  const stepEnabled = (expression, event) => Function('needs', 'github', `return (${expression})`)(
+    { changes: { outputs: { admin_build: 'true' } } }, { event_name: event },
+  )
+  assert.equal(stepEnabled(buildIf, 'workflow_dispatch'), true, 'manual release builds production assets')
+  assert.equal(stepEnabled(downloadIf, 'workflow_dispatch'), false, 'manual checks did not upload an artifact')
+  assert.equal(stepEnabled(buildIf, 'push'), false, 'push reuses its qualified build')
+  assert.equal(stepEnabled(downloadIf, 'push'), true)
   assert.equal((workflow.match(/if: needs\.changes\.outputs\.deep_integration == 'true'/g) ?? []).length, 2)
 })
 
