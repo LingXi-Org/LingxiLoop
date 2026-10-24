@@ -46,7 +46,7 @@ export function saveComposerDraftText(
 }
 
 export interface ComposerDraftScope {
-  kind?: 'composer' | 'questionnaire'
+  kind?: 'composer' | 'questionnaire' | 'artifact-question'
   companyId: string | null; userId: string | null; projectId: string | null
   conversationId: string; threadRootId: string | null
 }
