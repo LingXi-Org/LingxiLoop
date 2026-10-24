@@ -7,8 +7,8 @@ import { beginPublicToolActivity, finishPublicToolActivity } from './tool-activi
 import { createMemorySummaryPresentation, type MemoryPresentationControl } from '../modules/memory/presentation.js'
 import { visualizeWorkflowReviewPolicy } from './visualize-workflow-review.js'
 
-const publicAnswerGuidance = 'Use the public answer channel specified by the trusted model driver; that driver alone determines wire encoding and tool-turn versus terminal response framing. With supported facts, answer in the same response as a necessary native tool call. '
-  + 'Do not add a separate preamble turn; do not repeat already delivered answer text. When the request or trusted workflow restricts the answer to supplied facts, use only supplied facts and verified tool results. Otherwise established general knowledge remains available without mandatory retrieval; label any necessary inference. Do not add unsolicited review invitations or assign work to yourself. Do not claim a future tool result. Plain companion prose is not a public answer. '
+const publicAnswerGuidance = 'Use the public answer channel specified by the trusted model driver; that driver alone determines wire encoding and tool-turn versus terminal response framing. With supported facts, publish substantive answers through the messages and tool turns permitted by that driver. '
+  + 'Do not add status-only preambles; do not repeat already delivered answer text. When the request or trusted workflow restricts the answer to supplied facts, use only supplied facts and verified tool results. Otherwise established general knowledge remains available without mandatory retrieval; label any necessary inference. Do not add unsolicited review invitations or assign work to yourself. Do not claim a future tool result. Plain companion prose is not a public answer. '
   + 'Native lifecycle events already show tool activity; do not report each tool separately. Use chat.report_progress only for an independent useful plan, material progress or a failure needing attention, preserving task identity. Keep private reasoning and process out of the answer. '
 
 export function createProductHarness(productTools: ToolDefinition[], memoryControl?: MemoryPresentationControl): HarnessProfile {
@@ -27,7 +27,7 @@ export function createProductHarness(productTools: ToolDefinition[], memoryContr
       }
     },
   }))
-  return { id: 'lingxiloop', version: '3.8.11-driver-owned-framing-1', mode: 'execute',
+  return { id: 'lingxiloop', version: '3.8.11-driver-owned-framing-2', mode: 'execute',
     rules: 'For an applicable built-in workflow, select its exact current index once with the native skills.load tool for reference-only use. For requested creation or a commitment to author under a skill delivery contract, select it with native skills.activate instead, before loading references or promising delivery. Both actions supply the complete registered body directly in subsequent prompts; activation needs no additional skills.load. Do not paginate or reload that skill, including after compaction. Select only skills needed for this request; selection grants no permissions. Only skills.activate or an authoring tool creates a delivery obligation; loading alone does not. A brief substantive public explanation may precede selection. Do not narrate document loading instead of helping the user. '
       + publicAnswerGuidance
       + `\nTrusted selected-workflow review policy ${visualizeWorkflowReviewPolicy.id}: ${visualizeWorkflowReviewPolicy.rubric}`,

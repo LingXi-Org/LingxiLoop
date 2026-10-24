@@ -21,6 +21,7 @@ test('normal Worker model configuration consumes the same producer leaf without 
   assert.equal(config.maxThinkingTokens,0)
   assert.deepEqual(config.capabilities,{parallelTools:false})
   assert.equal(Reflect.get(config,'publicTextContinuation'),undefined)
+  assert.equal(Reflect.get(config,'publicAnswerTool'),undefined)
 })
 
 // Failure model: docs/evidence/issue-366/NATIVE-BUSINESS-SCHEMA-FAILURE-MODEL.md.
@@ -33,6 +34,8 @@ test('SiliconFlow DeepSeek retains native business schemas and the bounded v3 pu
   assert.equal(configured.publicTextProtocol,'purpose-json-v3')
   // Failure model: TYPED-MESSAGE-CONTINUATION-FAILURE-MODEL.md.
   assert.equal(Reflect.get(configured,'publicTextContinuation'),'typed-message-v1')
+  // Failure model: NATIVE-ANSWER-TURN-CONTRACT-FAILURE-MODEL.md.
+  assert.equal(Reflect.get(configured,'publicAnswerTool'),'native-v1')
   assert.equal(configured.maxThinkingTokens,0)
   assert.deepEqual(configured.recovery,{maxAttempts:3,totalTimeoutMs:120000})
   assert.equal(configured.requestTimeoutMs,90000)
@@ -48,5 +51,6 @@ test('SiliconFlow DeepSeek retains native business schemas and the bounded v3 pu
     assert.equal(Reflect.get(other.capabilities,'jsonObjectWithTools'),undefined)
     assert.equal(Object.hasOwn(other,'nativeToolPublicOutput'),false)
     assert.equal(Reflect.get(other,'publicTextContinuation'),undefined)
+    assert.equal(Reflect.get(other,'publicAnswerTool'),undefined)
   }
 })

@@ -93,15 +93,16 @@ test('duplicate literal readback is conditional on visible current original and 
   assert.notEqual(createProductHarness(tools).version, '3.8.6-on-demand-evidence-1')
 })
 
-// Failure model: docs/evidence/issue-366/EARLY-ANSWER-PROMPT-FAILURE-MODEL.md.
-test('initial and selected visualization guidance use the declared answer channel without an extra preamble turn', () => {
+// Failure model: docs/evidence/issue-366/NATIVE-ANSWER-TURN-CONTRACT-FAILURE-MODEL.md.
+test('initial and selected visualization guidance leave answer and tool sequencing to the driver without requiring a preamble', () => {
   const selected = context(), initial = context(undefined, false)
   const previous = buildPromptContext(selected, policy, 0)
   const restored = buildPromptContext({ ...selected, promptContextCandidate: previous }, policy, 2)
   for (const instructions of [buildPromptContext(initial, policy, 0).systemInstructions, previous.systemInstructions, restored.systemInstructions]) {
     assert.match(instructions, /public answer channel specified by the trusted model driver/)
-    assert.match(instructions, /same response as a necessary native tool call/)
-    assert.match(instructions, /Do not add a separate preamble turn/)
+    assert.match(instructions, /publish substantive answers through the messages and tool turns permitted by that driver/)
+    assert.match(instructions, /Do not add status-only preambles/)
+    assert.doesNotMatch(instructions, /same response as a necessary native tool call|including alongside necessary tools|Do not add a separate preamble turn/)
     assert.match(instructions, /do not repeat already delivered answer text/)
     assert.match(instructions, /Do not claim a future tool result/)
     assert.match(instructions, /Plain companion prose.*not.*public answer/)
@@ -112,15 +113,20 @@ test('initial and selected visualization guidance use the declared answer channe
     assert.match(instructions, /Native lifecycle events already show tool activity/)
     assert.match(instructions, /do not report each tool separately/)
     assert.doesNotMatch(instructions, /streaming in ordinary response text/)
-    assert.equal(instructions.split('Do not add a separate preamble turn').length, 2, 'Complete channel guidance occurs once')
+    assert.equal(instructions.split('Do not add status-only preambles').length, 2, 'Complete channel guidance occurs once')
   }
   for (const instructions of [visualizeHostInstructions('/authorized/output'), visualizeSkillAdaptations]) {
     assert.match(instructions, /public answer channel specified by the trusted model driver/)
+    assert.match(instructions, /using the messages and tool turns that driver permits/)
+    assert.match(instructions, /do not delay known explanation until saving finishes/)
+    assert.doesNotMatch(instructions, /same response as a necessary native tool call|including alongside necessary tools/)
     assert.doesNotMatch(instructions, /streaming in ordinary response text/)
     assert.doesNotMatch(instructions, /Do not add a separate preamble turn/)
   }
   assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-readback-2')
   assert.notEqual(createProductHarness(tools).version, '3.8.6-conditional-readback-2')
+  assert.notEqual(createProductHarness(tools).version, '3.8.11-driver-owned-framing-1')
+  assert.notEqual(visualizeSkill.version, '0a1fc56d279fd1001f78387bd81aec1c26767411-host-driver-framing-4')
 })
 
 // Failure model: docs/evidence/issue-366/DRIVER-FRAMING-CONSISTENCY.md (written first).
