@@ -8,7 +8,7 @@ x-logging: &logging
 
 x-runtime: &runtime
   image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:f7a572f60fe33f67c3bedaf77b9010677935da7d
-  pull_policy: never
+  pull_policy: always
   restart: unless-stopped
   environment: &runtime-environment
     NODE_ENV: production
