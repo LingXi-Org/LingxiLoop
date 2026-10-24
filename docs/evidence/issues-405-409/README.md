@@ -18,7 +18,7 @@ All checks use synthetic users/messages and local disposable PostgreSQL/Redis wi
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Targeted mentions, handoff, name contract, participant state, Markdown and copy tests | 66/66 | `unit.txt` |
-| Compiled native-answer and explicit handoff prompt contract | 2/2 | `prompt-contract.txt` |
+| Compiled native-answer and explicit handoff prompt contract | 3/3 | `prompt-contract.txt` |
 | Preserved current-agent identity and terminal feedback regressions | 9/9 | `preserved.txt` |
 | Real Worker/PG/recording IM group integration | 4/4 | `integration.txt`, `causal/` |
 | Official Chromium, Chinese presentation and admission history at 1440/390px | 4/4 | `browser-report.json.gz`, PNGs |
