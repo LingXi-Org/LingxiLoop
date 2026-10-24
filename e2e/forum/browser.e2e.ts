@@ -46,6 +46,11 @@ test('inline Memos lifecycle, drafts, moderation, assignments and private histor
   await composer().getByRole('button','专注模式',{exact:true}).tap()
   await expect(composer().getByRole('button','退出专注模式')).toBeVisible()
   await browser.keyboard.press('Escape')
+  await editor().focus()
+  await browser.keyboard.press('Control+a')
+  await browser.keyboard.press('Control+a')
+  await browser.keyboard.press('Backspace')
+  await expect(editor()).toHaveText('')
   await nativePaste(browser,screen,'内容正文','Student geometry case\n\n## 用图形理解面积\n\n> 先预测再验证。\n\n- [ ] 测量\n- [x] 复核\n\n| 底 | 高 |\n| --- | --- |\n| 6 | 4 |\n\n```typescript\nconst area = 6 * 4 / 2;\n```\n\n公式 $S = \\frac{bh}{2}$\n\n```mermaid\ngraph LR\n A[测量] --> B[面积]\n```\n\n#geometry')
   // The official source popups author rich math/diagrams; legacy Markdown import
   // is covered separately without replacing BlockNote's native paste pipeline.
