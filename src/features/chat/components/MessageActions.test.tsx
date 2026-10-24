@@ -38,11 +38,15 @@ function observeCopy(message: ThreadMessage) {
   return { ...result, selectors: [...copySelectors] }
 }
 
-function copyMessage(content: ThreadMessage['content']): ThreadMessage {
+type AssistantMessage = Extract<ThreadMessage, { role: 'assistant' }>
+function copyMessage(content: AssistantMessage['content']): AssistantMessage {
   return { id: 'answer', role: 'assistant', createdAt: new Date(0), content,
     status: { type: 'complete', reason: 'stop' },
     metadata: { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [], custom: {} } }
 }
+
+// These selectors read only the message scope; unrelated SDK scopes stay absent.
+function copySnapshot(message: ThreadMessage): AuiState { return { message } as AuiState }
 
 // The SDK evaluates selectors on every notification even when Object.is prevents
 // a render. Exercise the actual registered selectors, not a second test reducer.
@@ -59,11 +63,11 @@ test('unrelated notifications do not scan unchanged copy content', () => {
   assert.equal(rawText, '完整历史正文')
   assert.equal(getText(), rawText)
   assert.ok(selectors.length > 0)
-  const initial = selectors.map(select => select({ message } as AuiState))
+  const initial = selectors.map(select => select(copySnapshot(message)))
   scans = 0
   for (let tick = 0; tick < 240; tick++) {
     const unrelated = { ...message, metadata: { ...message.metadata, custom: { timer: tick } } }
-    selectors.forEach((select, index) => { assert.ok(Object.is(select({ message: unrelated } as AuiState), initial[index])) })
+    selectors.forEach((select, index) => { assert.ok(Object.is(select(copySnapshot(unrelated)), initial[index])) })
   }
   assert.equal(scans, 0, 'unchanged content must not be walked in subscription selectors')
 })
@@ -78,7 +82,7 @@ test('copy subscriptions retain ordered sources and update replacements and purp
   const original = copyMessage([first, second])
   const observed = observeCopy(original)
   assert.equal(observed.getText(), first.text + second.text)
-  const initial = observed.selectors.map(select => select({ message: original } as AuiState))
+  const initial = observed.selectors.map(select => select(copySnapshot(original)))
   const replacement = segment('修订正文', first.text.length, 'replacement')
   const process = { ...second, providerMetadata: { lingxiloop: { ...second.providerMetadata.lingxiloop,
     activity: { ...second.providerMetadata.lingxiloop.activity, purpose: 'process' },
@@ -89,7 +93,7 @@ test('copy subscriptions retain ordered sources and update replacements and purp
     [[second, first], second.text + '\n' + first.text],
   ] as const) {
     const changed = copyMessage(content)
-    assert.ok(observed.selectors.some((select, index) => !Object.is(select({ message: changed } as AuiState), initial[index])))
+    assert.ok(observed.selectors.some((select, index) => !Object.is(select(copySnapshot(changed)), initial[index])))
     assert.equal(observeCopy(changed).getText(), expected)
   }
 })
@@ -100,13 +104,13 @@ test('copy subscriptions see citation-only changes and keep run citation mode in
   const original = copyMessage([text, { type: 'data', name: 'citation-claims', data: { claims } }])
   const observed = observeCopy(original)
   assert.deepEqual(observed.confidenceClaims, claims)
-  const initial = observed.selectors.map(select => select({ message: original } as AuiState))
+  const initial = observed.selectors.map(select => select(copySnapshot(original)))
   const changedClaims = [{ ...claims[0], id: 'replacement-claim' }]
   const changed = copyMessage([text, { type: 'data', name: 'citation-claims', data: { claims: changedClaims } }])
-  assert.ok(observed.selectors.some((select, index) => !Object.is(select({ message: changed } as AuiState), initial[index])))
+  assert.ok(observed.selectors.some((select, index) => !Object.is(select(copySnapshot(changed)), initial[index])))
   assert.deepEqual(observeCopy(changed).confidenceClaims, changedClaims)
   const withRun = { ...original, metadata: { ...original.metadata, custom: { runId: 'run' } } }
-  assert.ok(observed.selectors.some((select, index) => !Object.is(select({ message: withRun } as AuiState), initial[index])))
+  assert.ok(observed.selectors.some((select, index) => !Object.is(select(copySnapshot(withRun)), initial[index])))
 })
 
 function ActionsThread({ isRunning }: { isRunning: boolean }) {
