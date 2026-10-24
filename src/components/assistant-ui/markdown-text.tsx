@@ -191,9 +191,9 @@ const MarkdownTextImpl = ({
   // smooth queue and our Markdown leaf lifetime the actual text-part identity.
   const partKey = useAuiState(state => JSON.stringify([state.message.id,
     activityAnnotation(state.part)?.id ?? state.message.parts.indexOf(state.part)]))
-  // The SDK marks non-last Text parts complete when their message is stopped.
-  // Preserve normal completion draining, but settle every interrupted part now.
-  const messageInterrupted = useAuiState(state => state.message.status?.type === 'incomplete')
+  // Terminal messages expose all received text immediately. The independent
+  // StreamingText color exit can finish without keeping a text reveal queue.
+  const messageSettled = useAuiState(state => state.message.status?.type === 'complete' || state.message.status?.type === 'incomplete')
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion)
   const [motionLifetime, setMotionLifetime] = useState({ partKey, settled: reducedMotion })
   // Once this part has displayed its full text under reduced motion, never
@@ -224,7 +224,7 @@ const MarkdownTextImpl = ({
         <StreamingPart key={partKey} offset={textOffset}>
         <StreamdownTextPrimitive
           key={partKey}
-          smooth={agent && typeof window !== 'undefined' && !motionSettled && !messageInterrupted && part.status.type !== 'incomplete' ? smooth : false}
+          smooth={agent && typeof window !== 'undefined' && !motionSettled && !messageSettled && part.status.type !== 'incomplete' ? smooth : false}
           animated={false}
           containerClassName="im-markdown-host"
           plugins={plugins}
