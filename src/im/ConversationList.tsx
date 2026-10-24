@@ -105,7 +105,7 @@ export function ConversationListItemContent({
       </ItemMedia>
       <ItemContent className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <ItemTitle className="block min-w-0 flex-1 truncate">{conversation.title}</ItemTitle>
+          <ItemTitle className={cn('block min-w-0 flex-1 truncate', conversation.pinned && 'font-semibold')}>{conversation.title}</ItemTitle>
           <span className={cn('flex shrink-0 items-center gap-1 whitespace-nowrap', secondaryText)}>
             <span className="text-xs tabular-nums">{conversation.lastAt}</span>
           </span>
