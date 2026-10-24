@@ -1,5 +1,26 @@
-import { test } from '@e2e-dev/web'
+import { test, type Browser } from '@e2e-dev/web'
 import { expect } from 'e2e'
+
+
+async function observeReactKeys(browser:Browser,reset=true) {
+  await browser.evaluate(reset=>{
+    const key='issue381-react-key-warnings'
+    if(reset)localStorage.setItem(key,'[]')
+    for(const method of ['error','warn'] as const){
+      const original=console[method].bind(console)
+      console[method]=(...args:unknown[])=>{
+        const text=args.map(value=>typeof value==='string'?value:'').join(' ')
+        if(/same key|unique.*key|Encountered two children/i.test(text)){
+          const warnings=JSON.parse(localStorage.getItem(key)??'[]') as string[]
+          localStorage.setItem(key,JSON.stringify([...warnings,text]))
+        }
+        original(...args)
+      }
+    }
+    return true
+  },reset)
+}
+const noKeyWarnings=async(browser:Browser)=>expect(await browser.evaluate(()=>JSON.parse(localStorage.getItem('issue381-react-key-warnings')??'[]'))).toEqual([])
 
 // Written before the fix: the first assertion fails on the conversation-only entry.
 test('381 header opens homework authoring without navigating to chat', async ({ app, browser, screen }) => {
@@ -7,10 +28,12 @@ test('381 header opens homework authoring without navigating to chat', async ({ 
   await browser.evaluate(async () => (await fetch('/api/fixture-role/teacher')).ok)
   await app.open('/?project=e2e-classroom&view=forum')
   await expect(screen.getByLabel('搜索学习论坛')).toBeVisible({ timeout: 120000 })
+  await observeReactKeys(browser)
   await screen.getByRole('button', '发布作业', { exact: true }).tap()
   await expect(screen.getByRole('region', '创建课程作业')).toBeVisible()
   expect(await browser.evaluate(() => new URL(location.href).searchParams.get('view'))).toBe('forum')
   expect(await browser.evaluate(() => new URL(location.href).searchParams.has('conversation'))).toBe(false)
+  await noKeyWarnings(browser)
 })
 
 test('381 saved human draft survives lost response and publishes once to the student forum',async({app,browser,screen})=>{
@@ -22,6 +45,7 @@ test('381 saved human draft survives lost response and publishes once to the stu
   }
   const counts=()=>browser.evaluate(async()=>fetch('/api/fixture-teacher-entry').then(response=>response.json()))
   await open('teacher')
+  await observeReactKeys(browser)
   const before=await counts()
   await screen.getByRole('button','发布作业',{exact:true}).tap()
   const form=screen.getByRole('region','创建课程作业')
@@ -47,6 +71,7 @@ test('381 saved human draft survives lost response and publishes once to the stu
   // not the model's judgment quality. No real provider is called in this suite.
   await browser.evaluate(async id=>(await fetch(`/api/fixture-teacher-homework/${id}/ready`,{method:'POST'})).ok,id)
   await browser.reload()
+  await observeReactKeys(browser,false)
   await screen.getByRole('button','发布作业',{exact:true}).tap()
   await expect(card.getByRole('button','确认发布',{exact:true})).toBeEnabled({timeout:15000})
   await browser.evaluate(()=>{
@@ -64,6 +89,7 @@ test('381 saved human draft survives lost response and publishes once to the stu
   }
   await expect(screen.getByRole('link',title,{exact:true})).toBeVisible()
   expect(await browser.evaluate(()=>new URL(location.href).searchParams.get('view'))).toBe('forum')
+  await noKeyWarnings(browser)
   await open('student')
   await expect(screen.getByRole('button','发布作业',{exact:true})).toHaveCount(0)
   await expect(screen.getByRole('link',title,{exact:true})).toBeVisible()
@@ -82,6 +108,7 @@ test('381 authoring cancels late assistant navigation and isolates course drafts
   await app.open('/');await browser.evaluate(async()=>(await fetch('/api/fixture-role/teacher')).ok)
   await app.open('/?project=e2e-classroom&view=forum')
   await expect(screen.getByLabel('搜索学习论坛')).toBeVisible({timeout:120000})
+  await observeReactKeys(browser)
   await browser.evaluate(async()=>(await fetch('/api/fixture-teacher-entry/hold',{method:'POST'})).ok)
   await screen.getByRole('button','教师助手',{exact:true}).tap()
   await expect(screen.getByRole('button','教师助手',{exact:true})).toBeDisabled()
@@ -101,6 +128,7 @@ test('381 authoring cancels late assistant navigation and isolates course drafts
   await expect(screen.getByRole('region','创建课程作业').getByLabel('作业标题',{exact:true})).toHaveValue('仅属于原课程的草稿')
   await screen.getByRole('region','创建课程作业').getByLabel('作业标题',{exact:true}).focus()
   expect(await browser.evaluate(()=>document.activeElement?.tagName ?? null)).toBe('INPUT')
+  await noKeyWarnings(browser)
   await app.screenshot('381-course-scoped-keyboard-draft')
 })
 
@@ -108,6 +136,7 @@ test('381 late creation receipt cannot overwrite newer edits after returning to 
   await app.open('/');await browser.evaluate(async()=>(await fetch('/api/fixture-role/teacher')).ok)
   await app.open('/?project=e2e-classroom&view=forum')
   await expect(screen.getByLabel('搜索学习论坛')).toBeVisible({timeout:120000})
+  await observeReactKeys(browser)
   await screen.getByRole('button','发布作业',{exact:true}).tap()
   const form=screen.getByRole('region','创建课程作业')
   await form.getByLabel('作业标题',{exact:true}).fill('381 原请求草稿')
@@ -131,6 +160,7 @@ test('381 late creation receipt cannot overwrite newer edits after returning to 
   await navigate('e2e-classroom')
   await expect(screen.getByLabel('搜索学习论坛')).toBeVisible()
   await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await expect(form).toHaveCount(1)
   await form.getByLabel('作业标题',{exact:true}).fill('381 返回后新的未保存编辑')
   await expect.poll(()=>browser.evaluate(()=>{
     const key=Object.keys(localStorage).find(key=>key.endsWith(':create-homework:e2e-course'))
@@ -140,8 +170,10 @@ test('381 late creation receipt cannot overwrite newer edits after returning to 
   await expect.poll(()=>browser.evaluate(()=>(window as unknown as {issue381CreationCompleted:boolean}).issue381CreationCompleted)).toBe(true)
   await browser.evaluate(async()=>{await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));return true})
   await browser.reload()
+  await observeReactKeys(browser,false)
   await screen.getByRole('button','发布作业',{exact:true}).tap()
   await expect(form.getByLabel('作业标题',{exact:true})).toHaveValue('381 返回后新的未保存编辑')
   await expect(form.getByRole('button','保存并检查草稿',{exact:true})).toBeEnabled()
+  await noKeyWarnings(browser)
   await app.screenshot('381-late-receipt-preserves-newer-edit')
 })

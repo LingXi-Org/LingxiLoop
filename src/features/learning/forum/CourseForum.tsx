@@ -166,7 +166,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
         <Button variant="ghost" size="sm" aria-pressed={archived} onClick={()=>setArchived(value=>!value)}>{archived?'返回内容流':'已归档'}</Button>
       </div>
       {tag && <Button variant="outline" size="sm" onClick={()=>setTag('')}>#{tag} · 清除标签筛选</Button>}
-      {creatingHomework && space.canEditContent && <HomeworkComposer key={`${space.companyId}:${userId}:${courseId}`} courseId={courseId} onClose={()=>setCreatingHomework(false)} onPublished={()=>{setCreatingHomework(false);setKind('all');setSearch('');setTag('');void load()}}/>}
+      {creatingHomework && space.canEditContent && <HomeworkComposer key={`homework:${space.companyId}:${userId}:${courseId}`} courseId={courseId} onClose={()=>setCreatingHomework(false)} onPublished={()=>{setCreatingHomework(false);setKind('all');setSearch('');setTag('');void load()}}/>}
       {canWrite && <ForumComposer key={`${space.companyId}:${userId}:${courseId}`} space={space} onCreated={()=>{setKind('all');setSearch('');setTag('');void load()}}/>}
       {error && <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">{error}<Button variant="outline" size="sm" disabled={loading} onClick={() => void load()}>重试</Button></div>}
       <div aria-busy={loading} data-forum-layout={display.columns} className={display.columns==='1'?"forum-list divide-y":"grid items-start gap-3 "+(display.columns==='2'?"@min-[40rem]/learning-grid:grid-cols-2":display.columns==='3'?"@min-[40rem]/learning-grid:grid-cols-2 @min-[60rem]/learning-grid:grid-cols-3":"grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]")}>
