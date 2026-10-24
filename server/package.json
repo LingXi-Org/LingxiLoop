@@ -26,6 +26,7 @@
     "mdast-util-from-markdown": "2.0.3",
     "mdast-util-gfm": "3.1.0",
     "micromark-extension-gfm": "3.0.0",
+    "officeparser": "8.2.0",
     "openai": "^6.37.0",
     "openlit": "1.15.0",
     "pg": "^8.20.0",

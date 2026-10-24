@@ -15,7 +15,7 @@ export type HomeworkTransaction = <T>(work: (db: Queryable) => Promise<T>) => Pr
 export interface HomeworkRow {
   id: string; company_id: string; project_id: string; course_id: string; created_by: string; status: 'DRAFT'|'PUBLISHED'|'CLOSED';
   editor_document?: ContentDocument | null; criteria_document?: ContentDocument | null; revision: number; title: string; instructions: string; criteria: string[]; links: string[]; attachments: LearningAttachment[];
-  due_at: Date|null; visible_hash: string; validated_revision: number|null; validation_status: 'PENDING'|'READY'|'INVALID';
+  due_at: Date|null; visible_hash: string; validated_revision: number|null; validation_status: 'PENDING'|'READY'|'INVALID'|'MATERIAL_ERROR'|'ERROR';
   validation_feedback: string; materials: HomeworkMaterial[]; publish_key: string|null
 }
 export interface HomeworkStateRow {

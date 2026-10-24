@@ -14,7 +14,8 @@ import { useApp } from '@/stores/app'
 import { contentLinks, ForumContentFields, ForumFiles } from '../forum/ForumContentFields'
 import { ForumBody } from '../forum/ForumBody'
 import { homeworkApi } from './api'
-import { localDeadline, type Homework } from './contracts'
+import { canPublishHomeworkDraft, localDeadline, type Homework } from './contracts'
+import { HomeworkValidation } from './HomeworkValidation'
 
 const resultSchema = z.object({ value: z.object({ result: z.object({ homeworkId: z.string().min(1), courseId: z.string().min(1) }) }) })
 
@@ -44,8 +45,8 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
     setHomework(next); setTitle(next.title); setInstructions(next.instructions); setEditorDocument(next.editorDocument ?? null); setCriteria(criteriaSource(next.criteria,next.criteriaDocument)); setCriteriaItems(next.criteria); setCriteriaDocument(next.criteriaDocument ?? null); setDueAt(localDeadline(next.dueAt))
     setLinks(next.links.join('\n')); setAttachments(next.attachments); setDirty(false)
   }, [])
-  const load = useCallback(async (replaceEdits = false) => {
-    if (dirtyRef.current && !replaceEdits) return
+  const load = useCallback(async () => {
+    if (dirtyRef.current) return
     const request = ++epoch.current
     try {
       const next = await homeworkApi.detail(courseId, homeworkId)
@@ -64,7 +65,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
     <CardHeader><CardTitle>作业草稿</CardTitle><CardDescription>确认下面的内容后，作业才会发布到课程论坛。</CardDescription></CardHeader>
     <CardContent className="space-y-4">
       {!homework && !error && <p role="status">正在加载草稿…</p>}
-      {error && <p role="alert" className="text-sm text-destructive">{error}<Button variant="link" disabled={busy || uploading} onClick={() => void load(true)}>重新加载草稿</Button></p>}
+      {error && <p role="alert" className="text-sm text-destructive">{error}{!dirty && <Button variant="link" disabled={busy || uploading} onClick={() => void load()}>重新加载草稿</Button>}</p>}
       {homework && homework.status !== 'DRAFT' ? <>
         <Badge variant="secondary">{homework.status === 'CLOSED' ? '已关闭' : '已发布'}</Badge><h3 className="font-medium">{homework.title}</h3>
         <ForumBody content={homework.instructions} document={homework.editorDocument} />{homework.criteriaDocument ? <ForumBody content={criteriaSource(homework.criteria,homework.criteriaDocument)} document={homework.criteriaDocument}/> : <ul className="list-disc space-y-1 ps-5 text-sm">{homework.criteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul>}
@@ -74,7 +75,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
         if (disabled || !dirty) return
         epoch.current++; setBusy(true); setError('')
         try { install((await homeworkApi.saveDraft(courseId, homeworkId, { expectedRevision: homework.revision, title, instructions, editorDocument, criteriaDocument, criteria: criteriaItems, links: contentLinks(links), attachments, dueAt: dueAt ? new Date(dueAt).toISOString() : null })).homework) }
-        catch (reason) { setError(userFacingError(reason, '修改未能保存，请检查内容后重试。')) }
+        catch (reason) { setError(`${userFacingError(reason, '修改未能保存，请重试。')} 当前输入和附件已保留。`) }
         finally { setBusy(false) }
       }}>
         {preparing && <p role="status" className="text-sm text-muted-foreground">助手正在整理草稿，回复结束后可以编辑并确认发布。</p>}
@@ -85,14 +86,18 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
           <p className="text-xs text-muted-foreground">每段一条标准，最多 20 条；保存后按标准核验作答。</p>
         </section>
         <div className="space-y-2"><Label htmlFor={`${id}-due`}>截止时间</Label><Input id={`${id}-due`} className="max-w-xs" type="datetime-local" value={dueAt} disabled={disabled} onChange={event => edited(() => setDueAt(event.target.value))} /></div>
-        {homework.validation.status === 'PENDING' && <p role="status" className="text-sm text-muted-foreground">正在检查要求与资料，完成后可以确认发布。</p>}
-        {homework.validation.feedback && <p role={homework.validation.status === 'INVALID' ? 'alert' : 'status'} className="text-sm text-muted-foreground">{homework.validation.feedback}</p>}
-        {dirty && <p role="status" className="text-sm text-muted-foreground">请先保存修改，再确认发布。</p>}
+        <HomeworkValidation validation={homework.validation} dirty={dirty} busy={disabled} onRetry={async () => {
+          if (disabled || dirtyRef.current) return
+          epoch.current++; setBusy(true); setError('')
+          try { install((await homeworkApi.validate(courseId, homeworkId, homework.revision)).homework) }
+          catch (reason) { setError(`${userFacingError(reason, '检查未能开始，请重试。')} 当前输入和附件已保留。`) }
+          finally { setBusy(false) }
+        }} />
         {!homework.canEditDraft && <p className="text-sm text-muted-foreground">请由发起这份作业的教师确认发布。</p>}
         <div className="flex flex-wrap gap-2">
           <Button type="submit" variant="outline" disabled={disabled || !dirty || !title.trim() || !instructions.trim() || !criteria.trim()}>保存修改</Button>
-          <Button type="button" disabled={disabled || dirty || !homework.canPublish || homework.validation.status !== 'READY' || homework.validation.revision !== homework.revision} onClick={async () => {
-            if (disabled || dirty) return
+          <Button type="button" disabled={disabled || !canPublishHomeworkDraft(homework, dirty)} onClick={async () => {
+            if (disabled || !canPublishHomeworkDraft(homework, dirtyRef.current)) return
             if (pending.current?.revision !== homework.revision) pending.current = { revision: homework.revision, key: crypto.randomUUID() }
             epoch.current++; setBusy(true); setError('')
             try { install((await homeworkApi.publish(courseId, homeworkId, { expectedRevision: homework.revision, visibleHash: homework.visibleHash, idempotencyKey: pending.current.key })).homework) }

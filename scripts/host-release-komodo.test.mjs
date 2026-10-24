@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 import {createHostReleaseOperations} from './host-release-komodo.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,hash,sealHostPlan,runHostRelease,runImagePreparation} from './host-release.mjs'
 function fixture(fault={}){
- if(fault.cover55||fault.same55)fault={...fault,producerV3:true};
+ if(fault.cover55||fault.same55||fault.homework56)fault={...fault,producerV3:true};
  if(fault.producerV3)fault={...fault,producerV2:true};
  fault={...fault,image54:fault.image54||fault.runtimePatch||fault.producerV2}
  fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
@@ -49,14 +49,15 @@ function fixture(fault={}){
  if(fault.runtimePatch||fault.producerV2){const p=structuredClone(plan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');plan=sealHostPlan(p);Object.assign(target,p.target)}
  if(fault.producerV2){const p=structuredClone(plan);p.source.runtime='3.8.3';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.runtime='3.8.5';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.publicText.target.producer='purpose-json-v2';p.publicText.targetConfigurationSha256='d'.repeat(64);plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target)}
  if(fault.producerV3){const p=structuredClone(plan);p.source.runtime='3.8.5';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.target.runtime='3.8.7';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.7/fixture';p.publicText.source.producer='purpose-json-v2';p.publicText.target={reader:3,producer:'purpose-json-v3'};plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target)}
- if(fault.cover55||fault.same55){
+ if(fault.cover55||fault.same55||fault.homework56){
   const p=structuredClone(plan);p.format=fault.same55?'product55-image-host-release/v1':'case-cover55-host-release/v1';
   for(const d of [p.source,p.target])Object.assign(d,CASE_COVER_PACKAGE)
   p.publicText.source=p.publicText.target={reader:3,producer:'purpose-json-v3'};p.publicText.sourceConfigurationSha256=p.publicText.targetConfigurationSha256;
   p.target.productVersion=55;p.target.migrations.push({version:55,name:'case_covers',checksum:'609100abaddceeaba19d363962d6defbfae3276450a2fd660777d7efd4a66160'});
   if(fault.same55){p.source.productVersion=55;p.source.migrations=structuredClone(p.target.migrations)}
   else p.backup={...backup,format:2,profile:'native14-product54',source:{sha:p.source.sha,productVersion:54,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,p.source[k]])),migrations:p.source.migrations}};
-  plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target);if(fault.cover55)Object.assign(backup,p.backup);
+  if(fault.homework56){p.format='homework56-host-release/v1';p.source.productVersion=55;p.source.migrations=structuredClone(p.target.migrations);p.target.productVersion=56;p.target.migrations.push({version:56,name:'homework_validation_status',checksum:'88f7078980c26b4d9658c805bc27fec8b4b4c7199a58c51a8b11201d65c4217a'});p.backup.profile='native14-product55';p.backup.source.productVersion=55;p.backup.source.migrations=structuredClone(p.source.migrations)}
+  plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target);if(fault.cover55||fault.homework56)Object.assign(backup,p.backup);
  }
  const containers=APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({
   stack,service,Id:String(i*2+j+1).repeat(64),Image:'sha256:'+(fault.sourceImageMismatch?'0':'f').repeat(64),
@@ -413,4 +414,21 @@ test('same55 native calls have no backup or migration and require observed healt
  const f=fixture({same55:true});await assert.rejects(f.ops.verifyHealthy(APPS[0],'lingxiloop'));
  await f.run();assert.equal(f.calls.some(c=>c.op==='SnapshotRestore'||JSON.stringify(c.command??[]).includes('migrate-bin')),false);
  assert.equal(f.events.filter(e=>e.status==='observed').length,4);await assert.rejects(f.ops.migrate());
+});
+
+test('homework56 native adapter gates one migration behind four drained writers, binding and fresh55 restore',async()=>{
+ const f=fixture({homework56:true});await assert.rejects(f.ops.migrate());assert.equal(f.calls.length,0);
+ const result=await f.run();assert.equal(result.state.product,56);assert.equal(result.publicText.reader,3);
+ const backups=f.calls.filter(c=>c.op==='SnapshotRestore'),jobs=f.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin'));
+ assert.equal(backups.length,1);assert.equal(jobs.length,1);assert.equal(Object.hasOwn(jobs[0],'env'),false);
+ assert.ok(f.calls.indexOf(backups[0])<f.calls.indexOf(jobs[0]));assert.match(JSON.stringify(jobs[0].command),/homework_validation_status/);
+ assert.deepEqual(f.calls.filter(c=>c.op==='StopStack').map(c=>[c.stack,c.services[0]]),['worker','lingxiloop'].flatMap(s=>APPS.map(a=>[a,s])));
+ assert.deepEqual(f.calls.filter(c=>c.op==='DeployStack').map(c=>[c.stack,c.services[0]]),['lingxiloop','worker'].flatMap(s=>APPS.map(a=>[a,s])));
+ assert.equal(f.events.filter(e=>e.status==='observed').length,4);await assert.rejects(f.ops.migrate());
+});
+test('homework56 native adapter refuses configuration drift, bound work, uncertain backup and unknown migration without retry',async()=>{
+ const drift=fixture({homework56:true});drift.configs.get(APPS[0]).config.environment='changed';await assert.rejects(drift.run());assert.equal(drift.calls.some(c=>['StopStack','DeployStack','SnapshotRestore','WriteStackFileContents','UpdateStack'].includes(c.op)),false);
+ const bound=fixture({homework56:true,bound:true});await assert.rejects(bound.run());assert.equal(bound.calls.some(c=>c.op==='SnapshotRestore'||JSON.stringify(c.command??[]).includes('migrate-bin')),false);
+ const backup=fixture({homework56:true,backupUnknown:true});await assert.rejects(backup.run(),e=>e.uncertain);assert.equal(backup.calls.some(c=>JSON.stringify(c.command??[]).includes('migrate-bin')),false);assert.equal(backup.events.at(-1).recovery,'unknown');
+ const unknown=fixture({homework56:true,migrationUnknown:true});await assert.rejects(unknown.run(),e=>e.uncertain);assert.equal(unknown.events.at(-1).recovery,'unknown');assert.equal(unknown.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin')).length,1);assert.equal(unknown.calls.some(c=>c.op==='DeployStack'),false);
 });
