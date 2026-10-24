@@ -1,0 +1,57 @@
+{
+  "base": "6a10d3216f10a9c9f8ad4de5db636e66f35f56c0",
+  "conclusion": "No draft-content authorization bypass reproduced; original report remains unverified",
+  "browser": {
+    "id": "01a16ccd-333b-7954-8cb2-4c61a0c30fd3",
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-24T07:25:50.226Z",
+    "finishedAt": "2026-10-24T07:26:05.424Z"
+  },
+  "checks": {
+    "browser": {
+      "passed": 1,
+      "failed": 0
+    },
+    "existingCasesIntegration": {
+      "passed": 11,
+      "failed": 0,
+      "file": "organization-cases.test.ts",
+      "durationMs": 9578
+    },
+    "focusedE2eTypecheck": "passed",
+    "diffCheck": "passed",
+    "productBuild": "not rerun; no product change"
+  },
+  "outcomes": {
+    "savedDraftStatus": "draft",
+    "savedPublishedVersion": null,
+    "readerDraftDetailStatus": 404,
+    "readerDraftListPresent": false,
+    "readerDraftCategoryPresent": false,
+    "otherTeacherCanManage": true,
+    "readerSeesPreviousPublishedBodyAfterDraftEdit": true
+  },
+  "attempts": [
+    "Initial ordinary-reader browser scenario passed; exploratory same-user re-admission fixture failed with HTTP500 before confirming a product defect and was removed.",
+    "First integration invocation stopped on missing local invite base URL.",
+    "Second integration invocation stopped at unmigrated disposable database setup.",
+    "After migrating the dedicated second database, final existing suite passed11/11."
+  ],
+  "limits": [
+    "Synthetic authentication/recorded external services, not real gateway login.",
+    "No private production content or original post inspected.",
+    "Same-user injected-session experiment is not evidence of a production-reachable path.",
+    "Reader updatedAt/version/order may change on draft save; content snapshot assertion is narrower.",
+    "No production fix, merge or deployment performed."
+  ],
+  "sha256": {
+    "e2e/cases/draft-visibility.e2e.ts": "49e42b06e560a57445c3d25c0dca7e722f58466b69626ffc02d85328d38695d8",
+    "server/src/modules/cases/application.ts": "c3f055dbbe0bd473eed9443f9bc1223668c6fa836a496ac94649fee14a08dc7e",
+    "server/src/modules/access/policy.ts": "ed1e5767254c64125759223b2b81f11c1caa2ed94acc0c4b542d91c00c8e9902",
+    "src/features/cases/CasesPage.tsx": "27cdd4951259e51e8450fa7caa93155f80a30044f9369b2328fa9b7239596795",
+    "src/App.tsx": "e92cfc59c365377237bfc4a05028689eae268115c932200aaf6a788961a72826",
+    "src/components/AuthGate.tsx": "ffb954acfad1a994149dab7aa0b3432fec171806b40c956df90b313dd89751f9",
+    "server/src/__integration__/organization-cases.test.ts": "86cc7910c781dffe61dc80499daf495d7a0398c409ea27d727cf24987453ab17"
+  }
+}
