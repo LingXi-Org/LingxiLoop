@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: public activity precedes secondary runtime details within the same disclosure
+ok 1 - public activity precedes secondary runtime details within the same disclosure
+  ---
+  duration_ms: 39.647276
+  type: 'test'
+  ...
+# Subtest: controlled open state is retained across running and terminal renders without fabricated timing
+ok 2 - controlled open state is retained across running and terminal renders without fabricated timing
+  ---
+  duration_ms: 32.021086
+  type: 'test'
+  ...
+# Subtest: history controls belong to the sole process disclosure even with no live entries
+ok 3 - history controls belong to the sole process disclosure even with no live entries
+  ---
+  duration_ms: 2.601357
+  type: 'test'
+  ...
+# Subtest: task diagnostics use the same secondary disclosure and archives do not replace the current summary
+ok 4 - task diagnostics use the same secondary disclosure and archives do not replace the current summary
+  ---
+  duration_ms: 6.841208
+  type: 'test'
+  ...
+# Subtest: the latest step shares the compact status row so completion does not retract a body-leading line
+ok 5 - the latest step shares the compact status row so completion does not retract a body-leading line
+  ---
+  duration_ms: 1.909612
+  type: 'test'
+  ...
+# Subtest: the native details disclosure supplies an inactive clock without unmounting its trace
+ok 6 - the native details disclosure supplies an inactive clock without unmounting its trace
+  ---
+  duration_ms: 2.861922
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 990.934378

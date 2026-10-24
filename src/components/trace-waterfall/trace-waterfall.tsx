@@ -1,9 +1,11 @@
-import { useEffect,useId,useMemo,useRef,useState } from 'react'
+import { useContext,useEffect,useId,useMemo,useRef,useState } from 'react'
 import { BotIcon,ChevronRightIcon,Clock3Icon,DatabaseIcon,GitBranchIcon,SparklesIcon,WrenchIcon } from 'lucide-react'
 import type { RunTrace,TraceSpan } from '@/lib/runTrace'
 import { workKindLabels } from '@/lib/runTrace'
 import { formatTraceCost as cost,formatTracePricing } from '@/lib/traceCost'
 import { cn } from '@/lib/utils'
+import { TraceActivity } from './trace-activity'
+import { observeTraceClock } from './trace-clock'
 import { TimelineRowMetrics } from './TimelineRowMetrics'
 
 const ms = (value: number|null) => value === null ? '—' : `${Math.round(value).toLocaleString('zh-CN')} ms`
@@ -40,13 +42,13 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
   const latestRoot = useRef(trace.root)
   latestRoot.current = trace.root
   const [laneWidth,setLaneWidth] = useState(240)
+  const surface = useRef<HTMLElement>(null)
+  const active = useContext(TraceActivity)
   const running = trace.root.status === 'running'
   useEffect(() => {
-    if (!running) return
-    setNow(Date.now())
-    const timer = setInterval(() => setNow(Date.now()),100)
-    return () => clearInterval(timer)
-  },[running,trace.startedAt])
+    if (!surface.current) return
+    return observeTraceClock(surface.current, running && active, () => setNow(Date.now()))
+  },[running,active,trace.startedAt])
   useEffect(() => {
     if (!rail.current) return
     const element = rail.current
@@ -151,7 +153,7 @@ export function TraceWaterfall({ trace,selectedSpanId,onSelectedSpanChange,selec
       </div>}
     </li>
   }
-  return <section aria-labelledby={titleId} aria-label="运行瀑布图" className="bg-background/70 min-w-0 overflow-hidden rounded-lg border border-border/60 text-foreground" data-slot="trace-waterfall">
+  return <section ref={surface} aria-labelledby={titleId} aria-label="运行瀑布图" className="bg-background/70 min-w-0 overflow-hidden rounded-lg border border-border/60 text-foreground" data-slot="trace-waterfall">
     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 px-3 py-2.5">
       <h3 id={titleId} className="flex items-center gap-1.5 text-xs font-medium"><GitBranchIcon className="text-muted-foreground size-3.5" aria-hidden="true" />运行瀑布图</h3>
       <span data-trace-clock className="text-muted-foreground font-mono text-[11px] tabular-nums">{labels[trace.root.status]} · {ms(elapsed ?? trace.root.durationMs)}</span>
