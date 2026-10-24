@@ -15,8 +15,11 @@ Base: `2686f475eac075bc9033f13714d5d6bbfa5078eb`. Node 22.23.3, installed publis
 ## Verification
 
 - Focused eight-file node test command: 37 passed, 0 failed, 0 skipped (`ConversationMessage`, `message-presentation`, `run-recovery`, `error-recovery`, `conversation-status`, `approval-context`, `drafts`, `approval-public-view`). Draft regression rerun after corrupt-cache repair: 1 passed.
-- Biome focused lint: 13 files passed. `tsc -p server/tsconfig.json --noEmit` passed. Web typecheck initially failed only because sparse checkout omitted the tracked streaming range utility; it was restored from the same base before rechecking.
+- Biome focused lint: 13 files passed. `tsc -p server/tsconfig.json --noEmit` passed. Web typecheck passed after restoring the tracked streaming range utility omitted by sparse checkout.
 - Initial approval regression failed on missing explicit receipt state, then passed after implementation. Initial message suite failed on the sparse missing range utility, then passed after restoring it.
+- Independent review by `cover_ui` found a knowledge preview field mismatch: the actual producer uses `visibilityScope`, not the repository row's `visibility_scope`. Corrected with a failing-before/passing-after producer-shaped regression and an explicitly reviewed ISO version field in `3910d200`; reviewer reran four focused files (5/5 pass) and closed the finding with no additional P1/P2.
+- Artifact question drafts share this cache through the `artifact-question` namespace (consumer owned by the learning workstream).
+- Three focused browser scenarios and configuration are committed in `e2e/answer-first/state373.e2e.ts` and `e2e.state373.config.ts`; their focused TypeScript check passed. The broad existing E2E config has unrelated recovery-test JsonValue/Promise<void> and alias-resolution failures, so it is not reported as passed.
 - Browser acceptance is separate and still pending: inspect approval public context and grant/execute/unknown receipts; reload a text+uploaded-reference draft; switch account/course/thread and verify isolation; reload an incomplete questionnaire, submit, then confirm server receipt wins. Verify no second pending message on failed send/reconnect using the original outbox.
 
 ## Boundaries and rollback
