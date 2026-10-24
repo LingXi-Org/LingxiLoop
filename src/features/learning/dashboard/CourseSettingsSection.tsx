@@ -1,6 +1,6 @@
 import { Archive02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CourseSettingsSkeleton } from './LearningSkeletons'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -53,24 +53,43 @@ const LIFECYCLE_ACTIONS = {
     destructive: boolean
   }
 >
-export function CourseSettingsSection({ space, section }: { space: LearningSpace; section: 'profile' | 'members' | 'status' }) {
+type CourseSettingsSectionProps = { space: LearningSpace; section: 'profile' | 'members' | 'status' }
+
+export function CourseSettingsSection({ space, section }: CourseSettingsSectionProps) {
   const canView = space.perspective === 'teacher' && space.canManage && Boolean(space.courseId)
-  const canEdit = canView && space.canUpdateCourse
+  if (!canView) {
+    return <DashboardSectionFrame space={space} section="settings"><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
+  }
+  return <ScopedCourseSettingsSection key={JSON.stringify([space.companyId, space.projectId, space.courseId])} space={space} section={section} />
+}
+
+function ScopedCourseSettingsSection({ space, section }: CourseSettingsSectionProps) {
   const setView = useApp(state => state.setView)
   const [course, setCourse] = useState<ApiCourse | null>(null)
-  const [loading, setLoading] = useState(canView)
+  const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
+  const current = useRef({ mounted: true, space, course })
+  current.current.space = space
+  current.current.course = course
 
   useEffect(() => {
-    if (!canView || !space.courseId) return
+    current.current.mounted = true
+    return () => { current.current.mounted = false }
+  }, [])
+
+  useEffect(() => {
+    if (!space.courseId) return
     let active = true
     setLoading(true)
     setError('')
     void learningApi
       .getCourse(space.courseId)
       .then((next) => {
+        if (next.id !== space.courseId || next.companyId !== space.companyId || next.projectId !== space.projectId) {
+          throw new Error('Course response scope mismatch')
+        }
         if (active) setCourse(next)
       })
       .catch((reason) => {
@@ -82,16 +101,14 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
     return () => {
       active = false
     }
-  }, [canView, space.courseId, revision])
-  if (!canView) {
-    return <DashboardSectionFrame space={space} section="settings"><Alert><AlertDescription>你没有查看课程设置的权限。</AlertDescription></Alert></DashboardSectionFrame>
-  }
+  }, [space.companyId, space.projectId, space.courseId, revision])
   if (loading && !course) return <DashboardSectionFrame space={space} section="settings"><CourseSettingsSkeleton section={section} /></DashboardSectionFrame>
   if (!course) {
     return <DashboardSectionFrame space={space} section="settings"><Alert variant="destructive"><AlertDescription className="flex flex-wrap items-center gap-3">{error || '课程设置暂不可用。'}<Button variant="outline" size="sm" disabled={loading} onClick={() => setRevision(value => value + 1)}>重试</Button></AlertDescription></Alert></DashboardSectionFrame>
   }
 
-  const lifecycleAction = course.status === space.status ? space.lifecycleAction : null
+  const canEdit = space.canUpdateCourse && course.canManage && course.status === space.status
+  const lifecycleAction = course.canManage && course.status === space.status ? space.lifecycleAction : null
   const lifecycle = lifecycleAction ? LIFECYCLE_ACTIONS[lifecycleAction] : null
   const advanceLifecycle = async () => {
     if (busy || !space.canManage || !lifecycle) return
@@ -101,7 +118,9 @@ export function CourseSettingsSection({ space, section }: { space: LearningSpace
       confirmLabel: lifecycle.label,
       tone: lifecycle.destructive ? 'destructive' : 'warning',
     })
-    if (!confirmed) return
+    if (!confirmed || !current.current.mounted || !current.current.space.canManage
+      || !current.current.course?.canManage || current.current.space.status !== current.current.course.status
+      || current.current.space.lifecycleAction !== lifecycleAction || current.current.course?.status !== course.status) return
     setBusy(true)
     try {
       const result = await toastAction(lifecycle.run(space.projectId), {

@@ -392,6 +392,14 @@ for (const kind of ['TEACHING', 'INSTITUTIONAL_COURSE'] as const) {
     assert.equal(space?.perspective, 'learner')
     assert.equal(space?.canManage, false)
     assert.equal(space?.canUpdateCourse, false)
+    const studentDetail = await fetch(`${learnerUrl}/api/courses/${course.id}`, { headers })
+    assert.equal(studentDetail.status, 200)
+    const studentCourse = await studentDetail.json() as { courseRole: string; canManage: boolean }
+    assert.equal(studentCourse.courseRole, 'learner')
+    assert.equal(studentCourse.canManage, false)
+    const adminDetail = await fetch(`${admin.url}/api/courses/${course.id}`, { headers })
+    assert.equal(adminDetail.status, 200)
+    assert.equal((await adminDetail.json() as { canManage: boolean }).canManage, true)
     for (const writer of writers) {
       const initial = await snapshot()
       // Browser-supplied roles/user IDs cannot replace the authenticated actor.
