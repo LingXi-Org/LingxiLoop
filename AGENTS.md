@@ -2,6 +2,12 @@
 
 This is a stable web product. Follow the user's request to completion; ask only when an answer would materially change the outcome or the next action needs new authority. Repository edits do not authorize deployment, publishing, external messages, or destructive operations.
 
+## Development scope
+
+Before adding complexity for a speculative or vanishingly unlikely race or security edge case, explain the concrete failure mode, likelihood, and complexity cost to the user and get their buy-in. Do not silently expand scope for theoretical robustness.
+
+[Source and MIT attribution](THIRD_PARTY_NOTICES.md#opencode-agent-guidance).
+
 ## Delivery
 
 1. Track the issue, work on an isolated branch, and open a draft PR. Parallel contributors preserve other branches and hand off to the parent thread's designated sole integrator; only that integrator merges the product release and serializes production rollout.
