@@ -109,16 +109,24 @@ test.describe('Streaming Text lifecycle', {
       const step = (status: string) => window.dispatchEvent(new CustomEvent('streaming-lifecycle-step', { detail: { text, status, sync: status === 'complete' } }))
       // Observe the committed pending queue, before another animation frame can drain it.
       const completion = await new Promise<{ before: ReturnType<typeof snapshot>; terminal: ReturnType<typeof snapshot>; commitMs: number }>((resolve, reject) => {
+        let before: ReturnType<typeof snapshot> | undefined, terminalAt = 0
         const observer = new MutationObserver(() => {
           const sample = snapshot()
+          // The external-store runtime may publish after the parent flushSync.
+          // Observe the first actual terminal commit, never wait for its text.
+          if (before) {
+            if (sample.message !== 'complete') return
+            observer.disconnect()
+            clearTimeout(timeout)
+            resolve({ before, terminal: sample, commitMs: performance.now() - terminalAt })
+            return
+          }
           if (sample.message !== 'running' || sample.received !== text.length || sample.length <= 0 || sample.length >= text.length) return
-          observer.disconnect()
-          clearTimeout(timeout)
-          const terminalAt = performance.now()
+          before = sample
+          terminalAt = performance.now()
           step('complete')
-          resolve({ before: sample, terminal: snapshot(), commitMs: performance.now() - terminalAt })
         })
-        const timeout = setTimeout(() => { observer.disconnect(); reject(new Error('No committed pending queue before completion')) }, remaining())
+        const timeout = setTimeout(() => { observer.disconnect(); reject(new Error(before ? 'No terminal commit' : 'No committed pending queue before completion')) }, remaining())
         observer.observe(root(), { subtree: true, childList: true, characterData: true, attributes: true })
         step('running')
       })
