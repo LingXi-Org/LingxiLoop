@@ -57,5 +57,6 @@ test.describe('Bounded streaming animation', {
     expect(result.staticWrappers).toBe(0)
     console.log('Bounded streaming structure:', JSON.stringify({ wrappers: result.wrappers, fresh: result.fresh,
       characters: result.completeText?.length, selectionPreserved: result.selectedAfter === result.selected, staticWrappers: result.staticWrappers }))
+    await app.screenshot('streaming-budget-complete')
   })
 })

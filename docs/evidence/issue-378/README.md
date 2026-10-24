@@ -41,7 +41,7 @@ until the integrator provides its dependency preparation boundary.
 
 Rollback uses compatible source/lock commits; no durable schema changes.
 
-## B/C first bounded candidate (work in progress)
+## B/C bounded candidate
 
 Current changes stabilize `mentionTargets` across text-only updates and cap
 animation wrappers at 128 tokens across the original text-part's blocks. The
@@ -51,15 +51,16 @@ and shows new text without additional wrappers until selection leaves. Unicode
 combining marks, joined emoji and Hangul clusters use `Intl.Segmenter`.
 
 Pure owning red: 0/2 on the original component (1,000 tokens produced 1,000
-word wrappers; `animate=false` still produced per-token wrappers). Current combined owning tests: 17/17 (five budget/Unicode/block cases and twelve
-existing Markdown cases), recorded in `bc-tests.log`. One web typecheck passed
-before the last pure test/tokenizer additions; final type checks remain pending.
-Source lint passed eight changed implementation/test/fixture files. No browser
-run was consumed.
+word wrappers; `animate=false` still produced per-token wrappers). Combined
+owning tests: 17/17 (five budget/Unicode/block cases and twelve existing Markdown
+cases), recorded in `bc-tests.log`. Exact source CI `40069426629` on
+`41dc70958c4c6a283f20ad37fedc73d9ac1c3b60` passed lint/unit and the full web build,
+which includes final web typechecking. Independent source review found no P1/P2.
+The dedicated browser case/configs also pass their targeted typecheck.
 
 The opt-in official-engine `e2e/web/streaming-budget.e2e.ts` uses the existing
 real renderer fixture to check 10k Chinese text, selection during append,
-completion and removal of settled wrappers. It is prepared, **not run**.
+completion and removal of settled wrappers. Its actual result is recorded below.
 
 ### Reproducible structural/SSR measurement
 
@@ -95,3 +96,40 @@ Peers remain React ^18/^19 and assistant-ui ^0.15.0. The matching markdown
 0.14.15 has no dependency-range delta from installed 0.14.13. No tarball was
 installed and no lock was changed by this audit. Formal dependency preparation,
 full remend/render comparisons and all D–G store/layout work remain pending.
+
+## Actual browser behavior verification
+
+Official e2e `0.17.0` with `@e2e-dev/web 0.12.0`, Node 22.23.3 and the batch's
+existing Chromium over CDP9337. No browser restart, sandbox change, provider call
+or production service was involved. This is the production-built **existing
+renderer fixture**, with synthetic public text; it is not a user-device frame
+benchmark or the complete application performance replay.
+
+The first build at a deliberately bounded 768MiB Node heap failed with V8 heap
+exhaustion (exit134), retained in `production-build-768-failure.log`. With the
+integrator's exclusive resource window, the same single-entry build succeeded
+once at 2048MiB in 24.37s. Sourcemaps/public-directory copying are disabled;
+365 output files total 15,064,131 bytes. Source and complete output hashes are in
+`browser-build-evidence.json`. Product source remained exactly `41dc709`; the
+browser report's `dirty:true` records the added dedicated configurations and
+one screenshot call, subsequently committed with this evidence.
+
+Run `01a16c9e-b1e8-7924-9628-5ce90ea10468` passed **1/1**: scenario 4.054s,
+total 5.471s, preview startup486ms. It verified 10,204 exact characters,
+128 animation word wrappers, two fresh words, the same selected30 characters
+after append, complete final text, no final caret and zero settled wrappers.
+The original report, console measurements and one completion screenshot are
+retained. The preview exited normally and port5196 was free before handing the
+shared browser to the next owner.
+
+```sh
+node --max-old-space-size=2048 node_modules/vite/bin/vite.js build --config e2e.streaming-budget.vite.config.ts
+E2E_STREAMING_FIXTURE=1 E2E_CDP_URL=http://127.0.0.1:9337 E2E_TELEMETRY_DISABLED=1 \
+  node node_modules/e2e/dist/cli/bin.js run --config e2e.streaming-budget.config.ts
+```
+
+Remaining boundaries: this bounded B/C change does not establish Markdown
+parse counts under the full store pipeline, mixed rich-content frame times,
+cross-browser selection behavior, hidden-page recovery, or the numerical
+performance budgets in #378. Dependency A and store/layout D–G remain separate;
+this PR does not close the issue.
