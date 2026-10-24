@@ -6,7 +6,7 @@ import {
 import { Copy01Icon, ReplyIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { CheckCheck, LoaderCircle } from 'lucide-react'
-import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useRef, useState } from 'react'
+import { type PointerEvent as ReactPointerEvent, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Avatar } from '@/components/Avatar'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
 import { MarkdownText } from '@/components/assistant-ui/markdown-text'
@@ -114,7 +114,7 @@ function MessageTextPart() {
   const metadata = useAuiState((state) => state.message.metadata.custom) as LingxiMessageMetadata
   const members = useConversations(state => state.list.find(conversation => conversation.id === metadata.conversationId)?.members)
   const participants = useParticipants(state => state.byId)
-  const mentionTargets = (members ?? []).flatMap(id => participants[id] ? [participants[id]] : [])
+  const mentionTargets = useMemo(() => (members ?? []).flatMap(id => participants[id] ? [participants[id]] : []), [members, participants])
   const footer = useContext(MessageFooterContext)
   const isAgent = metadata.senderKind === 'agent'
   const isHuman = metadata.senderKind === 'human'

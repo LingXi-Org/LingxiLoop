@@ -162,6 +162,49 @@ if (scenario === 'mention-names') {
   }, { participants, meId: 'me' })
   updateConversation(CONVERSATION_ID, state => ({ ...state, messages: [message] }))
 }
+if (scenario === 'incomplete-answer') {
+  const target = { conversationId: CONVERSATION_ID, agentId: 'scout', runId: 'incomplete' }
+  const outcome = new URLSearchParams(location.search).get('outcome') === 'blocked' ? 'blocked' : 'partial'
+  const question = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'me', clientMsgNo: 'incomplete-question', messageId: 'incomplete-question', messageSeq: 1, timestamp: Date.parse(NOW) / 1000,
+    payload: createNativeMessage({ id: 'incomplete-question', role: 'user', createdAt: NOW, content: [{ type: 'text', text: '请完成这个合成示例。' }] }) }, { participants, meId: 'me' })
+  let body = false, cancelled = false, hasTarget = true, seq = 1
+  const publish = () => updateConversation(CONVERSATION_ID, state => applyRunSnapshot(state, target, { message: createNativeMessage({
+    id: 'run-incomplete', role: 'assistant', createdAt: NOW, content: body ? [{ type: 'text', text: '已生成的示例说明。' }] : [],
+    status: { type: 'incomplete', reason: cancelled ? 'cancelled' : 'other' },
+    custom: { runId: target.runId, sourceRef: hasTarget ? 'incomplete-question' : null, refs: { agentId: 'scout' },
+      harness: { ...createRunView(target.runId), requestVersion: 1, fence: 1, lastSeq: seq,
+        lifecycle: cancelled ? 'cancelled' : outcome, goalOutcome: { status: outcome, requestVersion: 1, verification: 'inconclusive' },
+        artifacts: body ? [{ path: '/workspace/合成附件.pdf', mime: 'application/pdf', size: 10, sha256: 'a'.repeat(64) }] : [] } },
+  }) }, participants.scout))
+  updateConversation(CONVERSATION_ID, state => ({ ...state, messages: [question], activeRuns: {} }))
+  publish()
+  const sends: Array<{ id: string; custom: Record<string, unknown> }> = []
+  document.documentElement.dataset.incompleteSends = '[]'
+  let finishSend: (() => void) | undefined
+  lingxiIm.send = async (conversationId, payload) => {
+    userMessageSchema.parse(payload)
+    if (conversationId !== CONVERSATION_ID) throw new Error('Invalid incomplete-retry conversation')
+    sends.push({ id: payload.id, custom: payload.metadata.custom })
+    document.documentElement.dataset.incompleteSends = JSON.stringify(sends)
+    await new Promise<void>(resolve => { finishSend = resolve })
+    return { channelId: conversationId, channelType: 2, fromUid: 'me', messageId: payload.id, clientMsgNo: payload.id,
+      messageSeq: 10 + sends.length, timestamp: Date.parse(payload.createdAt) / 1000, payload }
+  }
+  window.addEventListener('incomplete-answer-step', ((event: CustomEvent<string>) => {
+    if (event.detail === 'sent') { finishSend?.(); finishSend = undefined; return }
+    if (event.detail === 'read-only' || event.detail === 'writable') {
+      useConversations.setState(state => ({ list: state.list.map(room => room.id === CONVERSATION_ID ? { ...room, readOnly: event.detail === 'read-only' } : room) })); return
+    }
+    if (event.detail === 'other-running' || event.detail === 'idle') {
+      updateConversation(CONVERSATION_ID, state => ({ ...state, activeRuns: event.detail === 'other-running'
+        ? { other: { id: 'other', agentId: 'iris', messageId: 'run-other', lastSequence: 1, state: 'running' } } : {} })); return
+    }
+    if (event.detail === 'body') { body = true; seq++ }
+    if (event.detail === 'cancelled') { cancelled = true; seq++ }
+    if (event.detail === 'target-missing' || event.detail === 'target-present') { hasTarget = event.detail === 'target-present'; seq++ }
+    publish()
+  }) as EventListener)
+}
 if (scenario === 'message-actions') {
   const reply = convertEnvelope({ channelId: CONVERSATION_ID, channelType: 2, fromUid: 'scout', messageId: 'actions-reply',
     clientMsgNo: 'actions-reply', messageSeq: 1, timestamp: Date.parse(NOW) / 1000,
@@ -336,7 +379,7 @@ if (scenario === 'chat-regressions') {
   const kind = scenario.slice(5)
   const failed = kind === 'failed'
   const outcome = kind === 'partial' ? 'partial' : kind === 'blocked' || kind === 'empty-blocked' ? 'blocked' : 'satisfied'
-  const view = { ...createRunView('feedback'), artifacts: [],
+  const view = { ...createRunView('feedback'), requestVersion: 1, artifacts: [],
     lifecycle: failed ? 'failed' as const : kind === 'cancelled' ? 'cancelled' as const : kind === 'approval' ? 'waiting' as const : 'succeeded' as const,
     delivery: kind === 'delivery' ? 'failed' as const : 'delivered' as const,
     resultId: failed || kind === 'empty-blocked' || kind === 'approval' ? null : 'result-feedback',

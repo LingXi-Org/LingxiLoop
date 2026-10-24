@@ -69,7 +69,8 @@ test('one native message survives acceptance and replay; every attachment settle
 
   const outside = await fetch(`${baseUrl}/api/im/channels/${channelId}/messages`,{ headers: { ...headers,'x-company-id': 'outside-company' } })
   assert.equal(outside.status,403)
-  const body = JSON.stringify([{ message_idstr: 'native-event',channel_id: channelId,from_uid: 'test-owner',client_msg_no: message.id,
+  // The callback and confirmed send identify the same real durable IM message.
+  const body = JSON.stringify([{ message_idstr: recording.messages[0].messageId,channel_id: channelId,from_uid: 'test-owner',client_msg_no: message.id,
     payload: Buffer.from(JSON.stringify({ type: 1001,...message })).toString('base64') }])
   const webhook = (signature: string) => fetch(`${baseUrl}/webhooks/wukong`,{ method: 'POST',headers: { 'content-type': 'application/json','x-wukong-signature': signature },body })
   assert.equal((await webhook('invalid')).status,401)

@@ -1,0 +1,19 @@
+{
+  "kind": "transcribed-original-tool-output-and-single-variable-experiment",
+  "originalRun": "01a16c60-1408-795b-9e1b-bdb2e496a9d3",
+  "originalAssertion": "expected 16 to be less than 2",
+  "original": {
+    "before": { "scrollTop": 1037, "viewportHeight": 660, "selectedMessageTop": 255.0625 },
+    "after": { "scrollTop": 1053, "viewportHeight": 660, "selectedMessageTop": 239.0625 },
+    "selectedTextUnchanged": true,
+    "overflowAnchor": "auto"
+  },
+  "singleVariableExperimentRun": "01a16c61-47eb-7399-a420-c7193c2684d0",
+  "singleVariableExperiment": {
+    "before": { "scrollTop": 1037, "viewportHeight": 660, "selectedMessageTop": 255.0625 },
+    "after": { "scrollTop": 1037, "viewportHeight": 660, "selectedMessageTop": 255.0625 },
+    "selectedTextUnchanged": true,
+    "overflowAnchor": "none"
+  },
+  "decision": "Experiment reverted. Preserve native async image/font anchoring and existing assistant-ui viewport. Retain measured sub-line drift as an acceptance boundary; do not add another scroll manager. Final browser assertion requires same selected text and less than one body line of displacement."
+}

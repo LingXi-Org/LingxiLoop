@@ -1,0 +1,364 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a16c65-b21d-7169-9bc1-1982185f0e9b",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-24T05:32:47.709Z",
+    "finishedAt": "2026-10-24T05:33:33.499Z",
+    "project": {
+      "id": "lingxiloop-373-learning",
+      "configDigest": "6999d6464157bc2d05fad7514d443b9076ac77e7e71269a855b63785ddc1725e"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "94673515aedb2efe6d6666b51a9fd9b136891949",
+      "branch": "fix/373-artifact-learning",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5193",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "b19a574ce7465a43db0cb00dc93db11416c7d8751793108aa2d7c264b421f4b1",
+        "testId": "e2e/visualize/learning.e2e.ts::student%20operates%20a%20topology%2C%20compares%20settings%20and%20continues%20in%20the%20original%20conversation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "student operates a topology, compares settings and continues in the original conversation"
+        ],
+        "file": "e2e/visualize/learning.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/learning.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a16c65-c894-7ab5-87a3-bdc49ac4c044",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-24T05:32:52.245Z",
+            "durationMs": 21358,
+            "artifacts": [
+              {
+                "id": "01a16c65-c894-7ab5-87a3-bdc49ac4c044:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_learning.e2e.ts__student_20operates_20a_20topology_2C_20compares_20settings_20and_20continues_20i-4767b27c/default/attempt-0/failure/screen.txt",
+                "size": 1260,
+                "sha256": "0186699c4216e727254feba1c266b3b4f23d72d1e92dce93d71e354f44331843"
+              },
+              {
+                "id": "01a16c65-c894-7ab5-87a3-bdc49ac4c044:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_learning.e2e.ts__student_20operates_20a_20topology_2C_20compares_20settings_20and_20continues_20i-4767b27c/default/attempt-0/screenshots/001-failure.png",
+                "size": 48988,
+                "sha256": "ee35f0062589594bf920fce9256370ec9e4a8e79a0ac8dad0a247d8a012cbc8f"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expect.toBeVisible failed\nlocator: frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"image\", name: \"路由器连接教室 A 和教室 B\")\nexpected: visible\nobserved: no node (match count 0)",
+              "retryable": false,
+              "phase": "body",
+              "details": {
+                "locator": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"image\", name: \"路由器连接教室 A 和教室 B\")",
+                "expected": "visible",
+                "observed": "no node",
+                "matches": 0
+              },
+              "source": {
+                "file": "e2e/visualize/learning.e2e.ts",
+                "line": 9,
+                "column": 3
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5193/e2e/visualize/learning.html",
+              "screen": "01a16c65-c894-7ab5-87a3-bdc49ac4c044:artifact:0",
+              "screenshot": "01a16c65-c894-7ab5-87a3-bdc49ac4c044:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a16c65-c894-7ab5-87a3-bdc49ac4c044:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/learning.html",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:32:52.532Z",
+                "durationMs": 5122,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 7,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16c65-c894-7ab5-87a3-bdc49ac4c044:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"image\", name: \"路由器连接教室 A 和教室 B\")",
+                "status": "failed",
+                "startedAt": "2026-10-24T05:32:57.657Z",
+                "durationMs": 15119,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 9,
+                  "column": 76
+                },
+                "error": {
+                  "category": "test",
+                  "code": "ASSERTION_FAILED",
+                  "message": "expect.toBeVisible failed\nlocator: frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"image\", name: \"路由器连接教室 A 和教室 B\")\nexpected: visible\nobserved: no node (match count 0)",
+                  "retryable": false,
+                  "details": {
+                    "locator": "frameLocator(\"iframe[data-visualize-guest]:visible\") >> frameLocator(\"iframe[data-visualize-content]\") >> getByRole(\"image\", name: \"路由器连接教室 A 和教室 B\")",
+                    "expected": "visible",
+                    "observed": "no node",
+                    "matches": 0
+                  },
+                  "source": {
+                    "file": "e2e/visualize/learning.e2e.ts",
+                    "line": 9,
+                    "column": 3
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "39eef842fcefdaa1240e4645ceb430b276dbc2964ed4939b89cea5ed7f4db613",
+        "testId": "e2e/visualize/learning.e2e.ts::artifact%20question%20drafts%20survive%20refresh%20and%20stay%20within%20the%20actual%20account%2Fsource%20scope",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "artifact question drafts survive refresh and stay within the actual account/source scope"
+        ],
+        "file": "e2e/visualize/learning.e2e.ts",
+        "source": {
+          "file": "e2e/visualize/learning.e2e.ts",
+          "line": 66,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a16c66-1c2a-766a-9c8e-9d74e9af8ebd",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-24T05:33:13.642Z",
+            "durationMs": 19639,
+            "artifacts": [
+              {
+                "id": "01a16c66-1c2a-766a-9c8e-9d74e9af8ebd:artifact:0",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_learning.e2e.ts__artifact_20question_20drafts_20survive_20refresh_20and_20stay_20within_20the_20a-6369cc72/default/attempt-0/failure/screen.txt",
+                "size": 1276,
+                "sha256": "498dbb4387ec0810c5cfa26d6c2f9ae23e0d94e80e4245e55e29cf9330445ea3"
+              },
+              {
+                "id": "01a16c66-1c2a-766a-9c8e-9d74e9af8ebd:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_visualize_learning.e2e.ts__artifact_20question_20drafts_20survive_20refresh_20and_20stay_20within_20the_20a-6369cc72/default/attempt-0/screenshots/001-failure.png",
+                "size": 48988,
+                "sha256": "ee35f0062589594bf920fce9256370ec9e4a8e79a0ac8dad0a247d8a012cbc8f"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expect.toHaveAttribute failed\nlocator: locator(\"[data-testid=\\\"gen-ui-card\\\"]\")\nexpected: attribute \"data-gen-ui-phase\" \"ready\"\nobserved: attribute \"data-gen-ui-phase\" \"error\" (match count 1)",
+              "retryable": false,
+              "phase": "body",
+              "details": {
+                "locator": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "expected": "attribute \"data-gen-ui-phase\" \"ready\"",
+                "observed": "attribute \"data-gen-ui-phase\" \"error\"",
+                "matches": 1
+              },
+              "source": {
+                "file": "e2e/visualize/learning.e2e.ts",
+                "line": 68,
+                "column": 3
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5193/e2e/visualize/learning.html?draft=1",
+              "screen": "01a16c66-1c2a-766a-9c8e-9d74e9af8ebd:artifact:0",
+              "screenshot": "01a16c66-1c2a-766a-9c8e-9d74e9af8ebd:artifact:1"
+            },
+            "steps": [
+              {
+                "id": "01a16c66-1c2a-766a-9c8e-9d74e9af8ebd:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/visualize/learning.html?draft=1",
+                "status": "passed",
+                "startedAt": "2026-10-24T05:33:13.737Z",
+                "durationMs": 2401,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 67,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a16c66-1c2a-766a-9c8e-9d74e9af8ebd:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                "status": "failed",
+                "startedAt": "2026-10-24T05:33:16.142Z",
+                "durationMs": 15777,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/visualize/learning.e2e.ts",
+                  "line": 68,
+                  "column": 64
+                },
+                "error": {
+                  "category": "test",
+                  "code": "ASSERTION_FAILED",
+                  "message": "expect.toHaveAttribute failed\nlocator: locator(\"[data-testid=\\\"gen-ui-card\\\"]\")\nexpected: attribute \"data-gen-ui-phase\" \"ready\"\nobserved: attribute \"data-gen-ui-phase\" \"error\" (match count 1)",
+                  "retryable": false,
+                  "details": {
+                    "locator": "locator(\"[data-testid=\\\"gen-ui-card\\\"]\")",
+                    "expected": "attribute \"data-gen-ui-phase\" \"ready\"",
+                    "observed": "attribute \"data-gen-ui-phase\" \"error\"",
+                    "matches": 1
+                  },
+                  "source": {
+                    "file": "e2e/visualize/learning.e2e.ts",
+                    "line": 68,
+                    "column": 3
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 2,
+      "executed": 2,
+      "passed": 0,
+      "failed": 2,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 100512,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

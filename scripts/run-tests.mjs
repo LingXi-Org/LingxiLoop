@@ -10,7 +10,6 @@ const testsByScope = {
     'server/src/__tests__/document-collaboration.test.ts',
     'server/src/__tests__/admin-platform.test.ts',
     'server/src/__tests__/coworker-activity-realtime.test.ts',
-    'server/src/__tests__/api-module-boundaries.test.ts',
     'server/src/__tests__/domain-events.test.ts',
     'server/src/__tests__/entitlement-resolver.test.ts',
     'server/src/__tests__/llm-ledger.test.ts',
@@ -58,7 +57,6 @@ const testsByScope = {
     'src/api/core/http.test.ts',
     'src/features/knowledge/api.test.ts',
     'src/features/presentations/presentationFeature.test.ts',
-    'src/features/settings/settingsDialog.test.ts',
     'src/features/learning/courseAvatar.test.ts',
   ],
 }

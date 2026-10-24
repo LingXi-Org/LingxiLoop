@@ -30,13 +30,13 @@ async function activateAuthoring(context: ActionContext) {
 }
 export const visualizeTools: ToolDefinition[] = [
   nativeTool('visualize.read_reference', z.object({ path: z.string().max(200) }).strict(), {
-    description: 'Read a needed visualize reference by its skill-relative path, e.g. references/api.md, references/styles.md, tweak.md, widgets/calendar.md or examples/calendar.html. Select the skill once with native skills.load for its complete host rules; do not page through SKILL.md. Product DOM-range additions are host/range-overlay.md and host/range-overlay.js. No arbitrary filesystem access.',
+    description: 'Read a needed visualize reference by its skill-relative path, e.g. references/api.md, references/styles.md, tweak.md, widgets/calendar.md or examples/calendar.html. Select the exact skill once with skills.activate for requested creation or an authoring commitment, or skills.load for reference-only use. Either selection supplies its complete host rules; do not load again or page through SKILL.md. Product DOM-range additions are host/range-overlay.md and host/range-overlay.js. No arbitrary filesystem access.',
     effect: 'read', approval: false, authorize,
     async execute(_context, input) { return { ok: true, value: { path: input.path, text: await readVisualizeReference(input.path), complete: true } } },
   }),
   nativeTool('visualize.save', z.object({ name, html: z.string().min(1).max(5_000_000) }).strict(), {
-    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Follow the complete visualize skill supplied in host rules after selecting it once with native skills.load. Derive numeric labels and decisions from the same computed data as the plot; check branches, units and same-series differences against the original inputs. name is lowercase-hyphenated without .html. Returns the actual authorized path, literal reference, stored version and sourceHash. Read back with visualize.read and reconcile calculations, labels and final prose. Correct actual errors before delivery; if this version is already checked, use its reference outside code without saving it again merely to obtain a reference. Saving verifies storage, not numeric correctness. Never send a full HTML document or unfinished script.',
-    effect: 'transaction', approval: false, authorize, semanticVersion: '2',
+    description: 'Save a complete literal HTML fragment for a useful inline comparison, relationship, process, trend or interactive explanation; no explicit visualization request is required. Select the exact visualize contract once with skills.activate before authoring and follow its complete host rules next turn; no additional skills.load is needed. Saving also activates authoring transactionally. Derive numeric labels and decisions from the same computed data as the plot; check branches, units and same-series differences against the original inputs. name is lowercase-hyphenated without .html. Returns the authorized path, literal reference, actual stored version/sourceHash and checked readback. Only when readback.status is matched for this request/version/hash and the complete literal original remains in current context may you reconcile that original with this receipt without a redundant visualize.read. Otherwise read the complete fragment; missing/truncated/restored context, changed version/content or known errors require readback and correction. Use the checked reference outside code; do not save again merely to obtain it. Storage equality is not semantic or browser verification. Never send a full HTML document or unfinished script.',
+    effect: 'transaction', approval: false, authorize, semanticVersion: '3',
     async execute(context, input) {
       try { validateVisualizeFragment(input.name, input.html) }
       catch (error) {
@@ -49,15 +49,25 @@ export const visualizeTools: ToolDefinition[] = [
       await activateAuthoring(context)
       const document = await saveVisualizeDocument({ ...scope(context), runId: context.work.id, agentId: context.work.agentId,
         name: input.name, html: input.html, requestVersion: context.requestVersion!, database: context.database as Queryable })
+      // saveVisualizeDocument reads the actual row under the save transaction's
+      // lock. Check that snapshot before exposing proof, not a future verify.
+      const inputHash = createHash('sha256').update(input.html).digest('hex')
+      if (document.html !== input.html || document.sourceHash !== inputHash
+        || !Number.isSafeInteger(document.version) || document.version < 1) throw new HttpError(409, 'Saved visualization readback did not match the complete input.')
       return { ok: true, value: { path: document.path, reference: `::visualize${JSON.stringify({ path: document.path })}`,
-        bytes: Buffer.byteLength(document.html), version: document.version, sourceHash: document.sourceHash } }
+        bytes: Buffer.byteLength(document.html), version: document.version, sourceHash: document.sourceHash,
+        readback: { status: 'matched', requestVersion: context.requestVersion!, version: document.version,
+          sourceHash: document.sourceHash, completeLiteralInput: true, semanticValidation: false, browserValidation: false } } }
     },
     async verify(context, input, value) {
       await authorize(context)
-      const saved = z.object({ path }).passthrough().parse(value)
-      const document = await readAuthorizedVisualizeDocument({ ...scope(context), path: saved.path }, context.database as Queryable)
+      const saved = z.object({ path, version: z.number().int().positive(), sourceHash: z.string().regex(/^[a-f0-9]{64}$/) }).passthrough().parse(value)
+      const document = await readAuthorizedVisualizeSnapshot({ ...scope(context), path: saved.path }, context.database as Queryable)
       const hash = (html: string) => createHash('sha256').update(html).digest('hex')
-      return compareResource(`visualize:${saved.path}`, { sha256: hash(input.html) }, { sha256: hash(document.html) })
+      return compareResource(`visualize:${saved.path}`, { sha256: hash(input.html), version: saved.version, sourceHash: saved.sourceHash,
+        runId: context.work.id, requestVersion: context.requestVersion, agentId: context.work.agentId, principalId: context.work.principalId },
+      { sha256: hash(document.html), version: document.version, sourceHash: document.source_hash,
+        runId: document.run_id, requestVersion: document.request_version, agentId: document.agent_id, principalId: document.created_by })
     },
   }),
   nativeTool('visualize.chart', z.object({ name, chart: numericChartSchema }).strict(), {

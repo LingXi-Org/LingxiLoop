@@ -12,6 +12,7 @@ import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 import { nativeText } from '../im/message-types.js'
+import { createProductTools } from '../agent-runtime/tools.js'
 
 // Failure model precedes implementation in docs/model-availability-failure-model.md.
 // Additional failure cases: missing streamed usage settles an estimate; failed tools
@@ -19,21 +20,43 @@ import { nativeText } from '../im/message-types.js'
 // a provider attempt from either ledger. Check actual HTTP attempts and receipts.
 // Cancellation/idle/total driver cases live in LingxiOS PR #30's
 // test/auxiliary-streaming.test.ts; this fixture does not claim product cancellation coverage.
+// Native business-schema failure model: docs/evidence/issue-366/NATIVE-BUSINESS-SCHEMA-FAILURE-MODEL.md.
+// DeepSeek and GLM both retain the complete current catalog parameters and {}.
+// Generation detection must recognize the native v3 header without classifying
+// structured review as generation. GLM keeps its unwrapped tool contract; all
+// actual attempts, measured usage, retries and durable receipts remain exact.
 let recording: Awaited<ReturnType<typeof installRecordingWukong>>
+const productSchemas = new Map(createProductTools(lingxiOSControl).map(tool => [tool.name, tool.parameters]))
 before(async () => { await ensureSchemaOnce(); await resetAllTables(); recording = await installRecordingWukong() })
 after(async () => { await stopLingxiOSControl(); await teardownAll(); await recording?.close() })
 
-for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=${retryAuxiliary})`, { timeout: 30000 }, async () => {
+for (const model of ['zai-org/GLM-5.3-Flash', 'deepseek-ai/DeepSeek-V4.1-Flash'])
+for (const retryAuxiliary of [false, true]) test(`${model}: slow auxiliary generation preserves measured usage, receipts and the next turn (503 retry=${retryAuxiliary})`, { timeout: 30000 }, async () => {
   const requests: { structured: boolean; stream: boolean; effort: unknown; thinking: unknown; status: number }[] = []
   let injectedFailure = false
   const provider = createServer(async (request, response) => {
     let raw = ''; for await (const chunk of request) raw += chunk
     const input = JSON.parse(raw)
-    assert.equal(input.response_format?.type, 'json_object')
-    // Both agent turns and auxiliary review use JSON mode; only main turns
-    // receive the public-purpose wire contract (review keeps its own schema).
+    for (const { function: tool } of input.tools ?? []) {
+      const expected = productSchemas.get(tool.name)
+      if (expected) assert.deepEqual(tool.parameters, expected, `${tool.name} must retain its entire business schema`)
+      assert.equal(tool.parameters.properties.public_output, undefined, 'native tools must not carry a public-output wrapper')
+    }
+    // Only the qualified SiliconFlow DeepSeek profile omits JSON mode when
+    // tools are advertised. Tool-free review and the GLM profile retain it.
+    const jsonWithToolsUnsupported = model === 'deepseek-ai/DeepSeek-V4.1-Flash' && input.tools?.length > 0
+    if (jsonWithToolsUnsupported) assert.equal(input.response_format, undefined)
+    else assert.equal(input.response_format?.type, 'json_object')
+    // Main turns retain the public-purpose wire contract even without native
+    // JSON mode; auxiliary review keeps its own schema.
     const structured = !input.messages.some((message: { role: string; content: string }) =>
-      message.role === 'system' && message.content.includes('Public output wire contract (purpose-json-v1):'))
+      message.role === 'system' && /Public output wire contract \(purpose-json-v[23](?:; publicAnswerTool native-v1)?\):/.test(message.content))
+    const nativeOutput = (input.tools ?? []).some((tool: { function: { name: string } }) => tool.function.name === 'public_answer')
+    assert.equal(nativeOutput, !structured && model === 'deepseek-ai/DeepSeek-V4.1-Flash', 'Only DeepSeek main turns use the native public output tool')
+    if (nativeOutput) {
+      assert.equal(input.tool_choice, 'auto'); assert.equal(input.parallel_tool_calls, false)
+      assert.equal(input.tools.filter((tool: { function: { name: string } }) => tool.function.name === 'public_answer').length, 1)
+    }
     const fail = retryAuxiliary && structured && !injectedFailure
     requests.push({ structured, stream: input.stream === true, effort: input.reasoning_effort, thinking: input.enable_thinking, status: fail ? 503 : 200 })
     if (fail) {
@@ -44,22 +67,29 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
     }
     const usage = { prompt_tokens: 20, completion_tokens: 8, completion_tokens_details: { reasoning_tokens: 4 } }
     if (requests.length === 1) {
+      const parameters = input.tools.find((tool: { function: { name: string } }) => tool.function.name === 'directory__self').function.parameters
+      assert.deepEqual(parameters, productSchemas.get('directory__self'))
+      const argumentsText = '{}'
       response.writeHead(200, { 'content-type': 'text/event-stream' })
-      response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'fixture-identity', type: 'function', function: { name: 'directory__self', arguments: '{}' } }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
+      response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, id: 'fixture-identity', type: 'function', function: { name: 'directory__self', arguments: argumentsText } }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
       return
     }
-    const content = structured ? '{"missing":[]}' : JSON.stringify({ commentary: '', answer: 'Fixture completed.' })
+    const content = structured ? '{"missing":[]}' : JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: 'Fixture completed.', outcome: { status: 'satisfied', gaps: [] } })
+    // Match the advertised main-turn channel; auxiliary JSON and GLM remain unchanged.
+    const message = nativeOutput ? { tool_calls: [{ index: 0, id: `fixture-answer-${requests.length}`, type: 'function',
+      function: { name: 'public_answer', arguments: content } }] } : { content }
+    const finishReason = nativeOutput ? 'tool_calls' : 'stop'
     if (input.stream) {
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       const heartbeat = setInterval(() => response.write(`data: ${JSON.stringify({ choices: [{ delta: { reasoning_content: 'PRIVATE_SYNTHETIC_REASONING' } }] })}\n\n`), 20)
       try {
         if (structured) await delay(250)
-        response.end(`data: ${JSON.stringify({ choices: [{ delta: { content }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
+        response.end(`data: ${JSON.stringify({ choices: [{ delta: message, finish_reason: finishReason }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`)
       } finally { clearInterval(heartbeat) }
     } else {
       if (structured) await delay(250)
       response.writeHead(200, { 'content-type': 'application/json' })
-      response.end(JSON.stringify({ choices: [{ message: { content }, finish_reason: 'stop' }], usage }))
+      response.end(JSON.stringify({ choices: [{ message, finish_reason: finishReason }], usage }))
     }
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
@@ -67,15 +97,18 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
   const began = performance.now()
   try {
     const { companyId, projectId, agentId } = await seedCompanyWithAgent()
-    const principalId = `auxiliary-human-${retryAuxiliary}`, room = `auxiliary-latency-${retryAuxiliary}`, members = [principalId, agentId]
+    const modelKey = model.startsWith('deepseek') ? 'deepseek' : 'glm'
+    const principalId = `auxiliary-human-${modelKey}-${retryAuxiliary}`, room = `auxiliary-latency-${modelKey}-${retryAuxiliary}`, members = [principalId, agentId]
     await seedUserMembership(principalId, companyId)
     await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER') ON CONFLICT DO NOTHING", [projectId, companyId, principalId])
     await pool.query("INSERT INTO conversations(id,company_id,project_id,kind,title,members) VALUES($1,$2,$3,'group','Fixture',$4::jsonb)", [room, companyId, projectId, JSON.stringify(members)])
     await pool.query('INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES($1,$2,$3::jsonb)', [room, companyId, JSON.stringify({ channelType: 2, members })])
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, room)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
-    worker = createWorker({ controlPlane: api, worker: { id: `auxiliary-latency-${retryAuxiliary}`, concurrency: 1 }, model: {
-      ...runtimeModelConfiguration({ id: 'zai-org/GLM-5.3-Flash', apiKey: 'synthetic-key', baseUrl: 'https://api.siliconflow.cn/v1' }, 1500),
+    // This fixture owns optional review transport/retries; ordinary workers
+    // keep the runtime's disabled default.
+    worker = createWorker({ semanticReview: 'required', controlPlane: api, worker: { id: `auxiliary-latency-${retryAuxiliary}`, concurrency: 1 }, model: {
+      ...runtimeModelConfiguration({ id: model, apiKey: 'synthetic-key', baseUrl: 'https://api.siliconflow.cn/v1' }, 1500),
       baseUrl: `http://127.0.0.1:${address.port}/v1`,
       firstByteTimeoutMs: 100, streamIdleTimeoutMs: 100,
       recovery: { maxAttempts: 3, totalTimeoutMs: 3000 },
@@ -110,7 +143,7 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
       assert.equal(state?.run.status, 'succeeded')
       assert.equal(state?.message?.body, 'Fixture completed.')
       assert.equal(currentRequests.filter(row => row.structured).length, 1 + expectedFailed, 'exercise review and its exact retry count')
-      assert.ok(requests.every(row => row.stream && row.effort === 'low' && row.thinking === false))
+      assert.ok(requests.every(row => row.stream && row.effort === (modelKey === 'glm' ? 'low' : undefined) && row.thinking === false))
       const expectedTools = messageId === 'first' ? 1 : 0
       assert.equal(startedTools.length, expectedTools)
       assert.equal(completedTools.length, expectedTools, 'auxiliary retries and the next turn must not replay the completed tool')
@@ -176,8 +209,8 @@ for (const retryAuxiliary of [false, true]) test(`slow auxiliary generation pres
         calls: calls.map(row => ({ status: row.status, measured: row.measured, inputTokens: Number(row.input_tokens), outputTokens: Number(row.output_tokens),
           reasoningTokens: row.extras.reasoningTokens ?? null, costMeasurement: row.extras.costMeasurement, attempt: row.extras.attempt, failure: row.extras.failure ?? null })) })
       await mkdir('artifacts/model-availability', { recursive: true })
-      await writeFile(`artifacts/model-availability/auxiliary${retryAuxiliary ? '-retry' : ''}-candidate.json`, JSON.stringify({ passed: messageId === 'next',
-        runtime: releaseVersions.runtime, fixture: 'local HTTP; 100ms first byte/idle, 250ms generation, 1500ms request, 3000ms logical total', retryAuxiliary,
+      await writeFile(`artifacts/model-availability/auxiliary-${modelKey}${retryAuxiliary ? '-retry' : ''}-candidate.json`, JSON.stringify({ passed: messageId === 'next',
+        runtime: releaseVersions.runtime, model, fixture: 'local HTTP; 100ms first byte/idle, 250ms generation, 1500ms request, 3000ms logical total', retryAuxiliary,
         elapsedMs: Math.round(performance.now() - began), requests, outcomes }, null, 2) + '\n')
     }
     assert.equal(injectedFailure, retryAuxiliary)

@@ -2,6 +2,7 @@ const presentationFormat='run-presentation-contract-host-release/v1',presentatio
 const traceFormat='run-trace-provenance-host-release/v1',traceMigration={version:52,name:'run_trace_provenance',checksum:'2016fdcc9e095454f1a9fbd5fdffdaa4443c8918173dea8a324f88546123a886'};
 import test from 'node:test'
 import {continueStoppedRelease} from './host-release-stopped-recovery.mjs'
+import {restoreImageSource} from './host-release-image-recovery.mjs'
 import {READER_FORMAT,PRODUCER_FORMAT,CONVERSATION_FORMAT,MIGRATION53,MIGRATION51,SCHEMA14} from './public-text-release.mjs'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
@@ -25,6 +26,8 @@ const targetRef={commit:next,branch:'release/target',sha256:'d'.repeat(64),autoP
 const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:hash,qualification:{commit:next,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/123'},stacks:[...apps,core].map((stack,i)=>({stack,server:i===1?'shanghai-b':'shanghai-a',source:sourceRef,target:i===2?sourceRef:targetRef,...(i!==2?{preparation:{commit:next,sha256:'e'.repeat(64)}}:{})}))})
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
+ if(fault.producerV3)fault={...fault,producerV2:true};
+ fault={...fault,image54:fault.image54||fault.runtimePatch||fault.producerV2}
  fault={...fault,presentation:fault.presentation||fault.image54,repair:fault.repair||fault.presentation||fault.image54,trace:fault.trace||fault.repair||fault.presentation||fault.image54}
  let releasePlan=sealHostPlan({...plan,...(fault.native14?{format:'native-schema-host-release/v1',backup:nativeBackup()} : fault.upgrade?{format:'product-schema-host-release/v1'}:{}),
   source:{...source,...(fault.sameNative14?formal50:fault.product49||fault.native14?formal49:formal)},target:{...target,...(fault.sameNative14||fault.native14?formal50:fault.upgrade||fault.product49?formal49:formal)}})
@@ -39,6 +42,9 @@ function fixture(fault={}){
   releasePlan=sealHostPlan({...releasePlan,format:fault.presentation?presentationFormat:fault.repair?CONVERSATION_FORMAT:fault.trace?traceFormat:fault.reader?READER_FORMAT:PRODUCER_FORMAT,source,target,imageConfigs,publicText:{source:fault.reader?null:{reader:2,producer:fault.trace?'purpose-json-v1':'disabled'},target:{reader:2,producer:fault.reader?'disabled':'purpose-json-v1'},sourceConfigurationSha256:fault.reader?null:hash,targetConfigurationSha256:hash,sourceContainers:fault.producer||fault.trace?['lingxiloop-app-a','lingxiloop-app-b'].flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,service,id:String(i*2+j+1).repeat(64),imageId:'sha256:'+'c'.repeat(64)}))):null}});
  }
  if(fault.image54){const p=JSON.parse(JSON.stringify(releasePlan));p.format='product54-image-host-release/v1';for(const k of ['runtime','schema','protocol','schemaHash','integrity','tarball','productVersion','migrations'])p.source[k]=structuredClone(p.target[k]);for(const row of p.stacks.slice(0,2)){row.source.autoPull=false;row.source.extraArgs=['--no-deps','--pull','never']}releasePlan=sealHostPlan(p)}
+ if(fault.runtimePatch||fault.producerV2){const p=structuredClone(releasePlan);p.format='runtime-patch-host-release/v1';p.target.runtime='3.8.3';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.integrity='sha512-'+Buffer.alloc(64,1).toString('base64');releasePlan=sealHostPlan(p)}
+ if(fault.producerV2){const p=structuredClone(releasePlan);p.source.runtime='3.8.3';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.3/fixture';p.target.runtime='3.8.5';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.publicText.target.producer='purpose-json-v2';p.publicText.targetConfigurationSha256='d'.repeat(64);releasePlan=sealHostPlan(p)}
+ if(fault.producerV3){const p=structuredClone(releasePlan);p.source.runtime='3.8.5';p.source.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.5/fixture';p.target.runtime='3.8.7';p.target.tarball='https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.7/fixture';p.publicText.source.producer='purpose-json-v2';p.publicText.target={reader:3,producer:'purpose-json-v3'};releasePlan=sealHostPlan(p)}
  const trace=[],events=[],rows=apps.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({stack,server:i?'shanghai-b':'shanghai-a',service,id:String(i*2+j+1).repeat(64),source:sha,imageId:digest,running:true,restarting:false,restartCount:0,pid:1,healthy:true,policy:{readOnly:service==='worker'}})))
  let staged=0,deployed=0,stops=0,targetInspections=0,stateReads=0,migrated=false
  const ops={
@@ -47,7 +53,9 @@ function fixture(fault={}){
   async state(){trace.push('state');if(++stateReads>fault.stateUnknownAfter||migrated&&fault.migrationStateUnknown)throw Object.assign(Error('unknown state'),{uncertain:true});const s=state(migrated?releasePlan.target:releasePlan.source);s.installedSchema=s.schema;if(fault.native14)s.otherClients=stops===4?0:4;if(fault.otherClients&&stops===4)s.otherClients=1;if(fault.busy&&stops===2)s.liveWork=1;if(fault.schema&&deployed)s.schemaHash='e'.repeat(64);return s},
   async verifyImages(which='target'){trace.push('images:'+which);if(fault.image&&which==='target')throw Error('missing image')},
   async stage(stack){trace.push('stage:'+stack);staged++;if(fault.stage&&staged===2)throw Object.assign(Error('unknown'),{uncertain:true})},
-  async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...((fault.reader||fault.producer||fault.trace)?{publicText:2,deployment:{...releasePlan.publicText.target,...(fault.producerLeak?{producer:'purpose-json-v1'}:{})},configurationSha256:hash,modelOptions:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:1}:{})}:{}),...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
+  async metadata(stack){trace.push('metadata:'+stack);return {...releasePlan.target,...((fault.reader||fault.producer||fault.trace)?{publicText:fault.wrongV3Capability?2:releasePlan.publicText.target.reader,deployment:{...releasePlan.publicText.target,...(fault.producerLeak?{producer:'purpose-json-v1'}:{})},configurationSha256:releasePlan.publicText.targetConfigurationSha256,modelOptions:fault.producerV2?{publicTextProtocol:fault.wrongV2Options?'purpose-json-v1':releasePlan.publicText.target.producer}:fault.producer||fault.trace?{publicTextProtocol:'purpose-json-v1'}:{},...(fault.trace?{runTrace:1}:{})}:{}),...(fault.metadata&&stack===apps[1]?{schema:releasePlan.target.schema+1}:{})}},
+  async patchPrecheck(){trace.push('patch-precheck');if(fault.bound)throw Error('incompatible old runs');return {incompatibleRuns:0}},
+  async patchProvenance(){trace.push('patch');if(fault.patchUnknown)throw Object.assign(Error('unknown patch'),{uncertain:true});if(fault.patchFailed)throw Error('patch failed');migrated=true;if(fault.patchCommittedFailure)throw Error('patch committed before failure')},
   async seedPrecheck(){trace.push('seed');if(fault.seedUnknown)throw Object.assign(Error('unknown seed'),{uncertain:true});if(fault.seed)throw Error('seed drift');return {equal:true}},
   async backup(){trace.push('backup');if(fault.backupUnknown)throw Object.assign(Error('backup unknown'),{uncertain:true});return {...backupReceipt(),...(fault.badBackup?{isolatedDatabaseRemoved:false}:{})}},
   async migrate(){trace.push('migrate');if(fault.migrationUnknown)throw Object.assign(Error('unknown migration'),{uncertain:true});if(fault.migrationFailed)throw Error('migration failed');migrated=true;if(fault.migrationCommittedFailure)throw Error('migration committed before failure')},
@@ -390,4 +398,83 @@ test('presentation unknown outcomes stop calls; committed54 only records fix-for
  for(const [fault,recovery]of [[{migrationFailed:true},'source-unchanged-recovery-requires-review'],[{migrationCommittedFailure:true},'fix-forward']]){
   const f=fixture({presentation:true,...fault});await assert.rejects(f.run());assert.equal(f.events.at(-1).recovery,recovery);assert.equal(f.trace.filter(x=>x==='migrate').length,1);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);
  }
+});
+
+
+test('runtime patch preserves full54 while CAS runs once after four stops and two barriers',async()=>{
+ const f=fixture({runtimePatch:true});const result=await f.run();assert.equal(result.state.runtime,'3.8.3');assert.equal(result.state.product,54)
+ assert.equal(f.trace.filter(x=>x==='patch').length,1);assert.equal(f.trace.includes('migrate'),false);assert.equal(f.trace.includes('seed'),false)
+ assert.ok(f.trace.indexOf('patch-precheck')<f.trace.findIndex(x=>x.startsWith('stop:')))
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)))
+ assert.equal(f.events.filter(e=>e.status==='zero-leases'&&e.state.runtime==='3.8.2').length,2)
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)))
+})
+test('runtime patch rejects mismatched profiles and old bound work before stopping',async()=>{
+ const f=fixture({runtimePatch:true});
+ for(const change of [p=>p.target.runtime='3.9.0',p=>p.target.runtime='3.8.2',p=>p.target.schema=15,p=>p.target.migrations[0].checksum='0'.repeat(64),p=>p.target.productVersion=55,p=>p.publicText.targetConfigurationSha256='0'.repeat(64)]){
+  const p=structuredClone(f.plan);change(p);assert.throws(()=>validateHostPlanShape(sealHostPlan(p)))
+ }
+ const bound=fixture({runtimePatch:true,bound:true});await assert.rejects(bound.run());assert.equal(bound.trace.some(x=>x.startsWith('stop:')),false)
+})
+test('runtime patch unknown stops without read/replay; known outcomes distinguish source and target',async()=>{
+ const f=fixture({runtimePatch:true,patchUnknown:true});await assert.rejects(f.run(),e=>e.uncertain);assert.equal(f.trace.at(-1),'patch');assert.equal(f.events.at(-1).recovery,'unknown')
+ for(const [fault,recovery] of [[{patchFailed:true},'source-unchanged-recovery-requires-review'],[{patchCommittedFailure:true},'fix-forward']]){
+  const f=fixture({runtimePatch:true,...fault});await assert.rejects(f.run());assert.equal(f.events.at(-1).recovery,recovery);assert.equal(f.trace.filter(x=>x==='patch').length,1);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false)
+ }
+})
+test('known failed runtime CAS restores all four original services only while source provenance remains exact',async()=>{
+ const f=fixture({runtimePatch:true,patchFailed:true}),inspect=f.ops.inspect
+ f.ops.inspect=async()=>{const rows=await inspect();for(const r of rows)r.policy.configurationSha256=hash;return rows}
+ await assert.rejects(f.run());const rows=await f.ops.inspect()
+ const receipt={mode:f.plan.format,planHash:f.plan.planHash,complete:false,events:f.events},trace=[],events=[]
+ const ops={
+  async prepareSourceRestoration(){trace.push('prepare')},async assertIdle(){},
+  async inspect(){return structuredClone(rows)},state:f.ops.state,
+  async verifyImages(){return Object.fromEntries(apps.map(a=>[a,digest]))},
+  async stop(){throw Error('Already stopped source must not be stopped again')},async wait(){},
+  async restoreAcceptedSource(stack){trace.push('restore:'+stack)},
+  async metadata(){return {...await f.ops.metadata(apps[0]),...f.plan.source}},
+  async deploy(stack,service){trace.push('deploy:'+stack+':'+service);const r=rows.find(r=>r.stack===stack&&r.service===service);Object.assign(r,{id:'9'+r.id.slice(1),running:true,pid:2})},
+  async verifyHealthy(stack,service,identity){const r=rows.find(r=>r.stack===stack&&r.service===service);assert.deepEqual(identity,{id:r.id,imageId:r.imageId})},
+ }
+ const result=await restoreImageSource({plan:f.plan,receipt,ops,onProgress:async e=>events.push(e)})
+ assert.equal(result.status,'complete');assert.equal(result.state.runtime,'3.8.2')
+ assert.equal(result.containers.filter(r=>r.running&&r.healthy).length,4)
+ assert.deepEqual(trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)))
+ assert.equal(events.filter(e=>e.phase==='rollout'&&e.status==='healthy').length,4)
+ trace.length=0
+ await assert.rejects(restoreImageSource({plan:f.plan,receipt,ops:{...ops,state:async()=>({...await f.ops.state(),runtime:'3.8.3'})}}))
+ assert.deepEqual(trace,['prepare'])
+})
+
+test('v1 to v2 runtime patch retains precheck, four drains, two barriers and exactly one non-DDL CAS',async()=>{
+ const f=fixture({producerV2:true});await f.prepare();assert.equal(f.trace.some(x=>x.startsWith('stop:')),false);f.trace.length=0;f.events.length=0;
+ const result=await f.run();assert.equal(result.state.runtime,'3.8.5');assert.deepEqual(result.publicText,{reader:2,producer:'purpose-json-v2'});
+ assert.ok(f.trace.indexOf('patch-precheck')<f.trace.findIndex(x=>x.startsWith('stop:')));assert.equal(f.trace.filter(x=>x==='patch').length,1);
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('stop:')),['worker','lingxiloop'].flatMap(s=>apps.map(a=>'stop:'+a+':'+s)));
+ assert.equal(f.events.filter(e=>e.status==='zero-leases'&&e.state.runtime==='3.8.3').length,2);
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)));
+ assert.equal(f.trace.some(x=>['migrate','backup','seed'].includes(x)),false);
+});
+test('v2 runtime patch fails before stopping on actual v1 options or old bound work and never replays unknown CAS',async()=>{
+ for(const fault of [{wrongV2Options:true},{bound:true}]){const f=fixture({producerV2:true,...fault});await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('stop:')),false);}
+ const f=fixture({producerV2:true,patchUnknown:true});await assert.rejects(f.run(),e=>e.uncertain);assert.equal(f.trace.at(-1),'patch');assert.equal(f.trace.filter(x=>x==='patch').length,1);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);
+});
+test('v3 runtime patch drains old bindings and brings both compatible Web readers up before writers',async()=>{
+ const f=fixture({producerV3:true});await f.prepare();assert.equal(f.trace.some(x=>x.startsWith('stop:')),false);f.trace.length=0;f.events.length=0;
+ const result=await f.run();assert.equal(result.state.runtime,'3.8.7');assert.equal(result.state.product,54);assert.deepEqual(result.publicText,{reader:3,producer:'purpose-json-v3'});
+ assert.ok(f.trace.indexOf('patch-precheck')<f.trace.findIndex(x=>x.startsWith('stop:')));assert.equal(f.trace.filter(x=>x==='patch').length,1);
+ assert.equal(f.events.filter(e=>e.status==='zero-leases'&&e.state.runtime==='3.8.5').length,2);
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['lingxiloop','worker'].flatMap(s=>apps.map(a=>'deploy:'+a+':'+s)));
+ assert.ok(f.trace.indexOf('health:'+apps[1]+':lingxiloop')<f.trace.indexOf('deploy:'+apps[0]+':worker'));
+ assert.equal(f.trace.some(x=>['migrate','backup','seed'].includes(x)),false);
+});
+test('v3 release refuses stale capability/binding before downtime and retains unknown/fix-forward CAS outcomes',async()=>{
+ for(const fault of [{wrongV3Capability:true},{wrongV2Options:true},{bound:true}]){const f=fixture({producerV3:true,...fault});await assert.rejects(f.run());assert.equal(f.trace.some(x=>x.startsWith('stop:')),false);}
+ for(const [fault,recovery] of [[{patchUnknown:true},'unknown'],[{patchFailed:true},'source-unchanged-recovery-requires-review'],[{patchCommittedFailure:true},'fix-forward']]){
+  const f=fixture({producerV3:true,...fault});await assert.rejects(f.run());assert.equal(f.events.at(-1).recovery,recovery);
+  assert.equal(f.trace.filter(x=>x==='patch').length,1);assert.equal(f.trace.some(x=>x.startsWith('deploy:')),false);
+  if(fault.patchUnknown)assert.equal(f.trace.at(-1),'patch');
+ }
+ const replaced=fixture({producerV3:true,replacedTarget:true});await assert.rejects(replaced.run());assert.equal(replaced.trace.filter(x=>x.startsWith('deploy:')).length,1);
 });

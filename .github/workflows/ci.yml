@@ -36,6 +36,7 @@ jobs:
     outputs:
       admin_build: ${{ steps.scope.outputs.admin_build }}
       integration_files: ${{ steps.scope.outputs.integration_files }}
+      integration_mode: ${{ steps.scope.outputs.integration_mode }}
       deep_integration: ${{ steps.scope.outputs.deep_integration }}
       open_notebook: ${{ steps.scope.outputs.open_notebook }}
       deployment: ${{ steps.scope.outputs.deployment }}
@@ -76,6 +77,7 @@ jobs:
               - 'scripts/run-tests.mjs'
               - 'scripts/test-selectors.test.mjs'
             web:
+              - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
               - 'third_party/assistant-ui/streaming-text/**'
               - 'third_party/assistant-ui-elements/**'
@@ -123,6 +125,7 @@ jobs:
               - '!server/src/__integration__/**'
             # Include shared sources loaded by the server runtime and copied by its image.
             server_source:
+              - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
               - 'scripts/verify-zcode-visualize.mjs'
               - 'scripts/build-visualize-runtime.mjs'
@@ -144,9 +147,11 @@ jobs:
               - 'src/lib/participantDisplayName.ts'
               - 'src/lib/agentRunSnapshot.ts'
               - 'src/lib/nativeMessage.ts'
+              - 'src/lib/answerSegment.ts'
               - 'src/lib/userFacingError.ts'
               - 'src/lib/runActivity.ts'
               - 'src/lib/runTrace.ts'
+              - 'src/lib/traceCost.ts'
               - 'src/lib/memoryActivity.ts'
               - 'src/features/chat/visualize/zcode/shared/gen-ui/**'
               - 'src/features/chat/visualize/zcode/gen-ui/domain/**'
@@ -155,6 +160,11 @@ jobs:
               - 'server/src/__integration__/*.test.ts'
             integration_runner:
               - 'server/run-integration-tests.mjs'
+              - 'server/integration-suite.mjs'
+              - 'server/run-historical-migration-tests.mjs'
+              - 'server/fixtures/**'
+              - 'scripts/ci-scope.mjs'
+              - '.github/workflows/ci.yml'
               - 'server/src/__integration__/**'
               - '!server/src/__integration__/*.test.ts'
             server_docker:
@@ -195,6 +205,7 @@ jobs:
               - 'scripts/checkout-bytes.test.mjs'
               - '.github/workflows/ci.yml'
               - 'scripts/ci-scope.mjs'
+              - 'scripts/knowledge-shadow-pg-*.mjs'
               - 'scripts/production-rag-contract.test.mjs'
               - 'scripts/release-smoke*.mjs'
               - 'scripts/update-deployment-images.mjs'
@@ -231,6 +242,8 @@ jobs:
         shell: bash
         env:
           INTEGRATION_FILES: ${{ steps.paths.outputs.integration_tests_files }}
+          SERVER_SOURCE_FILES: ${{ steps.paths.outputs.server_source_files }}
+          INTEGRATION_RUNNER_FILES: ${{ steps.paths.outputs.integration_runner_files }}
           EVENT: ${{ github.event_name }}
           MANUAL_SCOPE: ${{ inputs.scope }}
           SHARED_FRONTEND: ${{ steps.paths.outputs.shared_frontend }}
@@ -265,7 +278,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.changes.outputs.check_jobs) }}
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 8
     services:
       redis:
         image: ${{ matrix.component == 'server' && 'redis:7-alpine' || '' }}
@@ -330,16 +343,39 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with: { enable-cache: true, cache-dependency-glob: third_party/open-notebook/uv.lock }
       - if: matrix.component == 'open-notebook'
+        name: Start isolated shadow-generation database
+        run: |
+          docker run -d --name rag-shadow-ci -p 127.0.0.1:18879:8000 \
+            accel.way2api.fun/docker.io/surrealdb/surrealdb@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011 \
+            start --user test --pass test memory
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:18879/health; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - if: matrix.component == 'open-notebook'
         working-directory: third_party/open-notebook
-        run: uv run --frozen --python 3.12 pytest -q
+        env:
+          RAG_SHADOW_TEST_URL: ws://127.0.0.1:18879/rpc
+        run: uv run --frozen --python 3.12 pytest -q --junitxml=shadow-generation-junit.xml
+      - if: always() && matrix.component == 'open-notebook'
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-generation-junit
+          path: third_party/open-notebook/shadow-generation-junit.xml
+      - if: always() && matrix.component == 'open-notebook'
+        run: docker rm -f rag-shadow-ci
       - if: matrix.component == 'deploy-contract'
         run: node --test scripts/checkout-bytes.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test scripts/compose-offline.test.mjs
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-stopped-recovery.test.mjs scripts/host-release-image-recovery.test.mjs scripts/host-release-lease-wait.test.mjs scripts/public-text-release.test.mjs scripts/current-source52-acceptance.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
+        run: node --test scripts/production-rag-contract.test.mjs scripts/release-smoke.test.mjs scripts/schema-upgrade-maintenance.test.mjs scripts/schema-upgrade-host-source.test.mjs scripts/host-release.test.mjs scripts/host-release-model-config.test.mjs scripts/host-release-stopped-recovery.test.mjs scripts/host-release-image-recovery.test.mjs scripts/host-release-lease-wait.test.mjs scripts/public-text-release.test.mjs scripts/current-source52-acceptance.test.mjs scripts/host-release-transport.test.mjs scripts/host-release-komodo.test.mjs scripts/verify-memory-backup.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test --test-name-pattern 'effective candidate' scripts/host-release.local.test.mjs
+      - name: Check shadow PG gate deadline and coordinator boundaries
+        if: matrix.component == 'deploy-contract'
+        run: node --experimental-test-module-mocks --test scripts/knowledge-shadow-pg-*.test.mjs
       - if: matrix.component == 'release'
         run: npm run version:check
 
@@ -347,7 +383,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.integration == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: ${{ needs.changes.outputs.deep_integration == 'true' && 30 || 8 }}
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -386,7 +422,16 @@ jobs:
         run: node --test scripts/test-selectors.test.mjs
       - run: npm run test:integration
         env:
+          INTEGRATION_TEST_MODE: ${{ needs.changes.outputs.integration_mode }}
           INTEGRATION_TEST_FILES: ${{ needs.changes.outputs.integration_files }}
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-timings-${{ github.sha }}
+          path: artifacts/ci-integration/timings.json
+          if-no-files-found: warn
+          retention-days: 7
       - if: needs.changes.outputs.deep_integration == 'true'
         name: Distributed SSE with a real Redis restart
         run: node --import tsx scripts/test-distributed-realtime.mjs

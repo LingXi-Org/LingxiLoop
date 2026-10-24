@@ -1,0 +1,123 @@
+{
+  "recordedAt": "2026-10-22T17:44:35.521552+00:00",
+  "baseCommit": "58c1a214590e56d35caf328553df5ee1f2c6c0f1",
+  "node": "22.23.3",
+  "dependencyInstall": "isolated worktree npm ci from committed lock; shared root dependency symlink removed before install",
+  "formalRuntime": {
+    "version": "3.8.2",
+    "integrity": "sha512-+6eghjSbFClmE1DjQEQhTP6Y+9NztLLKPMZOMebMtdQtWMb741xYBK3d/D+GEaFbIxaZXEEBDcqdi0VSwPeQxQ=="
+  },
+  "productionAccess": false,
+  "paidProviderRequests": 0,
+  "checks": {
+    "serverTypecheck": "passed",
+    "serverLint": "passed",
+    "cliRegression": {
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    "baselineCliRegression": {
+      "passed": 8,
+      "failed": 4,
+      "meaning": "new successful status/enqueue modes and uncertainty checkpoints are absent on the unchanged baseline"
+    },
+    "publicApiRetention": {
+      "passed": true,
+      "cleanupCompleted": true,
+      "oldRecords": 40,
+      "newRecords": 40,
+      "localProviderRequests": 81,
+      "initialProAdmission": 32
+    },
+    "upstreamEmbeddingSemantic": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "sourceCommit": "64f2adbac3310280a9bd776531d464e6acb48686",
+      "scope": "existing matching-source tests, distinct from the installed-package public API integration"
+    },
+    "preFixErrorRedaction": {
+      "passed": 10,
+      "failed": 2,
+      "meaning": "new binding/control initialization errors leaked the synthetic sentinel before the outer new-mode error boundary"
+    }
+  },
+  "initialDependencyFailure": "Shared startup-updated dependencies produced two unchanged integration test type errors; exact locked worktree install cleared them without editing either test.",
+  "scope": "Synthetic/local preparation only. Real authorized binding closure, current effective model/key and production coverage/usage receipts remain the sole production executor’s work.",
+  "sourceFiles": [
+    {
+      "path": "server/src/bin/memory-maintenance.ts",
+      "bytes": 3188,
+      "sha256": "bf758b8652589c9e3a90105da2beb6a778ebed816c9ad50779cd866af26abd31"
+    },
+    {
+      "path": "server/src/agent-runtime/memory-index-maintenance.ts",
+      "bytes": 4982,
+      "sha256": "03a4b5bf142660329da40574e4faf3145db492807044c14985e422cf9fa8953f"
+    },
+    {
+      "path": "server/src/__tests__/memory-index-maintenance.test.ts",
+      "bytes": 6653,
+      "sha256": "c118c107e7a31db81ccca1fba142968aad21b1f0666523f3dbda648cc417b780"
+    },
+    {
+      "path": "server/src/__tests__/memory-maintenance-lifecycle.test.ts",
+      "bytes": 3126,
+      "sha256": "686fe61fca6a4c40ac626b00f1fc6196efea795934379012d95d178a6430f2aa"
+    },
+    {
+      "path": "scripts/verify-native-index-public.mjs",
+      "bytes": 6808,
+      "sha256": "d246075dd8aae194c75c794c7674f34c2676b461c0a603a235925ded08641962"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "docs/evidence/issue-297/native-index/cli-baseline-red.tap",
+      "bytes": 6286,
+      "sha256": "77133b06d613e6270602f8924886135a35382b4b588e0ca76a814da0ffccb7ef"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/cli-final-green.tap",
+      "bytes": 3946,
+      "sha256": "01d312e0bd71d78f5d0bdb60df92557b6d7180583bc679c21e4f84dbd80c5b38"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/server-typecheck.log",
+      "bytes": 290,
+      "sha256": "5ca1ddbb0ba02a55dcb70d1f36e9975bb8b5c082839c67bebd5af5306c82db1e"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/server-lint.log",
+      "bytes": 309,
+      "sha256": "9ee2fcd139fb0b014fa0be3dd5d92edbb858140587717779922be866a66431d7"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/public-api-retention.json",
+      "bytes": 1561,
+      "sha256": "1c857b6b365e1d04f018895c9de2be788c58935420ca1811c52bee8c2cc7465c"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/public-api-retention.log",
+      "bytes": 1853,
+      "sha256": "f135ac57cef49a13a0452bec6db97c3feb992def18c22d03297c0ac8e7ad65dc"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/upstream-semantic-green.tap",
+      "bytes": 1116,
+      "sha256": "e40b62743bf206798f5d6e846f97f9d9f383fee235ae4cddbef72dd82ce9d8c1"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/initial-shared-dependency-typecheck.log",
+      "bytes": 1310,
+      "sha256": "7a4a2bd78481d7088e4628468cde8209fdeb661157c3c510630d4424471a70ea"
+    },
+    {
+      "path": "docs/evidence/issue-297/native-index/cli-error-redaction-red.tap",
+      "bytes": 6919,
+      "sha256": "b843e2a32d212d8cb8347f28d72df5bf5527e2e6fe8fdd444e5dc3c0ef78a996"
+    }
+  ],
+  "artifactNormalization": "Text evidence may trim trailing line whitespace; hashes bind the committed evidence bytes."
+}

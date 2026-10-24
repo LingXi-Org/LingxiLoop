@@ -44,6 +44,12 @@ export function AssistantMessageActions() {
   const replyTo = regenerateOf ?? (typeof metadata.sourceRef === 'string' ? metadata.sourceRef : null)
   const retryDisabled = readOnly || !replyTo || pending !== null || threadRunning
   const regenerating = pending === 'regenerate' || message.status?.type === 'running'
+  const view = metadata.harness
+  const outcome = view?.goalOutcome
+  const incompleteOutcome = message.status?.type === 'incomplete' && message.status.reason === 'other'
+    && view?.runId === metadata.runId && outcome?.requestVersion === view?.requestVersion
+    && (outcome?.status === 'partial' || outcome?.status === 'blocked')
+    && (view?.lifecycle === outcome.status || view?.lifecycle === 'succeeded') ? outcome.status : null
   const buttonClassName = cn(ghostButton, 'size-7 disabled:pointer-events-none disabled:opacity-40 max-md:size-11')
   const ratingClassName = (emoji: string) => cn(buttonClassName,
     metadata.reactions.some(reaction => reaction.emoji === emoji && reaction.mine)
@@ -79,9 +85,14 @@ export function AssistantMessageActions() {
   }
   return <>
     <MessagePrimitive.Error>
-      <ErrorState title="回复生成失败" detail={metadata.harnessError ? harnessFailure(metadata.harnessError) : '消息生成失败，请重试。'}
+      <ErrorState title="回复生成失败" detail={metadata.terminalNotice?.text ?? (metadata.harnessError ? harnessFailure(metadata.harnessError) : '消息生成失败，请重试。')}
         retrying={pending === 'regenerate'} onRetry={() => void regenerate()} disabled={retryDisabled} className="mt-2" />
     </MessagePrimitive.Error>
+    {incompleteOutcome && <div data-run-outcome={incompleteOutcome} role="status" className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+      <span>{pending === 'regenerate' ? '正在重试' : '答复尚未完成'}</span>
+      <button type="button" disabled={retryDisabled} onClick={() => void regenerate()}
+        className={cn(ghostButton, 'rounded-md px-2 py-1 text-xs disabled:opacity-40 max-md:min-h-11')}>重试</button>
+    </div>}
     {(message.content.length > 0 || metadata.replyBranches) && <ActionBarPrimitive.Root ref={root} data-slot="message-actions" role="toolbar" aria-label="智能助教回复操作" className="mt-1 flex flex-wrap items-center gap-1">
     {metadata.replyBranches && <MessageBranches variants={metadata.replyBranches.ids} index={metadata.replyBranches.index}
       onIndexChange={index => {

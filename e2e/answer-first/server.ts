@@ -1,10 +1,10 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk } from 'assistant-stream'
-import type { Plugin } from 'vite'
+import type { Plugin, PreviewServer, ViteDevServer } from 'vite'
 
 type Snapshot = { message: { id: string; metadata: { custom: Record<string, unknown> } } }
 type Page = { message: unknown; total: number; nextOffset: number | null }
-type Setup = { snapshot: Snapshot; pages?: Record<string, Page>; failPages?: number; holdPages?: boolean }
+type Setup = { approval?: Record<string, unknown>; snapshot: Snapshot; pages?: Record<string, Page>; failPages?: number; holdPages?: boolean }
 
 // Synthetic local HTTP service. No proxy, production network, browser routes,
 // credentials, private records, or replacement product decoder/store.
@@ -24,7 +24,7 @@ export function answerFirstFixture(): Plugin {
     if (setup) setup.snapshot = snapshot
     for (const stream of streams) stream.enqueue({ type: 'update-state', path: [], operations: [{ type: 'set', path: [], value: snapshot as never }] })
   }
-  return { name: 'answer-first-fixture', configureServer(server) {
+  const configure = (server: Pick<ViteDevServer | PreviewServer, 'middlewares'>) => {
     server.middlewares.use((req, res, next) => { void (async () => {
       const url = new URL(req.url!, 'http://127.0.0.1')
       if (url.pathname === '/__fixture/reset') {
@@ -63,7 +63,7 @@ export function answerFirstFixture(): Plugin {
         return json(res, page)
       }
       if (url.pathname.includes('/approvals/') && req.method === 'POST') { approvalPosts++; return json(res, { ok: true, approved: true }) }
-      if (url.pathname.includes('/approvals/')) return json(res, { id: url.pathname.split('/').at(-1), summary: '批准合成资料导出', status: 'PENDING', action: { action: 'test.export' } })
+      if (url.pathname.includes('/approvals/')) return json(res, { id: url.pathname.split('/').at(-1), summary: '批准合成资料导出', status: 'PENDING', action: { action: 'test.export' }, ...setup?.approval })
       if (url.pathname.endsWith('/memory')) {
         const id = url.searchParams.get('ids') === 'memory-process' ? 'memory-process' : 'memory-fixture'
         return json(res, { chips: [{ id, text: id === 'memory-process' ? '过程学习偏好' : '用户请求的记忆摘要', version: 1, change: 'existing' }] })
@@ -73,5 +73,6 @@ export function answerFirstFixture(): Plugin {
       // Ordinary ancillary local UI requests have no private backing service.
       return json(res, { ok: true })
     })().catch(error => { if (!res.headersSent) json(res, { error: String(error) }, 500); else res.end() }) })
-  } }
+  }
+  return { name: 'answer-first-fixture', configureServer: configure, configurePreviewServer: configure }
 }

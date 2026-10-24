@@ -172,7 +172,7 @@ async function seedCreationWorkspace() {
 
 async function createConversation(
   scope: { companyId: string; projectId: string },
-  input: { participantIds: string[]; title?: string },
+  input: { participantIds: string[]; title?: string; requestId?: string },
   expectedStatus = 201,
 ): Promise<{ id: string; created: boolean }> {
   const response = await fetch(`${baseUrl}/api/projects/${scope.projectId}/conversations`, {
@@ -330,4 +330,103 @@ test('[integration] personal conversation deletion is reversible and retains sha
   assert.equal((await fetch(`${url}/restore`, { method: 'POST', headers })).status, 404)
   assert.equal((await channels(true)).length, 0)
   assert.equal((await pool.query('SELECT 1 FROM conversation_list_removals WHERE conversation_id=$1', [conversationId])).rowCount, 0)
+})
+
+// Failure model: docs/evidence/issue-327/FAILURE-MODEL.md (written before implementation).
+test('[integration] six ordinary agents accept an authorized admin caller without an explicit project membership', async () => {
+  const scope = await seedCreationWorkspace()
+  const agents = ['a-tutor', 'a-two', 'a-three', 'a-four', 'a-five', 'a-six']
+  for (const id of agents.slice(1)) await pool.query(`INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status)
+    VALUES($1,$2,'agent',$1,'A','transparent','avail')`, [id, scope.companyId])
+  await pool.query('DELETE FROM project_memberships WHERE company_id=$1 AND project_id=$2 AND user_id=$3',
+    [scope.companyId, scope.projectId, ME_USER_ID])
+  const synchronized: string[][] = []
+  const sync = conversationInfrastructure.syncChannel
+  conversationInfrastructure.syncChannel = async profile => { synchronized.push(profile.members); await sync(profile) }
+  try {
+    const created = await createConversation(scope, { participantIds: agents })
+    const rows = await pool.query(`SELECT c.kind,c.members,b.profile->'members' AS bound_members
+      FROM conversations c JOIN im_channel_bindings b ON b.channel_id=c.id AND b.company_id=c.company_id
+      WHERE c.id=$1 AND c.company_id=$2 AND c.project_id=$3`, [created.id,scope.companyId,scope.projectId])
+    assert.deepEqual(rows.rows, [{ kind: 'group', members: [ME_USER_ID,...agents], bound_members: [ME_USER_ID,...agents] }])
+    assert.deepEqual(synchronized, [[ME_USER_ID,...agents]])
+    // Optional isolated real WuKong probe; ordinary CI still verifies the full
+    // product synchronization path with its established recording adapter.
+    if (process.env.ISSUE327_WUKONG_API_URL) {
+      const url = new URL(process.env.ISSUE327_WUKONG_API_URL)
+      assert.equal(url.hostname,'127.0.0.1','Real IM probe must target a disposable loopback service')
+      const im = new WukongClient({apiUrl:url.origin,wsUrl:'ws://unused',apiToken:'fixture',webhookSecret:'fixture'})
+      await im.upsertChannel({channelId:created.id,channelType:2,kind:'group',title:'fixture',members:[ME_USER_ID,...agents],pinned:false})
+      for (const member of [ME_USER_ID,...agents]) {
+        const message=await im.sendMessage(created.id,2,member,createNativeMessage({id:`probe-${member}`,role:'user',content:[{type:'text',text:'isolated membership probe'}]}))
+        assert.ok(message.messageSeq>0)
+      }
+      await assert.rejects(()=>im.sendMessage(created.id,2,'not-a-member',createNativeMessage({id:'probe-denied',role:'user',content:[{type:'text',text:'isolated denied probe'}]})))
+    }
+    for (let i=0;i<2;i++) {
+      const response = await fetch(`${baseUrl}/api/im/channels`, { headers: { 'x-company-id': scope.companyId, 'x-project-id': scope.projectId } })
+      assert.equal(response.status, 200)
+      const channels = await response.json() as Array<{ id: string; members: string[] }>
+      assert.deepEqual(channels.find(channel => channel.id === created.id)?.members, [ME_USER_ID,...agents])
+    }
+    const humanDirect=await createConversation(scope,{participantIds:[OTHER_USER_ID]})
+    const agentDirect=await createConversation(scope,{participantIds:['a-tutor']})
+    assert.notEqual(humanDirect.id,agentDirect.id)
+    // The caller exception must not grant membership to a selected administrator peer.
+    await seedUserMembership('u-admin-peer',scope.companyId,{role:'TEACHER',isAdmin:true})
+    await createConversation(scope, { participantIds: ['u-admin-peer','a-tutor'] },400)
+    await pool.query('UPDATE company_memberships SET is_admin=FALSE WHERE company_id=$1 AND user_id=$2', [scope.companyId,ME_USER_ID])
+    await createConversation(scope, { participantIds: agents },404)
+    assert.equal((await pool.query('SELECT id FROM conversations WHERE company_id=$1',[scope.companyId])).rowCount,3)
+  } finally { conversationInfrastructure.syncChannel=sync }
+})
+
+test('[integration] keyed group retries are durable, scoped, concurrent and payload-bound', async () => {
+  const scope = await seedCreationWorkspace()
+  const input = { participantIds: [OTHER_USER_ID,'a-tutor'], requestId: 'request-327-concurrent' }
+  const responses = await Promise.all(Array.from({length:6}, () => fetch(`${baseUrl}/api/projects/${scope.projectId}/conversations`, {
+    method: 'POST', headers: {'content-type':'application/json','x-company-id':scope.companyId,'x-project-id':scope.projectId}, body: JSON.stringify(input),
+  })))
+  assert.deepEqual(responses.map(r=>r.status).sort(),[200,200,200,200,200,201])
+  const bodies = await Promise.all(responses.map(r=>r.json())) as Array<{id:string}>
+  assert.equal(new Set(bodies.map(r=>r.id)).size,1)
+  assert.deepEqual(await createConversation(scope,input,200),{id:bodies[0].id,created:false})
+  assert.deepEqual(await createConversation(scope,{...input,participantIds:[...input.participantIds].reverse()},200),{id:bodies[0].id,created:false})
+  const conflict=await createConversation(scope,{...input,title:'different'},409)
+  assert.equal((conflict as unknown as {code:string}).code,'creation_conflict')
+  const fresh = await createConversation(scope,{...input,requestId:'request-327-new'})
+  assert.notEqual(fresh.id,bodies[0].id)
+  const otherActor = await conversationsApplication.create({...scope,userId:OTHER_USER_ID}, {...input,participantIds:[ME_USER_ID,'a-tutor']})
+  assert.notEqual(otherActor.id,bodies[0].id)
+  assert.equal((await pool.query('SELECT id FROM conversations WHERE company_id=$1',[scope.companyId])).rowCount,3)
+  assert.equal((await pool.query('SELECT channel_id FROM im_channel_bindings WHERE company_id=$1',[scope.companyId])).rowCount,3)
+  const otherProject={companyId:scope.companyId,projectId:'second-project'}
+  await pool.query(`INSERT INTO projects(id,company_id,kind,name,created_by) VALUES($1,$2,'INSTITUTIONAL_COURSE','Second',$3)`,[otherProject.projectId,scope.companyId,ME_USER_ID])
+  const sameKeyOtherProject=await createConversation(otherProject,{...input,participantIds:['a-tutor','a-second']},400)
+  assert.equal((sameKeyOtherProject as unknown as {code:string}).code,'invalid_members')
+  await pool.query(`INSERT INTO participants(id,company_id,kind,name,initial,avatar_bg,status) VALUES('a-second',$1,'agent','Second','S','transparent','avail')`,[scope.companyId])
+  const otherGroup=await createConversation(otherProject,{...input,participantIds:['a-tutor','a-second']})
+  assert.notEqual(otherGroup.id,bodies[0].id)
+  await pool.query('DELETE FROM project_memberships WHERE company_id=$1 AND user_id=$2',[scope.companyId,OTHER_USER_ID])
+  const invalid=await createConversation(scope,input,400)
+  assert.equal((invalid as unknown as {code:string}).code,'invalid_members')
+})
+
+test('[integration] keyed creation rolls back before commit and retries after a channel outage', async () => {
+  const scope=await seedCreationWorkspace()
+  const input={participantIds:[OTHER_USER_ID,'a-tutor'],requestId:'request-327-outage'}
+  const transaction=conversationInfrastructure.transaction
+  conversationInfrastructure.transaction=work=>transaction(async db=>{await work(db);throw new Error('injected rollback before commit')})
+  try { await createConversation(scope,input,500) } finally { conversationInfrastructure.transaction=transaction }
+  assert.equal((await pool.query('SELECT id FROM conversations WHERE company_id=$1',[scope.companyId])).rowCount,0)
+  assert.equal((await pool.query('SELECT channel_id FROM im_channel_bindings WHERE company_id=$1',[scope.companyId])).rowCount,0)
+  const sync=conversationInfrastructure.syncChannel
+  conversationInfrastructure.syncChannel=async()=>{throw new Error('injected IM outage')}
+  let id: string
+  try { id=(await createConversation(scope,input)).id } finally { conversationInfrastructure.syncChannel=sync }
+  assert.deepEqual(await createConversation(scope,input,200),{id,created:false})
+  assert.equal((await pool.query('SELECT id FROM conversations WHERE company_id=$1',[scope.companyId])).rowCount,1)
+  assert.equal((await pool.query('SELECT channel_id FROM im_channel_bindings WHERE company_id=$1',[scope.companyId])).rowCount,1)
+  await mkdir('artifacts/issue-327',{recursive:true})
+  await writeFile('artifacts/issue-327/rollback-retry.json',JSON.stringify({passed:true,checks:['transaction-rollback-no-orphans','channel-outage-retains-binding','same-key-retry-one-conversation-one-binding']},null,2))
 })

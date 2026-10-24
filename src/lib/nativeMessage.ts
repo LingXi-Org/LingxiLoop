@@ -2,6 +2,7 @@ import type { CompleteAttachment, ThreadMessage } from '@assistant-ui/react'
 import { z } from 'zod'
 import { activityAnnotation, toolDisplaySchema } from './runActivity.js'
 import { memoryActivitySchema } from './memoryActivity.js'
+import { answerSegment } from './answerSegment.js'
 
 type Wire<T> = T extends Date ? string : T extends readonly (infer U)[] ? Wire<U>[] : T extends object ? { [K in keyof T]: Wire<T[K]> } : T
 export type NativeMessage = Wire<ThreadMessage>
@@ -123,7 +124,15 @@ export function serializeMessage(message: ThreadMessage): NativeMessage {
   return nativeMessageSchema.parse(JSON.parse(JSON.stringify(message, (key, value) => key === 'file' && typeof File !== 'undefined' && value instanceof File ? undefined : value)))
 }
 export function deserializeMessage(value: unknown): ThreadMessage {
-  const parsed = nativeMessageSchema.parse(value)
+  return decodeNativeMessage(value).display
+}
+
+/** Decode external input once, then project that validated clone for display. */
+export function decodeNativeMessage(value: unknown): { message: NativeMessage; display: ThreadMessage } {
+  const message = nativeMessageSchema.parse(value)
+  return { message, display: projectValidatedMessage(message) }
+}
+function projectValidatedMessage(parsed: NativeMessage): ThreadMessage {
   // Old IM records and browser caches may still contain private memory projections.
   const { memory: _memory, ...custom } = parsed.metadata.custom
   return { ...parsed, metadata: { ...parsed.metadata, custom }, createdAt: new Date(parsed.createdAt),
@@ -140,7 +149,7 @@ export function deserializeMessage(value: unknown): ThreadMessage {
           memory: memoryActivitySchema.optional(), display: toolDisplaySchema.optional() }).safeParse(part.result)
         part = { ...part, args: {}, argsText: '', ...(part.result === undefined ? {} : { result: result.success ? result.data : {} }) }
       }
-      return part.messages ? { ...part, messages: part.messages.map(deserializeMessage) } : part
+      return part.messages ? { ...part, messages: part.messages.map(projectValidatedMessage) } : part
     }) } as ThreadMessage
 }
 export function createNativeMessage(input: { id: string; role: ThreadMessage['role']; content: ThreadMessage['content'] | NativeMessage['content'];
@@ -151,10 +160,16 @@ export function createNativeMessage(input: { id: string; role: ThreadMessage['ro
     metadata: { ...(input.role === 'assistant' ? { unstable_state: null, unstable_annotations: [], unstable_data: [], steps: [] } : {}), custom: input.custom ?? {} } })))
 }
 export function nativeText(message: Pick<NativeMessage, 'content'> | Pick<ThreadMessage, 'content'>): string {
-  return message.content.flatMap(part => {
+  let text = '', previous: ReturnType<typeof answerSegment>, count = 0
+  for (const part of message.content) {
     const annotation = activityAnnotation(part)
-    return part.type === 'text' && annotation?.kind !== 'commentary' && annotation?.purpose !== 'process' ? [part.text] : []
-  }).join('\n')
+    if (part.type !== 'text' || annotation?.kind === 'commentary' || annotation?.purpose === 'process') continue
+    const source = answerSegment(part)
+    const contiguous = source && previous && source.messageId === previous.messageId && source.start === previous.end
+    text += (count && !contiguous ? '\n' : '') + part.text
+    previous = source; count++
+  }
+  return text
 }
 export function nativeData<T = Record<string, unknown>>(message: Pick<NativeMessage, 'content'>, name: string): T | undefined {
   const part = message.content.find(part => part.type === 'data' && part.name === name)

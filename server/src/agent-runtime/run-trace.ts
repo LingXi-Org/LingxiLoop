@@ -1,31 +1,38 @@
 import { createHash } from 'node:crypto'
 import type { RunView } from '@lyyzka/lingxios/ui'
 import { publicText,toolDisplay,toolDisplaySchema,resolveToolDisplay } from '../../../src/lib/runActivity.js'
-import type { RunTrace,TraceSpan,TraceStatus } from '../../../src/lib/runTrace.js'
-import { isEmbeddingTraceModel } from '../../../src/lib/runTrace.js'
+import type { RunTrace,TraceSpan,TraceStatus,TraceMoney,TracePricing } from '../../../src/lib/runTrace.js'
+import { traceCostTotals } from '../../../src/lib/traceCost.js'
+import { isEmbeddingTraceModel,readModelOperation,modelOperationLabel,toolWorkKind,type ModelOperation } from '../../../src/lib/runTrace.js'
 import type { HarnessToolPart } from './message-projection.js'
 
 export interface PublicLlmTrace {
   id: string; model: string; status: 'complete'|'error'; durationMs: number|null
   tokensIn: number|null; tokensOut: number|null; cost: number|null; costEstimated: boolean
   callId?: string; apiKind?: 'chat'|'embedding'; startedAt?: number|null; completedAt?: number|null
+  operation?: ModelOperation
+  costBreakdown?: TraceMoney[]; costPricing?: TracePricing
 }
 const opaque = (id: string) => createHash('sha256').update(id).digest('hex').slice(0,24)
 const number = (value: unknown): number|null => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null
 const safe = (value: unknown): string|undefined => { const parsed = publicText.safeParse(value); return parsed.success ? parsed.data : undefined }
 function costTotals(calls: readonly TraceSpan[],complete: boolean) {
   const known = calls.filter(call=>call.cost !== null)
+  const costBreakdown = traceCostTotals(calls)
   return { cost: complete && calls.length > 0 && known.length === calls.length ? known.reduce((sum,call)=>sum+call.cost!,0) : null,
     ...(known.length ? { knownCost: known.reduce((sum,call)=>sum+call.cost!,0) } : {}),
+    ...(costBreakdown ? { costBreakdown } : {}),
     costIncomplete: !complete || known.length !== calls.length,
     costEstimated: known.some(call=>call.costEstimated) }
 }
 function ledgerSpan(call: PublicLlmTrace,relative: (value: unknown)=>number|null): TraceSpan {
   const start = relative(call.startedAt),candidate = relative(call.completedAt)
   const end = candidate !== null && (start === null || candidate >= start) ? candidate : null
-  return { id: `llm-${opaque(call.id)}`,name: call.apiKind === 'embedding' ? '向量编码' : '模型调用',kind: call.apiKind === 'embedding' ? 'embedding' : 'llm',
+  const operation = readModelOperation(call.operation)
+  return { id: `llm-${opaque(call.id)}`,name: call.apiKind === 'embedding' ? '向量编码' : operation ? modelOperationLabel[operation] : '模型调用',kind: call.apiKind === 'embedding' ? 'embedding' : 'llm',
     model: safe(call.model)?.slice(0,160) ?? '未知模型',status: call.status,start,end,durationMs: call.durationMs,
-    tokensIn: call.tokensIn,tokensOut: call.tokensOut,cost: call.cost,costEstimated: call.costEstimated,children: [] }
+    tokensIn: call.tokensIn,tokensOut: call.tokensOut,cost: call.cost,costEstimated: call.costEstimated,
+    ...(call.costBreakdown ? { costBreakdown: call.costBreakdown } : {}),...(call.costPricing ? { costPricing: call.costPricing } : {}),children: [] }
 }
 function status(lifecycle: RunView['lifecycle']): TraceStatus {
   return lifecycle === 'leased' || lifecycle === 'queued' ? 'running' : lifecycle === 'waiting' ? 'waiting'
@@ -40,7 +47,7 @@ export function nativeTraceMatchesState(snapshot: import('@lyyzka/lingxios').Run
 }
 
 /** Only existing public tool displays and the scoped product usage ledger enter this DTO.
- * Native events have no timestamp; their seq/arrival time is never a clock. */
+ * Older events may lack captured timestamps; seq/arrival time is never a clock. */
 export function buildRunTrace(input: { runId: string; createdAt: string; lifecycle: RunView['lifecycle'];
   tools: readonly HarnessToolPart[]; llm: readonly PublicLlmTrace[]; presentationAvailable?: boolean }): RunTrace {
   const parsed = Date.parse(input.createdAt), startedAt = number(parsed)
@@ -60,7 +67,7 @@ export function buildRunTrace(input: { runId: string; createdAt: string; lifecyc
     const end = start !== null && endValue !== null && endValue >= start ? endValue : null
     const durationMs = tool.timing?.completedAt !== undefined ? number(tool.timing.completedAt-tool.timing.startedAt) : null
     children.push({ id: `tool-${opaque(tool.toolCallId)}`,name: safe(info.title)?.slice(0,160) ?? label.title,kind: 'tool',status: state,
-      start,end,durationMs,detail: safe(info.purpose),
+      start,end,durationMs,detail: safe(info.purpose),workKind: toolWorkKind(tool.toolName),
       ...(info.input?.length ? { input: info.input.filter(field => safe(field.value)) } : {}),
       ...(safe(info.summary) ? { output: safe(info.summary) } : {}),tokensIn: null,tokensOut: null,cost: null,costEstimated: false,children: [] })
   }
@@ -91,20 +98,24 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
     const parsed = toolDisplaySchema.safeParse(tool?.display)
     const display = resolveToolDisplay(tool?.toolName ?? item.name ?? '',item.state === 'complete' ? 'completed' : item.state,parsed.success ? parsed.data : undefined)
     const recorded = item.callId ? ledger.get(item.callId) : undefined
-    const embedding = item.kind === 'llm' && (recorded?.apiKind === 'embedding' || isEmbeddingTraceModel(item.model))
+    const operation = readModelOperation(Reflect.get(item,'operation')) ?? readModelOperation(recorded?.operation)
+    const embedding = item.kind === 'llm' && (operation === 'embedding' || recorded?.apiKind === 'embedding' || isEmbeddingTraceModel(item.model))
     const detail = item.kind === 'llm' ? '模型调用：包含准入、请求与用量结算。' : item.kind === 'agent'
       ? '实际执行区间；排队时间单独记录。' : safe(display.purpose)
     const durationMs = item.startedAt !== null && item.completedAt !== null && item.completedAt >= item.startedAt
       ? item.completedAt-item.startedAt : null
-    spans.set(item.spanId,{ id: item.spanId,name: item.kind === 'agent' ? item.childRunId ? '子任务' : '运行' : item.kind === 'llm' ? embedding ? '向量编码' : '模型调用' : safe(display.title)?.slice(0,160) ?? '工具调用',
+    spans.set(item.spanId,{ id: item.spanId,name: item.kind === 'agent' ? item.childRunId ? '子任务' : '运行' : item.kind === 'llm' ? embedding ? '向量编码' : operation ? modelOperationLabel[operation] : '模型调用' : safe(display.title)?.slice(0,160) ?? '工具调用',
       kind: embedding ? 'embedding' : item.kind,status: item.state === 'failed' ? 'error' : item.state,start: relative(item.startedAt),end: relative(item.completedAt),durationMs,
+      ...(item.kind === 'tool' ? { workKind: toolWorkKind(item.name ?? '') } : item.childRunId ? { workKind: 'subtask' as const } : {}),
       ...(item.kind === 'llm' ? { model: safe(item.model)?.slice(0,160) ?? '未知模型' } : {}),detail,
       ...(item.kind === 'tool' && parsed.success ? { input: display.input,output: safe(display.summary) } : {}),
       tokensIn: item.kind === 'llm' && item.usageAvailable ? number(item.inputTokens) : null,
       tokensOut: item.kind === 'llm' && item.usageAvailable ? number(item.outputTokens) : null,
       cost: item.kind === 'llm' && item.usageAvailable ? recorded ? recorded.cost
         : !embedding && item.costMicros != null && (item.costMicros > 0 || item.inputTokens === 0 && item.outputTokens === 0) ? number(item.costMicros/1_000_000) : null : null,
-      costEstimated: item.kind === 'llm' ? recorded?.costEstimated ?? true : false,children: [] })
+      costEstimated: item.kind === 'llm' ? recorded?.costEstimated ?? true : false,
+      ...(item.kind === 'llm' && item.usageAvailable && recorded?.costBreakdown ? { costBreakdown: recorded.costBreakdown,
+        ...(recorded.costPricing ? { costPricing: recorded.costPricing } : {}) } : {}),children: [] })
   }
   const root = spans.get(snapshot.rootSpanId)
   if (!root) throw new Error('native trace root is missing')
@@ -125,6 +136,27 @@ export function buildNativeRunTrace(snapshot: import('@lyyzka/lingxios').RunTrac
     const parent = item.parentSpanId ? spans.get(item.parentSpanId) : undefined
     if (!parent || !ancestors(item.spanId) || parent.children.length >= 100) { truncated = true; continue }
     parent.children.push(spans.get(item.spanId)!)
+  }
+  // A partial native collector must not erase actual public tool work already
+  // admitted for this run. Never join by a label or cross request/fence bounds.
+  const nativeTools = new Set(snapshot.spans.filter(item=>item.runId === snapshot.runId && item.kind === 'tool').map(item=>item.toolCallId))
+  for (const tool of new Map(tools.map(tool=>[tool.toolCallId,tool])).values()) {
+    if (nativeTools.has(tool.toolCallId) || !tool.activityIdentity || tool.activityIdentity.requestVersion !== snapshot.requestVersion
+      || tool.activityIdentity.fence !== snapshot.fence || !tool.eventSeq || tool.eventSeq > snapshot.seq) continue
+    if (root.children.length >= 100) { truncated = true; continue }
+    const raw = tool.result && typeof tool.result === 'object' ? Reflect.get(tool.result,'status') : undefined
+    const state: TraceStatus = raw === 'completed' ? 'complete' : raw === 'failed' || tool.isError ? 'error'
+      : raw === 'cancelled' ? 'cancelled' : raw === 'unknown' ? 'unknown' : tool.approval || tool.interrupt ? 'waiting'
+      : root.status === 'running' ? 'running' : 'unknown'
+    const parsed = toolDisplaySchema.safeParse(tool.display)
+    const display = resolveToolDisplay(tool.toolName,raw,parsed.success ? parsed.data : undefined)
+    const start = relative(tool.timing?.startedAt ?? null),endValue = relative(tool.timing?.completedAt ?? null)
+    const end = endValue !== null && (start === null || endValue >= start) ? endValue : null
+    const durationMs = tool.timing?.completedAt !== undefined ? number(tool.timing.completedAt-tool.timing.startedAt) : null
+    root.children.push({ id: `tool-${opaque(tool.toolCallId)}`,name: safe(display.title)?.slice(0,160) ?? '工具调用',kind: 'tool',
+      workKind: toolWorkKind(tool.toolName),status: state,start,end,durationMs,detail: safe(display.purpose),
+      ...(parsed.success ? { input: display.input,output: safe(display.summary) } : {}),
+      tokensIn: null,tokensOut: null,cost: null,costEstimated: false,children: [] })
   }
   const totals = (span: TraceSpan): TraceSpan[] => {
     span.children.sort((a,b)=>(a.start ?? Infinity)-(b.start ?? Infinity))

@@ -2,10 +2,12 @@ import type { ThreadMessage } from '@assistant-ui/react'
 import type { ReplyBranchSelection } from '@/stores/conversationUi'
 import { getLingxiMessageMetadata as metadata } from './model'
 import { projectMessageGroups } from './converter'
+import { projectRunTerminals } from './terminal-projection'
 
 /** Keep the IM timeline intact; only explicit regenerations share a visible reply slot. */
 // shortcut: versions use loaded history; fetch quoted ancestors when branch navigation must span unloaded pages.
-export function projectReplyBranches(messages: readonly ThreadMessage[], selections: Record<string, ReplyBranchSelection>): ThreadMessage[] {
+export function projectReplyBranches(history: readonly ThreadMessage[], selections: Record<string, ReplyBranchSelection>): ThreadMessage[] {
+  const messages = projectRunTerminals(history)
   const byClient = new Map(messages.map(message => [metadata(message).clientMessageId, message]))
   const requests = new Map<string, ThreadMessage>()
   for (const message of messages) {

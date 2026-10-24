@@ -15,6 +15,7 @@ import { nativeMessageSchema } from '../../../src/lib/nativeMessage.js'
 import type { Queryable } from '../db/queryable.js'
 import { readQuestionnaireWait } from './questionnaire-projection.js'
 import { projectActivityTasks } from './activity-tasks.js'
+import { readDeliveredReference } from './delivery-reference.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
 export class RunStreamProjection {
@@ -30,6 +31,7 @@ export class RunStreamProjection {
   private nativeTraceReadRevision = 0
   private error: string | null = null
   private sourceRef: string | null = null
+  private deliveredReference?: { resultId: string; requestVersion: number; fence: number; sourceMessageId: string }
   private durableDraft = ''
   private questionnaireWait: { questionId: string; requestVersion: number } | null = null
   private terminalFeedback: { id: string; requestVersion: number; reason: string; status: string; delivery: string } | null = null
@@ -131,7 +133,7 @@ export class RunStreamProjection {
     this.llm = presentation.llm
     this.tools = this.tools.map(tool => {
       const recorded = records.get(tool.toolCallId)
-      return recorded && revisions.get(tool.toolCallId) === tool.eventSeq ? { ...tool, timing: recorded.timing, display: recorded.display } : tool
+      return recorded && revisions.get(tool.toolCallId) === tool.eventSeq ? { ...tool, timing: { ...recorded.timing,...tool.timing }, display: recorded.display } : tool
     })
   }
 
@@ -145,6 +147,21 @@ export class RunStreamProjection {
     this.terminalFeedback = terminal && terminal.feedback.requestVersion === this.view.requestVersion
       ? { id: terminal.feedback.id,requestVersion: terminal.feedback.requestVersion,reason: terminal.feedback.reason,
           status: terminal.feedback.status,delivery: terminal.delivery } : null
+  }
+
+  async syncDeliveredReference(identity: RunIdentity, database?: Queryable): Promise<void> {
+    const view = this.view
+    if (view.lifecycle !== 'succeeded' || view.delivery !== 'delivered' || !view.resultId || view.messageFence !== view.fence
+      || view.message?.envelope.requestVersion !== view.requestVersion) return
+    const previous = this.deliveredReference
+    if (previous?.resultId === view.resultId && previous.requestVersion === view.requestVersion && previous.fence === view.messageFence) return
+    const sourceMessageId = await readDeliveredReference(identity, {
+      resultId: view.resultId, requestVersion: view.requestVersion, fence: view.messageFence,
+    }, database)
+    if (sourceMessageId && this.view.lifecycle === 'succeeded' && this.view.delivery === 'delivered' && this.view.resultId === view.resultId
+      && this.view.requestVersion === view.requestVersion && this.view.fence === view.fence && this.view.messageFence === view.messageFence) {
+      this.deliveredReference = { sourceMessageId, resultId: view.resultId, requestVersion: view.requestVersion, fence: view.messageFence }
+    }
   }
 
   committed(message: AssistantMessage, commit: { resultId: string; fence: number }): AgentRunSnapshot {
@@ -172,7 +189,8 @@ export class RunStreamProjection {
 
   get snapshot(): AgentRunSnapshot {
     if (!this.createdAt) throw new Error('run state must precede message updates')
-    const { message, draft: _draft, preview: _preview, publicTextParts: _publicTextParts, publicTextAttempts: _publicTextAttempts, ...control } = this.view
+    const { message, draft: _draft, preview: _preview, publicTextParts: _publicTextParts, publicTextAttempts: _publicTextAttempts,
+      publicTextCommit: _publicTextCommit, ...control } = this.view
     // Outcome gaps are internal verification diagnostics, not product copy.
     const { gaps: _gaps, ...outcome } = control.goalOutcome ?? {}
     const harness: RunDisplayState = { ...control,
@@ -205,7 +223,11 @@ export class RunStreamProjection {
         ...(this.identity?.threadId ? { replyToClientMsgNo: this.identity.threadId } : {}),
         ...(this.error ? { harnessError: this.error } : {}),
         ...(this.terminalFeedback?.requestVersion === this.view.requestVersion ? { terminalFeedback: this.terminalFeedback } : {}),
-        ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}), suppressAgentWake: true } }
+        ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}),
+        ...(this.view.lifecycle === 'succeeded' && this.view.delivery === 'delivered' && this.deliveredReference?.resultId === this.view.resultId
+          && this.deliveredReference.requestVersion === this.view.requestVersion && this.deliveredReference.fence === this.view.messageFence
+          && this.view.messageFence === this.view.fence ? { sourceMessageId: this.deliveredReference.sourceMessageId } : {}),
+        suppressAgentWake: true } }
     // Try the complete message first for ordinary histories; the wire protocol
     // stays unchanged. Overflow becomes an authorized, bounded activity page.
     if (activity.length <= 80) {
@@ -266,6 +288,7 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   await projection.syncApprovals(api,identity,operation)
   await projection.syncTerminal(api,identity,operation)
   await projection.syncQuestionnaire(identity,database)
+  await projection.syncDeliveredReference(identity,database)
   await Promise.all([projection.syncPresentation(identity, presentationSignal),
     ...(includeTrace ? [projection.syncNativeTrace(api,identity,presentationSignal ?? operation?.signal)] : [])])
   if (includeTrace) {
@@ -336,6 +359,7 @@ export function assistantRunResponse(body: ReadableStream<Uint8Array>, projectio
             continue
           }
           projection.advance(item)
+          if (approvals && item.type === 'state') await projection.syncDeliveredReference(approvals.identity)
           if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'tool.completed')) await projection.syncApprovals(approvals.api,approvals.identity)
           if (approvals && (item.type === 'state' || item.type === 'event' && ['run.failed','run.cancelled'].includes(item.event.kind))) await projection.syncTerminal(approvals.api,approvals.identity)
           if (approvals && (item.type === 'state' || item.type === 'event' && item.event.kind === 'goal.waiting')) await projection.syncQuestionnaire(approvals.identity)

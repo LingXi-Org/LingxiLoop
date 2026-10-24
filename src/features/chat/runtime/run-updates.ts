@@ -2,7 +2,7 @@ import type { ThreadMessage } from '@assistant-ui/react'
 import type { Participant } from '@/types'
 import type { AgentRunTarget } from './harness-api'
 import type { AgentRunSnapshot, RunDisplayState } from '@/lib/agentRunSnapshot'
-import { deserializeMessage } from '@/lib/nativeMessage'
+import { snapshotDisplay } from './snapshot-publication'
 import { getLingxiMessageMetadata as metadata, resolveMessagePresentation, type LingxiMessageMetadata } from './model'
 import { mergeCanonicalMessages, messageKey, type ConversationChatState } from './store'
 import { isOlderRun } from './harness'
@@ -12,7 +12,7 @@ export function needsRunStream(status: string | null, delivery?: string | null):
 }
 
 export function applyRunSnapshot(state: ConversationChatState, target: AgentRunTarget, snapshot: AgentRunSnapshot, participant?: Participant): ConversationChatState {
-  const native = deserializeMessage(snapshot.message)
+  const native = snapshotDisplay(snapshot)
   const view = native.metadata.custom.harness as RunDisplayState
   if (native.role !== 'assistant' || view?.runId !== target.runId || native.id !== `run-${target.runId}`) throw new Error('运行身份不一致')
   const current = state.messages.find(message => message.id === native.id), before = current && metadata(current)
@@ -31,12 +31,17 @@ export function applyRunSnapshot(state: ConversationChatState, target: AgentRunT
       && value.threadRootId === (target.threadId ?? null)
   }).at(-1)
   const custom: LingxiMessageMetadata = {
-    schema: 'lingxiloop.thread-message.v2', conversationId: target.conversationId, clientMessageId: native.id,
-    sequence: null, senderId: target.agentId, senderName: participant?.name ?? target.agentId, senderKind: 'agent',
+    schema: 'lingxiloop.thread-message.v2', conversationId: target.conversationId,
+    senderId: target.agentId, senderName: participant?.name ?? target.agentId, senderKind: 'agent',
     senderAvatarUrl: participant?.avatarUrl ?? null, isMine: false, delivery: 'sent', messageKind: 'text',
     quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
     threadRootId: target.threadId ?? null, groupStart: true, groupEnd: true, continuedFromPrevious: false,
     continuedToNext: false, clusterChromeAt: null, ...before, ...native.metadata.custom,
+    // A stable run UI key spans multiple results. Transport receipts do not.
+    sourceMessageId: native.metadata.custom.sourceMessageId ?? (sameResult ? before?.sourceMessageId : undefined),
+    sequence: sameResult ? before?.sequence ?? null : null,
+    clientMessageId: sameResult ? before?.clientMessageId ?? native.id : native.id,
+    imMessageId: sameResult ? before?.imMessageId : undefined,
     presentation: resolveMessagePresentation(content),
     positionAfter: before?.sequence != null ? undefined : lastSent ? messageKey(lastSent)
       : before?.positionAfter !== undefined ? before.positionAfter : predecessor ? messageKey(predecessor) : null,

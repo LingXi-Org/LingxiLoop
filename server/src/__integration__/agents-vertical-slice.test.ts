@@ -54,6 +54,22 @@ test('[integration] agent creation atomically seeds strict identity, Bloub persi
   assert.equal(agents[0]?.avatar_bg, 'transparent')
   assert.deepEqual(agents[0]?.tools, ['ipython'])
   assert.deepEqual(agents[0]?.capabilities, ['web', 'knowledge'])
+  await assert.rejects(
+    pool.query('UPDATE participants SET avatar_url=$3 WHERE id=$1 AND company_id=$2', [
+      created.id, companyId, 'https://assets.test.invalid/agent.png',
+    ]),
+    (error: unknown) => (error as { code?: string }).code === '23514'
+      && (error as { constraint?: string }).constraint === 'participants_agent_bloub_only',
+  )
+  await pool.query(
+    `INSERT INTO participants (id,company_id,kind,name,initial,avatar_bg,avatar_url,status)
+     VALUES ('human-avatar',$1,'human','Human','H','#ffffff',$2,'avail')`,
+    [companyId, 'https://assets.test.invalid/human.png'],
+  )
+  const human = await pool.query<{ avatar_url: string | null }>(
+    "SELECT avatar_url FROM participants WHERE id='human-avatar' AND company_id=$1", [companyId],
+  )
+  assert.equal(human.rows[0]?.avatar_url, 'https://assets.test.invalid/human.png')
 
   const { rows: persona } = await pool.query<{ system_prompt: string }>(
     `SELECT system_prompt FROM participants WHERE id=$1 AND company_id=$2`, [created.id, companyId],

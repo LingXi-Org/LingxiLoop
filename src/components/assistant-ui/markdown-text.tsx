@@ -20,6 +20,7 @@ import { StreamingBlock, StreamingPart, useStreamingBlock } from './streaming-ta
 
 import type { MarkdownConfidenceClaim } from '@/lib/agentRunSnapshot'
 import { activityAnnotation } from '@/lib/runActivity'
+import { answerTextOffset } from '@/lib/answerSegment'
 import { scanMentions, standaloneMention } from '@/lib/mentions'
 import type { Participant } from '@/types'
 import { MentionBadge } from '@/components/MentionBadge'
@@ -147,8 +148,8 @@ function rehypeConfidence({ claims, offset, inlineCitations }: {
 }
 
 const CitationBlocks = createContext<{
-  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean
-}>({ offsets: [], claims: [], inlineCitations: false, mentionTargets: [], agent: false })
+  offsets: number[]; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean; animate: boolean
+}>({ offsets: [], claims: [], inlineCitations: false, mentionTargets: [], agent: false, animate: false })
 
 function CitationBlock(props: BlockProps) {
   const { offsets, ...context } = useContext(CitationBlocks)
@@ -156,14 +157,14 @@ function CitationBlock(props: BlockProps) {
 }
 
 // New tail offsets must not reparse every already completed citation block.
-const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, agent, ...props }: BlockProps & {
-  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean
+const CitedBlock = memo(function CitedBlock({ offset, claims, inlineCitations, mentionTargets, agent, animate, ...props }: BlockProps & {
+  offset: number; claims: readonly MarkdownConfidenceClaim[]; inlineCitations: boolean; mentionTargets: readonly Participant[]; agent: boolean; animate: boolean
 }) {
   const { isAnimating } = useContext(StreamdownContext)
   const [initialContent] = useState(props.content)
   const [decorated, setDecorated] = useState(agent && isAnimating)
   if (!decorated && agent && isAnimating && props.content !== initialContent) setDecorated(true)
-  const streamingBlock = useStreamingBlock(props.index, agent && isAnimating, decorated)
+  const streamingBlock = useStreamingBlock(props.index, agent && isAnimating, decorated && animate)
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...(props.rehypePlugins ?? Object.values(defaultRehypePlugins)), [rehypeConfidence, { claims, offset, inlineCitations }],
     [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],
@@ -203,8 +204,7 @@ const MarkdownTextImpl = ({
   }
   // Citation spans use nativeText's joined-message coordinates, including between cards.
   const splitTextOffset = useContext(TextOffsetContext)
-  const nativeTextOffset = useAuiState(state => state.message.parts.slice(0, state.message.parts.indexOf(state.part))
-    .reduce((offset, part) => offset + (part.type === 'text' && activityAnnotation(part)?.kind !== 'commentary' ? part.text.length + 1 : 0), 0))
+  const nativeTextOffset = useAuiState(state => answerTextOffset(state.message.parts,state.message.parts.indexOf(state.part)))
   const textOffset = splitTextOffset ?? nativeTextOffset
   const hasCitations = Boolean(confidenceClaims.length) || inlineCitations && text.includes('#cite-')
   // Complete block starts are identical in the raw text and its revealed prefix.
@@ -213,7 +213,7 @@ const MarkdownTextImpl = ({
     let offset = textOffset
     return blocks.map(block => { const start = offset; offset += block.length; return start })
   }, [blocks, textOffset])
-  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, mentionTargets, agent }), [offsets, confidenceClaims, inlineCitations, mentionTargets, agent])
+  const citationBlocks = useMemo(() => ({ offsets, claims: confidenceClaims, inlineCitations, mentionTargets, agent, animate: !motionSettled }), [offsets, confidenceClaims, inlineCitations, mentionTargets, agent, motionSettled])
   const rehypePlugins = useMemo<StreamdownTextPrimitiveProps['rehypePlugins']>(() => [
     ...Object.values(defaultRehypePlugins),
     [rehypeMentionNames, { targets: mentionTargets, allowInlineCodeMentions: agent }],

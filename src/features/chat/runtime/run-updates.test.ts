@@ -53,6 +53,30 @@ const event = (draft: string): RunStreamEvent => ({ type: 'preview', preview: {
   kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', seq: 1, draft,
 } })
 
+test('delivery identities stay with their exact result across replay and revision', () => {
+  const original = project({ type: 'state', state: snapshot() })
+  if (original.message.role !== 'assistant') throw new Error('Expected assistant snapshot')
+  const envelope = sent('accepted-original', 7)
+  envelope.payload = { ...original.message, metadata: { ...original.message.metadata,
+    custom: { ...original.message.metadata.custom, sourceMessageId: 'accepted-original' } } }
+  const canonical = convertEnvelope(envelope, { participants, meId: 'human' })
+  const history = { ...EMPTY_CONVERSATION_CHAT_STATE, messages: [canonical] }
+  const replay = applyRunSnapshot(history, target, original)
+  assert.equal(metadata(replay.messages[0]).sourceMessageId, 'accepted-original')
+  assert.equal(metadata(replay.messages[0]).sequence, 7)
+
+  const next = snapshot('run', 'leased')
+  next.run.requestVersion = 2; next.run.fence = 2
+  const revised = project({ type: 'state', state: next })
+  const current = applyRunSnapshot(history, target, revised)
+  const record = metadata(current.messages[0])
+  assert.equal(record.sourceMessageId, undefined, 'the earlier visualization owner cannot authorize a later result')
+  assert.equal(record.imMessageId, undefined)
+  assert.equal(record.sequence, null)
+  assert.equal(record.clientMessageId, revised.message.id)
+  assert.equal(metadata(mergeCanonicalMessages([canonical], current.messages)[0]).sourceMessageId, undefined)
+})
+
 test('message updates require a recorded run timestamp and preserve it during previews', () => {
   assert.throws(() => project(event('preview')), /state must precede/)
   projections.clear()
@@ -476,4 +500,31 @@ test('separate agents and child threads cannot overwrite each other', () => {
   state = applyRunSnapshot(state, { ...target, agentId: 'other-agent', runId: 'run-b', threadId: 'thread' }, second)
   assert.deepEqual(state.messages.map(message => [metadata(message).senderId, metadata(message).threadRootId]), [['agent', null], ['other-agent', 'thread']])
   assert.throws(() => applyRunSnapshot(state, target, second), /身份/)
+})
+
+// Exercise actual server projection watermarks, not an artificially metadata-free stream.
+test('actual projected text deltas coalesce while preserving part revisions and final text', async () => {
+  const { createSnapshotPublisher, decodeRunSnapshot } = await import('./snapshot-publication')
+  for (const version of [2, 3] as const) {
+  projections.clear()
+  const output: AgentRunSnapshot[] = []
+  const controller = new AbortController()
+  const publisher = createSnapshotPublisher(value => output.push(value), controller.signal, error => { throw error }, () => () => {})
+  publisher.push(decodeRunSnapshot(project({ type: 'state', state: snapshot('run', 'leased') }), target))
+  const identity = { version, requestVersion: 1, fence: 1, attemptId: 'answer', partId: 'answer', partIndex: 0, purpose: 'answer',
+    ...(version === 3 ? { messageId: 'answer:run:v1', segmentId: 'answer', operation: 'append', supersedes: [] } : {}) }
+  if (version === 3) publisher.push(decodeRunSnapshot(project({ type: 'event', event: { runId: 'run', seq: 1, kind: 'public.text.operation', stage: 'started', visibility: 'user', data: identity } }), target))
+  for (let index = 0; index < 25; index++) {
+    const response = project({ type: 'event', event: { runId: 'run', seq: index + 2, kind: 'public.text.delta', stage: 'delta', visibility: 'user', data: {
+      ...identity, chunkIndex: index, text: '正文',
+    } } })
+    publisher.push(decodeRunSnapshot(response, target))
+  }
+  assert.equal(output.length, version === 3 ? 3 : 2, 'initial snapshot and first body publish immediately; later text waits for one frame')
+  publisher.flush(); publisher.dispose()
+  assert.equal(output.length, version === 3 ? 4 : 3)
+  const last = output.at(-1)!
+  assert.equal(last.message.content[0].type === 'text' && last.message.content[0].text, '正文'.repeat(25))
+  assert.equal(last.message.metadata.custom.harness && Reflect.get(last.message.metadata.custom.harness, 'lastSeq'), 26)
+  }
 })

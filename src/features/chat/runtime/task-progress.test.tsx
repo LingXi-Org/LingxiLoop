@@ -1,10 +1,8 @@
 import { createNativeMessage } from '@/lib/nativeMessage'
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { ProgressTracker } from '@/components/tool-ui/progress-tracker'
 import type { ImEnvelope } from '@/lib/im/wukong'
-import { canvasProgress, knowledgeProgress } from './task-progress'
+import { canvasProgress, knowledgeSourceState } from './task-progress'
 import { convertEnvelope, convertEnvelopeBatch } from './converter'
 import { mergeCanonicalMessages } from './store'
 import { getLingxiMessageMetadata } from './model'
@@ -53,12 +51,14 @@ test('retrieval progress replays real host events without storing source content
       toolCallId: 'host:search',result: { status: 'completed',value: { status: 'no_matches',secretSourceText: 'never retain' } } } },
   ]
   const live = harnessToolParts('run',events.slice(0,1))
-  assert.equal(knowledgeProgress('run',live,'leased','寻知')?.steps[0].status,'in-progress')
+  assert.equal(knowledgeSourceState(live[0].toolName,live[0].result),undefined)
   const restored = harnessToolParts('run',events)
   assert.equal(JSON.stringify(restored).includes('never retain'),false)
   assert.deepEqual(harnessToolParts('run',[...events].reverse()),restored)
   assert.deepEqual(harnessToolParts('run',[{ ...events[1],seq: 1,data: { ...events[1].data,result: { status: 'failed' } } }],restored),restored)
-  assert.deepEqual(knowledgeProgress('run',restored,'succeeded','寻知'),knowledgeProgress('run',harnessToolParts('run',events,restored),'succeeded','寻知'))
-  const progress = knowledgeProgress('run',restored,'succeeded','寻知')!
-  assert.match(renderToStaticMarkup(<ProgressTracker {...progress} />),/没有匹配资料/)
+  const replayed = harnessToolParts('run',events,restored)
+  assert.deepEqual(knowledgeSourceState(restored[0].toolName,restored[0].result),knowledgeSourceState(replayed[0].toolName,replayed[0].result))
+  assert.deepEqual(knowledgeSourceState(restored[0].toolName,restored[0].result),{ status: 'no_matches',label: '没有匹配资料' })
+  assert.equal(knowledgeSourceState('fixture.tool',{ sourceStatus: 'ready' }),undefined)
+  assert.equal(knowledgeSourceState('knowledge.search',{ sourceStatus: '__proto__' }),undefined)
 })

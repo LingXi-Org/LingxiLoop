@@ -1,5 +1,14 @@
 # Model defaults and price provenance
 
+Cloud follow-up: the separate [shadow implementation](SHADOW-OPERATIONS.md)
+now supplies finite corpus planning, source/target database fences, resumable
+Pro backfill and a two-phase cutover requiring a fresh externally verified PG
+lock barrier. [Failure boundaries](SHADOW-FAILURE-MODEL.md) and
+[local validation](shadow-validation.json) accompany it. This is implemented
+repository preparation; production backfill/configuration/cutover are separate
+operations and are not claimed by this PR. The original defaults assessment
+and its earlier access observations below remain historical evidence.
+
 Issue: https://github.com/LingXi-Org/LingxiLoop/issues/297
 
 New general chat defaults are `deepseek-ai/DeepSeek-V4.1-Flash`. New embedding defaults are `Pro/BAAI/bge-m3`; independent rerankers and historical ledger model/rate snapshots remain unchanged. The eval candidate follows the chat default; the independent judge remains independently configured.

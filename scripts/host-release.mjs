@@ -7,7 +7,7 @@ import {isAbsolute,resolve} from 'node:path'
 import {fileURLToPath,pathToFileURL} from 'node:url'
 import {releaseDescriptor,assertInstalledTarget,assertBarrier} from './schema-upgrade-maintenance.mjs'
 import {validateMemoryBackupPlan} from './verify-memory-backup.mjs'
-import {READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,isPublicTextPlan,assertPublicTextPlan,assertReaderInventory,assertTraceInventory,assertConversationRepairInventory,assertRunPresentationInventory,assertPublicTextMetadata,assertAcceptedPublicTextSource,DEPLOYMENT_PATH} from './public-text-release.mjs'
+import {READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT,assertFull54RuntimeInventory,isPublicTextPlan,assertPublicTextPlan,assertReaderInventory,assertTraceInventory,assertConversationRepairInventory,assertRunPresentationInventory,assertPublicTextMetadata,assertAcceptedPublicTextSource,DEPLOYMENT_PATH} from './public-text-release.mjs'
 import {assertSeedDefinitions} from './public-text-seed.mjs'
 import {assertHostComposeChange} from './host-release-compose.mjs'
 import {waitForWorkerLeaseExpiry} from './host-release-lease-wait.mjs'
@@ -29,6 +29,7 @@ const stable=value=>JSON.stringify(value,(_,v)=>v&&typeof v==='object'&&!Array.i
 export function sealHostPlan(value){const {planHash:_,...body}=value;return {...body,planHash:hash(stable(body))}}
 const exactKeys=(v,keys)=>v&&equal(Object.keys(v).sort(),keys.toSorted())
 function assertMigrationInventory(descriptor){
+ if(descriptor?.productVersion===54){assertFull54RuntimeInventory(descriptor);check(equal(descriptor.migrations[48],migration49),'Historical49 changed');return}
  if(['3.7.0','3.8.0','3.8.2'].includes(descriptor?.runtime)){
   if(descriptor.runtime==='3.8.2'){
    if(descriptor.productVersion===54)assertRunPresentationInventory(descriptor);else assertConversationRepairInventory(descriptor)
@@ -66,7 +67,7 @@ export function assertNativeBackupReceipt(plan,receipt){
 }
 export function validateHostPlanShape(plan){
  check(exactKeys(plan,['format','createdAt','source','target','sourceAcceptanceSha256','qualification','stacks','planHash',...(plan?.format===NATIVE_SCHEMA_FORMAT?['backup']:[]),...(isPublicTextPlan(plan)?['publicText','imageConfigs']:[])])
-  &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
+  &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
  if(plan.format===NATIVE_SCHEMA_FORMAT){
   assertNativeSchemaUpgrade(plan.source,plan.target)
   check(plan.backup?.format===2&&plan.backup.profile==='native13-product49'&&equal(plan.backup.source,backupSource(plan.source))
@@ -134,10 +135,10 @@ async function failed({error,ops,plan,record}){
  let recovery='unknown',uncertain=error?.uncertain===true
  if(!uncertain)try{
   const state=await ops.state()
-  try{assertCompatibleState(state,plan.source);recovery=[PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format)?'source-unchanged-recovery-requires-review':'same-schema-recovery-requires-review'}
+  try{assertCompatibleState(state,plan.source);recovery=[PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)?'source-unchanged-recovery-requires-review':'same-schema-recovery-requires-review'}
   catch{
    if(plan.format===NATIVE_SCHEMA_FORMAT&&(state.schema===14||state.installedSchema===14||state.product===50))recovery='fix-forward'
-   else if([PRODUCT_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format)){assertCompatibleState(state,plan.target);recovery='fix-forward'}
+   else if([PRODUCT_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)){assertCompatibleState(state,plan.target);recovery='fix-forward'}
   }
  }catch(classificationError){uncertain=classificationError?.uncertain===true}
  await record({phase:'stopped',status:uncertain?'uncertain':'failed',recovery,noAutomaticRetry:true}).catch(()=>{})
@@ -148,7 +149,7 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
  const record=e=>onProgress({planHash:plan.planHash,...e}),native=plan.format===NATIVE_SCHEMA_FORMAT,provenanceUpgrade=[READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT].includes(plan.format),publicText=isPublicTextPlan(plan)
  try{
   await ops.assertIdle();const original=await ops.inspect();assertInventory(original,plan)
-  if([PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format))for(const c of plan.publicText.sourceContainers){const actual=original.find(r=>r.stack===c.stack&&r.service===c.service);check(actual?.id===c.id&&actual.imageId===c.imageId,'Accepted reader container replaced before producer phase')}
+  if([PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format))for(const c of plan.publicText.sourceContainers){const actual=original.find(r=>r.stack===c.stack&&r.service===c.service);check(actual?.id===c.id&&actual.imageId===c.imageId,'Accepted reader container replaced before producer phase')}
   assertCompatibleState(await ops.state(),plan.source)
   await ops.verifyImages('source');await ops.verifyImages('target')
   assertInventory(await ops.inspect(),plan,original)
@@ -158,17 +159,18 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
   for(const stack of APPS){const actual=await ops.metadata(stack);check(equal(select(actual,metadataKeys),select(plan.target,metadataKeys)),'Actual target metadata mismatch');if(publicText)assertPublicTextMetadata(actual,plan)}
   assertCompatibleState(await ops.state(),plan.source);assertInventory(await ops.inspect(),plan,original)
   await record({phase:'online',status:'prepared'})
+  if(plan.format===RUNTIME_PATCH_FORMAT){const receipt=await ops.patchPrecheck();await record({phase:'patch-precheck',status:'verified',receipt})}
   if(provenanceUpgrade){const receipt=await ops.seedPrecheck();await record({phase:'seed-precheck',status:'verified',receipt})}
   const stopped=new Set(),deployed=new Map()
   let installed=plan.source
-  for(const service of native||provenanceUpgrade||plan.format===SAME54_FORMAT?['worker','lingxiloop']:['worker'])for(const stack of APPS){await ops.assertIdle();await ops.stop(stack,service);stopped.add(stack+':'+service);assertInventory(await ops.inspect(),plan,original,stopped);await record({phase:'drain',status:'stopped',stack,service})}
+  for(const service of native||provenanceUpgrade||[SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)?['worker','lingxiloop']:['worker'])for(const stack of APPS){await ops.assertIdle();await ops.stop(stack,service);stopped.add(stack+':'+service);assertInventory(await ops.inspect(),plan,original,stopped);await record({phase:'drain',status:'stopped',stack,service})}
   const barrier=async(waitForExpiry=false)=>{
    const read=async()=>{assertInventory(await ops.inspect(),plan,original,stopped,deployed);const state=await ops.state();assertCompatibleState(state,installed);return state}
    const state=waitForExpiry?await waitForWorkerLeaseExpiry({read,wait:ops.wait,onProgress:record}):await read()
    if(native&&installed===plan.source)assertBarrier(state);else assertWorkerBarrier(state)
    await record({phase:'drain',status:'zero-leases',state})
   }
-  await barrier([CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format));await ops.wait(2000);await barrier()
+  await barrier([CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format));await ops.wait(2000);await barrier()
   if(native){
    await ops.assertIdle();const receipt=await ops.backup();assertNativeBackupReceipt(plan,receipt)
    await record({phase:'backup',status:'verified',receipt})
@@ -183,6 +185,11 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
    const state=await ops.state();assertCompatibleState(state,plan.target);installed=plan.target
    await record({phase:'migration',status:'migrated',state,recovery:'fix-forward'})
   }
+  if(plan.format===RUNTIME_PATCH_FORMAT){
+   await ops.assertIdle();await ops.verifyImages('target');await record({phase:'provenance',status:'submitting'});
+   await ops.patchProvenance();const state=await ops.state();assertCompatibleState(state,plan.target);installed=plan.target;
+   await record({phase:'provenance',status:'updated',state,recovery:'fix-forward'});
+  }
   for(const service of ['lingxiloop','worker'])for(const stack of APPS){
    await ops.assertIdle();await ops.verifyImages('target')
    assertCompatibleState(await ops.state(),plan.target)
@@ -191,7 +198,7 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
    assertInventory(await ops.inspect(),plan,original,stopped,deployed)
    await ops.deploy(stack,service)
    let observedIdentity
-   if(plan.format===SAME54_FORMAT){
+   if([SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)){
     const actual=(await ops.inspect()).find(r=>r.stack===stack&&r.service===service)
     check(actual?.source===plan.target.sha&&hex.test(actual.id??'')&&digest.test(actual.imageId??''),'Deployed target identity unavailable')
     observedIdentity={id:actual.id,imageId:actual.imageId}
@@ -206,7 +213,7 @@ export async function runHostRelease({plan,ops,onProgress=async()=>{}}){
   }
   await ops.assertIdle();await ops.verifyImages('target');const state=await ops.state();assertCompatibleState(state,plan.target)
   const containers=await ops.inspect();assertInventory(containers,plan,original,stopped,deployed)
-  const result={phase:'complete',status:'complete',planHash:plan.planHash,state,containers,...(publicText?{publicText:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,readerContainers:containers.map(({stack,service,id,imageId})=>({stack,service,id,imageId})),...([TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format)?{runTrace:1}:{})}:{})}
+  const result={phase:'complete',status:'complete',planHash:plan.planHash,state,containers,...(publicText?{publicText:plan.publicText.target,configurationSha256:plan.publicText.targetConfigurationSha256,readerContainers:containers.map(({stack,service,id,imageId})=>({stack,service,id,imageId})),...([TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format)?{runTrace:1}:{})}:{})}
   await record(result);return result
  }catch(error){return failed({error,ops,plan,record})}
 }
@@ -239,7 +246,7 @@ export async function validateHostPlan(plan,{acceptance,sourceAudit,targetAudit}
  if(isPublicTextPlan(plan)){
   assertAcceptedPublicTextSource(accepted,plan)
   check(hash(await git(['show',`${plan.target.sha}:${DEPLOYMENT_PATH}`]))===plan.publicText.targetConfigurationSha256,'Target deployment leaf changed')
-  if([READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT].includes(plan.format))await assertSeedDefinitions(plan.source.sha,plan.target.sha,git)
+  if([READER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT].includes(plan.format))await assertSeedDefinitions(plan.source.sha,plan.target.sha,git)
   if(plan.format!==READER_FORMAT){
    check(hash(await git(['show',`${plan.source.sha}:${DEPLOYMENT_PATH}`]))===plan.publicText.sourceConfigurationSha256,'Source deployment leaf changed')
   }

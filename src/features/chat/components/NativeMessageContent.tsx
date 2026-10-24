@@ -7,7 +7,7 @@ import { DocumentReference } from '@/components/assistant-ui/elements/document-r
 import { Reasoning } from '@/components/assistant-ui/elements/reasoning'
 import { AgentPlan, type AgentPlanStep } from '@/components/assistant-ui/elements/agent-plan'
 import { Button } from '@/components/ui/button'
-import { activityAnnotation, readActivityTasks } from '@/lib/runActivity'
+import { activityAnnotation, isAnswerRevision, readActivityTasks } from '@/lib/runActivity'
 import { useRunActivityHistory } from '../runtime/useRunActivityHistory'
 import { HistoryActivityScope } from '../runtime/HistoryActivityScope'
 import { MemoryTool } from './MemoryTool'
@@ -28,6 +28,7 @@ import { messagePresentation, orderActivityEntries } from './message-presentatio
 
 const ReadOnlyMessage = createContext(false)
 const GroupOwnsFooter = createContext(false)
+const LastBodyIndex = createContext(-1)
 const PartPresentation = createContext<{ Text: TextMessagePartComponent; footer: ReactNode; mediaFooter: ReactNode }>({ Text: DefaultText, footer: null, mediaFooter: null })
 
 function SourcePart(part: SourceMessagePartProps) {
@@ -66,11 +67,8 @@ function DefaultText() {
 function PartFrame({ children, footer, mediaFooter }: { children: ReactNode; footer: ReactNode; mediaFooter: ReactNode }) {
   const groupOwnsFooter = useContext(GroupOwnsFooter)
   const part = useAuiState(state => state.part)
-  const isLast = useAuiState(state => {
-    const last = messagePresentation(state.message).filter(item => item.region === 'body'
-      && (item.part.type !== 'data' || item.part.name !== 'citation-claims')).at(-1)
-    return last?.index === state.message.parts.indexOf(state.part)
-  })
+  const lastBodyIndex = useContext(LastBodyIndex)
+  const isLast = useAuiState(state => !groupOwnsFooter && state.message.parts[lastBodyIndex] === state.part)
   const value = !groupOwnsFooter && isLast ? part.type === 'image' || part.type === 'file' ? mediaFooter : footer : null
   return <MessageFooterContext.Provider value={value}>
     <div className="min-w-0" data-native-part={part.type} data-part-identity={activityAnnotation(part)?.id}>
@@ -104,7 +102,12 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: {
     // Deprecated audio is rejected by the wire schema; never silently hide a new part.
     default: content = <p role="alert" className="text-sm text-destructive">这类消息暂时无法显示。</p>
   }
-  return <PartFrame footer={footer} mediaFooter={mediaFooter}>{content}</PartFrame>
+  return <PartFrame footer={footer} mediaFooter={mediaFooter}>{isAnswerRevision(part) ? <details data-slot="answer-revision" className="min-w-0">
+    <summary className="text-muted-foreground hover:text-foreground focus-visible:ring-ring cursor-pointer rounded py-1 text-sm outline-none focus-visible:ring-2">
+      {activityAnnotation(part)!.label}
+    </summary>
+    <div className="border-border mt-2 border-s ps-3">{content}</div>
+  </details> : content}</PartFrame>
 }
 
 function IndexedPart() { return <NativePart {...useContext(PartPresentation)} /> }
@@ -138,15 +141,16 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   [custom.conversationId, custom.senderId, custom.runId, custom.threadRootId])
   const history = useRunActivityHistory({ target, message, enabled: !readOnly && message.role === 'assistant' })
   const tasks = readActivityTasks(custom.activityTasks)?.tasks
-  const presentation = messagePresentation(message)
+  const presentation = useMemo(() => messagePresentation(message), [message])
   const liveEntries = presentation.flatMap(item => item.region === 'process' && item.annotation ? [{
     id: item.annotation.id, order: item.annotation.order, taskId: item.annotation.taskId, kind: item.part.type === 'tool-call' ? 'tool' as const : 'commentary' as const,
-    label: item.part.type === 'text' ? item.part.text.slice(0,500).replace(/\s+/gu,' ').trim().slice(0,160) || item.annotation.label : item.annotation.label,
+    revision: isAnswerRevision(item.part),
+    label: item.part.type === 'text' && !isAnswerRevision(item.part) ? item.part.text.slice(0,500).replace(/\s+/gu,' ').trim().slice(0,160) || item.annotation.label : item.annotation.label,
     content: <PartPresentation.Provider value={activityDisplay}><GroupOwnsFooter.Provider value={true}><MessagePrimitive.PartByIndex index={item.index} components={indexedComponents} /></GroupOwnsFooter.Provider></PartPresentation.Provider>,
   }] : [])
   const archivedEntries = history.entries.map(entry => {
     const annotation = activityAnnotation(entry.part)!
-    return { id: entry.id, order: entry.order, taskId: annotation.taskId, history: true,
+    return { id: entry.id, order: entry.order, taskId: annotation.taskId, history: true, revision: isAnswerRevision(entry.part),
       kind: entry.part.type === 'tool-call' ? 'tool' as const : 'commentary' as const, label: annotation.label,
       content: <HistoryActivityScope entry={entry}><ReadOnlyMessage.Provider value={true}><GroupOwnsFooter.Provider value={true}>
         <NativePart />
@@ -170,8 +174,9 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
   const attachments = message.role === 'user' ? message.attachments : []
   const body = presentation.filter(item => item.region === 'body')
   const decisions = presentation.filter(item => item.region === 'attention')
+  const lastBodyIndex = body.findLast(item => item.part.type !== 'data' || item.part.name !== 'citation-claims')?.index ?? -1
   const display = { Text, footer, mediaFooter }
-  return <GroupOwnsFooter.Provider value={false}><PartPresentation.Provider value={display}><div className="native-message-content grid min-w-0 gap-2" data-aui-theme="elements">
+  return <LastBodyIndex.Provider value={lastBodyIndex}><GroupOwnsFooter.Provider value={false}><PartPresentation.Provider value={display}><div className="native-message-content grid min-w-0 gap-2" data-aui-theme="elements">
     {(entries.length > 0 || trace || tasks?.length || historyControls) && <RunActivity status={status} statusLabel={statusLabel} entries={entries} tasks={tasks} historyControls={historyControls}
       durationLabel={trace?.root.durationMs !== null && trace?.root.durationMs !== undefined ? `${(trace.root.durationMs / 1000).toLocaleString('zh-CN', { maximumFractionDigits: 2 })} 秒` : undefined}
       onInspectTask={id => setTraceSelection(current => ({ scope: traceScope, id, version: current.version + 1 }))}
@@ -197,5 +202,5 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
         </MessagePartBoundary>
       </MessageFooterContext.Provider>)}
     </div>)}
-  </div></PartPresentation.Provider></GroupOwnsFooter.Provider>
+  </div></PartPresentation.Provider></GroupOwnsFooter.Provider></LastBodyIndex.Provider>
 }

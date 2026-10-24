@@ -1,0 +1,48 @@
+name: Join LingXi / 加入我们
+description: 选择你希望参与的 LingXi 项目，提交加入申请
+title: "[Join] 申请加入 LingXi"
+labels: ["community", "join"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 欢迎加入 LingXi 👋
+
+        选择你希望参与的项目并提交申请。Issue 创建后，机器人会自动把标题更新为：
+
+        `@你的GitHub账号 请求加入 项目名`
+
+        审核通过后，系统会向你的 GitHub 账号发送 **LingXi-Org** Organization 邀请。
+
+        > 不需要填写邮箱、手机号、Token 或其他敏感信息。
+
+  - type: dropdown
+    id: project
+    attributes:
+      label: 想加入的项目
+      description: 选择一个你当前最希望参与的 LingXi 项目。
+      options:
+        - LingxiLearn — AI 学习工作台
+        - LingxiGraph — Agent 运行时
+        - LingxiSkills — Agent Skills 能力库
+        - LingxiIdentity — 身份认证与用户服务
+        - LingxiNext — 安全、版本化多 Agent 应用层
+    validations:
+      required: true
+
+  - type: textarea
+    id: note
+    attributes:
+      label: 想参与什么？
+      description: 简单说说你希望参与的模块、问题或方向即可。
+      placeholder: 例如：我想参与 LingxiLearn 的前端学习工作台和可视化组件开发。
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: 最后确认
+      options:
+        - label: 我已阅读并愿意遵守 LingXi 的社区行为准则。
+          required: true

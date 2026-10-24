@@ -1,0 +1,34 @@
+{
+  "format": "issue304-isolated-npm-ci/v1",
+  "command": "npm ci --prefer-offline --no-audit --no-fund",
+  "cwd": "/workspace/review-pr315",
+  "exitCode": 0,
+  "packagesAdded": 1494,
+  "durationSeconds": 58,
+  "sourceHeadBeforeCorrection": "b30692a5b487810d98165cc322623dcaa0d06128",
+  "productionManifestsUnchanged": true,
+  "credentialMechanism": "existing auth.mjs credentialEnvironment, command-scoped; no credential copied or persisted",
+  "environment": "Node22.23.3; ELECTRON_SKIP_BINARY_DOWNLOAD=1",
+  "beforeToolOverlay": {
+    "count": 153,
+    "mismatched": 0
+  },
+  "effectiveProduction": {
+    "count": 127,
+    "mismatched": 0
+  },
+  "intentionalToolOverrides": [
+    "e2e@0.21.2",
+    "@e2e-dev/web@0.15.2"
+  ],
+  "freshViteCacheForAcceptance": "/workspace/review-pr315/.e2e/answer-first-locked-vite-cache",
+  "freshViteCacheAbsentBeforeRun": true,
+  "cacheSelection": "Vite config resolves cache directly inside this worktree; no parent environment variable required",
+  "preCacheIsolationRun": {
+    "id": "01a164b0-ad85-72ee-a970-fea999db88f8",
+    "passed": 25,
+    "failed": 0,
+    "acceptedAsFinal": false,
+    "reason": "custom cache environment was filtered by runner; preserved separately before the direct per-worktree cache correction"
+  }
+}

@@ -6,6 +6,8 @@ import { DocumentReference } from '@/components/assistant-ui/elements/document-r
 import { ProgressCard, type ProgressStep } from '@/components/assistant-ui/elements/progress-card'
 import { MessageFooterContents, MessageFooterContext } from '@/components/assistant-ui/message-footer'
 import { userFacingError } from '@/lib/userFacingError'
+import { getWorkspaceSession } from '@/lib/workspaceSession'
+import { readComposerDraft, saveComposerDraft, type ComposerDraftScope } from '../drafts'
 import { getMeId, useAuth } from '@/stores/auth'
 import { chatTransport } from '../runtime/transport'
 import { CanvasArtifactTool, CanvasProgressTool, ElicitationFormTool,
@@ -30,7 +32,23 @@ export function BusinessMessagePart({ name, data, readOnly }: DataMessagePartPro
 function DurableQuestionnaire({ data, readOnly }: { data: unknown; readOnly: boolean }) {
   const message = useAuiState(state => state.message)
   const conversationId = message.metadata.custom.conversationId
+  const companyId = useAuth(auth => auth.activeCompanyId)
+  const userId = useAuth(auth => auth.user?.id ?? null)
+  const [draftScope] = useState<ComposerDraftScope>(() => ({ companyId, userId,
+    projectId: getWorkspaceSession()?.projectId ?? null, conversationId: String(conversationId), threadRootId: message.id, kind: 'questionnaire' }))
+  const [initialAnswers] = useState(() => {
+    try {
+      const text = !readOnly && readComposerDraft(draftScope)?.text
+      const parsed = questionnaireAnswersSchema.safeParse(text ? JSON.parse(text) : {})
+      return parsed.success ? parsed.data : {}
+    } catch { return {} }
+  })
   const [state, setState] = useState<QuestionnaireState | null>(null)
+  useEffect(() => {
+    // A durable server receipt supersedes local unsent answers. Unavailable
+    // includes cancellation, expiry and revoked access; it cannot be replayed.
+    if (state && state.status !== 'waiting') saveComposerDraft(draftScope, { text: '', attachments: [] })
+  }, [state, draftScope])
   const [loading, setLoading] = useState(true), [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null), [reload, setReload] = useState(0)
   const inFlight = useRef(false), lifecycle = useRef<AbortController | null>(null)
@@ -84,6 +102,9 @@ function DurableQuestionnaire({ data, readOnly }: { data: unknown; readOnly: boo
   return <div className="grid min-w-0 gap-2">
     <fieldset disabled={disabled} aria-busy={loading || busy}>
       <ElicitationFormTool args={{ ...record(data), id: message.id, acceptedLabel: state?.status === 'pending' ? '回答已保存，正在确认提交' : state?.status === 'resuming' ? '回答已提交，等待继续' : undefined }}
+        initialAnswers={initialAnswers} onAnswersChange={answers => {
+          if (!disabled) saveComposerDraft(draftScope, { text: JSON.stringify(answers), attachments: [] })
+        }}
         result={state?.status === 'submitted' || state?.status === 'pending' || state?.status === 'resuming' ? state.answers : undefined} addResult={submit} />
     </fieldset>
     {loading && <p role="status" className="text-xs text-muted-foreground">正在读取问卷状态…</p>}

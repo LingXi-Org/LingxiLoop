@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { load } from 'cheerio'
+import { useContext } from 'react'
+import { TraceActivity } from '@/components/trace-waterfall/trace-activity'
 import { RunActivity } from './run-activity'
 
 test('public activity precedes secondary runtime details within the same disclosure', () => {
@@ -51,4 +53,14 @@ test('the latest step shares the compact status row so completion does not retra
     entries={[{ id: 'host:step', kind: 'tool', label: '查看公开资料', content: <p>过程详情</p> }]} />))
   assert.match($('[data-slot="collapsible-trigger"]').text(), /查看公开资料/)
   assert.equal($('[data-slot="run-activity"] p').length, 0)
+})
+
+
+test('the native details disclosure supplies an inactive clock without unmounting its trace', () => {
+  function Probe() { return <span data-clock-active={String(useContext(TraceActivity))}>retained trace</span> }
+  const $ = load(renderToStaticMarkup(<RunActivity status="running" statusLabel="处理中" entries={[]} open onOpenChange={() => {}} trace={<Probe />} />))
+  assert.equal($('[data-clock-active]').length, 1)
+  assert.equal($('[data-clock-active]').attr('data-clock-active'), 'false')
+  assert.equal($('details').attr('open'), undefined)
+  assert.match($.text(), /retained trace/)
 })

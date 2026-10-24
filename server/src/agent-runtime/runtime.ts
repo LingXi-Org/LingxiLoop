@@ -26,6 +26,8 @@ import { verifyVisualizeCandidate } from './visualize-tools.js'
 import { runProductCallback } from './product-callbacks.js'
 import type { Queryable } from '../db/queryable.js'
 import { publicTextDeployment, publicTextModelOptions } from './public-text-deployment.js'
+import { readModelOperation } from '../../../src/lib/runTrace.js'
+import { visualizeSemanticReviewPolicy } from './visualize-workflow-review.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -59,20 +61,33 @@ function providerPricing(model = env.OPENAI_MODEL) {
 
 /** Build the product Worker's bounded provider configuration. */
 export function runtimeModelConfiguration(model: { id: string; apiKey: string; baseUrl: string }, requestTimeoutMs: number) {
-  if (releaseVersions.publicText !== publicTextDeployment.reader) throw new Error('Public purpose requires a formally qualified v2 runtime reader')
-  // Reader-first release: omit publicTextProtocol until every active reader is upgraded.
+  if (releaseVersions.publicText !== publicTextDeployment.reader) throw new Error('Public text requires the formally qualified runtime reader declared by this release')
+  // The runtime patch starts both compatible Web readers before either Worker.
   const siliconFlow = new URL(model.baseUrl).hostname === 'api.siliconflow.cn'
+  const nativeDeepSeekTools = siliconFlow && model.id === 'deepseek-ai/DeepSeek-V4.1-Flash'
   return {
     ...model,
     ...publicTextModelOptions(),
+    publicTextContinuation: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
+      ? 'typed-message-v1' : undefined,
+    publicAnswerTool: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
+      ? 'native-v1' : undefined,
     recovery: { maxAttempts: 3, totalTimeoutMs: Math.max(120_000, requestTimeoutMs) },
     requestTimeoutMs,
     firstByteTimeoutMs: 30_000, streamIdleTimeoutMs: 30_000,
-    maxThinkingTokens: 0, capabilities: { parallelTools: false },
-    // Flash uses a reasoning tier even when enable_thinking is false. Keep
-    // auxiliary progress flowing within the same first-byte/idle budgets.
+    maxThinkingTokens: 0, capabilities: {
+      parallelTools: false,
+      // This provider/model suppresses native tool calls when JSON mode is
+      // combined with tools. Keep the strict public-purpose parser enabled.
+      ...(nativeDeepSeekTools ? { jsonObjectWithTools: false } : {}),
+    },
+    // Auxiliary review/compaction must retain streamed progress after the model
+    // switch, under the same first-byte/idle/request and logical-call budgets.
+    ...(siliconFlow && ['zai-org/GLM-5.3-Flash', 'deepseek-ai/DeepSeek-V4.1-Flash'].includes(model.id)
+      ? { auxiliaryStreaming: true } : {}),
+    // GLM Flash uses a reasoning tier even when enable_thinking is false.
     ...(model.id === 'zai-org/GLM-5.3-Flash' && siliconFlow
-      ? { reasoningEffort: 'low' as const, compactionReasoningEffort: 'low' as const, auxiliaryStreaming: true } : {}),
+      ? { reasoningEffort: 'low' as const, compactionReasoningEffort: 'low' as const } : {}),
     ...(isSiliconFlowModel(model.id) && siliconFlow ? { contextWindowTokens: 1_000_000 } : {}),
   } satisfies WorkerOptions['model']
 }
@@ -108,6 +123,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     const harness = createProductHarness(createProductTools(lingxiOSControl), lingxiOSControl)
     const { tools } = assembleHarness(harness)
     control = createLingxiOS({ ...common(), harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
+      semanticReviewPolicy: visualizeSemanticReviewPolicy,
       background: { role: backgroundRole },
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
       ...(objectStore ? { objects: objectStore, workspace: {} } : {}),
@@ -148,6 +164,7 @@ export async function recordModelCall(observation: ModelCallObservation, context
     const binding = (await database.query<{ conversation_id: string }>('SELECT conversation_id FROM agent_run_bindings WHERE company_id=$1 AND run_id=$2',
       [observation.tenantId,observation.workId])).rows[0]
     const usage = observation.usage?.available ? observation.usage : undefined
+    const operation = readModelOperation(Reflect.get(observation, 'operation'))
     // The public observation exposes settlement time but no provider issue time.
     // Do not derive a tariff from callback time or completedAt minus latency;
     // the model pricing helper records its conservative standard-peak estimate.
@@ -161,6 +178,7 @@ export async function recordModelCall(observation: ModelCallObservation, context
         ...(binding ? { conversationId: binding.conversation_id } : {}),
         source: 'agent-os' as const,
         extras: { callId: observation.callId,apiKind: observation.purpose === 'embedding' ? 'embedding' : 'chat', pricing: observation.cost.pricing, costMeasurement: observation.cost.usage,
+          ...(operation ? { operation } : {}),
           ...(observation.executionTiming ? { completedAt: observation.executionTiming.completedAt } : {}),
           ...(observation.logicalCallId ? { logicalCallId: observation.logicalCallId } : {}),
           ...(observation.attempt !== undefined ? { attempt: observation.attempt } : {}),
@@ -228,6 +246,8 @@ export async function startLingxiOSWorker() {
   // tool continuations exceed the former 90s limit; retain bounded attempts.
   const requestTimeoutMs = positiveInteger('AGENT_OS_MODEL_REQUEST_TIMEOUT_MS', env.OPENAI_MODEL === 'zai-org/GLM-5.3-Flash' ? 180_000 : 90_000)
   const options = {
+    semanticReview: 'selective',
+    additionalContentCorrections: 3,
     modelBudget: common().modelBudget,
     controlPlane: { url: process.env.LINGXIOS_CONTROL_URL?.trim() || 'http://127.0.0.1:5182', serviceToken: lingxiOSServiceToken() },
     ...kernelOptions(), policy: new ProductRuntimePolicy(),

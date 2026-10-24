@@ -1,6 +1,72 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import test from 'node:test'
+import { SMOKE_FILES, parseIntegrationArgs, selectIntegrationFiles } from '../server/integration-suite.mjs'
+import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact } from '../server/run-historical-migration-tests.mjs'
+import { createHash } from 'node:crypto'
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
+// Failure model: today's projection imports new runtime UI exports which the
+// real historical3.8.2 package cannot expose. Pin only the two display leaves;
+// preserve current migrations, identity, all historical assertions and helpers.
+// Modified/missing snapshots must fail closed, never patch the old runtime.
+test('historical fixture isolates pinned display leaves while retaining current migration coverage', async () => {
+ const { copyHistoricalFixtureSource } = await import('../server/run-historical-migration-tests.mjs')
+ assert.equal(typeof copyHistoricalFixtureSource,'function')
+ const root=await mkdtemp(join(tmpdir(),'historical-source-owner-'))
+ try {
+  const source=join(root,'source'),fixture=join(root,'fixture')
+  const retained=['server/src/db/migrate.ts','server/src/agent-runtime/identity.ts',
+   'server/src/__integration__/run-presentation-contract.test.ts','src/lib/runActivity.ts']
+  const pinned=['server/src/agent-runtime/message-projection.ts','src/lib/nativeMessage.ts']
+  for(const path of [...retained,...pinned]){
+   await mkdir(join(source,path,'..'),{recursive:true})
+   await writeFile(join(source,path),'current source: '+path)
+  }
+  const snapshots='server/fixtures/historical-projection-3.8.2'
+  await cp(new URL('../'+snapshots,import.meta.url),join(source,snapshots),{recursive:true})
+  const receipt=await copyHistoricalFixtureSource(source,fixture)
+  assert.equal(receipt.sourceCommit,'7a255c3fe95d832e77fd29c6db9a506d111d3cf2')
+  assert.deepEqual(receipt.files.map(row=>row.path),pinned)
+  for(const path of retained)assert.equal(await readFile(join(fixture,path),'utf8'),'current source: '+path)
+  for(const row of receipt.files){
+   const bytes=await readFile(join(fixture,row.path))
+   assert.deepEqual(bytes,await readFile(join(source,snapshots,row.path)))
+   assert.equal(createHash('sha256').update(bytes).digest('hex'),row.sha256)
+   assert.equal(await readFile(join(source,row.path),'utf8'),'current source: '+row.path)
+  }
+  await writeFile(join(source,snapshots,pinned[1]),'tampered historical source')
+  await assert.rejects(copyHistoricalFixtureSource(source,join(root,'tampered')),/Historical projection source integrity changed/)
+  await rm(join(source,snapshots,pinned[1]))
+  await assert.rejects(copyHistoricalFixtureSource(source,join(root,'missing')),{code:'ENOENT'})
+ }finally{await rm(root,{recursive:true,force:true})}
+})
+
+test('historical migration routing retains every requested file and adds current-package owning checks',()=>{
+ const historical=['migration.test.ts','conversation-repair-provenance-migration.test.ts','public-purpose-reader-migration.test.ts','run-trace-provenance-migration.test.ts','run-presentation-contract.test.ts']
+ const result=partitionMigrationTests([...historical,'closed-education.test.ts'])
+ assert.deepEqual(result.historical,historical)
+ assert.deepEqual(result.current,['closed-education.test.ts','runtime-patch-provenance.test.ts'])
+ assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:['runtime-patch-provenance.test.ts'],historical:[]})
+})
+test('historical fixture rejects nonlocal/non-test targets, arbitrary files and altered pinned package bytes',()=>{
+ const env={NODE_ENV:'test',INTEGRATION_DATABASE_URL:'postgres://postgres:fixture@127.0.0.1:5432/runtime_test'}
+ assert.doesNotThrow(()=>assertHistoricalFixtureTarget(['migration.test.ts'],env))
+ for(const value of [{...env,NODE_ENV:'production'},{...env,INTEGRATION_DATABASE_URL:'postgres://localhost/main'},
+  {...env,INTEGRATION_DATABASE_URL:'postgres://external.test/runtime_test'}, {...env,INTEGRATION_DATABASE_URL:env.INTEGRATION_DATABASE_URL+'?host=remote.test'},
+  {...env,INTEGRATION_DATABASE_URL:env.INTEGRATION_DATABASE_URL+'?hostaddr=203.0.113.10'}]){
+  assert.throws(()=>assertHistoricalFixtureTarget(['migration.test.ts'],value))
+ }
+ assert.throws(()=>assertHistoricalFixtureTarget(['../migration.test.ts'],env))
+ assert.throws(()=>assertHistoricalFixtureTarget(['runtime-patch-provenance.test.ts'],env))
+ const bytes=Buffer.from('synthetic archive'),record={version:'3.8.2',resolved:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.2/fixture',integrity:'sha512-'+createHash('sha512').update(bytes).digest('base64')}
+ assert.doesNotThrow(()=>assertHistoricalArtifact(bytes,record))
+ assert.throws(()=>assertHistoricalArtifact(Buffer.from('changed'),record))
+ assert.throws(()=>assertHistoricalArtifact(bytes,{...record,version:'3.8.3'}))
+ assert.throws(()=>assertHistoricalArtifact(bytes,{...record,resolved:'https://other.test/package'}))
+})
 
 test('test selectors reject malformed and cross-scope paths before starting tests', () => {
   const run = (script, args, env) => spawnSync(process.execPath, [script, ...args], {
@@ -15,9 +81,9 @@ test('test selectors reject malformed and cross-scope paths before starting test
     assert.equal(run('server/run-integration-tests.mjs', [], { INTEGRATION_TEST_FILES: files }).status, 2)
   }
   const selected = run('server/run-integration-tests.mjs', [], { INTEGRATION_TEST_FILES: '["migration.test.ts"]' })
-  assert.equal(selected.status, 0)
+  assert.equal(selected.status, 2)
   assert.match(selected.stdout, /selected 1\/\d+ file\(s\): migration\.test\.ts/)
-  assert.match(selected.stdout, /skipped/)
+  assert.match(selected.stderr, /INTEGRATION_DATABASE_URL is required/)
 })
 
 test('integration runner refuses unsafe database targets without exposing credentials', () => {
@@ -53,4 +119,36 @@ test('integration runner refuses unsafe database targets without exposing creden
     assert.match(result.stderr, /dedicated test database/i)
     assert.doesNotMatch(`${result.stdout}${result.stderr}`, /sentinel-secret|sentinel-test-secret/)
   }
+})
+
+
+test('integration modes are explicit and empty selections never mean full', () => {
+  const availableFiles = [...SMOKE_FILES, 'migration.test.ts', 'runtime-model-context.test.ts']
+  const choose = (argv = [], env = {}) => selectIntegrationFiles({ ...parseIntegrationArgs(argv, env), availableFiles })
+  assert.deepEqual(choose(), SMOKE_FILES)
+  assert.deepEqual(choose([], { INTEGRATION_TEST_FILES: '[]' }), SMOKE_FILES)
+  assert.deepEqual(choose(['--mode', 'smoke']), SMOKE_FILES)
+  assert.deepEqual(choose(['--file', 'migration.test.ts', '--file', 'migration.test.ts']), ['migration.test.ts'])
+  assert.deepEqual(choose([], { INTEGRATION_TEST_MODE: 'selected', INTEGRATION_TEST_FILES: '["migration.test.ts"]' }), ['migration.test.ts'])
+  assert.deepEqual(choose(['--mode', 'full']), availableFiles.toSorted())
+  for (const argv of [['--mode', 'selected'], ['--mode', 'full', '--file', 'migration.test.ts'], ['--mode', 'smoke', '--file', 'migration.test.ts'], ['--mode', 'typo'], ['--mode'], ['--file'], ['--mode', 'smoke', '--mode', 'full'], ['--file', '../migration.test.ts'], ['--file', 'unknown.test.ts']]) {
+    assert.throws(() => choose(argv), undefined, JSON.stringify(argv))
+  }
+  for (const files of ['{}', 'null', '[1]', 'invalid']) assert.throws(() => choose([], { INTEGRATION_TEST_FILES: files }))
+  assert.throws(() => selectIntegrationFiles({ mode: 'smoke', files: [], availableFiles: [] }), /missing|unavailable/)
+  assert.throws(() => selectIntegrationFiles({ mode: 'full', files: [], availableFiles: [] }), /empty/)
+})
+
+test('integration required services fail before any test is spawned', () => {
+  const run = env => spawnSync(process.execPath, ['server/run-integration-tests.mjs', '--mode', 'smoke'], {
+    encoding: 'utf8', env: { ...process.env, DOTENV_CONFIG_PATH: '__no_test_env__', INTEGRATION_TEST_FILES: '', INTEGRATION_TEST_MODE: '', INTEGRATION_DATABASE_URL: '', REDIS_URL: '', LINGXIOS_TEST_REDIS_URL: '', ...env },
+  })
+  const missingDb = run({})
+  assert.equal(missingDb.status, 2)
+  assert.match(missingDb.stderr, /INTEGRATION_DATABASE_URL is required/)
+  assert.doesNotMatch(missingDb.stdout, /TAP version|skipped/)
+  const missingRedis = run({ INTEGRATION_DATABASE_URL: 'postgres://test@127.0.0.1:1/ci_test' })
+  assert.equal(missingRedis.status, 2)
+  assert.match(missingRedis.stderr, /REDIS_URL is required/)
+  assert.doesNotMatch(missingRedis.stdout, /TAP version|skipped/)
 })

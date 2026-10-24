@@ -1,11 +1,11 @@
 import type { MessageStatus, ThreadAssistantMessagePart, ToolCallMessagePart } from '@assistant-ui/react'
 import { createHash } from 'node:crypto'
-import { responseSegments, type PublicTextPart, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
+import { publicAnswerSegments, responseSegments, type PublicTextPart, type RunEvent, type RunView } from '@lyyzka/lingxios/ui'
 import { toolCardResult } from '../../../src/lib/agentToolCards.js'
 import { researchSources } from '../../../src/lib/researchSources.js'
 import { memoryActivitySchema } from '../../../src/lib/memoryActivity.js'
 import { assertVisualizeCitationSpans, projectVisualizeText } from './visualize-projection.js'
-import { publicActivitySchema, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
+import { publicActivitySchema, answerRevisionLabels, toolDisplay, canonicalToolName, resolveToolDisplay, type ActivityAnnotation, type ToolDisplay } from '../../../src/lib/runActivity.js'
 
 export type HarnessToolPart = ToolCallMessagePart & { eventSeq?: number; startedSeq?: number; display?: ToolDisplay;
   purpose?: 'process' | 'result'; taskId?: string; activityIdentity?: { requestVersion: number; fence: number; attemptId: string } }
@@ -27,12 +27,18 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
     if (event.runId !== runId || event.visibility !== 'user') continue
     const id = event.data.toolCallId
     if (typeof id !== 'string' || !id.startsWith('host:')) continue
+    const timing = event.data._executionTrace
+    const at = timing && typeof timing === 'object' && Reflect.get(timing,'version') === 1
+      && Reflect.get(timing,'requestVersion') === event.data.requestVersion && Reflect.get(timing,'fence') === event.data.fence
+      && typeof Reflect.get(timing,'at') === 'number' && Number.isFinite(Reflect.get(timing,'at')) && Number(Reflect.get(timing,'at')) >= 0
+      ? Number(Reflect.get(timing,'at')) : undefined
     if (event.kind === 'tool.started' && typeof event.data.name === 'string' && !calls.has(id)) {
       const { requestVersion,fence,attemptId } = event.data
       const activityIdentity = typeof requestVersion === 'number' && Number.isSafeInteger(requestVersion) && requestVersion > 0
         && typeof fence === 'number' && Number.isSafeInteger(fence) && fence > 0 && typeof attemptId === 'string' && attemptId.length > 0 && attemptId.length <= 2000
         ? { requestVersion,fence,attemptId } : undefined
       calls.set(id,{ type: 'tool-call',toolCallId: id,toolName: canonicalToolName(event.data.name),args: {},argsText: '{}',eventSeq: event.seq,startedSeq: event.seq,
+        ...(at !== undefined && activityIdentity ? { timing: { startedAt: at } } : {}),
         ...(event.data.presentation && typeof event.data.presentation === 'object' && Reflect.get(event.data.presentation,'purpose') === 'process' ? { purpose: 'process' as const } : {}),
         ...(activityIdentity ? { activityIdentity } : {}) })
     }
@@ -48,6 +54,9 @@ export function harnessToolParts(runId: string, events: readonly RunEvent[], cur
         ...(previous.toolName.startsWith('memory.') && Reflect.get(result, 'status') === 'completed' && memoryActivitySchema.safeParse(value).success ? { memory: memoryActivitySchema.parse(value) } : {}),
         ...(previous.toolName === 'chat.report_progress' && publicActivitySchema.safeParse(value).success ? { activity: publicActivitySchema.parse(value) } : {}),
       },isError: event.data.isError === true,
+        ...(at !== undefined && previous.timing && at >= previous.timing.startedAt
+          && previous.activityIdentity?.requestVersion === event.data.requestVersion && previous.activityIdentity?.fence === event.data.fence
+          ? { timing: { ...previous.timing,completedAt: at } } : {}),
         purpose: purpose && typeof purpose === 'object' && ['process','result'].includes(String(Reflect.get(purpose,'purpose')))
           ? Reflect.get(purpose,'purpose') as 'process'|'result' : undefined,
         ...(typeof Reflect.get(result,'approvalId') === 'string' ? { approval: { id: String(Reflect.get(result,'approvalId')) } } : {}) })
@@ -61,10 +70,10 @@ function annotated<T extends ThreadAssistantMessagePart>(part: T, annotation: Om
   return { ...part, providerMetadata: { ...('providerMetadata' in part ? part.providerMetadata : {}),
     lingxiloop: { activity } } }
 }
-/** Only an explicit accepted source is replaced by the final answer. Other
- * attempts remain available as process, never deduplicated by their text. */
+/** The committed answer replaces its explicit accepted source. Keep the source
+ * in the read-only transcript, never deduplicated by its text. */
 export function archivedPublicText(part: PublicTextPart): boolean {
-  return !!part.acceptedResultId
+  return part.version !== 3 && !!part.acceptedResultId
 }
 const stableId = (prefix: string, identity: unknown[]) => `${prefix}:${createHash('sha256').update(JSON.stringify(identity)).digest('hex')}`
 const publicTextId = (part: PublicTextPart) => stableId('public-text', [part.runId,part.requestVersion,part.fence,part.attemptId,part.partIndex,part.partId])
@@ -75,23 +84,23 @@ function pendingAcceptedSource(part: PublicTextPart, view: RunView): boolean {
     && part.requestVersion === view.requestVersion && part.fence === view.fence
     && (!view.message || view.message.publicTextPartId !== part.partId || view.resultId !== part.acceptedResultId)
 }
-function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): 'answer' | 'commentary' {
-  if (pendingAcceptedSource(part,view)) return 'answer'
-  if (part.acceptedResultId || part.requestVersion !== view.requestVersion || part.fence !== view.fence
-    || part.reason === 'superseded' || view.message && view.messageFence >= part.fence && view.message.envelope.requestVersion >= part.requestVersion) return 'commentary'
-  const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
-    || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
-  if (replaced) return 'commentary'
-  // Native v2 declares public purpose before its first text character. This is
-  // producer metadata, not a classification of arbitrary prose.
-  if (part.version === 2 && part.purpose) return part.purpose
+function publicTextPurpose(part: PublicTextPart, view: RunView, tools: readonly HarnessToolPart[]): 'answer' | 'commentary' | 'revision' {
+  // Declared commentary remains genuine progress even when a later attempt or
+  // request replaces an answer. Never infer a revision from the wording.
   const hasTool = tools.some(tool => tool.activityIdentity?.requestVersion === part.requestVersion
     && tool.activityIdentity.fence === part.fence && tool.activityIdentity.attemptId === part.attemptId)
-  if (part.reason === 'tool' || hasTool) return 'commentary'
-  // 3.6.0 has no per-delta purpose: keep the current unresolved candidate live
-  // until public tool/result evidence establishes its role, including failures.
+  if (part.purpose === 'commentary' || part.version !== 2 && (part.reason === 'tool' || hasTool)) return 'commentary'
+  if (pendingAcceptedSource(part,view)) return 'answer'
+  if (part.acceptedResultId || part.requestVersion !== view.requestVersion || part.fence !== view.fence
+    || part.reason === 'superseded' || view.message && view.messageFence >= part.fence && view.message.envelope.requestVersion >= part.requestVersion) return 'revision'
+  const replaced = (view.publicTextParts ?? []).some(next => next.firstSeq > part.firstSeq && next.attemptId !== part.attemptId)
+    || tools.some(tool => (tool.startedSeq ?? 0) > part.firstSeq && tool.activityIdentity && tool.activityIdentity.attemptId !== part.attemptId)
+  if (replaced) return 'revision'
+  // Native v2 declares public purpose before its first text character. Older
+  // unresolved candidates remain live, including failed/cancelled partial text.
   return 'answer'
 }
+
 function activityParts(view: RunView, tools: readonly HarnessToolPart[], includeAcceptedPublicText: boolean, history: boolean): ThreadAssistantMessagePart[] {
   const parts = new Map<string, { seq: number; part: ThreadAssistantMessagePart }>()
   const attempts = [
@@ -108,27 +117,61 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
       ...(requestVersion > 0 ? { requestVersion } : {}) }) })
   }
   for (const part of view.publicTextParts ?? []) {
+    // v3 answer operations are resolved once by the native shared reader below.
+    // The legacy attempt heuristic must never reclassify these sources.
+    if (part.version === 3) continue
     const pendingAccepted = pendingAcceptedSource(part,view)
     if (!includeAcceptedPublicText && archivedPublicText(part) && !pendingAccepted) continue
-    const id = archivedPublicText(part) && (history || !pendingAccepted) ? `archive:${publicTextId(part)}` : publicTextId(part)
+    const currentPurpose = publicTextPurpose(part,view,tools)
+    // The history endpoint keeps current partial/streamed sources auditable.
+    // Their original identity lets the live answer exclude a stale page copy.
+    const kind = history && currentPurpose === 'answer' ? 'revision' : currentPurpose
+    // Preserve source identity across supersession so older history pages
+    // reconcile with the live revision. Fixed lifecycle labels distinguish
+    // transcripts within the existing v1 metadata shape.
+    const id = archivedPublicText(part) && (history || !pendingAccepted) ? `archive:${publicTextId(part)}`
+      : publicTextId(part)
     const status = part.status === 'running' ? { type: 'running' as const } : part.status === 'complete' ? { type: 'complete' as const }
       : { type: 'incomplete' as const,reason: part.reason === 'cancelled' ? 'cancelled' as const : part.reason === 'failed' ? 'error' as const : 'other' as const }
     // Public text is an unverified archive, including candidates superseded by
     // repair. Only the delivered answer may activate a renderer reference.
-    const kind = history ? 'commentary' : publicTextPurpose(part,view,tools)
     for (const text of projectVisualizeText(part.text, true)) {
-      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind,label: kind === 'answer' ? '答复' : part.acceptedResultId ? '答复片段' : '公开说明',
+      put(id,part.firstSeq,annotated({ ...text,status },{ id,kind: kind === 'revision' ? 'commentary' : kind,
+        label: kind === 'answer' ? '答复' : kind !== 'revision' ? '公开说明' : currentPurpose === 'answer' ? answerRevisionLabels.current : part.acceptedResultId ? answerRevisionLabels.accepted
+          : part.reason === 'failed' ? answerRevisionLabels.failed : part.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.superseded,
         purpose: kind === 'answer' ? 'result' : 'process' }),part.lastSeq,part.requestVersion)
     }
   }
-  for (const { eventSeq, startedSeq, activityIdentity, taskId, purpose, display: recordedDisplay, ...tool } of tools) {
+  for (const segment of publicAnswerSegments(view)) {
+    if (segment.status !== 'pending-replacement' && segment.status !== 'replaced') continue
+    const source = view.publicTextParts?.find(part=>part.partId===segment.partId)
+    const id = stableId('public-text',[view.runId,segment.requestVersion,segment.partId])
+    const label = segment.status === 'replaced' ? answerRevisionLabels.superseded
+      : source?.reason === 'failed' ? answerRevisionLabels.failed
+      : source?.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.pending
+    for (const text of projectVisualizeText(segment.text,true)) put(id,source?.firstSeq ?? view.lastSeq,
+      annotated(text,{id,kind:'commentary',label,purpose:'process'}),source?.lastSeq,segment.requestVersion)
+  }
+  const planVersions = new Map<string, { fence: number; revision: number }>()
+  // Completion order may differ from start order; retain the original public
+  // position while selecting a plan's latest recorded version below.
+  const orderedTools = [...tools].sort((a,b) => (a.startedSeq ?? a.eventSeq ?? 0) - (b.startedSeq ?? b.eventSeq ?? 0))
+  for (const { eventSeq, startedSeq, activityIdentity, taskId, purpose, display: recordedDisplay, ...tool } of orderedTools) {
     const seq = startedSeq ?? eventSeq ?? 0
     const result = tool.result && typeof tool.result === 'object' ? tool.result : undefined
     const explanation = publicActivitySchema.safeParse(result && Reflect.get(result, 'activity'))
-    if (tool.toolName === 'chat.report_progress' && explanation.success) {
-      const entry = explanation.data, id = stableId('public-report',[view.runId,activityIdentity?.requestVersion ?? null,
-        activityIdentity?.fence ?? null,activityIdentity?.attemptId ?? null,entry.id])
+    if (tool.toolName === 'chat.report_progress' && explanation.success && result && Reflect.get(result,'status') === 'completed' && !tool.isError) {
+      const entry = explanation.data, id = entry.kind === 'plan'
+        ? stableId('public-plan',[view.runId,activityIdentity?.requestVersion ?? null,entry.id])
+        : stableId('public-report',[view.runId,activityIdentity?.requestVersion ?? null,
+          activityIdentity?.fence ?? null,activityIdentity?.attemptId ?? null,entry.id])
       if (entry.kind === 'plan' && entry.plan) {
+        // The explicit plan id belongs to the task request, not a model call.
+        // Recovery keeps that identity; an older lease or replay cannot win.
+        const version = { fence: activityIdentity?.fence ?? 0,revision: eventSeq ?? seq }
+        const previous = planVersions.get(id)
+        if (previous && (previous.fence > version.fence || previous.fence === version.fence && previous.revision >= version.revision)) continue
+        planVersions.set(id,version)
         put(id,seq, annotated({ type: 'generative-ui', id, spec: { root: { component: 'agent-plan', props: { title: entry.label, ...entry.plan } } } },
           { id, kind: 'commentary', label: entry.label, purpose: 'process', ...(taskId ? { taskId } : {}) }),eventSeq,activityIdentity?.requestVersion)
         continue
@@ -166,6 +209,21 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
   }
   return [...parts.values()].sort((a,b) => a.seq-b.seq).map(value => value.part)
 }
+/** Display the native reader's ordered sources. No product-side reducer or
+ * attempt/text comparison is involved in append, replacement or acceptance. */
+function segmentedAnswerParts(view: RunView): ThreadAssistantMessagePart[] {
+  return publicAnswerSegments(view).flatMap(segment=>{
+    if (!segment.text || segment.status === 'pending-replacement' || segment.status === 'replaced') return []
+    const id = stableId('public-text',[view.runId,segment.requestVersion,segment.segmentId])
+    const status = segment.status === 'streaming' ? {type:'running' as const}
+      : segment.status === 'incomplete' ? {type:'incomplete' as const,reason:view.lifecycle==='cancelled'?'cancelled' as const:view.lifecycle==='failed'?'error' as const:'other' as const}
+      : {type:'complete' as const}
+    const part = annotated({type:'text',text:segment.text,status},{id,kind:'answer',label:'答复',purpose:'result',requestVersion:segment.requestVersion})
+    return [{...part,providerMetadata:{...part.providerMetadata,lingxiloop:{...part.providerMetadata.lingxiloop,
+      answerSegment:{version:3,messageId:segment.messageId,segmentId:segment.segmentId,partId:segment.partId,start:segment.start,end:segment.end},
+    }}}]
+  })
+}
 function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]): ThreadAssistantMessagePart[] {
   const accepted = view.message && view.message.envelope.requestVersion === view.requestVersion && view.messageFence === view.fence
     && (view.publicTextParts ?? []).find(part => part.partId === view.message!.publicTextPartId
@@ -183,9 +241,12 @@ function answerParts(view: RunView, parts: readonly ThreadAssistantMessagePart[]
 }
 export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[] = [], options: { includeAcceptedPublicText?: boolean; activityHistory?: boolean } = {}): ThreadAssistantMessagePart[] {
   const cards = activityParts(view, tools, options.includeAcceptedPublicText !== false, options.activityHistory === true)
+  const hasSegments = view.message?.publicTextSources?.version === 3 || view.publicTextParts?.some(part=>part.version===3)
+  const answer = hasSegments && !options.activityHistory ? segmentedAnswerParts(view) : []
   if (view.lifecycle === 'queued') return cards
   // Native drafts expose content deltas only; provider reasoning fields are excluded upstream.
   if (view.lifecycle === 'leased' && view.draft) {
+    if (hasSegments) return [...answer,...cards]
     // Native emits model.delta after ending the current public candidate. That
     // is an additional preview, not another answer. Acceptance still requires
     // the explicit committed source ID; no text comparison is involved.
@@ -193,7 +254,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       && part.fence === view.fence && part.reason === 'completed' && part.purpose !== 'commentary' && !part.acceptedResultId)
     return publicCandidate ? cards : [...answerParts(view, projectVisualizeText(view.draft, true)), ...cards]
   }
-  if (!view.message || view.message.envelope.requestVersion !== view.requestVersion || view.messageFence !== view.fence) return cards
+  if (!view.message || view.message.envelope.requestVersion !== view.requestVersion || view.messageFence !== view.fence) return [...answer,...cards]
   assertVisualizeCitationSpans(view.message.envelope.body, view.message.envelope.citations)
   const segments = responseSegments(view.message.envelope)
   const evidence = view.message.envelope.citationEvidence
@@ -236,6 +297,7 @@ export function runMessageParts(view: RunView, tools: readonly HarnessToolPart[]
       providerMetadata: { lingxiloop: { sourceId: source.sourceId,sourceVersion: source.sourceVersion,
         chunkIds: [...new Set([...(Array.isArray(previousChunks) ? previousChunks.filter((chunk): chunk is string => typeof chunk === 'string') : []),...source.chunkIds])] } } })
   }
+  if (hasSegments) return [...answer,...answerParts(view,parts.filter(part=>part.type!=='text')),...cards,...sources.values()]
   return [...answerParts(view, parts.flatMap(part => part.type === 'text' ? projectVisualizeText(part.text, view.delivery !== 'delivered') : [part])), ...cards, ...sources.values()]
 
 }

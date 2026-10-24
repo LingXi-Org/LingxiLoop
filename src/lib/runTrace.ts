@@ -1,27 +1,58 @@
 import { z } from 'zod'
-import { publicText } from './runActivity.js'
+import { publicText,canonicalToolName } from './runActivity.js'
 
 const metric = z.number().finite().nonnegative().nullable()
 const label = publicText.pipe(z.string().max(160))
 export const traceStatusSchema = z.enum(['running','waiting','complete','partial','blocked','cancelled','error','unknown'])
 export type TraceStatus = z.infer<typeof traceStatusSchema>
+export const modelOperationSchema = z.enum(['generation','correction','content-review','compaction','memory-synthesis','approval-explanation','embedding','structured'])
+export type ModelOperation = z.infer<typeof modelOperationSchema>
+export function readModelOperation(value: unknown): ModelOperation|undefined {
+  const parsed = modelOperationSchema.safeParse(value)
+  return parsed.success ? parsed.data : undefined
+}
+export const modelOperationLabel: Record<ModelOperation,string> = { generation: '生成回复',correction: '纠正回复','content-review': '内容验收',
+  compaction: '上下文摘要','memory-synthesis': '记忆整理','approval-explanation': '审批说明',embedding: '向量编码',structured: '模型辅助调用' }
 /** Exact provider model registrations, never a guess from an arbitrary label. */
 export const isEmbeddingTraceModel = (model: unknown) => model === 'BAAI/bge-m3' || model === 'Pro/BAAI/bge-m3' || model === 'Qwen/Qwen3-Embedding-8B'
+export const workKindSchema = z.enum(['tool','skill','retrieval','subtask'])
+export type WorkKind = z.infer<typeof workKindSchema>
+/** Registered action identities only; arbitrary names and prose never select a stage. */
+export function toolWorkKind(action: string): WorkKind {
+  const name = canonicalToolName(action)
+  if (['skills.load','skills.activate','visualize.read_reference'].includes(name)) return 'skill'
+  if (['research.search','research.read','knowledge.search','knowledge.read_source','knowledge.list_sources',
+    'task.read_evidence','task.read_attachment','files.read','documents.read','memory.search','observations.read'].includes(name)) return 'retrieval'
+  return 'tool'
+}
+export const workKindLabels = { tool: '工具',skill: '技能',retrieval: '检索与阅读',subtask: '子任务' } as const
+export const traceMoneySchema = z.object({ currency: z.enum(['CNY','USD']),amount: z.number().finite().nonnegative(),estimated: z.boolean() }).strict()
+export type TraceMoney = z.infer<typeof traceMoneySchema>
+export const tracePricingSchema = z.object({ currency: z.literal('CNY'),inputPerMillion: z.number().finite().nonnegative(),
+  cachedInputPerMillion: z.number().finite().nonnegative(),outputPerMillion: z.number().finite().nonnegative(),
+  version: z.literal('siliconflow-cn-2026-10-22').optional(),billingItem: z.literal('pro/baai/bge-m3.online.input-tokens').optional(),
+}).strict()
+export type TracePricing = z.infer<typeof tracePricingSchema>
 export interface TraceSpan {
   id: string; name: string; kind: 'agent'|'llm'|'embedding'|'tool'; status: TraceStatus
   start: number|null; end: number|null; durationMs: number|null
   model?: string; detail?: string
+  workKind?: WorkKind
   input?: { label: string; value: string }[]; output?: string
   tokensIn: number|null; tokensOut: number|null; cost: number|null; costEstimated: boolean
   knownCost?: number; costIncomplete?: boolean
+  /** Original recorded currencies; legacy cost/knownCost retain their USD budget basis. */
+  costBreakdown?: TraceMoney[]; costPricing?: TracePricing
   children: TraceSpan[]
 }
 const span: z.ZodType<TraceSpan> = z.lazy(() => z.object({
   id: z.string().min(1).max(160),name: label,kind: z.enum(['agent','llm','embedding','tool']),status: traceStatusSchema,
-  start: metric,end: metric,durationMs: metric,model: label.optional(),detail: publicText.optional(),
+  start: metric,end: metric,durationMs: metric,model: label.optional(),detail: publicText.optional(),workKind: workKindSchema.optional(),
   input: z.array(z.object({ label,value: publicText.pipe(z.string().max(500)) }).strict()).max(8).optional(),
   output: publicText.optional(),tokensIn: metric,tokensOut: metric,cost: metric,costEstimated: z.boolean(),
   knownCost: z.number().finite().nonnegative().optional(),costIncomplete: z.boolean().optional(),
+  costBreakdown: z.array(traceMoneySchema).min(1).max(2).refine(items=>new Set(items.map(item=>item.currency)).size === items.length).optional(),
+  costPricing: tracePricingSchema.optional(),
   children: z.array(span).max(100),
 }).strict())
 export const runTraceSchema = z.object({ version: z.literal(1),startedAt: metric,root: span,

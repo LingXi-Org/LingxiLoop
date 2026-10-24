@@ -45,7 +45,7 @@ function mapApplicationError(error: unknown): never {
     ? 404
     : error.code === 'not_member' || error.code === 'managed_pulse' || error.code === 'teacher_room_managed'
       ? 403
-      : error.code === 'workspace_read_only' || error.code === 'binding_missing'
+      : error.code === 'workspace_read_only' || error.code === 'binding_missing' || error.code === 'creation_conflict'
         ? 409
         : 400
   throw new HttpError(status, error.message)
@@ -53,11 +53,20 @@ function mapApplicationError(error: unknown): never {
 
 conversationsRouter.post('/projects/:projectId/conversations', safe(async (req, res) => {
   const scope = await requireWorkspace(req, String(req.params.projectId), 'conversation:write')
-  const input = parse(createConversationRequestSchema.safeParse(req.body ?? {}))
+  const parsed = createConversationRequestSchema.safeParse(req.body ?? {})
+  if (!parsed.success) {
+    res.status(400).json({ code: 'invalid_selection', error: 'invalid conversation selection' })
+    return
+  }
+  const input = parsed.data
   try {
     const result = await conversationsApplication.create(scope, input)
     res.status(result.created ? 201 : 200).json(result)
   } catch (error) {
+    if (error instanceof ConversationApplicationError && ['invalid_members', 'creation_conflict'].includes(error.code)) {
+      res.status(error.code === 'creation_conflict' ? 409 : 400).json({ code: error.code, error: error.message })
+      return
+    }
     mapApplicationError(error)
   }
 }))

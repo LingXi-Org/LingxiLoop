@@ -68,6 +68,26 @@ export function activityAnnotation(part: unknown): ActivityAnnotation | undefine
   return result.success ? result.data : undefined
 }
 
+/** Fixed producer lifecycle labels use the existing v1 metadata shape. */
+export const answerRevisionLabels = {
+  pending: '待确认的答复修订',
+  current: '当前答复的原始片段',
+  accepted: '已交付答复的原始片段',
+  superseded: '已替换的答复草稿',
+  failed: '未完成的答复草稿（已替换）',
+  cancelled: '已取消的答复草稿（已替换）',
+} as const
+const answerRevisionLabelValues = new Set<string>(Object.values(answerRevisionLabels))
+
+/** Explicit public-text lifecycle metadata only; ordinary commentary/report
+ * labels and arbitrary body text never classify a part as a revision. Keep
+ * source identities stable so stale pages reconcile with the current part. */
+export function isAnswerRevision(part: unknown): boolean {
+  const annotation = activityAnnotation(part)
+  return annotation?.kind === 'commentary' && /^(?:archive:)?public-text:[a-f0-9]{64}$/.test(annotation.id)
+    && (annotation.id.startsWith('archive:') || answerRevisionLabelValues.has(annotation.label))
+}
+
 export const toolDisplaySchema = z.object({
   title: z.string().max(160), purpose: z.string().max(500), summary: z.string().max(1000).optional(),
   input: z.array(z.object({ label: z.string().max(80), value: publicText.pipe(z.string().max(500)) }).strict()).max(8).optional(),

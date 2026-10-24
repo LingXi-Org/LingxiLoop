@@ -1,0 +1,68 @@
+{
+  "candidateSourceCommit": "b8394f7c2e25cfdb8d373d4e9498a18d3ef1b35b",
+  "integratedBaseCommit": "d3227695c7ae1bb89356dc9135821a1a276ae65d",
+  "runtime": "3.8.11",
+  "reportRun": {
+    "id": "01a16cc5-df62-7892-af74-df03d9a484ea",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-24T07:17:51.078Z",
+    "finishedAt": "2026-10-24T07:18:06.161Z",
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "b8394f7c2e25cfdb8d373d4e9498a18d3ef1b35b",
+      "branch": "perf/378-snapshot-store",
+      "dirty": true
+    },
+    "summary": {
+      "discovered": 161,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "engine": {
+      "name": "web",
+      "version": "0.12.0"
+    },
+    "results": [
+      {
+        "testId": "e2e/web/memory-public-streaming.e2e.ts::Memory%20public%20streaming::public%20explanations%20and%20a%20memory%20tool%20stay%20in%20order%20while%20SSE%20remains%20open",
+        "file": "e2e/web/memory-public-streaming.e2e.ts",
+        "status": "passed"
+      },
+      {
+        "testId": "e2e/web/native-streaming.e2e.ts::Native%20streaming%20conversation::long%20native%20replies%20remain%20responsive%20through%20tool%20and%20final%20updates",
+        "file": "e2e/web/native-streaming.e2e.ts",
+        "status": "passed"
+      }
+    ]
+  },
+  "fixtureSha256": {
+    "e2e/web/native-streaming.e2e.ts": "e81c3b0465726698a7b6c282f7555f25062139240008ca34d568c69e49796918",
+    "e2e/web/memory-public-streaming.e2e.ts": "c1ae65e61af26522e5249fe86c0f18d96dd0c0616f359fa33b6fe267b9047440"
+  },
+  "observations": {
+    "nativeDistinctVisibleLengths": 29,
+    "nativeMaxIntervalMs": 140,
+    "intervalBudgetMs": 500,
+    "streamWrappers": 128,
+    "finalWrappers": 0,
+    "testsPassed": 2,
+    "testsFailed": 0
+  },
+  "qualification": "Synthetic local Vite fixture using official @e2e-dev/web, not production-build FPS or a deployed-service measurement. The dirty working tree at execution contains only the two fixture assertion updates tracked by the hashes. All application source is the source commit shown."
+}

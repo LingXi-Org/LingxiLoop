@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="e2e" tests="25" failures="0" errors="0" skipped="0" time="120.494">
+  <testsuite name="e2e/answer-first/attention.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="8.168">
+    <testcase name="native interrupt and awaiting_input have one actionable continuation [reduced-motion]" classname="e2e/answer-first/attention.e2e.ts" time="3.871"/>
+    <testcase name="current approval has one external action and replay cannot submit it again [reduced-motion]" classname="e2e/answer-first/attention.e2e.ts" time="4.297"/>
+  </testsuite>
+  <testsuite name="e2e/answer-first/cloud-acceptance/outcomes.e2e.ts" tests="3" failures="0" errors="0" skipped="0" time="13.987">
+    <testcase name="failed cancelled and incomplete runs retain body and honest process status [reduced-motion]" classname="e2e/answer-first/cloud-acceptance/outcomes.e2e.ts" time="4.543"/>
+    <testcase name="partial and blocked delivered artifacts remain visible without being called complete or empty [reduced-motion]" classname="e2e/answer-first/cloud-acceptance/outcomes.e2e.ts" time="4.854"/>
+    <testcase name="approval without control stays discoverable and non-actionable across disclosure and reload [reduced-motion]" classname="e2e/answer-first/cloud-acceptance/outcomes.e2e.ts" time="4.590"/>
+  </testsuite>
+  <testsuite name="e2e/answer-first/cloud-acceptance/reduced.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="3.495">
+    <testcase name="real reduced motion disables process and task motion without removing keyboard actions [reduced-motion]" classname="e2e/answer-first/cloud-acceptance/reduced.e2e.ts" time="3.495"/>
+  </testsuite>
+  <testsuite name="e2e/answer-first/history.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="12.743">
+    <testcase name="bounded history retries in one process entry without replacing live answer or repeating entries [reduced-motion]" classname="e2e/answer-first/history.e2e.ts" time="6.037"/>
+    <testcase name="late history page cannot replace newer live data or new-request content [reduced-motion]" classname="e2e/answer-first/history.e2e.ts" time="6.706"/>
+  </testsuite>
+  <testsuite name="e2e/answer-first/layout.e2e.ts" tests="4" failures="0" errors="0" skipped="0" time="33.104">
+    <testcase name="one process disclosure contains ordinary rich tools while answer and results stay outside [reduced-motion]" classname="e2e/answer-first/layout.e2e.ts" time="12.887"/>
+    <testcase name="manual reading position is not pulled to the bottom by new stream frames or process disclosure [reduced-motion]" classname="e2e/answer-first/layout.e2e.ts" time="12.914"/>
+    <testcase name="copy while the process is expanded contains only the current answer [reduced-motion]" classname="e2e/answer-first/layout.e2e.ts" time="2.932"/>
+    <testcase name="390px light and dark keep the answer readable and process keyboard accessible [reduced-motion]" classname="e2e/answer-first/layout.e2e.ts" time="4.371"/>
+  </testsuite>
+  <testsuite name="e2e/answer-first/narrow-acceptance.e2e.ts" tests="1" failures="0" errors="0" skipped="0" time="4.975">
+    <testcase name="390px real process disclosure stays framed and keyboard usable in light and dark themes [reduced-motion]" classname="e2e/answer-first/narrow-acceptance.e2e.ts" time="4.975"/>
+  </testsuite>
+  <testsuite name="e2e/answer-first/v2-stream.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="6.810">
+    <testcase name="real v2 first character, pending acceptance and final handoff preserve answer DOM and selection [reduced-motion]" classname="e2e/answer-first/v2-stream.e2e.ts" time="2.906"/>
+    <testcase name="real superseded candidate leaves the main answer and correction receives a new identity [reduced-motion]" classname="e2e/answer-first/v2-stream.e2e.ts" time="3.904"/>
+  </testsuite>
+  <testsuite name="e2e/answer-first/visualize.e2e.ts" tests="2" failures="0" errors="0" skipped="0" time="7.580">
+    <testcase name="completed replay preserves the visualization and owner change rebinds acquisition [reduced-motion]" classname="e2e/answer-first/visualize.e2e.ts" time="3.672"/>
+    <testcase name="a late old-owner acquisition cannot activate inside the new owner card [reduced-motion]" classname="e2e/answer-first/visualize.e2e.ts" time="3.908"/>
+  </testsuite>
+  <testsuite name="e2e/web/questionnaire.e2e.ts" tests="8" failures="0" errors="0" skipped="0" time="29.632">
+    <testcase name="durable questionnaire &gt; trusted questionnaire binding replaces generic continuation forms [reduced-motion]" classname="e2e/web/questionnaire.e2e.ts" time="2.896"/>
+    <testcase name="durable questionnaire &gt; unread status blocks submission; waiting stays idle until explicit submit [reduced-motion]" classname="e2e/web/questionnaire.e2e.ts" time="4.032"/>
+    <testcase name="durable questionnaire &gt; durable answers render read-only without answer history and refresh never posts [reduced-motion]" classname="e2e/web/questionnaire.e2e.ts" time="3.523"/>
+    <testcase name="durable questionnaire &gt; double clicks submit once; failure retries and refresh preserves accepted answers [reduced-motion]" classname="e2e/web/questionnaire.e2e.ts" time="3.427"/>
+    <testcase name="durable questionnaire &gt; a lost accepted response reconciles canonical answers before another POST [reduced-motion]" classname="e2e/web/questionnaire.e2e.ts" time="3.542"/>
+    <testcase name="durable questionnaire &gt; pending submission freezes saved answers and retries only those values [reduced-motion]" classname="e2e/web/questionnaire.e2e.ts" time="3.393"/>
+    <testcase name="durable questionnaire &gt; an exhausted resume keeps canonical answers and requires one explicit recovery [reduced-motion]" classname="e2e/web/questionnaire.e2e.ts" time="4.392"/>
+    <testcase name="durable questionnaire &gt; unavailable and foreign owner cards stay disabled; loading failure can reload [reduced-motion]" classname="e2e/web/questionnaire.e2e.ts" time="4.427"/>
+  </testsuite>
+</testsuites>

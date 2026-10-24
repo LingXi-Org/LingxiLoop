@@ -6,6 +6,7 @@ import { createRunView } from '@lyyzka/lingxios/ui'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { convertEnvelope, projectMessageGroups } from '../runtime/converter'
 import { getLingxiMessageMetadata } from '../runtime/model'
+import { projectReplyBranches } from '../runtime/reply-branches'
 import { create } from 'zustand'
 import type { Participant } from '@/types'
 import { load } from 'cheerio'
@@ -15,6 +16,14 @@ mock.module('../visualize/VisualizeText', { namedExports: { VisualizeText: ({ Te
 mock.module('./ConversationComposer', { namedExports: { ConversationComposer: () => null } })
 mock.module('../runtime/transport', { namedExports: { ChatTransport: class {}, chatTransport: {}, filterThreadMessages: (messages: ThreadMessage[]) => messages } })
 mock.module('@/stores/auth', { namedExports: { useAuth: create(() => ({ user: null })), getMeId: () => null, getActiveCompanyId: () => null } })
+const actualPresentation = await import('./message-presentation')
+let presentationCalls = 0
+mock.module('./message-presentation', { namedExports: { ...actualPresentation,
+  messagePresentation: (...args: Parameters<typeof actualPresentation.messagePresentation>) => {
+    presentationCalls++
+    return actualPresentation.messagePresentation(...args)
+  },
+} })
 const { useParticipants } = await import('@/features/agents/state')
 const { ConversationMessage } = await import('./ConversationMessage')
 const { ConversationThread } = await import('./ConversationThread')
@@ -47,7 +56,7 @@ test('connection recovery keeps reply text and exposes no diagnostic card', () =
     const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
     assert.match($.text(), /正文1/)
     assert.doesNotMatch($.text(), /连接任务失败|核对任务状态|状态待确认|已停止本地等待|权限可能已变化/)
-    assert.equal($('button').filter((_, el) => $(el).text().includes('重新连接')).length, connection === 'released' ? 1 : 0)
+    assert.equal($('button').filter((_, el) => $(el).text().includes('恢复连接')).length, connection === 'released' ? 1 : 0)
   }
 })
 
@@ -240,6 +249,31 @@ test('failed streamed replies retain prose and show the official error banner wi
   assert.match(error.attr('class') ?? '', /rounded-2xl.*bg-red-500/)
 })
 
+test('terminal feedback shares the run error or cancellation display and retains retry context', () => {
+  for (const lifecycle of ['failed', 'cancelled'] as const) {
+    const detail = lifecycle === 'failed' ? '模型服务暂时不可用，已完成的操作会保留。' : '这次任务已取消，已完成的操作会保留。'
+    const reply = { ...message('1'), id: 'run-run', status: { type: 'incomplete', reason: lifecycle === 'failed' ? 'error' : 'cancelled' }, metadata: { custom: {
+      ...getLingxiMessageMetadata(message('1')), sequence: null, sourceRef: 'original-question', runId: 'run',
+      harness: { ...createRunView('run'), lifecycle, requestVersion: 1, fence: 1, artifacts: [] },
+    } } } as ThreadMessage
+    const feedback = convertEnvelope({ channelId: 'room', channelType: 2, fromUid: 'agent', clientMsgNo: 'terminal-feedback',
+      messageId: 'terminal-feedback', messageSeq: 2, timestamp: 2,
+      payload: createNativeMessage({ id: 'terminal-feedback', role: 'system', content: [{ type: 'text', text: detail }],
+        custom: { runId: 'run', requestVersion: 1, terminalFeedbackId: 'feedback', terminalStatus: lifecycle } }),
+    }, { participants, meId: 'me' })
+    const projected = projectReplyBranches([reply, feedback], {})
+    const $ = load(renderToStaticMarkup(<Preview messages={projected} />))
+    assert.equal(projected.length, 1)
+    assert.equal($.text().split(detail).length - 1, 1, 'one readable terminal explanation')
+    assert.match($.text(), /正文1/)
+    assert.equal(getLingxiMessageMetadata(projected[0]).sourceRef, 'original-question')
+    if (lifecycle === 'failed') {
+      assert.equal($('[data-slot="error-state"]').length, 1)
+      assert.equal($('[data-slot="error-state"] button').text(), '重试')
+    } else assert.equal($('[data-slot="error-state"]').length, 0)
+  }
+})
+
 // Failure cases: incoming humans mistaken for agents; long replies center avatars;
 // streaming chrome persists on history; compact typography leaks into human bubbles.
 test('sender kind owns bubble chrome and agent avatars align at the top', () => {
@@ -325,26 +359,90 @@ test('legacy unclassified content stays visible and the answer region is stable 
 
 // #304 review: strict data parts cannot carry activity annotations. A delivered
 // artifact is still a result; citation metadata/process alone is not one.
-test('partial and blocked replies recognize data-only or persisted artifact delivery', () => {
+test('partial and blocked replies retain delivered results and always expose one recovery status', () => {
   for (const outcome of ['partial', 'blocked'] as const) {
-    for (const delivered of ['presentation', 'artifact', 'citations', 'process'] as const) {
-      const base = message('1')
-      const content = delivered === 'presentation'
-        ? [{ type: 'data', name: 'presentation-artifact', data: { artifactId: 'deck-304', artifactKind: 'lecture_deck_html', title: '已交付的演示稿' } }]
-        : delivered === 'citations' ? [{ type: 'data', name: 'citation-claims', data: { claims: [] } }]
-        : delivered === 'process' ? [{ type: 'text', text: '公开过程', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-304', kind: 'commentary', label: '公开过程' } } } }]
-        : []
-      const harness = { ...createRunView('run'), lifecycle: 'succeeded', requestVersion: 1,
-        goalOutcome: { status: outcome, requestVersion: 1 },
-        artifacts: delivered === 'artifact' ? [{ path: '/workspace/已交付.pdf', mime: 'application/pdf', size: 100, sha256: 'a'.repeat(64) }] : [] }
-      const reply = { ...base, content: [...content, { type: 'text', text: '过程记录', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-status-304', kind: 'commentary', label: '过程记录' } } } }], status: { type: 'incomplete', reason: 'other' },
-        metadata: { ...base.metadata, custom: { ...getLingxiMessageMetadata(base), runId: 'run', harness } } } as ThreadMessage
-      const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
-      if (delivered === 'presentation' || delivered === 'artifact') {
-        assert.doesNotMatch($.text(), /本次请求未能生成答复/, `${outcome}/${delivered}`)
-        assert.match($.text(), /已交付/, `${outcome}/${delivered}`)
-      } else assert.match($.text(), /本次请求未能生成答复/, `${outcome}/${delivered}`)
-      assert.match($.text(), /未完成/, 'a delivered result does not turn partial/blocked into success')
+    for (const lifecycle of [outcome, 'succeeded'] as const) {
+      for (const delivered of ['presentation', 'artifact', 'citations', 'process', 'text', 'empty'] as const) {
+        const base = message('1')
+        const content = delivered === 'presentation'
+          ? [{ type: 'data', name: 'presentation-artifact', data: { artifactId: 'deck-304', artifactKind: 'lecture_deck_html', title: '已交付的演示稿' } }]
+          : delivered === 'citations' ? [{ type: 'data', name: 'citation-claims', data: { claims: [] } }]
+          : delivered === 'process' ? [{ type: 'text', text: '公开过程', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-304', kind: 'commentary', label: '公开过程' } } } }]
+          : delivered === 'text' ? [{ type: 'text', text: '保留的部分答复。' }] : []
+        const harness = { ...createRunView('run'), lifecycle, requestVersion: 1,
+          goalOutcome: { status: outcome, requestVersion: 1 },
+          artifacts: delivered === 'artifact' ? [{ path: '/workspace/已交付.pdf', mime: 'application/pdf', size: 100, sha256: 'a'.repeat(64) }] : [] }
+        const reply = { ...base, content: [...content, ...(delivered === 'empty' ? [] : [{ type: 'text', text: '过程记录', providerMetadata: { lingxiloop: { activity: { version: 1, id: 'process-status-304', kind: 'commentary', label: '过程记录' } } } }])], status: { type: 'incomplete', reason: 'other' },
+          metadata: { ...base.metadata, custom: { ...getLingxiMessageMetadata(base), sequence: null, sourceRef: 'source-question', runId: 'run', harness } } } as ThreadMessage
+        const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+        if (delivered === 'presentation' || delivered === 'artifact') {
+          assert.match($.text(), /已交付/, `${outcome}/${delivered}`)
+        }
+        if (delivered === 'text') assert.match($('[data-message-region="body"]').text(), /保留的部分答复/)
+        assert.equal($('[data-run-outcome]').length, 1, `${lifecycle}/${outcome}/${delivered}`)
+        assert.equal($('[data-run-outcome]').attr('data-run-outcome'), outcome)
+        assert.equal($('[data-run-outcome]').attr('role'), 'status')
+        assert.equal($('[data-run-outcome][data-slot="error-state"]').length, 0)
+        assert.match($('[data-run-outcome]').text(), /答复尚未完成/)
+        assert.equal($('[data-run-outcome] button').text(), '重试')
+      }
     }
   }
+})
+
+test('incomplete recovery honors lifecycle and version protections', () => {
+  const base = message('1')
+  const harness = { ...createRunView('run'), lifecycle: 'partial', requestVersion: 1, artifacts: [],
+    goalOutcome: { status: 'partial', requestVersion: 1 } }
+  const reply = { ...base, content: [], status: { type: 'incomplete', reason: 'other' },
+    metadata: { ...base.metadata, custom: { ...getLingxiMessageMetadata(base), sequence: null, sourceRef: 'source-question', runId: 'run', harness } } } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.equal($('[data-run-outcome]').length, 1)
+  for (const [lifecycle, status, version] of [
+    ['cancelled', { type: 'incomplete', reason: 'cancelled' }, 1],
+    ['failed', { type: 'incomplete', reason: 'error' }, 1],
+    ['leased', { type: 'running' }, 1],
+    ['waiting', { type: 'requires-action', reason: 'tool-calls' }, 1],
+    ['succeeded', { type: 'complete', reason: 'stop' }, 1],
+    ['partial', { type: 'incomplete', reason: 'other' }, 2],
+    ['succeeded', { type: 'incomplete', reason: 'other' }, 2],
+  ] as const) {
+    const guarded = { ...reply, status, metadata: { ...reply.metadata, custom: { ...reply.metadata.custom,
+      harness: { ...harness, lifecycle, requestVersion: version } } } } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[guarded]} />))
+    assert.equal($('[data-run-outcome]').length, 0, `${lifecycle}/${version}`)
+  }
+})
+
+// #353 failure model: duplicate knowledge status card, lost source outcomes,
+// alias mismatch, stale ready overriding cancellation/unknown, or hidden reply.
+test('knowledge results use one compact tool row while preserving source and terminal states', () => {
+  for (const [sourceStatus, resultStatus, label] of [
+    ['ready', 'completed', '已读取原文'], ['no_matches', 'completed', '没有匹配资料'],
+    ['empty', 'completed', '资料没有可读正文'], ['processing', 'completed', '资料处理中'],
+    ['unavailable', 'completed', '检索服务不可用'], ['ready', 'failed', '执行失败'],
+    ['ready', 'cancelled', '已取消'], ['ready', 'unknown', '结果待核对'],
+  ]) {
+    const reply = { ...message('1'), content: [{ type: 'tool-call', toolCallId: 'reading', toolName: 'knowledge__read_source', args: {}, argsText: '',
+      result: { status: resultStatus, sourceStatus, secretSourceText: 'PRIVATE_SOURCE_CANARY' } },
+      { type: 'text', text: '正文及引用仍保留' }] } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+    assert.equal($('[data-slot="tool-call"]').length, 1)
+    assert.equal($('[data-slot="progress-tracker"]').length, 0)
+    assert.match($('[data-slot="tool-call"] button').text(), new RegExp(label))
+    assert.match($.text(), /正文及引用仍保留/)
+    assert.doesNotMatch($.text(), /PRIVATE_SOURCE_CANARY/)
+    if (sourceStatus === 'unavailable' || resultStatus === 'failed') assert.match($('[role="alert"]').text(), /这一步未完成/)
+  }
+})
+
+
+test('each message render classifies its parts once and still places exactly one final footer', () => {
+  const original = message('1', 'me')
+  const reply = { ...original, content: Array.from({ length: 80 }, (_, index) => ({ type: 'text' as const, text: `part ${index}` })) } as ThreadMessage
+  presentationCalls = 0
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.equal($('[data-native-part="text"]').length, 80)
+  assert.equal($('[data-message-footer]').length, 1)
+  assert.equal(presentationCalls, 1, 'footer consumers reuse their message owner classification')
 })

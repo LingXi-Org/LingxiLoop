@@ -1389,6 +1389,61 @@ test('[integration] homework shares forum filters while keeping target flags, co
   assert.equal((await call(outsider,`/courses/${courseId}/teacher-agent`)).status,404)
 })
 
+// #325 failure model, recorded before implementation: the forum entry reads a
+// teacher room that course creation no longer provisions. A lost response or
+// concurrent retry must reuse one room, restore only the caller's list entry,
+// and leave existing homework drafts/files untouched. Preparation must not
+// grant course membership, reopen an inactive course, or cross tenant/course.
+test('[integration] forum teacher entry prepares one room and preserves drafts on repeated requests', async () => {
+  const draft = await homework.draft(teacher, courseId, visible)
+  const url = `/courses/${courseId}/teacher-agent`
+  assert.equal((await call(teacher, url)).status, 404, 'GET remains a read, not a provisioning side effect')
+  const responses = await Promise.all([call(teacher, url, 'POST', {}), call(teacher, url, 'POST', {})])
+  for (const response of responses) assert.equal(response.status, 200)
+  const first = await responses[0].json() as { roomId: string; agentId: string; roomStatus: string }
+  const second = await responses[1].json()
+  assert.deepEqual(first, second)
+  assert.deepEqual(await (await call(teacher, url)).json(), first)
+  const channels = () => fetch(`${clients.get(teacher.userId)}/im/channels`, {
+    headers: { 'x-company-id': companyId, 'x-project-id': projectId },
+  }).then(response => response.json()) as Promise<Array<{ id: string }>>
+  assert.ok((await channels()).some(item => item.id === first.roomId))
+  for (const scope of [teacher, colleague]) await pool.query(`INSERT INTO conversation_list_removals(user_id,conversation_id,company_id,project_id)
+    VALUES($1,$2,$3,$4)`, [scope.userId,first.roomId,companyId,projectId])
+  assert.ok(!(await channels()).some(item => item.id === first.roomId))
+  assert.equal((await call(teacher, url, 'POST', {})).status, 200)
+  assert.ok((await channels()).some(item => item.id === first.roomId))
+  assert.deepEqual((await pool.query('SELECT user_id FROM conversation_list_removals WHERE conversation_id=$1', [first.roomId])).rows,
+    [{ user_id: colleague.userId }])
+  assert.equal((await pool.query('SELECT 1 FROM learning_course_teacher_rooms WHERE company_id=$1 AND course_id=$2', [companyId,courseId])).rowCount, 1)
+  assert.equal((await pool.query('SELECT 1 FROM learning_project_teacher_agents WHERE company_id=$1 AND project_id=$2', [companyId,projectId])).rowCount, 1)
+  assert.equal((await pool.query('SELECT 1 FROM homeworks WHERE company_id=$1', [companyId])).rowCount, 1)
+  assert.deepEqual(await homework.detail(teacher, courseId, draft.homework.id), draft)
+  assert.equal((await pool.query('SELECT 1 FROM course_forum_posts WHERE company_id=$1', [companyId])).rowCount, 0)
+})
+
+test('[integration] teacher entry refuses unauthorized or inactive scopes without provisioning', async () => {
+  const url = `/courses/${courseId}/teacher-agent`
+  assert.equal((await call(student, url, 'POST', {})).status, 403)
+  assert.equal((await call(outsider, url, 'POST', {})).status, 404)
+  assert.equal((await call(teacher, '/courses/nonexistent/teacher-agent', 'POST', {})).status, 404)
+  assert.equal((await call(colleague, '/courses/homework-other-course/teacher-agent', 'POST', {})).status, 404)
+  assert.equal((await call({ ...teacher, companyId: 'another-tenant' }, url, 'POST', {})).status, 404)
+  await pool.query("UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3", [companyId,projectId,teacher.userId])
+  assert.equal((await call(teacher, url, 'POST', {})).status, 403)
+  await pool.query("UPDATE project_memberships SET status='ACTIVE' WHERE company_id=$1 AND project_id=$2 AND user_id=$3", [companyId,projectId,teacher.userId])
+  // A company administrator with no course teacher membership must not be
+  // silently added to the teacher group as a side effect of this entry point.
+  await pool.query('UPDATE company_memberships SET is_admin=TRUE WHERE company_id=$1 AND user_id=$2 AND ended_at IS NULL', [companyId,colleague.userId])
+  assert.equal((await call(colleague, '/courses/homework-other-course/teacher-agent', 'POST', {})).status, 403)
+  for (const status of ['DRAFT','COURSE_ENDED','READ_ONLY','ARCHIVED']) {
+    await pool.query('UPDATE projects SET status=$3 WHERE company_id=$1 AND id=$2', [companyId,projectId,status])
+    assert.equal((await call(teacher, url, 'POST', {})).status, 403)
+  }
+  assert.equal((await pool.query('SELECT 1 FROM learning_course_teacher_rooms')).rowCount, 0)
+  assert.equal((await pool.query('SELECT 1 FROM learning_project_teacher_agents')).rowCount, 0)
+})
+
 // Failure model: recovery-only pre-edit text leaks through report JSON, frozen
 // submissions or old stored snapshots; stripping it must preserve current native
 // formatting, private recovery, report pairing, tenant/peer checks and idempotency.
@@ -1438,4 +1493,33 @@ test('[integration] legacy recovery stays private across current reports and nat
   await assert.rejects(homework.submissions(outsider, courseId, task.id))
   assert.equal((await homework.detail(student, courseId, task.id)).student!.answer.editorDocument?.legacyMarkdown, 'PRIVATE ORIGINAL A')
   assert.equal((await pool.query('SELECT answer FROM homework_submissions WHERE id=$1', [submitted.id])).rows[0].answer.editorDocument.legacyMarkdown, 'PRIVATE ORIGINAL A')
+})
+
+// #381: direct human authoring must enter the existing homework lifecycle. The
+// caller UUID is stable across a lost HTTP response; it never grants authority.
+test('381 human draft endpoint retries one course-scoped draft and preserves explicit publication', async () => {
+  const id=randomUUID(),url=path(id,'/draft')
+  const created=await call(teacher,url,'PUT',visible)
+  assert.equal(created.status,200)
+  const first=await created.json() as {homework:{id:string;status:string;revision:number;visibleHash:string}}
+  assert.equal(first.homework.id,id);assert.equal(first.homework.status,'DRAFT')
+  const replays=await Promise.all([call(teacher,url,'PUT',visible),call(teacher,url,'PUT',visible)])
+  for(const replay of replays){assert.equal(replay.status,200);assert.equal((await replay.json() as {homework:{id:string}}).homework.id,id)}
+  const count=await pool.query('SELECT count(*)::int n FROM homeworks WHERE id=$1',[id])
+  assert.equal(count.rows[0].n,1)
+  assert.equal((await call(teacher,url,'PUT',{...visible,title:'Changed retry'})).status,409)
+  assert.equal((await call(colleague,url,'PUT',visible)).status,409)
+  assert.equal((await call(student,path(id))).status,404)
+  assert.equal((await call(teacher,path(id,'/publish'),'POST',{expectedRevision:first.homework.revision,visibleHash:first.homework.visibleHash,idempotencyKey:'381-publish'})).status,409)
+  await pool.query("UPDATE homeworks SET validation_status='READY',validated_revision=revision WHERE id=$1",[id])
+  assert.equal((await call(teacher,path(id,'/publish'),'POST',{expectedRevision:first.homework.revision,visibleHash:first.homework.visibleHash,idempotencyKey:'381-publish'})).status,200)
+  assert.equal((await call(student,path(id))).status,200)
+})
+
+test('381 direct draft rejects student, unrelated course and revoked teacher without writes',async()=>{
+  for(const scope of [student,outsider]) assert.ok([403,404].includes((await call(scope,path(randomUUID(),'/draft'),'PUT',visible)).status))
+  assert.equal((await call(teacher,path('invalid-id','/draft'),'PUT',visible)).status,400)
+  await pool.query("UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3",[companyId,projectId,teacher.userId])
+  assert.ok([403,404].includes((await call(teacher,path(randomUUID(),'/draft'),'PUT',visible)).status))
+  assert.equal((await pool.query('SELECT count(*)::int n FROM homeworks')).rows[0].n,0)
 })

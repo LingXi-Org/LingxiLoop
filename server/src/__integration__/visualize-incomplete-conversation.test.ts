@@ -21,7 +21,7 @@ import { installRecordingWukong } from './_recording-wukong.js'
 
 // Failure model: docs/evidence/issue-298/FAILURE-MODEL.md. Uses the published
 // Worker and OpenAI HTTP driver, real local PostgreSQL, and synthetic responses.
-// Pre-fix receipt is preserved separately; these assertions require formal3.8.2.
+// Pre-fix receipts are preserved separately; use the current formal runtime.
 test('ordinary and activated conversations repair missing delivery; exhausted repair remains partial', { timeout: 60000 }, async () => {
   await ensureSchemaOnce(); await resetAllTables()
   const im = await installRecordingWukong()
@@ -35,8 +35,10 @@ test('ordinary and activated conversations repair missing delivery; exhausted re
   const usage = { prompt_tokens: 100, completion_tokens: 20, total_tokens: 120 }
   let worker: ReturnType<typeof createWorker> | undefined
   try {
-    for (const scenario of ['ordinary','activated','exhausted','quoted-peer','protocol-exhausted','handoff'] as const) {
-      const activated = scenario === 'activated', exhausted = scenario === 'exhausted', handoff = scenario === 'handoff', protocolExhausted = scenario === 'protocol-exhausted'
+    for (const scenario of ['ordinary','activated','exhausted','quoted-peer','protocol-exhausted','protocol-promise','handoff'] as const) {
+      const promiseOnly = scenario === 'protocol-promise'
+      const activated = scenario === 'activated', exhausted = scenario === 'exhausted', handoff = scenario === 'handoff', protocolExhausted = scenario === 'protocol-exhausted' || promiseOnly
+      const candidateAnswer = promiseOnly ? 'I will look up the materials and then create the interactive comparison.' : answer
       const protocolFailures = activated || handoff || protocolExhausted ? 2 : exhausted ? 0 : 1
       const firstCandidate = protocolFailures+1+(activated ? 1 : 0), partial = exhausted || handoff || protocolExhausted
       const peer = `visual-peer-${scenario}`
@@ -70,7 +72,7 @@ test('ordinary and activated conversations repair missing delivery; exhausted re
           const { name,version,hash } = skillIndex(visualizeSkill)
           tool('skills__activate',{ name,version,hash })
         } else if (n === firstCandidate || exhausted) {
-          const candidate = handoff ? `- Reviewer \`@${peer}\` Verify the comparison.` : scenario === 'quoted-peer' ? `> @${peer} This is a quoted example.\n\n${answer}` : answer
+          const candidate = handoff ? `- Reviewer \`@${peer}\` Verify the comparison.` : scenario === 'quoted-peer' ? `> @${peer} This is a quoted example.\n\n${answer}` : candidateAnswer
           send({ content: JSON.stringify({ commentary,answer: candidate }) },'stop')
         } else if (n === firstCandidate+1) {
           assert.ok(JSON.stringify(input.messages).includes(activated ? 'product:visualize-authoring' : 'fix the omissions'))
@@ -90,7 +92,9 @@ test('ordinary and activated conversations repair missing delivery; exhausted re
       await new Promise<void>(resolve => provider.listen(0,'127.0.0.1',resolve))
       try {
         const address = provider.address(); assert.ok(address && typeof address !== 'string')
-        worker = createWorker({ controlPlane: api,policy: new ProductRuntimePolicy(),worker: { id: `incomplete-visual-${scenario}`,shutdownGraceMs: 1000 },
+        // Explicit review coverage: preserve content omissions/partial outcomes
+        // without restoring review to ordinary production conversations.
+        worker = createWorker({ semanticReview: 'required',controlPlane: api,policy: new ProductRuntimePolicy(),worker: { id: `incomplete-visual-${scenario}`,shutdownGraceMs: 1000 },
           model: { id: 'synthetic-visual',apiKey: 'synthetic-local-provider',baseUrl: `http://127.0.0.1:${address.port}/v1`,publicTextProtocol: 'purpose-json-v1',
             requestTimeoutMs: 10000,firstByteTimeoutMs: 2000,streamIdleTimeoutMs: 2000,contextWindowTokens: 1_000_000 },
           // Native handoff reserves a default 120s child call and a 120s closing call.
@@ -133,12 +137,42 @@ test('ordinary and activated conversations repair missing delivery; exhausted re
           assert.equal(calls,exhausted ? 3 : firstCandidate); assert.equal(repairs,0)
           assert.equal(state?.run.goalOutcome?.status,'partial')
           assert.equal(replay.status?.type,'incomplete')
-          if(exhausted || protocolExhausted)assert.equal(nativeText(replay),answer)
+          if(exhausted || protocolExhausted)assert.equal(nativeText(replay),candidateAnswer)
           assert.equal((await pool.query('SELECT count(*)::int n FROM im_visualize_documents WHERE run_id=$1',[identity.runId])).rows[0].n,0)
           if(handoff){
             assert.ok(nativeText(replay).includes(`@${peer}`))
             assert.ok((await pool.query('SELECT 1 FROM lingxios.agent_work_items WHERE tenant_id=$1 AND agent_id=$2',[companyId,peer])).rowCount,'committed authorized mention dispatches actual peer work')
           }
+        }
+        if (promiseOnly) {
+          // Issue 331: preserve the existing shared correction ceiling. A valid
+          // envelope is not goal satisfaction, even if its body is non-empty.
+          // The current runtime makes one joint content/scope review; this
+          // fixture retains the default zero additional content allowance.
+          // Failure model: docs/evidence/issue-331/FAILURE-MODEL.md.
+          assert.equal(calls,3); assert.equal(reviews,1); assert.equal(repairs,0)
+          assert.equal(state?.run.goalOutcome?.verification,'inconclusive')
+          assert.ok(state?.run.goalOutcome?.gaps?.length)
+          const delivered = () => im.messages.filter(row => row.channelId === room && row.fromUid === agentId)
+          assert.equal(delivered().length,1)
+          assert.equal(nativeText(delivered()[0].payload),candidateAnswer)
+          assert.deepEqual(replay.status,{ type: 'incomplete',reason: 'other' })
+          assert.equal((replay.metadata.custom.harness as { lifecycle: string }).lifecycle,'partial')
+          const before = { calls,reviews,deliveries: delivered().length,ledger: ledger.length }
+          for (let replayCount=0; replayCount<2; replayCount++) {
+            const refreshed = (await readRunProjection(api,identity,true,undefined,undefined,undefined,true)).snapshot.message
+            assert.equal(nativeText(refreshed),candidateAnswer)
+            assert.deepEqual(refreshed.status,replay.status)
+            assert.deepEqual(refreshed.content,replay.content)
+          }
+          const afterLedger = await pool.query('SELECT count(*)::int n FROM llm_calls WHERE company_id=$1 AND run_id=$2',[companyId,identity.runId])
+          assert.deepEqual({ calls,reviews,deliveries: delivered().length,ledger: afterLedger.rows[0].n },before)
+          await mkdir('artifacts/issue-331',{ recursive: true })
+          await writeFile('artifacts/issue-331/promise-partial.json',JSON.stringify({ runtime: releaseVersions.runtime,syntheticOnly: true,
+            originalCaseVerified: false,productionRequests: 0,publishedWorker: true,realPostgres: true,
+            initialProtocolFailures: failed.length,generationCalls: calls,reviewCalls: reviews,contentRepairs: repairs,
+            execution: state?.run.status,outcome: state?.run.goalOutcome?.status,delivery: state?.delivery,
+            deliveries: delivered().length,visualizationWrites: 0,retainedTextStable: true,replayHasNoEffects: true },null,2)+'\n')
         }
         receipts.push({ scenario,activated,initialProtocolFailures: protocolFailures,execution: state?.run.status,traceState: rootTrace?.state,actualExecutionEnd: !!rootTrace?.completedAt,generationCalls: calls,reviews,repairs,failedProtocolAttempts: failed.length,outcome: state?.run.goalOutcome?.status,
           delivery: state?.delivery,renderedReferencePresent: !!reference && nativeText(replay).includes(reference),commentaryOutsideAnswer: true })

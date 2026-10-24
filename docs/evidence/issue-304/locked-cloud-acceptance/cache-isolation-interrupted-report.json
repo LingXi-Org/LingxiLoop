@@ -1,0 +1,2289 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a164ae-5a4d-7e1b-aed2-1b8395073e4e",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.21.2"
+    },
+    "status": "interrupted",
+    "exitCode": 130,
+    "startedAt": "2026-10-22T17:35:11.326Z",
+    "finishedAt": "2026-10-22T17:36:16.823Z",
+    "project": {
+      "id": "lingxiloop-answer-first-cloud",
+      "configDigest": "4f8cfdd5c2ef3b6d3a7f523b9db746cedc78e633ddc48645b5c5b9486bdc21f0"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "5ad98e3b1f606a41a6b22c910cbbcce4a8ec58e2",
+      "branch": "verify/304-cloud-acceptance",
+      "dirty": false
+    },
+    "targets": [
+      {
+        "id": "reduced-motion",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:53124",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.15.2",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "18877bcff759121a0e016ed7a36b537078cab04683726b5181fdf5ce383c78d4",
+        "testId": "e2e/answer-first/attention.e2e.ts::native%20interrupt%20and%20awaiting_input%20have%20one%20actionable%20continuation",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "native interrupt and awaiting_input have one actionable continuation"
+        ],
+        "file": "e2e/answer-first/attention.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/attention.e2e.ts",
+          "line": 7,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T17:35:15.539Z",
+            "durationMs": 10926,
+            "artifacts": [
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:8"
+                },
+                "path": "attention-native-interrupt-and-awaiting-18877bcff759121a/attempt-1/screenshots/001-native-unbound-single-attention.png",
+                "size": 32239,
+                "sha256": "5378c51dc7b4bcd4156c0f98af94cfbf9f1e46fdb1151ae04461d9f2e15fcd42"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "environment": {
+              "browser": "chromium 156.0.8078.4",
+              "user agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+            },
+            "steps": [
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/questionnaire.html?mode=native-unbound",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:16.911Z",
+                "durationMs": 9202,
+                "events": [],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/questionnaire.html?mode=native-unbound",
+                  "nodes": 18,
+                  "changes": []
+                },
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 8,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.117Z",
+                "durationMs": 59,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:26.117Z",
+                    "durationMs": 59,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 9,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.177Z",
+                "durationMs": 5,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:26.177Z",
+                    "durationMs": 5,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 10,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.fill",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.182Z",
+                "durationMs": 121,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "fill",
+                    "startedAt": "2026-10-22T17:35:26.183Z",
+                    "durationMs": 121,
+                    "status": "passed",
+                    "detail": "fill textbox \"补充信息\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/questionnaire.html?mode=native-unbound",
+                  "nodes": 18,
+                  "since": 0,
+                  "changes": [
+                    "changed textbox \"补充信息\" value=\"合成补充答案\" (was: textbox \"补充信息\")",
+                    "changed button \"提交\" (was: button \"提交\" [disabled])"
+                  ]
+                },
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 11,
+                  "column": 62
+                }
+              },
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.306Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 12,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-native-resumes]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.338Z",
+                "durationMs": 17,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:26.338Z",
+                    "durationMs": 16,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 17,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-native-sends]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.355Z",
+                "durationMs": 4,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:26.355Z",
+                    "durationMs": 4,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 18,
+                  "column": 56
+                }
+              },
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"textbox\", name: \"补充信息\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.360Z",
+                "durationMs": 5,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:26.360Z",
+                    "durationMs": 5,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 19,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164ae-6e53-7155-bc6d-9e9f333bfc20:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "native-unbound-single-attention",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.365Z",
+                "durationMs": 82,
+                "events": [],
+                "artifacts": [
+                  "01a164ae-6e53-7155-bc6d-9e9f333bfc20:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 20,
+                  "column": 13
+                }
+              }
+            ],
+            "appLog": [
+              {
+                "source": "console",
+                "level": "info",
+                "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (at http://127.0.0.1:53124/@fs/tmp/lingxiloop-issue304-browser-vite-cache/deps/react-dom_client.js?v=541d8334:20103)",
+                "at": "2026-10-22T17:35:25.414Z",
+                "step": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "50f6b008268f47513f683e62e31d21422a5a1724840200b19fb60baea54e494f",
+        "testId": "e2e/answer-first/attention.e2e.ts::current%20approval%20has%20one%20external%20action%20and%20replay%20cannot%20submit%20it%20again",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "current approval has one external action and replay cannot submit it again"
+        ],
+        "file": "e2e/answer-first/attention.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/attention.e2e.ts",
+          "line": 23,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a164ae-9903-78c8-80d6-e887b3992a95",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T17:35:26.467Z",
+            "durationMs": 31381,
+            "artifacts": [
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a164ae-9903-78c8-80d6-e887b3992a95:10"
+                },
+                "path": "attention-current-approval-has-one-50f6b008268f4751/attempt-1/screenshots/001-answer-first-approval-single-receipt.png",
+                "size": 17416,
+                "sha256": "5175357865ee2efc96255ef9aaea7c7d282e9f99dbbd5988c9fb51336c25b416"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "environment": {
+              "browser": "chromium 156.0.8078.4",
+              "user agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+            },
+            "steps": [
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:26.527Z",
+                "durationMs": 27716,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 27,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:54.244Z",
+                "durationMs": 140,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:54.245Z",
+                    "durationMs": 140,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 28,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-message-region=\\\"attention\\\"]\") >> getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:54.385Z",
+                "durationMs": 24,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:54.388Z",
+                    "durationMs": 24,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 29,
+                  "column": 116
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:3",
+                "index": 3,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:54.413Z",
+                "durationMs": 571,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "tap",
+                    "startedAt": "2026-10-22T17:35:54.413Z",
+                    "durationMs": 567,
+                    "status": "passed",
+                    "detail": "tap button \"等待处理\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 34,
+                  "changes": []
+                },
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 30,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:54.986Z",
+                "durationMs": 198,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "tap",
+                    "startedAt": "2026-10-22T17:35:54.986Z",
+                    "durationMs": 198,
+                    "status": "passed",
+                    "detail": "tap button \"等待处理\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 31,
+                  "since": 3,
+                  "changes": [
+                    "changed button \"等待处理\" (was: button \"等待处理\" [expanded])",
+                    "removed list",
+                    "removed listitem \"公开过程 001\"",
+                    "removed text=\"公开过程 001\""
+                  ]
+                },
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 31,
+                  "column": 92
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:55.219Z",
+                "durationMs": 61,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 33,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:55.280Z",
+                "durationMs": 44,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:55.280Z",
+                    "durationMs": 44,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 34,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:55.369Z",
+                "durationMs": 246,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:55.369Z",
+                    "durationMs": 245,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 39,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:55.615Z",
+                "durationMs": 1624,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 40,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"批准并继续\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:57.240Z",
+                "durationMs": 315,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:35:57.240Z",
+                    "durationMs": 314,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 41,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164ae-9903-78c8-80d6-e887b3992a95:10",
+                "index": 10,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-approval-single-receipt",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:57.594Z",
+                "durationMs": 156,
+                "events": [],
+                "artifacts": [
+                  "01a164ae-9903-78c8-80d6-e887b3992a95:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/attention.e2e.ts",
+                  "line": 43,
+                  "column": 13
+                }
+              }
+            ],
+            "appLog": [
+              {
+                "source": "network",
+                "level": "warning",
+                "text": "GET http://127.0.0.1:53124/@fs/tmp/lingxiloop-issue304-browser-vite-cache/deps/chunk-4ADLBBCM.js?v=ba0c10b8 404 Not Found",
+                "at": "2026-10-22T17:35:49.266Z",
+                "step": 0
+              },
+              {
+                "source": "console",
+                "level": "info",
+                "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (at http://127.0.0.1:53124/@fs/tmp/lingxiloop-issue304-browser-vite-cache/deps/react-dom_client.js?v=79b81b49:20103)",
+                "at": "2026-10-22T17:35:52.669Z",
+                "step": 0
+              },
+              {
+                "source": "console",
+                "level": "info",
+                "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (at http://127.0.0.1:53124/@fs/tmp/lingxiloop-issue304-browser-vite-cache/deps/react-dom_client.js?v=79b81b49:20103)",
+                "at": "2026-10-22T17:35:56.808Z",
+                "step": 8
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "253e0f64bf9fcb8d8441071df4478f161d7e5e1dd249cd208f2d550cc5b90042",
+        "testId": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts::failed%20cancelled%20and%20incomplete%20runs%20retain%20body%20and%20honest%20process%20status",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "failed cancelled and incomplete runs retain body and honest process status"
+        ],
+        "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a164af-13ed-7213-8b07-722ad0c08ef5",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-22T17:35:57.933Z",
+            "durationMs": 7273,
+            "artifacts": [
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a164af-13ed-7213-8b07-722ad0c08ef5:8"
+                },
+                "path": "outcomes-failed-cancelled-and-incomplete-253e0f64bf9fcb8d/attempt-1/screenshots/001-answer-first-outcome-error.png",
+                "size": 31924,
+                "sha256": "5e9e6884d507f1139c348fb9470351006622b451b6f3dd7e151ad174e196fdd2"
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a164af-13ed-7213-8b07-722ad0c08ef5:17"
+                },
+                "path": "outcomes-failed-cancelled-and-incomplete-253e0f64bf9fcb8d/attempt-1/screenshots/002-answer-first-outcome-cancelled.png",
+                "size": 25386,
+                "sha256": "bed3ccf3d474d428946d5ffe25a6efe4d4100b9344aef781132edb65fa851f3d"
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a164af-13ed-7213-8b07-722ad0c08ef5:26"
+                },
+                "path": "outcomes-failed-cancelled-and-incomplete-253e0f64bf9fcb8d/attempt-1/screenshots/003-answer-first-outcome-incomplete.png",
+                "size": 24746,
+                "sha256": "b549c34ffd1fcebe687ec7d7421adb85466cf6719a5af8ac9fcef37625754aa1"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "environment": {
+              "browser": "chromium 156.0.8078.4",
+              "user agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36"
+            },
+            "steps": [
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:35:57.984Z",
+                "durationMs": 3027,
+                "events": [],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 9,
+                  "changes": []
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 13,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.013Z",
+                "durationMs": 71,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:01.013Z",
+                    "durationMs": 70,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 14,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.084Z",
+                "durationMs": 9,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:01.084Z",
+                    "durationMs": 9,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 15,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.093Z",
+                "durationMs": 8,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:01.093Z",
+                    "durationMs": 7,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 17,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.101Z",
+                "durationMs": 131,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "focus",
+                    "startedAt": "2026-10-22T17:36:01.101Z",
+                    "durationMs": 131,
+                    "status": "passed",
+                    "detail": "focus button \"处理失败\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 25,
+                  "since": 0,
+                  "changes": [
+                    "added text=\"2026/10/22 00:00 · 会话开始\"",
+                    "added image \"学习助手 · 可用\"",
+                    "added text=\"学习助手\"",
+                    "added button \"处理失败\"",
+                    "added text=\"处理失败\"",
+                    "added status \"处理失败\"",
+                    "added text=\"已形成的部分答复仍然可读。\"",
+                    "added alert \"回复生成失败 消息生成失败，请重试。 重试\"",
+                    "added text=\"回复生成失败\"",
+                    "added text=\"消息生成失败，请重试。\"",
+                    "added button \"重试\" [disabled]",
+                    "added toolbar \"智能助教回复操作\""
+                  ],
+                  "more": 6
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 18,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.232Z",
+                "durationMs": 155,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "press",
+                    "startedAt": "2026-10-22T17:36:01.233Z",
+                    "durationMs": 155,
+                    "status": "passed",
+                    "detail": "press button \"处理失败\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 28,
+                  "since": 4,
+                  "changes": [
+                    "changed button \"处理失败\" [expanded] (was: button \"处理失败\")",
+                    "added list",
+                    "added listitem \"公开过程 001\"",
+                    "added text=\"公开过程 001\""
+                  ]
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 18,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.389Z",
+                "durationMs": 17,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:01.390Z",
+                    "durationMs": 17,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 19,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"已形成的部分答复仍然可读。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.407Z",
+                "durationMs": 17,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:01.411Z",
+                    "durationMs": 17,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 20,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-outcome-error",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.428Z",
+                "durationMs": 145,
+                "events": [],
+                "artifacts": [
+                  "01a164af-13ed-7213-8b07-722ad0c08ef5:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 21,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:9",
+                "index": 9,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:01.578Z",
+                "durationMs": 1327,
+                "events": [],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 9,
+                  "since": 5,
+                  "changes": [
+                    "added status \"开始一段新对话\"",
+                    "removed text=\"2026/10/22 00:00 · 会话开始\"",
+                    "removed image \"学习助手 · 可用\"",
+                    "removed text=\"学习助手\"",
+                    "removed button \"处理失败\" [expanded]",
+                    "removed text=\"处理失败\"",
+                    "removed list",
+                    "removed listitem \"公开过程 001\"",
+                    "removed text=\"公开过程 001\"",
+                    "removed status \"处理失败\"",
+                    "removed text=\"已形成的部分答复仍然可读。\"",
+                    "removed alert \"回复生成失败 消息生成失败，请重试。 重试\""
+                  ],
+                  "more": 9
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 13,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:02.907Z",
+                "durationMs": 53,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:02.909Z",
+                    "durationMs": 51,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 14,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:11",
+                "index": 11,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:02.960Z",
+                "durationMs": 17,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:02.961Z",
+                    "durationMs": 17,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 15,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:02.979Z",
+                "durationMs": 12,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:02.979Z",
+                    "durationMs": 12,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 17,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:13",
+                "index": 13,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:02.991Z",
+                "durationMs": 156,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "focus",
+                    "startedAt": "2026-10-22T17:36:02.992Z",
+                    "durationMs": 156,
+                    "status": "passed",
+                    "detail": "focus button \"已取消\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 23,
+                  "since": 9,
+                  "changes": [
+                    "added text=\"2026/10/22 00:00 · 会话开始\"",
+                    "added image \"学习助手 · 可用\"",
+                    "added text=\"学习助手\"",
+                    "added button \"已取消\"",
+                    "added text=\"已取消\"",
+                    "added status \"已取消\"",
+                    "added text=\"已形成的部分答复仍然可读。\"",
+                    "added region \"答复附件与操作\"",
+                    "added status \"已取消\"",
+                    "added toolbar \"智能助教回复操作\"",
+                    "added button \"复制回复\"",
+                    "added button \"评价为有帮助\" [disabled]"
+                  ],
+                  "more": 4
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 18,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:14",
+                "index": 14,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:03.152Z",
+                "durationMs": 143,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "press",
+                    "startedAt": "2026-10-22T17:36:03.156Z",
+                    "durationMs": 143,
+                    "status": "passed",
+                    "detail": "press button \"已取消\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 26,
+                  "since": 13,
+                  "changes": [
+                    "changed button \"已取消\" [expanded] (was: button \"已取消\")",
+                    "added list",
+                    "added listitem \"公开过程 001\"",
+                    "added text=\"公开过程 001\""
+                  ]
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 18,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:15",
+                "index": 15,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:03.302Z",
+                "durationMs": 12,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:03.302Z",
+                    "durationMs": 12,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 19,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:16",
+                "index": 16,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"已形成的部分答复仍然可读。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:03.314Z",
+                "durationMs": 7,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:03.314Z",
+                    "durationMs": 7,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 20,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:17",
+                "index": 17,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-outcome-cancelled",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:03.321Z",
+                "durationMs": 114,
+                "events": [],
+                "artifacts": [
+                  "01a164af-13ed-7213-8b07-722ad0c08ef5:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 21,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:18",
+                "index": 18,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:03.439Z",
+                "durationMs": 1163,
+                "events": [],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 10,
+                  "since": 14,
+                  "changes": [
+                    "added status \"开始一段新对话\"",
+                    "removed image \"学习助手 · 可用\"",
+                    "removed text=\"学习助手\"",
+                    "removed button \"已取消\" [expanded]",
+                    "removed text=\"已取消\"",
+                    "removed list",
+                    "removed listitem \"公开过程 001\"",
+                    "removed text=\"公开过程 001\"",
+                    "removed status \"已取消\"",
+                    "removed text=\"已形成的部分答复仍然可读。\"",
+                    "removed region \"答复附件与操作\"",
+                    "removed status \"已取消\""
+                  ],
+                  "more": 6
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 13,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:04.604Z",
+                "durationMs": 47,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:04.604Z",
+                    "durationMs": 46,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 14,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-message-region=\\\"body\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:04.651Z",
+                "durationMs": 8,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:04.651Z",
+                    "durationMs": 8,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 15,
+                  "column": 67
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:21",
+                "index": 21,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:04.659Z",
+                "durationMs": 11,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:04.660Z",
+                    "durationMs": 11,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 17,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:22",
+                "index": 22,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:04.671Z",
+                "durationMs": 223,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "focus",
+                    "startedAt": "2026-10-22T17:36:04.671Z",
+                    "durationMs": 223,
+                    "status": "passed",
+                    "detail": "focus button \"未完成\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 21,
+                  "since": 18,
+                  "changes": [
+                    "added image \"学习助手 · 可用\"",
+                    "added text=\"学习助手\"",
+                    "added button \"未完成\"",
+                    "added text=\"未完成\"",
+                    "added status \"未完成\"",
+                    "added text=\"已形成的部分答复仍然可读。\"",
+                    "added toolbar \"智能助教回复操作\"",
+                    "added button \"复制回复\"",
+                    "added button \"评价为有帮助\" [disabled]",
+                    "added button \"评价为无帮助\" [disabled]",
+                    "added button \"重新生成回复\" [disabled]",
+                    "added button \"更多回复操作\""
+                  ],
+                  "more": 1
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 18,
+                  "column": 22
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:23",
+                "index": 23,
+                "kind": "locator",
+                "api": "locator.press",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:04.895Z",
+                "durationMs": 116,
+                "events": [
+                  {
+                    "kind": "engine",
+                    "name": "press",
+                    "startedAt": "2026-10-22T17:36:04.896Z",
+                    "durationMs": 115,
+                    "status": "passed",
+                    "detail": "press button \"未完成\""
+                  }
+                ],
+                "artifacts": [],
+                "screen": {
+                  "location": "http://127.0.0.1:53124/e2e/answer-first.html",
+                  "nodes": 24,
+                  "since": 22,
+                  "changes": [
+                    "changed button \"未完成\" [expanded] (was: button \"未完成\")",
+                    "added list",
+                    "added listitem \"公开过程 001\"",
+                    "added text=\"公开过程 001\""
+                  ]
+                },
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 18,
+                  "column": 48
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[data-slot=\\\"run-activity\\\"] > [data-slot=\\\"collapsible\\\"] > button\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:05.013Z",
+                "durationMs": 27,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:05.013Z",
+                    "durationMs": 26,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 19,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"已形成的部分答复仍然可读。\")",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:05.040Z",
+                "durationMs": 10,
+                "events": [
+                  {
+                    "kind": "poll",
+                    "name": "expect",
+                    "startedAt": "2026-10-22T17:36:05.040Z",
+                    "durationMs": 9,
+                    "status": "passed",
+                    "count": 1
+                  }
+                ],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 20,
+                  "column": 70
+                }
+              },
+              {
+                "id": "01a164af-13ed-7213-8b07-722ad0c08ef5:26",
+                "index": 26,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "answer-first-outcome-incomplete",
+                "status": "passed",
+                "startedAt": "2026-10-22T17:36:05.050Z",
+                "durationMs": 138,
+                "events": [],
+                "artifacts": [
+                  "01a164af-13ed-7213-8b07-722ad0c08ef5:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 21,
+                  "column": 15
+                }
+              }
+            ],
+            "appLog": [
+              {
+                "source": "console",
+                "level": "info",
+                "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (at http://127.0.0.1:53124/@fs/tmp/lingxiloop-issue304-browser-vite-cache/deps/react-dom_client.js?v=79b81b49:20103)",
+                "at": "2026-10-22T17:35:59.710Z",
+                "step": 0
+              },
+              {
+                "source": "console",
+                "level": "info",
+                "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (at http://127.0.0.1:53124/@fs/tmp/lingxiloop-issue304-browser-vite-cache/deps/react-dom_client.js?v=79b81b49:20103)",
+                "at": "2026-10-22T17:36:02.175Z",
+                "step": 9
+              },
+              {
+                "source": "console",
+                "level": "info",
+                "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold (at http://127.0.0.1:53124/@fs/tmp/lingxiloop-issue304-browser-vite-cache/deps/react-dom_client.js?v=79b81b49:20103)",
+                "at": "2026-10-22T17:36:04.020Z",
+                "step": 18
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "f86e1e89712dc0bf43e65fa533ff481385b8390226a1767ff7ae83f8f2d52b68",
+        "testId": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts::partial%20and%20blocked%20delivered%20artifacts%20remain%20visible%20without%20being%20called%20complete%20or%20empty",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "partial and blocked delivered artifacts remain visible without being called complete or empty"
+        ],
+        "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+          "line": 25,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "interrupted",
+        "attempts": [
+          {
+            "id": "01a164af-3064-7218-bbfc-036d3ea50aa7",
+            "index": 0,
+            "status": "interrupted",
+            "startedAt": "2026-10-22T17:36:05.220Z",
+            "durationMs": 1319,
+            "artifacts": [],
+            "error": {
+              "category": "interrupted",
+              "code": "INTERRUPTED",
+              "message": "run interrupted in phase body",
+              "retryable": false,
+              "phase": "body"
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a164af-3064-7218-bbfc-036d3ea50aa7:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/answer-first.html",
+                "status": "cancelled",
+                "startedAt": "2026-10-22T17:36:05.242Z",
+                "durationMs": 1211,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                  "line": 30,
+                  "column": 15
+                },
+                "error": {
+                  "category": "infrastructure",
+                  "code": "CANCELLED",
+                  "message": "operation cancelled",
+                  "retryable": false,
+                  "source": {
+                    "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+                    "line": 30,
+                    "column": 5
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "e46f80bab8f786ff0773e539f0c553fa528c70c70100d3d882336a9cfc4aa121",
+        "testId": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts::approval%20without%20control%20stays%20discoverable%20and%20non-actionable%20across%20disclosure%20and%20reload",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "approval without control stays discoverable and non-actionable across disclosure and reload"
+        ],
+        "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/cloud-acceptance/outcomes.e2e.ts",
+          "line": 44,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "3273bd47136c2a1122bdb37aa2b6fa61e1f7ee552d1ab7924406196bff631156",
+        "testId": "e2e/answer-first/cloud-acceptance/reduced.e2e.ts::real%20reduced%20motion%20disables%20process%20and%20task%20motion%20without%20removing%20keyboard%20actions",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "real reduced motion disables process and task motion without removing keyboard actions"
+        ],
+        "file": "e2e/answer-first/cloud-acceptance/reduced.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/cloud-acceptance/reduced.e2e.ts",
+          "line": 6,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "45bd503b366872eaf6538c319c3d182746c2d6083bf46579ead09292927d0dbd",
+        "testId": "e2e/answer-first/history.e2e.ts::bounded%20history%20retries%20in%20one%20process%20entry%20without%20replacing%20live%20answer%20or%20repeating%20entries",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "bounded history retries in one process entry without replacing live answer or repeating entries"
+        ],
+        "file": "e2e/answer-first/history.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/history.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "e8927baca5eeb6b140a8fa7aec4ddd126dfd16539e0fbf718143b36b9d777869",
+        "testId": "e2e/answer-first/history.e2e.ts::late%20history%20page%20cannot%20replace%20newer%20live%20data%20or%20new-request%20content",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "late history page cannot replace newer live data or new-request content"
+        ],
+        "file": "e2e/answer-first/history.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/history.e2e.ts",
+          "line": 33,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "5b75b24198d3db40978c0b0ed61e04007343fc6f11b914614a8e996948f1bafe",
+        "testId": "e2e/answer-first/layout.e2e.ts::one%20process%20disclosure%20contains%20ordinary%20rich%20tools%20while%20answer%20and%20results%20stay%20outside",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "one process disclosure contains ordinary rich tools while answer and results stay outside"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "a8742762b3bc2cbb7ad099e99be7d505b9c14cb292ce506f270087c392a4c54b",
+        "testId": "e2e/answer-first/layout.e2e.ts::manual%20reading%20position%20is%20not%20pulled%20to%20the%20bottom%20by%20new%20stream%20frames%20or%20process%20disclosure",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "manual reading position is not pulled to the bottom by new stream frames or process disclosure"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 43,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "3a1d3dadab3656d8c37cbc0f31e0c078967af9a43c1c57b6285314ba96a11189",
+        "testId": "e2e/answer-first/layout.e2e.ts::copy%20while%20the%20process%20is%20expanded%20contains%20only%20the%20current%20answer",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "copy while the process is expanded contains only the current answer"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 71,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "586305dc77e59835936351509d5713aceb42fe20d8b19395f5eff24849afb78d",
+        "testId": "e2e/answer-first/layout.e2e.ts::390px%20light%20and%20dark%20keep%20the%20answer%20readable%20and%20process%20keyboard%20accessible",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "390px light and dark keep the answer readable and process keyboard accessible"
+        ],
+        "file": "e2e/answer-first/layout.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/layout.e2e.ts",
+          "line": 89,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "d5418a75847bcea047e17aed854ccb5fe70e44dd4b63f03af6222874e85dec13",
+        "testId": "e2e/answer-first/narrow-acceptance.e2e.ts::390px%20real%20process%20disclosure%20stays%20framed%20and%20keyboard%20usable%20in%20light%20and%20dark%20themes",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "390px real process disclosure stays framed and keyboard usable in light and dark themes"
+        ],
+        "file": "e2e/answer-first/narrow-acceptance.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/narrow-acceptance.e2e.ts",
+          "line": 5,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "353a444b470d47bdc801cf66a8cc7dfcff935392f0e9d6dbf3aa7f5ce1633118",
+        "testId": "e2e/answer-first/v2-stream.e2e.ts::real%20v2%20first%20character%2C%20pending%20acceptance%20and%20final%20handoff%20preserve%20answer%20DOM%20and%20selection",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "real v2 first character, pending acceptance and final handoff preserve answer DOM and selection"
+        ],
+        "file": "e2e/answer-first/v2-stream.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/v2-stream.e2e.ts",
+          "line": 14,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "16631a05fac4536231f6c271942d4ed0f170056d1ad2c73551c606d1a6149d35",
+        "testId": "e2e/answer-first/v2-stream.e2e.ts::real%20superseded%20candidate%20leaves%20the%20main%20answer%20and%20correction%20receives%20a%20new%20identity",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "real superseded candidate leaves the main answer and correction receives a new identity"
+        ],
+        "file": "e2e/answer-first/v2-stream.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/v2-stream.e2e.ts",
+          "line": 55,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "73d803436da69d856438783667d6abf6b5cd1e814818e78155e68f42ff6206a9",
+        "testId": "e2e/answer-first/visualize.e2e.ts::completed%20replay%20preserves%20the%20visualization%20and%20owner%20change%20rebinds%20acquisition",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "completed replay preserves the visualization and owner change rebinds acquisition"
+        ],
+        "file": "e2e/answer-first/visualize.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/visualize.e2e.ts",
+          "line": 8,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "be08308cf1ab2ecdf37facde0f462b59ffb3f55d4691527f718250f4a8a32113",
+        "testId": "e2e/answer-first/visualize.e2e.ts::a%20late%20old-owner%20acquisition%20cannot%20activate%20inside%20the%20new%20owner%20card",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "a late old-owner acquisition cannot activate inside the new owner card"
+        ],
+        "file": "e2e/answer-first/visualize.e2e.ts",
+        "source": {
+          "file": "e2e/answer-first/visualize.e2e.ts",
+          "line": 47,
+          "column": 1
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "3173e9b355e0a5d31f407542862b6c2d6aedef18d47ddc268917cc554de8e0b2",
+        "testId": "e2e/web/questionnaire.e2e.ts::durable%20questionnaire::trusted%20questionnaire%20binding%20replaces%20generic%20continuation%20forms",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "durable questionnaire",
+          "trusted questionnaire binding replaces generic continuation forms"
+        ],
+        "file": "e2e/web/questionnaire.e2e.ts",
+        "source": {
+          "file": "e2e/web/questionnaire.e2e.ts",
+          "line": 5,
+          "column": 3
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "questionnaire"
+        ],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "27eca446a3718d4a98080a24c845bf07f98873d7125ce14403b51f64a709321e",
+        "testId": "e2e/web/questionnaire.e2e.ts::durable%20questionnaire::unread%20status%20blocks%20submission%3B%20waiting%20stays%20idle%20until%20explicit%20submit",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "durable questionnaire",
+          "unread status blocks submission; waiting stays idle until explicit submit"
+        ],
+        "file": "e2e/web/questionnaire.e2e.ts",
+        "source": {
+          "file": "e2e/web/questionnaire.e2e.ts",
+          "line": 15,
+          "column": 3
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "questionnaire"
+        ],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "099a4b08aea07be0f091eafecc169d0fd47271adcb783fb0f5d7faa04ab74075",
+        "testId": "e2e/web/questionnaire.e2e.ts::durable%20questionnaire::durable%20answers%20render%20read-only%20without%20answer%20history%20and%20refresh%20never%20posts",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "durable questionnaire",
+          "durable answers render read-only without answer history and refresh never posts"
+        ],
+        "file": "e2e/web/questionnaire.e2e.ts",
+        "source": {
+          "file": "e2e/web/questionnaire.e2e.ts",
+          "line": 22,
+          "column": 3
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "questionnaire"
+        ],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "798014b3619729b1a1339d03070ba5b28cd434fe6e4b494828270e9cd35581a8",
+        "testId": "e2e/web/questionnaire.e2e.ts::durable%20questionnaire::double%20clicks%20submit%20once%3B%20failure%20retries%20and%20refresh%20preserves%20accepted%20answers",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "durable questionnaire",
+          "double clicks submit once; failure retries and refresh preserves accepted answers"
+        ],
+        "file": "e2e/web/questionnaire.e2e.ts",
+        "source": {
+          "file": "e2e/web/questionnaire.e2e.ts",
+          "line": 32,
+          "column": 3
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "questionnaire"
+        ],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "6669bf0a1d0e1f4b26a8a651df5322dc77fb20f930f45fbcf3ce5ba1434221c8",
+        "testId": "e2e/web/questionnaire.e2e.ts::durable%20questionnaire::a%20lost%20accepted%20response%20reconciles%20canonical%20answers%20before%20another%20POST",
+        "kind": "test",
+        "declarationIndex": 4,
+        "titlePath": [
+          "durable questionnaire",
+          "a lost accepted response reconciles canonical answers before another POST"
+        ],
+        "file": "e2e/web/questionnaire.e2e.ts",
+        "source": {
+          "file": "e2e/web/questionnaire.e2e.ts",
+          "line": 47,
+          "column": 3
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "questionnaire"
+        ],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "0acc82edc3077878d909781e85e8ce352655bf85dfd6ac0cffb49acf4564653f",
+        "testId": "e2e/web/questionnaire.e2e.ts::durable%20questionnaire::pending%20submission%20freezes%20saved%20answers%20and%20retries%20only%20those%20values",
+        "kind": "test",
+        "declarationIndex": 5,
+        "titlePath": [
+          "durable questionnaire",
+          "pending submission freezes saved answers and retries only those values"
+        ],
+        "file": "e2e/web/questionnaire.e2e.ts",
+        "source": {
+          "file": "e2e/web/questionnaire.e2e.ts",
+          "line": 59,
+          "column": 3
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "questionnaire"
+        ],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "ba77c31513e9decfe68c12e40db0807a6c24f0e89c767f08c01858a2d8e5297f",
+        "testId": "e2e/web/questionnaire.e2e.ts::durable%20questionnaire::an%20exhausted%20resume%20keeps%20canonical%20answers%20and%20requires%20one%20explicit%20recovery",
+        "kind": "test",
+        "declarationIndex": 6,
+        "titlePath": [
+          "durable questionnaire",
+          "an exhausted resume keeps canonical answers and requires one explicit recovery"
+        ],
+        "file": "e2e/web/questionnaire.e2e.ts",
+        "source": {
+          "file": "e2e/web/questionnaire.e2e.ts",
+          "line": 70,
+          "column": 3
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "questionnaire"
+        ],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      },
+      {
+        "id": "17abfb008baf9f792f51b54d9451cbcb50b395fd2191826273a240d1cf05ec32",
+        "testId": "e2e/web/questionnaire.e2e.ts::durable%20questionnaire::unavailable%20and%20foreign%20owner%20cards%20stay%20disabled%3B%20loading%20failure%20can%20reload",
+        "kind": "test",
+        "declarationIndex": 7,
+        "titlePath": [
+          "durable questionnaire",
+          "unavailable and foreign owner cards stay disabled; loading failure can reload"
+        ],
+        "file": "e2e/web/questionnaire.e2e.ts",
+        "source": {
+          "file": "e2e/web/questionnaire.e2e.ts",
+          "line": 88,
+          "column": 3
+        },
+        "targetId": "reduced-motion",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [
+          "web",
+          "questionnaire"
+        ],
+        "selected": true,
+        "status": "skipped",
+        "skip": {
+          "cause": "infrastructure-unavailable",
+          "reason": "run interrupted before execution"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 25,
+      "selected": 25,
+      "executed": 4,
+      "passed": 3,
+      "failed": 0,
+      "interrupted": 1,
+      "flaky": 0,
+      "skipped": 21
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 25,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 131711,
+      "downloads": 0,
+      "events": 34,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

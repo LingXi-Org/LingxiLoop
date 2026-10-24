@@ -12,6 +12,9 @@
 !bin/**
 # Frontend sources needed to build the SPA bundle inside the image.
 !src/**
+!shared
+shared/**
+!shared/visualize-public-resources.ts
 !public/**
 !index.html
 !vite.config.ts

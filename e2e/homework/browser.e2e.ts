@@ -56,7 +56,7 @@ test('real learning records allow honest report pairs, closed return without new
   }
   const publish = async (name: string, materials: boolean) => {
     await checkpoint(materials ? 'teacher-draft-native-card' : 'quick-check-draft-native-card')
-    await forum(); await screen.getByRole('button', '发布作业', { exact: true }).tap()
+    await forum(); await screen.getByRole('button', '教师助手', { exact: true }).tap()
     await expect.poll(() => browser.evaluate(() => Boolean(new URL(location.href).searchParams.get('conversation'))), { timeout: 60_000 }).toBe(true)
     await expect(browser.locator('[data-composer-column] [contenteditable="true"]')).toBeVisible()
     teacherChannelId = await browser.evaluate(() => new URL(location.href).searchParams.get('conversation') ?? '')

@@ -27,7 +27,7 @@ test.describe('Native streaming conversation', {
     console.log(`Native streaming evidence: ${JSON.stringify(sample)}`)
     expect(sample.distinct).toBeGreaterThan(3)
     expect(sample.maxBlock).toBeLessThan(500)
-    expect(sample.spans).toBe(0)
+    expect(sample.spans).toBeLessThanOrEqual(128)
     await browser.locator('input').fill('页面仍然响应')
     await expect(browser.locator('.im-markdown')).toContainText('第 70 段')
     const minimum = await browser.evaluate(async text => {
@@ -44,6 +44,7 @@ test.describe('Native streaming conversation', {
     await browser.evaluate(text => window.dispatchEvent(new CustomEvent('native-streaming-step', { detail: { text: text + '工具完成后继续输出。最终答复。', tool: true, done: true } })), text)
     await expect(browser.locator('.im-markdown')).toContainText('最终答复。')
     await expect(browser.locator('.im-markdown-host[data-status="running"]')).toHaveCount(0)
+    await expect(browser.locator('[data-streaming-word]')).toHaveCount(0)
     await expect(browser.locator('[role="alert"]')).toHaveCount(0)
     await app.screenshot('native-streaming-complete')
   })

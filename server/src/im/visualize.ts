@@ -14,6 +14,7 @@ import { genUiWidgetStateSchema, type GenUiWidgetState } from '../../../src/feat
 import { createNativeMessage, nativeMessageSchema, type NativeMessage } from './message-types.js'
 import { messageAcceptanceDigest } from './messages-digest.js'
 import { acceptSend, ensureSendAcceptance, getSendAcceptance, SEND_NOT_DISPATCHED } from './messages-repository.js'
+import { readPublicVisualizeResourceHashes } from './visualize-public-resources.js'
 
 export interface VisualizeActor { companyId: string; channelId: string; userId: string }
 export interface VisualizePageActor extends VisualizeActor { pageId: string; token: string }
@@ -141,6 +142,9 @@ export async function createVisualizePage(input: VisualizeActor & { request: unk
   const messages = await imMessagesApplication.readMessages({ ...input, messageIds: [request.sourceMessageId] })
   const message = messages?.find(item => item.messageId === request.sourceMessageId || item.clientMsgNo === request.sourceMessageId)
   if (!message || message.payload.role !== 'assistant' || message.payload.status.type !== 'complete' || message.fromUid !== source.agent_id || message.payload.metadata.custom.runId !== source.run_id || !referencesPath(message.payload, source.path)) throw new HttpError(403, 'Visualize requires a delivered assistant reference.')
+  // Optional fixed public metadata only. Keep legacy preparation working if a
+  // development image has not built its resource manifest yet.
+  const resourceHashes = await readPublicVisualizeResourceHashes().catch(() => undefined)
   return withTransaction(pool, async db => {
     await assertVisualizeActor(db, input); await lock(db, input)
     const current = await document(db, { ...input, path: request.path })
@@ -155,7 +159,8 @@ export async function createVisualizePage(input: VisualizeActor & { request: unk
     await db.query(`INSERT INTO im_visualize_pages(id,company_id,channel_id,path,user_id,token_hash,instance_key,document_version,source_message_id,project_id)
       SELECT $1,$2,$3,$4,$5,$6,$7,$8,$9,project_id FROM conversations WHERE company_id=$2 AND id=$3`, [pageId, input.companyId, input.channelId, source.path, input.userId, digest(initId), request.instanceKey, source.version, message.messageId])
     const snapshot = await getVisualizeStateSnapshot({ ...input, path: source.path }, db)
-    return { pageId, initId, path: source.path, html: source.html, state: snapshot.state, stateRevision: snapshot.revision }
+    return { pageId, initId, path: source.path, html: source.html, state: snapshot.state, stateRevision: snapshot.revision,
+      ...(resourceHashes ? { resourceHashes } : {}) }
   })
 }
 export async function assertVisualizePage(db: Queryable, input: VisualizePageActor, write = false): Promise<PageRow> {

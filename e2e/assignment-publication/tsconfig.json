@@ -1,0 +1,4 @@
+{
+  "extends": "../tsconfig.json",
+  "include": ["./browser.e2e.ts", "../../e2e.assignment-publication.config.ts"]
+}

@@ -17,6 +17,7 @@ from open_notebook.exceptions import (
     OpenNotebookError,
 )
 from open_notebook.rag.extraction import MAX_SOURCE_BYTES
+from open_notebook.rag.generation import generation_status
 from open_notebook.rag.runtime import (
     RagRuntimeState,
     initialize_runtime,
@@ -35,6 +36,7 @@ async def lifespan(app: FastAPI):
     if not read_secret("OPEN_NOTEBOOK_PASSWORD"):
         raise RuntimeError("OPEN_NOTEBOOK_PASSWORD is required for the RAG profile")
     logger.info("Initializing Open Notebook RAG profile")
+    await generation_status()
     app.state.rag_runtime = await initialize_runtime()
     app.state.rag_ready = True
     try:
@@ -59,13 +61,30 @@ app.add_middleware(MaxBodySizeMiddleware, max_body_size=RAG_REQUEST_MAX_SIZE)
 app.include_router(router, prefix="/api")
 
 
+@app.middleware("http")
+async def active_generation_guard(request: Request, call_next):
+    if request.url.path != "/health":
+        try:
+            await generation_status()
+        except Exception:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "detail": "Knowledge generation is fenced, stale or unavailable"
+                },
+            )
+    return await call_next(request)
+
+
 @app.exception_handler(NotFoundError)
 async def not_found_handler(request: Request, exc: NotFoundError) -> JSONResponse:
     return JSONResponse(status_code=404, content={"detail": str(exc)})
 
 
 @app.exception_handler(InvalidInputError)
-async def invalid_input_handler(request: Request, exc: InvalidInputError) -> JSONResponse:
+async def invalid_input_handler(
+    request: Request, exc: InvalidInputError
+) -> JSONResponse:
     return JSONResponse(status_code=400, content={"detail": str(exc)})
 
 
@@ -84,7 +103,9 @@ async def external_service_handler(
 
 
 @app.exception_handler(OpenNotebookError)
-async def domain_error_handler(request: Request, exc: OpenNotebookError) -> JSONResponse:
+async def domain_error_handler(
+    request: Request, exc: OpenNotebookError
+) -> JSONResponse:
     return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 
@@ -98,4 +119,8 @@ async def ready(request: Request) -> dict[str, object]:
     if not request.app.state.rag_ready:
         raise HTTPException(status_code=503, detail="RAG runtime is not initialized")
     state: RagRuntimeState = request.app.state.rag_runtime
-    return await readiness_details(state)
+    details = await readiness_details(state)
+    generation = await generation_status()
+    if generation is not None:
+        details["active_generation"] = generation
+    return details

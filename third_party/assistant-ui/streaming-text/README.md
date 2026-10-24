@@ -35,6 +35,23 @@ A text-part identity key resets the SDK queue and decoration lifetime on message
 
 No provider, LingxiOS API, protocol, authorization, migration, canvas state or runtime dependency changed. Renderer fixtures do not claim live-provider coverage.
 
+## #378 bounded animation adaptation
+
+The attributed word/caret elements and their entry/color classes are retained.
+Only the last 128 word tokens in the original text part receive animation
+wrappers; earlier tokens become exact static text (standalone mono styling is
+preserved). The shared block counter now carries a capped 128-token distance,
+while the original blue window remains exactly two tokens and one caret.
+Budget pressure may settle old wrappers early during a burst. Normal completion
+keeps the 700ms color exit before removing wrappers. Existing selection holds
+its current wrapped range and receives new text as plain text until selection
+leaves, deferring nonessential DOM consolidation. This is a DOM-cost change,
+not a second typing queue; the SDK remains the only reveal controller.
+
+`scripts/streaming-render-cost.tsx` measures pure synthetic SSR node/serialization
+cost. Browser selection, lifecycle and actual paint remain separate verification
+gates; this measurement cannot establish user-device frame rates.
+
 ## Reproduction
 
 Use the repository's official `tester-army/e2e` / `@e2e-dev/web` engine:

@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "types": ["node", "vite/client"] },
+  "include": ["./fixture.tsx", "./browser.e2e.ts", "../../e2e.quote-preview.config.ts", "../../src/**/*.d.ts"]
+}

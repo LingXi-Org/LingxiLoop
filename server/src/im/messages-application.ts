@@ -58,6 +58,9 @@ export interface ImMessageEnvelope {
 export interface ImMessagesInfrastructure {
   db: Queryable
   withConnection<T>(work: (db: Queryable) => Promise<T>): Promise<T>
+  commitAcceptedSend?(db: Queryable, input: {
+    companyId: string; userId: string; clientNonce: string; echo: Record<string, unknown>
+  }): Promise<void>
   syncMessages(
     channelId: string,
     channelType: number,
@@ -104,6 +107,12 @@ export interface ImMessagesInfrastructure {
 
 export class ImMessagesApplication {
   constructor(private readonly infrastructure: ImMessagesInfrastructure) {}
+
+  private commitAcceptedSend(db: Queryable, input: {
+    companyId: string; userId: string; clientNonce: string; echo: Record<string, unknown>
+  }): Promise<void> {
+    return this.infrastructure.commitAcceptedSend?.(db, input) ?? acceptSend(db, input)
+  }
 
   private async channelType(input: { companyId: string; channelId: string; userId: string }): Promise<number | null> {
     const profile = await channelProfileForMember(this.infrastructure.db, input)
@@ -409,6 +418,7 @@ export class ImMessagesApplication {
       const expected = { ...input, channelType, payload: acceptance.payload }
       if (acceptance.channel_id !== input.channelId || acceptance.channel_type !== channelType) return { kind: 'nonce_conflict' }
       if (acceptance.status === 'accepted' && validSendEcho(acceptance.echo, expected)) {
+        await this.commitAcceptedSend(db, { ...identity, echo: acceptance.echo })
         return { kind: 'accepted', duplicate: true, echo: acceptance.echo }
       }
       const payload = nativeMessageSchema.parse(acceptance.payload)
@@ -419,7 +429,7 @@ export class ImMessagesApplication {
           && Date.now() - new Date(acceptance.updated_at).getTime() < 5_000) throw this.reconciliationRequired()
         const echo = await this.findAcceptanceEcho(db, { ...identity, channelId: input.channelId }, acceptance)
         if (echo) {
-          await acceptSend(db, { ...identity, echo })
+          await this.commitAcceptedSend(db, { ...identity, echo })
           return { kind: 'accepted', duplicate: true, echo }
         }
         await deferSend(db, { ...identity, error: SEND_RECONCILIATION_REQUIRED })
@@ -445,7 +455,7 @@ export class ImMessagesApplication {
           timestamp: Math.floor(Date.now() / 1000),
           payload,
         }
-        await acceptSend(db, { ...identity, echo })
+        await this.commitAcceptedSend(db, { ...identity, echo })
         return { kind: 'accepted', duplicate: false, echo }
       } catch (error) {
         await deferSend(db, {
@@ -532,7 +542,7 @@ export class ImMessagesApplication {
         const echo = await this.findAcceptanceEcho(db, scoped, acceptance, true)
         if (input.apply) {
           if (!await authorized()) return { classification: 'forbidden' }
-          if (echo) await acceptSend(db, { ...input, echo })
+          if (echo) await this.commitAcceptedSend(db, { ...input, echo })
           else await deferSend(db, { ...input, error: SEND_RECONCILIATION_REQUIRED })
         }
         return { classification: echo ? 'confirmed' : 'unknown' }

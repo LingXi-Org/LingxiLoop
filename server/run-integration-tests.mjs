@@ -1,29 +1,11 @@
 #!/usr/bin/env node
-/**
- * Integration test runner.
- *
- * The integration suite needs a REAL Postgres (we test SKIP LOCKED + jsonb
- * + indexes that pg-mem doesn't reproduce faithfully) and a REAL Redis
- * for durable product coordination).
- *
- * To run:
- *   1. Create a DEDICATED test DB (the suite TRUNCATEs everything, so
- *      pointing at your dev DB will eat its data):
- *        createdb lingxiloop_test
- *   2. Have Redis listening on REDIS_URL (default localhost:6379).
- *   3. Export INTEGRATION_DATABASE_URL pointing at the test DB:
- *        export INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test
- *   4. npm run test:integration
- *
- * Run one or more owning files without enumerating the full suite:
- *   npm run test:integration -- --file runtime-retirement.test.ts
- *
- * If INTEGRATION_DATABASE_URL is unset we print a one-line "skipped" and
- * exit 0 — so this script slots into CI / pre-commit hooks without
- * forcing every developer to maintain a test DB.
+/** Explicit smoke (default), selected (--file), and full integration runs.
+ * Requires a dedicated real Postgres test database and explicit Redis URL.
+ * These tests TRUNCATE their database and remain serialized.
  */
-import { spawn } from 'node:child_process'
-import { readdirSync } from 'node:fs'
+import { partitionMigrationTests, runHistoricalMigrationTests, runTestChild } from './run-historical-migration-tests.mjs'
+import { readdirSync, mkdirSync, writeFileSync } from 'node:fs'
+import { parseIntegrationArgs, selectIntegrationFiles } from './integration-suite.mjs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 // Load the developer's .env so RESEND_API_KEY / EMAIL_DOMAIN /
@@ -33,63 +15,24 @@ import { dirname, join } from 'node:path'
 // gating checks below need them present in THIS process.
 import 'dotenv/config'
 
-function integrationFileArgs(argv) {
-  const files = []
-  for (let index = 0; index < argv.length; index += 1) {
-    const argument = argv[index]
-    if (argument === '--file') {
-      const value = argv[index + 1]
-      if (!value || value.startsWith('--')) throw new Error('--file requires an integration test filename')
-      files.push(value)
-      index += 1
-      continue
-    }
-    throw new Error(`unknown argument: ${argument}`)
-  }
-  return [...new Set(files)]
-}
-
-let requestedFiles
+const here = dirname(fileURLToPath(import.meta.url))
+const integrationDir = join(here, 'src/__integration__')
+const availableFiles = readdirSync(integrationDir).filter(name => name.endsWith('.test.ts')).sort()
+let mode, selectedFiles
 try {
-  requestedFiles = integrationFileArgs(process.argv.slice(2))
-  if (requestedFiles.length === 0) requestedFiles = JSON.parse(process.env.INTEGRATION_TEST_FILES || '[]')
-  if (!Array.isArray(requestedFiles) || requestedFiles.some((name) => typeof name !== 'string')) {
-    throw new Error('INTEGRATION_TEST_FILES must be an array of integration test filenames')
-  }
+  const selection = parseIntegrationArgs(process.argv.slice(2))
+  mode = selection.mode
+  selectedFiles = selectIntegrationFiles({ ...selection, availableFiles })
 } catch (error) {
   console.error(`[integration] ${error instanceof Error ? error.message : String(error)}`)
   process.exit(2)
 }
-
-const here = dirname(fileURLToPath(import.meta.url))
-const integrationDir = join(here, 'src/__integration__')
-const availableFiles = readdirSync(integrationDir)
-  .filter((name) => name.endsWith('.test.ts'))
-  .sort()
-if (requestedFiles.some((name) => name.includes('/') || name.includes('\\') || !name.endsWith('.test.ts'))) {
-  console.error('[integration] --file accepts basenames ending in .test.ts from server/src/__integration__ only')
-  process.exit(2)
-}
-const missingFiles = requestedFiles.filter((name) => !availableFiles.includes(name))
-if (missingFiles.length > 0) {
-  console.error(`[integration] unknown test file(s): ${missingFiles.join(', ')}`)
-  process.exit(2)
-}
-const defaultFiles = availableFiles
-const selectedFiles = requestedFiles.length > 0 ? requestedFiles : defaultFiles
-console.log(`[integration] selected ${selectedFiles.length}/${availableFiles.length} file(s): ${selectedFiles.join(', ')}`)
-const testFiles = selectedFiles.map((name) => join(integrationDir, name))
-if (testFiles.length === 0) {
-  console.error(`[integration] no test files found under ${integrationDir}`)
-  process.exit(2)
-}
+console.log(`[integration ${mode}] selected ${selectedFiles.length}/${availableFiles.length} file(s): ${selectedFiles.join(', ')}`)
 
 const INTEGRATION_URL = process.env.INTEGRATION_DATABASE_URL
 if (!INTEGRATION_URL) {
-  console.log('[integration] skipped — set INTEGRATION_DATABASE_URL to enable.')
-  console.log('             example: INTEGRATION_DATABASE_URL=postgres://$USER@localhost:5432/lingxiloop_test \\\\')
-  console.log('                      npm run test:integration')
-  process.exit(0)
+  console.error('[integration] INTEGRATION_DATABASE_URL is required; use a dedicated test database.')
+  process.exit(2)
 }
 
 // The suite TRUNCATEs every table. Only the database name can identify a
@@ -113,6 +56,13 @@ if (!integrationTarget || !['postgres:', 'postgresql:'].includes(integrationTarg
   process.exit(2)
 }
 
+if (!process.env.REDIS_URL) {
+  console.error('[integration] REDIS_URL is required; use a dedicated test Redis.')
+  process.exit(2)
+}
+// The required realtime smoke must run, not silently skip its Redis boundary.
+process.env.LINGXIOS_TEST_REDIS_URL ||= process.env.REDIS_URL
+
 // Swap DATABASE_URL so the env module (server/src/env.ts) picks up the
 // test target when it's imported by the test harness.
 process.env.DATABASE_URL = INTEGRATION_URL
@@ -134,19 +84,39 @@ if (!process.env.EMAIL_DOMAIN) process.env.EMAIL_DOMAIN = 'lingxiloop.local'
 // spec explicitly opts into auto and supplies both model profiles.
 if (!process.env.AGENT_OS_RESPONSE_POLICY) process.env.AGENT_OS_RESPONSE_POLICY = 'deep'
 
-// Forward to node --import tsx --test against the integration suite.
-// tsx handles TypeScript; node:test handles the test runner.
-// --test-concurrency=1 serializes test FILES. Default is N-cpu which
-// causes deadlocks here: every file's beforeEach TRUNCATEs the same
-// tables on the shared test DB; two TRUNCATE CASCADE statements running
-// concurrently against overlapping tables deadlock at the catalog-lock
-// level. --test-force-exit prevents a failed spec with a leaked socket or
-// timer from hiding the actual assertion behind the workflow timeout.
-// We're not trying to optimize wall-time for this suite, so serializing is
-// the right trade.
-const child = spawn(
-  'node',
-  ['--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-reporter=tap', '--test-concurrency=1', '--test-force-exit', ...testFiles],
-  { stdio: 'inherit', env: process.env },
-)
-child.on('exit', (code) => process.exit(code ?? 1))
+// Each file owns a fresh process but shares the dedicated database serially.
+// Report real wall time and propagate every failure, signal and timeout.
+const groups = partitionMigrationTests(selectedFiles)
+const started = performance.now(), records = []
+const budgetMs = mode === 'full' ? 1_500_000 : mode === 'selected' ? 360_000 : 180_000
+let code = 0
+for (const name of groups.current) {
+  const remaining = budgetMs - (performance.now() - started)
+  if (remaining <= 0) { console.error(`[integration] ${mode} time budget exhausted before ${name}`); code = 1; break }
+  const begin = performance.now()
+  const exitCode = await runTestChild([
+    '--import', 'tsx', '--experimental-test-module-mocks', '--test', '--test-reporter=tap',
+    '--test-concurrency=1', '--test-force-exit', join(integrationDir, name),
+  ], { timeout: Math.max(1, Math.floor(Math.min(remaining, mode === 'full' ? 600_000 : 180_000))) })
+  const durationMs = Math.round(performance.now() - begin)
+  records.push({ files: [name], runtime: 'current', durationMs, exitCode })
+  console.log(`[integration file] ${name} duration_ms=${durationMs} exit=${exitCode}`)
+  if (exitCode !== 0) { code = exitCode; break }
+}
+if (!code && groups.historical.length) {
+  const begin = performance.now()
+  console.log(`[integration historical] ${groups.historical.length} file(s) using the exact formal 3.8.2 fixture`)
+  try { code = await runHistoricalMigrationTests(join(here, '..'), groups.historical) }
+  catch { console.error('[integration historical] fixture execution failed; tests were not skipped'); code = 1 }
+  records.push({ files: groups.historical, runtime: '3.8.2', durationMs: Math.round(performance.now() - begin), exitCode: code })
+}
+const report = {
+  mode, availableFiles: availableFiles.length, selectedFiles,
+  executedFiles: records.flatMap(record => record.files), records,
+  durationMs: Math.round(performance.now() - started), exitCode: code,
+}
+const reportPath = process.env.INTEGRATION_REPORT_PATH || join(here, '../artifacts/ci-integration/timings.json')
+mkdirSync(dirname(reportPath), { recursive: true })
+writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n')
+console.log(`[integration result] mode=${mode} files=${report.executedFiles.length} duration_ms=${report.durationMs} exit=${code}`)
+process.exit(code)

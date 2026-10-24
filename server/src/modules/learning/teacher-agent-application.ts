@@ -6,12 +6,43 @@ import { wukongClient } from '../../im/wukong.js'
 import { createNativeMessage } from '../../im/message-types.js'
 import { syncProductChannel } from '../../agent-runtime/conversations.js'
 import { inc } from '../../metrics.js'
+import { createPermissionService } from '../access/public.js'
+import type { LearningScope } from './contracts.js'
+import { LearningApplicationError } from './errors.js'
+import { requireLearningCourseProjectScope } from './project-scope-repository.js'
+import { enqueueLearningEffect } from './effects-repository.js'
 import { requireLearningCourseRole } from './membership-application.js'
 import { findTeacherScopeBinding } from './teacher-runtime-repository.js'
 import { closeTeacherRoomState, findActiveTeacherRoom, findProjectTeacherAgentId, findTeacherProvisioningCourse,
  findTeacherWelcomeDescriptor, listCourseTeacherIds, persistTeacherProvisioning, reactivateTeacherRoomState, updateTeacherRoomMembers } from './teacher-provisioning-repository.js'
 import { TEACHER_PRESET_VERSION, TEACHER_CAPABILITIES, TEACHER_ROLE, TEACHER_PROMPT } from './teacher-preset.js'
 export type TeacherTransaction = <T>(work: (client: Queryable) => Promise<T>) => Promise<T>
+
+/** Explicit teacher entry prepares missing rooms; ordinary GETs stay read-only. */
+export async function prepareTeacherRoom(scope: LearningScope, courseId: string, transaction: TeacherTransaction) {
+  return transaction(async db => {
+    await createPermissionService(db, { lockDependencies: true }).assertCan({
+      actorUserId: scope.userId, companyId: scope.companyId,
+      action: 'learning:manage', resource: { type: 'course', id: courseId },
+    })
+    const project = await requireLearningCourseProjectScope(db, scope.companyId, courseId)
+    if (project.projectStatus !== 'ACTIVE') {
+      throw new LearningApplicationError('forbidden', '当前课程未开放作业发布。')
+    }
+    // Company administration alone does not grant membership of the private
+    // teacher group. Never add a project role as an entry-point side effect.
+    if (!(await listCourseTeacherIds(db, scope.companyId, courseId)).includes(scope.userId)) {
+      throw new LearningApplicationError('forbidden', '请由当前课程的教师进入作业发布。')
+    }
+    const room = await ensureTeacherAgentForCourse(scope.companyId, courseId, db, work => work(db))
+    // Reopening the managed room restores only this teacher's list preference.
+    await db.query(`DELETE FROM conversation_list_removals
+      WHERE company_id=$1 AND project_id=$2 AND user_id=$3 AND conversation_id=$4`,
+      [scope.companyId, project.projectId, scope.userId, room.roomId])
+    await enqueueLearningEffect(db, { companyId: scope.companyId, courseId, kind: 'teacher_room.sync' })
+    return { roomId: room.roomId, agentId: room.agentId, roomStatus: 'active' as const }
+  })
+}
 
 
 function stableSegment(value: string): string {

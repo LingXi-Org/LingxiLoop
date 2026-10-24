@@ -9,8 +9,7 @@ import { chatTransport } from '../runtime/transport'
 import { DeliveryCard } from './RunResultCards'
 import { ElicitationForm } from '@/components/assistant-ui/elements/elicitation-form'
 import { hasQuestionnaireWait } from '../runtime/questionnaire-wait'
-import { inputOwner, messagePresentation } from './message-presentation'
-import { parsePresentationArtifact } from '@/features/presentations/contracts'
+import { inputOwner } from './message-presentation'
 
 export function HarnessDetails({ metadata }: { metadata: LingxiMessageMetadata }) {
   const message = useAuiState(state => state.message)
@@ -39,9 +38,6 @@ function HarnessDetailsContent({ metadata }: { metadata: LingxiMessageMetadata }
   const [resolvedApproval, setResolvedApproval] = useState<string | null>(null)
   const inFlight = useRef(false)
   const active = view.lifecycle === 'queued' || view.lifecycle === 'leased' || view.lifecycle === 'waiting'
-  const hasAnswer = view.artifacts.length > 0 || messagePresentation(message).some(({ part, region, annotation }) => region === 'body' && (part.type === 'text' ? Boolean(part.text.trim())
-    : part.type === 'data' ? part.name === 'presentation-artifact' && Boolean(parsePresentationArtifact(part.data)?.artifactId.trim())
-    : ['image', 'file', 'generative-ui'].includes(part.type) || annotation?.kind === 'result' || annotation?.purpose === 'result'))
   async function perform(action: () => Promise<unknown>) {
     if (inFlight.current) return
     inFlight.current = true
@@ -60,14 +56,14 @@ function HarnessDetailsContent({ metadata }: { metadata: LingxiMessageMetadata }
   })
 
   return <section aria-label="答复附件与操作" className="mt-2 grid w-full max-w-xl gap-2 text-xs text-muted-foreground empty:hidden">
-    {metadata.runConnection === 'released' && <p role="status">暂时无法更新回复。
-      <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => void perform(async () => {})}>重新连接</Button>
+    {metadata.runConnection === 'released' && <p role="status">暂时无法更新原任务进度。
+      <Button type="button" variant="link" size="sm" disabled={busy} onClick={() => void perform(async () => {})}>恢复连接 / 刷新进度</Button>
     </p>}
     {metadata.runConnection === 'unauthenticated' && <p role="status">登录已失效，请重新登录。</p>}
     {metadata.runConnection === 'inaccessible' && <p role="status">你已无法访问此回复。</p>}
-    {metadata.runConnection === 'missing' && <p role="status">此回复已不可用，请重新发送消息。</p>}
-    {view.lifecycle === 'cancelled' && <p role="status">已取消</p>}
-    {view.lifecycle === 'succeeded' && !hasAnswer && (outcome?.status === 'partial' || outcome?.status === 'blocked') && <ErrorPrimitive.Root className="text-destructive">本次请求未能生成答复，请补充信息后重试。</ErrorPrimitive.Root>}
+    {metadata.runConnection === 'missing' && <p role="status">原任务暂不可读取。请先核对已执行的操作，再决定是否重新发起。</p>}
+    {!!metadata.unresolvedActions?.length && <p role="status">操作结果待核对。请先刷新原任务进度并核查结果，避免重复提交。</p>}
+    {view.lifecycle === 'cancelled' && <p role="status">{metadata.terminalNotice?.text ?? '已取消'}</p>}
     {view.delivery === 'failed' && <ErrorPrimitive.Root className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
       <p>答复投递失败，请重试。</p>
       {metadata.harnessControl && <Button type="button" size="sm" className="mt-2" disabled={busy} onClick={() => void perform(() => harnessApi.retryDelivery(target))}>重试投递</Button>}

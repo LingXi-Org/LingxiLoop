@@ -1,0 +1,59 @@
+{
+  "runtime": "3.8.3",
+  "syntheticOnly": true,
+  "productionRequests": 0,
+  "originalCaseVerified": false,
+  "publishedWorker": true,
+  "realPostgres": true,
+  "receipts": [
+    {
+      "scenario": "read-only",
+      "calls": 2,
+      "saves": 0,
+      "reads": 0,
+      "repairs": 0,
+      "savedDocuments": 0,
+      "activationCount": 0,
+      "execution": "succeeded",
+      "delivery": "delivered",
+      "visualizationDelivered": false
+    },
+    {
+      "scenario": "authoring",
+      "calls": 6,
+      "saves": 1,
+      "reads": 1,
+      "repairs": 1,
+      "savedDocuments": 1,
+      "activationCount": 1,
+      "execution": "succeeded",
+      "delivery": "delivered",
+      "visualizationDelivered": true
+    },
+    {
+      "scenario": "cancelled",
+      "calls": 2,
+      "saves": 0,
+      "reads": 0,
+      "repairs": 0,
+      "savedDocuments": 0,
+      "activationCount": 1,
+      "execution": "cancelled",
+      "delivery": null,
+      "visualizationDelivered": false
+    },
+    {
+      "scenario": "unactivated-promise",
+      "calls": 1,
+      "saves": 0,
+      "reads": 0,
+      "repairs": 0,
+      "savedDocuments": 0,
+      "activationCount": 0,
+      "execution": "succeeded",
+      "delivery": "delivered",
+      "visualizationDelivered": false,
+      "knownLimit": "No trusted authoring action; message success is not visualization delivery."
+    }
+  ]
+}

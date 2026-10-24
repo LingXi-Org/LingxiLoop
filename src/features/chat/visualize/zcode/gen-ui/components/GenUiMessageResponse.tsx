@@ -6,8 +6,9 @@ import { GenUiCard } from "./GenUiCard.js";
 export const GenUiMessageResponse = memo(function GenUiMessageResponse({
   completed,
   messageKey,
+  awaitingDelivery = false,
   ...props
-}: MessageResponseProps & { completed: boolean; messageKey: string }) {
+}: MessageResponseProps & { completed: boolean; messageKey: string; awaitingDelivery?: boolean }) {
   const { intl } = useZCodeIntl();
   const parts = useMemo(
     () =>
@@ -17,26 +18,28 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
   const targets = useMemo(
     () =>
       parts.map((part) =>
-        part.kind === "ui" && props.workspacePath && props.sessionId
+        part.kind === "ui" && !awaitingDelivery && props.workspacePath && props.sessionId
           ? {
               workspacePath: props.workspacePath,
               workspaceIdentity: props.workspaceIdentity,
               remoteSessionId: props.workspaceRemoteSessionId,
               sessionId: props.sessionId,
               path: part.reference.path,
-              instanceKey: `${messageKey}:${part.offset}`,
+              instanceKey: `${messageKey}:${(props.textOffset ?? 0) + part.offset}`,
               sourceMessageId: props.sourceMessageId,
             }
           : null,
       ),
     [
       parts,
+      awaitingDelivery,
       props.workspacePath,
       props.workspaceIdentity,
       props.workspaceRemoteSessionId,
       props.sessionId,
       messageKey,
       props.sourceMessageId,
+      props.textOffset,
     ],
   );
   let cursor = 0;
@@ -53,7 +56,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
       </MessageResponse>
     ) : part.kind === "ui" && targets[index] ? (
       <GenUiCard
-        key={`${messageKey}:${part.offset}`}
+        key={`${messageKey}:${(props.textOffset ?? 0) + part.offset}`}
         reference={part.reference}
         target={targets[index]!}
       />
@@ -64,7 +67,7 @@ export const GenUiMessageResponse = memo(function GenUiMessageResponse({
       >
         {intl.formatMessage({
           id:
-            part.kind === "pending"
+            part.kind === "ui" && awaitingDelivery ? "genUi.awaitingDelivery" : part.kind === "pending"
               ? props.streaming
                 ? "genUi.waiting"
                 : "genUi.incomplete"

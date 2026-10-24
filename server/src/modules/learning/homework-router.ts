@@ -6,15 +6,20 @@ import { safe } from '../../http/async-handler.js'
 import { requireCompany } from '../../http/request-context.js'
 import { requireLearningCourseRole } from './membership-application.js'
 import { findActiveTeacherRoom } from './teacher-provisioning-repository.js'
+import { prepareTeacherRoom } from './teacher-agent-application.js'
 import { LearningApplicationError } from './errors.js'
 import { HomeworkApplication } from './homework-application.js'
-import { homeworkDeadlineSchema, homeworkEditSchema, homeworkPublishSchema, homeworkReportSchema, homeworkReviewSchema,
+import { homeworkDraftSchema, homeworkDeadlineSchema, homeworkEditSchema, homeworkPublishSchema, homeworkReportSchema, homeworkReviewSchema,
   homeworkRevisionSchema, homeworkSaveAnswerSchema, homeworkShareSchema, homeworkSubmitSchema, homeworkUnlockSchema } from './homework-contracts.js'
 import { forumPageSchema, forumStudentsSchema } from './forum-contracts.js'
 import { parseLearningRequest as parse, respondWithLearning as respond } from './http-adapter.js'
 
 export const homeworkRouter=Router()
 const homework=new HomeworkApplication(pool,work=>withTransaction(pool,work))
+homeworkRouter.post('/courses/:courseId/teacher-agent',safe(async(req,res)=>{
+  const scope=await requireCompany(req),courseId=String(req.params.courseId)
+  res.json(await respond(()=>prepareTeacherRoom(scope,courseId,work=>withTransaction(pool,work))))
+}))
 homeworkRouter.get('/courses/:courseId/teacher-agent',safe(async(req,res)=>{
   const scope=await requireCompany(req),courseId=String(req.params.courseId)
   res.json(await respond(async()=>{
@@ -25,6 +30,11 @@ homeworkRouter.get('/courses/:courseId/teacher-agent',safe(async(req,res)=>{
   }))
 }))
 const path='/courses/:courseId/homeworks/:homeworkId'
+homeworkRouter.put(`${path}/draft`,safe(async(req,res)=>{
+  const scope=await requireCompany(req),input=parse(homeworkDraftSchema.safeParse(req.body))
+  const id=parse(z.uuid().safeParse(req.params.homeworkId))
+  res.json(await respond(()=>homework.draft(scope,String(req.params.courseId),input,id)))
+}))
 homeworkRouter.get(path,safe(async(req,res)=>{
   const scope=await requireCompany(req)
   res.json(await respond(()=>homework.detail(scope,String(req.params.courseId),String(req.params.homeworkId))))
