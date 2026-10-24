@@ -11,6 +11,7 @@ import { useConversations } from '@/features/conversations/store'
 import { userFacingError } from '@/lib/userFacingError'
 import { useParticipants } from '../state'
 import type { AgentCapability, Participant } from '@/types'
+import { isChineseAgentName, participantDisplayName } from '@/lib/participantDisplayName'
 
 const CAPABILITY_DETAILS: Record<(typeof DEFAULT_AGENT_CAPABILITIES)[number], { label: string; description: string }> = {
   'canvas': { label: '共享画布', description: '查看并修改工作区共享画布与内容卡片' },
@@ -32,7 +33,9 @@ interface Props {
 
 export function AgentEditor({ agent, onClose }: Props) {
   const editing = agent !== null
-  const [name, setName] = useState(agent?.name ?? '')
+  const initialName = agent && participantDisplayName(agent)
+  const needsName = Boolean(agent && !isChineseAgentName(agent.sourceName ?? agent.name) && initialName === '智能助教')
+  const [name, setName] = useState(needsName ? '' : initialName ?? '')
   const [role, setRole] = useState(agent?.role ?? '')
   const [systemPrompt, setSystemPrompt] = useState(agent?.systemPrompt ?? '')
   const [bio, setBio] = useState(agent?.bio ?? '')
@@ -48,10 +51,11 @@ export function AgentEditor({ agent, onClose }: Props) {
 
   const submit = async () => {
     setErr(null)
+    if (!isChineseAgentName(name.trim())) { setErr('显示名请使用一至八十个汉字。'); return }
     setBusy(true)
     try {
       const payload: AgentInput = {
-        name, role, systemPrompt, bio, capabilities,
+        name: name.trim(), role, systemPrompt, bio, capabilities,
       }
       if (editing) {
         await agentsApi.updateAgent(agent!.id, payload)
@@ -93,7 +97,7 @@ export function AgentEditor({ agent, onClose }: Props) {
           <Avatar p={previewParticipant} size={48} animated={false} />
           <div className="flex-1">
             <h2 className="font-display font-medium text-[20px] tracking-tight">
-              {editing ? `编辑 ${agent!.name}` : "新建智能助教"}
+              {editing ? `编辑 ${participantDisplayName(agent!)}` : "新建智能助教"}
             </h2>
             <div className="text-[12.5px] text-ink-500 italic font-display">
               {editing ? "调整该队友的行为方式。" : "设置新队友的职责和工作方式。"}
@@ -107,9 +111,10 @@ export function AgentEditor({ agent, onClose }: Props) {
         </div>
 
         <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
-          <Field label="名称" hint="其他成员可在对话中用这个名称找到并提及它。">
+          <Field label="中文显示名" hint={needsName ? '请为存量智能助教设置中文显示名，内部身份保持不变。' : '使用汉字命名，其他成员可用这个名称提及它。'}>
             <Input
               type="text"
+              aria-label="中文显示名"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -198,7 +203,7 @@ export function AgentEditor({ agent, onClose }: Props) {
           <div className="flex-1" />
           <Button
             onClick={submit}
-            disabled={busy || !name.trim() || !systemPrompt.trim()}
+            disabled={busy || !isChineseAgentName(name.trim()) || !systemPrompt.trim()}
             className="px-5 py-2 rounded-[9px] text-[12.5px] font-semibold text-white transition disabled:opacity-50"
             style={{
               background: 'var(--skype)',

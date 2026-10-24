@@ -10,7 +10,9 @@ import { createRunListInvalidation } from './run-list-invalidation.js'
 import { syncConversationPolicy } from './conversations.js'
 import { createNativeMessage, nativeMessageSchema, nativeText } from '../im/message-types.js'
 import { getSendAcceptance } from '../im/messages-repository.js'
-import { parseMentions } from '../mentions.js'
+import { conversationHandoffMentions } from './conversation-handoff.js'
+import type { MentionTarget } from '../mentions.js'
+import { participantDisplayName } from '../../../src/lib/participantDisplayName.js'
 import { assertCanvasRequestCurrent } from '../modules/canvas/index.js'
 import { terminalFailure, terminalFeedbackText } from './terminal-feedback.js'
 
@@ -45,9 +47,9 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
             ? await terminalFailure(api, identity, state, scope) : null
           const recipients = new Set(work.conversation?.audience.participantIds ?? [])
           const visible = feedback.notStartedAgentIds.filter(id => recipients.has(id))
-          const names = visible.length ? (await database.query<{ name: string }>(`SELECT name FROM participants
+          const names = visible.length ? (await database.query<{ name: string; kind: 'agent'; presetKey: string | null }>(`SELECT name,kind,preset_key AS "presetKey" FROM participants
             WHERE company_id=$1 AND id=ANY($2::text[]) AND kind='agent' AND departed_at IS NULL ORDER BY id LIMIT 8`,
-          [work.tenantId,visible])).rows.map(row => row.name.slice(0,80)) : []
+          [work.tenantId,visible])).rows.map(row => participantDisplayName(row).slice(0,80)) : []
           payload = createNativeMessage({ id: clientNonce,role: 'system',createdAt: feedback.createdAt,
             content: [{ type: 'text',text: terminalFeedbackText(feedback, state, failure, names) }],
             custom: { runId: work.id,requestVersion: feedback.requestVersion,controlPrincipalId: work.principalId,
@@ -94,14 +96,14 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
           clientNonce, signal: context.signal, payload },database)
         if (result.kind !== 'accepted') throw new Error(`assistant delivery ${result.kind}`)
         if (context.im && policy) {
-          const members = (await database.query<{ id: string; name: string }>('SELECT id,name FROM participants WHERE company_id=$1 AND id=ANY($2::text[])',
+          const members = (await database.query<MentionTarget>('SELECT id,name,kind,preset_key AS "presetKey" FROM participants WHERE company_id=$1 AND departed_at IS NULL AND id=ANY($2::text[])',
             [work.tenantId, policy.participants.map(member => member.id)])).rows
-          const mentions = parseMentions(nativeText(result.payload), members, { allowInlineCodeMentions: true })
+          const mentions = conversationHandoffMentions(nativeText(result.payload), members, work.agentId)
           const accepted = await api.conversations.ingest({ tenantId: work.tenantId, conversationId,
             ...(work.threadId ? { threadId: work.threadId } : {}), policyVersion: policy.version,
             messageId: result.messageId, version: 1, author: { id: work.agentId, kind: 'agent' }, text: message.body,
             audience: { visibility: 'participants', participantIds: context.im.audience.participantIds },
-            mentions: mentions.mentionAll ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id) : mentions.mentionedIds,
+            mentions,
             causedBy: { resultId: context.commit.resultId }, replyTo: context.im.source },
           { mode: 'execute', deliveryMode: 'auto', executionClass: 'conversation' },scope)
           const source = (await database.query<{ source_client_msg_no: string | null }>('SELECT source_client_msg_no FROM agent_run_bindings WHERE run_id=$1 AND company_id=$2', [work.id,work.tenantId])).rows[0]?.source_client_msg_no

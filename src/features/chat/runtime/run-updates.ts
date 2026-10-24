@@ -32,7 +32,7 @@ export function applyRunSnapshot(state: ConversationChatState, target: AgentRunT
   }).at(-1)
   const custom: LingxiMessageMetadata = {
     schema: 'lingxiloop.thread-message.v2', conversationId: target.conversationId,
-    senderId: target.agentId, senderName: participant?.name ?? target.agentId, senderKind: 'agent',
+    senderId: target.agentId, senderName: participant?.name ?? '智能助教', senderKind: 'agent',
     senderAvatarUrl: participant?.avatarUrl ?? null, isMine: false, delivery: 'sent', messageKind: 'text',
     quotedMessageId: target.threadId ?? null, quote: null, reactions: [], replyCount: 0,
     threadRootId: target.threadId ?? null, groupStart: true, groupEnd: true, continuedFromPrevious: false,

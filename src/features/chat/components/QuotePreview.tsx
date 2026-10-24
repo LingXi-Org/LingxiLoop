@@ -5,6 +5,9 @@ import { useParticipants } from '@/features/agents/state'
 import { useConversationUi } from '@/stores/conversationUi'
 import type { LingxiMessageMetadata, LingxiQuoteMetadata } from '../runtime/model'
 import { quotePreviewText } from '../runtime/quote-preview'
+import { displayMentionText } from '@/lib/mentions'
+import { participantDisplayName } from '@/lib/participantDisplayName'
+import { useConversations } from '@/features/conversations/store'
 
 // Official registry QuoteBlock / ComposerQuotePreview styles, integrated with
 // Lingxi's author metadata, accessible jump, and empty/attachment fallbacks.
@@ -15,17 +18,21 @@ const focusClass = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus
 
 export function MessageQuotePreview({ quote }: { quote: LingxiQuoteMetadata }) {
   const jumpToMessage = useConversationUi(state => state.jumpToMessage)
-  const authorName = useParticipants(state => state.byId[quote.authorId]?.name) ?? quote.authorName ?? '引用消息'
+  const participants = useParticipants(state => state.byId)
+  const conversationId = useAuiState(state => state.message.metadata.custom.conversationId)
+  const members = useConversations(state => state.list.find(conversation => conversation.id === conversationId)?.members)
+  const authorName = participants[quote.authorId] ? participantDisplayName(participants[quote.authorId]) : '引用消息'
+  const roster = (members ?? []).flatMap(id => participants[id] ? [participants[id]] : [])
   return <MessagePrimitive.Quote>{({ text, messageId }) => (
     <button type="button" data-quote-preview="" data-slot="quote-block"
       className={`mb-2 flex w-full min-w-0 items-start gap-1.5 text-start ${focusClass}`}
-      aria-label={`查看原消息：${authorName}，${text || '原消息不可用'}`}
+      aria-label={`查看原消息：${authorName}，${displayMentionText(text,roster) || '原消息不可用'}`}
       onClick={() => jumpToMessage(messageId)}>
       <QuoteIcon data-slot="quote-block-icon" aria-hidden="true" className="text-muted-foreground/60 mt-0.5 size-3 shrink-0" />
       <div className="min-w-0 flex-1">
         <span className="block truncate text-xs font-medium text-muted-foreground">{authorName}</span>
         <p data-slot="quote-block-text" className="text-muted-foreground/80 line-clamp-2 min-w-0 text-sm italic [overflow-wrap:anywhere]">
-          {text || '原消息不可用'}
+          {displayMentionText(text,roster) || '原消息不可用'}
         </p>
       </div>
     </button>
@@ -37,11 +44,15 @@ export function ComposerQuotePreview({ onDismiss }: { onDismiss: () => void }) {
   const original = useAuiState(state => state.thread.messages.find(message => quote &&
     [message.id, message.metadata.custom.clientMessageId, message.metadata.custom.imMessageId].includes(quote.messageId)))
   const metadata = original?.metadata.custom as LingxiMessageMetadata | undefined
-  const authorName = useParticipants(state => metadata ? state.byId[metadata.senderId]?.name : undefined) ?? metadata?.senderName ?? '引用消息'
+  const participants = useParticipants(state => state.byId)
+  const members = useConversations(state => state.list.find(conversation => conversation.id === metadata?.conversationId)?.members)
+  const author = metadata && participants[metadata.senderId]
+  const authorName = author ? participantDisplayName(author) : '引用消息'
   // Reply actions sanitize citations. Even an intentionally empty body must not
   // be replaced with raw source text; derive only an attachment-only preview.
   const text = quote?.text ?? ''
-  const preview = original && !text.trim() && !nativeText(original).trim() ? quotePreviewText(original) : text
+  const preview = displayMentionText(original && !text.trim() && !nativeText(original).trim() ? quotePreviewText(original) : text,
+    (members ?? []).flatMap(id => participants[id] ? [participants[id]] : []))
   return <ComposerPrimitive.Quote data-composer-quote="" data-slot="composer-quote"
     className="bg-muted/60 mx-3 mt-2 flex min-w-0 items-start gap-2 rounded-lg px-3 py-2" aria-label="正在回复">
     <QuoteIcon data-slot="composer-quote-icon" aria-hidden="true" className="text-muted-foreground/70 mt-0.5 size-3.5 shrink-0" />

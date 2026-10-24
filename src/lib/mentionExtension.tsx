@@ -18,6 +18,8 @@ import { createRef } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { SuggestionOptions } from '@tiptap/suggestion'
 import Mention from '@tiptap/extension-mention'
+import { mergeAttributes } from '@tiptap/core'
+import { isChineseAgentName, participantDisplayName } from './participantDisplayName'
 import type { Participant } from '@/types'
 import { useParticipants } from '@/features/agents/state'
 import { MentionList, filterMentionCandidates, type MentionListHandle } from '@/components/MentionList'
@@ -138,9 +140,14 @@ function makeSuggestion(): Partial<SuggestionOptions> {
  *  the renderer surfaces `@<label>` chips that get the `.mention` class
  *  so globals.css can paint them. */
 export function buildMentionExtension() {
+  const name = (id: unknown, label: unknown) => {
+    const participant = useParticipants.getState().byId[String(id)]
+    return participant ? participantDisplayName(participant) : typeof label === 'string' && isChineseAgentName(label) ? label : '未识别成员'
+  }
   return Mention.configure({
     HTMLAttributes: { class: 'mention' },
-    renderText: ({ node }) => `@${String(node.attrs.label ?? '成员')}`,
+    renderText: ({ node }) => `@${name(node.attrs.id,node.attrs.label)}`,
+    renderHTML({options,node}) { return ['span',mergeAttributes(this.HTMLAttributes??{},options.HTMLAttributes??{}),`@${name(node.attrs.id,node.attrs.label)}`] },
     suggestion: makeSuggestion() as never,
   })
 }

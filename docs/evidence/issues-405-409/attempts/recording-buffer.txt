@@ -1,0 +1,72 @@
+[integration selected] selected 1/120 file(s): group-mentions.test.ts
+TAP version 13
+# {"ts":"2026-10-24T14:25:38.996Z","level":"info","msg":"worker started","workerId":"group-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-24T14:25:43.529Z","level":"info","msg":"worker stopped","workerId":"group-mentions","timedOut":false}
+# Subtest: committed formatted mentions drive A → B → C → A and a plain reply ends the chain
+ok 1 - committed formatted mentions drive A → B → C → A and a plain reply ends the chain
+  ---
+  duration_ms: 6377.515983
+  type: 'test'
+  ...
+# Subtest: message admission freezes canonical mentions across renames and preserves citation coordinates
+ok 2 - message admission freezes canonical mentions across renames and preserves citation coordinates
+  ---
+  duration_ms: 797.554424
+  type: 'test'
+  ...
+# {"ts":"2026-10-24T14:25:45.511Z","level":"info","msg":"worker started","workerId":"introduction-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-24T14:25:46.313Z","level":"info","msg":"worker stopped","workerId":"introduction-mentions","timedOut":false}
+# Subtest: a descriptive six-agent roster creates one answer and zero successor runs
+ok 3 - a descriptive six-agent roster creates one answer and zero successor runs
+  ---
+  duration_ms: 1571.207193
+  type: 'test'
+  ...
+# {"ts":"2026-10-24T14:25:47.098Z","level":"warn","msg":"deliveries failed","error":"Background operation failed"}
+# {"ts":"2026-10-24T14:25:47.228Z","level":"info","msg":"worker started","workerId":"introduction-mentions","healthPort":null,"maxConcurrentRuns":1}
+# {"ts":"2026-10-24T14:25:51.365Z","level":"info","msg":"worker stopped","workerId":"introduction-mentions","timedOut":false}
+# Subtest: explicit introduction handoffs wake the five specialists once
+# {"ts":"2026-10-24T14:25:51.376Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-24T14:25:51.376Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-24T14:25:51.376Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-24T14:25:51.376Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_delivery_outbox"}
+# {"ts":"2026-10-24T14:25:51.376Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-24T14:25:51.376Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-24T14:25:51.376Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+# {"ts":"2026-10-24T14:25:51.376Z","level":"warn","msg":"outbox acknowledgement failed; durable rows retain the delivery intent","table":"agent_run_events"}
+not ok 4 - explicit introduction handoffs wake the five specialists once
+  ---
+  duration_ms: 5041.662049
+  type: 'test'
+  location: '/workspace/LingxiLoop/server/src/__integration__/group-mentions.test.ts:3:9985'
+  failureType: 'testCodeFailure'
+  error: |-
+    the assignment must be committed first
+    + actual - expected
+
+    + 'a-a5d827b5'
+    - 'a-8d5f9e71'
+         ^
+
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'a-8d5f9e71'
+  actual: 'a-a5d827b5'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__integration__/group-mentions.test.ts:220:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 3
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 17935.35086
+[integration file] group-mentions.test.ts duration_ms=17988 exit=1
+[integration result] mode=selected files=1 duration_ms=17988 exit=1

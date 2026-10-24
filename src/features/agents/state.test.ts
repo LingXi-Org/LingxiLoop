@@ -10,7 +10,15 @@ test('roster avatar updates reject stale refreshes and clear on workspace reset'
   mock.module('@/api/core/realtime', { namedExports: { ws: {} } })
   mock.module('@/lib/avatarCache', { namedExports: { clearAvatarCache: () => {} } })
   try {
-    const { useParticipants } = await import('./state')
+    const { useParticipants, fromApi } = await import('./state')
+    const preset = fromApi({...agent,name:'nova',presetKey:'nova'})
+    assert.equal(preset.name,'司南')
+    assert.equal(preset.sourceName,'nova')
+    const legacy = fromApi({...agent,id:'old-agent',name:'English Helper',presetKey:null})
+    assert.equal(legacy.name,'智能助教')
+    assert.equal(legacy.sourceName,'English Helper')
+    const human = fromApi({...agent,id:'human',kind:'human',name:'Alice'})
+    assert.equal(human.name,'Alice')
     await useParticipants.getState().load()
     assert.deepEqual(useParticipants.getState().byId.nova.personalAvatar, { seed: 'saved' })
     let resolve!: (rows: ApiParticipant[]) => void

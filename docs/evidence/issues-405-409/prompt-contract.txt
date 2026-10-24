@@ -1,0 +1,11 @@
+✔ compiled IM answer contract supports native segments with chat.send unavailable (5.057886ms)
+✔ compiled IM answer contract supports native segments with chat.send available (3.189684ms)
+✔ compiled native segments preserve review, acceptance and group dispatch obligations (1.836839ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3887.911632

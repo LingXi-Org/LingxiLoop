@@ -5,6 +5,7 @@ import { ws } from '@/api/core/realtime'
 import { clearAvatarCache } from '@/lib/avatarCache'
 import type { Participant, Status } from '@/types'
 import { registerAuthTeardown } from '@/stores/authTeardown'
+import { presentParticipant } from '@/lib/participantDisplayName'
 
 interface ParticipantsState {
   byId: Record<string, Participant>
@@ -72,11 +73,10 @@ async function fetchInto(
   }
 }
 
-function fromApi(p: ApiParticipant): Participant {
+export function fromApi(p: ApiParticipant): Participant {
   return {
     id: p.id,
-    kind: p.kind,
-    name: p.name,
+    ...presentParticipant({name:p.name,kind:p.kind,presetKey:p.presetKey}),
     role: p.role ?? undefined,
     initial: p.initial,
     avatarBg: p.avatarBg,
@@ -191,8 +191,7 @@ export function bootParticipants(load = true) {
           [p.id]: {
             ...s.byId[p.id],
             id: p.id,
-            kind: p.kind,
-            name: p.name,
+            ...presentParticipant({name:p.name,kind:p.kind,presetKey:s.byId[p.id]?.presetKey}),
             role: p.role ?? undefined,
             initial: p.initial,
             avatarBg: p.avatarBg,

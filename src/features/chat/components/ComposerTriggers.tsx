@@ -16,7 +16,7 @@ import { participantRoleZh } from '@/lib/participantRole'
 import { scanMentions, type MentionTarget } from '@/lib/mentions'
 import { MentionBadge } from '@/components/MentionBadge'
 import { EVERYONE_BLOUB_PARTICIPANT } from '@/lib/agentVisualState'
-import { participantDisplayName } from '@/lib/participantDisplayName'
+import { isChineseAgentName, participantDisplayName } from '@/lib/participantDisplayName'
 
 function mentionFormatter(targets: readonly MentionTarget[]): Unstable_DirectiveFormatter { return {
   serialize: (item) => `@${item.id}`,
@@ -79,7 +79,7 @@ export function ComposerDirectiveChip({
 }) {
   const participant = useParticipants((state) => state.byId[directiveId])
   return <span data-directive-type={directiveType} data-directive-id={directiveId}>
-    {participant || directiveId === 'all' ? <MentionBadge participant={participant ?? EVERYONE_BLOUB_PARTICIPANT} id={directiveId} /> : <span>@{label}</span>}
+    {participant || directiveId === 'all' ? <MentionBadge participant={participant ?? EVERYONE_BLOUB_PARTICIPANT} id={directiveId} /> : <span>@{isChineseAgentName(label) ? label : '未识别成员'}</span>}
   </span>
 }
 
