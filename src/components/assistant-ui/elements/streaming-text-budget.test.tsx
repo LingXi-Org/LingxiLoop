@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { load } from 'cheerio'
-import { StreamingText } from './streaming-text'
+import { STREAMING_WORD_BUDGET, StreamingText } from './streaming-text'
 import { createStreamingTail } from '../streaming-tail'
 import { rehypeStreamingText, streamingWords } from '../markdown-streaming'
 import type { Root } from 'hast'
@@ -17,6 +17,44 @@ test('Chinese animation wrappers stay bounded as received text grows without los
     assert.ok($('[data-streaming-word]').length <= 128, `length=${length}: ${$('[data-streaming-word]').length} wrappers`)
     assert.equal($('[data-streaming-fresh="true"]').length, 2)
     assert.equal($('[data-streaming-caret]').length, 1)
+  }
+})
+
+// The DOM budget must also bound token reads: copying or joining the complete
+// already-readable prefix on every streamed update still grows with history.
+test('source-backed leaves read only the animation window and static range boundaries', t => {
+  for (const length of [1_000, 10_000]) {
+    const text = '中'.repeat(length)
+    for (const streaming of [true, false]) {
+      let reads = 0
+      const tokens = new Proxy(Array.from(text, (word, start) => ({ word, start, separator: '' })), {
+        get(target, property, receiver) {
+          if (typeof property === 'string' && /^\d+$/.test(property)) reads++
+          return Reflect.get(target, property, receiver)
+        },
+      })
+      const html = renderToStaticMarkup(<StreamingText segments={[]} tokens={tokens} sourceText={text}
+        count={length} streaming={streaming} inline />)
+      const $ = load(html)
+      assert.equal($('[data-slot="streaming-text"]').text(), text)
+      assert.ok(reads <= (streaming ? STREAMING_WORD_BUDGET : 0) + 4,
+        `${length} words, streaming=${streaming}: ${reads} token reads`)
+      t.diagnostic(`${length} words, streaming=${streaming}: ${reads} token reads`)
+    }
+  }
+})
+
+test('source-backed static text preserves Unicode, whitespace and normalized partial counts', () => {
+  const text = '  中́文\t👨‍👩‍👧‍👦 café\n한 字'
+  const tokens = streamingWords(text)
+  for (const [count, expected] of [[-1, ''], [Number.NaN, ''], [2.8, '  中́文\t'], [Infinity, text]] as const) {
+    for (const streaming of [true, false]) {
+      const html = renderToStaticMarkup(<StreamingText segments={[]} tokens={tokens} sourceText={text}
+        count={count} streaming={streaming} animate={false} caret={false} inline />)
+      const $ = load(html)
+      assert.equal($('[data-slot="streaming-text"]').text(), expected)
+      assert.equal($('[data-streaming-word]').length, 0)
+    }
   }
 })
 

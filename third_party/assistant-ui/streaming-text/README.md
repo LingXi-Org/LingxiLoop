@@ -10,13 +10,13 @@ Pinned commit: `736c07f59623ae571f1e969bb1c8b6f91f661fd0` (retrieved 2026-10-20)
 - Demo: `apps/docs/components/demo/elements/streaming-text.tsx` at the same commit (88ms word interval).
 - License: MIT, Copyright (c) 2026 AgentbaseAI Inc.; full original license in `LICENSE`.
 
-`upstream/` contains the complete, unmodified component and helper. The production component is `src/components/assistant-ui/elements/streaming-text.tsx`. It imports the original `take` helper; it does not depend on a floating registry or a new npm package. The local comparison fixture also renders the unmodified component directly. Package manifests and lockfiles are unchanged.
+`upstream/` contains the complete, unmodified component and helper. The production component is `src/components/assistant-ui/elements/streaming-text.tsx`. It imports the original `clamp` helper, preserving `take`'s count normalization without copying the full token array; it does not depend on a floating registry or a new npm package. The local comparison fixture also renders the unmodified component directly. Package manifests and lockfiles are unchanged.
 
 ## Actual code reused
 
 | Upstream implementation | Product integration |
 | --- | --- |
-| `useMemo`, `take`, `shown.map`, index keys, nested word spans | Preserved; optional pre-segmented tokens retain Markdown leaf whitespace. |
+| `useMemo`, count normalization, index keys, nested word spans | Preserved; optional pre-segmented tokens retain Markdown leaf whitespace. Only the animation window is sliced and mapped. |
 | `streaming && shown.length - 1 - i < 2` | Preserved with the number of tokens in subsequent leaves added to the distance, so bold/link/inline-code boundaries share the same trailing window. |
 | `fade-in animate-in fill-mode-both duration-500 motion-reduce:animate-none` | Actual upstream outer span/classes; disabled for historical content. |
 | `transition-colors duration-700 motion-reduce:transition-none` and blue-500/dark blue-400 | Actual upstream inner span/classes; finished words retain their nodes and transition to inherited text color. |
@@ -51,6 +51,14 @@ not a second typing queue; the SDK remains the only reveal controller.
 `scripts/streaming-render-cost.tsx` measures pure synthetic SSR node/serialization
 cost. Browser selection, lifecycle and actual paint remain separate verification
 gates; this measurement cannot establish user-device frame rates.
+
+Markdown tokens also carry their original UTF-16 start boundaries. Static prefix
+and suffix ranges slice the original text leaf directly, so rendering an update
+does not copy or join all earlier tokens. Standalone segments keep their existing
+mono styling and whitespace behavior. The block tokenizer drops cache entries
+for text leaves removed by a later Markdown pass. These changes bound renderer
+token reads and remove stale cache references; they do not establish a total
+heap reduction or an end-to-end frame-time improvement.
 
 ## Reproduction
 
