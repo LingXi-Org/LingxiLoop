@@ -75,9 +75,9 @@ corner coverage observed when auto-resizing an already rasterized512px image.
 
 Before implementation, all3 focused checks failed: pinned title lacked
 emphasis, actual PNG corner was opaque, and ICO48 corner was opaque. That output
-is retained in `before-regression.log`. After implementation4 checks pass:
+is retained in `before-regression.txt`. After implementation4 checks pass:
 rendered pinned/unpinned/selected/unread/long-title combinations and semantic
-marker retention; actual RGBA PNG alpha and sizes; all ICO frame alpha/center;
+marker retention; actual RGBA PNG alpha and sizes; all ICO frame alpha/center and legacy transparency mask;
 and real HTML/manifest/marketing resource/version consistency. Pixel checks use
 Node built-ins to decompress the committed bytes and require no renderer or
 new CI installation. ICO resampling may retain partial antialias edge coverage;
@@ -88,9 +88,13 @@ node --import tsx --experimental-test-module-mocks --test --test-force-exit \
   src/lib/favicon-assets.test.ts src/im/ConversationList.test.tsx
 ```
 
-Focused lint passes8 source/fixture files; generator syntax and `git diff --check`
-pass. Web/fixture typechecks, the serialized official browser scenario,
-independent final review and exact PR CI will be recorded after they run.
+Focused lint passes9 source/fixture/config files; generator syntax and `git diff --check`
+pass. `tsc -p e2e/favicon-pinned/tsconfig.json --noEmit` passes, covering all web
+source and the new fixture/config. Its first attempt failed because the sparse
+checkout omitted existing server modules imported by web tests; materializing
+the tracked4.7MB `server/src` resolved those errors without code changes. The
+serialized official browser scenario, independent final review and exact PR CI
+will be recorded after they run.
 The browser fixture uses the real row renderer, API client and store reload/map
 with a deterministic localhost API; its two pin controls are fixture affordances,
 not evidence of changed production menu behavior. It also copies the actual

@@ -64,6 +64,8 @@ test('every fallback ICO frame has transparent corners and an intact center', ()
     const pixels = offset + file.readUInt32LE(offset)
     // Tiny ICO frames may contain partial edge coverage after resampling.
     rounded(`favicon.ico ${width}`, width, height, (x, y) => file[pixels + ((height - 1 - y) * width + x) * 4 + 3] / 255, .2)
+    const mask = pixels + width * height * 4, maskStride = Math.ceil(width / 32) * 4
+    assert.ok(file[mask + (height - 1) * maskStride] & 128, 'legacy ICO AND mask must also clear the corner')
   }
   assert.deepEqual(sizes.sort((a, b) => a - b), [16, 32, 48])
 })
