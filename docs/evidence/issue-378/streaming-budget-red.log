@@ -1,0 +1,56 @@
+TAP version 13
+# Subtest: Chinese animation wrappers stay bounded as received text grows without losing text
+not ok 1 - Chinese animation wrappers stay bounded as received text grows without losing text
+  ---
+  duration_ms: 173.174479
+  type: 'test'
+  location: '/tmp/loop-378/src/components/assistant-ui/elements/streaming-text-budget.test.tsx:1:224'
+  failureType: 'testCodeFailure'
+  error: 'length=1000: 1000 wrappers'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-378/src/components/assistant-ui/elements/streaming-text-budget.test.tsx:14:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: historical and reduced animation text has no character wrappers or caret
+not ok 2 - historical and reduced animation text has no character wrappers or caret
+  ---
+  duration_ms: 4.26076
+  type: 'test'
+  location: '/tmp/loop-378/src/components/assistant-ui/elements/streaming-text-budget.test.tsx:1:849'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    3 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 3
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/loop-378/src/components/assistant-ui/elements/streaming-text-budget.test.tsx:26:12)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1235.919006
