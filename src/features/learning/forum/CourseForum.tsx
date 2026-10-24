@@ -18,6 +18,7 @@ import { userFacingError } from '@/lib/userFacingError'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { useApp } from '@/stores/app'
 import { captureConversationScope, useConversations } from '@/features/conversations/store'
+import { HomeworkComposer } from '../homework/HomeworkComposer'
 import { homeworkApi } from '../homework/api'
 import { MemoDetail } from './memos/MemoDetail'
 import { useAuth } from '@/stores/auth'
@@ -69,10 +70,11 @@ export function CourseForum({ space }: { space: LearningSpace }) {
   const [date, setDate] = useState<Date>(), [property, setProperty] = useState('all')
   const [deleting, setDeleting] = useState<ForumItem | null>(null)
   const [closing, setClosing] = useState<ForumItem | null>(null)
+  const [creatingHomework,setCreatingHomework]=useState(false)
   const [entryError, setEntryError] = useState(''), [entering, setEntering] = useState(false)
   const entry = useRef<AbortController | null>(null)
   useEffect(() => {
-    setEntryError(''); setEntering(false)
+    setEntryError(''); setEntering(false); setCreatingHomework(false)
     return () => { entry.current?.abort(); entry.current = null }
   }, [space.companyId, space.projectId, space.courseId, userId])
   const epoch = useRef(0)
@@ -142,13 +144,13 @@ export function CourseForum({ space }: { space: LearningSpace }) {
       await useConversations.getState().reload()
       if (!active()) return
       const conversations = useConversations.getState()
-      if (conversations.error) throw new Error('教师作业发布入口暂时无法加载，请重试。')
+      if (conversations.error) throw new Error('教师助手暂时无法加载，请重试。')
       if (conversations.projectId !== space.projectId || !conversations.list.some(item => item.id === agent.roomId)) {
-        throw new Error('教师作业发布入口暂不可访问，请确认当前课程教师权限后重试。')
+        throw new Error('教师助手暂不可访问，请确认当前课程教师权限后重试。')
       }
       useApp.getState().selectConversation(agent.roomId)
     } catch (reason) {
-      if (active()) setEntryError(userFacingError(reason, '作业发布入口暂时无法打开，草稿已保留，请重试。'))
+      if (active()) setEntryError(userFacingError(reason, '教师助手暂时无法打开，草稿已保留，请重试。'))
     } finally {
       if (entry.current === controller) { entry.current = null; setEntering(false) }
     }
@@ -164,6 +166,7 @@ export function CourseForum({ space }: { space: LearningSpace }) {
         <Button variant="ghost" size="sm" aria-pressed={archived} onClick={()=>setArchived(value=>!value)}>{archived?'返回内容流':'已归档'}</Button>
       </div>
       {tag && <Button variant="outline" size="sm" onClick={()=>setTag('')}>#{tag} · 清除标签筛选</Button>}
+      {creatingHomework && space.canEditContent && <HomeworkComposer key={`homework:${space.companyId}:${userId}:${courseId}`} courseId={courseId} onClose={()=>setCreatingHomework(false)} onPublished={()=>{setCreatingHomework(false);setKind('all');setSearch('');setTag('');void load()}}/>}
       {canWrite && <ForumComposer key={`${space.companyId}:${userId}:${courseId}`} space={space} onCreated={()=>{setKind('all');setSearch('');setTag('');void load()}}/>}
       {error && <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">{error}<Button variant="outline" size="sm" disabled={loading} onClick={() => void load()}>重试</Button></div>}
       <div aria-busy={loading} data-forum-layout={display.columns} className={display.columns==='1'?"forum-list divide-y":"grid items-start gap-3 "+(display.columns==='2'?"@min-[40rem]/learning-grid:grid-cols-2":display.columns==='3'?"@min-[40rem]/learning-grid:grid-cols-2 @min-[60rem]/learning-grid:grid-cols-3":"grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))]")}>
@@ -213,9 +216,9 @@ export function CourseForum({ space }: { space: LearningSpace }) {
     <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-3 border-b px-4 sm:px-6">
       {isMobile && <ForumSidebar kind={kind} onSelect={selectSection} date={date} onDate={value=>{setDate(value);if(detailId)closeDetail()}}/>}
       <h1 className="text-lg font-semibold">论坛</h1><span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">{space.title}</span>
-      {space.canEditContent && <Button variant="outline" size="sm" disabled={busy || entering} onClick={() => void openHomework()}>发布作业</Button>}
+      {space.canEditContent && <><Button variant="ghost" size="sm" disabled={busy || entering} onClick={() => void openHomework()}>教师助手</Button><Button variant="outline" size="sm" disabled={busy} onClick={() => {entry.current?.abort();entry.current=null;setEntering(false);setEntryError('');if(detailId)closeDetail();setCreatingHomework(true)}}>发布作业</Button></>}
     </header>
-    {entryError && <div role="alert" className="flex flex-wrap items-center gap-2 px-4 py-2 text-sm text-destructive sm:px-6">{entryError}<Button variant="outline" size="sm" disabled={entering} onClick={() => void openHomework()}>重试进入作业发布</Button></div>}
+    {entryError && <div role="alert" className="flex flex-wrap items-center gap-2 px-4 py-2 text-sm text-destructive sm:px-6">{entryError}<Button variant="outline" size="sm" disabled={entering} onClick={() => void openHomework()}>重试打开教师助手</Button></div>}
     <div data-forum-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain"><div data-ui-page="forum" className="mx-auto w-full max-w-5xl px-4 py-4 sm:px-6">{content}</div></div>
   </section>
 }

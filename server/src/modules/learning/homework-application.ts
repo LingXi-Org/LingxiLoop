@@ -22,12 +22,23 @@ import { assertHomeworkPublished, assertHomeworkRevision, homeworkHash, homework
 export class HomeworkApplication {
   constructor(private readonly db:Queryable,private readonly transaction:HomeworkTransaction) {}
 
-  async draft(scope:LearningScope,courseId:string,input:HomeworkDraft) {
-    const data=homeworkDraftSchema.parse(input),id=randomUUID()
+  async draft(scope:LearningScope,courseId:string,input:HomeworkDraft,id:string=randomUUID()) {
+    const data=homeworkDraftSchema.parse(input)
     await this.transaction(async db=>{
       const project=await homeworkScope(db,scope,courseId,'manage')
       await assertOwnedLearningAttachments(db,scope,data.attachments)
       assertDocumentAttachments(data.attachments, data.editorDocument, data.criteriaDocument)
+      // A client UUID retries a committed creation after a lost response. Serialize
+      // same-ID requests, then recheck both author scope and exact visible content.
+      await db.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`homework-draft:${id}`])
+      const existing=await db.query<{company_id:string;course_id:string;created_by:string;visible_hash:string}>('SELECT company_id,course_id,created_by,visible_hash FROM homeworks WHERE id=$1',[id])
+      if(existing.rows[0]) {
+        const prior=existing.rows[0]
+        if(prior.company_id!==scope.companyId||prior.course_id!==courseId||prior.created_by!==scope.userId||prior.visible_hash!==homeworkHash(data)) {
+          throw new LearningApplicationError('conflict','草稿已存在或内容已变化，请重新加载草稿')
+        }
+        return
+      }
       await db.query(`INSERT INTO homeworks(id,company_id,project_id,course_id,created_by,title,instructions,criteria,links,attachments,due_at,visible_hash,editor_document,criteria_document)
         VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9::jsonb,$10::jsonb,$11,$12,$13::jsonb,$14::jsonb)`,
       [id,scope.companyId,project.projectId,courseId,scope.userId,data.title,data.instructions,JSON.stringify(data.criteria),JSON.stringify(data.links),JSON.stringify(data.attachments),data.dueAt,homeworkHash(data),JSON.stringify(data.editorDocument ?? null),JSON.stringify(data.criteriaDocument ?? null)])

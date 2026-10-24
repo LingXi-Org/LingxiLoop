@@ -1494,3 +1494,32 @@ test('[integration] legacy recovery stays private across current reports and nat
   assert.equal((await homework.detail(student, courseId, task.id)).student!.answer.editorDocument?.legacyMarkdown, 'PRIVATE ORIGINAL A')
   assert.equal((await pool.query('SELECT answer FROM homework_submissions WHERE id=$1', [submitted.id])).rows[0].answer.editorDocument.legacyMarkdown, 'PRIVATE ORIGINAL A')
 })
+
+// #381: direct human authoring must enter the existing homework lifecycle. The
+// caller UUID is stable across a lost HTTP response; it never grants authority.
+test('381 human draft endpoint retries one course-scoped draft and preserves explicit publication', async () => {
+  const id=randomUUID(),url=path(id,'/draft')
+  const created=await call(teacher,url,'PUT',visible)
+  assert.equal(created.status,200)
+  const first=await created.json() as {homework:{id:string;status:string;revision:number;visibleHash:string}}
+  assert.equal(first.homework.id,id);assert.equal(first.homework.status,'DRAFT')
+  const replays=await Promise.all([call(teacher,url,'PUT',visible),call(teacher,url,'PUT',visible)])
+  for(const replay of replays){assert.equal(replay.status,200);assert.equal((await replay.json() as {homework:{id:string}}).homework.id,id)}
+  const count=await pool.query('SELECT count(*)::int n FROM homeworks WHERE id=$1',[id])
+  assert.equal(count.rows[0].n,1)
+  assert.equal((await call(teacher,url,'PUT',{...visible,title:'Changed retry'})).status,409)
+  assert.equal((await call(colleague,url,'PUT',visible)).status,409)
+  assert.equal((await call(student,path(id))).status,404)
+  assert.equal((await call(teacher,path(id,'/publish'),'POST',{expectedRevision:first.homework.revision,visibleHash:first.homework.visibleHash,idempotencyKey:'381-publish'})).status,409)
+  await pool.query("UPDATE homeworks SET validation_status='READY',validated_revision=revision WHERE id=$1",[id])
+  assert.equal((await call(teacher,path(id,'/publish'),'POST',{expectedRevision:first.homework.revision,visibleHash:first.homework.visibleHash,idempotencyKey:'381-publish'})).status,200)
+  assert.equal((await call(student,path(id))).status,200)
+})
+
+test('381 direct draft rejects student, unrelated course and revoked teacher without writes',async()=>{
+  for(const scope of [student,outsider]) assert.ok([403,404].includes((await call(scope,path(randomUUID(),'/draft'),'PUT',visible)).status))
+  assert.equal((await call(teacher,path('invalid-id','/draft'),'PUT',visible)).status,400)
+  await pool.query("UPDATE project_memberships SET status='SUSPENDED' WHERE company_id=$1 AND project_id=$2 AND user_id=$3",[companyId,projectId,teacher.userId])
+  assert.ok([403,404].includes((await call(teacher,path(randomUUID(),'/draft'),'PUT',visible)).status))
+  assert.equal((await pool.query('SELECT count(*)::int n FROM homeworks')).rows[0].n,0)
+})

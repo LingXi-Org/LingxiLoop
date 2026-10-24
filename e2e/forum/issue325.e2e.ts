@@ -20,7 +20,7 @@ async function snapshot(browser: Browser) {
   return browser.evaluate(async () => fetch('/api/fixture-teacher-entry').then(response => response.json()))
 }
 
-test('325 header entry repairs missing and hidden rooms, retries the entry, and preserves body/files', async ({ app, browser, screen }) => {
+test('325 explicit teacher-assistant entry repairs missing and hidden rooms, retries the entry, and preserves body/files', async ({ app, browser, screen }) => {
   await openAs(app, browser, screen)
   const composer = () => screen.getByRole('region', '发布学习论坛内容')
   await composer().getByRole('button', '展开发布框', { exact: true }).tap()
@@ -30,13 +30,13 @@ test('325 header entry repairs missing and hidden rooms, retries the entry, and 
   const before = await snapshot(browser)
   expect(before.rooms).toBe(0)
   await fixture(browser, '/api/fixture-teacher-entry/lost')
-  await screen.getByRole('button', '发布作业', { exact: true }).tap()
-  await expect(screen.getByRole('button', '重试进入作业发布', { exact: true })).toBeVisible()
+  await screen.getByRole('button', '教师助手', { exact: true }).tap()
+  await expect(screen.getByRole('button', '重试打开教师助手', { exact: true })).toBeVisible()
   expect((await snapshot(browser)).rooms).toBe(1)
   expect((await snapshot(browser)).homeworks).toBe(before.homeworks)
   await expect(composer().getByLabel('内容正文', { exact: true })).toContainText('Issue325 未发布的正文与附件')
   await app.screenshot('325-entry-failure-keeps-draft')
-  await screen.getByRole('button', '重试进入作业发布', { exact: true }).tap()
+  await screen.getByRole('button', '重试打开教师助手', { exact: true }).tap()
   await expect.poll(() => browser.evaluate(() => new URL(location.href).searchParams.get('conversation'))).toBeTruthy()
   const roomId = await browser.evaluate(() => new URL(location.href).searchParams.get('conversation')!)
   expect((await snapshot(browser)).requests).toBe(2)
@@ -47,28 +47,28 @@ test('325 header entry repairs missing and hidden rooms, retries the entry, and 
   expect(await browser.evaluate(async id => (await fetch(`/api/conversations/${id}`, {
     method: 'DELETE', headers: { 'x-company-id': 'e2e-school', 'x-project-id': 'e2e-classroom' },
   })).status, roomId)).toBe(200)
-  await screen.getByRole('button', '发布作业', { exact: true }).tap()
+  await screen.getByRole('button', '教师助手', { exact: true }).tap()
   await expect.poll(() => browser.evaluate(() => new URL(location.href).searchParams.get('conversation'))).toBe(roomId)
   await app.open(url)
   await screen.getByRole('link', 'Forum homework', { exact: true }).tap()
   await expect(browser.locator('[data-memo-detail]')).toBeVisible()
   await fixture(browser, '/api/fixture-teacher-entry/fail-list')
-  await screen.getByRole('button', '发布作业', { exact: true }).tap()
-  await expect(screen.getByRole('button', '重试进入作业发布', { exact: true })).toBeVisible()
+  await screen.getByRole('button', '教师助手', { exact: true }).tap()
+  await expect(screen.getByRole('button', '重试打开教师助手', { exact: true })).toBeVisible()
   await expect(screen.getByText('相关内容不存在或已不可访问。', { exact: true })).toHaveCount(0)
-  await screen.getByRole('button', '重试进入作业发布', { exact: true }).tap()
+  await screen.getByRole('button', '重试打开教师助手', { exact: true }).tap()
   await expect.poll(() => browser.evaluate(() => new URL(location.href).searchParams.get('conversation'))).toBe(roomId)
   expect((await snapshot(browser)).rooms).toBe(1)
   expect((await snapshot(browser)).homeworks).toBe(before.homeworks)
   await app.screenshot('325-teacher-room-recovered')
 })
 
-test('325 a pending teacher entry cannot navigate after switching course, and students remain denied', async ({ app, browser, screen }) => {
+test('325 a pending teacher-assistant entry cannot navigate after switching course, and students remain denied', async ({ app, browser, screen }) => {
   await openAs(app, browser, screen)
   await fixture(browser, '/api/fixture-teacher-entry/hold')
   const count = (await snapshot(browser)).requests
-  await screen.getByRole('button', '发布作业', { exact: true }).tap()
-  await expect(screen.getByRole('button', '发布作业', { exact: true })).toBeDisabled()
+  await screen.getByRole('button', '教师助手', { exact: true }).tap()
+  await expect(screen.getByRole('button', '教师助手', { exact: true })).toBeDisabled()
   await expect.poll(async () => (await snapshot(browser)).requests).toBe(count + 1)
   // Same-document navigation keeps the original request pending.
   await browser.evaluate(() => { history.pushState({}, '', '/?project=forum-other&view=forum'); window.dispatchEvent(new PopStateEvent('popstate')); return true })
@@ -77,7 +77,7 @@ test('325 a pending teacher entry cannot navigate after switching course, and st
   await expect.poll(async () => (await snapshot(browser)).completed).toBe(count + 1)
   expect(await browser.evaluate(() => location.search)).toBe('?project=forum-other&view=forum')
   await openAs(app, browser, screen, 'student')
-  await expect(screen.getByRole('button', '发布作业', { exact: true })).toHaveCount(0)
+  await expect(screen.getByRole('button', '教师助手', { exact: true })).toHaveCount(0)
   const denied = await browser.evaluate(async () => (await fetch('/api/courses/e2e-course/teacher-agent', {
     method: 'POST', headers: { 'x-company-id': 'e2e-school' },
   })).status)
