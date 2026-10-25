@@ -25,7 +25,8 @@ ProtectHome=true
 ProtectKernelTunables=true
 ProtectKernelModules=true
 ProtectControlGroups=true
-RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+# Node reads local interface ownership via NETLINK_ROUTE before accepting a private readiness URL.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
 ReadWritePaths=/var/lib/lingxi-release /etc/lingxi-release/gateway
 
 [Install]

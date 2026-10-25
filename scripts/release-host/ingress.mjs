@@ -3,6 +3,16 @@ import { dirname } from 'node:path'
 import { runDocker } from './adapter.mjs'
 import { canonical, fault, identifier } from './journal.mjs'
 
+/** The single byte-for-byte managed rendering used both by reload and qualification. */
+export function renderIngress(template,backends,states) {
+  if (['{{LINGXI_UPSTREAMS}}','{{LINGXI_INGRESS_STATES}}'].some(token=>template.split(token).length!==2) || Object.keys(states).length!==Object.keys(backends).length) throw fault('INVALID_INGRESS_POLICY','Gateway template requires exactly one of each fixed placeholder')
+  for (const [target,spec] of Object.entries(backends)) if (!identifier(target) || !/^[a-zA-Z0-9.-]+:\d{2,5}$/.test(spec.address??'') || !states[target] || typeof states[target].enabled!=='boolean' || !Number.isSafeInteger(states[target].generation) || states[target].generation<0) throw fault('INVALID_INGRESS_POLICY','Fixed backend addresses and nonnegative safe generations are required')
+  const servers=Object.entries(backends).map(([target,spec])=>`    server ${spec.address} ${states[target].enabled?'max_fails=2 fail_timeout=5s':'down'};`).join('\n')
+  const upstreams=['lingxiloop_web','lingxiloop_realtime'].map(name=>`upstream ${name} {\n    zone ${name} 64k;\n    least_conn;\n${servers}\n    keepalive 32;\n}`).join('\n')
+  const locations=Object.keys(backends).map(target=>`    location = /state/${target} { default_type application/json; return 200 '${canonical(states[target])}'; }`).join('\n')
+  return template.replace('{{LINGXI_UPSTREAMS}}',upstreams).replace('{{LINGXI_INGRESS_STATES}}',locations)
+}
+
 /** Stable gateway reloads only; this adapter never stops/recreates the gateway or its Compose project. */
 export class NginxIngress {
   constructor({ journal,policy,run = runDocker,fetcher = fetch,wait = ms => new Promise(resolve => setTimeout(resolve,ms)) }) {
@@ -60,12 +70,7 @@ export class NginxIngress {
       this.journal.db.prepare('INSERT INTO ingress_state VALUES (?,?,?,?) ON CONFLICT(target) DO UPDATE SET generation=excluded.generation,enabled=excluded.enabled,release_id=excluded.release_id').run(target,generation,enabled ? 1 : 0,releaseId)
     })
     try {
-      let template = await readFile(this.policy.templateFile,'utf8')
-      if (!template.includes('{{LINGXI_UPSTREAMS}}') || !template.includes('{{LINGXI_INGRESS_STATES}}')) throw fault('INVALID_INGRESS_POLICY','Gateway template requires both fixed placeholders')
-      const servers = Object.entries(this.policy.backends).map(([backend,spec]) => `    server ${spec.address} ${states[backend].enabled ? 'max_fails=2 fail_timeout=5s' : 'down'};`).join('\n')
-      const upstreams = ['lingxiloop_web','lingxiloop_realtime'].map(name => `upstream ${name} {\n    zone ${name} 64k;\n    least_conn;\n${servers}\n    keepalive 32;\n}`).join('\n')
-      const locations = Object.entries(states).map(([backend,state]) => `    location = /state/${backend} { default_type application/json; return 200 '${canonical(state)}'; }`).join('\n')
-      template = template.replace('{{LINGXI_UPSTREAMS}}',upstreams).replace('{{LINGXI_INGRESS_STATES}}',locations)
+      const template = renderIngress(await readFile(this.policy.templateFile,'utf8'),this.policy.backends,states)
       await mkdir(dirname(this.policy.outputFile),{ recursive:true,mode:0o700 })
       const path = `${this.policy.outputFile}.${process.pid}.tmp`, file = await open(path,'w',0o600)
       try { await file.writeFile(template); await file.sync() } finally { await file.close() }
