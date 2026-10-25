@@ -58,7 +58,9 @@ export async function handleRequest(request, env, fetcher = fetch) {
     return new Response(response.body, { status: response.status, headers })
   }
   if (/\.[^/]+$/.test(path) || !request.headers.get('accept')?.includes('text/html')) return response
-  const index = await env.ASSETS.fetch(new Request(new URL('/index.html', url), request))
+  // Static Assets canonicalizes /index.html to /. Fetch its canonical HTML
+  // path so SPA navigation keeps its original URL instead of returning 307.
+  const index = await env.ASSETS.fetch(new Request(new URL('/', url), request))
   const headers = new Headers(index.headers)
   headers.set('cache-control', 'no-store')
   return new Response(index.body, { status: index.status, headers })
