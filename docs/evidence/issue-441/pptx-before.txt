@@ -1,0 +1,19 @@
+✔ PPTX extracts actual reordered slide text, Chinese, tables and speaker notes (259.066322ms)
+✔ image-only PPTX yields no readable text or generated image placeholders (31.734635ms)
+✔ PPTX containing a chart preserves the current editable-text-only extraction (19.877604ms)
+✔ encrypted PPTX without a password remains a document error (3.037693ms)
+✔ legacy binary PPT explicitly requests conversion instead of decoding binary as text (8.504313ms)
+✔ malformed and truncated PPTX cannot be reported as successfully read (1.612247ms)
+✔ PPTX limits input bytes and expanded archive bytes before accepting text (485.16738ms)
+✔ cancellation keeps the original operational abort rather than a material error (2.100702ms)
+✔ cancellation after parsing starts preserves the original operational abort (8.524603ms)
+✔ upstream content omissions fail closed even when the parser returns an AST (37.984043ms)
+✔ unexpected parser or dependency failures remain operational and retryable (2.530981ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1734.777806

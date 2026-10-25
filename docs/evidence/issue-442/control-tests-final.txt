@@ -1,0 +1,36 @@
+
+> lingxiloop@0.1.0-beta control:test
+> vitest run --config workers/control-plane/vitest.config.ts
+
+Proxy environment variables detected. We'll use your proxy for fetch requests.
+
+ RUN  v3.2.7 /tmp/lingxi-442-control
+
+[vpw:debug] Adding `enable_nodejs_tty_module` compatibility flag during tests as this feature is needed to support the Vitest runner.
+[vpw:debug] Adding `enable_nodejs_fs_module` compatibility flag during tests as this feature is needed to support the Vitest runner.
+[vpw:debug] Adding `enable_nodejs_http_modules` compatibility flag during tests as this feature is needed to support the Vitest runner.
+[vpw:debug] Adding `enable_nodejs_perf_hooks_module` compatibility flag during tests as this feature is needed to support the Vitest runner.
+[vpw:info] Starting isolated runtimes for workers/control-plane/vitest.config.ts...
+[mf:warn] The latest compatibility date supported by the installed Cloudflare Workers Runtime is "2025-12-17",
+but you've requested "2026-09-01". Falling back to "2025-12-17"...
+[mf:warn] The latest compatibility date supported by the installed Cloudflare Workers Runtime is "2025-12-17",
+but you've requested "2026-09-01". Falling back to "2025-12-17"...
+Cannot optimize dependency: vitest > @vitest/snapshot > magic-string, present in 'ssr.optimizeDeps.include'
+Cannot optimize dependency: vitest > @vitest/expect > chai, present in 'ssr.optimizeDeps.include'
+ ✓ workers/control-plane/src/smtp.test.ts (1 test) 37ms
+stderr | workers/control-plane/src/index.test.ts > control-plane trust boundaries > keeps user lifecycle authority and D1 state aligned with the product result
+2026-10-25T05:17:58.571Z WARN [Better Auth]: Rate limiting could not determine a client IP and is falling back to a single shared per-path bucket. Ensure your runtime forwards a trusted client IP header, then set `advanced.ipAddress.ipAddressHeaders` or `advanced.ipAddress.trustedProxies` so the address can be resolved.
+
+stderr | workers/control-plane/src/index.test.ts > control-plane trust boundaries > rejects cross-site authentication writes and registration without CAPTCHA
+2026-10-25T05:17:59.753Z ERROR [Better Auth]: Invalid origin: https://attacker.example
+
+ ✓ workers/control-plane/src/index.test.ts (12 tests) 16513ms
+   ✓ control-plane trust boundaries > initializes concurrent platform reads and preserves administrator identity restrictions  369ms
+   ✓ control-plane trust boundaries > proxies Kuma status for an authenticated administrator  15147ms
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  05:17:56
+   Duration  18.42s (transform 272ms, setup 0ms, collect 1.10s, tests 16.55s, environment 2ms, prepare 621ms)
+
+[vpw:debug] Shutting down runtimes...
