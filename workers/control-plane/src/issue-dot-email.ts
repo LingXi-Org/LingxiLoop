@@ -28,15 +28,21 @@ function decode(part: string) {
 async function keys(): Promise<Jwk[]> {
   if (jwksCache && jwksCache.expires > Date.now()) return jwksCache.keys;
   try {
-    const result = await fetch(`${ISSUER}/.well-known/jwks`, { redirect: 'error', signal: AbortSignal.timeout(10_000) });
-    if (!result.ok) throw new UnavailableError();
+    const result = await fetch(`${ISSUER}/.well-known/jwks`, {
+      headers: { accept: 'application/json', 'user-agent': 'LingxiLoop-Issue-Dot/1.0' },
+      redirect: 'manual', signal: AbortSignal.timeout(10_000),
+    });
+    if (!result.ok) throw new UnavailableError(`identity_keys_http_${result.status}`);
     const raw = await result.text();
-    if (raw.length > 100_000) throw new UnavailableError();
+    if (raw.length > 100_000) throw new UnavailableError('identity_keys_invalid_response');
     const body = JSON.parse(raw);
-    if (!Array.isArray(body.keys) || !body.keys.length || body.keys.length > 30) throw new UnavailableError();
+    if (!Array.isArray(body.keys) || !body.keys.length || body.keys.length > 30) throw new UnavailableError('identity_keys_invalid_response');
     jwksCache = { keys: body.keys, expires: Date.now() + 300_000 };
     return jwksCache.keys;
-  } catch { throw new UnavailableError(); }
+  } catch (error) {
+    if (error instanceof UnavailableError) throw error;
+    throw new UnavailableError('identity_keys_fetch_failed');
+  }
 }
 
 async function authenticate(request: Request): Promise<Claims> {
@@ -87,7 +93,7 @@ export async function handleIssueDotEmail(
   try { claims = await authenticate(request); }
   catch (error) {
     return error instanceof UnavailableError
-      ? response(503, { error: 'identity_service_unavailable' })
+      ? response(503, { error: error.message })
       : response(401, { error: 'unauthorized' });
   }
   let body: Claims;

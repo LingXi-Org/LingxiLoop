@@ -55,9 +55,11 @@ def request_json(url, *, method="GET", headers=None, data=None, service="API"):
             else:
                 try:
                     code = json.loads(exc.read(4096)).get("error")
-                    if code in {"method_not_allowed", "identity_service_unavailable", "unauthorized",
+                    if code in {"method_not_allowed", "identity_service_unavailable", "identity_keys_fetch_failed",
+                                "identity_keys_invalid_response", "unauthorized", "internal service route",
                                 "invalid_payload", "mail_binding_unavailable", "probe_only_event",
-                                "invalid_idempotency_key", "mail_transport_failed"}:
+                                "invalid_idempotency_key", "mail_transport_failed"} or (
+                                    isinstance(code, str) and re.fullmatch(r"identity_keys_http_[0-9]{3}", code)):
                         diagnostic = " (" + code + ")"
                 except (ValueError, AttributeError, UnicodeError):
                     pass
