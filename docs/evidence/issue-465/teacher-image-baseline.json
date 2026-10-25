@@ -1,0 +1,86 @@
+{
+  "runtime": "3.8.12",
+  "syntheticProtocolFixture": true,
+  "imageBytes": 68,
+  "visionInputs": [],
+  "actualWorkerModelCalls": 11,
+  "observations": [
+    {
+      "layout": "same-message",
+      "attempt": 0,
+      "originalTask": true,
+      "imageContent": false,
+      "originalTime": true,
+      "imageReference": true,
+      "courseContext": true
+    },
+    {
+      "layout": "same-message",
+      "attempt": 1,
+      "originalTask": true,
+      "imageContent": false,
+      "originalTime": false,
+      "imageReference": true,
+      "courseContext": true
+    },
+    {
+      "layout": "same-message",
+      "attempt": 2,
+      "originalTask": true,
+      "imageContent": false,
+      "originalTime": false,
+      "imageReference": true,
+      "courseContext": true
+    },
+    {
+      "layout": "same-message",
+      "attempt": 3,
+      "originalTask": true,
+      "imageContent": false,
+      "originalTime": false,
+      "imageReference": true,
+      "courseContext": true
+    },
+    {
+      "layout": "separate-message",
+      "attempt": 0,
+      "originalTask": true,
+      "imageContent": false,
+      "originalTime": true,
+      "imageReference": true,
+      "courseContext": true
+    },
+    {
+      "layout": "separate-message",
+      "attempt": 1,
+      "originalTask": true,
+      "imageContent": false,
+      "originalTime": false,
+      "imageReference": false,
+      "courseContext": true
+    },
+    {
+      "layout": "separate-message",
+      "attempt": 2,
+      "originalTask": true,
+      "imageContent": false,
+      "originalTime": false,
+      "imageReference": false,
+      "courseContext": true
+    },
+    {
+      "layout": "separate-message",
+      "attempt": 3,
+      "originalTask": true,
+      "imageContent": false,
+      "originalTime": false,
+      "imageReference": false,
+      "courseContext": true
+    }
+  ],
+  "limitations": [
+    "No original production image or run records",
+    "No OCR quality claim",
+    "No draft/publish tool effect executed"
+  ]
+}

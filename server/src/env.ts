@@ -61,6 +61,8 @@ export const env = {
   OPENAI_MODEL: DEFAULT_MODEL,
   OPENAI_EMBEDDING_MODEL: process.env.OPENAI_EMBEDDING_MODEL?.trim() || 'Pro/BAAI/bge-m3',
   OPENAI_IMAGE_MODEL: process.env.OPENAI_IMAGE_MODEL?.trim() || '',
+  /** Explicit vision-capable model on the shared provider; empty disables image reading. */
+  OPENAI_VISION_MODEL: process.env.OPENAI_VISION_MODEL?.trim() || '',
   /**
    * Webhook URL for process-level alerts (unhandledRejection /
    * uncaughtException). Currently expects a Discord webhook

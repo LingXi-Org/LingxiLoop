@@ -1,0 +1,310 @@
+
+> lingxiloop@0.1.0-beta test:integration
+> node server/run-integration-tests.mjs --file homework.test.ts
+
+[integration selected] selected 1/128 file(s): homework.test.ts
+TAP version 13
+# Subtest: [integration] validation finalization and a concurrent draft revision cannot form an effect/actor lock cycle
+ok 1 - [integration] validation finalization and a concurrent draft revision cannot form an effect/actor lock cycle
+  ---
+  duration_ms: 2341.658831
+  type: 'test'
+  ...
+# Subtest: [integration] an effect lease expiring during authorization lock wait cannot install its judgment
+ok 2 - [integration] an effect lease expiring during authorization lock wait cannot install its judgment
+  ---
+  duration_ms: 645.305727
+  type: 'test'
+  ...
+# Subtest: [integration] each homework learner resumes one private thread and renewed authorization guards existing bindings
+ok 3 - [integration] each homework learner resumes one private thread and renewed authorization guards existing bindings
+  ---
+  duration_ms: 1054.220019
+  type: 'test'
+  ...
+# Subtest: [integration] a genuine learning record permits a truthful report and paired submission without an assessment
+ok 4 - [integration] a genuine learning record permits a truthful report and paired submission without an assessment
+  ---
+  duration_ms: 791.79157
+  type: 'test'
+  ...
+# Subtest: [integration] only the current learner persisted nonempty messages in this homework count as learning records
+ok 5 - [integration] only the current learner persisted nonempty messages in this homework count as learning records
+  ---
+  duration_ms: 884.882973
+  type: 'test'
+  ...
+# Subtest: [integration] an authorized unreadable learning attachment alone permits an unverified submission while revoked access still rejects
+ok 6 - [integration] an authorized unreadable learning attachment alone permits an unverified submission while revoked access still rejects
+  ---
+  duration_ms: 829.481392
+  type: 'test'
+  ...
+# Subtest: [integration] a changed learning conversation invalidates its report preview even when no assessment ran
+ok 7 - [integration] a changed learning conversation invalidates its report preview even when no assessment ran
+  ---
+  duration_ms: 861.016784
+  type: 'test'
+  ...
+# Subtest: [integration] a genuine user message committed while submission waits for authorization rejects the old report
+ok 8 - [integration] a genuine user message committed while submission waits for authorization rejects the old report
+  ---
+  duration_ms: 718.783946
+  type: 'test'
+  ...
+# Subtest: [integration] a genuine assistant message committed while submission waits for authorization rejects the old report
+ok 9 - [integration] a genuine assistant message committed while submission waits for authorization rejects the old report
+  ---
+  duration_ms: 698.054334
+  type: 'test'
+  ...
+# Subtest: [integration] invalid model claims yield an explicitly unverified factual report that the learner may submit
+ok 10 - [integration] invalid model claims yield an explicitly unverified factual report that the learner may submit
+  ---
+  duration_ms: 665.892139
+  type: 'test'
+  ...
+# Subtest: [integration] optional assessment diagnostics do not invalidate a ready report for unchanged learning records
+ok 11 - [integration] optional assessment diagnostics do not invalidate a ready report for unchanged learning records
+  ---
+  duration_ms: 651.995045
+  type: 'test'
+  ...
+# Subtest: [integration] canonical assessment retries reuse pending and negative ready evidence without erasing manual review or reports
+ok 12 - [integration] canonical assessment retries reuse pending and negative ready evidence without erasing manual review or reports
+  ---
+  duration_ms: 789.623657
+  type: 'test'
+  ...
+# Subtest: [integration] invalid assessment retries converge once while new evidence and teacher returns invalidate old native receipts
+ok 13 - [integration] invalid assessment retries converge once while new evidence and teacher returns invalidate old native receipts
+  ---
+  duration_ms: 964.222975
+  type: 'test'
+  ...
+# Subtest: [integration] pending assessment retry restores a missing effect without replacing the evidence receipt
+ok 14 - [integration] pending assessment retry restores a missing effect without replacing the evidence receipt
+  ---
+  duration_ms: 510.085018
+  type: 'test'
+  ...
+# Subtest: [integration] pending assessment retry restores a completed effect without replacing the evidence receipt
+ok 15 - [integration] pending assessment retry restores a completed effect without replacing the evidence receipt
+  ---
+  duration_ms: 489.999579
+  type: 'test'
+  ...
+# Subtest: [integration] host assessment sees the assistants published commentary and public explanation when judging copied help
+ok 16 - [integration] host assessment sees the assistants published commentary and public explanation when judging copied help
+  ---
+  duration_ms: 484.094059
+  type: 'test'
+  ...
+# Subtest: [integration] latest locked teacher decision wins when transaction start order differs from review order
+ok 17 - [integration] latest locked teacher decision wins when transaction start order differs from review order
+  ---
+  duration_ms: 658.841574
+  type: 'test'
+  ...
+# Subtest: [integration] submitted time and late status use the same post-lock database time
+ok 18 - [integration] submitted time and late status use the same post-lock database time
+  ---
+  duration_ms: 5637.484076
+  type: 'test'
+  ...
+# Subtest: [integration] manual review waiting for the learner cannot deadlock with the learner saving a draft
+ok 19 - [integration] manual review waiting for the learner cannot deadlock with the learner saving a draft
+  ---
+  duration_ms: 774.728835
+  type: 'test'
+  ...
+# Subtest: [integration] private drafts and truthful partial mastery reports form one idempotent versioned submission pair
+ok 20 - [integration] private drafts and truthful partial mastery reports form one idempotent versioned submission pair
+  ---
+  duration_ms: 973.975311
+  type: 'test'
+  ...
+# Subtest: [integration] pending replacement preserves history, stale teacher review rejects, and closed return exception is consumed once
+ok 21 - [integration] pending replacement preserves history, stale teacher review rejects, and closed return exception is consumed once
+  ---
+  duration_ms: 1685.427705
+  type: 'test'
+  ...
+# Subtest: [integration] manual unlock needs learner-shared evidence and preserves unresolved host findings without exposing private drafts
+ok 22 - [integration] manual unlock needs learner-shared evidence and preserves unresolved host findings without exposing private drafts
+  ---
+  duration_ms: 1072.479161
+  type: 'test'
+  ...
+# Subtest: [integration] fabricated assessment evidence stays invalid while an unreadable authorized answer permits an unverified submission
+ok 23 - [integration] fabricated assessment evidence stays invalid while an unreadable authorized answer permits an unverified submission
+  ---
+  duration_ms: 1062.849818
+  type: 'test'
+  ...
+# Subtest: [integration] changed bytes of a committed chat attachment invalidate a ready report without losing the answer
+ok 24 - [integration] changed bytes of a committed chat attachment invalidate a ready report without losing the answer
+  ---
+  duration_ms: 784.901548
+  type: 'test'
+  ...
+# Subtest: [integration] cached ready assessment cannot bypass revoked access to its committed attachment
+ok 25 - [integration] cached ready assessment cannot bypass revoked access to its committed attachment
+  ---
+  duration_ms: 626.99033
+  type: 'test'
+  ...
+# Subtest: [integration] revoked access to committed chat evidence blocks an existing report and preserves the private draft
+ok 26 - [integration] revoked access to committed chat evidence blocks an existing report and preserves the private draft
+  ---
+  duration_ms: 693.056291
+  type: 'test'
+  ...
+# Subtest: [integration] evidence access revoked during a paid report cannot install a ready report
+ok 27 - [integration] evidence access revoked during a paid report cannot install a ready report
+  ---
+  duration_ms: 607.52887
+  type: 'test'
+  ...
+# Subtest: [integration] evidence access revoked after material reading but before the submission transaction rejects atomically
+ok 28 - [integration] evidence access revoked after material reading but before the submission transaction rejects atomically
+  ---
+  duration_ms: 696.837234
+  type: 'test'
+  ...
+# Subtest: [integration] worker results cannot install over newer answers or expired queue ownership
+ok 29 - [integration] worker results cannot install over newer answers or expired queue ownership
+  ---
+  duration_ms: 752.850354
+  type: 'test'
+  ...
+# Subtest: [integration] 424 material and service failures remain distinct and same-revision retry retains the draft
+ok 30 - [integration] 424 material and service failures remain distinct and same-revision retry retains the draft
+  ---
+  duration_ms: 1164.091622
+  type: 'test'
+  ...
+# Subtest: [integration] 424 input rejection and malformed model responses do not validate a newer draft
+ok 31 - [integration] 424 input rejection and malformed model responses do not validate a newer draft
+  ---
+  duration_ms: 524.204182
+  type: 'test'
+  ...
+# Subtest: [integration] 453 a vague model rejection remains retryable instead of becoming an input error
+ok 32 - [integration] 453 a vague model rejection remains retryable instead of becoming an input error
+  ---
+  duration_ms: 457.050654
+  type: 'test'
+  ...
+# Subtest: [integration] 453 historical INVALID rechecks the unchanged PPTX and publishes only the current READY revision
+ok 33 - [integration] 453 historical INVALID rechecks the unchanged PPTX and publishes only the current READY revision
+  ---
+  duration_ms: 618.029752
+  type: 'test'
+  ...
+# Subtest: [integration] 424 uploaded PPTX text reaches validation and the current draft can be published
+ok 34 - [integration] 424 uploaded PPTX text reaches validation and the current draft can be published
+  ---
+  duration_ms: 455.844246
+  type: 'test'
+  ...
+# Subtest: [integration] 424 unreadable attachments name the file and recovery without calling the validator
+ok 35 - [integration] 424 unreadable attachments name the file and recovery without calling the validator
+  ---
+  duration_ms: 647.151637
+  type: 'test'
+  ...
+# Subtest: [integration] homework draft is teacher-owned and absent from learner feeds until explicit validated confirmation
+ok 36 - [integration] homework draft is teacher-owned and absent from learner feeds until explicit validated confirmation
+  ---
+  duration_ms: 461.589348
+  type: 'test'
+  ...
+# Subtest: [integration] card edits reject stale revisions, foreign course scope and forbidden client authority fields
+ok 37 - [integration] card edits reject stale revisions, foreign course scope and forbidden client authority fields
+  ---
+  duration_ms: 493.818696
+  type: 'test'
+  ...
+# Subtest: [integration] existing managed teacher bindings refresh their persona while ordinary custom agents retain theirs
+ok 38 - [integration] existing managed teacher bindings refresh their persona while ordinary custom agents retain theirs
+  ---
+  duration_ms: 362.899895
+  type: 'test'
+  ...
+# Subtest: [integration] teacher draft creation reuses the original committed request across new retry runs without changing or publishing it
+ok 39 - [integration] teacher draft creation reuses the original committed request across new retry runs without changing or publishing it
+  ---
+  duration_ms: 815.122292
+  type: 'test'
+  ...
+# Subtest: [integration] native teacher revisions update the same draft and require fresh human confirmation; no model publication/review tool exists
+ok 40 - [integration] native teacher revisions update the same draft and require fresh human confirmation; no model publication/review tool exists
+  ---
+  duration_ms: 783.189247
+  type: 'test'
+  ...
+# Subtest: [integration] native homework overview bounds long reports, aggregates the whole class and pages submitted sections without private drafts
+ok 41 - [integration] native homework overview bounds long reports, aggregates the whole class and pages submitted sections without private drafts
+  ---
+  duration_ms: 959.543191
+  type: 'test'
+  ...
+# Subtest: [integration] learner native reads page full requirements and real materials while retaining private scope and output bounds
+ok 42 - [integration] learner native reads page full requirements and real materials while retaining private scope and output bounds
+  ---
+  duration_ms: 1993.674014
+  type: 'test'
+  ...
+# Subtest: [integration] homework shares forum filters while keeping target flags, comments and room grants separate
+ok 43 - [integration] homework shares forum filters while keeping target flags, comments and room grants separate
+  ---
+  duration_ms: 563.552828
+  type: 'test'
+  ...
+# Subtest: [integration] forum teacher entry prepares one room and preserves drafts on repeated requests
+ok 44 - [integration] forum teacher entry prepares one room and preserves drafts on repeated requests
+  ---
+  duration_ms: 440.76107
+  type: 'test'
+  ...
+# Subtest: [integration] teacher entry refuses unauthorized or inactive scopes without provisioning
+ok 45 - [integration] teacher entry refuses unauthorized or inactive scopes without provisioning
+  ---
+  duration_ms: 462.03417
+  type: 'test'
+  ...
+# Subtest: [integration] legacy recovery stays private across current reports and native submission snapshots
+ok 46 - [integration] legacy recovery stays private across current reports and native submission snapshots
+  ---
+  duration_ms: 674.223646
+  type: 'test'
+  ...
+# Subtest: 381 human draft endpoint retries one course-scoped draft and preserves explicit publication
+ok 47 - 381 human draft endpoint retries one course-scoped draft and preserves explicit publication
+  ---
+  duration_ms: 594.286079
+  type: 'test'
+  ...
+# Subtest: 381 direct draft rejects student, unrelated course and revoked teacher without writes
+ok 48 - 381 direct draft rejects student, unrelated course and revoked teacher without writes
+  ---
+  duration_ms: 511.436179
+  type: 'test'
+  ...
+1..48
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 46446.256161
+[integration file] homework.test.ts duration_ms=46493 exit=0
+[integration result] mode=selected files=1 duration_ms=46493 exit=0
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice

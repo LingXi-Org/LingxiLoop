@@ -11,6 +11,7 @@ import { attachmentRefId, readRequestAttachments, selectRequestAttachments, unav
 import { assertInteractionAdmission } from '../im/interaction-admission.js'
 import { assertQuestionnaireContinuation, recordQuestionnaireContinuation } from '../im/questionnaires.js'
 import { resolveRequestReferences, requestTextWithReferences } from './request-references.js'
+import { readRunReference } from '@lyyzka/lingxios'
 
 export interface AgentRequest {
   companyId: string; agentId: string; channelId: string; clientMsgNo: string
@@ -53,16 +54,42 @@ export async function receiveAgentRequest(input: AgentRequest) {
       [runId, input.companyId, input.channelId, assistant.fromUid])).rows[0]
       return row?.source_client_msg_no ?? undefined
     })
+  const originalRequest = references.messages.find(item => item.clientMsgNo === references.originalRequestId) ?? message
   const explicitRefs = [...input.attachmentRefs ?? []]
+  if (originalRequest !== message) explicitRefs.push(...nativeAttachments(message.payload)
+    .map(file => ({ clientMsgNo: message.clientMsgNo, attachmentId: file.id })))
   for (const referenced of references.messages) explicitRefs.push(...nativeAttachments(referenced.payload)
     .map(file => ({ clientMsgNo: referenced.clientMsgNo, attachmentId: file.id })))
-  const history = await getAgentChannelHistory({ ...input, limit: 80, beforeSequence: message.messageSeq + 1 }) ?? []
+  const history = await getAgentChannelHistory({ ...input, limit: 80, beforeSequence: originalRequest.messageSeq + 1 }) ?? []
   const allMessages = [...messages!, ...references.messages, ...history]
-  const attachmentIds = selectRequestAttachments(message, explicitRefs, allMessages)
+  const attachmentIds = selectRequestAttachments(originalRequest, explicitRefs, allMessages)
   const missingIds = attachmentIds.filter(ref => !allMessages.some(item => item.clientMsgNo === ref.clientMsgNo)).map(ref => ref.clientMsgNo)
   if (missingIds.length) allMessages.push(...await readAgentChannelMessages({ ...input, messageIds: missingIds, signal }) ?? [])
   const audienceIds = policy.participants.filter(member => member.kind === 'human' && member.capabilities.includes('read')).map(member => member.id)
   const unavailable = await unavailableAttachmentIds(pool,input.companyId,input.channelId,attachmentIds,audienceIds)
+  // Image transcription is model-derived and can differ between calls. Replaying
+  // an already accepted IM message must return its original admission, rather
+  // than produce a new attachment snapshot and violate runtime idempotency.
+  const hasImages = attachmentIds.some(ref => allMessages.some(item => item.clientMsgNo === ref.clientMsgNo
+    && nativeAttachments(item.payload).some(file => file.id === ref.attachmentId && file.contentType?.startsWith('image/'))))
+  if (threadId && !input.continuation && custom.agentContinuation === undefined) {
+    await api.conversations.registerThread({ tenantId: input.companyId, conversationId: input.channelId, threadId, policyVersion: policy.version })
+  }
+  if (hasImages && !input.continuation && custom.agentContinuation === undefined) {
+    const prior = await api.readConversationTrace({ tenantId: input.companyId, conversationId: input.channelId,
+      principalId: message.fromUid, messageId: input.clientMsgNo, version: 1, ...(threadId ? { threadId } : {}) })
+    if (prior) {
+      const runs = []
+      for (const root of prior.runs.filter(run => run.parent_id === null)) {
+        if (typeof root.id !== 'string') throw new Error('recorded image admission has an invalid run')
+        const run = await readRunReference(pool, input.companyId, root.id)
+        if (!run || run.principalId !== message.fromUid) throw new Error('recorded image admission is unavailable')
+        await bindProductRun(pool, run, input.channelId, false, input.clientMsgNo)
+        runs.push(run)
+      }
+      return { runs, deduplicated: true }
+    }
+  }
   const files = await readRequestAttachments(allMessages, attachmentIds.filter(ref => !unavailable.has(attachmentRefId(ref))
     || explicitRefs.some(item => attachmentRefId(item) === attachmentRefId(ref)) || ref.clientMsgNo === input.clientMsgNo), input.companyId, signal, unavailable)
   const text = requestTextWithReferences(message, references)
@@ -85,7 +112,6 @@ export async function receiveAgentRequest(input: AgentRequest) {
     notifyRunAvailable(run, input.channelId)
     return { id: result.workId, deduplicated: result.status === 'already_resumed' }
   }
-  if (threadId) await api.conversations.registerThread({ tenantId: input.companyId, conversationId: input.channelId, threadId, policyVersion: policy.version })
   const members = (await pool.query<{ id: string; name: string; kind: 'human' | 'agent' }>(
     'SELECT id,name,kind FROM participants WHERE company_id=$1 AND id=ANY($2::text[])', [input.companyId,policy.participants.map(member => member.id)])).rows
   const parsed = custom.visualizeFollowUp || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(message.payload),members)

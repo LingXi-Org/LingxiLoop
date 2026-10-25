@@ -1,0 +1,22 @@
+{
+  "mode": "selected",
+  "availableFiles": 128,
+  "selectedFiles": [
+    "teacher-image-retry.test.ts"
+  ],
+  "executedFiles": [
+    "teacher-image-retry.test.ts"
+  ],
+  "records": [
+    {
+      "files": [
+        "teacher-image-retry.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 8538,
+      "exitCode": 0
+    }
+  ],
+  "durationMs": 8538,
+  "exitCode": 0
+}

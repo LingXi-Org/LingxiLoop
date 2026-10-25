@@ -4,6 +4,8 @@ import type { ModelUsage } from '@lyyzka/lingxios/worker'
 // The public component metadata explicitly uses realTimePriceCnyUnit / K tokens.
 // Existing model identities remain distinct; stored ledger records are never repriced.
 const rates = {
+  // Vision input/output component metadata checked on the CN pricing page 2026-10-25.
+  'Qwen/Qwen3-VL-32B-Instruct': { inputPerMillion: 1, cachedInputPerMillion: 1, outputPerMillion: 4 },
   'deepseek-ai/DeepSeek-V4.1-Flash': { inputPerMillion: 2, cachedInputPerMillion: 0.04, outputPerMillion: 8 },
   'Pro/BAAI/bge-m3': { inputPerMillion: 0.07, cachedInputPerMillion: 0.07, outputPerMillion: 0 },
   'BAAI/bge-m3': { inputPerMillion: 0, cachedInputPerMillion: 0, outputPerMillion: 0 },
