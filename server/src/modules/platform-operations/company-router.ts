@@ -107,7 +107,13 @@ async function list(admin: CompanyAdmin, resource: string, query: AdminListQuery
 companyAdminRouter.get('/resources/:resource', safe(async (req, res) => { res.json(await list(identity(res), String(req.params.resource), req.query as AdminListQuery)) }))
 
 async function detail(admin: CompanyAdmin, resource: string, id: string): Promise<Record<string, unknown>> {
-  if (resource === 'agent-runs') { const { run, runtime } = await readRun(admin, id); return { ...run, diagnostics: await runtime.readDiagnostics(run.identity), management_actions: await runAllowed(admin, run, 'agent_run:control') ? ['retry'] : [] } }
+  if (resource === 'agent-runs') {
+    const { run, runtime } = await readRun(admin, id)
+    const diagnostics = await runtime.readDiagnostics(run.identity)
+    const { runtimeFailure: _restrictedFailure, ...publicDiagnostics } = diagnostics ?? {}
+    return { ...run, diagnostics: diagnostics ? publicDiagnostics : null,
+      management_actions: await runAllowed(admin, run, 'agent_run:control') ? ['retry'] : [] }
+  }
   const row = await companyResource(pool, admin, resource, id)
   if (resource === 'documents') row.body = await readDocumentText(id, admin.companyId)
   if (resource === 'companies' || resource === 'projects') {

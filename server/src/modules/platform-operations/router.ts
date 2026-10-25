@@ -58,8 +58,10 @@ async function readAgentRun(id: string) {
   const runtime = await lingxiOSControl()
   const { items } = await runtime.listRuns({ id, limit: 1 })
   const run = items[0]
-  return run ? { data: { ...run, diagnostics: await runtime.readDiagnostics(run.identity),
-    contextFailures: await readContextFailures(pool, run.identity) } as Record<string, unknown>, sensitive: true } : null
+  if (!run) return null
+  const diagnostics = await runtime.readDiagnostics(run.identity)
+  return { data: { ...run, diagnostics, workerFailure: diagnostics?.runtimeFailure ?? null,
+    contextFailures: await readContextFailures(pool, run.identity) } as Record<string, unknown>, sensitive: true }
 }
 
 function requestMetadata(request: Parameters<typeof requirePlatformAdmin>[1]) {
