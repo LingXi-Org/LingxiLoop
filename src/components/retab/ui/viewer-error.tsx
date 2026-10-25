@@ -11,7 +11,7 @@ import {
   type ViewerFormat,
 } from "@/components/retab/lib/viewer-errors";
 
-import { Button } from "./button";
+import { Button } from "@/components/ui/button";
 import { ViewerDownloadButton } from "./viewer-download";
 
 export interface ViewerErrorStateProps extends ViewerErrorContext {

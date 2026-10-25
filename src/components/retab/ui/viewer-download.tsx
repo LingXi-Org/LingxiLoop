@@ -12,7 +12,7 @@ import {
 
 import { Spinner } from "@/components/retab/ui/spinner";
 
-import { Button, buttonVariants } from "./button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -183,7 +183,7 @@ export function useViewerDownloadTrigger({
 export function ViewerDownloadControl({
   actions,
   variant = "ghost",
-  size = "iconSm",
+  size = "icon-sm",
   className = "size-7",
   showLabel = false,
   onError,
@@ -220,7 +220,7 @@ export function ViewerDownloadControl({
 export function ViewerDownloadButton({
   action,
   variant = "ghost",
-  size = "iconSm",
+  size = "icon-sm",
   className = "size-7",
   showLabel = false,
   onError,
@@ -279,7 +279,7 @@ export function ViewerDownloadButton({
 export function ViewerDownloadMenu({
   actions,
   variant = "ghost",
-  size = "iconSm",
+  size = "icon-sm",
   className = "size-7",
   showLabel = false,
   onError,

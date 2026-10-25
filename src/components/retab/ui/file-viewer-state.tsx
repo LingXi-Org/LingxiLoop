@@ -16,7 +16,7 @@ import {
   type ViewerErrorContext,
 } from "@/components/retab/lib/viewer-errors";
 
-import { Button } from "./button";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ViewerDownloadButton } from "./viewer-download";
 

@@ -5,7 +5,7 @@ import { PanelLeft, PanelRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-import { Button } from "./button";
+import { Button } from "@/components/ui/button";
 import { Spinner } from "./spinner";
 import { useFileViewerControlsState } from "./file-viewer-provider";
 import { useFileViewerRequiredResourceState } from "./file-viewer-resource-state";

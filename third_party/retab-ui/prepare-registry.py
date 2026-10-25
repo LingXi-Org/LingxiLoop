@@ -6,7 +6,7 @@ def visit(n):
  d=json.loads((root/'public/r'/(n.split('/')[1]+'.json')).read_text());items[n]=d
  for f in d.get('files',[]):
   p=f['target'].replace('@ui/','ui/').replace('@lib/','lib/').replace('@hooks/','hooks/').replace('@components/','components/')
-  files[p]=f
+  if p != 'ui/button.tsx':files[p]=f
  for r in d.get('registryDependencies',[]):visit(r)
 visit('@retab/file-viewer')
 # Email is not an accepted material upload format; leave it to the upstream unsupported card.

@@ -144,11 +144,6 @@
       "sha256": "17ef63c7af04601fa4e20c7a209f4c664a4e4ecd4826ec21657b28f172fd2ee4"
     },
     {
-      "source": "registry/new-york-v4/ui/button.tsx",
-      "target": "src/components/retab/ui/button.tsx",
-      "sha256": "2f976ee25176dcd136a44a7b11be460e7b665f17ca9283df7abed91101007f07"
-    },
-    {
       "source": "registry/new-york-v4/ui/code-viewer-chrome.tsx",
       "target": "src/components/retab/ui/code-viewer-chrome.tsx",
       "sha256": "2b7646c2eeea7cab521a3d0a38340ef449ddc3bed228d99e07e593735112e2ab"

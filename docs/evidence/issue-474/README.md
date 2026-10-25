@@ -24,3 +24,13 @@ Per-format browser evidence is recorded separately. That isolated harness render
 actual Registry components and synthetic document bytes, and the real dialog's
 ZIP/parsed-text surface; it does not establish live backend authorization or
 Notebook indexing acceptance. Existing authorization routes are retained.
+
+[Browser results and screenshots](browser.md): 10/10 format/UI checks passed,
+plus a structured PPTX follow-up (1/1) that renders a real title and triangle.
+The first PPTX follow-up caught missing relative Button bindings during the host
+primitive adaptation; those were corrected before the passing follow-up.
+
+The initial PR CI correctly rejected out-of-date scoped dependency profiles.
+They were regenerated from the exact root lock using the existing generator;
+Prism type declarations are included in the Web tools profile. Both owning
+scoped-dependency tests and the generated-profile consistency check passed.

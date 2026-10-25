@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Maximize, Minus, Plus } from "lucide-react";
 
-import { Button } from "@/components/retab/ui/button";
+import { Button } from "@/components/ui/button";
 
 function IconButton({
   label,
@@ -13,7 +13,7 @@ function IconButton({
   return (
     <Button
       variant="ghost"
-      size="iconSm"
+      size="icon-sm"
       className="size-7"
       aria-label={label}
       title={label}
