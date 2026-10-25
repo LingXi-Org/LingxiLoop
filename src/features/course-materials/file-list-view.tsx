@@ -1,7 +1,7 @@
 // Adapted from Studio Admin, MIT © 2024 Mohammed Arham Khan.
 // Fixed source and changes: third_party/studio-admin/README.md.
 import { ArrowDown, ArrowUp, LoaderCircle } from 'lucide-react'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { AccountAvatar } from '@/components/AccountAvatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -52,7 +52,7 @@ export function FileListView({ files, publicSpace, selected, busyIds, sort, onSe
                 </div>
               </TableCell>
               <TableCell><Badge variant="outline" className="font-normal text-muted-foreground">{fileKindLabels[kind]}</Badge></TableCell>
-              {publicSpace && <TableCell><div className="flex items-center gap-2"><Avatar size="sm"><AvatarFallback>{owner.slice(0, 2)}</AvatarFallback></Avatar><span className="max-w-32 truncate">{owner}</span></div></TableCell>}
+              {publicSpace && <TableCell><div className="flex items-center gap-2"><AccountAvatar userId={file.ownerUserId} name={owner} url={file.ownerAvatarUrl} /><span className="max-w-32 truncate">{owner}</span></div></TableCell>}
               <TableCell className="text-xs tabular-nums text-muted-foreground"><time dateTime={file.updatedAt}>{dateLabel(file.updatedAt)}</time></TableCell>
               <TableCell className="text-xs tabular-nums text-muted-foreground">{sizeLabel(file.sizeBytes)}</TableCell>
               <TableCell><div className="flex items-center justify-end"><FileActions file={file} busy={busy} {...actions} /></div></TableCell>

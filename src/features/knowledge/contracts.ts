@@ -16,6 +16,7 @@ export interface KnowledgeSource {
   visibilityScope: 'PRIVATE' | 'PROJECT'
   ownerUserId: string
   ownerName?: string
+  ownerAvatarUrl?: string | null
   createdBy: string
   createdVia: 'USER' | 'AGENT'
   createdAt: string

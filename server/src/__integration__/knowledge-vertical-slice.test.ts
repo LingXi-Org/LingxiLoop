@@ -418,6 +418,33 @@ test('[integration] course materials store each original format, refresh, and en
   assert.equal((await application.materials(scope(TEACHER_ID), 'public')).capabilities.canUpload, true)
 })
 
+test('[integration] authorized material owner avatars stay current and separate from the creating actor', async () => {
+  const scope = (userId: string, projectId = PROJECT_ID) => ({ userId, companyId: COMPANY_ID, projectId })
+  await pool.query('UPDATE users SET avatar_url=$2 WHERE id=$1', [TEACHER_ID, 'https://assets.invalid/teacher.png'])
+  await pool.query('UPDATE users SET avatar_url=$2 WHERE id=$1', [USER_ID, 'https://assets.invalid/other.png'])
+  const create = (userId: string, projectId = PROJECT_ID) => application.presignSource(scope(userId, projectId), null,
+    { idempotencyKey: 'owner-avatar', name: 'notes.txt', mime: 'text/plain', size: 5 })
+  const teacher = await create(TEACHER_ID)
+  const other = await create(USER_ID)
+  const privateSource = await create(STUDENT_A_ID)
+  const otherCourse = await create(USER_ID, SAME_COMPANY_PROJECT_ID)
+  await pool.query("UPDATE knowledge_sources SET created_via='AGENT',created_by_user_id=$2 WHERE id=$1", [teacher.id, USER_ID])
+  const student = scope(STUDENT_B_ID)
+  const visible = await application.materials(student, 'public')
+  assert.deepEqual(visible.sources.map(source => source.id).sort(), [teacher.id, other.id].sort())
+  assert.equal(visible.sources.find(source => source.id === teacher.id)?.ownerAvatarUrl, 'https://assets.invalid/teacher.png')
+  assert.equal(visible.sources.find(source => source.id === other.id)?.ownerAvatarUrl, 'https://assets.invalid/other.png')
+  assert.equal((await application.source(student, teacher.id)).ownerAvatarUrl, 'https://assets.invalid/teacher.png')
+  await pool.query('UPDATE users SET avatar_url=$2 WHERE id=$1', [TEACHER_ID, 'https://assets.invalid/updated.png'])
+  assert.equal((await application.materials(student, 'public')).sources.find(source => source.id === teacher.id)?.ownerAvatarUrl,
+    'https://assets.invalid/updated.png')
+  await pool.query('UPDATE users SET avatar_url=NULL WHERE id=$1', [TEACHER_ID])
+  assert.equal((await application.source(student, teacher.id)).ownerAvatarUrl, null)
+  assert.deepEqual((await application.materials(student, 'private')).sources, [])
+  await assert.rejects(application.source(student, privateSource.id))
+  await assert.rejects(application.source(student, otherCourse.id))
+})
+
 test('[integration] global teacher labels cannot substitute for the actual course role', async () => {
   for (const [userId, visibility] of [[STUDENT_A_ID, 'PRIVATE'], [TEACHER_ID, 'PROJECT']] as const) {
     const scope = { userId, companyId: COMPANY_ID, projectId: PROJECT_ID }
