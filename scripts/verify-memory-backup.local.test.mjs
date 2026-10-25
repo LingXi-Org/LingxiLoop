@@ -156,7 +156,7 @@ local('overall deadline interrupts a real slow restore and removes only its owne
   },50)
   try {
     const started=performance.now()
-    const result=await shell(plan,{alter:command=>command.replace('timeout -k 75 3900 sh -ec','timeout -k 1 5 sh -ec')})
+    const result=await shell(plan,{alter:command=>command.replace('timeout -k 125 3900 sh -ec','timeout -k 1 5 sh -ec')})
     const elapsedMs=performance.now()-started
     assert.equal(restoreObserved,true,'the deadline must interrupt actual pg_restore COPY')
     assert.notEqual(result.code,0);assert.ok(!result.stdout.includes('COMPLETE=1'))

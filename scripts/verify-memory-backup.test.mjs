@@ -20,7 +20,7 @@ test('planning binds exact source and contains no candidate migration or remote 
     assert.equal(plan.source.runtime.schema,12); assert.equal(plan.source.migrations.length,46)
     assert.equal(plan.migrationRehearsal,'not-performed')
     assert.equal(plan.commandHash,hash(plan.command))
-    assert.match(plan.command,/^exec timeout -k 75 3900 sh -ec /)
+    assert.match(plan.command,/^exec timeout -k 125 3900 sh -ec /)
     const decoded = [...plan.command.matchAll(/[A-Za-z0-9+/=]{100,}/g)].map(match=>Buffer.from(match[0],'base64').toString()).join('\n')
     assert.match(decoded,/REPEATABLE READ READ ONLY/); assert.match(plan.command,/--snapshot=/)
     assert.match(plan.command,/--no-owner --no-privileges --exit-on-error/)
@@ -101,12 +101,58 @@ test('pre-abort sends no request; cancellation after acceptance preserves update
   } finally {globalThis.fetch=original}
 })
 
+test('owned-database cleanup has its own bounded deadline and preserves an earlier failure', async () => {
+  const plan=await fixture(), quoted=plan.command.slice('exec timeout -k 125 3900 sh -ec '.length,-' memory-backup "$1"'.length)
+  const inner=quoted.slice(1,-1).replaceAll("'\\''","'")
+  assert.match(inner,/PGOPTIONS='-c statement_timeout=110000 -c lock_timeout=10000 -c row_security=off -c search_path=public' timeout --foreground -k 5 120 dropdb /)
+  assert.doesNotMatch(inner,/--force|pg_terminate_backend|datconnlimit/)
+  const cleanup=inner.slice(inner.indexOf('cleanup() {'),inner.indexOf('\ntrap cleanup EXIT'))
+  const directory=await mkdtemp(join(tmpdir(),'memory-backup-cleanup-'))
+  try {
+    for(const earlierFailure of [true,false]){
+      const marker=join(directory,'options-'+earlierFailure)
+      const command=`set -eu
+${cleanup}
+timeout() { printf '%s' "$PGOPTIONS" > "$MARKER"; return 124; }
+fifo_open=0; holder=''; work=''; created=1; verify_db='${plan.isolatedDatabase}'
+POSTGRES_DB=production; POSTGRES_USER=unit; backup_dir='${directory}'; stage=${earlierFailure?'restore':'verify-restore'}; success=${earlierFailure?0:1}
+trap cleanup EXIT
+exit ${earlierFailure?42:0}
+`
+      const result=await new Promise((resolve,reject)=>{
+        const child=spawn('sh',['-ec',command],{env:{...process.env,MARKER:marker},stdio:['ignore','pipe','pipe']})
+        let stdout='',stderr='';child.stdout.on('data',v=>stdout+=v);child.stderr.on('data',v=>stderr+=v)
+        child.once('error',reject);child.once('exit',code=>resolve({code,stdout,stderr}))
+      })
+      assert.notEqual(result.code,0)
+      assert.match(result.stdout,new RegExp('MEMORY_BACKUP_FAILED_STAGE='+(earlierFailure?'restore':'cleanup-database')+'\\n'))
+      assert.match(result.stdout,/MEMORY_BACKUP_CLEANUP_STAGE=database\nMEMORY_BACKUP_CLEANUP_RC=124\n/)
+      assert.equal(result.stderr,'')
+      assert.doesNotMatch(result.stdout,/RECEIPT=|COMPLETE=1/)
+      assert.equal(await readFile(marker,'utf8'),'-c statement_timeout=110000 -c lock_timeout=10000 -c row_security=off -c search_path=public')
+    }
+  } finally {await rm(directory,{recursive:true,force:true})}
+})
+
+test('failed native backup returns only safe cleanup stage and exit code diagnostics', async () => {
+  const plan=await fixture(), original=globalThis.fetch
+  globalThis.fetch=async()=>Response.json({...completed(plan),success:false,logs:[{
+    stdout:'MEMORY_BACKUP_CLEANUP_STAGE=database\nMEMORY_BACKUP_CLEANUP_RC=124\nMEMORY_BACKUP_FAILED_STAGE=restore\n',stderr:'SECRET SQL payload',
+  }]})
+  try {
+    const result=await executeMemoryBackup({plan,apiKey:'fixture',apiSecret:'fixture'})
+    assert.equal(result.success,false);assert.equal(result.failedStage,'restore')
+    assert.deepEqual(result.cleanup,{stage:'database',rc:124})
+    assert.ok(!JSON.stringify(result).includes('SECRET'))
+  } finally {globalThis.fetch=original}
+})
+
 test('overall timeout reaches the generated inner timeout group before killing cleanup', {timeout:5000}, async () => {
   const plan=await fixture(), directory=await mkdtemp(join(tmpdir(),'memory-backup-deadline-'))
   const marker=join(directory,'events')
   // Preserve the actual generated modes, shorten only durations and replace the
   // database command with a harmless child. This failed before --foreground.
-  const outer=/^exec (timeout(?: --foreground)?) -k 75 3900 sh -ec /.exec(plan.command)?.[1]
+  const outer=/^exec (timeout(?: --foreground)?) -k 125 3900 sh -ec /.exec(plan.command)?.[1]
   const inner=/stage=restore\n(timeout(?: --foreground)?) -k 10 1200 pg_restore /.exec(plan.command)?.[1]
   assert.ok(outer); assert.ok(inner)
   const command=`trap 'printf "cleanup\\n" >> "$MARKER"' EXIT
