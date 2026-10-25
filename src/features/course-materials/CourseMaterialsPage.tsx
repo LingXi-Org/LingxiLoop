@@ -1,15 +1,15 @@
-import { useQuery } from '@tanstack/react-query'
-import { Download, Files, LoaderCircle, RefreshCw, Trash2, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { Download, Files, LoaderCircle, RefreshCw, Trash2, Upload, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { LearningPageHeader, LearningTopTabs } from '@/features/learning/components/LearningPageHeader'
 import { knowledgeApi } from '../knowledge/api'
-import type { KnowledgeSource } from '../knowledge/contracts'
+import type { KnowledgeSource, ProjectMaterials } from '../knowledge/contracts'
 import { useAuth } from '@/stores/auth'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -32,23 +32,24 @@ export function CourseMaterialsPage(props: CourseMaterialsPageProps) {
 
 function CourseMaterialsSpaces({ projectId, projectName, readOnly = false, userId, companyId }: CourseMaterialsPageProps & { userId: string; companyId: string }) {
   const [space, setSpace] = useState<MaterialSpace>('public')
-  return <main data-course-materials className="h-full min-h-0 overflow-y-auto bg-background">
-    <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-4 py-6 md:px-8 md:py-8">
-      <header><h1 className="text-2xl font-semibold tracking-tight">课程资料</h1>{projectName && <p className="mt-2 text-sm text-muted-foreground">{projectName}</p>}</header>
-      <Tabs value={space} onValueChange={value => setSpace(value as MaterialSpace)} className="gap-6">
-        <div className="border-b"><TabsList variant="line" aria-label="课程资料空间" className="h-12 gap-5 p-0">
-          <TabsTrigger value="public" className="h-12 rounded-none px-1">公共资料</TabsTrigger>
-          <TabsTrigger value="private" className="h-12 rounded-none px-1">我的资料</TabsTrigger>
-        </TabsList></div>
-        <TabsContent value={space} className="min-w-0">
-          <MaterialsSpace key={space} context={{ projectId, companyId, userId, space }} readOnly={readOnly} />
-        </TabsContent>
-      </Tabs>
+  const fileInput = useRef<HTMLInputElement>(null)
+  const context = { projectId, companyId, userId, space }
+  const query = useQuery({ queryKey: materialQueryKey(context),
+    queryFn: ({ signal }) => knowledgeApi.listProjectMaterials(projectId, space, signal),
+    refetchInterval: request => request.state.data?.sources.some(source => ['upload_pending', 'queued', 'processing'].includes(source.status)) ? 2000 : false,
+  }, materialsQueryClient)
+  const canUpload = !readOnly && query.data?.capabilities.canUpload === true
+  const uploadLabel = space === 'public' ? '上传到公共资料' : '上传到我的资料'
+  return <main data-course-materials aria-label={projectName ? `${projectName}课程资料` : '课程资料'} className="learning-page-surface h-full min-h-0 overflow-y-auto bg-background">
+    <div className="learning-page-shell">
+      <LearningPageHeader title="课程资料" actions={canUpload && <Button onClick={() => fileInput.current?.click()}><Upload />{uploadLabel}</Button>} />
+      <LearningTopTabs label="课程资料空间" value={space} onValueChange={value => setSpace(value as MaterialSpace)} items={[{ value: 'public', label: '公共资料' }, { value: 'private', label: '我的资料' }]} />
+      <MaterialsSpace key={space} context={context} readOnly={readOnly} query={query} fileInput={fileInput} />
     </div>
   </main>
 }
 
-function MaterialsSpace({ context, readOnly }: { context: MaterialContext; readOnly: boolean }) {
+function MaterialsSpace({ context, readOnly, query, fileInput }: { context: MaterialContext; readOnly: boolean; query: UseQueryResult<ProjectMaterials, Error>; fileInput: RefObject<HTMLInputElement | null> }) {
   const { projectId, space } = context
   const [search, setSearch] = useState('')
   const [format, setFormat] = useState<MaterialFormat>('all')
@@ -58,14 +59,9 @@ function MaterialsSpace({ context, readOnly }: { context: MaterialContext; readO
   const [renaming, setRenaming] = useState<KnowledgeSource | null>(null)
   const [busyIds, setBusyIds] = useState<Set<string>>(new Set())
   const [error, setError] = useState('')
-  const fileInput = useRef<HTMLInputElement>(null)
   const active = useRef(true)
   useEffect(() => { active.current = true; return () => { active.current = false } }, [])
   const queryKey = materialQueryKey(context)
-  const query = useQuery({ queryKey,
-    queryFn: ({ signal }) => knowledgeApi.listProjectMaterials(projectId, space, signal),
-    refetchInterval: request => request.state.data?.sources.some(source => ['upload_pending', 'queued', 'processing'].includes(source.status)) ? 2000 : false,
-  }, materialsQueryClient)
   const sources = query.data?.sources ?? []
   const visible = useMemo(() => filterAndSortFiles(sources, search, format, sort), [sources, search, format, sort])
   const canUpload = !readOnly && query.data?.capabilities.canUpload === true
@@ -122,12 +118,13 @@ function MaterialsSpace({ context, readOnly }: { context: MaterialContext; readO
   }
   const onDownload = (source: KnowledgeSource) => void run([source], () => download(source))
   const resetFilters = () => { setSearch(''); setFormat('all'); setSelected(new Set()) }
-  return <section aria-label={space === 'public' ? '公共资料' : '我的资料'} className="min-w-0 space-y-5">
+  return <>
+    <FileManagerToolbar className="learning-page-toolbar" search={search} format={format} sort={sort} uploadLabel={uploadLabel}
+      onSearch={value => { setSearch(value); setSelected(new Set()) }} onFormat={value => { setFormat(value); setSelected(new Set()) }} onSort={setSort} />
+    <section aria-label={space === 'public' ? '公共资料' : '我的资料'} className="min-w-0 space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground"><p>{space === 'public' ? '教师上传 · 课程成员可见' : '仅自己可见'}</p>
       <Button variant="ghost" size="sm" disabled={query.isFetching} onClick={() => void query.refetch()} aria-label="刷新课程资料"><RefreshCw className={query.isFetching ? 'animate-spin motion-reduce:animate-none' : ''} />刷新</Button>
     </div>
-    <FileManagerToolbar search={search} format={format} sort={sort} uploadLabel={uploadLabel} onUpload={canUpload ? () => fileInput.current?.click() : undefined}
-      onSearch={value => { setSearch(value); setSelected(new Set()) }} onFormat={value => { setFormat(value); setSelected(new Set()) }} onSort={setSort} />
     {canUpload && <input ref={fileInput} type="file" multiple className="hidden" aria-label="上传课程资料文件" accept=".pdf,.docx,.pptx,.xlsx,.md,.txt,.csv,.json,.jpg,.jpeg,.png,.zip" onChange={event => {
       const files = Array.from(event.target.files ?? [])
       if (files.length) useMaterialUploads.getState().add(files, { ...context })
@@ -170,7 +167,8 @@ function MaterialsSpace({ context, readOnly }: { context: MaterialContext; readO
       if (isCurrent()) { setRenaming(null); setOpened(previous => previous?.id === renaming.id ? { ...previous, title } : previous) }
       await refresh()
     }} />}
-  </section>
+    </section>
+  </>
 }
 
 function RenameMaterial({ source, onClose, onSave }: { source: KnowledgeSource; onClose(): void; onSave(title: string): Promise<void> }) {

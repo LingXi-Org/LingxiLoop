@@ -20,6 +20,7 @@ import { mergeCaseCoverMetadata } from './cover/polling'
 import { useCaseCoverPolling } from './cover/useCaseCoverPolling'
 import { caseArticleUrl, caseViewFromSearch, canManageCaseView, type CaseView } from './case-view'
 import { submitCase } from './submission'
+import { LearningPageHeader, LearningPageToolbar, LearningTopTabs } from '@/features/learning/components/LearningPageHeader'
 
 const empty: CaseInput = { title: '', summary: '', body: '', cover: null, category: '', tags: [] }
 const statusLabels = { draft: '草稿', published: '已发布', unpublished: '已下架' }
@@ -291,14 +292,17 @@ export function CasesPage() {
       </div>}
     </div>
   </div>
-  return <main aria-label="组织案例库" className="cases-page">
-    <div className={detail ? 'case-detail-shell' : 'case-library-shell'}>
-      <header className={'case-toolbar ' + (detail ? 'case-detail-toolbar' : '')}>
-        <h1 ref={heading} tabIndex={-1} className={detail ? 'sr-only' : 'case-library-title'}>案例库</h1>
+  return <main aria-label="组织案例库" className="cases-page learning-page-surface">
+    <div className={detail ? 'case-detail-shell' : 'learning-page-shell'}>
+      {!detail && <LearningPageHeader title="案例库" headingRef={heading} actions={<>
+        {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(undefined, 'manage')}>管理案例</Button> : <Button variant="outline" disabled={busy} onClick={() => navigate(undefined, 'reader')}>阅读案例</Button>}
+        {managing && <Button disabled={busy} onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>}
+      </>} />}
+      {detail && <header className="case-toolbar case-detail-toolbar">
+        <h1 ref={heading} tabIndex={-1} className="sr-only">案例库</h1>
         {detail && <Button variant="ghost" disabled={busy} onClick={() => navigate()}><ArrowLeft className="size-4"/>返回案例库</Button>}
         <div className="ms-auto flex flex-wrap items-center justify-end gap-3">
           {view === 'reader' ? canManage && <Button variant="outline" disabled={busy} onClick={() => navigate(id ?? undefined, 'manage')}>管理案例</Button> : <Button variant="outline" disabled={busy} onClick={() => navigate(article?.status === 'published' ? id ?? undefined : undefined, 'reader')}>阅读案例</Button>}
-          {!detail && managing && <Button disabled={busy} onClick={beginEdit}><Plus className="size-4"/>新建案例</Button>}
           {editing && managing ? <>
             <span className="text-sm text-muted-foreground">草稿</span>
             <Button type="submit" form="case-edit-form" name="intent" value="draft" variant="outline" disabled={invalid}>{submissionStage === 'saving' ? '正在保存…' : '保存草稿'}</Button>
@@ -317,16 +321,16 @@ export function CasesPage() {
             </DropdownMenuContent></DropdownMenu>
           </>}
         </div>
-      </header>
+      </header>}
       {error && <div role="alert" className="case-notice text-destructive">{error}{!editing && <Button variant="ghost" disabled={busy} onClick={() => setRevision(value => value + 1)}>重新加载</Button>}</div>}
       {notice && <p role="status" className="case-notice">{notice}</p>}
-      {!detail && <div className="case-library-filters">
-        <nav aria-label="案例分类" className="case-category-tabs">
-          {['', ...list.categories].map(value => <button key={value} type="button" aria-pressed={category === value} onClick={() => setCategory(value)}>{value || '全部'}</button>)}
-        </nav>
-        <label className="relative w-full sm:w-72"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
+      {!detail && <>
+        <LearningTopTabs label="案例分类" value={category} onValueChange={setCategory} items={['', ...list.categories].map(value => ({ value, label: value || '全部' }))} />
+        <LearningPageToolbar>
+        <label className="learning-page-search relative"><span className="sr-only">关键词搜索</span><Search aria-hidden="true" className="pointer-events-none absolute start-3 top-2.5 size-4 text-muted-foreground"/><Input type="search" className="ps-9" placeholder="搜索案例" value={search} onChange={event => setSearch(event.target.value)}/></label>
         {(search || category) && <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setCategory('') }}>清除筛选</Button>}
-      </div>}
+        </LearningPageToolbar>
+      </>}
       {editing && managing ? <form id="case-edit-form" aria-busy={busy} onSubmit={event => {
         event.preventDefault()
         void save((event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'publish')

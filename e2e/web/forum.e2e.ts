@@ -6,7 +6,7 @@ import { semanticEvidence } from './evidence'
 test.describe('Course forum', { ...memberSession(), tags: ['web', 'learning', 'forum'] }, () => {
   test('forum follows course URLs, reload and history at mobile and desktop widths', async ({ app, screen, browser }) => {
     await app.open('/?project=e2e-classroom&view=forum')
-    await expect(screen.getByRole('heading', '论坛', { exact: true })).toBeVisible()
+    await expect(screen.getByRole('heading', '学习论坛', { exact: true })).toBeVisible()
     await expect(screen.getByRole('button', '自由讨论', { exact: true })).toBeVisible()
     await screen.getByRole('navigation', '工作区与功能').getByRole('button', '学习概览', { exact: true }).tap()
     await browser.back()
@@ -23,6 +23,8 @@ test.describe('Course forum', { ...memberSession(), tags: ['web', 'learning', 'f
   test('publish a discussion without case or featured controls', { skip: mutationPermission.skip }, async ({ app, screen, browser }) => {
     const title = testName('Forum discussion')
     await app.open('/?project=e2e-classroom&view=forum')
+    await screen.getByRole('button', '发布', { exact: true }).tap()
+    await screen.getByRole('menuitem', '发起讨论', { exact: true }).tap()
     const composer = screen.getByRole('region', '发布学习论坛内容')
     await composer.getByLabel('内容正文').fill(title + '\nA repeatable forum discussion.')
     await expect(composer.getByRole('button', '作品案例', { exact: true })).toHaveCount(0)

@@ -1,0 +1,43 @@
+.learning-page-surface { container: learning-page / inline-size; }
+.learning-page-shell {
+  --learning-page-inline-padding: 32px;
+  --learning-page-top-padding: 56px;
+  --learning-page-title-size: 40px;
+  --learning-page-header-gap: 24px;
+  --learning-page-tab-gap: 32px;
+  --learning-page-tab-padding-block: 16px;
+  --learning-page-tab-padding-inline: 12px;
+  --learning-page-tab-size: 18px;
+  width: 100%;
+  max-width: 1324px;
+  min-width: 0;
+  margin-inline: auto;
+  padding: var(--learning-page-top-padding) var(--learning-page-inline-padding) 48px;
+}
+.learning-page-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 20px; margin-block-end: var(--learning-page-header-gap); }
+.learning-page-heading { min-width: 0; }
+.learning-page-heading h1 { font-size: var(--learning-page-title-size); font-weight: 700; line-height: 1.3; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.learning-page-heading h1:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
+.learning-page-description { margin-block-start: 8px; color: var(--muted-foreground); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.learning-page-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+.learning-top-tabs { display: flex; gap: var(--learning-page-tab-gap); max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; border-block-end: 1px solid var(--border); scrollbar-width: none; }
+.learning-top-tabs::-webkit-scrollbar { display: none; }
+.learning-top-tabs .learning-top-tab { flex: 0 0 auto; height: auto; border: 0; border-block-end: 2px solid transparent; border-radius: 0; padding: var(--learning-page-tab-padding-block) var(--learning-page-tab-padding-inline); color: var(--muted-foreground); font-size: var(--learning-page-tab-size); font-weight: 400; line-height: 1.5; }
+.learning-top-tabs .learning-top-tab[aria-pressed=true] { border-block-end-color: var(--primary); color: var(--foreground); font-weight: 600; }
+.learning-top-tabs .learning-top-tab:hover { background: var(--muted); color: var(--foreground); }
+.learning-top-tabs .learning-top-tab:focus-visible { outline: 2px solid var(--ring); outline-offset: -3px; box-shadow: none; }
+.learning-page-toolbar { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; margin-block: 18px 20px; }
+.learning-page-toolbar > .learning-page-search { flex: 1 1 280px; min-width: 0; max-width: none; }
+.learning-page-toolbar input[type=search]:not([data-slot=input-group-control]) { padding-inline-start: 36px; }
+.learning-page-search > svg { z-index: 1; }
+.learning-page-toolbar > button { font-size: 16px; }
+.learning-page-toolbar .learning-page-toolbar-controls { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-start; gap: 12px; }
+@container learning-page (max-width: 880px) {
+  .learning-page-shell { --learning-page-top-padding: 32px; --learning-page-inline-padding: 24px; }
+}
+@container learning-page (max-width: 640px) {
+  .learning-page-shell { --learning-page-top-padding: 24px; --learning-page-inline-padding: 16px; --learning-page-title-size: 30px; --learning-page-header-gap: 16px; --learning-page-tab-gap: 12px; --learning-page-tab-padding-block: 12px; --learning-page-tab-padding-inline: 8px; --learning-page-tab-size: 16px; }
+  .learning-page-toolbar { gap: 8px; }
+  .learning-page-toolbar > .learning-page-search { flex-basis: 100%; }
+  .learning-page-toolbar > button { font-size: 14px; }
+}

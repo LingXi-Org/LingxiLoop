@@ -15,12 +15,13 @@ const draftSchema=contentDraftSchema.extend({ title:z.string().max(200),criteria
 // Keyed by account + company + course at the caller. This is the same Homework
 // lifecycle as assistant-created drafts, with no conversation or model required
 // to enter the form. The existing validation and human publish gates still apply.
-export function HomeworkComposer({ courseId,onClose,onPublished }: { courseId:string;onClose():void;onPublished():void }) {
+export function HomeworkComposer({ courseId,onClose,onPublished,onBusyChange }: { courseId:string;onClose():void;onPublished():void;onBusyChange?(busy:boolean):void }) {
   const id=useId(),titleInput=useRef<HTMLInputElement>(null),mounted=useRef(true),saving=useRef(false)
   const {draft,setDraft,discard,storageError}=useForumDraft(`create-homework:${courseId}`,draftSchema,{...emptyContent,title:'',criteria:'',dueAt:'',creationId:crypto.randomUUID(),homeworkId:null})
   const [busy,setBusy]=useState(false),[uploading,setUploading]=useState(false),[error,setError]=useState('')
   useEffect(()=>{mounted.current=true;titleInput.current?.focus();return()=>{mounted.current=false}},[])
   const disabled=busy||uploading
+  useEffect(() => { onBusyChange?.(disabled); return () => onBusyChange?.(false) }, [disabled, onBusyChange])
   const published=()=>{discard();onPublished()}
   return <section aria-label="创建课程作业" className="space-y-4 rounded-lg border bg-card p-4">
     <div className="flex items-center justify-between gap-2"><h2 className="font-semibold">创建课程作业</h2><Button type="button" variant="ghost" disabled={disabled} onClick={onClose}>返回论坛</Button></div>

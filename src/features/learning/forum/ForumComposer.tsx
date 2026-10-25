@@ -20,9 +20,11 @@ import { contentLinks, ForumContentFields } from './ForumContentFields'
 import { composerDraftSchema, emptyContent, useForumDraft } from './useForumDraft'
 import { markdownText } from '@/features/content-editor/document'
 
-export function ForumComposer({ space, item, onCreated, onCancel }: { space: LearningSpace; item?: ForumItem; onCreated(): void; onCancel?(): void }) {
+export function ForumComposer({ space, item, onCreated, onCancel, presentation = 'inline', onWorkingChange }: { space: LearningSpace; item?: ForumItem; onCreated(): void; onCancel?(): void; presentation?: 'inline' | 'dialog'; onWorkingChange?(working: boolean): void }) {
+  const dialog = presentation === 'dialog'
   const [focus,setFocus]=useState(false)
-  const [expanded,setExpanded]=useState(Boolean(item)), [working,setWorking]=useState(false)
+  const [expanded,setExpanded]=useState(dialog || Boolean(item)), [working,setWorking]=useState(false)
+  useEffect(() => { onWorkingChange?.(working); return () => onWorkingChange?.(false) }, [working, onWorkingChange])
   const user=useAuth(state=>state.user)
   const section=useRef<HTMLElement>(null)
   const {containerRef,placeholderHeight}=useFocusMode(focus)
@@ -38,18 +40,18 @@ export function ForumComposer({ space, item, onCreated, onCancel }: { space: Lea
     <div hidden={!expanded} className="min-w-0"><span className="block truncate text-sm font-semibold">{user?.name}</span></div>
     </div>
     <div className="forum-focus-head-actions">
-      {expanded&&<Button type="button" variant="ghost" size="icon-sm" aria-label={focus?"退出专注模式":"专注模式"} aria-pressed={focus} onClick={()=>setFocus(value=>!value)}>{focus?<Minimize2Icon/>:<Maximize2Icon/>}</Button>}
-      {!item&&<Button type="button" variant="ghost" size="icon-sm" aria-label={expanded?'收起发布框':'展开发布框'} aria-expanded={expanded} onClick={()=>expanded?collapse():setExpanded(true)}>{expanded?<ChevronUpIcon/>:<ChevronDownIcon/>}</Button>}
+      {expanded&&!dialog&&<Button type="button" variant="ghost" size="icon-sm" aria-label={focus?"退出专注模式":"专注模式"} aria-pressed={focus} onClick={()=>setFocus(value=>!value)}>{focus?<Minimize2Icon/>:<Maximize2Icon/>}</Button>}
+      {!item&&!dialog&&<Button type="button" variant="ghost" size="icon-sm" aria-label={expanded?'收起发布框':'展开发布框'} aria-expanded={expanded} onClick={()=>expanded?collapse():setExpanded(true)}>{expanded?<ChevronUpIcon/>:<ChevronDownIcon/>}</Button>}
     </div>
     </header>
     <div className="forum-focus-compose-content">
       <div hidden={!expanded}>
-        {!item && <div className="forum-focus-modes" role="group" aria-label="发布类型">
+        {!item && !dialog && <div className="forum-focus-modes" role="group" aria-label="发布类型">
           <Button type="button" variant="ghost" size="sm" disabled={working} aria-pressed={kind === 'share'} onClick={() => setKind('share')}>自由讨论</Button>
           {space.canEditContent && <Button type="button" variant="ghost" size="sm" disabled={working} aria-pressed={kind === 'assignment'} onClick={() => setKind('assignment')}>正式作业</Button>}
         </div>}
       </div>
-      <InlineEditor key={`${user?.id}:${space.courseId}:${kind}:${item?.id ?? 'new'}`} space={space} kind={kind} item={item} expanded={expanded} onExpand={()=>setExpanded(true)} onWorking={setWorking} onCreated={()=>{if(!item)collapse();onCreated()}} onCancel={onCancel} />
+      <InlineEditor key={`${user?.id}:${space.courseId}:${kind}:${item?.id ?? 'new'}`} space={space} kind={kind} item={item} expanded={expanded} onExpand={()=>setExpanded(true)} onWorking={setWorking} onCreated={()=>{if(!item&&!dialog)collapse();onCreated()}} onCancel={onCancel} />
     </div>
   </section></div>
 }
@@ -65,6 +67,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
       .catch(()=>{if(active) setError('作业引用资料暂时无法加载，请稍后重试。')})
     return ()=>{active=false}
   },[space.projectId])
+  const saving = useRef(false)
   const disabled=busy||uploading
   const bodyText=editorDocument?markdownText(body):body
   useEffect(()=>{onWorking(disabled);return()=>onWorking(false)},[disabled,onWorking])
@@ -78,7 +81,8 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     }
   }} onSubmit={async event=>{
     event.preventDefault()
-    if(disabled||!space.courseId) return
+    if(disabled||saving.current||!space.courseId) return
+    saving.current=true
     setBusy(true);setError('')
     try {
       const data={kind,title:title.trim() || bodyText.trim().split('\n')[0].slice(0,200) || '附件讨论',body,editorDocument,
@@ -89,7 +93,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
       setDraft({...emptyContent,title:'',tags:'',sourceId:'none',dueAt:''});discard()
       toast.success(item?'内容已更新':'内容已发布');onCreated()
     } catch(reason){setError(userFacingError(reason,'发布失败，输入与附件已保留，请重试。'))}
-    finally{setBusy(false)}
+    finally{saving.current=false;setBusy(false)}
   }}>
     {!expanded&&<button type="button" onClick={onExpand} className="w-full truncate rounded-sm px-2 py-2 text-start text-sm text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring">{bodyText.trim().split('\n')[0] || '发起讨论…'}</button>}
     <div hidden={!expanded}>
@@ -106,7 +110,7 @@ function InlineEditor({space,kind,item,expanded,onExpand,onWorking,onCreated,onC
     {error&&<p role="alert" className="forum-focus-status text-destructive">{error}</p>}
     {storageError&&<p role="status" className="forum-focus-status text-destructive">本地草稿保存失败，请复制内容后重试。</p>}
     <footer className="forum-focus-foot"><span className="me-auto text-xs text-muted-foreground">{storageError ? '草稿未保存' : '草稿自动保存'}</span>
-      {item&&<Button type="button" variant="ghost" onClick={onCancel} disabled={disabled}>收起编辑</Button>}
+      {onCancel&&<Button type="button" variant="ghost" onClick={onCancel} disabled={disabled}>{item?'收起编辑':'取消'}</Button>}
       <Button data-forum-submit type="submit" title="Ctrl/⌘ + Shift + Enter" aria-keyshortcuts="Control+Shift+Enter Meta+Shift+Enter" disabled={disabled || (kind==='assignment'&&!title.trim()) || (!body.trim()&&!links.trim()&&!attachments.length)}>{uploading?'上传中…':busy?'发布中…':item?'保存修改':kind==='assignment'?'发布作业':'发布'}</Button>
     </footer>
     </div>
