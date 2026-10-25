@@ -3,7 +3,7 @@
 Observed 2026-10-25, Linux amd64, Docker 28.4.0 / Buildx 0.31.0,
 Node 24.19.0, Python 3.12.14. Source baseline:
 `9e3bfd892fa53f22dddbc00e98f466c21ce01b7d`; implementation commits
-`8629dc90` and `0791ce18`. The parent integrates this work with #440; this
+`649e8d03` and `efba619b`. The parent integrates this work with #440; this
 record does not claim checks against that later combined commit.
 
 Only the server Dockerfile-specific ignore and Notebook `.dockerignore`
@@ -70,16 +70,16 @@ these include tar metadata/padding. The descriptors use
 No full production image build, registry-transfer saving, or production
 readiness result is claimed here.
 
-The initial candidate `8629dc90` used `!open_notebook/database/` and an
+The initial candidate `649e8d03` used `!open_notebook/database/` and an
 exception for `repository.py`. Actual Docker COPY retained all 52 unwanted
 files because reincluding that directory includes its children. Reproducing
 that candidate with the same final source COPY probe yielded the exact
 baseline 81-file inventory and OCI manifest
 `sha256:dd35e42952be96e5cbc528b3fc884f065cb4944cecc4b7370e0f211bede13686`:
-[initial result](issue-443-initial-allowlist.json). Fix `0791ce18` explicitly
+[initial result](issue-443-initial-allowlist.json). Fix `efba619b` explicitly
 excludes `open_notebook/database/**` before the adapter exception. To replay
 the initial failure, use the generated `notebook-before.Dockerfile` with
-`git show 8629dc90:third_party/open-notebook/.dockerignore` as its
+`git show 649e8d03:third_party/open-notebook/.dockerignore` as its
 Dockerfile-specific `.dockerignore` sidecar; build against
 `third_party/open-notebook`.
 
