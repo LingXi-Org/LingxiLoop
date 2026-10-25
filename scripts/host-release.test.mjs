@@ -26,6 +26,7 @@ const targetRef={commit:next,branch:'release/target',sha256:'d'.repeat(64),autoP
 const plan=sealHostPlan({format:'same-schema-host-release/v1',createdAt:'2026-10-20T00:00:00Z',source,target,sourceAcceptanceSha256:hash,qualification:{commit:next,conclusion:'success',ciUrl:'https://github.com/LingXi-Org/LingxiLoop/actions/runs/123'},stacks:[...apps,core].map((stack,i)=>({stack,server:i===1?'shanghai-b':'shanghai-a',source:sourceRef,target:i===2?sourceRef:targetRef,...(i!==2?{preparation:{commit:next,sha256:'e'.repeat(64)}}:{})}))})
 function state(descriptor=formal){return {...descriptor,installedSchema:13,product:descriptor.productVersion,count:descriptor.productVersion,readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:20,queued:12,pendingCapture:4}}
 function fixture(fault={}){
+ if(fault.same57)fault={...fault,same56:true};
  if(fault.soft57)fault={...fault,homework56:true};
  if(fault.same56)fault={...fault,same55:true};
  if(fault.cover55||fault.same55||fault.homework56)fault={...fault,producerV3:true};
@@ -57,6 +58,7 @@ function fixture(fault={}){
   else p.backup={...nativeBackup(),format:2,profile:'native14-product54',source:{sha:p.source.sha,productVersion:54,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,p.source[k]])),migrations:p.source.migrations}};
   if(fault.homework56){p.format='homework56-host-release/v1';p.source.productVersion=55;p.source.migrations=structuredClone(p.target.migrations);p.target.productVersion=56;p.target.migrations.push({version:56,name:'homework_validation_status',checksum:'88f7078980c26b4d9658c805bc27fec8b4b4c7199a58c51a8b11201d65c4217a'});p.backup.profile='native14-product55';p.backup.source.productVersion=55;p.backup.source.migrations=structuredClone(p.source.migrations)}
   if(fault.same56){p.format='product56-image-host-release/v1';p.target.productVersion=56;p.target.migrations.push({version:56,name:'homework_validation_status',checksum:'88f7078980c26b4d9658c805bc27fec8b4b4c7199a58c51a8b11201d65c4217a'});p.source.productVersion=56;p.source.migrations=structuredClone(p.target.migrations)}
+  if(fault.same57){p.format='product57-image-host-release/v1';p.target.productVersion=57;p.target.migrations.push({version:57,name:'case_soft_delete',checksum:'f42124684d66f1387267f6da653ec2b255c2fa4a9f6dccd6179a3a5fbb4607a0'});p.source.productVersion=57;p.source.migrations=structuredClone(p.target.migrations)}
   if(fault.soft57){p.format='case-soft-delete57-host-release/v1';p.source.productVersion=56;p.source.migrations=structuredClone(p.target.migrations);p.target.productVersion=57;p.target.migrations.push({version:57,name:'case_soft_delete',checksum:'f42124684d66f1387267f6da653ec2b255c2fa4a9f6dccd6179a3a5fbb4607a0'});p.backup.profile='native14-product56';p.backup.source.productVersion=56;p.backup.source.migrations=structuredClone(p.source.migrations)}
   releasePlan=sealHostPlan(p);
  }
@@ -591,4 +593,26 @@ test('soft57 drains and binds before fresh56 restore and one migration, then fou
  const f=fixture({soft57:true});await f.run();assert.equal(f.trace.filter(x=>x==='migrate').length,1);assert.equal(f.trace.filter(x=>x==='backup').length,1);assert.equal(f.trace.filter(x=>x.startsWith('stop:')).length,4);assert.equal(f.events.filter(e=>e.phase==='rollout'&&e.status==='observed').length,4);assert.equal(f.trace.some(x=>['patch','seed'].includes(x)),false);
  assert.ok(f.trace.indexOf('binding-precheck')<f.trace.indexOf('backup'));assert.ok(f.trace.indexOf('backup')<f.trace.indexOf('migrate'));assert.ok(f.events.filter(e=>e.phase==='drain'&&e.status==='zero-leases').length>=2);
  for(const fault of [{bound:true},{backupUnknown:true},{migrationUnknown:true},{migrationCommittedFailure:true}]){const bad=fixture({soft57:true,...fault});await assert.rejects(bad.run());assert.equal(bad.trace.some(x=>x.startsWith('deploy:')),false);if(fault.bound||fault.backupUnknown)assert.equal(bad.trace.includes('migrate'),false);if(fault.backupUnknown||fault.migrationUnknown)assert.equal(bad.events.at(-1).recovery,'unknown');if(fault.migrationCommittedFailure){assert.equal(bad.events.at(-1).requiresTombstoneAwareCode,true);assert.equal(bad.events.at(-1).recovery,'fix-forward');bad.trace.length=0;await assert.rejects(bad.run());assert.equal(bad.trace.includes('migrate'),false);await assert.rejects(restoreImageSource({plan:bad.plan,receipt:{mode:bad.plan.format,planHash:bad.plan.planHash,complete:false,events:bad.events},ops:bad.ops}));}}
+});
+
+test('same57 exact unchanged profile accepts actual source identities and rejects schema/package/CI/manifest drift',()=>{
+ const p=fixture({same57:true}).plan;assert.doesNotThrow(()=>validateHostPlanShape(p));
+ for(const change of [q=>q.source.productVersion=55,q=>q.target.productVersion=58,q=>q.target.migrations.pop(),q=>q.target.migrations[56].checksum='0'.repeat(64),q=>q.target.migrations[0].checksum='0'.repeat(64),q=>q.target.runtime='3.8.13',q=>q.target.schema=15,q=>q.target.protocol=12,q=>q.target.integrity+='a',q=>q.target.tarball+='changed',q=>q.publicText.target.reader=2,q=>q.publicText.source.producer='purpose-json-v2',q=>q.publicText.targetConfigurationSha256='0'.repeat(64),q=>q.publicText.sourceContainers.pop(),q=>q.source.image.auditSha256='bad',q=>q.qualification.commit=q.source.sha,q=>q.stacks[2].target.commit=q.target.sha,q=>q.backup=nativeBackup(),q=>q.format='same-schema-host-release/v1',q=>q.format='product56-image-host-release/v1',q=>q.format='homework56-host-release/v1']){
+  const bad=structuredClone(p);change(bad);assert.throws(()=>validateHostPlanShape(sealHostPlan(bad)),String(change));
+ }
+ const accepted={format:'public-text-host-acceptance/v1',passed:true,candidate:p.source.sha,checks:{fourHealthyIdentities:true},evidence:{observed:{stacks:p.stacks.map((r,i)=>({stack:r.stack,id:String(i+1).repeat(24),configSha256:hash}))}},publicText:p.publicText.source,configurationSha256:p.publicText.sourceConfigurationSha256,readerContainers:p.publicText.sourceContainers};
+ assert.doesNotThrow(()=>assertAcceptedPublicTextSource(accepted,p));
+ for(const change of [a=>a.candidate=p.target.sha,a=>a.readerContainers[0].id='0'.repeat(64),a=>a.checks.fourHealthyIdentities=false,a=>a.evidence.observed.stacks.pop()]){const bad=structuredClone(accepted);change(bad);assert.throws(()=>assertAcceptedPublicTextSource(bad,p));}
+ const metadata={publicText:3,runTrace:1,deployment:p.publicText.target,configurationSha256:p.publicText.targetConfigurationSha256,modelOptions:{publicTextProtocol:'purpose-json-v3'}};
+ assert.doesNotThrow(()=>assertPublicTextMetadata(metadata,p));assert.throws(()=>assertPublicTextMetadata({...metadata,runTrace:0},p));
+});
+test('same57 drains four writers and binds before four observed identities with zero migrations or backup',async()=>{
+ const preparation=fixture({same57:true});await preparation.prepare();assert.equal(preparation.trace.filter(x=>x.startsWith('pull:')).length,2);assert.equal(preparation.trace.filter(x=>x.startsWith('restore:')).length,2);assert.equal(preparation.trace.some(x=>/^(stop|deploy|migrate|backup)/.test(x)),false);
+ const f=fixture({same57:true}),r=await f.run();assert.equal(r.status,'complete');assert.equal(r.migrationCount,0);
+ assert.equal(f.trace.some(x=>['migrate','backup','patch','seed'].includes(x)),false);
+ assert.equal(f.trace.filter(x=>x.startsWith('stop:')).length,4);assert.equal(f.events.filter(e=>e.status==='observed').length,4);
+ assert.equal(f.events.filter(e=>e.phase==='drain'&&e.status==='zero-leases').length>=2,true);
+ assert.ok(f.trace.indexOf('binding-precheck')<f.trace.findIndex(x=>x.startsWith('deploy:')));
+ assert.deepEqual(f.trace.filter(x=>x.startsWith('deploy:')),['deploy:lingxiloop-app-a:lingxiloop','deploy:lingxiloop-app-b:lingxiloop','deploy:lingxiloop-app-a:worker','deploy:lingxiloop-app-b:worker']);
+ for(const fault of [{bound:true},{stage:true},{replacedTarget:true}]){const bad=fixture({same57:true,...fault});await assert.rejects(bad.run());assert.equal(bad.trace.includes('migrate'),false);if(fault.stage)assert.equal(bad.events.at(-1).recovery,'unknown');if(fault.bound)assert.equal(bad.trace.some(x=>x.startsWith('deploy:')),false);if(fault.replacedTarget)assert.equal(bad.trace.filter(x=>x.startsWith('deploy:')).length,1);}
 });
