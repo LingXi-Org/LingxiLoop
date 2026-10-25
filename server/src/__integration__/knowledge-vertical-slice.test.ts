@@ -10,6 +10,9 @@ import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { ForbiddenError } from '../modules/access/public.js'
 import { KnowledgeApplication, KnowledgeApplicationError } from '../modules/knowledge/application.js'
+import { KnowledgeSourceSearchApplication } from '../modules/knowledge/source-search.js'
+import { OpenNotebookError, type OpenNotebookClient } from '../modules/knowledge/provider.js'
+import { knowledgeRouter } from '../modules/knowledge/router.js'
 import { MAX_SOURCE_BYTES } from '../modules/knowledge/policy.js'
 import {
   claimIngestionJob,
@@ -80,8 +83,10 @@ const application = new KnowledgeApplication(pool, {
 before(async () => {
   await ensureSchemaOnce()
   const app = express()
+  app.use(express.json())
   // Inject only the test identity; every file request still runs the real permission resolver.
   app.use((req, _res, next) => { (req as AuthedRequest).authUserId = String(req.headers['x-test-user-id'] ?? ''); next() })
+  app.use(knowledgeRouter)
   app.use(filesRouter)
   app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     res.status(error instanceof HttpError ? error.status : 500).json({ error: String(error) })
@@ -137,6 +142,159 @@ beforeEach(async () => {
 after(async () => {
   if (downloadServer) await new Promise<void>((resolve, reject) => downloadServer.close(error => error ? reject(error) : resolve()))
   await teardownAll()
+})
+
+async function indexedSource(userId: string, mimeType = 'text/markdown') {
+  const source = await application.createSource({ userId, companyId: COMPANY_ID, projectId: PROJECT_ID }, null,
+    { kind: 'text', idempotencyKey: `source-search-${mimeType}`, title: 'Attention notes', text: 'Attention uses Q, K and V.' })
+  await pool.query(`UPDATE knowledge_sources SET status='ready',stage='ready',mime_type=$2,
+    external_source_id='external-' || id,external_chunk_count=2,updated_at=NOW() WHERE id=$1`, [source.id, mimeType])
+  return source.id
+}
+
+function sourceSearchFixture() {
+  const text = '前言\nAttention uses Q, K and V.\n后记'
+  let content = text
+  let onSearch = async () => {}
+  const calls: Array<Parameters<OpenNotebookClient['search']>[0]> = []
+  let sourceReads = 0
+  const search = new KnowledgeSourceSearchApplication(pool, {
+    notebookEnabled: () => true,
+    ensureNotebook: async () => 'notebook:course',
+    client: {
+      getSource: async id => ({ id, full_text: content, command_id: 'command:ready', embedded_chunks: 2,
+        // GET records a view upstream; this timestamp must not invalidate an otherwise identical index.
+        updated: String(sourceReads++) }),
+      search: async input => {
+        calls.push(input)
+        await onSearch()
+        return [
+          { id: 'chunk:1', parent_id: input.sourceIds[0], content: 'Attention uses Q, K and V.' },
+          { id: 'chunk:1', parent_id: input.sourceIds[0], content: 'Attention uses Q, K and V.' },
+          { id: 'chunk:private', parent_id: 'external-other-student', content: 'PRIVATE' },
+        ]
+      },
+    },
+  })
+  return { search, calls, text, get sourceReads() { return sourceReads },
+    changeText(value: string) { content = value }, afterSearch(work: () => Promise<void>) { onSearch = work } }
+}
+
+test('[integration] source semantic search maps single-source PDF and Markdown provider hits to verified text anchors', async () => {
+  const fixture = sourceSearchFixture()
+  const scope = { userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID }
+  for (const mime of ['application/pdf', 'text/markdown']) {
+    const sourceId = await indexedSource(TEACHER_ID, mime)
+    const result = await fixture.search.search(scope, sourceId, { query: 'How does attention work?', limit: 8 })
+    assert.equal(result.status, 'matched')
+    assert.match(result.indexVersion!, /^[a-f0-9]{64}$/)
+    assert.equal(result.extractedText, fixture.text)
+    assert.deepEqual(result.matches, [{ sourceId, sourceTitle: 'Attention notes', chunkId: 'chunk:1',
+      excerpt: 'Attention uses Q, K and V.', anchor: { type: 'extracted_text', start: 3, end: 29 } }])
+    const request = fixture.calls.at(-1)!
+    assert.equal(request.type, 'vector')
+    assert.deepEqual(request.sourceIds, [`external-${sourceId}`])
+    assert.equal(request.companyId, COMPANY_ID)
+    assert.equal(request.notebookId, 'notebook:course')
+    const repeated = await fixture.search.search(scope, sourceId,
+      { query: 'attention', limit: 8, indexVersion: result.indexVersion! })
+    assert.equal(repeated.indexVersion, result.indexVersion)
+    assert.equal(repeated.status, 'matched')
+  }
+})
+
+test('[integration] semantic search never reads private, foreign-course or foreign-tenant index content', async () => {
+  const fixture = sourceSearchFixture()
+  const sourceId = await indexedSource(STUDENT_A_ID)
+  for (const scope of [
+    { userId: STUDENT_B_ID, companyId: COMPANY_ID, projectId: PROJECT_ID },
+    { userId: TEACHER_ID, companyId: COMPANY_ID, projectId: PROJECT_ID },
+    { userId: USER_ID, companyId: COMPANY_ID, projectId: SAME_COMPANY_PROJECT_ID },
+    { userId: STUDENT_A_ID, companyId: OTHER_COMPANY_ID, projectId: OTHER_PROJECT_ID },
+  ]) {
+    await assert.rejects(fixture.search.search(scope, sourceId, { query: 'private', limit: 8 }),
+      error => error instanceof ForbiddenError || (error instanceof KnowledgeApplicationError && error.code === 'not_found'))
+  }
+  assert.equal(fixture.calls.length, 0)
+  assert.equal(fixture.sourceReads, 0)
+  const owner = await fixture.search.search({ userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID },
+    sourceId, { query: 'attention', limit: 8 })
+  assert.equal(owner.status, 'matched')
+})
+
+test('[integration] stored PPTX, failed and pending sources never produce semantic hits or read the provider', async () => {
+  const fixture = sourceSearchFixture()
+  const sourceId = await indexedSource(TEACHER_ID)
+  const scope = { userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID }
+  for (const status of ['stored', 'failed', 'upload_pending', 'queued', 'processing']) {
+    await pool.query(`UPDATE knowledge_sources SET status=$2,mime_type=$3 WHERE id=$1`,
+      [sourceId, status, 'application/vnd.openxmlformats-officedocument.presentationml.presentation'])
+    const result = await fixture.search.search(scope, sourceId, { query: 'attention', limit: 8 })
+    assert.equal(result.status, ['queued', 'processing'].includes(status) ? 'processing' : 'not_indexed')
+    assert.deepEqual(result.matches, [])
+    assert.equal(result.extractedText, null)
+    assert.equal(result.indexVersion, null)
+  }
+  assert.equal(fixture.calls.length, 0)
+  assert.equal(fixture.sourceReads, 0)
+})
+
+test('[integration] changed index or revoked source access invalidates all search evidence before returning it', async () => {
+  const fixture = sourceSearchFixture()
+  const sourceId = await indexedSource(TEACHER_ID)
+  const scope = { userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID }
+  const result = await fixture.search.search(scope, sourceId, { query: 'attention', limit: 8 })
+  const assertStale = (value: Awaited<ReturnType<typeof fixture.search.search>>) => {
+    assert.deepEqual(value, { sourceId, status: 'stale', indexVersion: null, extractedText: null, matches: [] })
+  }
+  assertStale(await fixture.search.search(scope, sourceId, { query: 'attention', limit: 8, indexVersion: 'old' }))
+  assert.equal(fixture.calls.length, 1)
+  await pool.query(`UPDATE knowledge_sources SET updated_at=updated_at+INTERVAL '1 second' WHERE id=$1`, [sourceId])
+  assertStale(await fixture.search.search(scope, sourceId, { query: 'attention', limit: 8, indexVersion: result.indexVersion! }))
+  assert.equal(fixture.calls.length, 1)
+  fixture.afterSearch(async () => { fixture.changeText('New extracted text') })
+  assertStale(await fixture.search.search(scope, sourceId, { query: 'attention', limit: 8 }))
+  fixture.afterSearch(async () => { await pool.query(`UPDATE knowledge_sources SET status='processing' WHERE id=$1`, [sourceId]) })
+  assertStale(await fixture.search.search(scope, sourceId, { query: 'attention', limit: 8 }))
+  await pool.query(`UPDATE knowledge_sources SET status='ready' WHERE id=$1`, [sourceId])
+  fixture.afterSearch(async () => {
+    await pool.query(`UPDATE project_memberships SET status='SUSPENDED' WHERE project_id=$1 AND user_id=$2`, [PROJECT_ID, STUDENT_A_ID])
+  })
+  await assert.rejects(fixture.search.search(scope, sourceId, { query: 'attention', limit: 8 }), ForbiddenError)
+})
+
+test('[integration] project source search HTTP validates scope and body before returning only authorized index state', async () => {
+  const sourceId = await indexedSource(STUDENT_A_ID)
+  await pool.query(`UPDATE knowledge_sources SET status='stored',stage='stored_only' WHERE id=$1`, [sourceId])
+  const request = (userId: string, body: unknown) => fetch(`${downloadBaseUrl}/projects/${PROJECT_ID}/sources/${sourceId}/search`, {
+    method: 'POST', headers: { 'x-test-user-id': userId, 'x-company-id': COMPANY_ID, 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  assert.equal((await request('', { query: 'attention' })).status, 401)
+  assert.equal((await request(STUDENT_A_ID, { query: 'attention', sourceIds: ['foreign'] })).status, 400)
+  assert.equal((await request(STUDENT_B_ID, { query: 'attention' })).status, 404)
+  const owner = await request(STUDENT_A_ID, { query: 'attention' })
+  assert.equal(owner.status, 200)
+  assert.deepEqual(await owner.json(), { sourceId, status: 'not_indexed', indexVersion: null, extractedText: null, matches: [] })
+})
+
+test('[integration] removed upstream index is stale and an outage cannot masquerade as no matches', async () => {
+  const sourceId = await indexedSource(TEACHER_ID)
+  const scope = { userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID }
+  for (const status of [404, 503]) {
+    const search = new KnowledgeSourceSearchApplication(pool, { notebookEnabled: () => true,
+      ensureNotebook: async () => 'notebook:course', client: {
+        getSource: async () => { throw new OpenNotebookError('fixture upstream unavailable', status) },
+        search: async () => { throw new Error('must not query missing upstream content') },
+      } })
+    if (status === 404) {
+      assert.deepEqual(await search.search(scope, sourceId, { query: 'attention', limit: 8 }),
+        { sourceId, status: 'stale', indexVersion: null, extractedText: null, matches: [] })
+    } else {
+      await assert.rejects(search.search(scope, sourceId, { query: 'attention', limit: 8 }),
+        error => error instanceof KnowledgeApplicationError && error.code === 'unavailable')
+    }
+  }
 })
 
 test('[integration] knowledge source creation keeps explicit tenant and project ownership', async () => {

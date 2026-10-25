@@ -36,6 +36,29 @@ export const updateSourceRequestSchema = z.object({
   title: z.string().trim().min(1).max(200),
 }).strict()
 
+export const sourceSearchRequestSchema = z.object({
+  query: z.string().trim().min(1).max(4000),
+  limit: z.number().int().min(1).max(8).default(8),
+  indexVersion: z.string().min(1).max(200).optional(),
+}).strict()
+
+export type SourceSearchInput = z.infer<typeof sourceSearchRequestSchema>
+
+export interface KnowledgeSourceSearch {
+  sourceId: string
+  indexVersion: string | null
+  status: 'matched' | 'no_matches' | 'processing' | 'not_indexed' | 'stale'
+  /** Anchors refer only to this exact snapshot, using JavaScript UTF-16 offsets. */
+  extractedText: string | null
+  matches: Array<{
+    sourceId: string
+    sourceTitle: string
+    chunkId: string
+    excerpt: string
+    anchor: { type: 'extracted_text'; start: number; end: number } | null
+  }>
+}
+
 const sourceId = z.string().trim().min(1).max(200)
 const expectedSource = z.object({ enabled: z.boolean().optional(), status: z.string().trim().min(1).max(2000).optional(), title: z.string().trim().min(1).max(2000).optional() })
   .strict().refine(value => Object.keys(value).length > 0, 'expected source fields are required')

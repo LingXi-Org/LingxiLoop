@@ -215,8 +215,12 @@ export class OpenNotebookClient {
     })
   }
 
-  getSource(sourceId: string): Promise<OpenNotebookSource> {
-    return this.json(`/api/sources/${encodeURIComponent(sourceId)}`)
+  getSource(sourceId: string, signal?: AbortSignal): Promise<OpenNotebookSource> {
+    signal?.throwIfAborted()
+    const deadline = timeoutSignal(30_000)
+    return this.json(`/api/sources/${encodeURIComponent(sourceId)}`, {
+      signal: signal ? AbortSignal.any([signal, deadline]) : deadline,
+    })
   }
 
   getPresentationMaterial(sourceId: string): Promise<OpenNotebookPresentationMaterialV1> {
