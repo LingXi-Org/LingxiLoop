@@ -23,6 +23,7 @@ export const knowledgeApplication = new KnowledgeApplication(pool, {
   putObject: async (key, body, contentType) => { await storage.put(key, body, contentType) },
   presignPut: (key, contentType, contentLength) => storage.presignPut(key, contentType, { contentLength }),
   statObject: (key) => storage.statObject(key),
+  readObjectBounded: (key, maxBytes) => storage.readObjectBounded(key, maxBytes),
   publicUrl: (key) => storage.publicUrl(key),
   maxSourceBytes: MAX_SOURCE_BYTES,
 })

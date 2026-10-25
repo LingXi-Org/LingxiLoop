@@ -269,3 +269,17 @@ The root npm lock records the source tarball integrity; the adjacent README
 records its SHA-256 and update procedure. The license is retained alongside the
 source and in `public/licenses/shadcn.txt`, which Vite copies into the SPA.
 The shadcn CLI remains available through the full development installation.
+
+## Studio Admin file manager
+
+Course materials directly adapts Studio Admin's file list, toolbar, row actions,
+and format mappings from `arhamkhnz/next-shadcn-admin-dashboard` at fixed commit
+`51fb5d90e09b80f6c96b313a24b34c1514e3352b`:
+https://github.com/arhamkhnz/next-shadcn-admin-dashboard
+
+MIT License, Copyright (c) 2024 Mohammed Arham Khan. The complete license,
+unmodified fixed-commit source snapshots, SHA-256 checksums, exact original →
+local file mapping and adaptation diff are retained in
+[`third_party/studio-admin/`](third_party/studio-admin/README.md).
+The Next.js application shell and example business data are not included in
+LingxiLoop's runtime.

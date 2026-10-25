@@ -6,7 +6,7 @@ export interface WebDestination {
   conversationId: string | null
 }
 
-const views: ViewKey['view'][] = ['conversations', 'agents', 'cases', 'forum', 'learning', 'courses', 'course-members', 'course-status']
+const views: ViewKey['view'][] = ['conversations', 'agents', 'cases', 'forum', 'course-materials', 'learning', 'courses', 'course-members', 'course-status']
 let navigationEpoch = 0
 
 export const beginWebNavigation = () => ++navigationEpoch
@@ -16,8 +16,10 @@ export const isCurrentWebNavigation = (epoch: number) => epoch === navigationEpo
 export function readWebDestination(): WebDestination & { explicit: boolean; invalidView: boolean } {
   const parameters = new URLSearchParams(window.location.search)
   const requestedView = /^\/cases(?:\/|$)/.test(window.location.pathname) ? 'cases' : parameters.get('view')
-  const view = views.find((candidate) => candidate === requestedView) ?? 'conversations'
-  const invalidView = requestedView !== null && requestedView !== view
+  // Retired library URLs resolve to the sole course materials implementation.
+  const canonicalView = requestedView === 'library' ? 'course-materials' : requestedView
+  const view = views.find((candidate) => candidate === canonicalView) ?? 'conversations'
+  const invalidView = canonicalView !== null && canonicalView !== view
   return {
     projectId: parameters.get('project') || null,
     view,

@@ -3,7 +3,7 @@ import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService } from '../access/public.js'
 import type { KnowledgeCreatedVia, KnowledgeVisibilityScope } from './contracts.js'
 
-export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed'
+export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed' | 'stored'
 
 export interface IngestionSourceRow {
   id: string
@@ -365,13 +365,7 @@ export async function findVisibleSourceExternalId(db: Queryable, args: {
     `SELECT source.external_source_id FROM knowledge_sources source
       WHERE source.id=$1 AND source.company_id=$2 AND source.project_id=$3 AND source.deleted_at IS NULL
         AND (source.visibility_scope='PROJECT'
-          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4)
-          OR EXISTS (
-            SELECT 1 FROM project_memberships membership
-             WHERE membership.company_id=source.company_id AND membership.project_id=source.project_id
-               AND membership.user_id=$4 AND membership.status='ACTIVE'
-               AND membership.role = 'TEACHER'
-          ))`,
+          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4))`,
     [args.sourceId, args.companyId, args.projectId, args.userId],
   )
   return rows[0]?.external_source_id ?? null

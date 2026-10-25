@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
-import type { KnowledgeCreatedVia, KnowledgeVisibilityScope, ProjectPatch } from './contracts.js'
+import type { KnowledgeCreatedVia, KnowledgeVisibilityScope, MaterialSpace, ProjectPatch } from './contracts.js'
 
 const SOURCE_LIST_SELECT = `source.id,source.kind,source.title,source.mime_type AS "mimeType",
   source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",source.status,source.stage,
   source.error,source.is_truncated AS "isTruncated",source.visibility_scope AS "visibilityScope",
   source.owner_user_id AS "ownerUserId",source.created_by_user_id AS "createdByUserId",
+  (SELECT owner.display_name FROM users owner WHERE owner.id=source.owner_user_id) AS "ownerName",
   source.created_by_user_id AS "createdBy",source.created_via AS "createdVia",
   source.created_at AS "createdAt",source.updated_at AS "updatedAt",
   source.origin_client_msg_no AS "originClientMsgNo",source.external_chunk_count AS "chunkCount"`
@@ -14,13 +15,17 @@ const SOURCE_DETAIL_SELECT = `source.id,source.kind,source.title,source.mime_typ
   source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",source.storage_key AS "storageKey",
   source.status,source.stage,source.error,source.is_truncated AS "isTruncated",
   source.visibility_scope AS "visibilityScope",source.owner_user_id AS "ownerUserId",
+  (SELECT owner.display_name FROM users owner WHERE owner.id=source.owner_user_id) AS "ownerName",
   source.created_by_user_id AS "createdByUserId",source.created_by_user_id AS "createdBy",
   source.created_via AS "createdVia",source.created_at AS "createdAt",source.updated_at AS "updatedAt"`
 
 export interface KnowledgeSourceRow extends Record<string, unknown> {
   id: string
   kind: string
+  title: string
+  mimeType: string | null
   status: string
+  stage: string
   storageKey: string | null
   createdBy: string
   createdByUserId: string
@@ -91,14 +96,15 @@ export async function updateProject(
   return (result.rowCount ?? 0) > 0
 }
 
-export async function listSources(db: Queryable, companyId: string, projectId: string, userId: string) {
-  const { rows } = await db.query(
+export async function listSources(db: Queryable, companyId: string, projectId: string, userId: string, space?: MaterialSpace) {
+  const { rows } = await db.query<KnowledgeSourceRow>(
     `SELECT ${SOURCE_LIST_SELECT} FROM knowledge_sources source
       WHERE source.company_id=$1 AND source.project_id=$2 AND source.deleted_at IS NULL
         AND (source.visibility_scope='PROJECT'
           OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$3))
+        AND ($4::text IS NULL OR source.visibility_scope=$4)
       ORDER BY source.created_at DESC`,
-    [companyId, projectId, userId],
+    [companyId, projectId, userId, space ? (space === 'public' ? 'PROJECT' : 'PRIVATE') : null],
   )
   return rows
 }
@@ -107,7 +113,7 @@ export async function listConversationSources(
   db: Queryable,
   args: { companyId: string; projectId: string; userId: string; conversationId: string },
 ) {
-  const { rows } = await db.query(
+  const { rows } = await db.query<KnowledgeSourceRow>(
     `SELECT ${SOURCE_LIST_SELECT},(exclusion.source_id IS NULL) AS enabled
        FROM knowledge_sources source
        LEFT JOIN conversation_source_exclusions exclusion
@@ -182,6 +188,17 @@ export async function enqueueSourceJob(db: Queryable, args: {
   if ((inserted.rowCount ?? 0) === 0) throw new Error('source not found')
   await db.query(
     `UPDATE knowledge_sources SET status='queued',stage='queued',error=NULL,updated_at=NOW()
+      WHERE id=$1 AND company_id=$2 AND project_id=$3 AND deleted_at IS NULL
+        AND (visibility_scope='PROJECT' OR (visibility_scope='PRIVATE' AND owner_user_id=$4))`,
+    [args.sourceId, args.companyId, args.projectId, args.userId],
+  )
+}
+
+export async function markSourceStored(db: Queryable, args: {
+  sourceId: string; companyId: string; projectId: string; userId: string
+}): Promise<void> {
+  await db.query(
+    `UPDATE knowledge_sources SET status='stored',stage='stored_only',error=NULL,updated_at=NOW()
       WHERE id=$1 AND company_id=$2 AND project_id=$3 AND deleted_at IS NULL
         AND (visibility_scope='PROJECT' OR (visibility_scope='PRIVATE' AND owner_user_id=$4))`,
     [args.sourceId, args.companyId, args.projectId, args.userId],

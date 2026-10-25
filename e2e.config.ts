@@ -37,7 +37,7 @@ export default {
       }),
     },
   }],
-  credentials: Object.fromEntries(['member', 'admin', 'student', 'manager'].map((name) => [name, {
+  credentials: Object.fromEntries(['member', 'admin', 'student', 'student2', 'manager'].map((name) => [name, {
     username: process.env[`E2E_USER_${name.toUpperCase()}_USERNAME`] ?? '',
     password: () => process.env[`E2E_USER_${name.toUpperCase()}_PASSWORD`] ?? '',
   }])),

@@ -63,11 +63,15 @@ knowledgeRouter.post('/projects/:id/open', safe(async (req, res) => {
 
 knowledgeRouter.get('/projects/:id/sources', safe(async (req, res) => {
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
+  if (req.query.space !== undefined) {
+    if (req.query.space !== 'public' && req.query.space !== 'private') throw new HttpError(400, 'invalid material space')
+    res.json(await knowledgeApplication.materials(workspace, req.query.space))
+    return
+  }
   res.json(await knowledgeApplication.sources(workspace))
 }))
 
 knowledgeRouter.get('/projects/:id/sources/:sourceId', safe(async (req, res) => {
-  requireKnowledge()
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
   try { res.json(await knowledgeApplication.source(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
@@ -82,7 +86,6 @@ knowledgeRouter.post('/projects/:id/sources', safe(async (req, res) => {
 }))
 
 knowledgeRouter.post('/projects/:id/sources/upload/presign', safe(async (req, res) => {
-  requireKnowledge()
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
   const input = parse(presignSourceRequestSchema.safeParse(req.body ?? {}))
   try { res.status(201).json(await knowledgeApplication.presignSource(workspace, null, input)) }
@@ -90,7 +93,6 @@ knowledgeRouter.post('/projects/:id/sources/upload/presign', safe(async (req, re
 }))
 
 knowledgeRouter.post('/projects/:id/sources/:sourceId/complete-upload', safe(async (req, res) => {
-  requireKnowledge()
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
   try { res.json(await knowledgeApplication.completeUpload(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
@@ -111,7 +113,6 @@ knowledgeRouter.post('/projects/:id/sources/:sourceId/retry', safe(async (req, r
 }))
 
 knowledgeRouter.patch('/projects/:id/sources/:sourceId', safe(async (req, res) => {
-  requireKnowledge()
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
   const input = parse(updateSourceRequestSchema.safeParse(req.body ?? {}))
   try { res.json(await knowledgeApplication.editSource(workspace, String(req.params.sourceId), input)) }
@@ -119,7 +120,6 @@ knowledgeRouter.patch('/projects/:id/sources/:sourceId', safe(async (req, res) =
 }))
 
 knowledgeRouter.delete('/projects/:id/sources/:sourceId', safe(async (req, res) => {
-  requireKnowledge()
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:write')
   await permissionService.assertCan({
     actorUserId: workspace.userId,
@@ -149,7 +149,6 @@ knowledgeRouter.get('/conversations/:id/sources', safe(async (req, res) => {
 }))
 
 knowledgeRouter.get('/conversations/:id/sources/:sourceId', safe(async (req, res) => {
-  requireKnowledge()
   const scope = await conversationScope(req, String(req.params.id))
   try { res.json(await knowledgeApplication.source(scope, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
@@ -171,7 +170,6 @@ knowledgeRouter.post('/conversations/:id/sources', safe(async (req, res) => {
 }))
 
 knowledgeRouter.post('/conversations/:id/sources/upload/presign', safe(async (req, res) => {
-  requireKnowledge()
   const conversationId = String(req.params.id)
   const scope = await conversationScope(req, conversationId, 'conversation:write')
   await permissionService.assertCan({ actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId })
@@ -181,7 +179,6 @@ knowledgeRouter.post('/conversations/:id/sources/upload/presign', safe(async (re
 }))
 
 knowledgeRouter.post('/conversations/:id/sources/:sourceId/complete-upload', safe(async (req, res) => {
-  requireKnowledge()
   const scope = await conversationScope(req, String(req.params.id), 'conversation:write')
   await permissionService.assertCan({ actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId })
   try { res.json(await knowledgeApplication.completeUpload(scope, String(req.params.sourceId))) }
@@ -200,7 +197,6 @@ knowledgeRouter.post('/conversations/:id/sources/:sourceId/retry', safe(async (r
 }))
 
 knowledgeRouter.delete('/conversations/:id/sources/:sourceId', safe(async (req, res) => {
-  requireKnowledge()
   const scope = await conversationScope(req, String(req.params.id), 'conversation:write')
   await permissionService.assertCan({
     actorUserId: scope.userId, action: 'knowledge:manage', companyId: scope.companyId, projectId: scope.projectId,

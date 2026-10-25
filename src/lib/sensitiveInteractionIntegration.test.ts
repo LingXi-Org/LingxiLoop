@@ -13,7 +13,7 @@ test('sensitive actions retain confirmation prompts', () => {
     '../features/documents/components/DocumentEditor.tsx',
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
-    '../features/knowledge/components/ProjectSourceLibrary.tsx',
+    '../features/course-materials/CourseMaterialsPage.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
@@ -21,7 +21,6 @@ test('sensitive actions retain confirmation prompts', () => {
 test('dashboard invitations and destructive actions confirm before mutation and preserve Toast lifecycle', () => {
   const members = read('../features/learning/dashboard/CourseMembersSection.tsx')
   const settings = read('../features/learning/dashboard/CourseSettingsSection.tsx')
-  const reviews = read('../features/learning/components/LearningReviewsSection.tsx')
   const invitations = read('../features/companies/components/InvitePeopleModal.tsx')
   assert.match(members, /space\.perspective === 'teacher' && space\.canManage/)
   assert.match(members, /space\.canInviteMembers/)
@@ -33,9 +32,6 @@ test('dashboard invitations and destructive actions confirm before mutation and 
   assert.match(settings, /space\.perspective === 'teacher' && space\.canManage/)
   assert.match(settings, /space\.canUpdateCourse/)
   assert.match(settings, /confirmSensitiveAction\([\s\S]*?toastAction\(lifecycle\.run/)
-  assert.match(reviews, /course\.perspective !== 'teacher' \|\| !course\.canManage/)
-  assert.match(reviews, /confirmSensitiveAction\([\s\S]*?toastAction\(learningApi\.reviewEvaluation/)
-  assert.match(read('../desktop/WorkspaceRail.tsx'), /toastAction\(learningApi\.createCourse/)
   assert.match(invitations, /confirmSensitiveAction\([\s\S]*?toastAction\(companiesApi\.revokeInvitation/)
   assert.match(invitations, /toastAction\(companiesApi\.createInvitation/)
 

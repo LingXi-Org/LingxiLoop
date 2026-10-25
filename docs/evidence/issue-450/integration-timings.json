@@ -1,0 +1,22 @@
+{
+  "mode": "selected",
+  "availableFiles": 123,
+  "selectedFiles": [
+    "knowledge-vertical-slice.test.ts"
+  ],
+  "executedFiles": [
+    "knowledge-vertical-slice.test.ts"
+  ],
+  "records": [
+    {
+      "files": [
+        "knowledge-vertical-slice.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 11648,
+      "exitCode": 0
+    }
+  ],
+  "durationMs": 11648,
+  "exitCode": 0
+}

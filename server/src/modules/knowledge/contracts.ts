@@ -25,6 +25,9 @@ export const presignSourceRequestSchema = z.object({
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'text/plain', 'text/markdown', 'text/csv', 'application/json',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/jpeg', 'image/png', 'application/zip',
   ]),
   size: z.coerce.number().int().positive(),
 }).strict()
@@ -66,6 +69,7 @@ export type PresignSourceInput = z.infer<typeof presignSourceRequestSchema>
 export type UpdateSourceInput = z.infer<typeof updateSourceRequestSchema>
 export type KnowledgeVisibilityScope = 'PRIVATE' | 'PROJECT'
 export type KnowledgeCreatedVia = 'USER' | 'AGENT'
+export type MaterialSpace = 'public' | 'private'
 
 export interface KnowledgeScope {
   userId: string

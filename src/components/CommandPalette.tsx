@@ -23,6 +23,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
       { id: 'find-chat', label: '搜索当前对话', keywords: '查找 当前 对话', shortcut: '⌘ F', run: () => dispatch('find-chat') },
       { id: 'focus-composer', label: '聚焦消息输入框', keywords: '输入 消息', run: () => dispatch('focus-composer') },
       { id: 'forum', label: '打开学习论坛', keywords: '学习 作业 讨论', run: () => useApp.getState().setView('forum') },
+      { id: 'course-materials', label: '打开课程资料', keywords: '课程 资料 文件', run: () => useApp.getState().setView('course-materials') },
       { id: 'theme', label: '切换浅色 / 深色模式', keywords: '主题 浅色 深色', run: toggleTheme },
       ...conversations.slice(0, 8).map((conversation, index) => ({
         id: `conversation-${conversation.id}`,

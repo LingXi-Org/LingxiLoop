@@ -1,9 +1,11 @@
 import { createHash, } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
-import { createPermissionService, knowledgeSourceVisibilityScope } from '../access/public.js'
+import { createPermissionService, knowledgeSourceCapabilities, knowledgeSourceVisibilityScope } from '../access/public.js'
+import { KNOWLEDGE_ATTACHMENT_MIMES, SOURCE_FILE_EXTENSIONS, sourceFileSignatureMatches } from './policy.js'
 import type {
   CreateSourceInput,
   KnowledgeScope,
+  MaterialSpace,
   PresignSourceInput,
   ProjectPatch,
   UpdateSourceInput,
@@ -15,6 +17,7 @@ import {
   listConversationSources,
   listProjects,
   listSources,
+  markSourceStored,
   moveConversation,
   replaceSourceExclusions,
   updateProject,
@@ -26,6 +29,7 @@ export type KnowledgeErrorCode =
   | 'forbidden'
   | 'too_large'
   | 'upload_size_mismatch'
+  | 'invalid_upload'
   | 'workspace_read_only'
   | 'unavailable'
 
@@ -46,17 +50,9 @@ export interface KnowledgeInfrastructure {
   putObject(key: string, body: Buffer, contentType: string): Promise<void>
   presignPut(key: string, contentType: string, contentLength: number): Promise<{ uploadUrl: string }>
   statObject(key: string): Promise<{ sizeBytes: number; contentType: string | null }>
+  readObjectBounded(key: string, maxBytes: number): Promise<Buffer>
   publicUrl(key: string): Promise<string>
   maxSourceBytes: number
-}
-
-const EXTENSIONS: Record<PresignSourceInput['mime'], string> = {
-  'application/pdf': 'pdf',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
-  'text/plain': 'txt',
-  'text/markdown': 'md',
-  'text/csv': 'csv',
-  'application/json': 'json',
 }
 
 function normalizedContentType(value: string | null | undefined): string | null {
@@ -112,34 +108,51 @@ export class KnowledgeApplication {
   }
 
   async sources(scope: KnowledgeScope) {
-    await createPermissionService(this.db).assertCan({
+    const context = await createPermissionService(this.db).assertCan({
       actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
     })
-    return listSources(this.db, scope.companyId, scope.projectId, scope.userId)
+    const sources = await listSources(this.db, scope.companyId, scope.projectId, scope.userId)
+    return sources.map(source => ({ ...source, capabilities: knowledgeSourceCapabilities(context, source) }))
+  }
+
+  async materials(scope: KnowledgeScope, space: MaterialSpace) {
+    const permissions = createPermissionService(this.db)
+    const context = await permissions.assertCan({
+      actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
+    })
+    const write = await permissions.can({
+      actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId,
+    })
+    const role = context.projectMembership?.role
+    const canUpload = write.allowed && (space === 'public' ? role === 'TEACHER' : role === 'STUDENT')
+    const sources = await listSources(this.db, scope.companyId, scope.projectId, scope.userId, space)
+    return { space, capabilities: { canUpload },
+      sources: sources.map(source => ({ ...source, capabilities: knowledgeSourceCapabilities(context, source) })) }
   }
 
   async conversationSources(scope: KnowledgeScope, conversationId: string) {
-    await createPermissionService(this.db).assertCan({
+    const context = await createPermissionService(this.db).assertCan({
       actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
       resource: { type: 'conversation', id: conversationId },
     })
-    return listConversationSources(this.db, { ...scope, conversationId })
+    const sources = await listConversationSources(this.db, { ...scope, conversationId })
+    return sources.map(source => ({ ...source, capabilities: knowledgeSourceCapabilities(context, source) }))
   }
 
   async source(scope: KnowledgeScope, sourceId: string) {
-    await createPermissionService(this.db).assertCan({
+    const context = await createPermissionService(this.db).assertCan({
       actorUserId: scope.userId, action: 'knowledge:read', companyId: scope.companyId, projectId: scope.projectId,
     })
     const source = await findSource(this.db, scope.companyId, scope.projectId, scope.userId, sourceId)
     if (!source) throw new KnowledgeApplicationError('not_found', 'source not found')
     const { storageKey, ...payload } = source
-    const extractedText = source.status === 'ready'
-      ? await this.infrastructure.sourceText(sourceId, scope.companyId, scope.projectId, scope.userId)
+    const extractedText = source.status === 'ready' && this.infrastructure.notebookEnabled()
+      ? await this.infrastructure.sourceText(sourceId, scope.companyId, scope.projectId, scope.userId).catch(() => null)
       : null
-    const originalFileUrl = source.kind === 'file' && storageKey
+    const originalFileUrl = source.kind === 'file' && source.status !== 'upload_pending' && storageKey
       ? await this.infrastructure.publicUrl(storageKey)
       : null
-    return { ...payload, extractedText, originalFileUrl }
+    return { ...payload, extractedText, originalFileUrl, capabilities: knowledgeSourceCapabilities(context, source) }
   }
 
   async createSource(scope: KnowledgeScope, conversationId: string | null, input: CreateSourceInput) {
@@ -176,21 +189,26 @@ export class KnowledgeApplication {
     await createPermissionService(this.db).assertCan({
       actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId,
     })
-    if (input.size > this.infrastructure.maxSourceBytes) {
+    if (input.size <= 0 || input.size > this.infrastructure.maxSourceBytes) {
       throw new KnowledgeApplicationError('too_large', 'file size is outside the 200 MB limit')
     }
     const id = `ks-${createHash('sha256').update(`${scope.companyId}:${scope.projectId}:${scope.userId}:${input.idempotencyKey}`).digest('hex').slice(0, 16)}`
     const replay = await findSource(this.db, scope.companyId, scope.projectId, scope.userId, id)
     if (replay?.storageKey) {
+      if (replay.ownerUserId !== scope.userId || replay.status !== 'upload_pending'
+        || replay.mimeType !== input.mime || replay.sizeBytes !== input.size || replay.title !== input.name) {
+        throw new KnowledgeApplicationError('invalid_upload', 'upload key was already used; start a new upload')
+      }
       const signed = await this.infrastructure.presignPut(replay.storageKey, input.mime, input.size)
       return { id, uploadUrl: signed.uploadUrl, mime: input.mime, size: input.size }
     }
-    const key = `knowledge-sources/${scope.companyId}/${scope.projectId}/${id}.${EXTENSIONS[input.mime]}`
+    const key = `knowledge-sources/${scope.companyId}/${scope.projectId}/${id}.${SOURCE_FILE_EXTENSIONS[input.mime]}`
     const signed = await this.infrastructure.presignPut(key, input.mime, input.size)
     await this.infrastructure.transaction(async (db) => {
       const access = await createPermissionService(db, { lockDependencies: true }).assertCan({
         actorUserId: scope.userId, action: 'knowledge:write', companyId: scope.companyId, projectId: scope.projectId,
       })
+      if (!access.projectMembership) throw new KnowledgeApplicationError('forbidden', 'course membership is required to upload files')
       await insertSource(db, {
         id, ...scope, conversationId, kind: 'file', title: input.name, mime: input.mime,
         size: input.size, storageKey: key, originalUrl: null, status: 'upload_pending',
@@ -206,9 +224,10 @@ export class KnowledgeApplication {
       resource: { type: 'knowledge_source', id: sourceId },
     })
     const source = await findSource(this.db, scope.companyId, scope.projectId, scope.userId, sourceId)
-    if (!source || source.status !== 'upload_pending' || !source.storageKey) {
+    if (!source || !source.storageKey || source.kind !== 'file') {
       throw new KnowledgeApplicationError('not_found', 'pending source upload not found')
     }
+    if (source.status !== 'upload_pending') return { ok: true as const, id: sourceId, status: source.status }
     const metadata = await this.infrastructure.statObject(source.storageKey)
     const declaredContentType = typeof source.mimeType === 'string' ? source.mimeType : null
     if (metadata.sizeBytes !== source.sizeBytes
@@ -216,18 +235,26 @@ export class KnowledgeApplication {
       || normalizedContentType(metadata.contentType) !== normalizedContentType(declaredContentType)) {
       throw new KnowledgeApplicationError('upload_size_mismatch', 'uploaded object metadata does not match the declaration')
     }
-    await this.infrastructure.transaction(async (db) => {
+    const bytes = await this.infrastructure.readObjectBounded(source.storageKey, this.infrastructure.maxSourceBytes)
+    if (bytes.byteLength !== source.sizeBytes || !sourceFileSignatureMatches(declaredContentType ?? '', bytes)) {
+      throw new KnowledgeApplicationError('invalid_upload', 'uploaded file content does not match its declared format or size')
+    }
+    const canIndex = this.infrastructure.notebookEnabled() && KNOWLEDGE_ATTACHMENT_MIMES.has(declaredContentType ?? '')
+    const status = await this.infrastructure.transaction(async (db) => {
       await createPermissionService(db, { lockDependencies: true }).assertCan({
         actorUserId: scope.userId, action: 'knowledge:manage', companyId: scope.companyId, projectId: scope.projectId,
         resource: { type: 'knowledge_source', id: sourceId },
       })
       const pending = await findSource(db, scope.companyId, scope.projectId, scope.userId, sourceId)
-      if (!pending || pending.status !== 'upload_pending' || !pending.storageKey) {
+      if (!pending || !pending.storageKey) {
         throw new KnowledgeApplicationError('not_found', 'pending source upload not found')
       }
-      await enqueueSourceJob(db, { sourceId, ...scope })
+      if (pending.status !== 'upload_pending') return pending.status
+      if (canIndex) await enqueueSourceJob(db, { sourceId, ...scope })
+      else await markSourceStored(db, { sourceId, ...scope })
+      return canIndex ? 'queued' : 'stored'
     })
-    return { ok: true as const, id: sourceId, status: 'queued' as const }
+    return { ok: true as const, id: sourceId, status }
   }
 
   async editSource(scope: KnowledgeScope, sourceId: string, input: UpdateSourceInput) {
@@ -250,6 +277,10 @@ export class KnowledgeApplication {
     })
     const source = await findSource(this.db, scope.companyId, scope.projectId, scope.userId, sourceId)
     if (!source) throw new KnowledgeApplicationError('not_found', 'source not found')
+    if (source.kind === 'file' && !KNOWLEDGE_ATTACHMENT_MIMES.has(String(source.mimeType))) {
+      throw new KnowledgeApplicationError('invalid_upload', 'this format only supports original-file storage')
+    }
+    this.assertAvailable()
     await this.infrastructure.retrySource(sourceId, scope.companyId, scope.projectId, scope.userId)
     return { ok: true as const }
   }
