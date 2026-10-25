@@ -1,7 +1,7 @@
 # Notebook Supervisor reuse (#440)
 
 Baseline: `9e3bfd892fa53f22dddbc00e98f466c21ce01b7d` (2026-10-25).
-Implementation: `6b19ab0f`. No production operation, registry push or issue closure.
+Implementation: `7024462a` (integrated commit). No production operation, registry push or issue closure.
 
 ## Consumer evidence and change
 
