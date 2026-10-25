@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'workers/release/**'
+      - 'workers/web-static/**'
       - 'shared/release/**'
       - 'scripts/release/**'
       - 'scripts/release-host/**'
@@ -14,6 +15,7 @@ on:
     branches: [main]
     paths:
       - 'workers/release/**'
+      - 'workers/web-static/**'
       - 'shared/release/**'
       - 'scripts/release/**'
       - 'scripts/release-host/**'
@@ -42,6 +44,8 @@ jobs:
           node server/scripts/install-scoped-dependencies.mjs admin-control
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - name: Verify static routing against the locked real Assets engine
+        run: node --test workers/web-static/src/*.test.mjs
       - run: npx --no-install tsc -p workers/release/tsconfig.json --noEmit
       - run: npx --no-install vitest run --config workers/release/vitest.config.ts
       - name: Prepare isolated PostgreSQL fixture
