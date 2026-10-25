@@ -20,8 +20,13 @@ export function buildInstallCommand({opsSha,bundleSha256,bundleBase64}) {
 export const buildPublicKeyCommand=()=>runtime('publicKey')
 export function buildInventoryCommand(){return `python3 -c ${quote(readFileSync(new URL('./inventory.py',import.meta.url),'utf8'))}`}
 export function buildRuntimeMetadataCommand(){return `python3 -c ${quote(readFileSync(new URL('./runtime-metadata.py',import.meta.url),'utf8'))}`}
+export function buildProfileFactsCommand(side){
+ check(['a','b'].includes(side))
+ const source=readFileSync(new URL('./profile-facts.mjs',import.meta.url),'utf8')+`\nconsole.log(JSON.stringify(await collectProfileFacts('${side}')))`
+ return `${NODE} --input-type=module -e ${quote(source)}`
+}
 export function buildTunnelCommand(data){
- check(data&&Object.keys(data).sort().join(',')==='action,host,origin,remoteConfigSha256,tunnelId'&&['query','install','start','enable'].includes(data.action)&&['a','b'].includes(data.host)&&data.origin==='http://127.0.0.1:17951'&&/^[a-f0-9-]{36}$/.test(data.tunnelId)&&/^[a-f0-9]{64}$/.test(data.remoteConfigSha256))
+ check(data&&Object.keys(data).filter(k=>k!=='downloadSource').sort().join(',')==='action,host,origin,remoteConfigSha256,tunnelId'&&(data.downloadSource===undefined||['github','release-api'].includes(data.downloadSource))&&['query','install','start','enable','abort-download'].includes(data.action)&&['a','b'].includes(data.host)&&data.origin==='http://127.0.0.1:17951'&&/^[a-f0-9-]{36}$/.test(data.tunnelId)&&/^[a-f0-9]{64}$/.test(data.remoteConfigSha256))
  return `python3 -c ${quote(readFileSync(new URL('./tunnel.py',import.meta.url),'utf8'))} ${quote(JSON.stringify(data))}`
 }
 export function buildBackendRouteCommand(data){

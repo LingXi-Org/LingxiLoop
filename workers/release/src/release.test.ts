@@ -141,11 +141,17 @@ it('keeps submission, recovery and executor credentials in separate API roles', 
     const response = await request(`/v1/releases/${m.releaseId}/${action}`, 'submission-only')
     expect(response.status).toBe(403)
     expect(await response.json()).toMatchObject({ error: 'ADMIN_REQUIRED' })
+    expect((await request(`/v1/releases/not-yet-registered/${action}`, 'submission-only')).status).toBe(403)
   }
   expect((await request('/v1/bootstrap', 'submission-only')).status).toBe(403)
   expect((await request(`/v1/releases/${m.releaseId}/backups/main-runtime-a`, 'submission-only', 'GET')).status).toBe(401)
   expect((await request('/v1/accepted', 'executor-only', 'GET')).status).toBe(401)
   expect((await request('/v1/accepted', 'submission-only', 'GET')).status).toBe(200)
+  for (const artifact of ['/v1/bootstrap/cloudflared/2026.10.3/linux-amd64', '/v1/bootstrap/mihomo/v1.19.33/linux-amd64-compatible.gz']) {
+  expect((await request(artifact, 'submission-only', 'GET')).status).toBe(401)
+  expect((await request(artifact, 'submission-only', 'PUT')).status).toBe(403)
+  expect((await request(artifact, 'executor-only', 'PUT')).status).toBe(403)
+  }
   expect((await call(`/get?id=${m.releaseId}`)).body).toMatchObject({ workflowId: `${m.releaseId}-0`, generation: 0, status: 'queued' })
 })
 it('never commits an outbox intent if its durable alarm could not be armed', async () => {

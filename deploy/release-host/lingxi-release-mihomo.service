@@ -9,7 +9,8 @@ User=lingxi-release-proxy
 Group=lingxi-release-proxy
 UMask=0077
 # Install a verified official binary separately; do not bootstrap through a Docker image.
-ExecStart=/usr/local/bin/mihomo -d /var/lib/lingxi-release-proxy -f /etc/lingxi-release/mihomo.yml
+ExecStart=/usr/local/bin/mihomo -d /var/lib/lingxi-release-proxy -f %d/config.yaml
+LoadCredential=config.yaml:/etc/lingxi-release/mihomo.yml
 LoadCredential=provider.yaml:/etc/lingxi-release/secrets/mihomo-provider.yaml
 StateDirectory=lingxi-release-proxy
 Restart=on-failure

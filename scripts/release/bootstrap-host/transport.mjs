@@ -1,17 +1,20 @@
-import { buildInstallCommand, buildInstallQueryCommand, buildPublicKeyCommand, buildCredentialCommand, buildCredentialQueryCommand, buildPolicyCommand, buildInventoryCommand, buildRuntimeMetadataCommand, buildTunnelCommand, buildBackendRouteCommand } from './index.mjs'
+import { buildInstallCommand, buildInstallQueryCommand, buildPublicKeyCommand, buildCredentialCommand, buildCredentialQueryCommand, buildPolicyCommand, buildInventoryCommand, buildRuntimeMetadataCommand, buildTunnelCommand, buildBackendRouteCommand, buildProfileFactsCommand } from './index.mjs'
 
 const servers = { a: 'shanghai-a', b: 'shanghai-b' }
 const builders = { install: buildInstallCommand, 'query-install': buildInstallQueryCommand, 'public-key': buildPublicKeyCommand,
-  credentials: buildCredentialCommand, 'query-credentials': buildCredentialQueryCommand, policy: buildPolicyCommand, inventory: buildInventoryCommand, 'runtime-metadata': buildRuntimeMetadataCommand, tunnel: buildTunnelCommand, 'backend-route': buildBackendRouteCommand }
+  credentials: buildCredentialCommand, 'query-credentials': buildCredentialQueryCommand, policy: buildPolicyCommand, inventory: buildInventoryCommand, 'runtime-metadata': buildRuntimeMetadataCommand, tunnel: buildTunnelCommand, 'backend-route': buildBackendRouteCommand, 'profile-facts': buildProfileFactsCommand }
 const quote = text => `'${text.replaceAll("'", "'\\''")}'`
 // Operator bootstrap only, through the existing administrative transport. The
 // new executor exposes its finite release protocol, never this terminal API.
 export async function executeBootstrap(side, action, input, { fetcher = fetch, timeoutMs = 180000 } = {}) {
   if (!servers[side] || !builders[action]) throw new Error('INVALID_BOOTSTRAP_ACTION')
+  if (action === 'profile-facts' && input !== side) throw new Error('INVALID_BOOTSTRAP_SIDE')
   if (!process.env.KOMODO_API_KEY || !process.env.KOMODO_API_SECRET) throw new Error('EXISTING_OPERATOR_CREDENTIAL_REQUIRED')
   // Different actions have separate terminal streams; a remote kernel lock
   // also serializes their filesystem effects across operator processes.
-  const readTunnel = action === 'tunnel' && input?.action === 'query'
+  // Strict legacy-process cancellation proves its own owner with pidfd and
+  // must not wait for the very download's operator lock that it cancels.
+  const readTunnel = action === 'tunnel' && ['query','abort-download'].includes(input?.action) || action === 'profile-facts'
   const command = readTunnel ? `set +x; umask 077; ${builders[action](input)}` : `set +x; umask 077; mkdir -p -m 0700 /run/lingxi-release-bootstrap-495; /usr/bin/flock --exclusive --timeout 120 /run/lingxi-release-bootstrap-495/operator.lock /bin/bash -c ${quote(builders[action](input))}`
   const stream = ['tunnel','backend-route'].includes(action) ? `${action}-${input.action}` : action
   let response

@@ -1,6 +1,7 @@
 import { assertSource, hash, ReleaseError, requireThat, validateManifest, type Accepted } from '../../../shared/release/protocol'
 import { ledgerCall, type Bootstrap, type ReleaseEnv, type ReleaseRecord } from './types'
 import { handleArchive } from './archive'
+import { BOOTSTRAP_PATHS, handleBootstrapArtifact } from './bootstrap-artifact'
 export { ReleaseLedger } from './ledger'
 export { ReleaseWorkflow } from './workflow'
 
@@ -26,6 +27,10 @@ export default {
       if (url.pathname === '/healthz') return Response.json({ service: 'lingxiloop-release', protocol: 1 })
       const token = request.headers.get('authorization')?.replace(/^Bearer /, '') ?? ''
       const admin = await matches(env.RELEASE_ADMIN_TOKEN, token)
+      if (BOOTSTRAP_PATHS.includes(url.pathname)) {
+        requireThat(request.method === 'PUT' ? admin : admin || await matches(env.EXECUTOR_TOKEN, token), request.method === 'PUT' ? 'ADMIN_REQUIRED' : 'UNAUTHORIZED', request.method === 'PUT' ? 403 : 401)
+        return await handleBootstrapArtifact(request, env)
+      }
       const archive = /^\/v1\/releases\/([A-Za-z0-9][A-Za-z0-9._-]{0,95})\/backups\/main-runtime-a$/.exec(url.pathname)
       if (archive) {
         requireThat(admin || await matches(env.EXECUTOR_TOKEN, token), 'UNAUTHORIZED', 401)
@@ -56,6 +61,7 @@ export default {
       const match = /^\/v1\/releases\/([A-Za-z0-9][A-Za-z0-9._-]{0,95})(?:\/(events|resume|recover))?$/.exec(url.pathname)
       requireThat(match, 'NOT_FOUND', 404)
       const [, releaseId, action] = match
+      if (request.method === 'POST' && ['resume', 'recover'].includes(action)) requireThat(admin, 'ADMIN_REQUIRED', 403)
       const record = await ledgerCall<ReleaseRecord>(env, `/get?id=${encodeURIComponent(releaseId)}`)
       if (request.method === 'GET' && !action) return Response.json(safeRecord(record), { headers: { 'cache-control': 'no-store' } })
       if (request.method === 'GET' && action === 'events') {

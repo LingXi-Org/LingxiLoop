@@ -1,9 +1,11 @@
 """Fixed, standalone connector bootstrap; public JSON only, never secret arguments."""
-import os, sys, json, pathlib, hashlib, tempfile, subprocess, urllib.request, urllib.parse, base64, re, fcntl, signal, time, stat
+import os, sys, json, pathlib, hashlib, tempfile, subprocess, urllib.request, urllib.parse, base64, re, fcntl, signal, time, stat, select
 from contextlib import contextmanager, nullcontext
 VERSION='2026.10.3'
 BINARY_SHA256='053b80b0a23031a038fdbf3c073f59f82b8f1f152aa67971d7383ffafc0dbab0'
 URL='https://github.com/cloudflare/cloudflared/releases/download/'+VERSION+'/cloudflared-linux-amd64'
+RELEASE_API_URL='https://release.lingxilearn.cn/v1/bootstrap/cloudflared/2026.10.3/linux-amd64'
+EXECUTOR_TOKEN=pathlib.Path('/etc/lingxi-release/secrets/executor-token')
 ROOT=pathlib.Path('/opt/lingxi-release-tunnel')
 UNIT=pathlib.Path('/etc/systemd/system/lingxi-release-tunnel.service')
 TOKEN=pathlib.Path('/etc/lingxi-release/secrets/tunnel-token')
@@ -11,6 +13,7 @@ SERVICE='lingxi-release-tunnel.service'
 ORIGIN='http://127.0.0.1:17951'
 DOWNLOAD_DEADLINE_SECONDS=90
 INSTALL_DEADLINE_SECONDS=120
+LEGACY_SOURCE_SHA256='ed4018503c7581a7a16d7b106d10d374b8e73038825222a9a3e25b19dd5d936e'
 @contextmanager
 def wall_deadline(seconds):
     # A socket timeout is per blocking operation; SIGALRM bounds all redirects,
@@ -48,13 +51,24 @@ def atomic(path,data,exclusive=False):
         if os.path.exists(tmp): os.unlink(tmp)
 def record(path,value): atomic(path,json.dumps(value,sort_keys=True).encode(),exclusive=True)
 def readjson(path): return json.loads(regular(path))
-def _download(path):
+def _download(path,source='github',credential=EXECUTOR_TOKEN):
+    check(source in ('github','release-api'),'TUNNEL_DOWNLOAD_SOURCE_REJECTED')
     class RestrictedRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self,req,fp,code,msg,headers,url):
             parsed=urllib.parse.urlparse(url)
             check(parsed.scheme=='https' and parsed.hostname in ('github.com','release-assets.githubusercontent.com','objects.githubusercontent.com','github-releases.githubusercontent.com') and not parsed.username and not parsed.password,'TUNNEL_DOWNLOAD_ORIGIN_REJECTED')
             return super().redirect_request(req,fp,code,msg,headers,url)
-    with urllib.request.build_opener(RestrictedRedirect).open(URL,timeout=60) as response, open(path,'xb') as out:
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self,*args,**kwargs): raise RuntimeError('TUNNEL_RELEASE_API_REDIRECT_REJECTED')
+    if source=='release-api':
+        raw=regular(credential);metadata=credential.stat()
+        check(metadata.st_uid==0 and not metadata.st_mode&0o077,'TUNNEL_PRIVATE_EXECUTOR_TOKEN_REQUIRED')
+        token=raw.strip();check(32<=len(token)<=4096 and not any(byte<=32 or byte>=127 for byte in token),'TUNNEL_EXECUTOR_TOKEN_INVALID')
+        request=urllib.request.Request(RELEASE_API_URL,headers={'Authorization':'Bearer '+token.decode('ascii')})
+        opener=urllib.request.build_opener(NoRedirect)
+    else:
+        request=urllib.request.Request(URL);opener=urllib.request.build_opener(RestrictedRedirect)
+    with opener.open(request,timeout=60) as response, open(path,'xb') as out:
         total=0
         while True:
             chunk=response.read(1024*1024)
@@ -62,8 +76,8 @@ def _download(path):
             total+=len(chunk);check(total<=64*1024*1024,'TUNNEL_DOWNLOAD_TOO_LARGE');out.write(chunk)
         out.flush();os.fsync(out.fileno())
     check(digest(regular(path))==BINARY_SHA256,'TUNNEL_BINARY_HASH_MISMATCH');path.chmod(0o755)
-def download(path):
-    with wall_deadline(DOWNLOAD_DEADLINE_SECONDS): return _download(path)
+def download(path,source='github'):
+    with wall_deadline(DOWNLOAD_DEADLINE_SECONDS): return _download(path,source)
 def installation_progress(root):
     count=0;size=0
     if root.is_dir():
@@ -132,10 +146,60 @@ StandardError=null
 WantedBy=multi-user.target
 '''.replace('BIN',str(root/'current/cloudflared')).encode()
 def validate(data):
-    check(set(data)=={'action','host','tunnelId','origin','remoteConfigSha256'},'TUNNEL_INVALID_INPUT')
-    check(data['action'] in ('install','start','enable','query') and data['host'] in ('a','b') and data['origin']==ORIGIN,'TUNNEL_INVALID_INPUT')
+    check(set(data)-{'downloadSource'}=={'action','host','tunnelId','origin','remoteConfigSha256'} and data.get('downloadSource','github') in ('github','release-api'),'TUNNEL_INVALID_INPUT')
+    check(data['action'] in ('install','start','enable','query','abort-download') and data['host'] in ('a','b') and data['origin']==ORIGIN,'TUNNEL_INVALID_INPUT')
     check(re.fullmatch('[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}',data['tunnelId']) and re.fullmatch('[a-f0-9]{64}',data['remoteConfigSha256']),'TUNNEL_INVALID_INPUT')
     return {key:data[key] for key in ('host','tunnelId','origin','remoteConfigSha256')}
+def lock_owner(metadata,proc):
+    owners=[]
+    for line in (proc/'locks').read_text().splitlines():
+        fields=line.split()
+        if len(fields)!=8 or fields[1:4]!=['FLOCK','ADVISORY','WRITE'] or fields[6:]!=['0','EOF']: continue
+        try:
+            major,minor,inode=fields[5].split(':')
+            matches=(int(major,16),int(minor,16),int(inode))==(os.major(metadata.st_dev),os.minor(metadata.st_dev),metadata.st_ino)
+            if matches: owners.append(int(fields[4]))
+        except ValueError: continue
+    check(len(owners)==1 and owners[0]>1 and owners[0]!=os.getpid(),'TUNNEL_ABORT_LOCK_OWNER_UNPROVEN')
+    return owners[0]
+def prove_legacy_process(pid,identity,proc):
+    process=proc/str(pid)
+    statuses=[line.split()[1:] for line in (process/'status').read_text().splitlines() if line.startswith('Uid:')]
+    check(statuses==[['0','0','0','0']],'TUNNEL_ABORT_PROCESS_UID_UNPROVEN')
+    executable=os.readlink(process/'exe')
+    check(pathlib.PurePosixPath(executable).parent in (pathlib.PurePosixPath('/usr/bin'),pathlib.PurePosixPath('/usr/local/bin')) and re.fullmatch(r'python3(?:\.[0-9]+)?',pathlib.PurePosixPath(executable).name),'TUNNEL_ABORT_EXECUTABLE_UNPROVEN')
+    arguments=(process/'cmdline').read_bytes().split(b'\0')
+    check(arguments[-1:]==[b''],'TUNNEL_ABORT_CMDLINE_UNPROVEN');arguments=arguments[:-1]
+    check(len(arguments)==4 and arguments[0] in (b'python3',b'/usr/bin/python3',b'/usr/local/bin/python3') and arguments[1]==b'-c' and digest(arguments[2])==LEGACY_SOURCE_SHA256,'TUNNEL_ABORT_SOURCE_UNPROVEN')
+    try: original=json.loads(arguments[3])
+    except Exception: raise RuntimeError('TUNNEL_ABORT_INPUT_UNPROVEN') from None
+    check(original=={'action':'install',**identity},'TUNNEL_ABORT_INPUT_UNPROVEN')
+def abort_preconditions(root,unit,run):
+    check(not any(present(path) for path in (unit,root/('install-'+VERSION+'.json'),root/('intent-'+VERSION+'.json'),root/'current',root/'versions'/VERSION)),'TUNNEL_ABORT_EFFECTS_ALREADY_PRESENT')
+    state=status(run)
+    check(state['LoadState']=='not-found' and state['ActiveState']=='inactive' and state['MainPID'] in ('','0'),'TUNNEL_ABORT_SERVICE_ALREADY_PRESENT')
+def process_exited(pidfd):
+    poll=select.poll();poll.register(pidfd,select.POLLIN);return bool(poll.poll(3000))
+def abort_download(data,root=ROOT,unit=UNIT,proc=pathlib.Path('/proc'),run=system,pidfd_open=None,send_signal=None,exited=process_exited):
+    identity=validate(data);check(data['action']=='abort-download' and os.geteuid()==0,'TUNNEL_ABORT_ROOT_REQUIRED')
+    opener=pidfd_open or getattr(os,'pidfd_open',None);sender=send_signal or getattr(signal,'pidfd_send_signal',None)
+    check(callable(opener) and callable(sender),'TUNNEL_ABORT_PIDFD_UNAVAILABLE')
+    abort_preconditions(root,unit,run)
+    lockfd=os.open(root/'.lock',os.O_RDONLY|os.O_NOFOLLOW|os.O_CLOEXEC)
+    try:
+        metadata=os.fstat(lockfd);check(stat.S_ISREG(metadata.st_mode),'TUNNEL_ABORT_LOCK_UNPROVEN')
+        pid=lock_owner(metadata,proc);pidfd=opener(pid,0)
+        try:
+            prove_legacy_process(pid,identity,proc)
+            # Repeat all proofs while the pidfd pins the original process. No
+            # numeric-PID signal, process search, service stop or lock acquisition.
+            abort_preconditions(root,unit,run)
+            current=(root/'.lock').lstat();check((current.st_dev,current.st_ino)==(metadata.st_dev,metadata.st_ino) and stat.S_ISREG(current.st_mode),'TUNNEL_ABORT_LOCK_REPLACED')
+            check(lock_owner(metadata,proc)==pid,'TUNNEL_ABORT_OWNER_CHANGED');prove_legacy_process(pid,identity,proc)
+            sender(pidfd,signal.SIGTERM,None,0)
+            return {'action':'abort-download','identity':identity,'pid':pid,'sourceSha256':LEGACY_SOURCE_SHA256,'signalSent':'SIGTERM','processExited':exited(pidfd),'staging':installation_progress(root),'requiresReconciliation':True}
+        finally: os.close(pidfd)
+    finally: os.close(lockfd)
 def token_identity(path,tunnel_id):
     raw=regular(path);check(path.stat().st_uid==0 and not path.stat().st_mode&0o077,'TUNNEL_PRIVATE_TOKEN_REQUIRED')
     # Parse only to bind the existing credential to the exact approved Tunnel.
@@ -164,6 +228,7 @@ def query(data,root=ROOT,unit=UNIT,run=system):
 def _execute(data,root=ROOT,unit=UNIT,token=TOKEN,run=system,fetch=download,hook=lambda phase:None,version_check=None):
     identity=validate(data)
     if data['action']=='query': return query(data,root,unit,run)
+    if data['action']=='abort-download': return abort_download(data,root,unit,run=run)
     check(os.geteuid()==0 and os.uname().machine=='x86_64','TUNNEL_ROOT_X64_REQUIRED')
     binary_directory(root)
     versions=root/'versions';binary_directory(versions)
@@ -208,10 +273,13 @@ def _execute(data,root=ROOT,unit=UNIT,token=TOKEN,run=system,fetch=download,hook
             old_receipt=readjson(root/('install-'+old.name+'.json'));check(old_receipt['identity']==identity and old_receipt['version']==old.name and old_receipt['tokenSha256']==token_hash)
             check(digest(regular(old/'cloudflared'))==old_receipt['binarySha256']);old_unit_hash=old_receipt['unitSha256'];check(digest(regular(unit))==old_unit_hash)
         else: check(not present(unit) and state['LoadState'] in ('not-found',''),'TUNNEL_UNOWNED_UNIT')
-        stage=pathlib.Path(tempfile.mkdtemp(prefix='.stage-',dir=root));fetch(stage/'cloudflared');check(digest(regular(stage/'cloudflared'))==BINARY_SHA256)
+        stage=pathlib.Path(tempfile.mkdtemp(prefix='.stage-',dir=root))
+        if fetch is download: fetch(stage/'cloudflared',data.get('downloadSource','github'))
+        else: fetch(stage/'cloudflared')
+        check(digest(regular(stage/'cloudflared'))==BINARY_SHA256)
         output=version_check(stage/'cloudflared') if version_check else subprocess.check_output([str(stage/'cloudflared'),'--version'],text=True,stderr=subprocess.DEVNULL,timeout=15,env={'PATH':'/usr/bin:/bin'})
         check(re.search(r'cloudflared version '+re.escape(VERSION)+r'(?:\s|$)',output),'TUNNEL_VERSION_MISMATCH')
-        intent={'version':VERSION,'binarySha256':BINARY_SHA256,'unitSha256':digest(unit_text(root)),'identity':identity,'tokenSha256':token_hash,'stage':str(stage),'previousCurrent':old_current,'previousUnitHash':old_unit_hash}
+        intent={'version':VERSION,'binarySha256':BINARY_SHA256,'unitSha256':digest(unit_text(root)),'identity':identity,'tokenSha256':token_hash,'stage':str(stage),'downloadSource':data.get('downloadSource','github'),'previousCurrent':old_current,'previousUnitHash':old_unit_hash}
         stage.chmod(0o755);syncdir(stage);record(intent_path,intent);hook('intent')
     check(intent['unitSha256']==digest(unit_text(root)))
     for candidate in (binary,stage/'cloudflared'):
@@ -229,13 +297,13 @@ def _execute(data,root=ROOT,unit=UNIT,token=TOKEN,run=system,fetch=download,hook
     if pointer!=str(version):
         fd,tmp=tempfile.mkstemp(prefix='.current-',dir=root);os.close(fd);os.unlink(tmp);os.symlink(version,tmp);os.replace(tmp,current);syncdir(root)
     hook('current')
-    receipt={'version':VERSION,'binarySha256':BINARY_SHA256,'unitSha256':intent['unitSha256'],'identity':identity,'tokenSha256':token_hash,'serviceStarted':False}
+    receipt={'version':VERSION,'binarySha256':BINARY_SHA256,'unitSha256':intent['unitSha256'],'identity':identity,'tokenSha256':token_hash,'downloadSource':intent.get('downloadSource','github'),'serviceStarted':False}
     verify_install(receipt,root,unit);record(receipt_path,receipt);return receipt
 def execute(data,root=ROOT,unit=UNIT,token=TOKEN,run=system,fetch=download,hook=lambda phase:None,version_check=None):
     with wall_deadline(INSTALL_DEADLINE_SECONDS) if data.get('action')=='install' else nullcontext():
         return _execute(data,root,unit,token,run,fetch,hook,version_check)
 def main(data):
-    if data.get('action')=='query': return execute(data)
+    if data.get('action') in ('query','abort-download'): return execute(data)
     binary_directory(ROOT)
     with open(ROOT/'.lock','a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB);return execute(data)
