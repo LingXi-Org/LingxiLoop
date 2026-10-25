@@ -74,9 +74,11 @@ export function AssistantMessageActions() {
     setPending('regenerate')
     try {
       const id = `temp-${crypto.randomUUID()}`, text = `@${metadata.senderId} ${regenerateOf ? '请重新生成这条回复。' : '请重试这条消息。'}`
+      const threadRoot = metadata.replyBranches ? metadata.replyBranches.threadRootId : metadata.threadRootId
       const payload = createNativeMessage({ id, role: 'user', content: [{ type: 'text', text }],
         custom: { replyToClientMsgNo: replyTo, mentionedIds: [metadata.senderId],
-          ...(regenerateOf ? { regenerateOfClientMsgNo: regenerateOf } : {}) } })
+          ...(threadRoot ? { threadRootClientMsgNo: threadRoot } : {}),
+          ...(regenerateOf ? { regenerateOfClientMsgNo: regenerateOf } : { retryOfClientMsgNo: replyTo }) } })
       if (!await chatTransport.send(metadata.conversationId, text, null, replyTo, id, payload)) {
         throw new Error('regenerate send failed')
       }

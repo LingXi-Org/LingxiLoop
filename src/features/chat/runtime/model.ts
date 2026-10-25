@@ -75,6 +75,8 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   terminalNotice?: { id: string; text: string }
   runConnection?: 'checking' | 'released' | 'inaccessible' | 'missing' | 'unauthenticated'
   regenerateOfClientMsgNo?: string
+  retryOfClientMsgNo?: string
+  threadRootClientMsgNo?: string
   replyBranches?: { key: string; rootId: string; threadRootId: string | null; ids: string[]; clientIds: string[]; index: number }
   unresolvedActions?: Array<{ actionKey: string; action: string }>
   quotedMessageId: string | null

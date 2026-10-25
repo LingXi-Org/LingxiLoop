@@ -70,6 +70,7 @@ function senderMetadata(envelope: ImEnvelope, context: MessageConversionContext)
 export function convertEnvelope(envelope: ImEnvelope, context: MessageConversionContext): ThreadMessage {
   const message = deserializeMessage(envelope.payload), custom = message.metadata.custom
   const reply = typeof custom.replyToClientMsgNo === 'string' ? custom.replyToClientMsgNo : undefined
+  const threadRoot = typeof custom.threadRootClientMsgNo === 'string' ? custom.threadRootClientMsgNo : reply
   const refs = object(custom.refs)
   const card = message.content.find(part => part.type === 'data' && ['handoff','canvas','learning-mission','poll'].includes(part.name))
   const data = card?.type === 'data' ? object(card.data) : {}
@@ -87,7 +88,7 @@ export function convertEnvelope(envelope: ImEnvelope, context: MessageConversion
     runId: typeof custom.runId === 'string' ? custom.runId : typeof refs.runId === 'string' ? refs.runId : null,
     ...(harness ? { harness, harnessControl: custom.controlPrincipalId === context.meId } : {}),
     quotedMessageId: reply ?? null, quote: quote(custom,reply), reactions: reactions(custom,context.meId),
-    replyCount: finiteNumber(custom.replyCount) ?? 0, threadRootId: reply ?? null,
+    replyCount: finiteNumber(custom.replyCount) ?? 0, threadRootId: threadRoot ?? null,
     groupStart: true, groupEnd: true, continuedFromPrevious: false, continuedToNext: false, clusterChromeAt: null,
   }
   return { ...message, metadata: { ...message.metadata, custom: metadata } } as ThreadMessage

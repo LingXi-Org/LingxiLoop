@@ -1,0 +1,62 @@
+[integration selected] selected 1/124 file(s): agent-quote-model-input.test.ts
+TAP version 13
+# Subtest: first send resolves the complete old committed quote at actual model input and deduplicates replay
+ok 1 - first send resolves the complete old committed quote at actual model input and deduplicates replay
+  ---
+  duration_ms: 1134.375168
+  type: 'test'
+  ...
+# Subtest: a failed agent retry restores original B and its old A after refreshed history lookup
+ok 2 - a failed agent retry restores original B and its old A after refreshed history lookup
+  ---
+  duration_ms: 725.956001
+  type: 'test'
+  ...
+# Subtest: regenerating a delivered assistant restores sourceRef B and quoted A
+ok 3 - regenerating a delivered assistant restores sourceRef B and quoted A
+  ---
+  duration_ms: 842.280396
+  type: 'test'
+  ...
+# Subtest: ordinary messages retain their own text and current identity
+ok 4 - ordinary messages retain their own text and current identity
+  ---
+  duration_ms: 406.278899
+  type: 'test'
+  ...
+# Subtest: the selected quote stays distinct from thread scope and quoted mentions cannot wake peers
+ok 5 - the selected quote stays distinct from thread scope and quoted mentions cannot wake peers
+  ---
+  duration_ms: 424.972001
+  type: 'test'
+  ...
+# Subtest: missing and cross-channel quote targets cannot add foreign source text
+ok 6 - missing and cross-channel quote targets cannot add foreign source text
+  ---
+  duration_ms: 816.459458
+  type: 'test'
+  ...
+# Subtest: old quoted attachment content reaches the model through the committed quote
+ok 7 - old quoted attachment content reaches the model through the committed quote
+  ---
+  duration_ms: 841.235391
+  type: 'test'
+  ...
+# Subtest: an unavailable quoted attachment retains status without exposing its bytes
+ok 8 - an unavailable quoted attachment retains status without exposing its bytes
+  ---
+  duration_ms: 404.299613
+  type: 'test'
+  ...
+# {"ts":"2026-10-25T05:19:54.951Z","level":"info","msg":"worker stopped","workerId":"quote-input-fixture","timedOut":false}
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8357.451563
+[integration file] agent-quote-model-input.test.ts duration_ms=8390 exit=0
+[integration result] mode=selected files=1 duration_ms=8391 exit=0

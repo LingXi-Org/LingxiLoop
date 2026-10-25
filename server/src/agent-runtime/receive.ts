@@ -10,6 +10,7 @@ import { parseMentions } from '../mentions.js'
 import { attachmentRefId, readRequestAttachments, selectRequestAttachments, unavailableAttachmentIds } from './attachments.js'
 import { assertInteractionAdmission } from '../im/interaction-admission.js'
 import { assertQuestionnaireContinuation, recordQuestionnaireContinuation } from '../im/questionnaires.js'
+import { resolveRequestReferences, requestTextWithReferences } from './request-references.js'
 
 export interface AgentRequest {
   companyId: string; agentId: string; channelId: string; clientMsgNo: string
@@ -41,13 +42,22 @@ export async function receiveAgentRequest(input: AgentRequest) {
   if (!human) throw new Error('request author is not an active human')
   const policy = await syncConversationPolicy(api, input.companyId, input.channelId)
   const custom = message.payload.metadata.custom
-  const threadId = typeof custom.replyToClientMsgNo === 'string' ? custom.replyToClientMsgNo : undefined
+  const quoteId = typeof custom.replyToClientMsgNo === 'string' ? custom.replyToClientMsgNo : undefined
+  const threadId = typeof custom.threadRootClientMsgNo === 'string' ? custom.threadRootClientMsgNo : quoteId
+  const references = await resolveRequestReferences(message,
+    messageIds => readAgentChannelMessages({ ...input, messageIds, signal }), async assistant => {
+      const runId = assistant.payload.metadata.custom.runId
+      if (typeof runId !== 'string') return undefined
+      const row = (await pool.query<{ source_client_msg_no: string | null }>(`SELECT source_client_msg_no FROM agent_run_bindings
+        WHERE run_id=$1 AND company_id=$2 AND conversation_id=$3 AND agent_id=$4 AND NOT internal AND message_protocol=2`,
+      [runId, input.companyId, input.channelId, assistant.fromUid])).rows[0]
+      return row?.source_client_msg_no ?? undefined
+    })
   const explicitRefs = [...input.attachmentRefs ?? []]
-  const related = await readAgentChannelMessages({ ...input, messageIds: [...new Set([...explicitRefs.map(ref => ref.clientMsgNo),...threadId ? [threadId] : []])], signal }) ?? []
-  const quoted = related.find(item => item.clientMsgNo === threadId || item.messageId === threadId)
-  if (quoted) explicitRefs.push(...nativeAttachments(quoted.payload).map(file => ({ clientMsgNo: quoted.clientMsgNo, attachmentId: file.id })))
+  for (const referenced of references.messages) explicitRefs.push(...nativeAttachments(referenced.payload)
+    .map(file => ({ clientMsgNo: referenced.clientMsgNo, attachmentId: file.id })))
   const history = await getAgentChannelHistory({ ...input, limit: 80, beforeSequence: message.messageSeq + 1 }) ?? []
-  const allMessages = [...messages!, ...related, ...history]
+  const allMessages = [...messages!, ...references.messages, ...history]
   const attachmentIds = selectRequestAttachments(message, explicitRefs, allMessages)
   const missingIds = attachmentIds.filter(ref => !allMessages.some(item => item.clientMsgNo === ref.clientMsgNo)).map(ref => ref.clientMsgNo)
   if (missingIds.length) allMessages.push(...await readAgentChannelMessages({ ...input, messageIds: missingIds, signal }) ?? [])
@@ -55,8 +65,7 @@ export async function receiveAgentRequest(input: AgentRequest) {
   const unavailable = await unavailableAttachmentIds(pool,input.companyId,input.channelId,attachmentIds,audienceIds)
   const files = await readRequestAttachments(allMessages, attachmentIds.filter(ref => !unavailable.has(attachmentRefId(ref))
     || explicitRefs.some(item => attachmentRefId(item) === attachmentRefId(ref)) || ref.clientMsgNo === input.clientMsgNo), input.companyId, signal, unavailable)
-  const text = nativeText(message.payload).trim() || (nativeAttachments(message.payload).length
-    ? `Use the committed attachments to help with the current conversation.` : undefined)
+  const text = requestTextWithReferences(message, references)
   if (!text) throw new Error('request text is empty')
   const savedContinuation = custom.agentContinuation === undefined ? undefined : agentContinuationSchema.parse(custom.agentContinuation)
   if (savedContinuation && (savedContinuation.agentId !== input.agentId || input.continuation
@@ -79,7 +88,7 @@ export async function receiveAgentRequest(input: AgentRequest) {
   if (threadId) await api.conversations.registerThread({ tenantId: input.companyId, conversationId: input.channelId, threadId, policyVersion: policy.version })
   const members = (await pool.query<{ id: string; name: string; kind: 'human' | 'agent' }>(
     'SELECT id,name,kind FROM participants WHERE company_id=$1 AND id=ANY($2::text[])', [input.companyId,policy.participants.map(member => member.id)])).rows
-  const parsed = custom.visualizeFollowUp || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(text,members)
+  const parsed = custom.visualizeFollowUp || custom.questionnaireReply ? { mentionedIds: [], mentionAll: false } : parseMentions(nativeText(message.payload),members)
   const mentions = parsed.mentionAll
     ? policy.participants.filter(member => member.kind === 'agent').map(member => member.id)
     : custom.visualizeFollowUp && Array.isArray(custom.mentionedIds) ? custom.mentionedIds.map(String) : parsed.mentionedIds

@@ -1,0 +1,20 @@
+# Task-owned synthetic loopback fixtures. Do not load developer/provider secrets.
+export NODE_ENV=test
+export DOTENV_CONFIG_PATH=/dev/null
+export DATABASE_URL=postgresql://postgres:lingxiloop-e2e-local@127.0.0.1:55432/lingxiloop_quote447_test
+export INTEGRATION_DATABASE_URL="$DATABASE_URL"
+export REDIS_URL=redis://127.0.0.1:56379/7
+export OPENAI_API_KEY=quote447-deterministic-fixture
+export OPENAI_BASE_URL=http://127.0.0.1:1/v1
+export OPENAI_MODEL=authoritative-quote-fixture
+export OPENAI_EMBEDDING_MODEL=disabled
+export LINGXILOOP_DISABLE_EMBEDDINGS=1
+export OPEN_NOTEBOOK_ENABLED=false
+export RESEND_API_KEY=
+export ALERT_WEBHOOK_URL=
+export WUKONG_USER_TOKEN_SECRET=quote447-isolated-user-token
+export LINGXILOOP_GATEWAY_HMAC_SECRET=quote447-isolated-gateway
+export LINGXILOOP_INVITE_BASE_URL=http://127.0.0.1:5180
+export AGENT_OS_INPUT_COST_MICROS_PER_MILLION=1
+export AGENT_OS_OUTPUT_COST_MICROS_PER_MILLION=1
+export INTEGRATION_REPORT_PATH="$PWD/artifacts/issue-447/integration-timings.json"

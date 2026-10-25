@@ -12,7 +12,7 @@ export function uploadedAttachment(upload: ApiAttachment & { key?: string }): Na
 
 /** One composer submission is one message; browser Files never enter persistence. */
 export function attachmentMessage(attachments: readonly CompleteAttachment[], body: string, replyToClientMsgNo: string | null,
-  mentions: { mentionedIds: string[]; mentionAll: boolean }) {
+  mentions: { mentionedIds: string[]; mentionAll: boolean; threadRootClientMsgNo?: string }) {
   if (attachments.length > 20) throw new Error('一次最多发送 20 个附件')
   return createNativeMessage({ id: `temp-${crypto.randomUUID()}`, role: 'user', content: body ? [{ type: 'text', text: body }] : [],
     attachments: attachments.map(({ file: _file, ...attachment }) => nativeAttachmentSchema.parse(attachment)),

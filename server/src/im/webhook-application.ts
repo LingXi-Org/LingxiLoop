@@ -158,7 +158,8 @@ export class WukongWebhookApplication {
           companyId: binding.company_id, projectId: conversation.projectId, conversationId: input.channelId,
           clientMsgNo: input.clientMsgNo, attachmentId: attachment.id, createdBy: input.fromUid, title: metadata.name,
           mime: metadata.mime, size: metadata.size, storageKey: metadata.key,
-          ...(typeof custom.replyToClientMsgNo === 'string' ? { threadRootClientMsgNo: custom.replyToClientMsgNo } : {}), recipients: [],
+          ...(typeof (custom.threadRootClientMsgNo ?? custom.replyToClientMsgNo) === 'string'
+            ? { threadRootClientMsgNo: String(custom.threadRootClientMsgNo ?? custom.replyToClientMsgNo) } : {}), recipients: [],
         })
         knowledgeSourceIds.push(ingestion.sourceId)
       }

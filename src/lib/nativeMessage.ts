@@ -105,13 +105,17 @@ const bounded = z.unknown().superRefine((value, ctx) => {
   }
 })
 export const nativeMessageSchema = bounded.pipe(message) as z.ZodType<NativeMessage>
-const humanCustom = z.object({ replyToClientMsgNo: id.optional(), regenerateOfClientMsgNo: id.optional(), mentionedIds: z.array(id).max(100).optional(), mentionAll: z.boolean().optional(),
+const humanCustom = z.object({ replyToClientMsgNo: id.optional(), threadRootClientMsgNo: id.optional(),
+  regenerateOfClientMsgNo: id.optional(), retryOfClientMsgNo: id.optional(), mentionedIds: z.array(id).max(100).optional(), mentionAll: z.boolean().optional(),
   agentContinuation: z.object({ agentId: id, runId: id, requestVersion: z.number().int().positive().safe() }).strict().optional(),
   questionnaireReply: z.object({ questionId: id, answers: z.record(z.string(), z.union([z.string().max(4000), z.array(z.string().max(4000)).max(12)])) }).strict().optional(),
   recommendationReply: z.object({ questionId: id, answers: z.record(z.string(), z.union([z.string().max(4000), z.array(z.string().max(4000)).max(12)])) }).strict().optional(),
 }).strict().superRefine((value, ctx) => {
   if (value.regenerateOfClientMsgNo && (value.regenerateOfClientMsgNo !== value.replyToClientMsgNo || value.mentionedIds?.length !== 1)) {
     ctx.addIssue({ code: 'custom', message: 'regeneration requires its quoted reply and one target agent' })
+  }
+  if (value.retryOfClientMsgNo && (value.retryOfClientMsgNo !== value.replyToClientMsgNo || value.mentionedIds?.length !== 1 || value.regenerateOfClientMsgNo)) {
+    ctx.addIssue({ code: 'custom', message: 'retry requires its quoted request, one target agent and no regeneration' })
   }
 })
 export const userMessageSchema = nativeMessageSchema.superRefine((value, ctx) => {

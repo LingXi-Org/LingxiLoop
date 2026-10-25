@@ -31,10 +31,10 @@ export function selectRequestAttachments(message: ImMessageEnvelope, explicit: A
   const refs = new Map([...explicit, ...nativeAttachments(message.payload).map(file => ({ clientMsgNo: message.clientMsgNo, attachmentId: file.id }))]
     .map(ref => [attachmentRefId(ref),ref]))
   if (refs.size > 20) throw new Error('request supports at most 20 attachments')
-  const threadId = message.payload.metadata.custom.replyToClientMsgNo
+  const threadId = message.payload.metadata.custom.threadRootClientMsgNo ?? message.payload.metadata.custom.replyToClientMsgNo
   for (const item of [...messages].sort((a,b) => b.messageSeq - a.messageSeq)) {
     if (item.channelId !== message.channelId || item.messageSeq >= message.messageSeq || item.fromUid !== message.fromUid
-      || item.payload.metadata.custom.replyToClientMsgNo !== threadId) continue
+      || (item.payload.metadata.custom.threadRootClientMsgNo ?? item.payload.metadata.custom.replyToClientMsgNo) !== threadId) continue
     for (const file of nativeAttachments(item.payload)) {
       const ref = { clientMsgNo: item.clientMsgNo, attachmentId: file.id }
       if (refs.size < 20) refs.set(attachmentRefId(ref),ref)
