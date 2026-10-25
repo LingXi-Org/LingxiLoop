@@ -20,8 +20,9 @@ test('student operates a topology, compares settings and continues in the origin
     }, { version })).toBe(addresses)
   }
   await saveJudgment(32)
-  await screen.getByRole('button', '检查我的思路', { exact: true }).tap()
-  await expect(screen.getByLabel('我的推导')).toHaveValue('我认为每个子网需要 32 个地址。\n\n请检查我的思路，指出第一处需要核对的地方，让我先尝试修正。')
+  await expect(screen.getByLabel('我的推导')).toHaveValue('我认为每个子网需要 32 个地址。')
+  const attempt = '我认为每个子网需要 32 个地址。\n请帮我核对可用主机数。'
+  await screen.getByLabel('我的推导').fill(attempt)
   const before = await browser.evaluate(() => {
     const separator = document.querySelector('[role="separator"]')!;
     return { width: document.querySelector('[data-panel="true"]')?.getBoundingClientRect().width ?? 0, value: separator.getAttribute('aria-valuenow') };
@@ -30,6 +31,7 @@ test('student operates a topology, compares settings and continues in the origin
   const after = await browser.evaluate(() => document.querySelector('[role="separator"]')!.getAttribute('aria-valuenow'))
   expect(after).not.toBe(before.value)
   await screen.getByRole('button', '调整设计', { exact: true }).tap()
+  await expect(screen.getByLabel('我的推导')).toHaveValue(attempt)
   await screen.getByRole('slider', '每个子网地址数', { exact: true }).press('ArrowRight')
   await saveJudgment(48)
   await screen.getByRole('button', '预览原始值', { exact: true }).tap()
