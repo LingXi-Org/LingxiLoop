@@ -1,7 +1,7 @@
 # #444: WuKongIM release and debug artifacts
 
 Baseline: LingxiLoop `9e3bfd892fa53f22dddbc00e98f466c21ce01b7d`.
-Implementation: `f5df6c57`; root integrates the isolated branch.
+Implementation: `0f6a575a` (integrated commit).
 Scope: WuKongIM Dockerfile and focused validation. No production operations,
 independent audit, CI dispatch, issue closure or push by this contributor.
 
