@@ -1,15 +1,19 @@
+import { lazy, Suspense } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Download, RotateCcw } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { knowledgeApi } from '../knowledge/api'
 import type { KnowledgeSource } from '../knowledge/contracts'
 import { ConversationSourceToggle } from '../knowledge/components/ConversationSourceToggle'
 import { userFacingError } from '@/lib/userFacingError'
-import { type MaterialContext, materialQueryKey, sourceStatusLabel } from './data'
+import { type MaterialContext, fileKind, materialQueryKey, sourceStatusLabel } from './data'
 import { materialsQueryClient } from './queries'
+
+const OriginalFileViewer = lazy(() => import('./OriginalFileViewer'))
 
 export function MaterialPreview({ source, context, onClose, onDownload, downloadBusy }: {
   source: KnowledgeSource; context: MaterialContext; onClose(): void; onDownload(source: KnowledgeSource): void; downloadBusy: boolean
@@ -21,7 +25,7 @@ export function MaterialPreview({ source, context, onClose, onDownload, download
   const file = detail.data ?? source
   const stored = file.status === 'stored' || file.stage === 'stored_only'
   return <Dialog open onOpenChange={open => { if (!open) onClose() }}>
-    <DialogContent className="max-h-[85dvh] gap-0 overflow-hidden p-0 sm:max-w-3xl">
+    <DialogContent className="max-h-[85dvh] gap-0 overflow-hidden p-0 sm:max-w-6xl">
       <DialogHeader className="border-b p-6 pe-14"><DialogTitle className="break-words leading-6">{file.title}</DialogTitle>
         <DialogDescription>{sourceStatusLabel(file)} · {file.visibilityScope === 'PROJECT' ? '课程成员可见' : '仅自己可见'}</DialogDescription>
       </DialogHeader>
@@ -31,11 +35,21 @@ export function MaterialPreview({ source, context, onClose, onDownload, download
             : <>
               {file.capabilities?.canDownload && <Button variant="outline" disabled={downloadBusy} onClick={() => onDownload(file)}><Download />{downloadBusy ? '正在下载…' : '下载原文件'}</Button>}
               {file.originalUrl && <Button asChild variant="outline"><a href={file.originalUrl} target="_blank" rel="noreferrer">打开原始网页</a></Button>}
-              {file.extractedText ? <pre className="mt-5 whitespace-pre-wrap break-words rounded-xl bg-muted/40 p-5 font-sans text-sm leading-7">{file.extractedText}</pre>
-                : <p className="mt-5 rounded-xl bg-muted/40 p-5 text-sm leading-7 text-muted-foreground">{stored ? '仅保存原文件，请下载查看。'
-                  : file.status === 'failed' ? '内容解析失败。原文件已保存，可下载查看。'
-                    : file.status === 'ready' ? '暂无文本预览，请下载原文件查看。' : '资料正在解析，完成后可查看文本。原文件可下载后会显示下载入口。'}</p>}
-              {file.isTruncated && <p className="mt-3 text-xs text-muted-foreground">预览内容不完整，请下载原文件查看。</p>}
+              <Tabs defaultValue="original" className="mt-4 min-w-0">
+                <TabsList aria-label="资料预览方式"><TabsTrigger value="original">原文件</TabsTrigger><TabsTrigger value="parsed">解析文本</TabsTrigger></TabsList>
+                <TabsContent value="original" className="min-w-0">
+                  {file.kind === 'file' && file.capabilities?.canDownload && !['archive', 'unknown'].includes(fileKind(file))
+                    ? <Suspense fallback={<ResourceSkeleton variant="detail" label="正在加载原文件预览器" />}><OriginalFileViewer key={[...materialQueryKey(context), file.id].join('|')} source={file} context={context} /></Suspense>
+                    : <p className="rounded-xl bg-muted/40 p-5 text-sm leading-7 text-muted-foreground">{file.kind !== 'file' ? '此资料没有原文件，可切换到解析文本查看。' : file.status === 'upload_pending' ? '原文件尚未上传完成。' : '此格式暂不支持预览，可下载原文件查看。'}</p>}
+                </TabsContent>
+                <TabsContent value="parsed">
+                  {file.extractedText ? <pre className="whitespace-pre-wrap break-words rounded-xl bg-muted/40 p-5 font-sans text-sm leading-7">{file.extractedText}</pre>
+                    : <p className="rounded-xl bg-muted/40 p-5 text-sm leading-7 text-muted-foreground">{stored ? '此资料仅保存原文件，暂无解析文本。'
+                      : file.status === 'failed' ? '文本解析失败，仍可查看原文件。'
+                        : file.status === 'ready' ? '此资料暂无解析文本。' : '资料正在解析，请稍后查看文本。'}</p>}
+                  {file.isTruncated && <p className="mt-3 text-xs text-muted-foreground">解析文本不完整，可切换到原文件查看。</p>}
+                </TabsContent>
+              </Tabs>
               {file.status === 'ready' && <ConversationSourceToggle projectId={context.projectId} sourceId={file.id} />}
             </>}
       </div>

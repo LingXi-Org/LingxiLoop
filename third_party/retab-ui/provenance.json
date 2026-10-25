@@ -1,0 +1,1267 @@
+{
+  "repository": "https://github.com/retab-dev/retab-ui",
+  "commit": "321b3eacce133228042265c499d399c960bc7f13",
+  "items": [
+    "@retab/file-viewer",
+    "@retab/pdf-viewer",
+    "@retab/pdf-document-resource",
+    "@retab/scroll-area",
+    "@retab/spinner",
+    "@retab/viewer-controls",
+    "@retab/effect-key",
+    "@retab/use-keyed-mount-effect",
+    "@retab/docx-viewer",
+    "@retab/docx-document-resource",
+    "@retab/use-mount-effect",
+    "@retab/use-keyed-layout-effect",
+    "@retab/image-viewer",
+    "@retab/pptx-viewer",
+    "@retab/xlsx-viewer",
+    "@retab/xlsx-worker-protocol",
+    "@retab/xlsx-workbook",
+    "@retab/xlsx-sheetjs-flattener",
+    "@retab/csv",
+    "@retab/csv-viewer",
+    "@retab/code-viewer",
+    "@retab/text-viewer-chenglou",
+    "@retab/text-viewer",
+    "@retab/markdown-viewer"
+  ],
+  "files": [
+    {
+      "source": "hooks/use-keyed-layout-effect.ts",
+      "target": "src/components/retab/hooks/use-keyed-layout-effect.ts",
+      "sha256": "2371f3be92770a195e92fd3c6bf7655d4c4436683339cc79f598e7cd0d072179"
+    },
+    {
+      "source": "hooks/use-keyed-mount-effect.ts",
+      "target": "src/components/retab/hooks/use-keyed-mount-effect.ts",
+      "sha256": "548c7c292bee0bcebcbf3ab77cd4b73b6c3db14b0ec084aca3b6070131e54d24"
+    },
+    {
+      "source": "hooks/use-mount-effect.ts",
+      "target": "src/components/retab/hooks/use-mount-effect.ts",
+      "sha256": "86cb72c6182a33485afdcffc73734cc46dfa34defe64f60fa3ff440143f8bd8c"
+    },
+    {
+      "source": "registry/new-york-v4/lib/csv-dialect.ts",
+      "target": "src/components/retab/lib/csv-dialect.ts",
+      "sha256": "0acb25a64eb41139de0251a6d9c4be7f551d5b3d2c9f65aa72aab34fec2bc099"
+    },
+    {
+      "source": "registry/new-york-v4/lib/csv-normalizer.ts",
+      "target": "src/components/retab/lib/csv-normalizer.ts",
+      "sha256": "ff7756ef2de91086dea10eb38b0bc63b9c8128dd4bdcd81b4b8f4d763e016f9e"
+    },
+    {
+      "source": "registry/new-york-v4/lib/csv-parser.ts",
+      "target": "src/components/retab/lib/csv-parser.ts",
+      "sha256": "994f076457420b6b8580a30e9fae1d309e7a3883df450df7e0f754d3d550adff"
+    },
+    {
+      "source": "registry/new-york-v4/lib/csv.ts",
+      "target": "src/components/retab/lib/csv.ts",
+      "sha256": "7ee1e70790eaf2e904d55fef8de58e30adf3300b7884996d68da8b3d720330a2"
+    },
+    {
+      "source": "registry/new-york-v4/lib/docx-document-resource.ts",
+      "target": "src/components/retab/lib/docx-document-resource.ts",
+      "sha256": "8667b94e7dbdf54859812c2ebb277e54b92d7f24308bb53576f4b6c12948ff59"
+    },
+    {
+      "source": "lib/effect-key.ts",
+      "target": "src/components/retab/lib/effect-key.ts",
+      "sha256": "07242e2b0df62cadd779ecb5e83f0d777de414e503bc65a19797766321b39f37"
+    },
+    {
+      "source": "registry/new-york-v4/lib/image-frame-source.ts",
+      "target": "src/components/retab/lib/image-frame-source.ts",
+      "sha256": "90a0e3f2de8382e1ad145218d5a8cc4c3a2497a2461864bfddc51f4f1d97ad33"
+    },
+    {
+      "source": "registry/new-york-v4/lib/image-geometry.ts",
+      "target": "src/components/retab/lib/image-geometry.ts",
+      "sha256": "abe0753a7b2bc78510aa0b38dd3b56a10686018ab415c03e0818f682df79ae52"
+    },
+    {
+      "source": "registry/new-york-v4/lib/image-source-cache.ts",
+      "target": "src/components/retab/lib/image-source-cache.ts",
+      "sha256": "9c7a188c8d7202af8bbaf826507b13e21123edc52a26572942849b1a89b645fb"
+    },
+    {
+      "source": "registry/new-york-v4/lib/image-tiff-source.ts",
+      "target": "src/components/retab/lib/image-tiff-source.ts",
+      "sha256": "1938747a0de52298e8fe5bbd7859bba2301c4dc50e3349b72e526ede047c3891"
+    },
+    {
+      "source": "registry/new-york-v4/lib/pdf-document-resource.ts",
+      "target": "src/components/retab/lib/pdf-document-resource.ts",
+      "sha256": "80ac80f1c4ada850fd9e7b69d6b1402664e977e88142f77a98176b4082570a1f"
+    },
+    {
+      "source": "registry/new-york-v4/lib/pdf-document-types.ts",
+      "target": "src/components/retab/lib/pdf-document-types.ts",
+      "sha256": "4d749852732ba97e93582eb0fb425946ad6afd28844f906891d0cf5ef1aa9c95"
+    },
+    {
+      "source": "registry/new-york-v4/lib/pdf-viewer-diagnostics.ts",
+      "target": "src/components/retab/lib/pdf-viewer-diagnostics.ts",
+      "sha256": "74de69f40beb9a9a8689221df23570b6434c6fa7d97aecd6ba119e0532637617"
+    },
+    {
+      "source": "registry/new-york-v4/lib/viewer-download-actions.ts",
+      "target": "src/components/retab/lib/viewer-download-actions.ts",
+      "sha256": "cb255685489a3c7a0f3429b4267523cb5740528c74050c3fa4597ada4d2c7fc6"
+    },
+    {
+      "source": "registry/new-york-v4/lib/viewer-errors.ts",
+      "target": "src/components/retab/lib/viewer-errors.ts",
+      "sha256": "db57ec600d5e381fcb9d213307708e87c2f5ff7596d634237cc4618c5043f8d7"
+    },
+    {
+      "source": "registry/new-york-v4/lib/viewer-resource.ts",
+      "target": "src/components/retab/lib/viewer-resource.ts",
+      "sha256": "e24f003c26e00e27aeed7f340d26f5b602bf4379c9658e0903dd3f2624b76c47"
+    },
+    {
+      "source": "registry/new-york-v4/lib/viewer-source.ts",
+      "target": "src/components/retab/lib/viewer-source.ts",
+      "sha256": "e6f1c298974b5ba6ec04f214f950491d504b5eafb36216f2039a95da01871377"
+    },
+    {
+      "source": "registry/new-york-v4/lib/xlsx-sheetjs-flattener.ts",
+      "target": "src/components/retab/lib/xlsx-sheetjs-flattener.ts",
+      "sha256": "4275fcd5f2dee7150877af4acf54c7149aa91328eb084c10128a9864060c74b6"
+    },
+    {
+      "source": "registry/new-york-v4/lib/xlsx-workbook.ts",
+      "target": "src/components/retab/lib/xlsx-workbook.ts",
+      "sha256": "b84ac0772a67c880a8dfc738f3206497b902794916f65e186b93db10c1eef717"
+    },
+    {
+      "source": "registry/new-york-v4/lib/xlsx-worker-protocol.ts",
+      "target": "src/components/retab/lib/xlsx-worker-protocol.ts",
+      "sha256": "17ef63c7af04601fa4e20c7a209f4c664a4e4ecd4826ec21657b28f172fd2ee4"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-chrome.tsx",
+      "target": "src/components/retab/ui/code-viewer-chrome.tsx",
+      "sha256": "2b7646c2eeea7cab521a3d0a38340ef449ddc3bed228d99e07e593735112e2ab"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-content.tsx",
+      "target": "src/components/retab/ui/code-viewer-content.tsx",
+      "sha256": "ec16db4413268678dabc1681011cde5e0e0ac43d178ad0f97c1a009d1d081f24"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-layout.ts",
+      "target": "src/components/retab/ui/code-viewer-layout.ts",
+      "sha256": "d28a2dbd6bd6036626edf1c9a247419419b66a18cfaad0bb0b5e2f40c5cebd66"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-long-lines.ts",
+      "target": "src/components/retab/ui/code-viewer-long-lines.ts",
+      "sha256": "11947c03e3cc323d61917fed64ce613f1d2cd45b2334d661cb4d74577703841b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-prism-components.d.ts",
+      "target": "src/components/retab/ui/code-viewer-prism-components.d.ts",
+      "sha256": "31b6334010596b45bec9e9c2a416afc09a7bb37c7589dcdb2cba0aa417c053da"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-projection-scheduler.ts",
+      "target": "src/components/retab/ui/code-viewer-projection-scheduler.ts",
+      "sha256": "eb8b3b705e89ce6fd24a1c002738c6e67d8b1c128ad0242313389c7192f1d233"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-projector.ts",
+      "target": "src/components/retab/ui/code-viewer-projector.ts",
+      "sha256": "35e45a53a5b7cb42cea1653e3b5ba0b0990c86359df06f6506416747a81d4c9b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-scale.ts",
+      "target": "src/components/retab/ui/code-viewer-scale.ts",
+      "sha256": "41aff8133d4be7d1818503ea5fd4675ab6fc19e5475be0bc412d0be91a345f51"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-syntax-prism.ts",
+      "target": "src/components/retab/ui/code-viewer-syntax-prism.ts",
+      "sha256": "2a5dcd00128690892a4e54f0cdea4fd3c82b8166807fa54829be785f71f61fcc"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-syntax-protocol.ts",
+      "target": "src/components/retab/ui/code-viewer-syntax-protocol.ts",
+      "sha256": "868a250d5651dd58f042017e57535ee81251e33643a05ebf20fe1593c008810c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-syntax-style.tsx",
+      "target": "src/components/retab/ui/code-viewer-syntax-style.tsx",
+      "sha256": "575730455f484499852f875367c7498ea08204a9ba5aa16578b28bd196b0c601"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-syntax-worker.ts",
+      "target": "src/components/retab/ui/code-viewer-syntax-worker.ts",
+      "sha256": "6a2c20427120bf77f4b109896a9e1578eeafd3029923eb5b33788530994ec50d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-syntax.ts",
+      "target": "src/components/retab/ui/code-viewer-syntax.ts",
+      "sha256": "0489b6d51133ea1e70ed46ff5d707e8617f0f9a1aa498f12fb38ce97a3baf3fa"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-syntax.worker.ts",
+      "target": "src/components/retab/ui/code-viewer-syntax.worker.ts",
+      "sha256": "ac30b555fb7bb0a0bf2b34e34a3664ff027016eec747638f842698e9d1d20a50"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-types.ts",
+      "target": "src/components/retab/ui/code-viewer-types.ts",
+      "sha256": "76d86a13b3e2d078e4525f7b0bf9498f563b5fa0b824743177076e324814a73a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-viewport.tsx",
+      "target": "src/components/retab/ui/code-viewer-viewport.tsx",
+      "sha256": "a9c91127c6399b5d86a780ced3a74df17381a29962266720705cf3945afae0af"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer-virtualization.ts",
+      "target": "src/components/retab/ui/code-viewer-virtualization.ts",
+      "sha256": "5f1f44c1a2f31b4b88f2867260ee108a01f5d5f3a455bf8d56712cb1349d1f91"
+    },
+    {
+      "source": "registry/new-york-v4/ui/code-viewer.tsx",
+      "target": "src/components/retab/ui/code-viewer.tsx",
+      "sha256": "06f58353a52210ebb48f3ca79e2f4d33c22b98e3d6335904f93ef75ac573cd9f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-row-store.ts",
+      "target": "src/components/retab/ui/csv-row-store.ts",
+      "sha256": "0fecfc7fb8f92fc1115c975e0ea58fd22170d7ce0a61a5302648edfcddf4644b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-cell-classes.ts",
+      "target": "src/components/retab/ui/csv-viewer-cell-classes.ts",
+      "sha256": "bcc1b998fe58f25c768e49ea2c22096f5caf73d0bdcf88435a815f0450dd3926"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-chrome.tsx",
+      "target": "src/components/retab/ui/csv-viewer-chrome.tsx",
+      "sha256": "c950e1a70ea2b86ea11d52ab6fb444286d4af67851c141ca360154a4f0a8f711"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-download.ts",
+      "target": "src/components/retab/ui/csv-viewer-download.ts",
+      "sha256": "883262c58464ef0325fe1815886f9262fb54ce4e0af4e9d958bc8e06277c30f5"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-grid.tsx",
+      "target": "src/components/retab/ui/csv-viewer-grid.tsx",
+      "sha256": "348096e7f0c5a2bcb06ddd58ab31fb7b464e387d99dc26614ab12a4cc7bb6229"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-resource.ts",
+      "target": "src/components/retab/ui/csv-viewer-resource.ts",
+      "sha256": "13aca62be36847a12f3f1c5dc270d420ecb1bd69d9f2d69b4e42113aa91730ef"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-row-patcher.ts",
+      "target": "src/components/retab/ui/csv-viewer-row-patcher.ts",
+      "sha256": "a56a106ebe8f0f8a37efe442c36fc34b5b808794f16370e1cd7ed9d7212ca1d0"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-scrollbar.tsx",
+      "target": "src/components/retab/ui/csv-viewer-scrollbar.tsx",
+      "sha256": "f10166c1231ee7d5ba002fee290aff4960214d63b52566b72da39e97001e70f3"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-sort-worker.ts",
+      "target": "src/components/retab/ui/csv-viewer-sort-worker.ts",
+      "sha256": "7d16422f5d7be47f58c6645ea4a582edf3ef36376e264d0efcd453235b520a0f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-sort.ts",
+      "target": "src/components/retab/ui/csv-viewer-sort.ts",
+      "sha256": "eef1a6e104271383f88855f93f0a28f35ae55a167d4d7af961e6691c0192ee36"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-sort.worker.ts",
+      "target": "src/components/retab/ui/csv-viewer-sort.worker.ts",
+      "sha256": "ea561d8b603c738c06c65a2ba437cf125e37c3568462dd8c662a143df0b9c4b7"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-state.ts",
+      "target": "src/components/retab/ui/csv-viewer-state.ts",
+      "sha256": "714812adfe8c553b17672b168f50d1c24501d61ac3fbc3da5bc5bb0f0ba0bade"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-style-scope.tsx",
+      "target": "src/components/retab/ui/csv-viewer-style-scope.tsx",
+      "sha256": "bdb786657d1620639f880e8fac307e04976d3c8a1b55f1cd601e49886d41e045"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-types.ts",
+      "target": "src/components/retab/ui/csv-viewer-types.ts",
+      "sha256": "47b7726247c36e1bc6b4a1077a987c92706abf9d3abe458f97aeb246a5d1adfb"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer-worker.ts",
+      "target": "src/components/retab/ui/csv-viewer-worker.ts",
+      "sha256": "9ee18fd5f44532cb460e1d712741e2a56d088083cda7f4c300bf46e56df610c0"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer.tsx",
+      "target": "src/components/retab/ui/csv-viewer.tsx",
+      "sha256": "3795c98be9b8aa9fac124d6e80f7fa921c61693c6a355d5c203edad9ea58d73a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/csv-viewer.worker.ts",
+      "target": "src/components/retab/ui/csv-viewer.worker.ts",
+      "sha256": "1182d6460c1aa9a329ee101fd86ba4d4c23ccaa7f5df67c927bd16afbfa7d70d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-chrome.tsx",
+      "target": "src/components/retab/ui/docx-viewer-chrome.tsx",
+      "sha256": "ca89b1f5fabc00e31cda7040d7f32806298d0fa98369e26d8d34ab9a0d9eaee3"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-content.tsx",
+      "target": "src/components/retab/ui/docx-viewer-content.tsx",
+      "sha256": "7d54cea65a9520ad1acceb361e3334dd9036c2c43c973cae161b5fbe33511245"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-core.ts",
+      "target": "src/components/retab/ui/docx-viewer-core.ts",
+      "sha256": "2ef699373d4dff8b20ca39baaf39ae521aaba3cb2b14b84a8a55d72a7a3adbec"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-highlight.ts",
+      "target": "src/components/retab/ui/docx-viewer-highlight.ts",
+      "sha256": "68b99c614285c38922952a4e6da60ba92e302444181858d18b4e9b98a8882aba"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-layout.ts",
+      "target": "src/components/retab/ui/docx-viewer-layout.ts",
+      "sha256": "19b5c37d97e5091caa1e766179c30921d3388ddd34afcc9820dab75a82985cc7"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-render-cache.ts",
+      "target": "src/components/retab/ui/docx-viewer-render-cache.ts",
+      "sha256": "3b94a0aed040f3dd2afff8e71bba323c9af1952e253eff94acdaf0e0e6e3716d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-render.ts",
+      "target": "src/components/retab/ui/docx-viewer-render.ts",
+      "sha256": "0c8195f3272009dcbcc60b30bfa80e0e43ee2c252b3f29cea03bbd31a24c63e6"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-scale.ts",
+      "target": "src/components/retab/ui/docx-viewer-scale.ts",
+      "sha256": "33f115e881cee02e0d15a647b017229a5c591f755a943513cb7954c32bdf1632"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-scroll.ts",
+      "target": "src/components/retab/ui/docx-viewer-scroll.ts",
+      "sha256": "783ad473d4ca4af9dfe3bfd007a9353a38dfd7f03e7998598dfd58640fffbecf"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-targets.ts",
+      "target": "src/components/retab/ui/docx-viewer-targets.ts",
+      "sha256": "a87984cd54f9766ad318e9615219fadf1e92a58f9a527b527e12d6ff2c7a2e24"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-types.ts",
+      "target": "src/components/retab/ui/docx-viewer-types.ts",
+      "sha256": "03ed530ca9cc5693367f02861499a2c830ade55c1ba29c350c4daa3cc1f81e6b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer-zoom-motion.ts",
+      "target": "src/components/retab/ui/docx-viewer-zoom-motion.ts",
+      "sha256": "4334dc3ffe64af2cec47c84ccbb426d42cf0b8214c5a4b51f0033ccc858d0766"
+    },
+    {
+      "source": "registry/new-york-v4/ui/docx-viewer.tsx",
+      "target": "src/components/retab/ui/docx-viewer.tsx",
+      "sha256": "c55832a3ae6952e477aeebb0cdc339433d0a3151a686af70ac3f79ecb9ebbea4"
+    },
+    {
+      "source": "registry/new-york-v4/ui/dropdown-menu.tsx",
+      "target": "src/components/retab/ui/dropdown-menu.tsx",
+      "sha256": "93e329397fcd3a91d06a6f27c5d79a2e178e2aa0a1281861e8684a084f4b1fa0"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-accessibility.ts",
+      "target": "src/components/retab/ui/file-viewer-accessibility.ts",
+      "sha256": "877259dbf1d5bb4e9896b5531cc043bbfaf0fff90b0bd0ffa7d61e59fef37d8c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-context.tsx",
+      "target": "src/components/retab/ui/file-viewer-context.tsx",
+      "sha256": "cf78fe01ff4583858e3a62ae6302738e96e3edf73518fc2d9db080199afa78f2"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-core.ts",
+      "target": "src/components/retab/ui/file-viewer-core.ts",
+      "sha256": "5d9b72c6808f6f5e65dde3e30371bdc9c7fa5489686b4aa4566ce9b607def4f3"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-document.tsx",
+      "target": "src/components/retab/ui/file-viewer-document.tsx",
+      "sha256": "5a03d1aa6aa5498476d8789a99606969ec5f0b9b730b2a0415a0d2fc60d4e3bc"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-elements.ts",
+      "target": "src/components/retab/ui/file-viewer-elements.ts",
+      "sha256": "a9a1c616890226878b212b09576eb8f67f3a886d7f0dcc55cc04391254f985cd"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-fallback.tsx",
+      "target": "src/components/retab/ui/file-viewer-fallback.tsx",
+      "sha256": "5a6146c102f8db1230e6e466863ed85787c78f786a303fd6f40a676c7d6e020a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-fit-width-motion.ts",
+      "target": "src/components/retab/ui/file-viewer-fit-width-motion.ts",
+      "sha256": "3c3a34c365ebeb9398ffc41d58f004823ca8a1f892c3f083e1363cce3238d8da"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-header.tsx",
+      "target": "src/components/retab/ui/file-viewer-header.tsx",
+      "sha256": "1d45360ac96e41ba5b70f71b7c57996c83d751881936f7579acd215a913c1b4f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-html-srcdoc-cache.ts",
+      "target": "src/components/retab/ui/file-viewer-html-srcdoc-cache.ts",
+      "sha256": "e24e79cc9f62993dd8cc5147388e5ec8c2ab6682e17924c9e4e4dd995b65ef1c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-html-viewer.tsx",
+      "target": "src/components/retab/ui/file-viewer-html-viewer.tsx",
+      "sha256": "8a451ed602e9d550b02e1cf151d91eff50c335b14eb82fdd853b12913d48d42f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-layout.tsx",
+      "target": "src/components/retab/ui/file-viewer-layout.tsx",
+      "sha256": "046a54fc0c6595b6efcdb84a404cbb4e3991222a997364d4376bb50c53635c03"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-motion-kernel.ts",
+      "target": "src/components/retab/ui/file-viewer-motion-kernel.ts",
+      "sha256": "3c103ab554089a4f3c8b3bfbfe966cf61c5d4755db5791ad5cb3ee707d4d83e5"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-motion-plan.ts",
+      "target": "src/components/retab/ui/file-viewer-motion-plan.ts",
+      "sha256": "a48fe09463ae9709ac957b0b6c647f4e8fd598a6b65c47885740246d97341c22"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-preview.tsx",
+      "target": "src/components/retab/ui/file-viewer-preview.tsx",
+      "sha256": "3e7ecdf06f64557541ac83e6b239871cb3fc3944896acc3aaa4fb4742ebafaf0"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-prewarm.ts",
+      "target": "src/components/retab/ui/file-viewer-prewarm.ts",
+      "sha256": "ea48fe860422b4377c562e579826a9cd677fee0acf804d59fd28e3c5af79f672"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-provider.tsx",
+      "target": "src/components/retab/ui/file-viewer-provider.tsx",
+      "sha256": "20ce1e847ef00d6ae2021cb738e0dc442c14931d1d064538a38de72852144a8d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-renderer-contract.ts",
+      "target": "src/components/retab/ui/file-viewer-renderer-contract.ts",
+      "sha256": "35fdc1b3306154a99a96c754b2cf29857cb66bcab424a9f64a15921ad71a634f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-renderer-frame.tsx",
+      "target": "src/components/retab/ui/file-viewer-renderer-frame.tsx",
+      "sha256": "2b0f4b0193f80e89be8823b934145ab7a9e25ad7712085caa50f1b2df050d1f2"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-resource-state.ts",
+      "target": "src/components/retab/ui/file-viewer-resource-state.ts",
+      "sha256": "750b02d330811ddf5853abe761d91d9a5d7f8d478534d5ea4d6caf601e015de5"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-route.tsx",
+      "target": "src/components/retab/ui/file-viewer-route.tsx",
+      "sha256": "fe75dbbe4cf6b243aaf5b0e964b5b7528b70a4ef36b4fd894cf67d08280c17fd"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-shell-controller.ts",
+      "target": "src/components/retab/ui/file-viewer-shell-controller.ts",
+      "sha256": "b1fab000a58091ccff05e779e9f7ab39e0cba6c0cb615bb96dc2f0cf231c22c7"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-shell-keyboard.ts",
+      "target": "src/components/retab/ui/file-viewer-shell-keyboard.ts",
+      "sha256": "1d9c34100f0e4b9325c81d8f7bb6689aaf150f91dbc58c128c9ccf129003024a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-shell.tsx",
+      "target": "src/components/retab/ui/file-viewer-shell.tsx",
+      "sha256": "10022fb6bb63a394382154c59727854424b76a17645bb62c12d685fbc29e42c4"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-sidebar-controller.ts",
+      "target": "src/components/retab/ui/file-viewer-sidebar-controller.ts",
+      "sha256": "120f148cb6a08740e87aa9511d5644aabd71b21939b885b9fe18514d0d8f5d3e"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-sidebar.tsx",
+      "target": "src/components/retab/ui/file-viewer-sidebar.tsx",
+      "sha256": "65643fa4eca2062caed8d4ed3a3b75ba294d38a2ed619341bd7aa94a5df2b954"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-state.tsx",
+      "target": "src/components/retab/ui/file-viewer-state.tsx",
+      "sha256": "d3fcb4f45f4cc392290fb59d3101071fbf5d79e62ec488bc86ba55149f2a05c4"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer-text-resource.ts",
+      "target": "src/components/retab/ui/file-viewer-text-resource.ts",
+      "sha256": "02582e8eebb9813b706ed81e9f7a250d24c3aacc1b79c6a701c04d4b6af0d272"
+    },
+    {
+      "source": "registry/new-york-v4/ui/file-viewer.tsx",
+      "target": "src/components/retab/ui/file-viewer.tsx",
+      "sha256": "dfb7849cce988d32241179a8ff217b0ca01b0c44e42da8bc67a219bd63d9fffb"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-columns.ts",
+      "target": "src/components/retab/ui/fixed-grid-columns.ts",
+      "sha256": "5851125696b200c8114140571759e6401c0aa7ac3b774bc261d760b580049c9d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-layout.ts",
+      "target": "src/components/retab/ui/fixed-grid-layout.ts",
+      "sha256": "1a489639e848919594ac54c93d1552097aec8bc0828b5c3c62a933c489ad0665"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-native-find-index.tsx",
+      "target": "src/components/retab/ui/fixed-grid-native-find-index.tsx",
+      "sha256": "965e3ff50d1c60cc6baa797df5c02f2992390e1cf192182fe9c976a16786358c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-row-style.ts",
+      "target": "src/components/retab/ui/fixed-grid-row-style.ts",
+      "sha256": "403c3ca7aa700edbcb08d15de3e1b61e106430d6b98f2bf16be5ce8b6ed13509"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-row-window.tsx",
+      "target": "src/components/retab/ui/fixed-grid-row-window.tsx",
+      "sha256": "ddfbf718a00e01a915f84189c0be5ae9c9bffda46b094d538b4d396da238fd14"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-selection.ts",
+      "target": "src/components/retab/ui/fixed-grid-selection.ts",
+      "sha256": "f72c8662f8e71fdde88f3229993d26f8813d8e3c76461a15761e21d1b1808e72"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-template.ts",
+      "target": "src/components/retab/ui/fixed-grid-template.ts",
+      "sha256": "a8fbbe598a1df817d28a6da7328bdeaebf9726bf124158461797513a7b413ad9"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-viewport.tsx",
+      "target": "src/components/retab/ui/fixed-grid-viewport.tsx",
+      "sha256": "6f6e97afc551cc87a6b4db57403cc65bf249e4726114d400e88306620d21a5a7"
+    },
+    {
+      "source": "registry/new-york-v4/ui/fixed-grid-virtualization.ts",
+      "target": "src/components/retab/ui/fixed-grid-virtualization.ts",
+      "sha256": "c340934c41b3e9c9a8b48b0e0ebac5244f462ad14d66872b45ed28822c9f37d6"
+    },
+    {
+      "source": "registry/new-york-v4/ui/header-aware-scrollbar.tsx",
+      "target": "src/components/retab/ui/header-aware-scrollbar.tsx",
+      "sha256": "2cb4b5f61ff173a657b795c28b40ffe7345948e9091c7ae56ade4f2be2bf9343"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer-chrome.tsx",
+      "target": "src/components/retab/ui/image-viewer-chrome.tsx",
+      "sha256": "a18ee8bee5d5cd7562426fc397ad4342d3635778a5357301c0eaaa303d93df40"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer-content.tsx",
+      "target": "src/components/retab/ui/image-viewer-content.tsx",
+      "sha256": "b0ddfdcc16766426e986da10156453df02296767f49115c7e83b58433bcd2ed2"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer-frame.tsx",
+      "target": "src/components/retab/ui/image-viewer-frame.tsx",
+      "sha256": "fb3b8682f55469c3cf47a89df53ba7fb028089deaf26ec9d61354ce25bdbd213"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer-hooks.ts",
+      "target": "src/components/retab/ui/image-viewer-hooks.ts",
+      "sha256": "56e80820b7c73bcd0e973ef6be934eee27c1c1f3798ab102bc376c011f88fa9a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer-types.ts",
+      "target": "src/components/retab/ui/image-viewer-types.ts",
+      "sha256": "164034017be1f1474b77565005c4ed807f8f62b29e538742ee71870f35c0073c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer-virtualization.ts",
+      "target": "src/components/retab/ui/image-viewer-virtualization.ts",
+      "sha256": "f15c2e830f6ece5ab8ce356c42dd8c4a27b988c0165324ca562831901524e8b7"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer-zoom-motion.ts",
+      "target": "src/components/retab/ui/image-viewer-zoom-motion.ts",
+      "sha256": "897e17cfe67efc539c7a5da9a5cb08f88d259a6a4c5c7ed0ed2ce34859c0168a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer.tsx",
+      "target": "src/components/retab/ui/image-viewer.tsx",
+      "sha256": "9a5f474197e8706b939e6d4b09031f29a409da73a8a51d471ce48fabcaf98a9f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/image-viewer.worker.ts",
+      "target": "src/components/retab/ui/image-viewer.worker.ts",
+      "sha256": "0608210576d1391e90cdb62d3a214b49dd07dd2c72ece348e944b3c0cddecf64"
+    },
+    {
+      "source": "registry/new-york-v4/ui/line-ranges.ts",
+      "target": "src/components/retab/ui/line-ranges.ts",
+      "sha256": "0220af9ffda512cd28aaf60a6b628a353ce17b5c929487bd0c0ae2c4cb25d39c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-code-highlight-html.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-code-highlight-html.ts",
+      "sha256": "ed229ed7ace2596e37031c96e63c4d79607dba1cfc45cc3d88001514e41e7d33"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-code-highlight-protocol.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-code-highlight-protocol.ts",
+      "sha256": "5bd498cd646f3ce8e3c4c24b1022a83f687ce2cbc30e5e319a9b335a83e0b147"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-code-highlight.tsx",
+      "target": "src/components/retab/ui/markdown-greenfield-code-highlight.tsx",
+      "sha256": "156402754b108384a947fc0661251c677af158c5656570a680979c7553c4587b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-code-highlight.worker.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-code-highlight.worker.ts",
+      "sha256": "573c7bc8d88352b0b44442331344a15367b7c23a8663f97735da0c431cfe317b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-content.tsx",
+      "target": "src/components/retab/ui/markdown-greenfield-content.tsx",
+      "sha256": "a69b9589fb7a83d1798b23b274f50621992b83780e298939648c4dd93725c3cd"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-diagram.tsx",
+      "target": "src/components/retab/ui/markdown-greenfield-diagram.tsx",
+      "sha256": "4a28a8156fb6ae77f1a84ef80e0b39895e615008c63eb4017f68c0af43cb482f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-document-store.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-document-store.ts",
+      "sha256": "218d605b7bcd251b98ebad4961d0d9c071a51fa24d285c0735b7a21d20959ae9"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-document.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-document.ts",
+      "sha256": "f1efd274363a742bdfb350299f93dda353a056e0a075cbacb98454930b90e36d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-document.worker.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-document.worker.ts",
+      "sha256": "165f6ba1db8d4635bef81c65a9bc4984f86469c54bc6ae1d906fa9eb9a275f22"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-layout.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-layout.ts",
+      "sha256": "d0dc317c9700f3d094bbe9149bb9b922f6d6391092505cc32f786e0536c63a3e"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-renderer-frame.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-renderer-frame.ts",
+      "sha256": "7be02121691fcce7af01aa047b4564c626c364ba4ce372da8c639c87dcc9fc16"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-renderer.tsx",
+      "target": "src/components/retab/ui/markdown-greenfield-renderer.tsx",
+      "sha256": "134520fd7c35163063b5cb605664a6ff2f9aec070deb5b402ee038e9e8070273"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-greenfield-virtualizer.ts",
+      "target": "src/components/retab/ui/markdown-greenfield-virtualizer.ts",
+      "sha256": "a44af6027714db214170d221a361dcd03e712ccd8b016a36623ca11cca161f07"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-hast-types.ts",
+      "target": "src/components/retab/ui/markdown-hast-types.ts",
+      "sha256": "c08c0a4096802fdba222a231f873dabf8e12bca2bffb4eef1b69ab85d9e2a101"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-source-map.ts",
+      "target": "src/components/retab/ui/markdown-source-map.ts",
+      "sha256": "f206b0707d48aa4a05ab17fc1a0335d9d5d1cad13e58f429d49670850be1bd05"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-unified-pipeline.ts",
+      "target": "src/components/retab/ui/markdown-unified-pipeline.ts",
+      "sha256": "57176ef736422ecff9d732640b119c66bd55e729854334b446eaccac461a9d68"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-url-policy.ts",
+      "target": "src/components/retab/ui/markdown-url-policy.ts",
+      "sha256": "81757fe5a3f96701fe0193ae753e94dec8dec304c062c0f14364a1b67a86f90f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/markdown-viewer.tsx",
+      "target": "src/components/retab/ui/markdown-viewer.tsx",
+      "sha256": "bba45089d9c70073c6dd62fa7e1fb60a1e56dd08cd21ac7c8afe436cdfd9631f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/mermaid-renderer.ts",
+      "target": "src/components/retab/ui/mermaid-renderer.ts",
+      "sha256": "645a480c806ccdceef46b50b780aa48beb199c3b270be8bf545bc84094d0cf84"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-thumbnail-canvas.tsx",
+      "target": "src/components/retab/ui/pdf-thumbnail-canvas.tsx",
+      "sha256": "78179e8e417927c21bb8432110ce59b94c547097d05513a2ff91816ea3f206e1"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-thumbnail-item.tsx",
+      "target": "src/components/retab/ui/pdf-thumbnail-item.tsx",
+      "sha256": "a2152414df7040ee67bfba0f460083e5b3a1921074a8a5c70b961bd95913dd47"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-thumbnail-layout.ts",
+      "target": "src/components/retab/ui/pdf-thumbnail-layout.ts",
+      "sha256": "7cf19e847b84993c8844da6749bc36ae57a46c12115a9d21cdb750589954d5ab"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-thumbnail-rail.tsx",
+      "target": "src/components/retab/ui/pdf-thumbnail-rail.tsx",
+      "sha256": "7c3e06cc8ad984640452fa0f51116e1dcb9c2a084d7bce241fa4669176558450"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-canvas.ts",
+      "target": "src/components/retab/ui/pdf-viewer-canvas.ts",
+      "sha256": "318e8e369aa852e2862fab02f74cc9fef38c82df65808f5bcd63fc00f0a338de"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-content.tsx",
+      "target": "src/components/retab/ui/pdf-viewer-content.tsx",
+      "sha256": "09ba257106f13b94d41b8b224df0ad52bff0d5cea44b99524fd82e03581cf518"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-context.tsx",
+      "target": "src/components/retab/ui/pdf-viewer-context.tsx",
+      "sha256": "336b25067c7016a76edcbaf26523c76f7023e1494fcc56095bccf6b96c43a882"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-document-controls.ts",
+      "target": "src/components/retab/ui/pdf-viewer-document-controls.ts",
+      "sha256": "3f573a3156f9b4ac7471b9de2cc62265601fa203b1ee3fbe5e35d35ff3ca8c6e"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-document-layout.ts",
+      "target": "src/components/retab/ui/pdf-viewer-document-layout.ts",
+      "sha256": "c8b3bd55480dc2fee771c9dcbde6a231a773c659ff014dd69a32d3f1ba66f537"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-document-resource.ts",
+      "target": "src/components/retab/ui/pdf-viewer-document-resource.ts",
+      "sha256": "b7edcfd0670d57f5a5380b507d1791700e5a8164397bc78cb3a1b1590b789b48"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-document-runtime.ts",
+      "target": "src/components/retab/ui/pdf-viewer-document-runtime.ts",
+      "sha256": "487d314613af4ec81a0251acf825b3be01afa667d676832f7a6c5ef1212fb49c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-layout.ts",
+      "target": "src/components/retab/ui/pdf-viewer-layout.ts",
+      "sha256": "a1d4ccf8f73e098721be4d69945001c030bf2b6eb5de54f9a82af043fee4289b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-page-sizes.ts",
+      "target": "src/components/retab/ui/pdf-viewer-page-sizes.ts",
+      "sha256": "88c62712a4551e0b5b52160bf1dbb5b64d837a0e07f0eb5f0fa6304da5031677"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-page.tsx",
+      "target": "src/components/retab/ui/pdf-viewer-page.tsx",
+      "sha256": "3916291dde9279708af163aca9aa98a7fa7f170ecc97dec7077a7640a1ce75ee"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-pages-layer.tsx",
+      "target": "src/components/retab/ui/pdf-viewer-pages-layer.tsx",
+      "sha256": "bc1bc148d9eb5db3d7958f2929de38601eac81480b3055090642adfb9def2f6d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-render-cache.ts",
+      "target": "src/components/retab/ui/pdf-viewer-render-cache.ts",
+      "sha256": "d81a4809e102e03a9d9ed34cdfbf2fb15784de0e2741058b7da6b7ea04b9cacc"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-render-error.ts",
+      "target": "src/components/retab/ui/pdf-viewer-render-error.ts",
+      "sha256": "a7ee7940292dca938cb27cb536dbb3241b291db4e369dc8972a76602cd154c62"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-render-scheduler.ts",
+      "target": "src/components/retab/ui/pdf-viewer-render-scheduler.ts",
+      "sha256": "de5f9d936124f1cc00c3b975a7b69f2165ef16899e559cf59dd3bf2bada7079a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-scale.ts",
+      "target": "src/components/retab/ui/pdf-viewer-scale.ts",
+      "sha256": "1dcdc90338b9dc6f1254b27d6563f6ed3559f642029db27a5aae8e1b0409d471"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-scroll.ts",
+      "target": "src/components/retab/ui/pdf-viewer-scroll.ts",
+      "sha256": "905b87cc7c7e9d10f3c1b666b4f3f42a3bd7741ae16fda65af85436989f2f069"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-states.tsx",
+      "target": "src/components/retab/ui/pdf-viewer-states.tsx",
+      "sha256": "3f2ae06626c88bb5f4c76b9512357f1b85b33db26523c076eccb0c0ee5f4a2e3"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-telemetry.ts",
+      "target": "src/components/retab/ui/pdf-viewer-telemetry.ts",
+      "sha256": "612ca81b85040f31fbe65795cfe80c59614ea18e027128e4fd680fa357d79c39"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-thumbnails.tsx",
+      "target": "src/components/retab/ui/pdf-viewer-thumbnails.tsx",
+      "sha256": "730cb641a35108b4c52bf2fc0380e4fc52b36ec82236bd9491c01a3232858a77"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-types.ts",
+      "target": "src/components/retab/ui/pdf-viewer-types.ts",
+      "sha256": "e26b588afeccead7731d60e187bdbc86a8e172c3d7ef2a51e9980b0b82d16ce1"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-virtualization.ts",
+      "target": "src/components/retab/ui/pdf-viewer-virtualization.ts",
+      "sha256": "3d9366d9acc6183b183f737ae3c3c4a6fd1e554f47b8980d996fa7cc0f351400"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer-zoom-motion.ts",
+      "target": "src/components/retab/ui/pdf-viewer-zoom-motion.ts",
+      "sha256": "1c3c5bb539cfb9a737826abfdd4b29fe2abea5091abf4cf030daacdca2a74aac"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pdf-viewer.tsx",
+      "target": "src/components/retab/ui/pdf-viewer.tsx",
+      "sha256": "d24b04eb2a7d3e7a0a6d1774c1903ef969e82fa14f50737dc732df1cb4fae5c7"
+    },
+    {
+      "source": "registry/new-york-v4/ui/plain-text-resource.ts",
+      "target": "src/components/retab/ui/plain-text-resource.ts",
+      "sha256": "cdf7e25226cb3ed11bb8aa6f0483c19022b9c2c1c03fe79b71d26bcc54f96e9e"
+    },
+    {
+      "source": "registry/new-york-v4/ui/plain-text-viewer-frame.tsx",
+      "target": "src/components/retab/ui/plain-text-viewer-frame.tsx",
+      "sha256": "308aacb53096ec32d975ea5a62369e911de5051a6b69dd9ea71605d42cd3ce67"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-cache.ts",
+      "target": "src/components/retab/ui/pptx-viewer-cache.ts",
+      "sha256": "fc1bfc70bcb29fd34df1cd2ac7299ab283e8f7fbdedae72f3dd380710d7cbdef"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-core.ts",
+      "target": "src/components/retab/ui/pptx-viewer-core.ts",
+      "sha256": "dcf249298af86948e7860b405ccf50c89afbcaf8af2e1e264120f84c6e35eb63"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-fallback.tsx",
+      "target": "src/components/retab/ui/pptx-viewer-fallback.tsx",
+      "sha256": "b74e7fc9b34b7b65cf654b77c42dcbe66d9b7290db18ae9f3e668114eb8ed3bd"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-hooks.ts",
+      "target": "src/components/retab/ui/pptx-viewer-hooks.ts",
+      "sha256": "e06bb58a71eba81112f69f67dd9ddf1d9a3330f2c6cc1bfdbb693dc5cbc78f2b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-renderer.ts",
+      "target": "src/components/retab/ui/pptx-viewer-renderer.ts",
+      "sha256": "4d79c043ef45d943a1741250f900ace5b99f2375b11f6b548cc855814acf449c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-scroll.ts",
+      "target": "src/components/retab/ui/pptx-viewer-scroll.ts",
+      "sha256": "72d395f4b0d613ee83cad835324af6d58f026230fc42148518a9aa52e5a888ca"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-slide.tsx",
+      "target": "src/components/retab/ui/pptx-viewer-slide.tsx",
+      "sha256": "1ab1895c47d8573fff14e0be18b319f830faba08f6bd5f265a41a37160f91d84"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-source.ts",
+      "target": "src/components/retab/ui/pptx-viewer-source.ts",
+      "sha256": "10db1b3f710fd06be0248829760088b5d934274d1a2a429dbd7dabfb58683fc0"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-types.ts",
+      "target": "src/components/retab/ui/pptx-viewer-types.ts",
+      "sha256": "9c2646018884839313e19ecc347d018f826ec229fd0244c2c4f607a11a7f48b6"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-viewport.ts",
+      "target": "src/components/retab/ui/pptx-viewer-viewport.ts",
+      "sha256": "721651e8c0ed6f323dde483800913ced47c19c1448c34502a2f75883ca50500b"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-visible-slide.ts",
+      "target": "src/components/retab/ui/pptx-viewer-visible-slide.ts",
+      "sha256": "d061d7c6bcf215eac89dfb256f72ac6400d90304df4b8c0e0ca47a770b76450e"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-zoom-motion.ts",
+      "target": "src/components/retab/ui/pptx-viewer-zoom-motion.ts",
+      "sha256": "b73dbde5ec204b498a007387498659fa2830680342049142dad14910f4b88e75"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer-zoom.ts",
+      "target": "src/components/retab/ui/pptx-viewer-zoom.ts",
+      "sha256": "147cea69d66b97f05e4bd40294482eca45cab3691ec114e79edd45384bb42308"
+    },
+    {
+      "source": "registry/new-york-v4/ui/pptx-viewer.tsx",
+      "target": "src/components/retab/ui/pptx-viewer.tsx",
+      "sha256": "7e3772d0bb7e6395bff2977306a23c92420fff509e011d7d2fca550dc061e8da"
+    },
+    {
+      "source": "registry/new-york-v4/ui/scroll-area.tsx",
+      "target": "src/components/retab/ui/scroll-area.tsx",
+      "sha256": "aeb628cd62367f590a096c952e567552a44aaba7343843aae0acce8a8535bdfc"
+    },
+    {
+      "source": "registry/new-york-v4/ui/spinner.tsx",
+      "target": "src/components/retab/ui/spinner.tsx",
+      "sha256": "0d8a523b160d314f61fa8f4d92f9aa60b566f148513939ae7a90a725ecf1f8c3"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-code-viewer-chrome.tsx",
+      "target": "src/components/retab/ui/text-code-viewer-chrome.tsx",
+      "sha256": "12f9d21d690604a1e48029a7422ed3907596cfbfddbaf691b3c5f8186a71e72d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-chenglou-content.tsx",
+      "target": "src/components/retab/ui/text-viewer-chenglou-content.tsx",
+      "sha256": "7731215464902469f4f0cf4a783379785e846eb7592e6488f35a6282af51c564"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-chenglou.tsx",
+      "target": "src/components/retab/ui/text-viewer-chenglou.tsx",
+      "sha256": "a29e13b9c70fdb890eb50574ba0833879df744e5415693b3f1102c64f75d33ba"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-chrome.tsx",
+      "target": "src/components/retab/ui/text-viewer-chrome.tsx",
+      "sha256": "f32b166baccbccefea4ca1dadaf634d4ede1630c95b39ea9401a3d9ee24c2fc3"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-content.tsx",
+      "target": "src/components/retab/ui/text-viewer-content.tsx",
+      "sha256": "44bad8fe54d6de4fe5b54d58f8d0fb7990580f16eb67d9928ccc5a08074393fb"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-dom-projection.ts",
+      "target": "src/components/retab/ui/text-viewer-dom-projection.ts",
+      "sha256": "cc7f1f9a1a147e6e729963b6d3a4250572b05af3aad1b9f4edfd045cf1b67fcc"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-layout.ts",
+      "target": "src/components/retab/ui/text-viewer-layout.ts",
+      "sha256": "81d5b44d28ae7d7fb7f093c1d33efb12aa97ebb3fdcadb740cc05d3275acfe35"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-ranges.ts",
+      "target": "src/components/retab/ui/text-viewer-ranges.ts",
+      "sha256": "5347774ad943118c3d28bc7ea465239dd281ec2f34861c1eb711ab07167bc3b1"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-resource.ts",
+      "target": "src/components/retab/ui/text-viewer-resource.ts",
+      "sha256": "1687704e74820839a1681e724b2ebd0bf08ef51a73bcc2c1931b8365f8d3fa8f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-scale.ts",
+      "target": "src/components/retab/ui/text-viewer-scale.ts",
+      "sha256": "6e946ba21a0aba0e8e7f0f8a5f88c3bad76b298d193ac1c4cb3918b76f0c2f29"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-scroll-interactions.ts",
+      "target": "src/components/retab/ui/text-viewer-scroll-interactions.ts",
+      "sha256": "b57403275d71ec4b2f8bd62b594fd8d4082ee254ec3bc85f1048fafd45533b86"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-types.ts",
+      "target": "src/components/retab/ui/text-viewer-types.ts",
+      "sha256": "d605208a0558727e4e0a313c0956004b84ffefe6a4c6ae5d36911d1056535e92"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer-virtualization.ts",
+      "target": "src/components/retab/ui/text-viewer-virtualization.ts",
+      "sha256": "fb8921559169688296cf7723fdc1120cf9010b70312754df05a3a7c63a9d9351"
+    },
+    {
+      "source": "registry/new-york-v4/ui/text-viewer.tsx",
+      "target": "src/components/retab/ui/text-viewer.tsx",
+      "sha256": "39f236d82e951ba2292f69ed610296b91395df89718b05689970743a0549c44f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/use-is-client.ts",
+      "target": "src/components/retab/ui/use-is-client.ts",
+      "sha256": "86c4434695130af31b5efed1f9c8be335971dfebabfb2193c3d98e1055b7a388"
+    },
+    {
+      "source": "registry/new-york-v4/ui/use-pdf-page-metrics.ts",
+      "target": "src/components/retab/ui/use-pdf-page-metrics.ts",
+      "sha256": "47bb7178e875044d5ee5dfae7116d10c5b4d6181cf3d7dccbbcbc8cb80b72c32"
+    },
+    {
+      "source": "registry/new-york-v4/ui/use-pdf-thumbnail-document.ts",
+      "target": "src/components/retab/ui/use-pdf-thumbnail-document.ts",
+      "sha256": "069b3161a3db534c61425e72b5b361ea855a23085577a118b90dc9296f8b8291"
+    },
+    {
+      "source": "registry/new-york-v4/ui/use-pdf-thumbnail-page-metrics.ts",
+      "target": "src/components/retab/ui/use-pdf-thumbnail-page-metrics.ts",
+      "sha256": "753fd5b16f4ced2ed490e8a486c8cad4464e126d38cf80b9e4e97935d4e23b3c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/use-pdf-thumbnail-window.ts",
+      "target": "src/components/retab/ui/use-pdf-thumbnail-window.ts",
+      "sha256": "9dfc37357a358e1a9d3ce9fd6616a66f506a0366168066221319cac670f42324"
+    },
+    {
+      "source": "registry/new-york-v4/ui/use-reading-fraction-rebase.ts",
+      "target": "src/components/retab/ui/use-reading-fraction-rebase.ts",
+      "sha256": "9269e351a0032242157cafe36accfa7bc2ff6572b5d0014d0a72b677447b78ee"
+    },
+    {
+      "source": "registry/new-york-v4/ui/use-thumbnail-rail-follow.ts",
+      "target": "src/components/retab/ui/use-thumbnail-rail-follow.ts",
+      "sha256": "f7c2cb4569ad7a4e61ef928702a6636fb2900a909371d9c9a74e8085c75a4e0f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/utif.d.ts",
+      "target": "src/components/retab/ui/utif.d.ts",
+      "sha256": "84507371055296b3bde449a7316a2a186293d37429e13862f5a1a85a07769f77"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-abortable-request.ts",
+      "target": "src/components/retab/ui/viewer-abortable-request.ts",
+      "sha256": "3eb92611b7685d70f83b675b8d5d1be972583c9526e2aaaa73c2702243323860"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-body.tsx",
+      "target": "src/components/retab/ui/viewer-body.tsx",
+      "sha256": "cd2a0f17620a47212f28984799daeb029b9261f08e008ef2eafb811cf59013b8"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-chrome.tsx",
+      "target": "src/components/retab/ui/viewer-chrome.tsx",
+      "sha256": "6bc186f012530145fb70b507f3f56d600a44440813085f4fc5b0006f6aafcaea"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-controls.tsx",
+      "target": "src/components/retab/ui/viewer-controls.tsx",
+      "sha256": "4084f544f6aa0c281a7c055590fa512c578fcccda631283e3473be254485201d"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-diagnostics.ts",
+      "target": "src/components/retab/ui/viewer-diagnostics.ts",
+      "sha256": "b3cd56fc854a540106a7c537c460551b21b7b15ab10ff31b3471d49456d98850"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-document-geometry.ts",
+      "target": "src/components/retab/ui/viewer-document-geometry.ts",
+      "sha256": "8251eb2783d1a382bad2a1819197a33a080e2a6769b313a9ff8d16524c0314b2"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-document-scroll.ts",
+      "target": "src/components/retab/ui/viewer-document-scroll.ts",
+      "sha256": "564371373ddd238dcd560a17f75041117ec5de1a9b162a87cb215bdd62667e67"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-download.tsx",
+      "target": "src/components/retab/ui/viewer-download.tsx",
+      "sha256": "962bd486d5920c90f77b086675a8bcd4565e24dabfd4208d28fa83492a45c9f9"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-error.tsx",
+      "target": "src/components/retab/ui/viewer-error.tsx",
+      "sha256": "527db188a05ffb69cf1d395c424eb0d2dd2885475e16ee9093bccb3764608b7a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-header-outlet.tsx",
+      "target": "src/components/retab/ui/viewer-header-outlet.tsx",
+      "sha256": "0cedee8105014ee3580173ce2ef93d5a4000a3b349f3d0f7ea219f9f945e0032"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-internals.tsx",
+      "target": "src/components/retab/ui/viewer-internals.tsx",
+      "sha256": "16dfec46c34f724b7c9dabebfda43dac529a7a31e8edb2eb4d2e20f78f9f6721"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-lru-cache.ts",
+      "target": "src/components/retab/ui/viewer-lru-cache.ts",
+      "sha256": "f6a4c74d17095d7cf1fca342a0d8175f22a9084d2e40d5f21d7d200116aa6989"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-measurement.ts",
+      "target": "src/components/retab/ui/viewer-measurement.ts",
+      "sha256": "aec9990a353877e427b779a752e59ac3daf53016f1717e5553e1a3ff3af4c0cf"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-motion-telemetry.ts",
+      "target": "src/components/retab/ui/viewer-motion-telemetry.ts",
+      "sha256": "7a39a86100d4a1017fa621f90dba7bf7fd35d52bc8ee66743cd769f86d94bf48"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-root.tsx",
+      "target": "src/components/retab/ui/viewer-root.tsx",
+      "sha256": "90fa9818b2edd28160a26ac76d35f90af2e6c918e5d09e7ea98315a87283ef59"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-scrollbar-css.ts",
+      "target": "src/components/retab/ui/viewer-scrollbar-css.ts",
+      "sha256": "db0d41c244e448d66280ca594b8111ce85a57bc6d60c032b07e9af63084c53ca"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-sidebar.tsx",
+      "target": "src/components/retab/ui/viewer-sidebar.tsx",
+      "sha256": "f3db7293b058256ae4911e94cc421fc44843c33c6860cc44013392f958a71452"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-surface.tsx",
+      "target": "src/components/retab/ui/viewer-surface.tsx",
+      "sha256": "1fb418467cca6109be90a30329fc9488d3008c8291381ba670b4c5a94639f84e"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-types.ts",
+      "target": "src/components/retab/ui/viewer-types.ts",
+      "sha256": "f932843c542b34534d71d43f1c623d9380a4b35ef316c91e1e62fee76f13d325"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer-zoom.tsx",
+      "target": "src/components/retab/ui/viewer-zoom.tsx",
+      "sha256": "e6606097e0b8c24c6f1636b99decc84ec99514c4a2b2ae686de23111b7e04556"
+    },
+    {
+      "source": "registry/new-york-v4/ui/viewer.tsx",
+      "target": "src/components/retab/ui/viewer.tsx",
+      "sha256": "89a399733c18deddbda0d937139a953006c148a0a8d0fe46ec9eec20c1d153c7"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-grid-constants.ts",
+      "target": "src/components/retab/ui/xlsx-grid-constants.ts",
+      "sha256": "b91d98b1ba0d4cda60fdf2500477f2e416931e594f0cf7648312316cf1aa557e"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-grid-row.tsx",
+      "target": "src/components/retab/ui/xlsx-grid-row.tsx",
+      "sha256": "02d117ccc4bd7e9143d2c6d0b51fcd33da1a1cdcd445c8728f636dbe97bb7b40"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-grid-scrollbar.tsx",
+      "target": "src/components/retab/ui/xlsx-grid-scrollbar.tsx",
+      "sha256": "fa487ee4ea07125c9d618445cd5d50e2466177455a4356740c0653403691c6d2"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-grid-skeleton.tsx",
+      "target": "src/components/retab/ui/xlsx-grid-skeleton.tsx",
+      "sha256": "d7394de7f76744b659c5ad1ad2c0611b684f3a3a2d3356ee5bb0931f7d682c59"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-grid.tsx",
+      "target": "src/components/retab/ui/xlsx-grid.tsx",
+      "sha256": "79f880e88e75385821213125daef61981e530876f333970f60d748be673016d1"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-shadow-scope.tsx",
+      "target": "src/components/retab/ui/xlsx-shadow-scope.tsx",
+      "sha256": "6011cbd3a78e914c8d89ca7d60064abefa8ae7f88da3b180442c52222697db1a"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-sheet-tabs.tsx",
+      "target": "src/components/retab/ui/xlsx-sheet-tabs.tsx",
+      "sha256": "2205228aff98b40b9c3dad13e4fbe59c0855e068e6f7a5885d940a56dbde3c46"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-active-cell.ts",
+      "target": "src/components/retab/ui/xlsx-viewer-active-cell.ts",
+      "sha256": "8efb63ff1948c00080b167ad62743c4f7d433df7c01393aa5e6bd7f8dd603ed7"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-chrome.tsx",
+      "target": "src/components/retab/ui/xlsx-viewer-chrome.tsx",
+      "sha256": "05fef3a33ab3a9d864b9b52781916381f5f927ea7aa4dabe11ed467ce3b47aa2"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-download.ts",
+      "target": "src/components/retab/ui/xlsx-viewer-download.ts",
+      "sha256": "5956b315e7bb759120ce5920aafbfbc401537ca8e5c7d8c9381be253c3697238"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-resource.ts",
+      "target": "src/components/retab/ui/xlsx-viewer-resource.ts",
+      "sha256": "27ce4db5a0febea68f3d045faa941260dd3783e95db9b31b9bc69ede7f53b38f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-row-patcher.ts",
+      "target": "src/components/retab/ui/xlsx-viewer-row-patcher.ts",
+      "sha256": "c54b730152bd489b5a027f2055d8ddc101e8905ef856e0e5ac68ffd0a3ab7298"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-scale.ts",
+      "target": "src/components/retab/ui/xlsx-viewer-scale.ts",
+      "sha256": "9a3a122303ecea5890f9e12258ce40ea6e6385b74a9ba12cb1e82864a22d69da"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-scroll.ts",
+      "target": "src/components/retab/ui/xlsx-viewer-scroll.ts",
+      "sha256": "53e383e10e4109a6f03cf499f4f714e2f5cad49718992510bc16528b4c72664c"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-session.tsx",
+      "target": "src/components/retab/ui/xlsx-viewer-session.tsx",
+      "sha256": "2e3089e1296ceb559640475049fcef781ea2d78820f54afc8e2e59582a23bcaf"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-sheet-state.ts",
+      "target": "src/components/retab/ui/xlsx-viewer-sheet-state.ts",
+      "sha256": "b0280a71ff1c06ceda9d57ffe44e581fc00a3614d8c102c8c202b5ad31e9554e"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-sheet.tsx",
+      "target": "src/components/retab/ui/xlsx-viewer-sheet.tsx",
+      "sha256": "e4a4470fcf70198a54d818ad6d291831c5b7f2566046d7e612422d5ba311aec2"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer-types.ts",
+      "target": "src/components/retab/ui/xlsx-viewer-types.ts",
+      "sha256": "fb5cfa0a570695ea4ff780468d28c8ec461e50a45797c947bf40ab25a04baf0f"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer.tsx",
+      "target": "src/components/retab/ui/xlsx-viewer.tsx",
+      "sha256": "d17a00215e70ce3f378b22ba52e57a6c5d69407152ac5066ba52f190befa5880"
+    },
+    {
+      "source": "registry/new-york-v4/ui/xlsx-viewer.worker.ts",
+      "target": "src/components/retab/ui/xlsx-viewer.worker.ts",
+      "sha256": "89ccb07750d701b8cc4ca91e992e7544cdedd8e77b83c07759a7a4f91035cc72"
+    }
+  ]
+}

@@ -66,7 +66,7 @@ export function generateProfiles() {
     if (!version) throw new Error(`Unknown root dependency ${name}`)
     return [name, version]
   }))
-  const tools = ['@biomejs/biome', '@types/react', '@types/react-dom', '@vitejs/plugin-react',
+  const tools = ['@biomejs/biome', '@types/prismjs', '@types/react', '@types/react-dom', '@vitejs/plugin-react',
     '@tailwindcss/typography', 'esbuild', 'postcss', 'tailwind-scrollbar-hide', 'tailwindcss', 'typescript', 'vite', 'vitest']
   const profiles = {
     web: { dependencies: Object.fromEntries(Object.entries(full.dependencies).filter(([name]) => !excludedWeb.has(name))), devDependencies: pick(tools) },
