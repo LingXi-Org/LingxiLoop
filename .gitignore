@@ -63,7 +63,7 @@ ios/App/.symlinks
 /build/sim
 
 # Electron builder output
-release/
+/release/
 electron-package/
 
 # Runtime-generated user content (AI portraits + image uploads)

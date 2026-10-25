@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "WebWorker"],
+    "types": ["../../worker-configuration.d.ts", "@cloudflare/vitest-pool-workers"],
+    "noEmit": true
+  },
+  "include": ["src", "../../shared/release", "../../worker-configuration.d.ts"]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "lingxiloop-release-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": { "bindings": [{ "name": "RELEASES", "class_name": "ReleaseLedger" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ReleaseLedger"] }],
+  "workflows": [{ "binding": "RELEASE_WORKFLOW", "name": "lingxiloop-release-test", "class_name": "ReleaseWorkflow" }],
+  "r2_buckets": [{ "binding": "ARTIFACTS", "bucket_name": "lingxiloop-releases-test" }],
+  "vars": { "ENVIRONMENT": "test", "BOOTSTRAP_ENABLED": "true", "EXECUTORS_JSON": "{}", "WORKER_NAMES_JSON": "[]", "PROBES_JSON": "{}" }
+}

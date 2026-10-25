@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync } from 'node:fs'
 import { basename } from 'node:path'
 import { SMOKE_FILES } from '../server/integration-suite.mjs'
+import { runtimeSharedPaths } from './ci-scope-paths.mjs'
 
 const image = (packageName, manifest, dockerfile, context = '.', target = '', wukongCommit = '') => ({
   package: packageName, manifest, dockerfile, context, target, wukong_commit: wukongCommit,
@@ -62,7 +63,7 @@ function integrationScope(changed, { serverSource, deepIntegration, deployment }
   return { integration: true, integration_mode: 'selected', integration_files: selected }
 }
 
-export function computeScope(changed = {}, manual = '') {
+export function computeScope(changed = {}, manual = '', { releaseController = false } = {}) {
   if (manual) {
     if (!['web', 'admin-control', 'server', 'open-notebook', 'wukongim', 'gateway', 'deployment', 'release', 'deep-integration'].includes(manual)) {
       throw new Error(`unknown CI scope: ${manual}`)
@@ -107,8 +108,8 @@ export function computeScope(changed = {}, manual = '') {
   if (release) checkJobs.push({ component: 'release' })
 
   const images = []
-  if (webBuild || serverSource || enabled('serverDocker')) {
-    images.push(image('lingxiloop-server', 'server', 'server/docker/lingxiloop-server.Dockerfile'))
+  if ((!releaseController && webBuild) || serverSource || enabled('serverDocker')) {
+    images.push(image('lingxiloop-server', 'server', 'server/docker/lingxiloop-server.Dockerfile', '.', releaseController ? 'runtime' : ''))
   }
   if (enabled('wukongim') || release) {
     images.push(image(
@@ -156,7 +157,10 @@ if (process.argv[1]?.endsWith('ci-scope.mjs')) {
   changed.integrationFiles = JSON.parse(process.env.INTEGRATION_FILES || '[]')
   changed.serverSourceFiles = JSON.parse(process.env.SERVER_SOURCE_FILES || '[]')
   changed.integrationRunnerFiles = JSON.parse(process.env.INTEGRATION_RUNNER_FILES || '[]')
-  const result = computeScope(changed, process.env.EVENT === 'workflow_dispatch' ? process.env.MANUAL_SCOPE : '')
+  const sharedRuntime = runtimeSharedPaths()
+  const webFiles = JSON.parse(process.env.WEB_FILES || '[]').filter(path => sharedRuntime.has(path))
+  if (webFiles.length) { changed.serverSource = true; changed.serverSourceFiles.push(...webFiles) }
+  const result = computeScope(changed, process.env.EVENT === 'workflow_dispatch' ? process.env.MANUAL_SCOPE : '', { releaseController: process.env.RELEASE_CONTROLLER_ENABLED === 'true' })
   const lines = Object.entries(result).map(([name, value]) => {
     if (name === 'images' || name === 'check_jobs') return `${name}=${JSON.stringify({ include: value })}`
     return `${name}=${Array.isArray(value) ? JSON.stringify(value) : value}`

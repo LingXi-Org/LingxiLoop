@@ -1,0 +1,15 @@
+# Template only: do not create a tunnel, route or Access service token from this file.
+# Use the existing verified Tunnel identity and root-owned credentials reference.
+tunnel: REPLACE_WITH_VERIFIED_EXISTING_TUNNEL_ID
+credentials-file: /etc/cloudflared/credentials.json
+# Tunnel transport is independent of Docker daemon's HTTP proxy.
+ingress:
+  - hostname: release-host-a.example.invalid
+    service: http://127.0.0.1:9465
+    originRequest:
+      access:
+        required: true
+        teamName: REPLACE_WITH_ACCESS_TEAM
+        audTag:
+          - REPLACE_WITH_EXECUTOR_ACCESS_APPLICATION_AUDIENCE
+  - service: http_status:404
