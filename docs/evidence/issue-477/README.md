@@ -30,3 +30,13 @@ mode; source authorization is checked before and again after upstream search.
 Real Notebook PDF/Markdown ingestion/query browser acceptance has not run. The
 available original-format browser harness establishes #474 rendering only;
 it does not supply semantic provider results. No production writes or deployment.
+
+Final combined Vite build passed. Environment handoff confirms only the local
+PostgreSQL, Redis, MinIO and WuKongIM containers; no Notebook/SurrealDB service or
+real embedding provider was established. The integration fixture disables live
+Notebook/embedding calls. The missing isolated real-provider test configuration
+was requested in issue #477 comment 6396312767; no production credentials were
+read and no provider result was fabricated.
+
+PR #489 targets main to use the repository's main-only pull-request CI. It keeps
+#485's ancestry and must be integrated after #485, while #485 remains independent.
