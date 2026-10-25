@@ -130,6 +130,36 @@ is part of this work.
 
 ## Qualification and plan
 
+### Product56 to57 case soft deletion
+
+`case-soft-delete57-host-release/v1` is the exact PR459 transition from full56
+to full57 on the unchanged formally published3.8.12/native14/control11 package,
+reader3 and producer `purpose-json-v3`. Preserve every56 migration byte; append
+only `0057_case_soft_delete.sql`, SHA256
+`f42124684d66f1387267f6da653ec2b255c2fa4a9f6dccd6179a3a5fbb4607a0`.
+The source must be the actually accepted56 release, not a hardcoded historical SHA.
+
+Use the existing absolute-path CLI and exact successful-target CI/full OCI audit,
+source acceptance, four original reader identities and unchanged configuration
+bindings. Add a fresh format2 backup plan using `native14-product56` with that
+source SHA and a new attempt/nonce. The driver drains all four writers, proves
+two zero-lease barriers and the zero bound/checkpoint gate, verifies the fresh56
+snapshot plus isolated restore, then submits one57 migration. No runtime CAS,
+credential path, core deployment or new runner operation is introduced. All known
+native updates must be Complete/success:true; acceptance requires the same first
+four healthy target identities, installed full57 provenance and actual public
+health/HTML/entry-resource hashes. Never replay the earlier55-to56 wrapper.
+
+Recovery after57 is **fix forward with tombstone-aware code**. Migration retains
+article snapshots/assets; switching to ordinary56 code can expose logically deleted
+rows and assets. Migration and stopped receipts therefore record
+`requiresTombstoneAwareCode:true`, including unknown outcomes. Preserve read/file/
+asset/worker tombstone filtering in every recovery image. There is no automatic
+57-to56 restoration or retry; first resolve unknown native operations. A fresh
+source56 backup is pre-migration evidence, not permission to erase later user
+deletions or restore source56 over live57. Existing source-image restoration and
+52-to53 stopped-recovery helpers explicitly do not accept this profile.
+
 ### Product56 image replacement without a schema change
 
 Use the explicit `product56-image-host-release/v1` format only when source and

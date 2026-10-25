@@ -207,3 +207,9 @@ test('homework56 source backup binds exact formal3.8.12 full55 and verifies the 
   await assert.rejects(buildMemoryBackupPlan({sourceSha:'213fb25312c81dfdeff12dea072d433c4de92f7a',profile:'native14-product55',attempt:'synthetic-wrong-product'}));
  }finally{globalThis.fetch=original}
 });
+
+
+test('soft57 source backup restores exact formal3.8.12 product56 without a target migration',async()=>{
+ const original=globalThis.fetch;globalThis.fetch=()=>assert.fail('offline source56 backup used network');
+ try{const plan=await buildMemoryBackupPlan({sourceSha:'192f110e56659cb2a6ce40f1ca52200ea1c00064',profile:'native14-product56',attempt:'synthetic-soft57-unit',nonce:'0123456789abcdef'});assert.equal(plan.profile,'native14-product56');assert.equal(plan.source.productVersion,56);assert.equal(plan.source.migrations.length,56);assert.equal(plan.source.runtime.runtime,'3.8.12');assert.equal(plan.source.runtime.schema,14);assert.equal(plan.source.runtime.protocol,11);assert.match(plan.command,/--snapshot=/);assert.doesNotMatch(plan.command,/migrate-bin/);await validateMemoryBackupPlan(plan);const changed=structuredClone(plan);changed.source.migrations[55].checksum='0'.repeat(64);await assert.rejects(validateMemoryBackupPlan(changed));const update=completed(plan);update.logs[0].stdout=update.logs[0].stdout.replaceAll('["public","schema_migrations",46]','["public","schema_migrations",56]');assert.equal(parseMemoryBackupReceipt(plan,update).source.productVersion,56);await assert.rejects(buildMemoryBackupPlan({sourceSha:'9116dcb05eba30c76c81511e64ac9026730e6135',profile:'native14-product56',attempt:'synthetic-wrong-source'}));}finally{globalThis.fetch=original}
+});
