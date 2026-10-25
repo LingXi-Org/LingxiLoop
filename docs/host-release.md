@@ -130,6 +130,42 @@ is part of this work.
 
 ## Qualification and plan
 
+### Product56 image replacement without a schema change
+
+Use the explicit `product56-image-host-release/v1` format only when source and
+target both retain formal LingxiOS3.8.12, native14/control11, the complete identical
+56-migration inventory (including the exact homework-validation56 checksum),
+reader3 and producer `purpose-json-v3`. The target commit must differ. Package,
+schema, producer, deployment configuration or migration changes are refused;
+this format does not qualify a future migration or product version.
+
+Use the ordinary absolute-path CLI below: seal without flags, optionally prepare
+images with `--prepare-images`, then execute the sealed plan with `--execute`.
+No new runner operation or credential path is introduced. Bind the actual accepted
+source56 acceptance bytes, source/target full OCI audits and config bytes, exact
+target successful CI, fresh plan timestamp, four accepted reader identities and
+configuration hashes. Keep all three stack refs from the source acceptance;
+generate separate committed target-never and preparation-always app templates,
+and keep the core-state source/target refs and configuration identical.
+
+The adapter drains both Webs and Workers, proves two zero-lease barriers and the
+zero bound/checkpoint gate, then starts Webs before Workers and binds each first
+healthy identity. It performs **zero backups, zero migrations and zero runtime
+provenance updates**; the final complete event records `migrationCount: 0`.
+It does not deploy or recreate the core-state services. Native actions still
+require terminal `Complete`/`success:true` with fresh readback. Existing source
+configuration, image/platform/layer, public-text capability and health checks
+remain mandatory. Final acceptance must bind the complete release receipt,
+absence of migration/backup/provenance events, its four unchanged rollout
+identities, all known native success receipts and the actual target public
+health/HTML/entry-resource hashes. This is deployment acceptance, not browser or
+provider feature acceptance.
+
+Unknown outcomes stop without retry. No automatic source restoration or new
+recovery format is added; inspect the saved terminal receipt and actual compatible
+state before the sole release owner chooses a narrow fix forward. Never reuse the
+completed55-to56 wrapper or remove its profile checks to perform this release.
+
 ### Fresh qualification when the historical source52 receipt is unavailable
 
 `current-source52-acceptance/v1` is a separate, narrowly reviewed source input for
