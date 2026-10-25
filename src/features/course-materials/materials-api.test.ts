@@ -18,7 +18,7 @@ test('material upload binds presign and completion to initial organization/cours
     puts++; progress(50); progress(100); return { ok: true, status: 200 }
   } } })
   const { knowledgeApi } = await import('../knowledge/api')
-  const file = new File(['PK'], 'notes.zip')
+  const file = new File(['PK'], 'notes.zip', { type: 'application/x-zip-compressed' })
   const progress: number[] = []
   const binding = { companyId: 'original-org', userId: 'original-user', space: 'private' as const, isCurrentIdentity: () => principalValid }
   try {
@@ -32,7 +32,7 @@ test('material upload binds presign and completion to initial organization/cours
       assert.deepEqual(call.init.headers, { 'x-company-id': 'original-org', 'x-project-id': 'original-course' })
     }
     const body = JSON.parse(String(calls[0].init.body))
-    assert.equal(body.mime, 'application/zip', 'empty browser MIME is inferred from original extension')
+    assert.equal(body.mime, 'application/zip', 'browser ZIP alias is canonicalized to the server MIME by original extension')
     assert.equal(body.visibilityScope, undefined, 'scope remains server-owned')
     assert.equal(body.ownerUserId, undefined)
     principalValid = false

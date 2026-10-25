@@ -29,6 +29,7 @@ const USER_ID = 'u-knowledge-slice'
 const STUDENT_A_ID = 'u-knowledge-student-a'
 const STUDENT_B_ID = 'u-knowledge-student-b'
 const TEACHER_ID = 'u-knowledge-teacher'
+const TEACHER_NAME = '林老师'
 const STUDENT_C_ID = 'u-knowledge-student-c'
 const COMPANY_ID = 'co-knowledge-slice'
 const PROJECT_ID = 'project-knowledge-slice'
@@ -108,7 +109,10 @@ beforeEach(async () => {
   )
   await seedUserMembership(USER_ID, COMPANY_ID)
   for (const userId of [STUDENT_A_ID, STUDENT_B_ID, TEACHER_ID, STUDENT_C_ID]) {
-    await seedUserMembership(userId, COMPANY_ID, { role: [STUDENT_A_ID, STUDENT_B_ID, STUDENT_C_ID].includes(userId) ? 'STUDENT' : 'TEACHER', isAdmin: false })
+    await seedUserMembership(userId, COMPANY_ID, {
+      role: [STUDENT_A_ID, STUDENT_B_ID, STUDENT_C_ID].includes(userId) ? 'STUDENT' : 'TEACHER', isAdmin: false,
+      displayName: userId === TEACHER_ID ? TEACHER_NAME : userId,
+    })
   }
   await pool.query(
     `INSERT INTO projects (id,company_id,kind,name,color,created_by,is_default)
@@ -298,6 +302,10 @@ test('[integration] Source authorization is PROJECT plus only the current user P
   assert.deepEqual(await retrievalIdsFor(TEACHER_ID), [teacherProject.id])
   assert.deepEqual(await retrievalIdsFor(STUDENT_C_ID), [thirdStudentPrivate.id, teacherProject.id].sort())
   assert.deepEqual(await retrievalIdsFor(USER_ID), [teacherProject.id])
+  const conversationSources = await application.conversationSources({
+    userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID,
+  }, retrievalConversationId)
+  assert.equal(conversationSources.find(source => source.id === teacherProject.id)?.ownerName, TEACHER_NAME)
 
   for (const actorUserId of [STUDENT_B_ID, USER_ID, TEACHER_ID, STUDENT_C_ID]) {
     const actorScope = { userId: actorUserId, companyId: COMPANY_ID, projectId: PROJECT_ID }
@@ -357,6 +365,9 @@ test('[integration] course materials store each original format, refresh, and en
     ['lesson.pptx', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', Buffer.from('PK\x03\x04[Content_Types].xml ppt/presentation.xml')],
     ['lesson.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', Buffer.from('PK\x03\x04[Content_Types].xml xl/workbook.xml')],
     ['notes.md', 'text/markdown', Buffer.from('# original markdown')],
+    ['notes.txt', 'text/plain', Buffer.from('original text')],
+    ['data.csv', 'text/csv', Buffer.from('name,value\noriginal,1\n')],
+    ['data.json', 'application/json', Buffer.from('{"original":true}')],
     ['image.jpg', 'image/jpeg', Buffer.from([255, 216, 255, 224, 12, 34, 56])],
     ['image.png', 'image/png', Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 12, 34, 56])],
     ['archive.zip', 'application/zip', Buffer.from([80, 75, 5, 6, 0, 0, 0, 0])],
@@ -408,8 +419,6 @@ test('[integration] course materials store each original format, refresh, and en
 })
 
 test('[integration] global teacher labels cannot substitute for the actual course role', async () => {
-  await pool.query(`UPDATE company_memberships SET role='TEACHER' WHERE company_id=$1 AND user_id=$2`, [COMPANY_ID, STUDENT_A_ID])
-  await pool.query(`UPDATE company_memberships SET role='STUDENT' WHERE company_id=$1 AND user_id=$2`, [COMPANY_ID, TEACHER_ID])
   for (const [userId, visibility] of [[STUDENT_A_ID, 'PRIVATE'], [TEACHER_ID, 'PROJECT']] as const) {
     const scope = { userId, companyId: COMPANY_ID, projectId: PROJECT_ID }
     const created = await application.presignSource(scope, null, { idempotencyKey: 'actual-course-role', name: 'notes.txt', mime: 'text/plain', size: 5 })
@@ -423,6 +432,8 @@ test('[integration] global teacher labels cannot substitute for the actual cours
       await storage.put(key, Buffer.from('hello'), 'text/plain')
       await application.completeUpload(scope, created.id)
       const studentView = await application.materials({ ...scope, userId: STUDENT_B_ID }, 'public')
+      assert.equal(studentView.sources[0]?.ownerName, TEACHER_NAME)
+      assert.equal((await application.source({ ...scope, userId: STUDENT_B_ID }, created.id)).ownerName, TEACHER_NAME)
       assert.deepEqual(studentView.sources[0]?.capabilities, { canDownload: true, canRename: false, canDelete: false })
       for (const userId of [STUDENT_A_ID, STUDENT_B_ID]) {
         const response = await fetch(`${downloadBaseUrl}/files?key=${encodeURIComponent(key)}`, { headers: { 'x-test-user-id': userId } })
@@ -434,6 +445,38 @@ test('[integration] global teacher labels cannot substitute for the actual cours
       await assert.rejects(application.source({ ...scope, companyId: OTHER_COMPANY_ID, projectId: OTHER_PROJECT_ID }, created.id))
     }
   }
+  const unassignedTeacher = { userId: TEACHER_ID, companyId: COMPANY_ID, projectId: SAME_COMPANY_PROJECT_ID }
+  await assert.rejects(application.materials(unassignedTeacher, 'public'))
+  await assert.rejects(application.presignSource(unassignedTeacher, null, {
+    idempotencyKey: 'unassigned-global-teacher', name: 'forbidden.txt', mime: 'text/plain', size: 5,
+  }))
+})
+
+test('[integration] students cannot manage legacy public files they created, while own private files remain manageable', async () => {
+  const student = { userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID }
+  const teacher = { ...student, userId: TEACHER_ID }
+  const created = await application.presignSource(student, null, {
+    idempotencyKey: 'legacy-student-public', name: 'notes.txt', mime: 'text/plain', size: 5,
+  })
+  await application.editSource(student, created.id, { title: 'own-private.txt' })
+  assert.deepEqual((await application.source(student, created.id)).capabilities,
+    { canDownload: false, canRename: true, canDelete: true })
+  // A historical row can predate the current server-determined upload scope.
+  await pool.query(`UPDATE knowledge_sources SET visibility_scope='PROJECT' WHERE id=$1`, [created.id])
+  assert.deepEqual((await application.source(student, created.id)).capabilities,
+    { canDownload: false, canRename: false, canDelete: false })
+  for (const userId of [STUDENT_A_ID, STUDENT_B_ID]) {
+    const scope = { ...student, userId }
+    await assert.rejects(application.editSource(scope, created.id, { title: 'forbidden.txt' }))
+    await assert.rejects(application.delete(scope, created.id))
+    await assert.rejects(application.retry(scope, created.id))
+    await assert.rejects(application.completeUpload(scope, created.id))
+  }
+  assert.equal((await application.source(teacher, created.id)).capabilities.canRename, true)
+  await application.editSource(teacher, created.id, { title: 'teacher-managed.txt' })
+  assert.equal((await application.source(student, created.id)).title, 'teacher-managed.txt')
+  await application.delete(teacher, created.id)
+  await assert.rejects(application.source(student, created.id))
 })
 
 test('[integration] originals remain usable with indexing disabled and malformed uploads stay pending', async () => {

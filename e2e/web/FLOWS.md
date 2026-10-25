@@ -23,7 +23,9 @@ The supported product is the browser SPA. These cases drive the actual app with 
 | Canvas text card create/edit/move/reload/download/delete | `canvas.e2e.ts` | Same group fixture, canvas API, actual WebSocket proxy; `run.mjs` checks exact exported bytes against the report's download artifact and emits `export-validation.json` |
 | Settings sections, theme persistence, notifications form, focus return, phone drawer | `workspace.e2e.ts` | Preferences API |
 | Notification schedule/switch persistence; generated and uploaded avatar persistence | `preferences.e2e.ts` | Preferences API and object storage; reuses `public/icon-192.png` as the upload fixture |
-| Private text source ingestion/preview/rename/reload/delete | `knowledge.e2e.ts` | Student, actual worker, storage, Open Notebook/SurrealDB, `E2E_KNOWLEDGE=1`, `E2E_MUTATIONS=1` |
+| Shared text source ingestion/preview/rename/reload/delete through course materials | `knowledge.e2e.ts` | Student, actual worker, storage, Open Notebook/SurrealDB, `E2E_KNOWLEDGE=1`, `E2E_MUTATIONS=1` |
+
+| Course materials public teacher/student views, private upload/refresh/download byte equality, search/filter/rename/delete and teacher/second-student direct API isolation | `course-materials.e2e.ts` | Real disposable API/object storage, `E2E_COURSE_MATERIALS=1`, `E2E_MUTATIONS=1`, seeded teacher/student/student2 |
 
 ## Remaining flow requirements
 

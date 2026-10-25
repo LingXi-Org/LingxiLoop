@@ -85,8 +85,10 @@ export const knowledgeApi = {
     const [{ putMaterialFile }, { materialMimes }] = await Promise.all([
       import('../course-materials/upload-transport'), import('../course-materials/data'),
     ])
-    const mime = file.type && file.type !== 'application/octet-stream' ? file.type
-      : materialMimes[file.name.split('.').at(-1)?.toLowerCase() ?? ''] ?? 'application/octet-stream'
+    // Browser MIME aliases (especially Windows ZIP and Markdown) vary; the
+    // server validates canonical format plus the actual original-file bytes.
+    const mime = materialMimes[file.name.split('.').at(-1)?.toLowerCase() ?? '']
+      ?? (file.type || 'application/octet-stream')
     return uploadSource(`/projects/${encodeURIComponent(projectId)}/sources`,
       JSON.stringify([binding.companyId, binding.userId, projectId, binding.space]), file, undefined, {
         mime, headers: { 'x-company-id': binding.companyId, 'x-project-id': projectId },

@@ -27,7 +27,7 @@ await run(['d1', 'migrations', 'apply', 'DB', '--local', '--config', config, '--
 const now = Math.floor(Date.now() / 1000)
 const quote = value => `'${String(value).replaceAll("'", "''")}'`
 const statements = []
-for (const [role, number] of [['member', 1], ['admin', 2], ['student', 3], ['manager', 4], ['lifecycle', 6]]) {
+for (const [role, number] of [['member', 1], ['admin', 2], ['student', 3], ['student2', 7], ['manager', 4], ['lifecycle', 6]]) {
   const name = `E2E ${role}`
   const id = `e2e-auth-${role}`
   const email = process.env[`E2E_USER_${role.toUpperCase()}_USERNAME`] || `${role}@e2e.lingxiloop.test`

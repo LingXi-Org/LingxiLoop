@@ -394,6 +394,10 @@ export function evaluatePolicy(
 
   const projectRole = context.projectMembership?.role
   const isProjectManager = projectRole === 'TEACHER'
+  if (request.action === 'knowledge:manage' && request.resource?.type === 'knowledge_source'
+    && resource.visibilityScope === 'PROJECT' && !isProjectManager) {
+    return 'ROLE_NOT_ALLOWED'
+  }
   switch (policy.resource) {
     case 'none':
       return 'ALLOWED'

@@ -88,7 +88,7 @@ function MaterialsSpace({ context, readOnly }: { context: MaterialContext; readO
     finally { setBusy(ids, false) }
   }
   const download = async (source: KnowledgeSource) => {
-    if (!source.capabilities?.canDownload) return
+    if (!isCurrent() || !source.capabilities?.canDownload) return
     const detail = await knowledgeApi.getProjectSource(projectId, source.id)
     if (!isCurrent()) return
     if (!detail.originalFileUrl) throw new Error('原文件暂时无法下载')

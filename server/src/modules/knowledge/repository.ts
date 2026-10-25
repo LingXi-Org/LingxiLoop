@@ -6,6 +6,7 @@ const SOURCE_LIST_SELECT = `source.id,source.kind,source.title,source.mime_type 
   source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",source.status,source.stage,
   source.error,source.is_truncated AS "isTruncated",source.visibility_scope AS "visibilityScope",
   source.owner_user_id AS "ownerUserId",source.created_by_user_id AS "createdByUserId",
+  (SELECT owner.display_name FROM users owner WHERE owner.id=source.owner_user_id) AS "ownerName",
   source.created_by_user_id AS "createdBy",source.created_via AS "createdVia",
   source.created_at AS "createdAt",source.updated_at AS "updatedAt",
   source.origin_client_msg_no AS "originClientMsgNo",source.external_chunk_count AS "chunkCount"`
@@ -14,6 +15,7 @@ const SOURCE_DETAIL_SELECT = `source.id,source.kind,source.title,source.mime_typ
   source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",source.storage_key AS "storageKey",
   source.status,source.stage,source.error,source.is_truncated AS "isTruncated",
   source.visibility_scope AS "visibilityScope",source.owner_user_id AS "ownerUserId",
+  (SELECT owner.display_name FROM users owner WHERE owner.id=source.owner_user_id) AS "ownerName",
   source.created_by_user_id AS "createdByUserId",source.created_by_user_id AS "createdBy",
   source.created_via AS "createdVia",source.created_at AS "createdAt",source.updated_at AS "updatedAt"`
 

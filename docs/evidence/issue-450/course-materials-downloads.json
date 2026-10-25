@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "runId": "01a17189-07f7-742d-ae8d-8dd0ba36355e",
+  "files": [
+    {
+      "name": "triangle.pdf",
+      "bytes": 1398,
+      "sha256": "ce552fda8a5f7aa8e79c104c3a5922574292ad711bc3b0c86fb4dae5bc9132cf",
+      "artifact": "web/e2e_web_course-materials.e2e.ts__student_20files_20upload_2C_20refresh_2C_20download_20intact_2C_20filter_2C_20-8b25969e/default/attempt-0/downloads/001-triangle.pdf"
+    },
+    {
+      "name": "triangle.docx",
+      "bytes": 36612,
+      "sha256": "d772eafc3dd96b43274e08855706a61e9a7037afa846a0cb2ed5d23afa4aa988",
+      "artifact": "web/e2e_web_course-materials.e2e.ts__student_20files_20upload_2C_20refresh_2C_20download_20intact_2C_20filter_2C_20-8b25969e/default/attempt-0/downloads/002-triangle.docx"
+    },
+    {
+      "name": "triangle.pptx",
+      "bytes": 28104,
+      "sha256": "46c1431b3654c59769eb4d01c4f35c24ea54071b8274225feb0040360b20daa1",
+      "artifact": "web/e2e_web_course-materials.e2e.ts__student_20files_20upload_2C_20refresh_2C_20download_20intact_2C_20filter_2C_20-8b25969e/default/attempt-0/downloads/003-triangle.pptx"
+    },
+    {
+      "name": "triangle.xlsx",
+      "bytes": 4859,
+      "sha256": "9afcc727256dd1556de094e7ceef486754f2b1bb9dfb46689fde49f2813781f1",
+      "artifact": "web/e2e_web_course-materials.e2e.ts__student_20files_20upload_2C_20refresh_2C_20download_20intact_2C_20filter_2C_20-8b25969e/default/attempt-0/downloads/004-triangle.xlsx"
+    },
+    {
+      "name": "triangle.md",
+      "bytes": 68,
+      "sha256": "ca76110e3df35ae2aa33f7f0ba9b4673c7b912088c39e3d716f817ac1421d367",
+      "artifact": "web/e2e_web_course-materials.e2e.ts__student_20files_20upload_2C_20refresh_2C_20download_20intact_2C_20filter_2C_20-8b25969e/default/attempt-0/downloads/005-triangle.md"
+    },
+    {
+      "name": "triangle.png",
+      "bytes": 4719,
+      "sha256": "41877e0a6040c1a5f84230de18220d00d441f4f149e7c113dcf0d86c14201375",
+      "artifact": "web/e2e_web_course-materials.e2e.ts__student_20files_20upload_2C_20refresh_2C_20download_20intact_2C_20filter_2C_20-8b25969e/default/attempt-0/downloads/006-triangle.png"
+    },
+    {
+      "name": "triangle.zip",
+      "bytes": 177,
+      "sha256": "38f391b1566939c37852518563e3dbd62892772978d03463f169374682d55c68",
+      "artifact": "web/e2e_web_course-materials.e2e.ts__student_20files_20upload_2C_20refresh_2C_20download_20intact_2C_20filter_2C_20-8b25969e/default/attempt-0/downloads/007-triangle.zip"
+    }
+  ]
+}

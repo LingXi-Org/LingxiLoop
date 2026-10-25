@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { validateCanvasExport } from './export-validation.mjs'
+import { validateMaterialDownloads } from './course-materials-downloads.mjs'
 
 const args = process.argv.slice(2)
 const outputFlag = args.findIndex(arg => arg === '--output' || arg.startsWith('--output='))
@@ -31,7 +32,7 @@ await writeFile(path.join(output, 'run-metadata.json'), JSON.stringify({
   build,
 }, null, 2))
 if (exitCode === 0) {
-  try { await validateCanvasExport(output) }
-  catch (error) { console.error('Canvas export validation failed:', error.message); process.exitCode = 1 }
+  try { await validateCanvasExport(output); await validateMaterialDownloads(output) }
+  catch (error) { console.error('Browser artifact validation failed:', error.message); process.exitCode = 1 }
 }
 if (exitCode !== 0) process.exitCode = exitCode

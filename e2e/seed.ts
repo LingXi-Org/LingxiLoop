@@ -24,14 +24,14 @@ try {
   await db.query(`INSERT INTO education_contracts(id,company_id,plan_id,status,starts_at,ends_at,seat_limit)
     VALUES($1,$1,'plan-education','ACTIVE',NOW()-INTERVAL '1 day',NOW()+INTERVAL '30 days',100)
     ON CONFLICT(id) DO UPDATE SET ends_at=EXCLUDED.ends_at`, [company])
-  for (const [name, number] of [['member', 1], ['admin', 2], ['student', 3]] as const) {
+  for (const [name, number] of [['member', 1], ['admin', 2], ['student', 3], ['student2', 7]] as const) {
     const user = `00000000-0000-4000-8000-${String(number).padStart(12, '0')}`
-    const role = name === 'student' ? 'STUDENT' : 'TEACHER'
+    const role = name.startsWith('student') ? 'STUDENT' : 'TEACHER'
     const email = process.env[`E2E_USER_${name.toUpperCase()}_USERNAME`] || `${name}@e2e.lingxiloop.test`
     await db.query(`INSERT INTO users(id,email,display_name,email_verified_at) VALUES($1,$2,$3,NOW())
       ON CONFLICT(id) DO UPDATE SET email=EXCLUDED.email`, [user, email, `E2E ${name}`])
     await db.query(`INSERT INTO company_memberships(company_id,user_id,role,is_admin) VALUES($1,$2,$3,$4)
-      ON CONFLICT DO NOTHING`, [company, user, role, name !== 'student'])
+      ON CONFLICT DO NOTHING`, [company, user, role, !name.startsWith('student')])
     await db.query(`WITH period AS (INSERT INTO company_membership_periods(membership_id,role)
       SELECT id,role FROM company_memberships WHERE company_id=$1 AND user_id=$2 AND period_id IS NULL RETURNING id,membership_id)
       UPDATE company_memberships member SET period_id=period.id FROM period WHERE member.id=period.membership_id`, [company, user])

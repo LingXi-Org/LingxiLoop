@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import type { Queryable } from '../db/queryable.js'
 import { ContextScopedPermissionService } from '../modules/access/application.js'
-import { evaluatePolicy, resourceAccessMode } from '../modules/access/policy.js'
+import { evaluatePolicy, knowledgeSourceCapabilities, resourceAccessMode } from '../modules/access/policy.js'
 import type { ResolvedAccessContext } from '../modules/access/public.js'
 
 const ownerContext: ResolvedAccessContext = {
@@ -33,6 +33,25 @@ test('creator policies deny missing ownership facts instead of treating them as 
       status: null,
     },
   ), 'ROLE_NOT_ALLOWED')
+})
+
+test('public knowledge sources require course-teacher management even when a student created them', () => {
+  const student: ResolvedAccessContext = { ...ownerContext, actorUserId: 'student',
+    companyMembership: { role: 'STUDENT', isAdmin: false, status: 'ACTIVE' },
+    projectMembership: { role: 'STUDENT', status: 'ACTIVE' },
+  }
+  const request = { actorUserId: 'student', action: 'knowledge:manage' as const,
+    companyId: 'company', projectId: 'project', resource: { type: 'knowledge_source' as const, id: 'legacy' } }
+  const resource = { companyId: 'company', projectId: 'project', createdBy: 'student', ownerUserId: 'student',
+    visibilityScope: 'PROJECT' as const, conversationMembers: null, leaderId: null, status: null }
+  assert.equal(evaluatePolicy(request, student, resource), 'ROLE_NOT_ALLOWED')
+  assert.equal(evaluatePolicy(request, student, { ...resource, visibilityScope: 'PRIVATE' }), 'ALLOWED')
+  assert.equal(evaluatePolicy({ ...request, actorUserId: 'owner' }, ownerContext, resource), 'ALLOWED')
+  assert.equal(evaluatePolicy({ ...request, actorUserId: 'owner' }, ownerContext, { ...resource, visibilityScope: 'PRIVATE' }), 'ROLE_NOT_ALLOWED')
+  assert.equal(evaluatePolicy(request, { ...student, platformAdmin: true }, resource), 'ALLOWED')
+  assert.deepEqual(knowledgeSourceCapabilities(student, { id: 'legacy', kind: 'file', status: 'stored',
+    createdByUserId: 'student', ownerUserId: 'student', visibilityScope: 'PROJECT',
+  }), { canDownload: true, canRename: false, canDelete: false })
 })
 
 test('users can edit their own Canvas frames after the workspace finishes', () => {

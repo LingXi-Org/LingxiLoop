@@ -1,0 +1,58 @@
+{
+  "baseCommit": "4aa740489b4d31bdffd05f887d0e993b38efddab",
+  "buildIndex": ".e2e/dist-web-450-final/index.html",
+  "buildIndexSha256": "0282b7db04d97e0939cf62564a38770bd0e234f11dd5e0a360358e61acbdbb1a",
+  "note": "Final source was a working tree on this base commit; file hashes identify the actual build inputs. No claim that the base commit alone contains all changes.",
+  "sourceFileSha256": {
+    "src/features/course-materials/queries.ts": "d9fbf252b908d15732bd06c94f218086e05449483816e09f89d177bae3a6e02e",
+    "src/features/course-materials/file-list-view.tsx": "c373ce03f023a15cc8857bc2a994fa7f5829cee5e6d70a93bf9c9a98cb2f04fe",
+    "src/features/course-materials/uploads.ts": "c34efbcecd0cd62d80723f55394f20a1d14caf78916746730bfa224c263926e8",
+    "src/features/course-materials/CourseMaterialsPage.tsx": "06a55b33d35c75b161521a265d7a8c8609605bb3f3233e47a379b56fca9bf53b",
+    "src/features/course-materials/MaterialPreview.tsx": "4cf72b9e6bd8b11b25d7a265195a2e5a46a021815226d2e967ef42af8463d34b",
+    "src/features/course-materials/file-actions.tsx": "b8006e44100c2e8ee4a3ee740a400ca1528ca2f6b482058ba208e5d95315b7e1",
+    "src/features/course-materials/data.test.ts": "19f90cc4fac913d2e7dfbce519d376580ca5aecfca46c3ea161cd031cdf97864",
+    "src/features/course-materials/data.ts": "69cc51f9151cfb5c26803cd20c5faa0b578f817f2ecb2b795a51720e11d423bf",
+    "src/features/course-materials/upload-transport.ts": "0082d71ebb5227e55b0f37c6db8a0691e1dbe3909d9efb6f933e74d13d963c24",
+    "src/features/course-materials/file-manager-toolbar.tsx": "5a71dc041fdb1b09f2fb0b52d6f5a0b9744a709f7df6209526c737339b605774",
+    "src/features/course-materials/materials-api.test.ts": "85cddbdb01ab8eda8c2b6de0fea9ae791a380981584ae79554f10ea4cbb9e8d8",
+    "src/features/course-materials/uploads.test.ts": "937a7e77fdd90a8f6a59c16c39208291c91e92e10e9091d2dc8f224311af2e29",
+    "server/src/modules/knowledge/agent-application.ts": "d5342a5942d933865e42ae4d98999f63148fa959d34588d68e56cb1b626312ec",
+    "server/src/modules/knowledge/agent-repository.ts": "c6e4ae43f3e0d4e6fb99329efd68511f642134eb389cb7a7e5f379260ca10206",
+    "server/src/modules/knowledge/agent-tools.ts": "bba6347457ffeab748da04df6c35b76d8d846bdba43da13559fdeb20bcb26b7f",
+    "server/src/modules/knowledge/application.ts": "ff9fb472f82acd543fc89e6ff83f760a709e8bc96b306193f9fc534b03e77e72",
+    "server/src/modules/knowledge/case-notebook.ts": "4912494a923bc814f5d594ada2dfc0db6167b142b17982bbf39a7071f61ab28d",
+    "server/src/modules/knowledge/contracts.ts": "bd9e8614401087c5aa0f5ce60e763f60b955464190ab06bae47c5a1399e38a4c",
+    "server/src/modules/knowledge/embedding-proxy.ts": "65b675298ed825928db05627093ece01a933bb16aaab52098c474b569bfdd7b9",
+    "server/src/modules/knowledge/facade.ts": "345c704c3f1a1fca5c9b9948721292a5bd8c52dfc7ca5cfdb4f77a462be9dc05",
+    "server/src/modules/knowledge/ingestion-repository.ts": "dd46e1bb6b78975722838dd51bcfd9a5a48c3a890f033bb58bbd2083f1d379cc",
+    "server/src/modules/knowledge/notebook-repository.ts": "f2abeebaaaaf4b7086b077dbbbee39c45ebdb8c5f0ce1cfa399a0bed46eae297",
+    "server/src/modules/knowledge/policy.ts": "b1977574b23c381881d0acc6ceed8270aef5449c7facfed59ab2eb14b2aaf71c",
+    "server/src/modules/knowledge/provider.ts": "c75ea82aae698a890d4e69addf75f9a33eed18a2450591877c69484eca1db328",
+    "server/src/modules/knowledge/public.ts": "d8d43303e4195da439d35b443ee3541b385b20e64eae862211bf4c8d08c453db",
+    "server/src/modules/knowledge/repository.ts": "29e5b273bc986d456e2a78ab58ee091e4f02e19ace4b6d511480924372c81791",
+    "server/src/modules/knowledge/retrieval-repository.ts": "b2cd862c854a06a37f0bfad50212d8e30f24f89131181894edad9d9f55e760b7",
+    "server/src/modules/knowledge/router.ts": "11a26b9b3741c35a2c6c1a413de6002b43ca8ce12d22660a7c876e07c9105178",
+    "server/src/modules/knowledge/runtime.ts": "ee96d36a38e24e5a772f702e9cb016f2d8ba2175d95ef90fdca2b213290e36ca",
+    "server/src/modules/knowledge/worker.ts": "76f5d23356eb3e3d580f943e1a5ffc0e80985471d0b3c0573d5749c30e119823",
+    "src/features/knowledge/api.ts": "5558c3e598f3b352ac5f2f8e9a36e0f26ee69bcd1ecae93145a02c853b14fbce",
+    "server/src/modules/access/policy.ts": "82b4bd0f45af7d8ab4edacfb40a1f6b661a1e5d031b571afbda5c2c9f3458cca",
+    "src/features/learning/dashboard/LearningDashboardPanel.tsx": "ee6931284fed457874b57ba829e8fc1b46fbca6cec33a6a88c31c56055961f4d"
+  },
+  "screenshots": [
+    {
+      "file": "docs/evidence/issue-450/screenshots/course-materials-teacher-public.png",
+      "source": ".e2e/issue450-browser-latest/artifacts/web/e2e_web_course-materials-screenshots.e2e.ts__course_20materials_20screenshot_20member_20public-9d8c641d/default/attempt-0/screenshots/001-course-materials-teacher-public.png",
+      "sha256": "a64ae0a4213d0ffefdf0734bec968c8108b12b34af2f1f919f6f672828a10119"
+    },
+    {
+      "file": "docs/evidence/issue-450/screenshots/course-materials-student-private.png",
+      "source": ".e2e/issue450-browser-latest/artifacts/web/e2e_web_course-materials-screenshots.e2e.ts__course_20materials_20screenshot_20student_20private-66e72774/default/attempt-0/screenshots/001-course-materials-student-private.png",
+      "sha256": "b7a65887306d2ce60992f6f86440e51a2de2fdfd8464872d175cb5accd1bb3d6"
+    },
+    {
+      "file": "docs/evidence/issue-450/screenshots/course-materials-student-public.png",
+      "source": ".e2e/issue450-browser-latest/artifacts/web/e2e_web_course-materials-screenshots.e2e.ts__course_20materials_20screenshot_20student_20public-05967354/default/attempt-0/screenshots/001-course-materials-student-public.png",
+      "sha256": "e9edc258e40c0b16ba10c992d164d70c061a9b5bb77fcb2187a14334f038b436"
+    }
+  ]
+}

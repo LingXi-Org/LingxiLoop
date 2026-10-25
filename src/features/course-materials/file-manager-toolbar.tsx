@@ -15,7 +15,7 @@ export function FileManagerToolbar({ search, format, sort, onSearch, onFormat, o
   return (
     <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
       <InputGroup className="border-border bg-background md:max-w-lg">
-        <InputGroupInput type="search" placeholder="搜索文件名称或上传教师…" aria-label="搜索课程资料" value={search} onChange={event => onSearch(event.target.value)} />
+        <InputGroupInput type="search" placeholder="搜索文件名称…" aria-label="搜索课程资料" value={search} onChange={event => onSearch(event.target.value)} />
         <InputGroupAddon><Search /></InputGroupAddon>
       </InputGroup>
       <div className="flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
