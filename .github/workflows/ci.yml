@@ -12,6 +12,10 @@ on:
         required: true
         type: choice
         options: [web, admin-control, server, open-notebook, wukongim, gateway, deployment, release, deep-integration]
+      release_contract_run_id:
+        description: Successful same-repository run containing release-contracts-<exact app SHA>; optional for same-schema releases
+        required: false
+        type: string
       publish_only:
         description: Verify and publish immutable images without changing production manifests or deploying
         type: boolean
@@ -22,10 +26,11 @@ on:
         default: false
 
 concurrency:
-  group: lingxiloop-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ${{ vars.RELEASE_CONTROLLER_ENABLED == 'true' && format('lingxiloop-{0}', github.sha) || format('lingxiloop-{0}', github.ref) }}
+  cancel-in-progress: ${{ vars.RELEASE_CONTROLLER_ENABLED != 'true' && github.ref != 'refs/heads/main' }}
 
 permissions:
+  actions: read
   contents: read
   packages: read
   pull-requests: read
@@ -38,30 +43,30 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      admin_build: ${{ steps.scope.outputs.admin_build }}
-      integration_files: ${{ steps.scope.outputs.integration_files }}
-      integration_mode: ${{ steps.scope.outputs.integration_mode }}
-      deep_integration: ${{ steps.scope.outputs.deep_integration }}
-      open_notebook: ${{ steps.scope.outputs.open_notebook }}
-      deployment: ${{ steps.scope.outputs.deployment }}
-      web_build: ${{ steps.scope.outputs.web_build }}
-      web_tests: ${{ steps.paths.outputs.web_tests_files }}
-      admin_tests: ${{ steps.paths.outputs.admin_tests_files }}
-      server_tests: ${{ steps.paths.outputs.server_tests_files }}
-      web: ${{ steps.scope.outputs.web }}
-      admin: ${{ steps.scope.outputs.admin }}
-      control: ${{ steps.scope.outputs.control }}
-      server: ${{ steps.scope.outputs.server }}
-      integration: ${{ steps.scope.outputs.integration }}
-      deploy_contract: ${{ steps.scope.outputs.deploy_contract }}
-      control_deploy: ${{ steps.scope.outputs.control_deploy }}
-      control_migrations: ${{ steps.scope.outputs.control_migrations }}
-      release: ${{ steps.scope.outputs.release }}
-      checks: ${{ steps.scope.outputs.checks }}
-      publish: ${{ steps.scope.outputs.publish }}
-      images: ${{ steps.scope.outputs.images }}
-      packages: ${{ steps.scope.outputs.packages }}
-      check_jobs: ${{ steps.scope.outputs.check_jobs }}
+      admin_build: ${{ steps.cumulative.outputs.admin_build || steps.scope.outputs.admin_build }}
+      integration_files: ${{ steps.cumulative.outputs.integration_files || steps.scope.outputs.integration_files }}
+      integration_mode: ${{ steps.cumulative.outputs.integration_mode || steps.scope.outputs.integration_mode }}
+      deep_integration: ${{ steps.cumulative.outputs.deep_integration || steps.scope.outputs.deep_integration }}
+      open_notebook: ${{ steps.cumulative.outputs.open_notebook || steps.scope.outputs.open_notebook }}
+      deployment: ${{ steps.cumulative.outputs.deployment || steps.scope.outputs.deployment }}
+      web_build: ${{ steps.cumulative.outputs.web_build || steps.scope.outputs.web_build }}
+      web_tests: ${{ steps.cumulative.outputs.web_tests || steps.paths.outputs.web_tests_files }}
+      admin_tests: ${{ steps.cumulative.outputs.admin_tests || steps.paths.outputs.admin_tests_files }}
+      server_tests: ${{ steps.cumulative.outputs.server_tests || steps.paths.outputs.server_tests_files }}
+      web: ${{ steps.cumulative.outputs.web || steps.scope.outputs.web }}
+      admin: ${{ steps.cumulative.outputs.admin || steps.scope.outputs.admin }}
+      control: ${{ steps.cumulative.outputs.control || steps.scope.outputs.control }}
+      server: ${{ steps.cumulative.outputs.server || steps.scope.outputs.server }}
+      integration: ${{ steps.cumulative.outputs.integration || steps.scope.outputs.integration }}
+      deploy_contract: ${{ steps.cumulative.outputs.deploy_contract || steps.scope.outputs.deploy_contract }}
+      control_deploy: ${{ steps.cumulative.outputs.control_deploy || steps.scope.outputs.control_deploy }}
+      control_migrations: ${{ steps.cumulative.outputs.control_migrations || steps.scope.outputs.control_migrations }}
+      release: ${{ steps.cumulative.outputs.release || steps.scope.outputs.release }}
+      checks: ${{ steps.cumulative.outputs.checks || steps.scope.outputs.checks }}
+      publish: ${{ steps.cumulative.outputs.publish || steps.scope.outputs.publish }}
+      images: ${{ steps.cumulative.outputs.images || steps.scope.outputs.images }}
+      packages: ${{ steps.cumulative.outputs.packages || steps.scope.outputs.packages }}
+      check_jobs: ${{ steps.cumulative.outputs.check_jobs || steps.scope.outputs.check_jobs }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
@@ -84,6 +89,7 @@ jobs:
               - 'scripts/run-tests.mjs'
               - 'scripts/test-selectors.test.mjs'
             web:
+              - 'workers/web-static/**'
               - 'shared/visualize-public-resources.ts'
               - 'third_party/zcode/**'
               - 'third_party/assistant-ui/streaming-text/**'
@@ -145,6 +151,8 @@ jobs:
               - 'server/package.json'
               - 'server/package-lock.json'
               - 'server/*.conf'
+              - 'src/types.ts'
+              - 'src/lib/conversationRunSummary.ts'
               - 'src/lib/agentToolCards.ts'
               - 'src/lib/researchSources.ts'
               - 'src/lib/agentCapabilities.ts'
@@ -175,7 +183,9 @@ jobs:
               - 'server/integration-suite.mjs'
               - 'server/run-historical-migration-tests.mjs'
               - 'server/fixtures/**'
-              - 'scripts/ci-scope.mjs'
+              - 'scripts/ci-scope*.mjs'
+              - 'scripts/release-candidate*.mjs'
+              - 'scripts/release-static*.mjs'
               - '.github/workflows/ci.yml'
               - 'server/src/__integration__/**'
               - '!server/src/__integration__/*.test.ts'
@@ -216,7 +226,9 @@ jobs:
               - '.gitattributes'
               - 'scripts/checkout-bytes.test.mjs'
               - '.github/workflows/ci.yml'
-              - 'scripts/ci-scope.mjs'
+              - 'scripts/ci-scope*.mjs'
+              - 'scripts/release-candidate*.mjs'
+              - 'scripts/release-static*.mjs'
               - 'scripts/knowledge-shadow-pg-*.mjs'
               - 'scripts/production-rag-contract.test.mjs'
               - 'scripts/release-smoke*.mjs'
@@ -270,6 +282,7 @@ jobs:
           OPEN_NOTEBOOK_TESTS: ${{ steps.paths.outputs.open_notebook_tests }}
           CI_CONFIG: ${{ steps.paths.outputs.ci }}
           WEB: ${{ steps.paths.outputs.web }}
+          WEB_FILES: ${{ steps.paths.outputs.web_files }}
           ADMIN: ${{ steps.paths.outputs.admin }}
           CONTROL: ${{ steps.paths.outputs.control }}
           SERVER: ${{ steps.paths.outputs.server }}
@@ -281,7 +294,22 @@ jobs:
           DEPLOYMENT: ${{ steps.paths.outputs.deployment }}
           CONTROL_MIGRATIONS: ${{ steps.paths.outputs.control_migrations }}
           RELEASE: ${{ steps.paths.outputs.release }}
+          RELEASE_CONTROLLER_ENABLED: ${{ vars.RELEASE_CONTROLLER_ENABLED }}
         run: node scripts/ci-scope.mjs
+      - id: cumulative
+        if: vars.RELEASE_CONTROLLER_ENABLED == 'true' && github.ref == 'refs/heads/main' && inputs.scope != 'deep-integration'
+        env:
+          RELEASE_API_URL: ${{ vars.RELEASE_API_URL }}
+          RELEASE_API_TOKEN: ${{ secrets.RELEASE_API_TOKEN }}
+        run: node scripts/ci-scope-cumulative.mjs
+      - if: vars.RELEASE_CONTROLLER_ENABLED == 'true' && github.ref == 'refs/heads/main' && inputs.scope != 'deep-integration'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-baseline-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            accepted-baseline.json
+            release-scope.json
+          retention-days: 7
 
   checks:
     needs: changes
@@ -366,7 +394,7 @@ jobs:
         name: Start isolated shadow-generation database
         run: |
           docker run -d --name rag-shadow-ci -p 127.0.0.1:18879:8000 \
-            accel.way2api.fun/docker.io/surrealdb/surrealdb@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011 \
+            docker.io/surrealdb/surrealdb@sha256:d653f6c8a89e81f865ee31cd2f587c50f50ace922175e04150b1e385d2f86011 \
             start --user test --pass test memory
           for attempt in $(seq 1 30); do
             if curl --fail --silent http://127.0.0.1:18879/health; then exit 0; fi
@@ -385,6 +413,8 @@ jobs:
           path: third_party/open-notebook/shadow-generation-junit.xml
       - if: always() && matrix.component == 'open-notebook'
         run: docker rm -f rag-shadow-ci
+      - if: matrix.component == 'deploy-contract'
+        run: node --test scripts/ci-scope.test.mjs scripts/release-candidate.test.mjs scripts/release/image-archive.test.mjs workers/web-static/src/index.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test scripts/checkout-bytes.test.mjs
       - if: matrix.component == 'deploy-contract'
@@ -475,7 +505,9 @@ jobs:
     if: >-
       always() &&
       ((github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true')) ||
-       (github.event_name == 'workflow_dispatch' && inputs.publish_only)) &&
+       (github.event_name == 'workflow_dispatch' && inputs.publish_only) ||
+       (vars.RELEASE_CONTROLLER_ENABLED == 'true' && github.ref == 'refs/heads/main' &&
+        github.event_name == 'workflow_dispatch' && inputs.scope != 'deep-integration')) &&
       needs.changes.outputs.publish == 'true' &&
       needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
@@ -497,6 +529,7 @@ jobs:
       - uses: docker/login-action@v3
         with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
       - uses: docker/build-push-action@v6
+        id: image
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}
@@ -513,10 +546,28 @@ jobs:
             VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEsX5eyOl1nAe5i9
           cache-from: type=gha,scope=${{ matrix.package }}
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
+      - if: vars.RELEASE_CONTROLLER_ENABLED == 'true'
+        name: Record registry index, platform, config and layer identities
+        env:
+          IMAGE_REFERENCE: ghcr.io/${{ steps.metadata.outputs.owner }}/${{ matrix.package }}
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          COMPONENT: ${{ matrix.manifest == 'open-notebook' && 'notebook' || matrix.manifest }}
+          RELEASE_API_URL: ${{ vars.RELEASE_API_URL }}
+          RELEASE_API_TOKEN: ${{ secrets.RELEASE_API_TOKEN }}
+        run: |
+          mkdir -p "release-artifacts/$COMPONENT"
+          node scripts/release-candidate.mjs image "$IMAGE_REFERENCE" "$IMAGE_DIGEST" "release-artifacts/$COMPONENT/artifact.json"
+          node scripts/release/image-archive.mjs "release-artifacts/$COMPONENT/artifact.json"
+      - if: vars.RELEASE_CONTROLLER_ENABLED == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-component-${{ matrix.manifest }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: release-artifacts/
+          retention-days: 7
 
   update-manifests:
     if: >-
-      always() && !inputs.publish_only && !contains(github.event.head_commit.message, '[skip deploy]') &&
+      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !inputs.publish_only && !contains(github.event.head_commit.message, '[skip deploy]') &&
       github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped') &&
@@ -559,7 +610,7 @@ jobs:
 
   deploy:
     if: >-
-      always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
+      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' ||
        (github.event_name == 'workflow_dispatch' && inputs.scope == 'admin-control' &&
@@ -609,7 +660,7 @@ jobs:
 
   rollout:
     if: >-
-      always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
+      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
       github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.update-manifests.result == 'success' &&
       (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
@@ -627,3 +678,161 @@ jobs:
         with: { ref: '${{ needs.update-manifests.outputs.commit-sha }}' }
       - name: Trigger Komodo rollout
         run: node scripts/trigger-komodo-rollout.mjs
+
+
+  prepare-static:
+    if: >-
+      always() && vars.RELEASE_CONTROLLER_ENABLED == 'true' &&
+      github.ref == 'refs/heads/main' && !inputs.publish_only &&
+      !contains(github.event.head_commit.message, '[skip deploy]') &&
+      (needs.changes.outputs.web_build == 'true' || needs.changes.outputs.control_deploy == 'true') &&
+      needs.checks.result == 'success' &&
+      (needs.integration.result == 'success' || needs.integration.result == 'skipped')
+    needs: [changes, checks, integration]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: "22" }
+      - name: Install locked Worker tooling and required Web graph
+        run: |
+          node server/scripts/scoped-dependencies.mjs
+          node server/scripts/install-scoped-dependencies.mjs admin-control
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - if: needs.changes.outputs.web_build == 'true'
+        run: npm run build
+        env:
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAEsX5eyOl1nAe5i9' }}
+      - if: needs.changes.outputs.control_deploy == 'true'
+        run: npm run admin:build
+        env:
+          VITE_LINGXILIT_URL: ${{ vars.VITE_LINGXILIT_URL || 'https://openlit.lingxilearn.cn' }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAEsX5eyOl1nAe5i9' }}
+      - name: Upload immutable Worker versions and retained chunks
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          RELEASE_ARTIFACT_BUCKET: ${{ vars.RELEASE_ARTIFACT_BUCKET }}
+          BACKEND_ORIGIN_BASE_URL: ${{ vars.RELEASE_BACKEND_ORIGIN }}
+          AUTH_ORIGIN_BASE_URL: ${{ vars.AUTH_ORIGIN_BASE_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$BACKEND_ORIGIN_BASE_URL"
+          test -n "$AUTH_ORIGIN_BASE_URL"
+          if [ "${{ needs.changes.outputs.web_build }}" = "true" ]; then
+            node scripts/release-static.mjs inventory main-frontend dist workers/web-static/wrangler.jsonc
+            npx --no-install wrangler versions upload --config workers/web-static/wrangler.jsonc --tag "$GITHUB_SHA" --var "BACKEND_ORIGIN_BASE_URL:$BACKEND_ORIGIN_BASE_URL" --var "AUTH_ORIGIN_BASE_URL:$AUTH_ORIGIN_BASE_URL" 2>&1 | tee web-version.log
+            node scripts/release-static.mjs record main-frontend web-version.log lingxiloop-web
+          fi
+          if [ "${{ needs.changes.outputs.control_deploy }}" = "true" ]; then
+            node scripts/release-static.mjs inventory admin-worker dist-admin workers/control-plane/wrangler.jsonc
+            npx --no-install wrangler versions upload --config workers/control-plane/wrangler.jsonc --tag "$GITHUB_SHA" --var "ORIGIN_BASE_URL:$BACKEND_ORIGIN_BASE_URL" 2>&1 | tee admin-version.log
+            node scripts/release-static.mjs record admin-worker admin-version.log lingxiloop-control-plane
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-component-static-${{ github.sha }}-${{ github.run_attempt }}
+          path: release-artifacts/
+          retention-days: 7
+
+  register-candidate:
+    if: >-
+      always() && vars.RELEASE_CONTROLLER_ENABLED == 'true' &&
+      github.ref == 'refs/heads/main' && !inputs.publish_only &&
+      !contains(github.event.head_commit.message, '[skip deploy]') &&
+      needs.changes.result == 'success' && needs.checks.result == 'success' &&
+      (needs.integration.result == 'success' || needs.integration.result == 'skipped') &&
+      (needs.publish.result == 'success' || needs.publish.result == 'skipped') &&
+      (needs.prepare-static.result == 'success' || needs.prepare-static.result == 'skipped') &&
+      (needs.publish.result == 'success' || needs.prepare-static.result == 'success')
+    needs: [changes, checks, integration, publish, prepare-static]
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      release_id: ${{ steps.register.outputs.release_id }}
+      app_sha: ${{ steps.register.outputs.app_sha }}
+    steps:
+      - uses: actions/checkout@v5
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v5
+        with: { node-version: "22" }
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-baseline-${{ github.sha }}-${{ github.run_attempt }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-component-*-${{ github.sha }}-${{ github.run_attempt }}
+          path: release-artifacts/
+          merge-multiple: true
+      - if: inputs.release_contract_run_id != ''
+        name: Verify exact successful contract workflow source
+        env:
+          RELEASE_CONTRACT_RUN_ID: ${{ inputs.release_contract_run_id }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release-candidate.mjs verify-attestation-run
+      - if: inputs.release_contract_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: release-contracts-${{ github.sha }}
+          run-id: ${{ inputs.release_contract_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-contract-input/
+      - if: inputs.release_contract_run_id != ''
+        name: Install exact locked package for public schema provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          node server/scripts/scoped-dependencies.mjs
+          node server/scripts/install-scoped-dependencies.mjs server-ci
+      - name: Register qualified candidate with the single release controller
+        id: register
+        env:
+          RELEASE_API_URL: ${{ vars.RELEASE_API_URL }}
+          RELEASE_API_TOKEN: ${{ secrets.RELEASE_API_TOKEN }}
+          RELEASE_OPS_SHA: ${{ vars.RELEASE_OPS_SHA }}
+          RELEASE_CONTRACT_FILE: ${{ inputs.release_contract_run_id != '' && 'release-contract-input/release-contracts.json' || '' }}
+        run: |
+          node scripts/release-candidate.mjs submit
+          node scripts/release/github-report.mjs emit
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-registration-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            release-manifest.json
+            release-submission.json
+          retention-days: 30
+
+
+  report-release:
+    if: >-
+      always() && vars.RELEASE_CONTROLLER_ENABLED == 'true' &&
+      needs.register-candidate.result == 'success' && needs.register-candidate.outputs.release_id != ''
+    needs: [register-candidate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      deployments: write
+      statuses: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: "22" }
+      - name: Observe durable release and report the production outcome
+        id: report
+        env:
+          RELEASE_ID: ${{ needs.register-candidate.outputs.release_id }}
+          RELEASE_API_URL: ${{ vars.RELEASE_API_URL }}
+          RELEASE_API_TOKEN: ${{ secrets.RELEASE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release/github-report.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-github-report-${{ github.sha }}-${{ github.run_attempt }}
+          path: release-github-report.json
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "lingxiloop-web",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "assets": {
+    "directory": "../../dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "none"
+  },
+  "services": [{ "binding": "AUTH", "service": "lingxiloop-control-plane" }],
+  "r2_buckets": [{ "binding": "RETAINED_ASSETS", "bucket_name": "lingxiloop-releases" }],
+  "observability": { "enabled": true },
+  "vars": {
+    "PUBLIC_HOSTS": "loop.lingxilearn.cn",
+    "AUTH_ORIGIN_BASE_URL": "https://admin.lingxilearn.cn",
+    "BACKEND_ORIGIN_BASE_URL": "https://backend.lingxilearn.cn"
+  }
+}

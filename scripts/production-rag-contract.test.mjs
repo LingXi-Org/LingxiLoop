@@ -96,7 +96,7 @@ test('production stops both old workers before an application can enqueue new ef
 // Failure: development resolves shared imports that the production image never copies.
 test('server image includes the complete shared runtime import graph', () => {
   const root = fileURLToPath(new URL('../', import.meta.url))
-  const copied = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1).split(/\r?\n/)
+  const copied = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).find(part => /^.* AS runtime\r?\n/.test(part)).split(/\r?\n/)
     .filter(line => /^COPY (?:src|shared)[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
   assert.deepEqual(copied.filter(path => path.startsWith('src/features/cases/cover-vm')), [
     'runtime', 'protocol', 'program', 'guest-source', 'svg',
@@ -138,7 +138,7 @@ test('server image includes the complete shared runtime import graph', () => {
 // Failures: the final image carries desktop/reference source, or slimming drops
 // the immutable skill, the one served upstream script, or license/provenance.
 test('server image ships only the required pinned ZCode runtime payload', () => {
-  const finalStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1)
+  const finalStage = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).find(part => /^.* AS runtime\r?\n/.test(part))
   const root = fileURLToPath(new URL('../', import.meta.url))
   const copied = finalStage.split(/\r?\n/).filter(line => /^COPY third_party\/zcode[ /]/.test(line))
     .flatMap(line => {
@@ -617,7 +617,7 @@ test('workflow path filters route real changed paths to their owning checks', ()
   assert.deepEqual(select('server/src/__integration__/migration.test.ts').integration_files, ['migration.test.ts'])
   // The image's shared runtime inputs also need owning server checks. Cover
   // future additions instead of relying only on the examples above.
-  const sharedSources = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).at(-1).split(/\r?\n/)
+  const sharedSources = read('server/docker/lingxiloop-server.Dockerfile').split(/^FROM /m).find(part => /^.* AS runtime\r?\n/.test(part)).split(/\r?\n/)
     .filter(line => /^COPY (?:src|shared)[ /]/.test(line)).flatMap(line => line.trim().split(/\s+/).slice(1, -1))
     .flatMap(path => path.endsWith('.ts') ? [path] : ts.sys.readDirectory(path, ['.ts'], ['**/*.test.ts']))
   assert.ok(sharedSources.length > 10)
@@ -640,7 +640,8 @@ test('actual workflow conditions block publishing and deployment after a failed 
     for (const name of ['checks', 'integration', 'publish', 'update-manifests', 'deploy']) {
       needs[name] = { result: results[name] ?? 'success' }
     }
-    return Function('github', 'needs', 'always', 'inputs', 'contains', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
+    return Function('vars', 'github', 'needs', 'always', 'inputs', 'contains', `return (${expression.replaceAll('needs.update-manifests', "needs['update-manifests']")})`)(
+      { RELEASE_CONTROLLER_ENABLED: options.releaseController ? 'true' : '' },
       { ref: options.ref ?? 'refs/heads/main', event_name: event, event: { head_commit: { message } } }, needs, () => true, { publish_only: publishOnly, scope: options.scope, deploy_admin_control: options.deployAdminControl ?? false }, (value, marker) => String(value ?? '').toLowerCase().includes(marker.toLowerCase()),
     )
   }
@@ -650,7 +651,10 @@ test('actual workflow conditions block publishing and deployment after a failed 
   }
   assert.equal(allows('publish', release, {}, 'push', false, 'Merge development [skip deploy]'), true, 'immutable publication and checks remain allowed')
   assert.equal(allows('publish', release), true)
+  for (const job of ['update-manifests', 'deploy', 'rollout']) assert.equal(allows(job, { ...release, control_deploy: true }, {}, 'push', false, '', { releaseController: true }), false, `controller gate owns ${job}`)
   assert.equal(allows('publish', computeScope({}, 'server'), {}, 'workflow_dispatch', true), true)
+  assert.equal(allows('publish', computeScope({}, 'server'), {}, 'workflow_dispatch', false, '', { releaseController: true, scope: 'server' }), true, 'an explicitly attested manual candidate can publish accumulated backend changes')
+  assert.equal(allows('publish', computeScope({}, 'deep-integration'), {}, 'workflow_dispatch', false, '', { releaseController: true, scope: 'deep-integration' }), false)
   assert.equal(allows('update-manifests', release, {}, 'workflow_dispatch', true), false)
   for (const gate of ['checks', 'integration']) {
     for (const result of ['failure', 'cancelled']) {
@@ -749,7 +753,7 @@ test('CI integration modes distinguish core smoke, explicit owners and manual fu
 
 test('workflow carries explicit integration mode and bounded ordinary budgets', () => {
   const workflow = read('.github/workflows/ci.yml')
-  assert.match(workflow, /integration_mode: \$\{\{ steps.scope.outputs.integration_mode \}\}/)
+  assert.match(workflow, /integration_mode: \$\{\{ steps.cumulative.outputs.integration_mode \|\| steps.scope.outputs.integration_mode \}\}/)
   assert.match(workflow, /INTEGRATION_TEST_MODE: \$\{\{ needs.changes.outputs.integration_mode \}\}/)
   assert.match(workflow, /SERVER_SOURCE_FILES: \$\{\{ steps.paths.outputs.server_source_files \}\}/)
   assert.match(workflow, /INTEGRATION_RUNNER_FILES: \$\{\{ steps.paths.outputs.integration_runner_files \}\}/)

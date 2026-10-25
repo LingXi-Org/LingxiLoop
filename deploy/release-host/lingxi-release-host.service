@@ -1,0 +1,32 @@
+[Unit]
+Description=LingxiLoop fixed release host executor
+After=docker.service network-online.target
+Wants=network-online.target
+# No Requires= on Web, Worker, Komodo, Mihomo or Tunnel: recovery remains independent.
+
+[Service]
+Type=simple
+User=root
+Group=root
+UMask=0077
+WorkingDirectory=/opt/lingxi-release/current
+ExecStart=/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node --experimental-sqlite scripts/release-host/server.mjs /etc/lingxi-release/policy.json
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=240
+KillMode=control-group
+StateDirectory=lingxi-release
+RuntimeDirectory=lingxi-release
+LoadCredential=executor-token:/etc/lingxi-release/secrets/executor-token
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/lingxi-release /etc/lingxi-release/gateway
+
+[Install]
+WantedBy=multi-user.target

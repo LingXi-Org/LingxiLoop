@@ -1,16 +1,15 @@
-# lingxiloop-server — the product control plane and web application.
+# lingxiloop-server — product API, worker and migration runtime.
 #
-# Serves three surfaces from the same Node process:
-#   /api/*        — JSON API (Express router)
-#   everything else — the React SPA bundle (built into /app/dist below)
+# CI after the ingress handoff builds --target runtime, without the SPA.
+# The default legacy-web target retains the SPA until controller ownership is enabled.
 #
 # Entry points:
 #   npm run server:start  →  tsx server/src/bin/web.ts  (HTTP/WS runtime)
 #   npm run worker:start  →  tsx server/src/bin/worker.ts  (background tasks)
 #   npm run db:migrate  →  tsx server/src/migrate-bin.ts
 #
-# Model turns run only in the separate Agent OS service. The control plane
-# owns product authorization, approvals, WuKong integration and projections.
+# Model turns run in the separate background Worker process using the exact
+# published LingxiOS dependency. Product authorization stays in the API/gateway.
 #
 # Build (from repo root):
 #   docker build \
@@ -22,9 +21,9 @@
 # OrbStack auto-loads into its K8s.
 
 # ─── stage 1: install runtime node deps (prod only) ─────────────────
-ARG NODE_BASE_IMAGE=accel.way2api.fun/docker.io/library/node:22-bookworm-slim
+ARG NODE_BASE_IMAGE=docker.io/library/node:22-bookworm-slim
 ARG NPM_REGISTRY=https://registry.npmjs.org
-ARG APT_MIRROR=http://mirrors.aliyun.com
+ARG APT_MIRROR=http://deb.debian.org
 
 FROM ${NODE_BASE_IMAGE} AS deps
 ARG NPM_REGISTRY
@@ -50,7 +49,7 @@ RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "n
 # image; nothing from this stage's node_modules makes it through.
 #
 # The SPA uses same-origin `/api` routes through the control-plane Worker.
-FROM ${NODE_BASE_IMAGE} AS spa-build
+FROM ${NODE_BASE_IMAGE} AS web-deps
 ARG NPM_REGISTRY
 WORKDIR /app
 ARG VITE_PUBLIC_POSTHOG_KEY=""
@@ -66,6 +65,15 @@ ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
 RUN --mount=type=secret,id=npm_token \
     --mount=type=cache,id=lingxiloop-web-npm,target=/root/.npm,sharing=locked \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
+# The runtime renderer has its own source-only build: a CSS change never
+# enters this graph. CI selects target runtime after the static ingress handoff.
+FROM web-deps AS visualize-build
+COPY third_party/zcode ./third_party/zcode
+COPY scripts/build-visualize-runtime.mjs ./scripts/
+RUN node scripts/build-visualize-runtime.mjs
+
+FROM web-deps AS spa-build
+WORKDIR /app
 # Preserve the existing Web/visualize build entrypoints after the scoped install.
 COPY package.json ./
 COPY src ./src
@@ -84,7 +92,7 @@ COPY scripts/verify-zcode-visualize.mjs scripts/build-visualize-runtime.mjs ./sc
 RUN npm run build
 
 # ─── stage 3: runtime ───────────────────────────────────────────────
-FROM ${NODE_BASE_IMAGE}
+FROM ${NODE_BASE_IMAGE} AS runtime
 ARG APT_MIRROR
 ARG LINGXILOOP_VERSION=0.0.0-dev
 ARG LINGXILOOP_COMMIT_SHA=dev
@@ -110,6 +118,8 @@ COPY shared/visualize-public-resources.ts ./shared/
 # the React client. They are loaded by tsx at runtime, so include them in the
 # control-plane image as well (the SPA build stage's source is not copied into
 # this final stage).
+COPY src/types.ts ./src/types.ts
+COPY src/lib/conversationRunSummary.ts ./src/lib/
 COPY src/lib/agentToolCards.ts src/lib/researchSources.ts src/lib/agentCapabilities.ts src/lib/canvasLayout.ts src/lib/canvasEventKinds.ts src/lib/mentions.ts src/lib/participantDisplayName.ts src/lib/agentRunSnapshot.ts src/lib/nativeMessage.ts src/lib/answerSegment.ts src/lib/userFacingError.ts src/lib/runActivity.ts src/lib/runTrace.ts src/lib/traceCost.ts src/lib/memoryActivity.ts ./src/lib/
 COPY src/features/chat/visualize/zcode/shared/gen-ui ./src/features/chat/visualize/zcode/shared/gen-ui
 COPY src/features/chat/visualize/zcode/gen-ui/domain ./src/features/chat/visualize/zcode/gen-ui/domain
@@ -127,14 +137,7 @@ COPY third_party/zcode/skills/visualize ./third_party/zcode/skills/visualize
 COPY third_party/zcode/upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js ./third_party/zcode/upstream/packages/desktop/src/renderer/src/plugin-sandbox/genUiTweakRuntime.js
 COPY third_party/zcode/LICENSE third_party/zcode/README.md third_party/zcode/manifest.json ./third_party/zcode/
 COPY third_party/zcode/upstream/LICENSE ./third_party/zcode/upstream/LICENSE
-COPY --from=spa-build /app/server/assets/visualize-runtime ./server/assets/visualize-runtime
-# Web SPA bundle — read by server/src/web.ts at boot via existsSync().
-# When this is absent (e.g. an older runtime image) the server falls
-# back to a JSON `/` response.
-COPY --from=spa-build /app/dist ./dist
-COPY third_party/assistant-ui/streaming-text/LICENSE ./dist/licenses/assistant-ui-streaming-text.txt
-COPY third_party/assistant-ui-elements/LICENSE ./dist/licenses/assistant-ui-elements.txt
-COPY third_party/react-chat-elements/reply-message/LICENSE ./dist/licenses/react-chat-elements-reply-message.txt
+COPY --from=visualize-build /app/server/assets/visualize-runtime ./server/assets/visualize-runtime
 
 ENV NODE_ENV=production \
     LINGXILOOP_VERSION=${LINGXILOOP_VERSION} \
@@ -151,3 +154,14 @@ RUN node --experimental-strip-types --input-type=module -e 'await import("./src/
 # production Compose migration job overrides this with `npm run db:migrate`.
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["npm", "run", "server:start"]
+
+# Transitional default keeps the existing ingress working until the controller
+# owns production. The controller explicitly builds target runtime above.
+FROM runtime AS legacy-web
+# Web SPA bundle — read by server/src/web.ts at boot via existsSync().
+# When this is absent (e.g. an older runtime image) the server falls
+# back to a JSON `/` response.
+COPY --from=spa-build /app/dist ./dist
+COPY third_party/assistant-ui/streaming-text/LICENSE ./dist/licenses/assistant-ui-streaming-text.txt
+COPY third_party/assistant-ui-elements/LICENSE ./dist/licenses/assistant-ui-elements.txt
+COPY third_party/react-chat-elements/reply-message/LICENSE ./dist/licenses/react-chat-elements-reply-message.txt

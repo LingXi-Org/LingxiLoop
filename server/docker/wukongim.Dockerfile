@@ -1,4 +1,4 @@
-FROM accel.way2api.fun/docker.io/library/alpine:3.21 AS source
+FROM docker.io/library/alpine:3.21 AS source
 
 ARG WUKONG_COMMIT
 RUN test -n "$WUKONG_COMMIT" \
@@ -18,7 +18,7 @@ RUN cd /src \
  && test "$(git rev-parse FETCH_HEAD)" = "$WUKONG_RAFTSTORE_FIX_COMMIT" \
  && git checkout FETCH_HEAD -- pkg/controller/raft/raftstore
 
-FROM accel.way2api.fun/docker.io/library/golang:1.25.0 AS builder
+FROM docker.io/library/golang:1.25.0 AS builder
 
 ARG TARGETOS=linux
 ARG TARGETARCH
@@ -36,7 +36,7 @@ RUN go mod download \
       cd /out && sha256sum wukongim wukongim.debug; \
     } > /out/build-info.txt
 
-FROM accel.way2api.fun/docker.io/library/alpine:3.19 AS runtime
+FROM docker.io/library/alpine:3.19 AS runtime
 
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
