@@ -1,0 +1,6 @@
+d4f2f6115637639342e10780a8c4ebf4ea54239662aa362554ede12fe1d0beaa  upstream/LICENSE
+2dfd5544b52c30841fb5e33f4bae33fcd023011b7dc62afb0d9dbbd3d45b52c0  upstream/src/app/(main)/dashboard/file-manager/_components/data.ts
+3121cc0e9b336f09a8ee4d9d3395af22d16b4b72fc0897be721b63f793faa76e  upstream/src/app/(main)/dashboard/file-manager/_components/file-actions.tsx
+b07229ec12dea54317ec736672659e47a0369ad796a4219775075222dfe85709  upstream/src/app/(main)/dashboard/file-manager/_components/file-list-view.tsx
+d5cfcd20ba823ca3f8fa742afc04e7695094857e5f9e2aef5b015e9b6abc949f  upstream/src/app/(main)/dashboard/file-manager/_components/file-manager-toolbar.tsx
+9a18c2eb55dc73021e38d1dbc1a61927ef6f52022bba78f267906fcdc8ab5374  upstream/src/app/(main)/dashboard/file-manager/page.tsx

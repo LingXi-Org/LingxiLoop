@@ -67,10 +67,10 @@ async function authorizeWorker(db: Queryable, job: Pick<CaseCoverClaim,'company_
   return decision.allowed
 }
 async function lockCurrentCase(db: Queryable, job: Pick<CaseCoverClaim,'case_id'|'company_id'>, skipLocked = false) {
-  return (await db.query(`SELECT id FROM organization_cases WHERE id=$1 AND company_id=$2 FOR UPDATE ${skipLocked?'SKIP LOCKED':''}`, [job.case_id,job.company_id])).rows.length > 0
+  return (await db.query(`SELECT id FROM organization_cases WHERE id=$1 AND company_id=$2 AND deleted_at IS NULL FOR UPDATE ${skipLocked?'SKIP LOCKED':''}`, [job.case_id,job.company_id])).rows.length > 0
 }
 const wanted = `EXISTS(SELECT 1 FROM organization_case_cover_targets t JOIN organization_cases c ON c.id=t.case_id
-  WHERE t.job_id=j.id AND (t.snapshot_kind='draft' OR c.status='published'))`
+  WHERE t.job_id=j.id AND c.deleted_at IS NULL AND (t.snapshot_kind='draft' OR c.status='published'))`
 
 /** Same PostgreSQL SKIP LOCKED + lease token + heartbeat convention as presentations. */
 export async function claimCaseCover(db: Queryable, workerId: string, concurrency: number, maxAttempts = 3): Promise<CaseCoverClaim | null> {

@@ -3,7 +3,7 @@ import test from 'node:test'
 import { runInNewContext } from 'node:vm'
 import type { GeneratedCaseCover } from '../api'
 import { CASE_COVER_CSP, coverAssetPath, coverSandboxDocument, createCoverBudget, isCoverMessage, MAX_CASE_COVER_HTML } from './sandbox'
-import { startCoverPolling } from './polling'
+import { COVER_POLL_LIMIT, COVER_POLL_WINDOW_MS, createCoverPollingController, listenForCoverPollingRecovery, startCoverPolling } from './polling'
 
 test('generated code is isolated by an initial restrictive policy; active assets stay in the dedicated API', () => {
   const doc = coverSandboxDocument({ html: '<svg></svg><script>draw()</script>' })
@@ -74,12 +74,33 @@ test('polling finishes on ready and abort cancels an in-flight stale scope befor
   assert.ok(requestSignal?.aborted); assert.equal(received, false); assert.equal(another.size, 0)
 })
 
-test('polling is bounded by elapsed time and three consecutive read failures', async () => {
+// Failure modes: a queued generation completes after the old 120s deadline;
+// three transient read failures strand a pending cover until page navigation.
+test('polling adopts a queued cover completing after two minutes', async () => {
+  const timer = clock(); let ready = false
+  startCoverPolling({ ...timer, signal: new AbortController().signal,
+    refresh: async () => timer.now() >= 180_000,
+    receive: value => { ready = value; return !value } })
+  for (let attempt = 0; attempt < 70; attempt++) await timer.tick()
+  assert.equal(ready, true); assert.equal(timer.size, 0)
+})
+
+test('polling retries temporary read failures within its bounded session', async () => {
+  const timer = clock(); let calls = 0; let received = false
+  startCoverPolling({ ...timer, signal: new AbortController().signal,
+    refresh: async () => { if (++calls <= 3) throw new Error('offline'); return 'ready' },
+    receive: () => { received = true; return false } })
+  for (let attempt = 0; attempt < 6; attempt++) await timer.tick()
+  assert.equal(calls, 4); assert.equal(received, true); assert.equal(timer.size, 0)
+})
+
+test('pending and failing polling sessions have a finite deadline and read budget', async () => {
   for (const fail of [false, true]) {
     const timer = clock(); let calls = 0
     startCoverPolling({ ...timer, signal: new AbortController().signal, refresh: async () => { calls++; if (fail) throw new Error('offline'); return true }, receive: () => true })
-    for (let attempt = 0; attempt < 30; attempt++) await timer.tick()
-    assert.equal(timer.size, 0); assert.ok(calls <= 24); if (fail) assert.equal(calls, 3)
+    for (let attempt = 0; attempt < 100; attempt++) await timer.tick()
+    assert.equal(timer.size, 0); assert.ok(calls <= COVER_POLL_LIMIT)
+    assert.ok(timer.now() <= COVER_POLL_WINDOW_MS)
   }
 })
 
@@ -107,4 +128,58 @@ test('cover refresh adopts only matching snapshot metadata and preserves article
   for (const stale of [{ ...fresh, id: 'other-case' }, { ...fresh, generatedCover: { ...fresh.generatedCover, fingerprint: 'published-b' } }, { ...fresh, generatedCover: { ...fresh.generatedCover, generation: 1 } }]) {
     assert.equal(mergeCaseCoverMetadata(current, stale), current)
   }
+})
+
+// Recovery must be explicit: no hidden endless timer after budget exhaustion,
+// no active-deadline extension on browser wakeups, no late adoption after restart.
+test('a stopped session resumes immediately while browser wakeups preserve active bounds', async () => {
+  const timer = clock(); let ready = false; let received = false; let calls = 0
+  const controller = createCoverPollingController({ ...timer, signal: new AbortController().signal,
+    refresh: async () => { calls++; return ready },
+    receive: value => { received = value; return !value } })
+  while (timer.size && timer.now() < COVER_POLL_WINDOW_MS) {
+    controller.wake()
+    await timer.tick()
+  }
+  assert.equal(timer.size, 0); assert.ok(calls <= COVER_POLL_LIMIT)
+  assert.equal(timer.now(), COVER_POLL_WINDOW_MS); assert.equal(received, false)
+  ready = true
+  controller.wake()
+  await new Promise(resolve => setImmediate(resolve))
+  assert.equal(received, true); assert.equal(timer.size, 0)
+  controller.stop()
+})
+
+test('manual status refresh cancels the old request and disposed scopes never resume', async () => {
+  const timer = clock(); const scope = new AbortController(); const signals: AbortSignal[] = []
+  const finishes: Array<(value: string) => void> = []; const received: string[] = []
+  const controller = createCoverPollingController({ ...timer, signal: scope.signal,
+    refresh: signal => { signals.push(signal); return new Promise<string>(resolve => finishes.push(resolve)) },
+    receive: value => { received.push(value); return false } })
+  await timer.tick()
+  controller.resume()
+  assert.equal(signals.length, 2); assert.equal(signals[0].aborted, true)
+  finishes[0]('superseded'); finishes[1]('current')
+  await new Promise(resolve => setImmediate(resolve))
+  assert.deepEqual(received, ['current']); assert.equal(timer.size, 0)
+  controller.resume(); assert.equal(signals.length, 3)
+  scope.abort(); controller.resume(); controller.wake()
+  assert.equal(signals[2].aborted, true)
+  finishes[2]('disposed scope'); await new Promise(resolve => setImmediate(resolve))
+  assert.deepEqual(received, ['current'])
+  assert.equal(signals.length, 3); assert.equal(timer.size, 0)
+})
+
+test('visible-tab and online recovery events are removed when the scope is disposed', () => {
+  const page = Object.assign(new EventTarget(), { visibilityState: 'hidden' as DocumentVisibilityState })
+  const network = new EventTarget(); let wakes = 0
+  const unsubscribe = listenForCoverPollingRecovery(() => wakes++, page, network)
+  page.dispatchEvent(new Event('visibilitychange')); network.dispatchEvent(new Event('online'))
+  assert.equal(wakes, 0)
+  page.visibilityState = 'visible'
+  page.dispatchEvent(new Event('visibilitychange')); network.dispatchEvent(new Event('online'))
+  assert.equal(wakes, 2)
+  unsubscribe()
+  page.dispatchEvent(new Event('visibilitychange')); network.dispatchEvent(new Event('online'))
+  assert.equal(wakes, 2)
 })

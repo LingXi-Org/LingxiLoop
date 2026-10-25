@@ -5,9 +5,10 @@ import type { LearningSpace } from '@/features/learning/contracts'
 
 // A promoted organization teacher has no course grants and cannot follow a student invitation.
 test('empty workspace guidance follows the active company identity and preserves existing states', async () => {
+  const renderedSections: string[] = []
   mock.module('./DashboardSkeleton', { namedExports: { DashboardSkeleton: () => <p>正在加载学习空间</p> } })
   mock.module('@/features/learning/dashboard/LearningDashboardPanel', { namedExports: {
-    LearningDashboardPanel: () => <p>已授权课程</p>,
+    LearningDashboardPanel: ({ section }: { section: string }) => { renderedSections.push(section); return <p>已授权课程</p> },
   } })
   try {
     const { PersonalDashboard } = await import('./PersonalDashboard')
@@ -23,7 +24,7 @@ test('empty workspace guidance follows the active company identity and preserves
     assert.doesNotMatch(render(), /索取课程邀请链接|指定课程的教师/)
 
     const selectable = render({ companyRole: 'teacher', hasSpaces: true, onChooseWorkspace() {} })
-    assert.match(selectable, /选择课程，查看作业与讨论。/)
+    assert.match(selectable, /选择课程，查看课程资料、作业与讨论。/)
     assert.match(selectable, />选择工作区<\/button>/)
     assert.doesNotMatch(selectable, /请联系公司管理员/)
     assert.equal(render({ companyRole: 'teacher', loading: true }), '<p>正在加载学习空间</p>')
@@ -31,5 +32,7 @@ test('empty workspace guidance follows the active company identity and preserves
     assert.match(failure, /role="alert"[\s\S]*课程加载失败[\s\S]*重试/)
     assert.doesNotMatch(failure, /当前没有可用|指定课程的教师/)
     assert.equal(render({ companyRole: 'teacher', space: { companyId: 'company', projectId: 'course' } as LearningSpace }), '<p>已授权课程</p>')
+    render({ view: 'course-materials', space: { companyId: 'company', projectId: 'course' } as LearningSpace })
+    assert.equal(renderedSections.at(-1), 'materials')
   } finally { mock.restoreAll() }
 })

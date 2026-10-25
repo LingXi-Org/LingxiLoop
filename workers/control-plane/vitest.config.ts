@@ -5,6 +5,8 @@ import { defineWorkersConfig, readD1Migrations } from '@cloudflare/vitest-pool-w
 const here = dirname(fileURLToPath(import.meta.url))
 
 export default defineWorkersConfig(async () => ({
+  // Worker tests have no stylesheet inputs; do not load the SPA PostCSS pipeline.
+  css: { postcss: { plugins: [] } },
   test: {
     include: ['workers/control-plane/src/**/*.test.ts'],
     deps: { optimizer: { ssr: { include: [

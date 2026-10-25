@@ -42,10 +42,45 @@ const inspectSources = directory => {
     else if (entry.isFile() && /\.[cm]?[jt]sx?$/.test(entry.name)) {
       assert.doesNotMatch(readFileSync(path, 'utf8'), /pdfjs-dist\/(?:web|legacy\/web)\b/,
         `Server source imports a removed PDF.js viewer path: ${path}`)
+      if (!/\.(?:test|spec)\./.test(path) && !path.includes('/__tests__/') && !path.includes('/__integration__/')) {
+        const source = readFileSync(path, 'utf8')
+        assert.doesNotMatch(source, /["']officeparser\//, `Server source imports a removed browser entry: ${path}`)
+        if (/["'](?:officeparser|tesseract\.js(?:-core)?)["']/.test(source)) {
+          assert.equal(path, join('server/src/modules/learning', 'homework-presentation.ts'),
+            `Re-audit an additional OfficeParser/OCR product consumer: ${path}`)
+        }
+      }
     }
   }
 }
 inspectSources('server/src')
+
+// Validate the real Node exports after pruning. OCR is disabled at the product
+// boundary; retain its Node imports/glue and diagnostics even without WASM data.
+const { OfficeParser } = await import('officeparser')
+assert.equal(typeof OfficeParser.parseOffice, 'function')
+assert.equal(typeof require('officeparser').OfficeParser.parseOffice, 'function')
+assert.equal(typeof require('tesseract.js').createWorker, 'function')
+assert.equal(typeof require('tesseract.js-core'), 'function')
+for (const path of ['officeparser/dist/officeparser.browser.mjs', 'tesseract.js/dist/worker.min.js',
+  'tesseract.js-core/tesseract-core.wasm']) {
+  assert.equal(existsSync(join('node_modules', path)), false, `Unexpected unused OfficeParser/OCR payload: ${path}`)
+}
+for (const path of ['officeparser/LICENSE', 'tesseract.js/LICENSE.md', 'tesseract.js-core/LICENSE',
+  'tesseract.js/dist/tesseract.min.js.LICENSE.txt', 'tesseract.js/dist/worker.min.js.LICENSE.txt',
+  'officeparser/dist/utils/ocrUtils.js', 'officeparser/dist/index.d.ts']) {
+  assert.ok(existsSync(join('node_modules', path)), `Missing retained OfficeParser/OCR metadata: ${path}`)
+}
+const officeRequire = createRequire(require.resolve('officeparser'))
+const nestedPdfManifest = officeRequire.resolve('pdfjs-dist/package.json')
+assert.equal(JSON.parse(readFileSync(nestedPdfManifest, 'utf8')).version, '6.2.108')
+// Match moduleLoader's Node preference: legacy initializes DOM polyfills before
+// the generic browser-oriented entry can be imported in a plain Node process.
+for (const specifier of ['pdfjs-dist/legacy/build/pdf.mjs', 'pdfjs-dist']) {
+  const { getDocument } = await import(officeRequire.resolve(specifier))
+  assert.equal(typeof getDocument, 'function', `Broken retained OfficeParser PDF entry: ${specifier}`)
+}
+console.log('OfficeParser: Node exports, OCR diagnostics/imports and separate PDF.js runtime preserved')
 
 // Run the production launcher against the files in this package, not a source
 // checkout. Static imports must link before the existing fail-fast env check.

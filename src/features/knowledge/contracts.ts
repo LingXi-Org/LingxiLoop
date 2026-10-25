@@ -1,7 +1,8 @@
-export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed'
+export type KnowledgeSourceStatus = 'upload_pending' | 'queued' | 'processing' | 'ready' | 'failed' | 'stored'
 
 export interface KnowledgeSource {
   id: string
+  capabilities?: { canDownload: boolean; canRename: boolean; canDelete: boolean }
   kind: 'file' | 'url' | 'text'
   title: string
   mimeType: string | null
@@ -37,4 +38,10 @@ export interface KnowledgeCitation {
 export interface ConversationSourceSelection {
   conversationId: string
   sources: Array<{ sourceId: string; title: string; status: KnowledgeSourceStatus; enabled: boolean }>
+}
+
+export interface ProjectMaterials {
+  sources: KnowledgeSource[]
+  capabilities: { canUpload: boolean }
+  space: 'public' | 'private'
 }

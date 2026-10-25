@@ -33,17 +33,20 @@ COPY server/package.json server/package-lock.json server/.npmrc ./
 COPY package.json /tmp/qualified-package.json
 COPY scripts/prune-pdfjs-server-runtime.mjs /tmp/prune-pdfjs-server-runtime.mjs
 COPY scripts/prune-glibc-canvas-runtime.mjs /tmp/prune-glibc-canvas-runtime.mjs
+COPY server/scripts/prune-officeparser-runtime.mjs /tmp/prune-officeparser-runtime.mjs
+COPY server/src/modules/learning/homework-presentation.ts /tmp/homework-presentation.ts
 RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; const expected=JSON.parse(fs.readFileSync("/tmp/qualified-package.json")).dependencies["@lyyzka/lingxios"]; assert.match(expected,/^\d+\.\d+\.\d+$/); assert.equal(JSON.parse(fs.readFileSync("package.json")).dependencies["@lyyzka/lingxios"],expected,"server runtime must match root qualification");'
 RUN --mount=type=secret,id=npm_token \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --omit=dev --no-audit --no-fund --prefer-offline \
     && node /tmp/prune-pdfjs-server-runtime.mjs /app/node_modules/pdfjs-dist --apply \
+    && node /tmp/prune-officeparser-runtime.mjs /app/node_modules /tmp/homework-presentation.ts --apply \
     && node /tmp/prune-glibc-canvas-runtime.mjs /app/node_modules --apply \
     && node --input-type=module -e 'for (const name of ["pdfjs-dist", "pdfjs-dist/legacy/build/pdf.mjs"]) { const { getDocument } = await import(name); if (typeof getDocument !== "function") throw Error(`Broken PDF.js entry: ${name}`); }'
 RUN node --input-type=module -e 'import fs from "node:fs"; import assert from "node:assert/strict"; import {releaseVersions} from "@lyyzka/lingxios"; assert.equal(releaseVersions.runtime,JSON.parse(fs.readFileSync("/tmp/qualified-package.json")).dependencies["@lyyzka/lingxios"],"installed image runtime must match root qualification");'
 
 # ─── stage 2: build the web SPA bundle ──────────────────────────────
-# Separate stage with FULL devDeps installed so vite + tsc + tailwind +
-# postcss are available. The output (dist/) is copied into the runtime
+# Separate stage with the locked Web dependency graph, including vite, tsc,
+# tailwind and postcss. The output (dist/) is copied into the runtime
 # image; nothing from this stage's node_modules makes it through.
 #
 # The SPA uses same-origin `/api` routes through the control-plane Worker.
@@ -56,11 +59,15 @@ ARG VITE_TURNSTILE_SITE_KEY=""
 ENV VITE_PUBLIC_POSTHOG_KEY=${VITE_PUBLIC_POSTHOG_KEY}
 ENV VITE_PUBLIC_POSTHOG_HOST=${VITE_PUBLIC_POSTHOG_HOST}
 ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
-COPY package.json package-lock.json .npmrc ./
+COPY server/build/web/package.json server/build/web/package-lock.json .npmrc ./
 # The Web build uses optional platform packages and needs no install scripts;
 # skip Electron's binary download in this stage too.
+ENV ELECTRON_SKIP_BINARY_DOWNLOAD=1
 RUN --mount=type=secret,id=npm_token \
+    --mount=type=cache,id=lingxiloop-web-npm,target=/root/.npm,sharing=locked \
     NODE_AUTH_TOKEN="$(cat /run/secrets/npm_token 2>/dev/null)" npm ci --registry="${NPM_REGISTRY}" --no-audit --no-fund --prefer-offline --ignore-scripts
+# Preserve the existing Web/visualize build entrypoints after the scoped install.
+COPY package.json ./
 COPY src ./src
 COPY shared/visualize-public-resources.ts ./shared/
 COPY public ./public

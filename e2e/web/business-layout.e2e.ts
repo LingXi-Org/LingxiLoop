@@ -36,36 +36,29 @@ test('teacher priorities and follow-up precede charts and open the existing revi
   await expect(screen.getByRole('dialog', '课程学生')).toBeVisible()
 })
 
-test('resource scope shows public sources immediately and preserves student write permissions', {
+test('student course materials show public read access and private upload on narrow screens', {
   ...memberSession('student'), tags: ['web', 'business-layout', 'knowledge', 'authorization'],
 }, async ({ app, screen, browser }) => {
-  await app.open('/?project=e2e-classroom&view=library')
+  await app.open('/?project=e2e-classroom&view=course-materials')
   await expect(screen.getByRole('heading', '课程资料', { level: 1 })).toBeVisible()
-  await expect(screen.getByRole('combobox', '资料范围')).toContainText('公共资料')
-  await expect(browser.locator('[data-ui-page="library"] [aria-busy="true"]')).toHaveCount(0)
-  await expect(screen.getByRole('button', '添加资料')).toBeHidden()
-  await screen.getByRole('combobox', '资料范围').tap()
-  await screen.getByRole('option', '个人资料').tap()
-  await expect(screen.getByRole('button', '添加资料').first()).toBeVisible()
-  await screen.getByRole('combobox', '资料范围').tap()
-  await screen.getByRole('option', '公共资料').tap()
-  await expect(screen.getByRole('button', '添加资料')).toBeHidden()
+  await expect(screen.getByRole('tab', '公共资料')).toHaveAttribute('aria-selected', 'true')
+  await expect(screen.getByText('教师上传 · 课程成员可见')).toBeVisible()
+  await expect(screen.getByRole('button', '上传到公共资料')).toBeHidden()
+  await screen.getByRole('tab', '我的资料').tap()
+  await expect(screen.getByText('仅自己可见')).toBeVisible()
+  await expect(screen.getByRole('button', '上传到我的资料').first()).toBeVisible()
   await browser.setViewport({ width: 390, height: 844 })
-  await expect(screen.getByRole('combobox', '资料范围')).toBeVisible()
+  await expect(screen.getByRole('tab', '我的资料')).toBeVisible()
   expect(await browser.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
-test('teacher can manage public sources while learner review sources stay read-only', {
+test('teacher public uploads follow course authority and private space has no upload', {
   ...memberSession(), tags: ['web', 'business-layout', 'knowledge', 'authorization'],
 }, async ({ app, screen }) => {
-  await app.open('/?project=e2e-classroom&view=library')
-  await expect(screen.getByRole('combobox', '资料范围')).toContainText('公共资料')
-  await expect(screen.getByRole('button', '添加资料')).toBeVisible()
-  await screen.getByRole('combobox', '资料范围').tap()
-  await screen.getByRole('option', /个人资料$/).first().tap()
-  await expect(screen.getByRole('combobox', '资料范围')).toContainText('个人资料')
-  await expect(screen.getByRole('button', '添加资料')).toBeHidden()
-  await screen.getByRole('combobox', '资料范围').tap()
-  await screen.getByRole('option', '公共资料').tap()
-  await expect(screen.getByRole('button', '添加资料')).toBeVisible()
+  await app.open('/?project=e2e-classroom&view=course-materials')
+  await expect(screen.getByRole('button', '上传到公共资料').first()).toBeVisible()
+  await screen.getByRole('tab', '我的资料').tap()
+  await expect(screen.getByRole('button', '上传到我的资料')).toBeHidden()
+  await screen.getByRole('tab', '公共资料').tap()
+  await expect(screen.getByRole('button', '上传到公共资料').first()).toBeVisible()
 })

@@ -3,6 +3,36 @@ import { isIP } from 'node:net'
 
 export const MAX_SOURCE_BYTES = 200 * 1024 * 1024
 
+/** Original-file storage is independent of the optional indexing engine. */
+export const SOURCE_FILE_EXTENSIONS = {
+  'application/pdf': 'pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'text/plain': 'txt',
+  'text/markdown': 'md',
+  'text/csv': 'csv',
+  'application/json': 'json',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'application/zip': 'zip',
+} as const
+
+export function sourceFileSignatureMatches(mime: string, bytes: Buffer): boolean {
+  if (mime === 'image/png') return bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+  if (mime === 'image/jpeg') return bytes.subarray(0, 3).equals(Buffer.from([255, 216, 255]))
+  const extension = SOURCE_FILE_EXTENSIONS[mime as keyof typeof SOURCE_FILE_EXTENSIONS]
+  if (extension === 'zip' || extension === 'pptx' || extension === 'xlsx') {
+    const zip = bytes.subarray(0, 4).equals(Buffer.from([80, 75, 3, 4]))
+      || bytes.subarray(0, 4).equals(Buffer.from([80, 75, 5, 6]))
+    if (!zip) return false
+    if (extension === 'zip') return true
+    return bytes.includes(Buffer.from('[Content_Types].xml'))
+      && bytes.includes(Buffer.from(extension === 'pptx' ? 'ppt/' : 'xl/'))
+  }
+  return true
+}
+
 function blockedIp(raw: string): boolean {
   const ip = raw.toLowerCase().replace(/^::ffff:/, '')
   if (ip === '::' || ip === '::1' || ip === '0.0.0.0') return true

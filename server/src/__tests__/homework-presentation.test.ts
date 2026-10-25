@@ -20,6 +20,22 @@ test('image-only PPTX yields no readable text or generated image placeholders', 
   assert.equal((await extractHomeworkPresentationText(await fixture('image-only.pptx'), 'pptx')).trim(), '')
 })
 
+test('PPTX containing a chart preserves the current editable-text-only extraction', async () => {
+  const text = await extractHomeworkPresentationText(await fixture('chart.pptx'), 'pptx')
+  // officeparser 8.2.0 with extractAttachments:false does not surface chart
+  // categories/series. Record the existing boundary when checking runtime trims.
+  assert.equal(text.trim(), 'Synthetic chart 图表')
+})
+
+test('encrypted PPTX without a password remains a document error', async () => {
+  await assert.rejects(extractHomeworkPresentationText(await fixture('encrypted.pptx'), 'pptx'), error => {
+    assert.ok(error instanceof HomeworkPresentationMaterialError)
+    assert.equal(error.contentStatus, 'failed')
+    assert.match(error.message, /加密/)
+    return true
+  })
+})
+
 test('legacy binary PPT explicitly requests conversion instead of decoding binary as text', async () => {
   await assert.rejects(extractHomeworkPresentationText(await fixture('material.ppt'), 'ppt'), error => {
     assert.ok(error instanceof HomeworkPresentationMaterialError)
@@ -51,10 +67,21 @@ test('cancellation keeps the original operational abort rather than a material e
   await assert.rejects(extractHomeworkPresentationText(await fixture('material.pptx'), 'pptx', controller.signal), error => error === reason)
 })
 
+test('cancellation after parsing starts preserves the original operational abort', async () => {
+  const controller = new AbortController(), reason = new Error('synthetic cancellation during parsing')
+  const parsing = extractHomeworkPresentationText(await fixture('material.pptx'), 'pptx', controller.signal)
+  queueMicrotask(() => controller.abort(reason))
+  await assert.rejects(parsing, error => error === reason)
+})
+
 test('upstream content omissions fail closed even when the parser returns an AST', async t => {
   const original = OfficeParser.parseOffice.bind(OfficeParser)
   t.mock.method(OfficeParser, 'parseOffice', async (bytes: Parameters<typeof OfficeParser.parseOffice>[0], config: Parameters<typeof OfficeParser.parseOffice>[1]) => {
     assert.ok(config && typeof config !== 'function')
+    assert.equal(config.ocr, false)
+    assert.equal(config.extractAttachments, false)
+    assert.equal(config.includeRawContent, false)
+    assert.equal(config.allowRemoteAssets, false)
     config.onWarning?.({ type: 'warning', code: OfficeWarningType.CONTENT_PART_NOT_READ, message: 'synthetic unreadable part' })
     return original(bytes, config)
   })

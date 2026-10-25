@@ -11,6 +11,7 @@ import { userFacingError } from '@/lib/userFacingError'
 const statusLabel: Record<string, string> = {
   upload_pending: '等待上传', queued: '等待处理', processing: '处理中', parsing: '处理中',
   chunking: '处理中', indexing: '处理中', ready: '可查看', failed: '处理失败', retrying: '处理中',
+  stored: '仅保存原文件', stored_only: '仅保存原文件',
 }
 const sourceKindLabel: Record<KnowledgeSource['kind'], string> = {
   file: '文件', url: '网页', text: '文本',
@@ -58,7 +59,8 @@ export function SourceDetailOverlay() {
           : selectedSource
             ? <><pre className="mt-5 whitespace-pre-wrap rounded-2xl bg-muted/40 p-4 font-sans text-xs leading-6 text-foreground">{sourceText
               ? sourceText
-              : selectedSource.error ? userFacingError(selectedSource.error, '资料处理失败，请重试。') : '资料处理中，完成后可预览内容。'}</pre><Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-destructive">删除资料</Button></>
+              : selectedSource.status === 'stored' ? '仅保存原文件，请下载查看。'
+                : selectedSource.error ? userFacingError(selectedSource.error, '资料处理失败，请重试。') : '资料处理中，完成后可预览内容。'}</pre>{selectedSource.capabilities?.canDelete && <Button onClick={() => void removeSelectedSource()} className="mt-5 text-xs font-semibold text-destructive">删除资料</Button>}</>
             : null}
       </div>
     </DrawerContent>

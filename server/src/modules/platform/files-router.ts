@@ -26,7 +26,8 @@ filesRouter.get('/files', safe(async (req, res) => {
       WHERE f.storage_key=$1 AND f.owner_user_id=$2 AND m.ended_at IS NULL AND m.status='ACTIVE' AND $3::boolean
     UNION ALL SELECT 'conversation',channel_id,'conversation:read' FROM im_send_acceptances
       WHERE payload->'attachments' @> jsonb_build_array(jsonb_build_object('id',$1::text)) AND status='accepted'
-    UNION ALL SELECT 'knowledge_source',id,'knowledge:read' FROM knowledge_sources WHERE storage_key=$1 AND deleted_at IS NULL
+    UNION ALL SELECT 'knowledge_source',id,'knowledge:read' FROM knowledge_sources
+      WHERE storage_key=$1 AND deleted_at IS NULL AND status<>'upload_pending'
     UNION ALL SELECT 'conversation',p.conversation_id,'conversation:read' FROM presentation_versions v
       JOIN presentations p ON p.id=v.presentation_id WHERE v.storage_key=$1
         AND (p.visibility_scope='PROJECT' OR p.authorization_user_id=$2)

@@ -1,0 +1,2 @@
+Warning: Please use the `legacy` build in Node.js environments.
+OfficeParser Node ESM/CJS, Tesseract Node imports, and nested PDF.js ESM passed

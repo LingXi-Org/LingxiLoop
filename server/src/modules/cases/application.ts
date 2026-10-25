@@ -36,7 +36,7 @@ async function row(db: Queryable, scope: CaseScope, id: string, lock = false): P
   const { rows } = await db.query<CaseRow>(`SELECT c.*,u.display_name AS author_name,u.avatar_url AS author_avatar_url,s.status AS index_status,s.error AS index_error
     FROM organization_cases c LEFT JOIN knowledge_sources s ON s.id=c.source_id AND s.deleted_at IS NULL
     JOIN users u ON u.id=c.created_by
-    WHERE c.id=$1 AND c.company_id=$2 ${lock ? 'FOR UPDATE OF c' : ''}`, [id,scope.companyId])
+    WHERE c.id=$1 AND c.company_id=$2 AND c.deleted_at IS NULL ${lock ? 'FOR UPDATE OF c' : ''}`, [id,scope.companyId])
   if (!rows[0]) throw new HttpError(404, 'case not found')
   return rows[0]
 }
@@ -116,7 +116,7 @@ export class CasesApplication {
     const { rows } = await this.db.query<CaseRow>(`SELECT c.*,u.display_name AS author_name,u.avatar_url AS author_avatar_url,s.status AS index_status,s.error AS index_error
       FROM organization_cases c LEFT JOIN knowledge_sources s ON s.id=c.source_id AND s.deleted_at IS NULL
       JOIN users u ON u.id=c.created_by
-      WHERE c.company_id=$1 AND ($2 OR c.status='published')
+      WHERE c.company_id=$1 AND c.deleted_at IS NULL AND ($2 OR c.status='published')
       ORDER BY CASE WHEN $2 THEN c.updated_at ELSE c.published_at END DESC`, [scope.companyId,manage])
     const covers = await listCaseCoverDescriptors(this.db,scope.companyId,rows.map(c => c.id),manage?'draft':'published',manage)
     const all = rows.map(c => ({ ...payload(c,view,canManage), generatedCover:covers.get(c.id) ?? null }))
@@ -185,6 +185,16 @@ export class CasesApplication {
     })
     return this.detail(scope,id,'manage')
   }
+  async remove(scope: CaseScope, id: string, version: number) {
+    await this.infrastructure.transaction(async db => {
+      await access(db,scope,true,true)
+      const c = await row(db,scope,id,true); checkVersion(c,version)
+      await invalidate(db,c.source_id)
+      await db.query(`UPDATE organization_cases SET deleted_at=NOW(),version=version+1,updated_at=NOW() WHERE id=$1`, [id])
+      await cancelUnneededCaseCovers(db,scope.companyId,id,true)
+    })
+    return { deleted:true as const,id }
+  }
   async retry(scope: CaseScope, id: string, version: number) {
     await this.infrastructure.transaction(async db => {
       await access(db,scope,true,true)
@@ -231,7 +241,7 @@ export class CasesApplication {
     const boundedLimit = Math.max(1,Math.min(50,Math.trunc(limit)||25))
     return this.infrastructure.transaction(async db => {
       await access(db,scope,true,true)
-      const { rows } = await db.query<CaseRow>(`SELECT * FROM organization_cases WHERE company_id=$1 AND id>$2 ORDER BY id LIMIT $3 FOR UPDATE`, [scope.companyId,afterId,boundedLimit])
+      const { rows } = await db.query<CaseRow>(`SELECT * FROM organization_cases WHERE company_id=$1 AND deleted_at IS NULL AND id>$2 ORDER BY id LIMIT $3 FOR UPDATE`, [scope.companyId,afterId,boundedLimit])
       for (const c of rows) {
         await queueCaseCover(db,scope,c.id,'draft',c.draft)
         if (c.status==='published' && c.published) await queueCaseCover(db,scope,c.id,'published',c.published)
@@ -266,7 +276,7 @@ export class CasesApplication {
     })
   }
   async coverAssetScope(userId: string, id: string): Promise<CaseScope> {
-    const { rows } = await this.db.query<{ company_id:string }>('SELECT company_id FROM organization_cases WHERE id=$1',[id])
+    const { rows } = await this.db.query<{ company_id:string }>('SELECT company_id FROM organization_cases WHERE id=$1 AND deleted_at IS NULL',[id])
     if (!rows[0]) throw new HttpError(404,'cover not found')
     return { userId,companyId:rows[0].company_id }
   }
@@ -303,7 +313,7 @@ export class CasesApplication {
 /** null means not a case asset; false must never fall through to generic file grants. */
 export async function canReadCaseFile(db: Queryable, key: string, userId: string): Promise<boolean | null> {
   if (!key.startsWith('case-images/')) return null
-  const { rows } = await db.query<CaseRow>(`SELECT c.* FROM organization_case_images i JOIN organization_cases c ON c.id=i.case_id AND c.company_id=i.company_id WHERE i.storage_key=$1`, [key])
+  const { rows } = await db.query<CaseRow>(`SELECT c.* FROM organization_case_images i JOIN organization_cases c ON c.id=i.case_id AND c.company_id=i.company_id WHERE i.storage_key=$1 AND c.deleted_at IS NULL`, [key])
   const c = rows[0]
   if (!c) return false
   const permissions = createPermissionService(db)

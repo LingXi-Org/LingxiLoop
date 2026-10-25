@@ -23,7 +23,7 @@ export type {
 } from './contracts.js'
 export { ENTITLEMENT_CODES, PERMISSION_ACTIONS } from './contracts.js'
 export { ForbiddenError, PermissionResolutionError } from './errors.js'
-export { knowledgeSourceVisibilityScope } from './policy.js'
+export { knowledgeSourceCapabilities, knowledgeSourceVisibilityScope } from './policy.js'
 
 export function createPermissionService(
   db: Queryable,

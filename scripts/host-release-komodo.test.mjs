@@ -7,6 +7,7 @@ import assert from 'node:assert/strict'
 import {createHostReleaseOperations} from './host-release-komodo.mjs'
 import {APPS,CORE,IMAGE,RELEASE_ARGS,hash,sealHostPlan,runHostRelease,runImagePreparation} from './host-release.mjs'
 function fixture(fault={}){
+ if(fault.soft57)fault={...fault,homework56:true};
  if(fault.same56)fault={...fault,same55:true};
  if(fault.cover55||fault.same55||fault.homework56)fault={...fault,producerV3:true};
  if(fault.producerV3)fault={...fault,producerV2:true};
@@ -59,6 +60,7 @@ function fixture(fault={}){
   else p.backup={...backup,format:2,profile:'native14-product54',source:{sha:p.source.sha,productVersion:54,runtime:Object.fromEntries(['runtime','schema','protocol','schemaHash','integrity','tarball'].map(k=>[k,p.source[k]])),migrations:p.source.migrations}};
   if(fault.homework56){p.format='homework56-host-release/v1';p.source.productVersion=55;p.source.migrations=structuredClone(p.target.migrations);p.target.productVersion=56;p.target.migrations.push({version:56,name:'homework_validation_status',checksum:'88f7078980c26b4d9658c805bc27fec8b4b4c7199a58c51a8b11201d65c4217a'});p.backup.profile='native14-product55';p.backup.source.productVersion=55;p.backup.source.migrations=structuredClone(p.source.migrations)}
   if(fault.same56){p.format='product56-image-host-release/v1';p.target.productVersion=56;p.target.migrations.push({version:56,name:'homework_validation_status',checksum:'88f7078980c26b4d9658c805bc27fec8b4b4c7199a58c51a8b11201d65c4217a'});p.source.productVersion=56;p.source.migrations=structuredClone(p.target.migrations)}
+  if(fault.soft57){p.format='case-soft-delete57-host-release/v1';p.source.productVersion=56;p.source.migrations=structuredClone(p.target.migrations);p.target.productVersion=57;p.target.migrations.push({version:57,name:'case_soft_delete',checksum:'f42124684d66f1387267f6da653ec2b255c2fa4a9f6dccd6179a3a5fbb4607a0'});p.backup.profile='native14-product56';p.backup.source.productVersion=56;p.backup.source.migrations=structuredClone(p.source.migrations)}
   plan=sealHostPlan(p);Object.assign(source,p.source);Object.assign(target,p.target);if(fault.cover55||fault.homework56)Object.assign(backup,p.backup);
  }
  const containers=APPS.flatMap((stack,i)=>['lingxiloop','worker'].map((service,j)=>({
@@ -447,4 +449,12 @@ test('same56 adapter keeps core source, terminal native receipts and observed he
  const drift=fixture({same56:true});drift.configs.get(APPS[0]).config.environment='changed';await assert.rejects(drift.run());assert.equal(drift.calls.some(c=>c.op==='StopStack'),false);
  const bound=fixture({same56:true,bound:true});await assert.rejects(bound.run());assert.equal(bound.calls.some(c=>c.op==='DeployStack'),false);
  const unknown=fixture({same56:true,unknownWrite:true});await assert.rejects(unknown.run(),e=>e.uncertain);assert.equal(unknown.calls.filter(c=>c.op==='WriteStackFileContents').length,1);assert.equal(unknown.calls.some(c=>c.op==='StopStack'),false);
+});
+
+
+test('soft57 adapter restores56 before exact57 command, forbids replay, and leaves core source unchanged',async()=>{
+ const f=fixture({soft57:true}),core=structuredClone(f.configs.get(CORE));await assert.rejects(f.ops.migrate());assert.equal(f.calls.length,0);await f.run();
+ assert.equal(f.calls.filter(c=>c.op==='SnapshotRestore').length,1);const commands=f.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin'));assert.equal(commands.length,1);assert.match(JSON.stringify(commands[0]),/productVersion\\?":57/);assert.equal(Object.hasOwn(commands[0],'env'),false);assert.deepEqual(f.configs.get(CORE),core);assert.equal(f.calls.some(c=>c.stack===CORE&&['StopStack','DeployStack','UpdateStack','WriteStackFileContents'].includes(c.op)),false);assert.equal(f.events.filter(e=>e.phase==='rollout'&&e.status==='observed').length,4);await assert.rejects(f.ops.migrate());
+ const bound=fixture({soft57:true,bound:true});await assert.rejects(bound.run());assert.equal(bound.calls.some(c=>c.op==='SnapshotRestore'||JSON.stringify(c.command??[]).includes('migrate-bin')),false);
+ const unknown=fixture({soft57:true,migrationUnknown:true});await assert.rejects(unknown.run(),e=>e.uncertain);assert.equal(unknown.calls.filter(c=>JSON.stringify(c.command??[]).includes('migrate-bin')).length,1);assert.equal(unknown.events.at(-1).recovery,'unknown');assert.equal(unknown.calls.some(c=>c.op==='DeployStack'),false);
 });
