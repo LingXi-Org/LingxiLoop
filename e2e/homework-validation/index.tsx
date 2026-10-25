@@ -21,15 +21,18 @@ let homework: Homework = {
   id: 'fixture-homework', courseId: 'fixture-course', title: '课程知识点应用练习', instructions: '阅读课程提纲，解释一个知识点，并给出自己的应用例子。',
   criteria: ['理解课件'], links: [], attachments: [{ key: 'fixture/course-outline.pptx', name: '课程提纲.pptx' }], dueAt: null,
   status: 'DRAFT', revision: 3, visibleHash: 'fixture-hash-3', createdBy: 'fixture-teacher',
-  validation: { status: state as Homework['validation']['status'], revision: params.has('stale') ? 2 : 3, feedback: feedback[state as keyof typeof feedback] },
+  validation: { status: state as Homework['validation']['status'], revision: params.has('stale') ? 2 : 3, feedback: params.has('legacy') ? '无法验证作业要求或完整读取材料，请检查内容、提供可读取的文字材料后重试。' : feedback[state as keyof typeof feedback] },
   canPublish: state === 'READY', canEditDraft: true,
 }
 let validateRequests = 0, publishRequests = 0, saveRequests = 0
 let failRetry = params.has('failRetry')
 let failSave = params.has('failSave')
+let holdValidation = params.has('holdValidate')
+let releaseValidation: (() => void) | null = null
 const snapshot = () => structuredClone({ homework, validateRequests, publishRequests, saveRequests })
 const fixture = {
   snapshot,
+  releaseValidation() { releaseValidation?.(); releaseValidation = null },
   settle(status: Homework['validation']['status']) {
     homework = { ...homework, validation: { status, revision: homework.revision, feedback: feedback[status] }, canPublish: status === 'READY' }
   },
@@ -53,6 +56,10 @@ window.fetch = async (input, init) => {
     if (failRetry) { failRetry = false; return json({ error: 'service unavailable' }, 503) }
     if (body.expectedRevision !== homework.revision) return json({ error: 'revision changed' }, 409)
     homework = { ...homework, validation: { status: 'PENDING', revision: null, feedback: '' }, canPublish: false }
+    if (holdValidation) {
+      holdValidation = false
+      await new Promise<void>(resolve => { releaseValidation = resolve })
+    }
   } else if (url.endsWith('/publish')) {
     publishRequests++
     if (body.expectedRevision !== homework.revision || homework.validation.status !== 'READY' || homework.validation.revision !== homework.revision) return json({ error: 'not ready' }, 409)

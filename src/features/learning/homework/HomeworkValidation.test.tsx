@@ -15,6 +15,27 @@ test('an invalid draft has a destructive alert, icon, actual explanation and a c
   assert.equal($('[role="alert"] svg[aria-hidden="true"]').length, 1)
   assert.match($.text(), /验收标准未说明需要提交什么。/)
   assert.match($.text(), /修改作业要求或验收标准后，保存并重新检查/)
+  assert.equal($('button').text(), '重新检查')
+})
+
+test('legacy invalid feedback offers unchanged rechecking without attributing an unknown failure to the teacher', () => {
+  for (const feedback of ['', '无法验证作业要求或完整读取材料，请检查内容、提供可读取的文字材料后重试。']) {
+    const $ = load(renderToStaticMarkup(<HomeworkValidation validation={validation('INVALID', feedback)} dirty={false} busy={false} onRetry={() => {}} />))
+    assert.equal($('[role="alert"]').length, 1)
+    assert.match($.text(), /检查原因尚不明确/)
+    assert.match($.text(), /上次检查未能明确说明原因，请先重新检查/)
+    assert.doesNotMatch($.text(), /作业要求需要修改|修改作业要求或验收标准后|无法验证作业要求或完整读取材料/)
+    assert.equal($('button').text(), '重新检查')
+    assert.equal($('button[disabled]').length, 0)
+  }
+})
+
+test('rechecking is disabled while a request is busy and unavailable while checking is pending', () => {
+  const busy = load(renderToStaticMarkup(<HomeworkValidation validation={validation('INVALID')} dirty={false} busy onRetry={() => {}} />))
+  assert.equal(busy('button[disabled]').text(), '重新检查')
+  const pending = load(renderToStaticMarkup(<HomeworkValidation validation={validation('PENDING')} dirty={false} busy={false} onRetry={() => {}} />))
+  assert.equal(pending('button').length, 0)
+  assert.match(pending.text(), /正在检查要求与资料/)
 })
 
 test('material and service errors explain different recovery actions and allow checking again', () => {
