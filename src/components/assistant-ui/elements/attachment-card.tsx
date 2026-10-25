@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ImageViewer } from '@/components/ImageViewer'
 import { cn } from '@/lib/utils'
@@ -11,6 +11,7 @@ export function AttachmentCard({ filename, data, mimeType, sourceType, variant =
   const [failedPreview, setFailedPreview] = useState<string | null>(null)
   const [loadedPreview, setLoadedPreview] = useState<string | null>(null)
   const [viewerOpen, setViewerOpen] = useState(false)
+  const thumbnailRef = useRef<HTMLButtonElement>(null)
   const kind = getFileDataKind(data, sourceType)
   const href = kind === 'id' ? `/api/files?key=${encodeURIComponent(data)}` : kind === 'base64' ? `data:${mimeType};base64,${data}` : data
   const safeHref = href && /^(https?:\/\/|\/api\/files\?|blob:|data:(?:image|audio|video)\/|data:application\/pdf;)/i.test(href) ? href : null
@@ -27,9 +28,12 @@ export function AttachmentCard({ filename, data, mimeType, sourceType, variant =
     </>
     const className = 'relative flex size-32 max-w-full shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
     return <>
-      {safeHref ? <button type="button" data-slot="attachment-thumbnail" title={filename} aria-label={`查看图片：${filename}`} className={className} onClick={() => setViewerOpen(true)}>{preview}</button>
+      {safeHref ? <button ref={thumbnailRef} type="button" data-slot="attachment-thumbnail" title={filename} aria-label={`查看图片：${filename}`} className={className} onClick={() => setViewerOpen(true)}>{preview}</button>
         : <div data-slot="attachment-thumbnail" role="img" aria-label={`${filename}：图片预览不可用`} className={className}>{preview}</div>}
-      {viewerOpen && safeHref && <ImageViewer src={safeHref} name={filename} onClose={() => setViewerOpen(false)} />}
+      {viewerOpen && safeHref && <ImageViewer src={safeHref} name={filename} onClose={() => setViewerOpen(false)} onCloseAutoFocus={event => {
+        event.preventDefault()
+        thumbnailRef.current?.focus()
+      }} />}
     </>
   }
   return <CardSurface data-slot="attachment-card" className={cn(conversationCardSize.standard, 'rounded-2xl')}>
