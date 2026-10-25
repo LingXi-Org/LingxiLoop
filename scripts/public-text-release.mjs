@@ -132,7 +132,11 @@ export function assertPublicTextMetadata(value,plan,which='target'){
 function envMap(rows){check(Array.isArray(rows),'Image environment unavailable');const map=new Map();for(const x of rows){check(typeof x==='string'&&x.indexOf('=')>0,'Invalid environment entry');const n=x.indexOf('='),k=x.slice(0,n);check(!map.has(k),'Duplicate environment key');map.set(k,x.slice(n+1));}return map;}
 export function qualifyImageEnvironments(plan){
  check(keys(plan.imageConfigs,['source','target']),'Both audited public image configurations required');const configs={},maps={};
- const activation=plan.visionModelActivation;if(activation){check(plan.format===SAME57_FORMAT,'Vision model activation requires the exact same57 image profile');assertVisionModelActivation(activation)}
+ const activation=plan.visionModelActivation;if(activation){
+  assertVisionModelActivation(activation)
+  if(plan.format===RUNTIME_PATCH_FORMAT){check(plan.source?.productVersion===57&&plan.target?.productVersion===57,'Vision runtime patch requires unchanged product57');assertRuntimePatchPlan(plan.source,plan.target)}
+  else check(plan.format===SAME57_FORMAT,'Vision model activation requires the exact same57 image or product57 runtime patch profile')
+ }
  for(const which of ['source','target']){const raw=plan.imageConfigs[which];check(typeof raw==='string'&&Buffer.byteLength(raw)<=65536&&'sha256:'+createHash('sha256').update(raw).digest('hex')===plan[which].image.configDigest,'Public image config digest differs');configs[which]=JSON.parse(raw).config;maps[which]=envMap(configs[which]?.Env);check(maps[which].get('LINGXILOOP_COMMIT_SHA')===plan[which].sha,'Baked commit mismatch');check(/^22\.\d+\.\d+$/.test(maps[which].get('NODE_VERSION')??''),'Only reviewed Node22 metadata supported');}
  check(equal({...configs.source,Env:null},{...configs.target,Env:null}),'Image startup configuration changed');
  for(const k of new Set([...maps.source.keys(),...maps.target.keys()]))if(!['LINGXILOOP_COMMIT_SHA','NODE_VERSION'].includes(k))check(maps.source.get(k)===maps.target.get(k),'Other baked environment changed');

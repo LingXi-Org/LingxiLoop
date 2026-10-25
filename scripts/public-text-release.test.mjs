@@ -170,3 +170,10 @@ test('explicit same57 vision activation permits only absent source to fixed targ
  for(const mutate of [q=>q.format='product56-image-host-release/v1',q=>q.visionModelActivation.target='other',q=>q.visionModelActivation.source='empty',q=>q.visionModelActivation.providerProofSha256='bad',q=>q.visionModelActivation.extra=true]){const q=structuredClone(p);mutate(q);assert.throws(()=>qualifyImageEnvironments(q));}
  const altered=[...env('target'),'OPENAI_VISION_MODEL=Qwen/Qwen3-VL-32B-Instruct','SECRET=changed'];assert.notDeepEqual(normalizeImageEnvironment(env('source'),p.source.sha,contract),normalizeImageEnvironment(altered,p.target.sha,contract));
 });
+
+test('vision runtime optin rejects other product versions and cannot bypass the formal patch guard',()=>{
+ const p=fixture();p.format='runtime-patch-host-release/v1';p.visionModelActivation={key:'OPENAI_VISION_MODEL',source:'absent',target:'Qwen/Qwen3-VL-32B-Instruct',providerProofSha256:'a'.repeat(64)};
+ assert.throws(()=>qualifyImageEnvironments(p),/unchanged product57/);
+ p.source.productVersion=p.target.productVersion=57;
+ assert.throws(()=>qualifyImageEnvironments(p));
+});

@@ -71,7 +71,7 @@ export function assertNativeBackupReceipt(plan,receipt){
 export function validateHostPlanShape(plan){
  check(exactKeys(plan,['format','createdAt','source','target','sourceAcceptanceSha256','qualification','stacks','planHash',...([NATIVE_SCHEMA_FORMAT,CASE_COVER55_FORMAT,HOMEWORK56_FORMAT,CASE_SOFT_DELETE57_FORMAT].includes(plan?.format)?['backup']:[]),...(isPublicTextPlan(plan)?['publicText','imageConfigs']:[]),...(plan?.visionModelActivation?['visionModelActivation']:[])])
   &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT,CASE_COVER55_FORMAT,SAME55_FORMAT,SAME56_FORMAT,SAME57_FORMAT,HOMEWORK56_FORMAT,CASE_SOFT_DELETE57_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
- check(!plan.visionModelActivation||plan.format===SAME57_FORMAT,'Vision activation is confined to the same57 image profile')
+ check(!plan.visionModelActivation||plan.format===SAME57_FORMAT||plan.format===RUNTIME_PATCH_FORMAT&&plan.source?.productVersion===57&&plan.target?.productVersion===57,'Vision activation requires same57 image or unchanged product57 runtime patch profile')
  if(plan.format===NATIVE_SCHEMA_FORMAT){
   assertNativeSchemaUpgrade(plan.source,plan.target)
   check(plan.backup?.format===2&&plan.backup.profile==='native13-product49'&&equal(plan.backup.source,backupSource(plan.source))
