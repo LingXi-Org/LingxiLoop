@@ -1,0 +1,64 @@
+name: Issue to ChatGPT Dot email
+
+on:
+  issues:
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/issue-dot-email.yml'
+      - '.github/scripts/issue_dot_email.py'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Check mail configuration, or dispatch an already authorized issue
+        type: choice
+        options: [probe, dispatch]
+        default: probe
+      issue_number:
+        description: Issue number for dispatch (approval rules still apply)
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  notify-dot:
+    if: >-
+      github.repository == 'LingXi-Org/LingxiLoop' &&
+      github.ref == 'refs/heads/main' &&
+      !github.event.issue.pull_request &&
+      (github.event_name == 'push' ||
+       github.event_name == 'issues' ||
+       (github.event_name == 'workflow_dispatch' &&
+        contains(fromJSON('["leecyang","lyyzka"]'), github.actor)) ||
+       (github.event_name == 'issue_comment' &&
+        contains(fromJSON('["leecyang","lyyzka"]'), github.event.comment.user.login) &&
+        (github.event.comment.body == '/dot approve' || github.event.comment.body == '/dot retry')))
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 3
+    concurrency:
+      group: issue-dot-email-${{ github.event.issue.number || inputs.issue_number || 'probe' }}
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Issue text and PR refs never select executable code.
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - name: Authorize the issue and send the Dot request
+        run: python3 .github/scripts/issue_dot_email.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_DOMAIN: ${{ vars.EMAIL_DOMAIN || secrets.EMAIL_DOMAIN }}
+          KOMODO_WEBHOOK_URL: ${{ secrets.KOMODO_WEBHOOK_URL }}
+          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
