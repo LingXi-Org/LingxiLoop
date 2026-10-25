@@ -38,17 +38,18 @@
     "measurements/before-list-390.json": "c22dcedfd9f76be426cb1b94af6dc79161274dd49712a9e66d234f00dd275237",
     "runs/before-list-report.json": "b1f4fcd462c263c6eac6c5136103a5eb9edcdab9988e0d8c9cae7a3873bd1b8f",
     "runs/before-first-summary.md": "dc2eb4d1f0ec8f757a0c52a74368a202ea2713e3c30fe2bdf475936541bd66da",
-    "runs/after-composer-fixture-build.log": "8ff5debbc1b965c632ee528d9411487a48667712b816fce7fd9d0b0541473eb8",
     "runs/after-list-first-report.json": "ae3f618eeda1da0688f0dbe5250ce415199874c4764ef30b22cb6b298828ef02",
-    "runs/before-fixture-build.log": "b9785df9c2efe4484076dbb6f1d75e6b443597e50dc0080b987bd1d5914bc253",
     "runs/after-composer-fixture-failure-report.json": "fdf7a37fff6d9e23c02434b5594bc1a68e0aa9955cecc0bb6462ebd0798523c5",
     "runs/after-composer-final-report.json": "aceecae3f3ed2c1bd3afa89ee3e109a01a313718748a8b81b4a7e9037bfbb64f",
     "runs/before-list-summary.md": "959db9d2b226bf1b4204dbb4ebab14cfe7fadd84b7c974cb71240fa360274e4c",
     "runs/after-composer-fixture-failure-summary.md": "0f9ce9fde7884c53cb9f448cf5ae9e1d4dc009b1e2bf6431cf2439beb20dca11",
-    "runs/production-build.log": "9fc79f2ef4e0847888c842c9087d5d36e63a5dcb1ed1fafd94d94949543450ad",
     "runs/before-first-report.json": "4db876ef2014b6e5993d46c8b81637ca134bb49ce0f5f70ea53f57a0c8280454",
-    "runs/after-list-fixture-build.log": "c9d49b53f1316796a8dc09cd4c041a3faf5bc21f200568eb96c21d491b6aced4",
     "runs/after-list-first-summary.md": "8c74041462089bb71c0886ccebce937b80ae73bcae77eca5228373e086a22967",
-    "runs/after-composer-final-summary.md": "d44f06086a6b31a34a5e4d77d0527dc96f082c5cdd79d99033ca366630b4d130"
-  }
+    "runs/after-composer-final-summary.md": "d44f06086a6b31a34a5e4d77d0527dc96f082c5cdd79d99033ca366630b4d130",
+    "runs/after-composer-fixture-build.txt": "b69b2a8715e648996bb28b863ca16ff89dd783a39db003a722dd5b77a2adba50",
+    "runs/before-fixture-build.txt": "06bd95863bf5c8c5e60ad3054b3ba4caa38edc0cc61af6e8135a0241d5a3f38e",
+    "runs/production-build.txt": "19be2cc514529f82443cc0d218a5d85d48f786f3fee923605e4ca08dbb246caa",
+    "runs/after-list-fixture-build.txt": "8057afa28bf48de8b05433f08f6f48ae354b38133723e4b74d67b7bc90559fa0"
+  },
+  "buildLogNormalization": "Saved .txt build outputs have trailing whitespace trimmed; originals remain in /tmp for the session."
 }
