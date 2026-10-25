@@ -28,8 +28,10 @@ for(const failure of ['502','transport'])test(`ingress ${failure} after effect i
   }
   const result=await f.run('recovery-drain')
   assert.equal(result.status,'succeeded',JSON.stringify(result))
-  assert.equal(result.result.ingressObservation.observedAfterUnknown,true)
-  assert.equal(result.result.ingressObservation.originalError.code,failure==='502'?'CONTROL_REJECTED':'CONTROL_UNAVAILABLE')
+  const step=result.steps.find(s=>s.name==='ingress-disable')
+  assert.equal(step.observedAfterUnknown,true)
+  assert.deepEqual(step.originalError,{code:failure==='502'?'CONTROL_REJECTED':'CONTROL_UNAVAILABLE',...(failure==='502'?{httpStatus:502}:{})})
+  assert.deepEqual(f.journal.get(result.key).steps.find(s=>s.name==='ingress-disable').originalError,step.originalError)
   const post=calls.find(c=>c.options.method==='POST'),reads=calls.slice(calls.indexOf(post)+1).filter(c=>new URL(c.url).pathname==='/ingress')
   assert.equal(calls.filter(c=>c.options.method==='POST').length,1)
   assert.ok(reads.length>=1)

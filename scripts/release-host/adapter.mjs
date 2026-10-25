@@ -315,7 +315,7 @@ export class ComposeAdapter {
       for (const [service,spec] of Object.entries(local.services)) if (spec.role === 'worker') {
         await context.step(`stop:${service}`, () => this.run([...context.compose,'stop','--timeout',String(this.policy.stopTimeoutSeconds ?? 150),service]), { sideEffect:true })
       }
-      const ingressChange = await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op,enabled:false }), { sideEffect:true })
+      await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op,enabled:false }), { sideEffect:true })
       const ingress = await this.control(local,'ingressState',op,'GET')
       requireValue(ingress.enabled === false && ingress.generation === op.generation, 'INGRESS_UNPROVEN', 'Stable ingress must confirm backend removal')
       for (const [service,spec] of Object.entries(local.services)) if (spec.role !== 'worker') {
@@ -328,7 +328,7 @@ export class ComposeAdapter {
         if (Date.now() >= deadline) throw fault('DRAIN_TIMEOUT','Maintenance writers stopped but live leases remain; task state is preserved')
         await this.wait(this.policy.pollIntervalMs ?? 1000)
       }
-      return { drained:true,ingress:false,mode:'maintenance',...(ingressChange?.observedAfterUnknown ? {ingressObservation:ingressChange} : {}) }
+      return { drained:true,ingress:false,mode:'maintenance' }
     }
     const evidence = await context.step('worker-admission-drain', () => this.control(local,'drain',{ ...op, mode: plan.mode }), { sideEffect: true })
     requireValue(evidence?.admissionClosed === true && (plan.mode === 'rolling' || evidence.writesStopped === true), 'DRAIN_UNPROVEN', 'Admission or maintenance write barrier is not proven')
@@ -337,13 +337,13 @@ export class ComposeAdapter {
       if (Date.now() >= deadline) throw fault('DRAIN_TIMEOUT', 'Task/lease/checkpoint barrier did not drain within the fixed budget')
       await this.wait(this.policy.pollIntervalMs ?? 1000)
     }
-    const ingressChange = await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op, enabled: false }), { sideEffect: true })
+    await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op, enabled: false }), { sideEffect: true })
     const ingress = await this.control(local,'ingressState',op,'GET')
     requireValue(ingress.enabled === false && ingress.generation === op.generation, 'INGRESS_UNPROVEN', 'Stable ingress has not confirmed backend removal')
     for (const [service, spec] of Object.entries(local.services)) if (spec.role === 'worker') {
       await context.step(`stop:${service}`, () => this.run([...(context.compose), 'stop','--timeout',String(this.policy.stopTimeoutSeconds ?? 150), service]), { sideEffect: true })
     }
-    return { drained: true, ingress: false, mode: plan.mode,...(ingressChange?.observedAfterUnknown ? {ingressObservation:ingressChange} : {}) }
+    return { drained: true, ingress: false, mode: plan.mode }
   }
   async apply(op, plan, context, direction = 'forward') {
     const local = this.policy.targets[op.target], descriptor = direction === 'source' ? (plan.source??plan.recovery) : direction === 'recovery' ? plan.recovery : plan
@@ -404,10 +404,10 @@ export class ComposeAdapter {
     const local = this.policy.targets[op.target]
     if (local.adapter !== 'main-runtime') return {drained:false,component:local.adapter,noIngressChange:true}
     if (plan.mode === 'rolling') await context.step('worker-admission-open', () => this.control(local,'undrain',op), { sideEffect: true })
-    const ingressChange = await context.step('ingress-enable', () => this.control(local,'ingress',{ ...op, enabled: true }), { sideEffect: true })
+    await context.step('ingress-enable', () => this.control(local,'ingress',{ ...op, enabled: true }), { sideEffect: true })
     const ingress = await this.control(local,'ingressState',op,'GET')
     requireValue(ingress.enabled === true && ingress.generation === op.generation, 'INGRESS_UNPROVEN', 'Stable ingress has not confirmed backend restoration')
-    return { drained: false, ingress: true,...(ingressChange?.observedAfterUnknown ? {ingressObservation:ingressChange} : {}) }
+    return { drained: false, ingress: true }
   }
   async observe(op, plan) {
     const local = this.policy.targets[op.target]
