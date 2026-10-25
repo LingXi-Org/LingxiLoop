@@ -78,3 +78,15 @@ test('a missing original task is unavailable, never inferred from the assistant 
   assert.match(requestTextWithReferences(current, result)!, /"relation":"original_request","status":"unavailable"/)
   assert.ok(!requestTextWithReferences(current, result)?.includes('线程根不是原问题'))
 })
+
+test('quoted assistant evidence does not start an unrelated task lineage lookup', async () => {
+  const source = message('A', '被引答复', { sourceRef: 'unrelated-task' }, 'assistant')
+  const question = message('B', '原问题', { replyToClientMsgNo: 'A' })
+  for (const current of [question, message('retry', '重试', { retryOfClientMsgNo: 'B', replyToClientMsgNo: 'B' })]) {
+    const calls: string[][] = []
+    const result = await resolveRequestReferences(current, reader([source, question], calls))
+    assert.ok(calls.every(ids => !ids.includes('unrelated-task')))
+    assert.ok(result.references.every(reference => reference.status === 'available'))
+    assert.ok(requestTextWithReferences(current, result)?.includes('被引答复'))
+  }
+})

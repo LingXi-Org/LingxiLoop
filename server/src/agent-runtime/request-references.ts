@@ -39,6 +39,9 @@ export async function resolveRequestReferences(message: ImMessageEnvelope,
   const seen = new Set([message.clientMsgNo, message.messageId])
   let current = message
   while (true) {
+    // An ordinary quoted answer is evidence in its own right. Recover an
+    // assistant's source task only while resolving a retry/regeneration.
+    if (current.payload.role === 'assistant' && (!operation || result.originalRequestId)) break
     const metadata = current.payload.metadata.custom
     const regenerate = identity(metadata.regenerateOfClientMsgNo), retry = identity(metadata.retryOfClientMsgNo)
     const source = current.payload.role === 'assistant'
