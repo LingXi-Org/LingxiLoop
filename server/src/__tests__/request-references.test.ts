@@ -90,3 +90,41 @@ test('quoted assistant evidence does not start an unrelated task lineage lookup'
     assert.ok(requestTextWithReferences(current, result)?.includes('被引答复'))
   }
 })
+
+test('three cross-day retries retain the original instruction, attachments and recorded time through prior retries and assistant results', async () => {
+  const createdAt = '2026-10-24T23:30:00+08:00'
+  const image = message('image', '', {})
+  image.messageSeq = 1
+  image.payload = createNativeMessage({ id: 'image', role: 'user', createdAt, content: [], attachments: [{ id: 'image-file', type: 'image',
+    name: 'original.png', contentType: 'image/png', status: { type: 'complete' }, content: [{ type: 'image', image: 'https://assets.test/original.png' }] }] })
+  for (const separate of [false, true]) {
+    const original = message('original', '请依据图片布置作业，明晚20:00截止。', separate ? { replyToClientMsgNo: image.clientMsgNo } : {})
+    original.timestamp = Date.parse(createdAt) / 1000
+    original.messageSeq = 2
+    original.payload = createNativeMessage({ id: original.clientMsgNo, role: 'user', createdAt,
+      content: original.payload.content, custom: original.payload.metadata.custom,
+      attachments: separate ? [] : image.payload.role === 'user' ? image.payload.attachments : [] })
+    const records = [image, original]
+    let previous = original.clientMsgNo
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const assistant = message(`reply-${attempt}`, '旧答复', { sourceRef: previous }, 'assistant')
+      records.push(assistant)
+      // Alternate a direct prior retry pointer and an assistant-result pointer.
+      const target = attempt === 2 ? previous : assistant.clientMsgNo
+      const retry = message(`retry-${attempt}`, '请重试这条消息。', { retryOfClientMsgNo: target, replyToClientMsgNo: target })
+      retry.timestamp = original.timestamp + attempt * 86400
+      retry.messageSeq = 100 + attempt
+      const result = await resolveRequestReferences(retry, reader(records))
+      assert.equal(result.originalRequestId, original.clientMsgNo)
+      const input = requestTextWithReferences(retry, result)!
+      assert.match(input, /请依据图片布置作业，明晚20:00截止。/)
+      assert.match(input, /image-file/)
+      const snapshot = JSON.parse(input.slice(input.indexOf('{'))) as {
+        originalRequest: { clientMsgNo: string; timestamp: number; createdAt: string }
+      }
+      assert.deepEqual(snapshot.originalRequest, { clientMsgNo: original.clientMsgNo, timestamp: original.timestamp, createdAt })
+      records.push(retry)
+      previous = retry.clientMsgNo
+    }
+  }
+})

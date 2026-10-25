@@ -12,6 +12,7 @@ import { learnerHomeworkRead, teacherHomeworkDraftReceipt, teacherHomeworkOvervi
 import { resolveTeacherScope } from './teacher-agent-application.js'
 import { loadHomeworkHelpState } from './homework-help-state.js'
 import { homeworkEvidenceAvailable } from './homework-effects.js'
+import { homeworkDraftRequestId } from './homework-draft-request.js'
 
 const id=z.string().trim().min(1).max(200)
 const teacherHomeworkDraftSchema=z.strictObject(homeworkDraftSchema.shape).omit({editorDocument:true,criteriaDocument:true}).extend({homeworkId:id.optional(),expectedRevision:z.number().int().min(1).optional()})
@@ -95,7 +96,7 @@ async function teacher(context:ActionContext) {
 
 export const homeworkTeacherTools:ToolDefinition[]=[
   nativeTool('teacher.draft_homework',teacherHomeworkDraftSchema,{
-    description:'Create or revise a homework draft with clear instructions and a few human-readable independent mastery criteria. To revise the same draft provide both homeworkId and its current expectedRevision. The result contains the card locator, verified title/revision/hash and a first text page of actual requirements. Read further pages or verify current draft state with teacher.homework_overview using homeworkId and section=requirements; keep sourceVersion consistent. Published-only lists cannot verify an unpublished draft. The initiating teacher must edit/review and explicitly click the latest draft card to publish. Every revision requires renewed confirmation. This tool never publishes. Do not create legacy activities, objectives or Missions for homework.',
+    description:'Create or revise a homework draft with clear instructions and a few human-readable independent mastery criteria. Creation retries for the same original teacher request return the same draft; changed creation content conflicts. To revise the same draft provide both homeworkId and its current expectedRevision. The result contains the card locator, verified title/revision/hash and a first text page of actual requirements. Read further pages or verify current draft state with teacher.homework_overview using homeworkId and section=requirements; keep sourceVersion consistent. Published-only lists cannot verify an unpublished draft. The initiating teacher must edit/review and explicitly click the latest draft card to publish. Every revision requires renewed confirmation. This tool never publishes. Do not create legacy activities, objectives or Missions for homework.',
     effect:'transaction',approval:false,authorize:async context=>{
       if(context.work.kind==='teacher_digest') throw new NoEffectError('scheduled summaries are read only','forbidden')
       await teacher(context)
@@ -103,7 +104,7 @@ export const homeworkTeacherTools:ToolDefinition[]=[
     async execute(context,input) {
       const {db,binding,scope}=await teacher(context),{homeworkId,expectedRevision,...draft}=input
       const detail=homeworkId?await application(db).updateDraft(scope,binding.courseId,homeworkId,{...draft,expectedRevision:expectedRevision!})
-        :await application(db).draft(scope,binding.courseId,draft)
+        :await application(db).draft(scope,binding.courseId,draft,await homeworkDraftRequestId(context,binding.courseId))
       return {ok:true,executionState:'succeeded',value:teacherHomeworkDraftReceipt(detail.homework,binding.courseId)}
     },
     async verify(context,_input,value) {

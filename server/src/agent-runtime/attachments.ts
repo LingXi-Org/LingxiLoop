@@ -6,6 +6,7 @@ import { decodeSourceText, extractDocumentText, type RequestAttachment } from '@
 import type { ImMessageEnvelope } from '../im/messages-application.js'
 import { storage } from '../storage.js'
 import type { Queryable } from '../db/queryable.js'
+import { readImageInput, supportedImageInput } from './image-input.js'
 
 export const attachmentRefId = (ref: AttachmentRef) => JSON.stringify([ref.clientMsgNo,ref.attachmentId])
 
@@ -55,13 +56,19 @@ export async function readRequestAttachments(messages: ImMessageEnvelope[], refs
     const mime = data.mime.split(';')[0].trim().toLowerCase()
     if (unavailable.has(id)) attachment.contentStatus = 'unavailable'
     else if (attachment.size > 16 * 1024 * 1024) attachment.contentStatus = 'too_large'
-    else if (!mime.startsWith('text/') && !['application/json','application/xml','application/pdf',
+    else if (!supportedImageInput(mime) && !mime.startsWith('text/') && !['application/json','application/xml','application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(mime)) attachment.contentStatus = 'unsupported'
     else {
       try {
         const bytes = Uint8Array.from(await storage.readObjectBounded(data.key, 16 * 1024 * 1024, signal))
         if (bytes.length !== data.size) throw new Error('attachment bytes differ from the committed size')
         attachment.sourceVersion = `sha256:${createHash('sha256').update(bytes).digest('hex')}`
+        if (supportedImageInput(mime)) {
+          Object.assign(attachment, await readImageInput(bytes, mime, { companyId, conversationId: message!.channelId,
+            extras: { clientMsgNo: message!.clientMsgNo, attachmentId: ref.attachmentId, sourceVersion: attachment.sourceVersion } }, signal))
+          result.push(attachment)
+          continue
+        }
         const text = mime === 'application/pdf' ? await extractDocumentText(bytes, 'pdf', signal)
           : mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? await extractDocumentText(bytes, 'docx', signal) : decodeSourceText(bytes)
         if (text.length > 1_000_000) attachment.contentStatus = 'too_large'

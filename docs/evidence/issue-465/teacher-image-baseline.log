@@ -1,0 +1,81 @@
+[integration selected] selected 1/128 file(s): teacher-image-retry.test.ts
+TAP version 13
+# Subtest: teacher PNG and original task survive three retries (same-message)
+not ok 1 - teacher PNG and original task survive three retries (same-message)
+  ---
+  duration_ms: 2193.277188
+  type: 'test'
+  location: '/tmp/lingxiloop-465-baseline/server/src/__integration__/teacher-image-retry.test.ts:1:7401'
+  failureType: 'testCodeFailure'
+  error: 'actual current model input must include the vision result from original PNG bytes'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/tmp/lingxiloop-465-baseline/server/src/__integration__/teacher-image-retry.test.ts:153:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: teacher PNG and original task survive three retries (separate-message)
+not ok 2 - teacher PNG and original task survive three retries (separate-message)
+  ---
+  duration_ms: 1458.441866
+  type: 'test'
+  location: '/tmp/lingxiloop-465-baseline/server/src/__integration__/teacher-image-retry.test.ts:1:7401'
+  failureType: 'testCodeFailure'
+  error: 'the original image identity must survive every retry after leaving recent history'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/tmp/lingxiloop-465-baseline/server/src/__integration__/teacher-image-retry.test.ts:152:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: revoked PNG is reported unavailable without sending bytes to the vision provider
+ok 3 - revoked PNG is reported unavailable without sending bytes to the vision provider
+  ---
+  duration_ms: 508.218665
+  type: 'test'
+  ...
+# Subtest: missing vision configuration and unreadable images retain truthful attachment status
+not ok 4 - missing vision configuration and unreadable images retain truthful attachment status
+  ---
+  duration_ms: 962.718846
+  type: 'test'
+  location: '/tmp/lingxiloop-465-baseline/server/src/__integration__/teacher-image-retry.test.ts:1:12444'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    0 !== 1
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 1
+  actual: 0
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/lingxiloop-465-baseline/server/src/__integration__/teacher-image-retry.test.ts:198:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# {"ts":"2026-10-25T09:56:10.406Z","level":"info","msg":"worker stopped","workerId":"teacher-image-retry-465","timedOut":false}
+1..4
+# tests 4
+# suites 0
+# pass 1
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8196.073861
+[integration file] teacher-image-retry.test.ts duration_ms=8233 exit=1
+[integration result] mode=selected files=1 duration_ms=8233 exit=1

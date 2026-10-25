@@ -71,7 +71,7 @@ async function tracked<T>(
       const callId = `${logicalCallId}:${attempt}`, startedAt = performance.now(),issuedAt = Date.now()
       const pricing = siliconFlowPricingForModel(env.OPENAI_BASE_URL, model, env.NODE_ENV === 'production',issuedAt)
       const requestOptions = { ...options,maxRetries: 0,signal,
-        timeout: Math.max(1,Math.min(30_000,policy.totalTimeoutMs-(performance.now()-began))) }
+        timeout: Math.max(1,Math.floor(Math.min(30_000,policy.totalTimeoutMs-(performance.now()-began)))) }
       let value: T | undefined, failure: unknown, succeeded = false
       issued++
       try {

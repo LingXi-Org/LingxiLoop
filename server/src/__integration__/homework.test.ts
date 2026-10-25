@@ -1310,6 +1310,75 @@ test('[integration] existing managed teacher bindings refresh their persona whil
   assert.equal(ordinary.system_prompt === customPrompt, true, 'An unmanaged custom persona must remain intact')
 })
 
+test('[integration] teacher draft creation reuses the original committed request across new retry runs without changing or publishing it', async () => {
+  const [{ teacherTools }, { ensureTeacherAgentForCourse }] = await Promise.all([
+    import('../modules/learning/public.js'), import('../modules/learning/teacher-agent-application.js'),
+  ])
+  const tool = teacherTools.find(item => item.action === 'teacher.draft_homework')!
+  const binding = await ensureTeacherAgentForCourse(companyId, courseId, pool, transaction)
+  const committed = (id: string, custom: Record<string, unknown> = {}, role: 'user' | 'assistant' = 'user') => {
+    im.messages.push({ channelId: binding.roomId, channelType: 2, messageId: `stored-${id}`, clientMsgNo: id,
+      messageSeq: im.messages.length + 1, fromUid: role === 'user' ? teacher.userId : binding.agentId,
+      timestamp: Date.now() / 1000, payload: createNativeMessage({ id, role,
+        content: [{ type: 'text', text: role === 'user' ? 'Prepare the same homework draft.' : 'Draft prepared.' }], custom }) })
+  }
+  const invoke = (source: string, runId: string, input: object = visible) => transaction(async db => {
+    const data = tool.parse(input)
+    const context = { database: db, signal: AbortSignal.timeout(15000), requestVersion: 1,
+      work: { id: runId, tenantId: companyId, agentId: binding.agentId, principalId: teacher.userId,
+        sessionId: binding.roomId, kind: 'turn', lane: 'interactive', triggerRef: source, fence: 1, homeEpoch: 1,
+        createdAt: new Date().toISOString(), conversation: { conversationId: binding.roomId, policyVersion: 1,
+          source: { messageId: source, version: 1 }, internal: false,
+          audience: { visibility: 'conversation', participantIds: [teacher.userId, colleague.userId, binding.agentId] } } },
+      action: { runId, cellId: 'draft', callIndex: 0, action: tool.action, args: data, idempotencyKey: `${runId}-draft` },
+    } as unknown as import('@lyyzka/lingxios').ActionContext
+    await tool.authorize(context, data)
+    const result = await tool.execute(context, data)
+    assert.ok(result.ok)
+    if (tool.verify) assert.equal((await tool.verify(context, data, result.value)).status, 'passed')
+    return result.value as { result: { homeworkId: string }; state: { revision: number; visibleHash: string } }
+  })
+  committed('original-homework-request')
+  const initial = await invoke('original-homework-request', 'draft-run-original')
+  let previous = 'original-homework-request'
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    committed(`draft-response-${attempt}`, { sourceRef: previous }, 'assistant')
+    const source = `retry-homework-${attempt}`
+    committed(source, attempt === 2 ? { regenerateOfClientMsgNo: `draft-response-${attempt}` }
+      : { retryOfClientMsgNo: previous })
+    const repeated = await invoke(source, `draft-new-run-${attempt}`)
+    assert.deepEqual(repeated.result, initial.result, 'A new retry run must return the original draft locator')
+    assert.deepEqual(repeated.state, initial.state)
+    previous = source
+  }
+  assert.equal((await pool.query('SELECT count(*)::int AS total FROM homeworks')).rows[0].total, 1)
+  assert.equal((await homework.detail(teacher, courseId, initial.result.homeworkId)).homework.status, 'DRAFT')
+  committed('missing-original-retry', { retryOfClientMsgNo: 'unavailable-original-request' })
+  await assert.rejects(invoke('missing-original-retry', 'draft-unresolved-retry'), /original committed teacher request is unavailable/)
+  committed('other-teacher-request')
+  im.messages[im.messages.length - 1]!.fromUid = colleague.userId
+  committed('other-teacher-retry', { retryOfClientMsgNo: 'other-teacher-request' })
+  await assert.rejects(invoke('other-teacher-retry', 'draft-other-teacher-retry'), /original committed teacher request is unavailable/)
+  await assert.rejects(invoke('invented-source-request', 'draft-invented-source'), /committed teacher request is unavailable/)
+  await assert.rejects(invoke(previous, 'draft-changed-retry', { ...visible, title: 'A silently replaced draft' }), /草稿已存在或内容已变化/)
+  const unchanged = (await homework.detail(teacher, courseId, initial.result.homeworkId)).homework
+  assert.equal(unchanged.title, visible.title)
+  assert.equal(unchanged.revision, initial.state.revision)
+  assert.equal((await pool.query('SELECT count(*)::int AS total FROM homeworks')).rows[0].total, 1)
+  modelReplies.push({ valid: true, feedback: 'The original draft remains valid.' })
+  await runLearningEffects()
+  const publish = { expectedRevision: unchanged.revision, visibleHash: unchanged.visibleHash, idempotencyKey: 'same-teacher-confirmation' }
+  await homework.publish(teacher, courseId, unchanged.id, publish)
+  const publishedAt = (await pool.query('SELECT published_at FROM homeworks WHERE id=$1', [unchanged.id])).rows[0].published_at
+  await homework.publish(teacher, courseId, unchanged.id, publish)
+  assert.deepEqual((await pool.query('SELECT published_at FROM homeworks WHERE id=$1', [unchanged.id])).rows[0].published_at, publishedAt)
+  assert.equal((await invoke(previous, 'draft-retry-after-publish')).result.homeworkId, unchanged.id)
+  assert.equal((await pool.query("SELECT count(*)::int AS total FROM homeworks WHERE status='PUBLISHED'")).rows[0].total, 1)
+  committed('new-homework-request', { replyToClientMsgNo: 'original-homework-request' })
+  assert.notEqual((await invoke('new-homework-request', 'draft-run-new-request')).result.homeworkId, unchanged.id,
+    'An ordinary quoted request starts its own draft')
+})
+
 test('[integration] native teacher revisions update the same draft and require fresh human confirmation; no model publication/review tool exists', async () => {
   const [{ teacherTools }, { ensureTeacherAgentForCourse }] = await Promise.all([
     import('../modules/learning/public.js'), import('../modules/learning/teacher-agent-application.js'),
@@ -1321,6 +1390,9 @@ test('[integration] native teacher revisions update the same draft and require f
   assert.throws(() => tool.parse({ ...visible, expectedRevision: 1 }))
   const draft = await homework.draft(teacher, courseId, visible)
   const binding = await ensureTeacherAgentForCourse(companyId, courseId, pool, transaction)
+  im.messages.push({ channelId: binding.roomId, channelType: 2, messageId: 'homework-teacher-message', clientMsgNo: 'homework-teacher-message',
+    messageSeq: im.messages.length + 1, fromUid: teacher.userId, timestamp: Date.now() / 1000,
+    payload: createNativeMessage({ id: 'homework-teacher-message', role: 'user', content: [{ type: 'text', text: 'Prepare a homework draft.' }] }) })
   const invoke = async (selectedTool: typeof tool, scope: typeof teacher, input: object) => {
     const data = selectedTool.parse(input)
     const context = { database: pool, signal: AbortSignal.timeout(15000), requestVersion: 1,
