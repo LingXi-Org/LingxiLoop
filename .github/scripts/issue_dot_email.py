@@ -35,7 +35,7 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 def request_json(url, *, method="GET", headers=None, data=None, service="API"):
     payload = None if data is None else json.dumps(data).encode("utf-8")
-    merged = {"Accept": "application/json", **(headers or {})}
+    merged = {"Accept": "application/json", "User-Agent": "LingxiLoop-Issue-Dot/1.0", **(headers or {})}
     if payload is not None:
         merged["Content-Type"] = "application/json"
     req = urllib.request.Request(url, data=payload, headers=merged, method=method)
@@ -46,7 +46,22 @@ def request_json(url, *, method="GET", headers=None, data=None, service="API"):
                 raise SafeError(f"{service} response exceeded the allowed size")
             return json.loads(raw) if raw else None
     except urllib.error.HTTPError as exc:
-        error = SafeError(f"{service} returned HTTP {exc.code}")
+        diagnostic = ""
+        if service == "Control-plane SMTP":
+            if exc.headers.get("cf-mitigated") == "challenge":
+                diagnostic = " (Cloudflare edge challenge)"
+            elif "text/html" in exc.headers.get("content-type", ""):
+                diagnostic = " (HTML edge response, not the mail API JSON response)"
+            else:
+                try:
+                    code = json.loads(exc.read(4096)).get("error")
+                    if code in {"method_not_allowed", "identity_service_unavailable", "unauthorized",
+                                "invalid_payload", "mail_binding_unavailable", "probe_only_event",
+                                "invalid_idempotency_key", "mail_transport_failed"}:
+                        diagnostic = " (" + code + ")"
+                except (ValueError, AttributeError, UnicodeError):
+                    pass
+        error = SafeError(f"{service} returned HTTP {exc.code}{diagnostic}")
         error.status = exc.code
         raise error from None
     except (urllib.error.URLError, TimeoutError, OSError):
