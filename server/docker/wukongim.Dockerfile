@@ -26,14 +26,31 @@ WORKDIR /src
 COPY --from=source /src ./
 RUN go mod download \
  && go test -count=1 ./pkg/controller/raft/raftstore \
- && CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=${TARGETARCH:-$(go env GOARCH)} \
-      go build -trimpath -o /out/wukongim ./cmd/wukongim
+ && export CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=${TARGETARCH:-$(go env GOARCH)} \
+ && go build -trimpath -o /out/wukongim.debug ./cmd/wukongim \
+ && go build -trimpath -ldflags="-s -w" -o /out/wukongim ./cmd/wukongim \
+ && { printf 'upstream_commit=%s\nraftstore_fix_commit=%s\nplatform=%s/%s\n' \
+        "$(git rev-parse HEAD)" "$(git rev-parse FETCH_HEAD)" "$GOOS" "$GOARCH"; \
+      go version; \
+      printf 'debug_flags=-trimpath\nrelease_flags=-trimpath -ldflags="-s -w"\n'; \
+      cd /out && sha256sum wukongim wukongim.debug; \
+    } > /out/build-info.txt
 
-FROM accel.way2api.fun/docker.io/library/alpine:3.19
+FROM accel.way2api.fun/docker.io/library/alpine:3.19 AS runtime
 
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
-COPY --from=builder /out/wukongim /usr/local/bin/wukongim
 COPY server/wukongim/wukongim.toml /etc/wukongim/wukongim.toml
 EXPOSE 5001 5100 5200 5301 7000 19092
 ENTRYPOINT ["/usr/local/bin/wukongim", "-config", "/etc/wukongim/wukongim.toml"]
+
+# Build with --target debug for the same source/toolchain and full Go symbols.
+# Both images identify both binaries; the debug target keeps the normal config.
+FROM runtime AS debug
+COPY --from=builder /out/wukongim.debug /usr/local/bin/wukongim
+COPY --from=builder /out/build-info.txt /usr/local/share/wukongim/build-info.txt
+
+# Keep release last so existing builds and Compose select the smaller binary.
+FROM runtime AS release
+COPY --from=builder /out/wukongim /usr/local/bin/wukongim
+COPY --from=builder /out/build-info.txt /usr/local/share/wukongim/build-info.txt

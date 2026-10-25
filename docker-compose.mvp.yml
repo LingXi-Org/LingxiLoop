@@ -90,7 +90,7 @@ services:
     volumes:
       - open-notebook-data:/app/data
     healthcheck:
-      test: ["CMD-SHELL", "grep -a -l 'surreal-commands-worker' /proc/[0-9]*/cmdline 2>/dev/null | grep -q . && curl -fsS http://localhost:5055/health"]
+      test: ["CMD-SHELL", "/app/.venv/bin/supervisorctl -s unix:///tmp/supervisor.sock status rag-api | grep -q RUNNING && /app/.venv/bin/supervisorctl -s unix:///tmp/supervisor.sock status rag-worker | grep -q RUNNING && curl -fsS http://localhost:5055/readyz"]
       interval: 10s
       timeout: 5s
       retries: 30

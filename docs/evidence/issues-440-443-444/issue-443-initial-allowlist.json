@@ -1,0 +1,63 @@
+{
+  "manifest": {
+    "mediaType": "application/vnd.oci.image.manifest.v1+json",
+    "digest": "sha256:dd35e42952be96e5cbc528b3fc884f065cb4944cecc4b7370e0f211bede13686",
+    "size": 1456,
+    "annotations": {
+      "io.containerd.image.name": "docker.io/library/issue443-notebook:initial-allowlist",
+      "org.opencontainers.image.ref.name": "initial-allowlist"
+    }
+  },
+  "config": {
+    "mediaType": "application/vnd.oci.image.config.v1+json",
+    "digest": "sha256:0e1f921124e13496fccf74cf7bbb37c5488ee626ca350730b5e7435a37df1b82",
+    "size": 2363
+  },
+  "layers": [
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:a9a838f35af27703cda71ceedbd2a7be8184ed6981ff8e4b5cd9c6d5444122c5",
+      "size": 12800
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:bfb160a05d9bf2f8b22c859d213ba737cc14ea1e1f7748710a33c11d9db24a6e",
+      "size": 153088
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:d0c4ce51b7380b04bd811f63fad3b092abcd30984547ba471a6e0657219b2d20",
+      "size": 18432
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:8543e42a0ca7a2badedaee368acac8e61e16b11bcb6b6239071ab66401d3815a",
+      "size": 122368
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:758d8cf6a8e7e83ff9fca870c71c7ca3b08fb82b54c931deeb2621d4209ff2ca",
+      "size": 21504
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:48d8a5a954de3da8651df5f93e0d0333ed5bd1236a434fe8e60098b1ba3d7f98",
+      "size": 55808
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:f6efa09230c349247b4fdfebd508e815ac4c94a0d1174309b0bb5921a93a5050",
+      "size": 4608
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar",
+      "digest": "sha256:62f2eaa1ce291fec15b6d63aaa443161abde96e57029f719b2cfd5e67a91f7ae",
+      "size": 4096
+    }
+  ],
+  "layerBytes": 392704,
+  "fileCount": 81,
+  "fileBytes": 309935,
+  "inventorySha256": "ab47929f8342aea63bd386818459663953c6aa1c269f6926ffc29bca755d715d",
+  "finding": "Initial allowlist retained all 52 upstream migration files; exact inventory equals baseline. Fixed by explicit database/** exclusion."
+}

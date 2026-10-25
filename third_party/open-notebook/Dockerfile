@@ -31,7 +31,6 @@ RUN mkdir -p /app/tiktoken-cache && \
 FROM accel.way2api.fun/docker.io/library/python:3.12-slim-trixie AS lingxiloop-rag
 
 RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
-    supervisor \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -61,8 +60,8 @@ RUN mkdir -p /app/data/uploads /var/log/supervisor
 EXPOSE 5055
 
 HEALTHCHECK --interval=15s --timeout=10s --start-period=30s --retries=4 \
-    CMD supervisorctl -s unix:///tmp/supervisor.sock status rag-api | grep -q RUNNING \
-    && supervisorctl -s unix:///tmp/supervisor.sock status rag-worker | grep -q RUNNING \
+    CMD /app/.venv/bin/supervisorctl -s unix:///tmp/supervisor.sock status rag-api | grep -q RUNNING \
+    && /app/.venv/bin/supervisorctl -s unix:///tmp/supervisor.sock status rag-worker | grep -q RUNNING \
     && curl -fsS http://127.0.0.1:5055/readyz >/dev/null
 
-CMD ["/app/.venv/bin/python", "-m", "open_notebook.rag.generation", "/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/app/.venv/bin/python", "-m", "open_notebook.rag.generation", "/app/.venv/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

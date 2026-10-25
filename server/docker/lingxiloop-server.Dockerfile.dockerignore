@@ -54,6 +54,12 @@ server/agent-os
 server/src/__tests__
 server/src/__integration__
 server/**/*.test.ts
+# Historical migration fixtures and integration runners remain in the repository/CI.
+server/fixtures/historical-projection-3.8.2
+server/fixtures/historical-runtime-3.8.2.json
+server/run-historical-migration-tests.mjs
+server/run-integration-tests.mjs
+server/integration-suite.mjs
 src/**/*.test.*
 src/**/__tests__
 **/node_modules

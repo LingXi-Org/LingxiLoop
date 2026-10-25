@@ -1,0 +1,9 @@
+SIGQUIT: quit
+main.run({0x2c15be8, 0xc0004536c0}, {0xc0001221f0?, 0x2?, 0x2?}, 0x28b59a0)
+	github.com/WuKongIM/WuKongIM/cmd/wukongim/main.go:48 +0x1db fp=0xc004085ef0 sp=0xc0040846f8 pc=0x1e9d67b
+main.main()
+	github.com/WuKongIM/WuKongIM/cmd/wukongim/main.go:29 +0xcd fp=0xc004085f50 sp=0xc004085ef0 pc=0x1e9d42d
+runtime.main()
+	runtime/proc.go:285 +0x29d fp=0xc004085fe0 sp=0xc004085f50 pc=0x44b91d
+runtime.goexit({})
+	runtime/asm_amd64.s:1693 +0x1 fp=0xc004085fe8 sp=0xc004085fe0 pc=0x48a881
