@@ -6,7 +6,8 @@ import { ensureEducationPlan } from '../../server/src/modules/entitlements/publi
 import { insertCourse } from '../../server/src/modules/learning/courses-repository'
 import { installRecordingWukong } from '../../server/src/__integration__/_recording-wukong'
 
-assert.equal(new URL(process.env.DATABASE_URL!).pathname, '/lingxiloop_cases_browser_test')
+assert.equal(new URL(process.env.DATABASE_URL!).pathname, process.env.CASES_AUTHORING_COVER_FIXTURE === '1'
+  ? '/lingxiloop_cases_449_browser_test' : '/lingxiloop_cases_browser_test')
 assert.equal(process.env.NODE_ENV, 'test')
 await ensureSchemaOnce()
 await resetAllTables()
@@ -25,6 +26,9 @@ for (const project of ['cases-classroom','cases-other-course']) await pool.query
 await pool.query("INSERT INTO knowledge_sources(id,company_id,project_id,kind,title,visibility_scope,owner_user_id,created_by_user_id,created_via) VALUES ('cases-independent-resource','cases-school','cases-classroom','text','独立资料保持可用','PROJECT','cases-teacher','cases-teacher','USER')")
 await installRecordingWukong()
 const app=express()
+if (process.env.CASES_AUTHORING_COVER_FIXTURE === '1') {
+  await (await import('./authoring-cover-fixture')).installAuthoringCoverFixture(app)
+}
 let listMode: 'pass'|'hold'|'fail'='pass'
 let releaseList:(()=>void)|undefined
 app.post('/api/fixture-case-list/:mode',(req,res)=>{

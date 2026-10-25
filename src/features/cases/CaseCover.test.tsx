@@ -13,10 +13,10 @@ const cover: CaseCoverDescriptor = {
   interactiveUrl: '/api/cases/a/cover/assets/j/2/interactive?snapshot=published', canRetry: false,
 }
 
-test('initial rendering reserves a complete 5:4 image and never injects generated code into the app', () => {
+test('initial rendering crops a 5:4 source and never injects generated code into the app', () => {
   const html = renderToStaticMarkup(<CaseCover cover={cover} title="知识整理" scopeKey="company:reader" fallbackUrl="/manual.png" />)
   assert.match(html, /aspect-\[5\/4\]/); assert.match(html, /width="400" height="320"/)
-  assert.match(html, /object-contain/); assert.match(html, /可以拉开抽屉的知识收纳柜/)
+  assert.match(html, /object-cover/); assert.match(html, /可以拉开抽屉的知识收纳柜/)
   assert.match(html, /assets\/j\/2\/preview/); assert.doesNotMatch(html, /<iframe|<script|srcDoc|manual\.png/)
 })
 
@@ -36,4 +36,21 @@ test('generation identity is independent of article row versions and pending sta
   assert.equal(caseCoverPending(cover), false)
   assert.equal(caseCoverPending({ ...cover, status: 'generating' }), true)
   assert.equal(caseCoverPending(null), false)
+})
+
+
+test('pending generation keeps the previous picture and exposes local loading and refresh', () => {
+  const html = renderToStaticMarkup(<CaseCover cover={{ ...cover, status: 'generating' }} title="知识整理" scopeKey="org" onRefresh={() => undefined} />)
+  assert.match(html, /assets\/j\/2\/preview/)
+  assert.match(html, /role="status"[^>]*>.*生成中/)
+  assert.match(html, /aria-label="刷新封面状态"/)
+  assert.doesNotMatch(html, /交互封面|静止|sr-only[^>]*>封面正在生成/)
+})
+
+test('management retry follows page busy and an unsaved cover stays neutral', () => {
+  const html = renderToStaticMarkup(<CaseCover cover={{ ...cover, status: 'failed', canRetry: true }} title="知识整理" scopeKey="org" busy onRetry={async () => undefined} />)
+  assert.match(html, /<button[^>]*disabled=""[^>]*>重试封面/)
+  const neutral = renderToStaticMarkup(<CaseCover title="新案例" scopeKey="org" />)
+  assert.doesNotMatch(neutral, /上传|添加|生成中|等待生成/)
+  assert.match(neutral, /role="img"/)
 })

@@ -54,7 +54,6 @@ export const casesApi = {
     return http<CaseArticle>(`${base(article.id)}/retry-cover`, { method:'POST',body:JSON.stringify({ snapshot,
       fingerprint:cover.fingerprint,expectedGeneration:cover.generation,idempotencyKey:`${cover.fingerprint}:${cover.generation}` }) })
   },
-  backfillCovers: (afterId = '', limit = 25) => http<{scanned:number;nextAfterId:string|null;pending:number;succeeded:number;failed:number;cancelled:number}>('/cases/covers/backfill', { method:'POST',body:JSON.stringify({afterId,limit}) }),
   file: (id: string, mime: string, data: string) => http<{ url: string }>(`${base(id)}/files`, { method: 'POST', body: JSON.stringify({ mime, data }) }),
   image: (id: string, mime: string, data: string) => http<{ url: string }>(`${base(id)}/images`, { method: 'POST', body: JSON.stringify({ mime, data }) }),
 }

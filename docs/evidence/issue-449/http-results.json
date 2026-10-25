@@ -1,0 +1,69 @@
+{
+  "mode": "--http-only",
+  "passed": true,
+  "results": [
+    {
+      "name": "fixture-migrate",
+      "exitCode": 0
+    }
+  ],
+  "receipt": {
+    "checks": [
+      "real POST creates one synthetic case",
+      "real PUT returns next acknowledged version",
+      "GET and direct SQL snapshot match acknowledged native summary/body/version",
+      "publish uses latest version and real reader GET returns published content",
+      "eight fixed fixture states persist and real API assets preserve their HTTP contract"
+    ],
+    "states": [
+      {
+        "state": "legacy",
+        "descriptor": null,
+        "version": 3
+      },
+      {
+        "state": "pending",
+        "descriptor": "pending",
+        "version": 3
+      },
+      {
+        "state": "generating",
+        "descriptor": "generating",
+        "version": 3
+      },
+      {
+        "state": "failed",
+        "descriptor": "failed",
+        "version": 3
+      },
+      {
+        "state": "cancelled",
+        "descriptor": "cancelled",
+        "version": 3
+      },
+      {
+        "state": "ready",
+        "descriptor": "ready",
+        "version": 3
+      },
+      {
+        "state": "asset-failed",
+        "descriptor": "ready",
+        "version": 3
+      },
+      {
+        "state": "vm-failed",
+        "descriptor": "ready",
+        "version": 3
+      }
+    ],
+    "caseId": "case-00919a75-248d-4637-a041-59c3a556b0a1",
+    "version": 3,
+    "synthetic": true,
+    "modelCalls": 0,
+    "scope": "HTTP→API→PostgreSQL fixture contract only; UI, worker execution, crop and video unverified"
+  },
+  "browserAssertions": 0,
+  "reproduce": "node e2e/cases/run-authoring-covers.mjs --http-only",
+  "finishedAt": "2026-10-25T05:16:27.362Z"
+}

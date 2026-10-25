@@ -1,0 +1,88 @@
+{
+  "developmentBase": "9e3bfd892fa53f22dddbc00e98f466c21ce01b7d",
+  "rebasedOnto": "970aff9e7295a45e79080e87bb7dd0423ac56cc1",
+  "originalSaveIncident": "Not reproduced; no original account/browser/error evidence supplied",
+  "integration": {
+    "command": "node server/run-integration-tests.mjs --file organization-cases.test.ts --file case-covers.test.ts",
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "exitCode": 0,
+    "timings": "integration-timings.json"
+  },
+  "focusedFrontend": {
+    "passed": 40,
+    "failed": 0,
+    "skipped": 0,
+    "exitCode": 0,
+    "breakdown": {
+      "submission": 10,
+      "viewApi": 3,
+      "coverPresentationGeometrySession": 14,
+      "pollingRecovery": 13
+    }
+  },
+  "webBuild": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "includesWebTypecheck": true
+  },
+  "serverTypecheck": {
+    "command": "npm run server:typecheck",
+    "exitCode": 0
+  },
+  "scopedLint": {
+    "files": 14,
+    "exitCode": 0
+  },
+  "e2eTypecheck": {
+    "command": "node node_modules/typescript/bin/tsc -p docs/evidence/issue-449/tsconfig.e2e-focused.json",
+    "exitCode": 0
+  },
+  "httpFixture": {
+    "exitCode": 0,
+    "syntheticCases": 1,
+    "checkGroups": 5,
+    "fixedStates": 8,
+    "modelCalls": 0,
+    "receipt": "http-results.json"
+  },
+  "browser": {
+    "status": "blocked before launch by existing invalid SUID sandbox helper",
+    "testsStarted": 0,
+    "assertions": 0,
+    "screenshots": 0,
+    "screencasts": 0,
+    "evidence": "browser-preflight-and-checks.json"
+  },
+  "unchanged": [
+    "server product authorization",
+    "case persistence/queue/worker",
+    "runtime dependency locks",
+    "schema",
+    "security/network settings"
+  ],
+  "sourceSha256": {
+    "e2e.case-authoring-covers.config.ts": "ba7247757e1893143c99318db62c6ad29ffe9adc274d629e8aeb8ed43dd19407",
+    "e2e/cases/api.ts": "ca0eeb36c5727a86f570af20c484fce2ea54e72989638e811d70a8a3a2149a0f",
+    "e2e/cases/authoring-cover-fixture.ts": "0487fd691c2f2b93186b1dea67fc58775cb262338425cdbf00a4ba87476e1924",
+    "e2e/cases/authoring-cover-http-check.mjs": "601145608eccd4515de77de2aa558429af023c5e779f73e3b5ad08143212ab88",
+    "e2e/cases/authoring-covers.e2e.ts": "a3343b9a423d88e408cebbeaac8329848df8866c787287b5f2bc1389fc4e5b38",
+    "e2e/cases/browser.e2e.ts": "71bd7350cceb767c94c423bb6efd7b49ce2317c9f559adff494ec733e0119329",
+    "e2e/cases/run-authoring-covers.mjs": "70f988bbe01c19eecb1a07a8c3de0704012a4bb4fa1e50fcc6613df6441c90ba",
+    "server/src/__integration__/organization-cases.test.ts": "9d9349f2caa4765f73627ecb3b57a57a49ecab312d081ca2a0f4d2a1856457db",
+    "src/features/cases/CaseCover.test.tsx": "8b8f9f1941ec6626a1730ed7b408394717973f551013d2330e824cb36715c49f",
+    "src/features/cases/CaseCover.tsx": "cb038a9f8e41c145e34a296b1b51dfa487c2610fa8cc249e43a68ec0ed737a3e",
+    "src/features/cases/CasesPage.tsx": "ba9b3e6fec6ac122ac0e4bcf692a6b75dcc451317a3950bb6d9e56f714cc2731",
+    "src/features/cases/api.ts": "8fb388b23b96201fcf30eaf367dbe98fd210be4c3ca0fd40eadde63171fda583",
+    "src/features/cases/cover-vm/CaseCoverPreview.tsx": "062086ae367a7a02d829d8ff0a48f204942db2b1586f38e90a509dbd3de4417f",
+    "src/features/cases/cover-vm/geometry.test.ts": "ffa37b541ae71ae2596c29280a42f32c2ced8869bce5e8bfc861eeaf17ab9faa",
+    "src/features/cases/cover-vm/geometry.ts": "d3a19a9e4314c7a190e411b64da130041371b4be8462fd8e015c6c912cf8d139",
+    "src/features/cases/cover-vm/session.test.ts": "8f315141fa76c2f04f099315485cb756a1d520ec4821ba2bb96d2ba34ea3f9d2",
+    "src/features/cases/cover/cover.test.ts": "82f7cc1049bb98b3fbeccae9139d93ba96152197dc6aa8fd356b4a12e934bce2",
+    "src/features/cases/cover/polling.ts": "2d30b013e484f27b5ecd01a03e21d769a8f23c6676bf5c4b1efeca3dcb4ff80a",
+    "src/features/cases/cover/useCaseCoverPolling.ts": "e0d137474bb20fd851e1973a790b54860bd6e65e836e718e3b3e8ae0a1af7af7",
+    "src/features/cases/submission.test.ts": "28cbf53d04d3bfb2fe7067f9fae2aec1220542341af85d44899f253aab4ed356",
+    "src/features/cases/submission.ts": "db17eb2a92f95eb67778e2623e79f4d352400f817067a911d218b0efcd79d625"
+  }
+}

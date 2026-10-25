@@ -222,7 +222,7 @@ test('teacher authors and publishes cover and body images through the UI',async(
   await screen.getByLabel('分类',{exact:true}).fill('设计实践')
   await screen.getByLabel('标签（逗号分隔）').fill('设计,协作')
   await nativePaste(browser,screen,'正文','## 从观察到设计\n\n这篇图文案例由教师主动编写。\n\n| 观察对象 | 记录方法 |\n| --- | --- |\n| 校园河流 | 每日采样 |\n\n```typescript\nconst observations = [12, 16, 20];\n```')
-  await screen.getByLabel('上传封面').setInputFiles([fileURLToPath(new URL('./cover.png',import.meta.url))])
+  await screen.getByLabel('上传备用封面').setInputFiles([fileURLToPath(new URL('./cover.png',import.meta.url))])
   await expect(screen.getByRole('status').first()).toContainText('附件已上传')
   await nativeUpload(browser,screen,'正文',fileURLToPath(new URL('./cover.png',import.meta.url)))
   await screen.getByText('预览',{exact:true}).tap()

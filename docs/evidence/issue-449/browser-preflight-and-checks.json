@@ -1,0 +1,49 @@
+{
+  "recordedAt": "2026-10-25T05:17:49.060839+00:00",
+  "browserStatus": "blocked_at_read_only_preflight",
+  "browserLaunched": false,
+  "officialBrowserRunId": null,
+  "browserTestsStarted": 0,
+  "uiAssertions": 0,
+  "screenshots": 0,
+  "crops": 0,
+  "screencasts": 0,
+  "retries": 0,
+  "blockedAction": "Start a normal-sandbox browser for the single official E2E workflow",
+  "target": "/usr/lib/chromium/chrome-sandbox",
+  "reason": "owner nobody:nogroup, mode4755; no installed legal alternative browser/helper or existing CDP browser found",
+  "denied": false,
+  "outcome": "known precondition block; browser operation not attempted",
+  "sourceSha256": {
+    "e2e/cases/api.ts": "ca0eeb36c5727a86f570af20c484fce2ea54e72989638e811d70a8a3a2149a0f",
+    "e2e/cases/browser.e2e.ts": "71bd7350cceb767c94c423bb6efd7b49ce2317c9f559adff494ec733e0119329",
+    "e2e/cases/authoring-cover-fixture.ts": "0487fd691c2f2b93186b1dea67fc58775cb262338425cdbf00a4ba87476e1924",
+    "e2e/cases/authoring-cover-http-check.mjs": "601145608eccd4515de77de2aa558429af023c5e779f73e3b5ad08143212ab88",
+    "e2e/cases/run-authoring-covers.mjs": "70f988bbe01c19eecb1a07a8c3de0704012a4bb4fa1e50fcc6613df6441c90ba",
+    "e2e/cases/authoring-covers.e2e.ts": "a3343b9a423d88e408cebbeaac8329848df8866c787287b5f2bc1389fc4e5b38",
+    "e2e.case-authoring-covers.config.ts": "ba7247757e1893143c99318db62c6ad29ffe9adc274d629e8aeb8ed43dd19407",
+    "docs/evidence/issue-449/tsconfig.e2e-focused.json": "f701d4bceba3a44b2ae973c030ec31dc7277a9f6723f4b6a0a92997a03e98226"
+  },
+  "executedChecks": {
+    "syntheticAuthMigrations": 0,
+    "syntheticBrowserMigrations": 0,
+    "httpOnlyFixtureContract": 0,
+    "focusedE2ETypecheck": 0,
+    "officialSingleWorkflowCollection": 0
+  },
+  "httpContractCheckGroups": 5,
+  "fixedSyntheticStates": 8,
+  "liveModelCalls": 0,
+  "cleanup": {
+    "api53107": "closed",
+    "web53108": "closed",
+    "databases": "task-owned synthetic services retained for parent"
+  },
+  "unrun": [
+    "browser UI save/publish/reload assertions",
+    "actual browser VM execution and homepage-card first hover with stationary pointer",
+    "visual fallback/crop comparison",
+    "screenshots and screencast",
+    "broader browser matrix"
+  ]
+}

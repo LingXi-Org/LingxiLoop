@@ -85,6 +85,46 @@ async function publish(title?: string) {
   return application.publish(teacher, draft.id, draft.version)
 }
 
+test('[integration] incomplete drafts persist and native content publishes without waiting for an automatic cover', async () => {
+  const request = await api(teacher.userId)
+  const created = await request('/cases', 'POST', { ...content('Incomplete case'), summary: '', body: '' })
+  assert.equal(created.status, 201)
+  const draft = await caseJson<'detail'>(created)
+  assert.equal(draft.generatedCover, null)
+  const savedEmpty = await caseJson<'detail'>(await request(`/cases/${draft.id}?view=manage`))
+  assert.equal(savedEmpty.title, 'Incomplete case')
+  assert.equal(savedEmpty.body, '')
+  assert.equal(savedEmpty.version, draft.version)
+  assert.equal((await request(`/cases/${draft.id}/publish`, 'POST', { version: draft.version })).status, 400)
+  assert.equal((await caseJson<'detail'>(await request(`/cases/${draft.id}?view=manage`))).version, draft.version)
+
+  const native = (id: string, text: string) => ({ format: 'blocknote' as const, version: 1 as const,
+    projection: text, sections: [text], blocks: [{ id, type: 'paragraph', props: {},
+      content: [{ type: 'text', text, styles: {} }], children: [] }] })
+  const input = { ...content('Complete case'), summary: 'Native summary', body: 'Native body',
+    summaryDocument: native('case-summary', 'Native summary'), editorDocument: native('case-body', 'Native body') }
+  const updated = await request(`/cases/${draft.id}`, 'PUT', { ...input, version: draft.version })
+  assert.equal(updated.status, 200)
+  const saved = await caseJson<'detail'>(updated)
+  assert.equal(saved.version, draft.version + 1)
+  assert.equal(saved.generatedCover?.status, 'pending')
+  const reopened = await caseJson<'detail'>(await request(`/cases/${draft.id}?view=manage`))
+  assert.deepEqual(reopened.editorDocument, input.editorDocument)
+  assert.deepEqual(reopened.summaryDocument, input.summaryDocument)
+  assert.equal(reopened.cover, null)
+
+  const published = await request(`/cases/${draft.id}/publish`, 'POST', { version: saved.version })
+  assert.equal(published.status, 200)
+  const live = await caseJson<'detail'>(published)
+  assert.equal(live.version, saved.version + 1)
+  assert.equal(live.generatedCover?.status, 'pending')
+  const readerRequest = await api(student.userId)
+  const reader = await caseJson<'detail'>(await readerRequest(`/cases/${draft.id}`))
+  assert.equal(reader.version, live.version)
+  assert.equal(reader.body, input.body)
+  assert.deepEqual(reader.editorDocument, input.editorDocument)
+})
+
 test('[integration] cases enforce organization teacher writes and published-only student reads at HTTP boundaries', async () => {
   // Attribution must remain the creator when another teacher edits/publishes.
   await pool.query('UPDATE users SET display_name=$2,avatar_url=$3 WHERE id=$1', [teacher.userId,'案例作者','https://example.com/author.png'])

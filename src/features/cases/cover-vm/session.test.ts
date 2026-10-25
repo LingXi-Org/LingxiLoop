@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createCoverSession, type CoverWorkerPort } from './session'
+import { coverPointerAt } from './geometry'
 import { coverFrameSvg } from './svg'
 import { classifyCoverVmFailure, isCoverVmFailureCode, parseCoverProgram, validateCoverEvent } from './program'
 const program = JSON.stringify({ version: 2, engine: 'quickjs-wasm', kernel: 'var HL={}', figure: 'hairline({})' })
@@ -59,4 +60,31 @@ test('SVG export owns palette and admits no HTML, script, CSS or external refere
   assert.match(coverFrameSvg(frame()), /xmlns="http:\/\/www.w3.org\/2000\/svg"/)
   assert.match(coverFrameSvg(frame(), 'dark'), /fill="#08090a"/)
   for (const attrs of [{ d: 'M0 0', href: 'https://example.test' }, { d: 'M0 0', style: 'fill:red' }]) assert.throws(() => coverFrameSvg(frame(0, attrs)))
+})
+
+
+test('first stationary hover survives worker initialization with the actual cropped pointer', () => {
+  const h = harness()
+  const pointer = coverPointerAt(400, 130, { left: 10, top: 20, width: 608, height: 320 })
+  h.session.send({ type: 'environment', visible: true, reducedMotion: false })
+  h.session.send({ type: 'pointer', kind: 'pointermove', ...pointer })
+  assert.equal(h.sent.length, 1)
+  h.reply()
+  h.reply('current', 1, frame(1))
+  assert.deepEqual(h.sent[2].event, { type: 'pointer', kind: 'pointermove', ...pointer })
+  assert.notEqual(pointer.x, 200)
+  assert.notEqual(pointer.y, 160)
+  h.session.dispose()
+})
+
+test('a failed VM can reload the same resource in a fresh bounded session', () => {
+  const failed = harness()
+  const late = failed.worker.onmessage
+  failed.worker.onerror?.(new Event('error'))
+  const reloaded = harness()
+  late?.({ data: { type: 'frame', scope: 'current', requestId: 0, json: frame() } } as MessageEvent)
+  reloaded.reply()
+  assert.deepEqual(failed.stats(), { ended: 1, failed: 1, frames: 0 })
+  assert.deepEqual(reloaded.stats(), { ended: 0, failed: 0, frames: 1 })
+  reloaded.session.dispose()
 })
