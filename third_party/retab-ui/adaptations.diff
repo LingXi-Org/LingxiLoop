@@ -1,0 +1,348 @@
+--- registry/new-york-v4/lib/csv-normalizer.ts
++++ src/components/retab/lib/csv-normalizer.ts
+@@ -20,25 +20,25 @@
+ export function createCsvNormalizer(
+   options?: CsvNormalizerOptions,
+ ): CsvNormalizer {
+-  var hasHeader = !options || options.hasHeader !== false;
+-  var columns: string[] | null = null;
+-  var width = 0;
+-  var sawFirstRecord = false;
++  let hasHeader = !options || options.hasHeader !== false;
++  let columns: string[] | null = null;
++  let width = 0;
++  let sawFirstRecord = false;
+ 
+   function makeColumnName(index: number): string {
+     return "Column " + (index + 1);
+   }
+ 
+   function copyAndPad(row: string[], nextWidth: number): string[] {
+-    var out = row.slice();
++    let out = row.slice();
+     while (out.length < nextWidth) out.push("");
+     return out;
+   }
+ 
+   function growColumns(nextWidth: number): CsvTableEvent[] {
+     if (!columns || nextWidth <= width) return [];
+-    var next = columns.slice();
+-    for (var i = width; i < nextWidth; i++) {
++    let next = columns.slice();
++    for (let i = width; i < nextWidth; i++) {
+       next.push(hasHeader ? "" : makeColumnName(i));
+     }
+     columns = next;
+@@ -55,7 +55,7 @@
+         return [{ type: "columns", columns: columns.slice() }];
+       }
+       columns = [];
+-      for (var i = 0; i < width; i++) columns.push(makeColumnName(i));
++      for (let i = 0; i < width; i++) columns.push(makeColumnName(i));
+       return [
+         { type: "columns", columns: columns.slice() },
+         { type: "row", row: copyAndPad(record, width) },
+--- registry/new-york-v4/lib/csv-parser.ts
++++ src/components/retab/lib/csv-parser.ts
+@@ -15,19 +15,19 @@
+  * so it can run in both the main thread and a worker without adaptation.
+  */
+ export function createCsvParser(options?: CsvParserOptions): CsvParser {
+-  var delimiter = (options && options.delimiter) || ",";
+-  var record: string[] = [];
+-  var field = "";
+-  var inQuotes = false;
+-  var pendingQuote = false;
+-  var pendingCR = false;
+-  var fieldStarted = false;
+-  var sawFirstChar = false;
++  let delimiter = (options && options.delimiter) || ",";
++  let record: string[] = [];
++  let field = "";
++  let inQuotes = false;
++  let pendingQuote = false;
++  let pendingCR = false;
++  let fieldStarted = false;
++  let sawFirstChar = false;
+ 
+   function push(text: string): string[][] {
+-    var out: string[][] = [];
+-    for (var i = 0; i < text.length; i++) {
+-      var c = text.charAt(i);
++    let out: string[][] = [];
++    for (let i = 0; i < text.length; i++) {
++      let c = text.charAt(i);
+       if (!sawFirstChar) {
+         sawFirstChar = true;
+         if (c === "\uFEFF") continue;
+@@ -83,7 +83,7 @@
+   }
+ 
+   function flush(): string[][] {
+-    var out: string[][] = [];
++    let out: string[][] = [];
+     if (pendingQuote) {
+       pendingQuote = false;
+       inQuotes = false;
+--- registry/new-york-v4/ui/code-viewer-chrome.tsx
++++ src/components/retab/ui/code-viewer-chrome.tsx
+@@ -4,7 +4,7 @@
+ 
+ import { type ViewerDownloadAction } from "@/components/retab/lib/viewer-download-actions";
+ 
+-import { Skeleton } from "./skeleton";
++import { Skeleton } from "@/components/ui/skeleton";
+ import { TextCodeViewerFrame } from "./text-code-viewer-chrome";
+ import {
+   ViewerControls,
+--- registry/new-york-v4/ui/csv-viewer-grid.tsx
++++ src/components/retab/ui/csv-viewer-grid.tsx
+@@ -482,7 +482,7 @@
+       signal: controller.signal,
+     }).then(
+       (rowOrder) => setWorkerRowOrder(rowOrder),
+-      (error) => {
++      (_error) => {
+         if (controller.signal.aborted) return;
+         setWorkerRowOrder(
+           sortCsvRowsOnMainThread({
+--- registry/new-york-v4/ui/csv-viewer-sort.ts
++++ src/components/retab/ui/csv-viewer-sort.ts
+@@ -1,17 +1,3 @@
+-/**
+- * Sorting helpers for the CSV grid.
+- *
+- * Cells are plain strings, but a column is often numeric (or mostly numeric
+- * with a few text outliers). `compareCsvCells` keeps numeric-looking values in
+- * numeric order while still producing a *total order* over mixed values: all
+- * numeric cells sort together (ahead of text), and text cells sort
+- * lexicographically. A total order matters because `Array.prototype.sort`
+- * requires a consistent comparator — a comparator that is numeric for some
+- * pairs and lexicographic for others can be intransitive, which makes the
+- * displayed order depend on the original row order.
+- */
+-
+-/** A value is treated as numeric when `Number()` yields a finite-ish number. */
+ export function isNumericCell(value: string): boolean {
+   return value !== "" && !Number.isNaN(Number(value));
+ }
+--- registry/new-york-v4/ui/csv-viewer.worker.ts
++++ src/components/retab/ui/csv-viewer.worker.ts
+@@ -2,7 +2,6 @@
+   createCsvNormalizer,
+   createCsvParser,
+   padRowsToColumnCount,
+-  type CsvDialect,
+ } from "@/components/retab/lib/csv";
+ 
+ import type { CsvWorkerRequest, CsvWorkerResponse } from "./csv-viewer-worker";
+--- registry/new-york-v4/ui/file-viewer-prewarm.ts
++++ src/components/retab/ui/file-viewer-prewarm.ts
+@@ -60,7 +60,7 @@
+   xlsx: () => import("@/components/retab/ui/xlsx-viewer").then(() => undefined),
+   markdown: () =>
+     import("@/components/retab/ui/markdown-viewer").then(() => undefined),
+-  email: () => import("@/components/ui/email-viewer").then(() => undefined),
++  email: async () => undefined,
+   text: () =>
+     import("@/components/retab/ui/text-viewer-chenglou").then(() => undefined),
+   code: () => import("@/components/retab/ui/code-viewer").then(() => undefined),
+--- registry/new-york-v4/ui/file-viewer-sidebar.tsx
++++ src/components/retab/ui/file-viewer-sidebar.tsx
+@@ -12,7 +12,7 @@
+   useFileViewerShell,
+ } from "./file-viewer-context";
+ import { useFileViewerSidebarController } from "./file-viewer-sidebar-controller";
+-import { Separator } from "./separator";
++import { Separator } from "@/components/ui/separator";
+ 
+ export type FileViewerSidebarProps = React.ComponentProps<"aside"> & {
+   collapsible?: FileViewerSidebarCollapsible;
+--- registry/new-york-v4/ui/file-viewer-state.tsx
++++ src/components/retab/ui/file-viewer-state.tsx
+@@ -17,7 +17,7 @@
+ } from "@/components/retab/lib/viewer-errors";
+ 
+ import { Button } from "./button";
+-import { Skeleton } from "./skeleton";
++import { Skeleton } from "@/components/ui/skeleton";
+ import { ViewerDownloadButton } from "./viewer-download";
+ 
+ type FileViewerStateKind =
+--- registry/new-york-v4/ui/image-viewer-frame.tsx
++++ src/components/retab/ui/image-viewer-frame.tsx
+@@ -896,7 +896,7 @@
+   canvas,
+   layout,
+   onFrameRenderTiming,
+-  preloadFrameNumbers,
++  preloadFrameNumbers: _preloadFrameNumbers,
+   renderFrameOverlay,
+   renderQuality,
+   renderedWindow,
+--- registry/new-york-v4/ui/image-viewer.worker.ts
++++ src/components/retab/ui/image-viewer.worker.ts
+@@ -1,6 +1,3 @@
+-// Web Worker that owns TIFF decode (UTIF) so it never blocks the UI thread.
+-// The main thread transfers file bytes in once; the worker parses frame metadata
+-// up front, decodes requested frames on demand, and transfers ImageBitmaps back.
+ import UTIF from "utif";
+ 
+ import type {
+--- registry/new-york-v4/ui/markdown-greenfield-code-highlight.tsx
++++ src/components/retab/ui/markdown-greenfield-code-highlight.tsx
+@@ -141,6 +141,7 @@
+     return (
+       <span
+         data-pretext-code-line-html=""
++        // biome-ignore lint/security/noDangerouslySetInnerHtml: upstream markdownCodeTokensToHtml escapes source text and restricts token markup.
+         dangerouslySetInnerHTML={{ __html: lineHtml }}
+       />
+     );
+--- registry/new-york-v4/ui/markdown-greenfield-diagram.tsx
++++ src/components/retab/ui/markdown-greenfield-diagram.tsx
+@@ -188,6 +188,7 @@
+             <div
+               className="text-foreground"
+               data-pretext-mermaid-svg=""
++              // biome-ignore lint/security/noDangerouslySetInnerHtml: upstream renderDiagram uses strict Mermaid and sanitizeSvg before this boundary.
+               dangerouslySetInnerHTML={{ __html: state.svg }}
+             />
+           </>
+--- registry/new-york-v4/ui/markdown-unified-pipeline.ts
++++ src/components/retab/ui/markdown-unified-pipeline.ts
+@@ -1805,7 +1805,7 @@
+     : null;
+ }
+ 
+-function parseQuotedAttributes(value: string): Record<string, string> {
++export function parseQuotedAttributes(value: string): Record<string, string> {
+   return Object.fromEntries(
+     Array.from(value.matchAll(/\s*([A-Za-z][A-Za-z0-9_]*)="([^"]*)"/g)).map(
+       (item) => [item[1]!, item[2]!],
+--- registry/new-york-v4/ui/pdf-viewer-states.tsx
++++ src/components/retab/ui/pdf-viewer-states.tsx
+@@ -1,4 +1,3 @@
+-import * as React from "react";
+ 
+ import { cn } from "@/lib/utils";
+ import { Skeleton } from "@/components/ui/skeleton";
+--- registry/new-york-v4/ui/pdf-viewer.tsx
++++ src/components/retab/ui/pdf-viewer.tsx
+@@ -15,8 +15,6 @@
+   FileViewerViewport,
+ } from "./file-viewer";
+ import {
+-  PdfResourceContent,
+-  type PdfResourceContentProps,
+   type PdfViewerContentProps,
+ } from "./pdf-viewer-content";
+ import {
+--- registry/new-york-v4/ui/text-viewer-chenglou-content.tsx
++++ src/components/retab/ui/text-viewer-chenglou-content.tsx
+@@ -24,7 +24,6 @@
+   type PreparedCodeTextBlock,
+   type PreparedImageTextBlock,
+   type PreparedInlineTextBlock,
+-  type PreparedRuleTextBlock,
+   type PreparedTableCell,
+   type PreparedTableTextBlock,
+   type PreparedTextBlock,
+--- registry/new-york-v4/ui/text-viewer-chrome.tsx
++++ src/components/retab/ui/text-viewer-chrome.tsx
+@@ -6,7 +6,7 @@
+ 
+ import { type ViewerDownloadAction } from "@/components/retab/lib/viewer-download-actions";
+ 
+-import { Skeleton } from "./skeleton";
++import { Skeleton } from "@/components/ui/skeleton";
+ import { TextCodeViewerFrame } from "./text-code-viewer-chrome";
+ import type { ViewerDownloadErrorHandler } from "./viewer-download";
+ import {
+--- registry/new-york-v4/ui/text-viewer-layout.ts
++++ src/components/retab/ui/text-viewer-layout.ts
+@@ -1021,7 +1021,7 @@
+       continue;
+     }
+ 
+-    const range = layoutNextLineRange(prepared, cursor, innerWidth);
++    const range = layoutNextLineRange(prepared, innerWidth, cursor);
+     if (!range) return;
+ 
+     const nextCursor = cloneLayoutCursor(range.end);
+--- registry/new-york-v4/ui/utif.d.ts
++++ src/components/retab/ui/utif.d.ts
+@@ -1,9 +1,3 @@
+-// Ambient shim for the `utif` package, which ships no type declarations
+-// (and has no @types/utif on npm). shadcn's registry build strips leading
+-// comments from source files, so an inline `@ts-expect-error` above the import
+-// does not survive into the published item — a real declaration is required for
+-// a fresh consumer install to typecheck. The decode workers cast the default
+-// export to their own local shapes, so an opaque `any` default is sufficient.
+ declare module "utif" {
+    
+   const UTIF: any;
+--- registry/new-york-v4/ui/viewer-document-geometry.ts
++++ src/components/retab/ui/viewer-document-geometry.ts
+@@ -363,7 +363,6 @@
+ function shouldRetainViewerDocumentTransitionAnchor<Anchor>(
+   layout: ViewerDocumentLayoutModel<Anchor>,
+ ) {
+-  const transition = getViewerDocumentTransition(layout);
+   return layout.isTransitioning === true;
+ }
+ 
+--- registry/new-york-v4/ui/viewer-document-scroll.ts
++++ src/components/retab/ui/viewer-document-scroll.ts
+@@ -7,7 +7,6 @@
+ 
+ import type {
+   ViewerDocumentLayoutModel,
+-  ViewerDocumentPhysicalScrollPosition,
+   ViewerDocumentResolvedScrollTarget,
+   ViewerDocumentScrollMapper,
+   ViewerDocumentScrollMetrics,
+--- registry/new-york-v4/ui/viewer-download.tsx
++++ src/components/retab/ui/viewer-download.tsx
+@@ -294,19 +294,8 @@
+   return (
+     <DropdownMenu>
+       <DropdownMenuTrigger asChild>
+-        <Button
+-          variant={variant}
+-          size={size}
+-          className={className}
+-          aria-label={label}
+-          title={label}
+-          disabled={pendingActionId != null}
+-        >
+-          {pendingActionId != null ? (
+-            <Spinner className="size-4 animate-spin" />
+-          ) : (
+-            <Download className={showLabel ? "mr-1.5 size-4" : undefined} />
+-          )}
++        <Button variant={variant} size={size} className={className} aria-label={label} title={label} disabled={pendingActionId != null}>
++          {pendingActionId != null ? <Spinner className="size-4 animate-spin" /> : <Download className={showLabel ? "mr-1.5 size-4" : undefined} />}
+           {showLabel ? label : null}
+         </Button>
+       </DropdownMenuTrigger>
+--- registry/new-york-v4/ui/viewer-sidebar.tsx
++++ src/components/retab/ui/viewer-sidebar.tsx
+@@ -57,7 +57,6 @@
+   const collapsible = collapsibleProp ?? defaultSidebarCollapsible;
+   const side = sideProp ?? defaultSidebarSide;
+   const open = collapsible === "none" ? true : sidebarState.open;
+-  const state: ViewerSidebarState = open ? "expanded" : "collapsed";
+   const mode = sidebarState.mode;
+   const visualOpen = mode === "inline" ? geometry.open : open;
+   const visualState: ViewerSidebarState = visualOpen
+--- registry/new-york-v4/ui/xlsx-viewer.worker.ts
++++ src/components/retab/ui/xlsx-viewer.worker.ts
+@@ -1,7 +1,3 @@
+-// Web Worker that owns the SheetJS parse so it never blocks the UI thread.
+-// @e965/xlsx is a patched, zero-dependency republish of SheetJS. The main thread
+-// transfers the file bytes in; the worker parses the workbook and flattens it
+-// into sparse compact sheets before transferring typed-array buffers back.
+ import * as XLSX from "@e965/xlsx";
+ 
+ import {

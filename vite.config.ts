@@ -10,6 +10,8 @@ const WS_TARGET = process.env.LINGXILOOP_DEV_WS_TARGET || HTTP_TARGET.replace(/^
 
 export default defineConfig({
   plugins: [react()],
+  // Retab format workers lazy-load their parsers as native ES modules.
+  worker: { format: 'es' },
   // Disposable API fixtures use distinct caches. Concurrent dev servers with
   // different proxy defines must not replace each other's optimized modules.
   cacheDir: process.env.LINGXILOOP_VITE_CACHE_DIR,

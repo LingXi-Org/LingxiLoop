@@ -283,3 +283,9 @@ local file mapping and adaptation diff are retained in
 [`third_party/studio-admin/`](third_party/studio-admin/README.md).
 The Next.js application shell and example business data are not included in
 LingxiLoop's runtime.
+
+## Retab UI file viewer
+
+Course-material original previews reuse the MIT-licensed Retab UI Registry at
+`321b3eacce133228042265c499d399c960bc7f13` (© 2026 Retab; portions © 2023 shadcn).
+[License, provenance and adaptations](third_party/retab-ui/README.md).
