@@ -25,6 +25,11 @@ http:
       entryPoints: [websecure]
       service: uptime
       tls: { certResolver: letsencrypt }
+    backend:
+      rule: Host(`backend.lingxilearn.cn`)
+      entryPoints: [websecure]
+      service: gateway
+      tls: { certResolver: letsencrypt }
   services:
     landing:
       loadBalancer:

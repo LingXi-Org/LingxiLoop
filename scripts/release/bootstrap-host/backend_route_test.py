@@ -9,12 +9,27 @@ HERE = pathlib.Path(__file__).parent
 spec = importlib.util.spec_from_file_location('backend_route', HERE / 'backend-route.py')
 route = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(route)
-SOURCE = (HERE.parent.parent.parent / 'deploy/komodo/server-b-ingress/dynamic.yml').read_bytes()
+REPOSITORY_SOURCE = (HERE.parent.parent.parent / 'deploy/komodo/server-b-ingress/dynamic.yml').read_bytes()
+BACKEND_ROUTER = b'    backend:\n      rule: Host(`backend.lingxilearn.cn`)\n      entryPoints: [websecure]\n      service: gateway\n      tls: { certResolver: letsencrypt }\n'
+# Preserve the pre-handoff fixture for crash/rollback tests once repository source
+# includes the accepted route. No production file or historical evidence is read.
+SOURCE = REPOSITORY_SOURCE.replace(BACKEND_ROUTER, b'', 1)
 
 class Crash(SystemExit):
     pass
 
 class RouteTests(unittest.TestCase):
+    def test_repository_route_is_exactly_the_accepted_fixed_actor_output(self):
+        self.assertEqual(route.digest(SOURCE), 'sha256:6634cc3a59c3824a7f6f7561c02387200775a1830c62bcb9fe7178537df045ac')
+        planned = route.plan(SOURCE)
+        self.assertEqual(planned['addition'], BACKEND_ROUTER)
+        self.assertEqual(REPOSITORY_SOURCE, planned['after'])
+        self.assertEqual(route.digest(REPOSITORY_SOURCE), 'sha256:0157eb67307692d96afd0b5474d54b5879896abbad7fbb37c7c6f6ea011ea609')
+        self.assertFalse(route.plan(REPOSITORY_SOURCE)['changed'])
+        self.assertEqual(REPOSITORY_SOURCE.replace(BACKEND_ROUTER, b'', 1), SOURCE)
+        self.assertIn(b'      rule: Host(`loop.lingxilearn.cn`)', REPOSITORY_SOURCE)
+        self.assertEqual(REPOSITORY_SOURCE.split(b'  services:', 1)[1], SOURCE.split(b'  services:', 1)[1])
+
     def fixture(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)

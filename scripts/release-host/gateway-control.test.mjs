@@ -28,7 +28,7 @@ async function setup(t,{unchanged=false,stopExitCode=0,stopResponseLost=false,st
     return original(args,options)
   }
   const phase=async phase=>{const accepted=f.executor.submit({releaseId:release.releaseId,target:'gateway',phase,generation:phase==='prepare'?0:1,manifestHash,parameters:{}});return f.executor.run(accepted.operation.key)}
-  return{...f,id,phase,mainBefore,setCorrupt:value=>corrupt=value}
+  return{...f,release,id,phase,mainBefore,setCorrupt:value=>corrupt=value}
 }
 test('gateway changes only its fixed service and can restore the cached source without application or DB actions',async t=>{
   const f=await setup(t)
@@ -74,4 +74,30 @@ test('lost stop response is reconciled from an allowed actual exit code without 
 test('unproven fast-stop readback retains the lock and observation never repeats the command',async t=>{
   const f=await setup(t,{stopStillRunning:true});assert.equal((await f.phase('prepare')).status,'succeeded');const result=await f.phase('drain');assert.equal(result.status,'uncertain');assert.equal(result.errors.forward.code,'GATEWAY_DRAIN_UNPROVEN');await assert.rejects(f.phase('apply'),{code:'RESOURCE_BUSY'})
   assert.equal((await f.executor.reconcile(result)).status,'uncertain');assert.equal(f.host.data.calls.filter(args=>args[0]==='container'&&args[1]==='stop').length,1);assert.equal(f.host.data.calls.some(args=>args[0]==='compose'&&(args.includes('up')||args.includes('stop'))),false)
+})
+
+test('managed ingress drain and undrain generations remain qualified by the original full Nginx profile',async t=>{
+  const {writeFile}=await import('node:fs/promises'),{renderIngress}=await import('./ingress.mjs'),{gatewayPrepare,verifyGatewayConfiguration}=await import('./gateway-control.mjs')
+  const f=await setup(t,{unchanged:true}),template='{{LINGXI_UPSTREAMS}}\nserver { listen 8091;\n{{LINGXI_INGRESS_STATES}}\n}\n',templateFile=join(f.adapter.policy.stateDirectory,'gateway-template.conf')
+  await writeFile(templateFile,template)
+  const ingress={templateFile,outputFile:'/fixed/gateway/gateway.conf',backends:{'main-runtime-a':{address:'10.20.0.2:5183'},'main-runtime-b':{address:'lingxiloop:5181'}}},initial=Object.fromEntries(Object.keys(ingress.backends).map(k=>[k,{enabled:true,generation:0}]))
+  f.adapter.policy.ingress=ingress
+  const local=f.adapter.policy.targets.gateway;local.services.gateway.mounts=[{type:'bind',source:'/fixed/gateway',target:'/etc/nginx/conf.d',readOnly:true}]
+  f.host.data.containers.gateway.Mounts=[{Type:'bind',Source:'/fixed/gateway',Destination:'/etc/nginx/conf.d',RW:false}]
+  const dump=states=>'# configuration file /etc/nginx/nginx.conf:\nevents {}\nhttp { include /etc/nginx/conf.d/*.conf; }\n\n# configuration file /etc/nginx/conf.d/gateway.conf:\n'+renderIngress(template,ingress.backends,states)+'\n'
+  const profile=local.gateway.imageProfiles[oldImage.configDigest];profile.metadata.configurationSha256=rawHash(dump(initial));profile.metadata.managedIngress={templateSha256:rawHash(template)}
+  const run=f.adapter.run;let states=structuredClone(initial)
+  f.adapter.run=async(args,options)=>['exec','run'].includes(args[0])&&args.at(-1)==='-T'?dump(states):run(args,options)
+  // Own regression: generation0 matches; a normal main-runtime drain changes only the managed rendering.
+  for(const generation of [0,1,2]){states={'main-runtime-a':{enabled:generation!==1,generation},'main-runtime-b':initial['main-runtime-b']};const result=await f.adapter.control(local,'state',{releaseId:f.release.releaseId,target:'gateway',manifestHash:hash(f.release)},'GET');assert.equal(result.verified,true);assert.equal((await f.adapter.control(local,'readiness',{releaseId:f.release.releaseId,target:'gateway',manifestHash:hash(f.release)},'GET')).ready,true)}
+  local.gateway.imageProfiles[newImage.configDigest]=structuredClone(profile)
+  const offlinePlan={...f.release.targets.gateway.hostPlan,images:{gateway:newImage}}
+  await gatewayPrepare(f.adapter,{target:'gateway'},offlinePlan)
+  assert.ok(f.host.data.calls.some(args=>args[0]==='run'))
+  const good=dump(states)
+  for(const mutated of [good.replace('10.20.0.2:5183','10.20.0.99:5183'),good.replace('least_conn;','ip_hash;'),good.replace('events {}','events { worker_connections 99; }'),good.replace('listen 8091','listen 0.0.0.0:8091'),good.replace('\"generation\":2','\"generation\":-1'),good.replace('\"generation\":2','\"generation\":2,\"extra\":true'),good+'# unexpected include\n']){
+    let allowed=false;try{allowed=await verifyGatewayConfiguration(mutated,profile,local,ingress)}catch(error){assert.equal(error.code,'GATEWAY_CONFIGURATION_MISMATCH')}assert.equal(allowed,false)
+  }
+  const unselected=structuredClone(profile);delete unselected.metadata.managedIngress;assert.equal(await verifyGatewayConfiguration(good,unselected,local,ingress),false)
+  await writeFile(templateFile,template+'# drift\n');await assert.rejects(verifyGatewayConfiguration(good,profile,local,ingress),{code:'GATEWAY_CONFIGURATION_MISMATCH'})
 })
