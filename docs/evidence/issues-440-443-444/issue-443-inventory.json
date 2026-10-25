@@ -1,0 +1,487 @@
+{
+  "baseline": "9e3bfd892fa53f22dddbc00e98f466c21ce01b7d",
+  "candidate": "0791ce184e6a8164ed03c64d170c7a8ac124ddc9",
+  "diffs": {
+    "notebook": {
+      "added": [],
+      "changed": [],
+      "removed": {
+        "app/open_notebook/database/async_migrate.py": {
+          "bytes": 10924,
+          "sha256": "45c7bcc1ccf21eb553222cb1fe04a8b38321a932d6fa8d6627ab734e43fdf299"
+        },
+        "app/open_notebook/database/migrate.py": {
+          "bytes": 811,
+          "sha256": "c2756a3e333ce4a98aa0dc983805e0edcc586fcb7ad2bbe346403908f3ddd33d"
+        },
+        "app/open_notebook/database/migrations/1.surrealql": {
+          "bytes": 7282,
+          "sha256": "c65fb7aa025e5cb732047ca6d0c3eaa0ea6d5a2bd5ed7f6cbae691f73b3ae3f3"
+        },
+        "app/open_notebook/database/migrations/10.surrealql": {
+          "bytes": 711,
+          "sha256": "1e9345aad9c449f27a46eb132968d071d1a86b4e36a64a0fb7114c48cb35391c"
+        },
+        "app/open_notebook/database/migrations/10_down.surrealql": {
+          "bytes": 207,
+          "sha256": "0273d93676fe3730a2654391ab8ef6880a3c42abafe5f2e4ad11c6165812c387"
+        },
+        "app/open_notebook/database/migrations/11.surrealql": {
+          "bytes": 469,
+          "sha256": "27f4d3a2b982eba28dc288f2d67dd95316245db48fe6d4cfa4c0c92387c02440"
+        },
+        "app/open_notebook/database/migrations/11_down.surrealql": {
+          "bytes": 153,
+          "sha256": "26eda5e16cc5cd59886b62c8f8c7495a7f6dcab212a22fbeb5a0eec12e2b2875"
+        },
+        "app/open_notebook/database/migrations/12.surrealql": {
+          "bytes": 1498,
+          "sha256": "37b1d3a10676425c1a06b5763157f69fbf98af9ea594d1682f049dca208ac8e7"
+        },
+        "app/open_notebook/database/migrations/12_down.surrealql": {
+          "bytes": 200,
+          "sha256": "fa064ffc240c857b05062924a4b1a9e0057928434997cbcfd7aa652c424c4a7a"
+        },
+        "app/open_notebook/database/migrations/13.surrealql": {
+          "bytes": 159,
+          "sha256": "8dae761bc3fa31bb500df7276cf8033586e0e07fcf4e2e7df7c4dfda3d8017b1"
+        },
+        "app/open_notebook/database/migrations/13_down.surrealql": {
+          "bytes": 141,
+          "sha256": "6fe63f8bc50c3ae4968d4eade1a3a8a68c920091725ed4a312043dffc9027be8"
+        },
+        "app/open_notebook/database/migrations/14.surrealql": {
+          "bytes": 1466,
+          "sha256": "a2c85f34bfa5a0d7aaab4a9a9c389b0e7482f2e36114502666ba7d02a9ba9884"
+        },
+        "app/open_notebook/database/migrations/14_down.surrealql": {
+          "bytes": 1060,
+          "sha256": "ac0993fbc03e8cd60d66e75a9344eebfaf91b07aa2bf6c3d6e0e78f54bdedb7c"
+        },
+        "app/open_notebook/database/migrations/15.surrealql": {
+          "bytes": 369,
+          "sha256": "aa9a697522ebe573091c100cb29eaf565b6cca97ae2d675e7bc19ad15176594c"
+        },
+        "app/open_notebook/database/migrations/15_down.surrealql": {
+          "bytes": 127,
+          "sha256": "e931b5f02e9bcf9b7c6ce108a08a3df9449fa5bac552a0a4aeae415b3781a4bd"
+        },
+        "app/open_notebook/database/migrations/16.surrealql": {
+          "bytes": 402,
+          "sha256": "2f7e4e10bd1bf37c1404b1a9010a6911f6502930a138f91cb3bdbe54fc4dad00"
+        },
+        "app/open_notebook/database/migrations/16_down.surrealql": {
+          "bytes": 133,
+          "sha256": "cae8d0d9dd0a21d9fb955854fc161d950c8aef14858f005f28cf6bc847c59163"
+        },
+        "app/open_notebook/database/migrations/17.surrealql": {
+          "bytes": 141,
+          "sha256": "8c1424659c02a523e16704f16f68f7b0819f5bdee6599aed0763c9e2b9917d26"
+        },
+        "app/open_notebook/database/migrations/17_down.surrealql": {
+          "bytes": 126,
+          "sha256": "f3cf19cc0b51ac9d4251d59221cb74877bb923d1fc1721c1880878955b343d11"
+        },
+        "app/open_notebook/database/migrations/18.surrealql": {
+          "bytes": 631,
+          "sha256": "3a9552aad12aaa7faf99c47fd4b1eb5c82ca63e056d3d7a43959f4974da25813"
+        },
+        "app/open_notebook/database/migrations/18_down.surrealql": {
+          "bytes": 303,
+          "sha256": "6d3448723f4e7942e23038ae5db3fa54e2bf73498e3bdfe4355bbbfecf1e4b44"
+        },
+        "app/open_notebook/database/migrations/19.surrealql": {
+          "bytes": 549,
+          "sha256": "e6ff693ff58dd7c6b8d74334e0dfd0bbab8cffec67812f257c8832396ff3d169"
+        },
+        "app/open_notebook/database/migrations/19_down.surrealql": {
+          "bytes": 178,
+          "sha256": "d45d9103f3440f394921e5de79663f69fa7c049864809e9e77279d9fef44b1ad"
+        },
+        "app/open_notebook/database/migrations/1_down.surrealql": {
+          "bytes": 860,
+          "sha256": "f03834b20217645761ba9a4edb23ad921d4a42adc660bb4e64975de00d57f579"
+        },
+        "app/open_notebook/database/migrations/2.surrealql": {
+          "bytes": 72,
+          "sha256": "14b3f040381a454d28d88ed711054e339fde1a93711604acba6dbc3c71be5eec"
+        },
+        "app/open_notebook/database/migrations/20.surrealql": {
+          "bytes": 1566,
+          "sha256": "91a7ab7f38c05d77221a90ead6539a0f5cd708569472ec5399deaa557b34be3b"
+        },
+        "app/open_notebook/database/migrations/20_down.surrealql": {
+          "bytes": 754,
+          "sha256": "4d4d95b898b649192cc69215289c699d789d83c46ede4cc81675b01f0f474525"
+        },
+        "app/open_notebook/database/migrations/21.surrealql": {
+          "bytes": 2292,
+          "sha256": "64f599541bb1ee4f29a156f2fbd0da254a5838c8f5ceb3b1c17244a3a4fdd4ac"
+        },
+        "app/open_notebook/database/migrations/21_down.surrealql": {
+          "bytes": 756,
+          "sha256": "240aa4c5c188929a64566ed1d605b346221b3e4e87f63d1b3727f88e66aa1001"
+        },
+        "app/open_notebook/database/migrations/22.surrealql": {
+          "bytes": 3081,
+          "sha256": "3e49c499779b6aea2f0796f1e1ff0382bca82e7b4c7a25c455c3dbd043a62990"
+        },
+        "app/open_notebook/database/migrations/22_down.surrealql": {
+          "bytes": 1029,
+          "sha256": "931303957d36b06fd10d6f978036d52a2b4c68611f2351836b498e1c589e69cf"
+        },
+        "app/open_notebook/database/migrations/23.surrealql": {
+          "bytes": 656,
+          "sha256": "8856faefbc1245fc54eee6a9bdfeba3b56cc0312d025b84a047ef8b840af1b1b"
+        },
+        "app/open_notebook/database/migrations/23_down.surrealql": {
+          "bytes": 164,
+          "sha256": "972f9e3ae55e15c425e6e8cb17a3e8ddd6cbc2fa6365efa062b3c118bf7ab626"
+        },
+        "app/open_notebook/database/migrations/24.surrealql": {
+          "bytes": 5961,
+          "sha256": "69d23c3d595f6e40794a0d7328ecaeb0e4a7988c8062f44e892a1ba87a040819"
+        },
+        "app/open_notebook/database/migrations/24_down.surrealql": {
+          "bytes": 225,
+          "sha256": "fbd78d3c2bd2fb38f0924d7d4ff7880d677cd624a74ea0a5b16673fef283e3fd"
+        },
+        "app/open_notebook/database/migrations/25.surrealql": {
+          "bytes": 2074,
+          "sha256": "5b795460dbe770c74312b1e38d5aaa480d55c5b8c3625d012a85326c0f02f636"
+        },
+        "app/open_notebook/database/migrations/25_down.surrealql": {
+          "bytes": 5982,
+          "sha256": "761232bbfe24d2fd39b50e0e558c7a97f10d669c4352dd08f4fce1ca9be01353"
+        },
+        "app/open_notebook/database/migrations/2_down.surrealql": {
+          "bytes": 48,
+          "sha256": "4d6f4be04ef4e766729245da2de1cedf40540997f8e8fd36d7f317592af51261"
+        },
+        "app/open_notebook/database/migrations/3.surrealql": {
+          "bytes": 5024,
+          "sha256": "d6e561e2b88d3774305549f3410dae57b9599fd1e3028cfe986c6770b40db1cc"
+        },
+        "app/open_notebook/database/migrations/3_down.surrealql": {
+          "bytes": 3753,
+          "sha256": "0025496cf3a51f6ce96532293a7076559e3377474a0b3b5a5e9a85f7f3d85152"
+        },
+        "app/open_notebook/database/migrations/4.surrealql": {
+          "bytes": 4864,
+          "sha256": "7ec5c8a3ba4d29493e13ef838307078cc47f655eca1657a43e1bddebb9987092"
+        },
+        "app/open_notebook/database/migrations/4_down.surrealql": {
+          "bytes": 4887,
+          "sha256": "d7b8533c10183fe7437fc8e7a33ecebb591a58633535493f3dba0a1e5f265746"
+        },
+        "app/open_notebook/database/migrations/5.surrealql": {
+          "bytes": 10171,
+          "sha256": "28f99972e6d1246a3c51221e4f72394efe7ca407bb827a16ea9fccbf043ee303"
+        },
+        "app/open_notebook/database/migrations/5_down.surrealql": {
+          "bytes": 51,
+          "sha256": "fc92c1008bae9f3c82732d9fa9cae74c6c8e66fe1810f289d7b463959c2c5fba"
+        },
+        "app/open_notebook/database/migrations/6.surrealql": {
+          "bytes": 61,
+          "sha256": "9d6dffa0836a8e8fe54eb0dd649cab7400af236b27e564a102cf3b83a187cdd8"
+        },
+        "app/open_notebook/database/migrations/6_down.surrealql": {
+          "bytes": 61,
+          "sha256": "ca9570f5163dace5e63809c89591c71a7d96e99f9ad37af2928cc8dc98934d17"
+        },
+        "app/open_notebook/database/migrations/7.surrealql": {
+          "bytes": 8712,
+          "sha256": "df7765d65511c5bb032f23ee57c2669976b93dc34c030459b142b0d430bb1823"
+        },
+        "app/open_notebook/database/migrations/7_down.surrealql": {
+          "bytes": 112,
+          "sha256": "a8eab6aa00e4303c8c726fbe31653d19bf85261d03da12065023eeb3641bc426"
+        },
+        "app/open_notebook/database/migrations/8.surrealql": {
+          "bytes": 440,
+          "sha256": "83d805ee8ba4dcca9c4602ef92674a5640e9ce1deee6bca49c151d93bac2d8e5"
+        },
+        "app/open_notebook/database/migrations/8_down.surrealql": {
+          "bytes": 272,
+          "sha256": "7e3930252a01541f3b820ae6585941c64e18c02e2a379181171b7530f518ec7f"
+        },
+        "app/open_notebook/database/migrations/9.surrealql": {
+          "bytes": 2328,
+          "sha256": "57b44a6aee671a07a96d10a37daff95de03dfcbade64ed1b61e7093c4ebcaac0"
+        },
+        "app/open_notebook/database/migrations/9_down.surrealql": {
+          "bytes": 2085,
+          "sha256": "d6864b269e5d131b8b1826a7e4b8d25e5aec6b373006da65514df31a57a5d08a"
+        }
+      },
+      "removedFiles": 52,
+      "removedSourceBytes": 96381
+    },
+    "server": {
+      "added": [],
+      "changed": [],
+      "removed": {
+        "app/server/fixtures/historical-projection-3.8.2/server/src/agent-runtime/message-projection.ts": {
+          "bytes": 23090,
+          "sha256": "80f0e203665a6992e9017ff424aca79b361804d8406de7ea5579020afa15aac2"
+        },
+        "app/server/fixtures/historical-projection-3.8.2/src/lib/nativeMessage.ts": {
+          "bytes": 14862,
+          "sha256": "2e845e9763b1a1bccafc345f91a7c172cf25391f86a40d215dfed1c57b836178"
+        },
+        "app/server/fixtures/historical-runtime-3.8.2.json": {
+          "bytes": 256,
+          "sha256": "c5ef2c5e07685d22b864f57a3f203a28b5ac0bf1d324a5e99c5dba7bdc58183b"
+        },
+        "app/server/integration-suite.mjs": {
+          "bytes": 2408,
+          "sha256": "fdd28e143463dd7b8a43f75308ee565ca6b22b0912c5b852063b8757898dc973"
+        },
+        "app/server/run-historical-migration-tests.mjs": {
+          "bytes": 12524,
+          "sha256": "0216b0c8e3c70ab88589d6621aade2bf228500b079f8a27db2f87af4d102a2dd"
+        },
+        "app/server/run-integration-tests.mjs": {
+          "bytes": 7248,
+          "sha256": "f67fbefd38f253e9356f6e1c7d87a062d9a643878749df436dc309655c1f0dfb"
+        }
+      },
+      "removedFiles": 6,
+      "removedSourceBytes": 60388
+    }
+  },
+  "images": {
+    "notebook-after": {
+      "config": {
+        "digest": "sha256:4afbcc02d038150c93e7a4bce7eea926e23a0a2ccc3b3f394025b39da4394170",
+        "mediaType": "application/vnd.oci.image.config.v1+json",
+        "size": 2364
+      },
+      "dockerfileSha256": "dda726705263e550e336009adaca25ff9e8fd7ff120c72a9b6429d2a8b277d9d",
+      "dockerignoreSha256": "71501011653a08f3c42f48aa507a213d73abe193aa69afa525ea4288603f7296",
+      "fileBytes": 213554,
+      "fileCount": 29,
+      "inventorySha256": "1a53b9b1ce7aa7564e4c9f50118bd14ff6310c83c5a873bfb91f63947eed0a13",
+      "layerBytes": 252928,
+      "layers": [
+        {
+          "digest": "sha256:a9a838f35af27703cda71ceedbd2a7be8184ed6981ff8e4b5cd9c6d5444122c5",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 12800
+        },
+        {
+          "digest": "sha256:929de08013f5c5b4195cf417354f050c4654b5a4ed51c724b5d5c6add09e93bd",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 13312
+        },
+        {
+          "digest": "sha256:d6608fee89e1c7c320e14be99fb88fad6a282c9ba02751679498911c44db482c",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 18432
+        },
+        {
+          "digest": "sha256:8e62163681db513136e9b96286075bc7dea73ac35e71e1efe60e46d072b982fe",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 122368
+        },
+        {
+          "digest": "sha256:0e34e9b26abb4a36ee71c7cb8c205b80f9ec298514f882f263c9490d5decbc65",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 21504
+        },
+        {
+          "digest": "sha256:3e19046e9c6293b11c0558d28b6879ce97a0b87a7dc92be12547909afeb50d5b",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 55808
+        },
+        {
+          "digest": "sha256:c98bbf80f15c7db5bbf4a6bf5aa8e14ba8d678be717c109222124292f227eb22",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 4608
+        },
+        {
+          "digest": "sha256:9c69d8dd521e4fd2906ef9b7ecaadcbaddadab90aaa10faf7a2d6fbd3ead6e92",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 4096
+        }
+      ],
+      "manifest": {
+        "annotations": {
+          "io.containerd.image.name": "docker.io/library/issue443-notebook:after",
+          "org.opencontainers.image.ref.name": "after"
+        },
+        "digest": "sha256:a0d3ca13d4b99cdbd18d7225cbea5328e17e45349baed66b8336e69ab1550a8b",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "size": 1455
+      }
+    },
+    "notebook-before": {
+      "config": {
+        "digest": "sha256:0e1f921124e13496fccf74cf7bbb37c5488ee626ca350730b5e7435a37df1b82",
+        "mediaType": "application/vnd.oci.image.config.v1+json",
+        "size": 2363
+      },
+      "dockerfileSha256": "dda726705263e550e336009adaca25ff9e8fd7ff120c72a9b6429d2a8b277d9d",
+      "dockerignoreSha256": "cd7fcad898b789f0c1c655b1ff51015958ce5e9d0577fd866ae5ce0e44b1795e",
+      "fileBytes": 309935,
+      "fileCount": 81,
+      "inventorySha256": "ab47929f8342aea63bd386818459663953c6aa1c269f6926ffc29bca755d715d",
+      "layerBytes": 392704,
+      "layers": [
+        {
+          "digest": "sha256:a9a838f35af27703cda71ceedbd2a7be8184ed6981ff8e4b5cd9c6d5444122c5",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 12800
+        },
+        {
+          "digest": "sha256:bfb160a05d9bf2f8b22c859d213ba737cc14ea1e1f7748710a33c11d9db24a6e",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 153088
+        },
+        {
+          "digest": "sha256:d0c4ce51b7380b04bd811f63fad3b092abcd30984547ba471a6e0657219b2d20",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 18432
+        },
+        {
+          "digest": "sha256:8543e42a0ca7a2badedaee368acac8e61e16b11bcb6b6239071ab66401d3815a",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 122368
+        },
+        {
+          "digest": "sha256:758d8cf6a8e7e83ff9fca870c71c7ca3b08fb82b54c931deeb2621d4209ff2ca",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 21504
+        },
+        {
+          "digest": "sha256:48d8a5a954de3da8651df5f93e0d0333ed5bd1236a434fe8e60098b1ba3d7f98",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 55808
+        },
+        {
+          "digest": "sha256:f6efa09230c349247b4fdfebd508e815ac4c94a0d1174309b0bb5921a93a5050",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 4608
+        },
+        {
+          "digest": "sha256:62f2eaa1ce291fec15b6d63aaa443161abde96e57029f719b2cfd5e67a91f7ae",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 4096
+        }
+      ],
+      "manifest": {
+        "annotations": {
+          "io.containerd.image.name": "docker.io/library/issue443-notebook:before",
+          "org.opencontainers.image.ref.name": "before"
+        },
+        "digest": "sha256:dd35e42952be96e5cbc528b3fc884f065cb4944cecc4b7370e0f211bede13686",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "size": 1456
+      }
+    },
+    "server-after": {
+      "config": {
+        "digest": "sha256:ba74aa4e1142dddb35b05b291b1b9ca5d1f9e14632b9fac1be374f9905c51fca",
+        "mediaType": "application/vnd.oci.image.config.v1+json",
+        "size": 896
+      },
+      "dockerfileSha256": "632ecde7950138b3e3e27f69e0ecbb79c805041979279d51e29b64d22a40a793",
+      "dockerignoreSha256": "99704ffa95c3931c0f356b4b518deefa40d89001f329b45973f8b20e3295cc5f",
+      "fileBytes": 3317554,
+      "fileCount": 536,
+      "inventorySha256": "2a5e634dce659bc36540db8c0070db12bc7546c0de066730cf4f937a23f86936",
+      "layerBytes": 3767296,
+      "layers": [
+        {
+          "digest": "sha256:6cca59f5c4f566c1f62590d37a53d3f280fc79016df0b44b19e4379906bea311",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 3584
+        },
+        {
+          "digest": "sha256:1662e9f326a3ba265f367c957831b0da6888b09ee9e6014947a0d83eb10ae904",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 217600
+        },
+        {
+          "digest": "sha256:59d43f2cde93c68eb8ab3a5d4cfe189f434d6293d700f4d827cbc5df05b79bd9",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 3546112
+        }
+      ],
+      "manifest": {
+        "annotations": {
+          "io.containerd.image.name": "docker.io/library/issue443-server:after",
+          "org.opencontainers.image.ref.name": "after"
+        },
+        "digest": "sha256:29ab6237492fa60d629fa43db18fe22bcfebe7cde2d87f271c542376ff53fda5",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "size": 702
+      }
+    },
+    "server-before": {
+      "config": {
+        "digest": "sha256:00b1af01d95d407b919a07f49a2e22a86fc56c07fd4b280f60e4f6878116eea0",
+        "mediaType": "application/vnd.oci.image.config.v1+json",
+        "size": 894
+      },
+      "dockerfileSha256": "632ecde7950138b3e3e27f69e0ecbb79c805041979279d51e29b64d22a40a793",
+      "dockerignoreSha256": "4fd1ef86cc6de8bf34cacd782b9e9bb96dc5a4f32c1bf9d46cb07aeab73a736d",
+      "fileBytes": 3377942,
+      "fileCount": 542,
+      "inventorySha256": "288fa9f0bcb4161053af7e3331e74091d36a4c926acaa907c5e6409bb0fb37de",
+      "layerBytes": 3835904,
+      "layers": [
+        {
+          "digest": "sha256:6cca59f5c4f566c1f62590d37a53d3f280fc79016df0b44b19e4379906bea311",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 3584
+        },
+        {
+          "digest": "sha256:1662e9f326a3ba265f367c957831b0da6888b09ee9e6014947a0d83eb10ae904",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 217600
+        },
+        {
+          "digest": "sha256:fae76100c86c996b2a85ffd77e776fb072cf43679b3d41ea06b106d3a1f8d94f",
+          "mediaType": "application/vnd.oci.image.layer.v1.tar",
+          "size": 3614720
+        }
+      ],
+      "manifest": {
+        "annotations": {
+          "io.containerd.image.name": "docker.io/library/issue443-server:before",
+          "org.opencontainers.image.ref.name": "before"
+        },
+        "digest": "sha256:a017284d5b14582f8ef3c6daa16dad33d5592476eb45ce9d2cc3b84abcf46775",
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "size": 702
+      }
+    }
+  },
+  "retained": {
+    "notebook": [
+      "open_notebook/database/repository.py",
+      "open_notebook/rag/schema.surrealql",
+      "open_notebook/rag/runtime.py",
+      "open_notebook/rag/generation.py",
+      "open_notebook/rag/shadow.py",
+      "api/rag_main.py",
+      "rag_commands.py"
+    ],
+    "server": [
+      "package.json",
+      "package-lock.json",
+      "server/package.json",
+      "server/package-lock.json",
+      "server/src/bin/web.ts",
+      "server/src/bin/worker.ts",
+      "server/src/migrate-bin.ts",
+      "server/src/db/runtime-profile.ts",
+      "server/src/db/development-runtime-qualification.ts",
+      "server/scripts/knowledge-rag-smoke.ts",
+      "server/src/db/migrations/0001_v1_baseline.sql"
+    ]
+  },
+  "scope": "scratch COPY probes; OCI archive layer descriptors, not production compressed transfer savings"
+}
