@@ -6,6 +6,15 @@ CI then pulls that immutable digest and saves exactly one tag:
 `localhost/lingxi-release-cache:sha256-<configDigest hex>`.
 The ordinary disabled-controller publish and deployment paths are unchanged.
 
+For first adoption, configure `RELEASE_API_URL` and the existing submission
+secret, keep `RELEASE_CONTROLLER_ENABLED` disabled, and dispatch the existing
+main-branch workflow with `publish_only=true` and the required image scope.
+That explicit mode also stages the verified R2 archives and metadata before
+accepted inventory exists. It does not register a candidate or deploy services.
+An unconfigured API or a non-main publish-only run does not enter this bootstrap
+path. Ordinary push behavior is unchanged, so initial artifact preparation does
+not require prematurely enabling automatic releases.
+
 `scripts/release/image-archive.mjs` streams Docker's standard image archive
 through gzip into a mode-0600 file under `RUNNER_TEMP`. It bounds the gzip at
 8 GiB and its uncompressed archive at 16 GiB. The Python standard-library

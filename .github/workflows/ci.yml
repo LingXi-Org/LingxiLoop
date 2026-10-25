@@ -546,7 +546,7 @@ jobs:
             VITE_TURNSTILE_SITE_KEY=0x4AAAAAAEsX5eyOl1nAe5i9
           cache-from: type=gha,scope=${{ matrix.package }}
           cache-to: type=gha,mode=max,scope=${{ matrix.package }}
-      - if: vars.RELEASE_CONTROLLER_ENABLED == 'true'
+      - if: vars.RELEASE_CONTROLLER_ENABLED == 'true' || (github.ref == 'refs/heads/main' && inputs.publish_only && vars.RELEASE_API_URL != '')
         name: Record registry index, platform, config and layer identities
         env:
           IMAGE_REFERENCE: ghcr.io/${{ steps.metadata.outputs.owner }}/${{ matrix.package }}
@@ -558,7 +558,7 @@ jobs:
           mkdir -p "release-artifacts/$COMPONENT"
           node scripts/release-candidate.mjs image "$IMAGE_REFERENCE" "$IMAGE_DIGEST" "release-artifacts/$COMPONENT/artifact.json"
           node scripts/release/image-archive.mjs "release-artifacts/$COMPONENT/artifact.json"
-      - if: vars.RELEASE_CONTROLLER_ENABLED == 'true'
+      - if: vars.RELEASE_CONTROLLER_ENABLED == 'true' || (github.ref == 'refs/heads/main' && inputs.publish_only && vars.RELEASE_API_URL != '')
         uses: actions/upload-artifact@v4
         with:
           name: release-component-${{ matrix.manifest }}-${{ github.sha }}-${{ github.run_attempt }}
