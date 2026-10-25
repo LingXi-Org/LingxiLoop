@@ -1,0 +1,73 @@
+{
+  "original": [
+    {
+      "id": "mine-single",
+      "attachments": [
+        "image-single"
+      ],
+      "thumbs": [
+        {
+          "name": "公开示意图.svg",
+          "label": "查看图片：公开示意图.svg"
+        }
+      ]
+    },
+    {
+      "id": "other-many",
+      "attachments": [
+        "image-landscape",
+        "image-file-portrait",
+        "image-square"
+      ],
+      "thumbs": [
+        {
+          "name": "公开横图.svg",
+          "label": "查看图片：公开横图.svg"
+        },
+        {
+          "name": "以文件形式上传的公开竖图.svg",
+          "label": "查看图片：以文件形式上传的公开竖图.svg"
+        },
+        {
+          "name": "公开方图.svg",
+          "label": "查看图片：公开方图.svg"
+        }
+      ]
+    },
+    {
+      "id": "mine-pure",
+      "attachments": [],
+      "thumbs": [
+        {
+          "name": "只有图片.svg",
+          "label": "查看图片：只有图片.svg"
+        }
+      ]
+    },
+    {
+      "id": "mine-failed",
+      "attachments": [
+        "image-broken"
+      ],
+      "thumbs": [
+        {
+          "name": "公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名.png",
+          "label": "查看图片：公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名.png"
+        }
+      ]
+    },
+    {
+      "id": "mine-pdf",
+      "attachments": [
+        "document-pdf"
+      ],
+      "thumbs": []
+    },
+    {
+      "id": "assistant-media",
+      "attachments": [],
+      "thumbs": []
+    }
+  ],
+  "remountAndReloadMatch": true
+}

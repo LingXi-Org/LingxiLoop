@@ -1,0 +1,312 @@
+{
+  "manifest": [
+    {
+      "messageId": "mine-single",
+      "role": "user",
+      "attachmentIds": [
+        "image-single"
+      ],
+      "images": [
+        {
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22800%22%20viewBox%3D%220%200%201200%20800%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%237d9f92%22%2F%3E%3Ccircle%20cx%3D%22600%22%20cy%3D%22400%22%20r%3D%22200%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2266.66666666666667%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20A%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "name": "公开示意图.svg"
+        }
+      ]
+    },
+    {
+      "messageId": "other-many",
+      "role": "user",
+      "attachmentIds": [
+        "image-landscape",
+        "image-file-portrait",
+        "image-square"
+      ],
+      "images": [
+        {
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221400%22%20height%3D%22600%22%20viewBox%3D%220%200%201400%20600%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23b3a087%22%2F%3E%3Ccircle%20cx%3D%22700%22%20cy%3D%22300%22%20r%3D%22150%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2250%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20B%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "name": "公开横图.svg"
+        },
+        {
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%221200%22%20viewBox%3D%220%200%20600%201200%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%237e93ad%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22600%22%20r%3D%22150%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2250%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20C%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "name": "以文件形式上传的公开竖图.svg"
+        },
+        {
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22900%22%20height%3D%22900%22%20viewBox%3D%220%200%20900%20900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ab91a6%22%2F%3E%3Ccircle%20cx%3D%22450%22%20cy%3D%22450%22%20r%3D%22225%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2275%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20D%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "name": "公开方图.svg"
+        }
+      ]
+    },
+    {
+      "messageId": "mine-pure",
+      "role": "user",
+      "attachmentIds": [],
+      "images": [
+        {
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%225000%22%20viewBox%3D%220%200%20400%205000%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%2396a474%22%2F%3E%3Ccircle%20cx%3D%22200%22%20cy%3D%222500%22%20r%3D%22100%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2233.333333333333336%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20E%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "name": "只有图片.svg"
+        }
+      ]
+    },
+    {
+      "messageId": "mine-failed",
+      "role": "user",
+      "attachmentIds": [
+        "image-broken"
+      ],
+      "images": [
+        {
+          "src": "data:image/png;base64,bm90LWFuLWltYWdl",
+          "name": "公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名.png"
+        }
+      ]
+    },
+    {
+      "messageId": "mine-pdf",
+      "role": "user",
+      "attachmentIds": [
+        "document-pdf"
+      ],
+      "images": []
+    },
+    {
+      "messageId": "assistant-media",
+      "role": "assistant",
+      "attachmentIds": [],
+      "images": [
+        {
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221100%22%20height%3D%22700%22%20viewBox%3D%220%200%201100%20700%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23a7a7a7%22%2F%3E%3Ccircle%20cx%3D%22550%22%20cy%3D%22350%22%20r%3D%22175%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2258.333333333333336%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EASSISTANT%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "name": "助手公开图片.svg"
+        }
+      ]
+    }
+  ],
+  "width": 390,
+  "documentWidth": 380,
+  "blockedNetwork": [],
+  "rows": [
+    {
+      "id": "mine-single",
+      "attachmentIds": [
+        "image-single"
+      ],
+      "gallery": {
+        "justify": "flex-end",
+        "left": 16,
+        "right": 324,
+        "top": -616.5,
+        "bottom": -488.5,
+        "beforeBody": true
+      },
+      "bodyText": "本人单图：这是我画出的公开示意图。",
+      "bodyTop": -480.5,
+      "bodyBottom": -410.125,
+      "card": null,
+      "thumbs": [
+        {
+          "tag": "BUTTON",
+          "name": "公开示意图.svg",
+          "label": "查看图片：公开示意图.svg",
+          "width": 128,
+          "height": 128,
+          "left": 196,
+          "right": 324,
+          "top": -616.5,
+          "bottom": -488.5,
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221200%22%20height%3D%22800%22%20viewBox%3D%220%200%201200%20800%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%237d9f92%22%2F%3E%3Ccircle%20cx%3D%22600%22%20cy%3D%22400%22%20r%3D%22200%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2266.66666666666667%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20A%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "loaded": true,
+          "imageWidth": 126,
+          "imageHeight": 84,
+          "naturalWidth": 1200,
+          "naturalHeight": 800,
+          "objectFit": "contain"
+        }
+      ],
+      "overflow": 0
+    },
+    {
+      "id": "other-many",
+      "attachmentIds": [
+        "image-landscape",
+        "image-file-portrait",
+        "image-square"
+      ],
+      "gallery": {
+        "justify": "flex-start",
+        "left": 56,
+        "right": 364,
+        "top": -378.125,
+        "bottom": -114.125,
+        "beforeBody": true
+      },
+      "bodyText": "别人多图：横图、竖图和方图保留原来的顺序。",
+      "bodyTop": -106.125,
+      "bodyBottom": -35.75,
+      "card": null,
+      "thumbs": [
+        {
+          "tag": "BUTTON",
+          "name": "公开横图.svg",
+          "label": "查看图片：公开横图.svg",
+          "width": 128,
+          "height": 128,
+          "left": 56,
+          "right": 184,
+          "top": -378.125,
+          "bottom": -250.125,
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221400%22%20height%3D%22600%22%20viewBox%3D%220%200%201400%20600%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23b3a087%22%2F%3E%3Ccircle%20cx%3D%22700%22%20cy%3D%22300%22%20r%3D%22150%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2250%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20B%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "loaded": true,
+          "imageWidth": 126,
+          "imageHeight": 54,
+          "naturalWidth": 1400,
+          "naturalHeight": 600,
+          "objectFit": "contain"
+        },
+        {
+          "tag": "BUTTON",
+          "name": "以文件形式上传的公开竖图.svg",
+          "label": "查看图片：以文件形式上传的公开竖图.svg",
+          "width": 128,
+          "height": 128,
+          "left": 192,
+          "right": 320,
+          "top": -378.125,
+          "bottom": -250.125,
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%221200%22%20viewBox%3D%220%200%20600%201200%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%237e93ad%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22600%22%20r%3D%22150%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2250%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20C%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "loaded": true,
+          "imageWidth": 63,
+          "imageHeight": 126,
+          "naturalWidth": 600,
+          "naturalHeight": 1200,
+          "objectFit": "contain"
+        },
+        {
+          "tag": "BUTTON",
+          "name": "公开方图.svg",
+          "label": "查看图片：公开方图.svg",
+          "width": 128,
+          "height": 128,
+          "left": 56,
+          "right": 184,
+          "top": -242.125,
+          "bottom": -114.125,
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22900%22%20height%3D%22900%22%20viewBox%3D%220%200%20900%20900%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23ab91a6%22%2F%3E%3Ccircle%20cx%3D%22450%22%20cy%3D%22450%22%20r%3D%22225%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2275%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20D%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "loaded": true,
+          "imageWidth": 126,
+          "imageHeight": 126,
+          "naturalWidth": 900,
+          "naturalHeight": 900,
+          "objectFit": "contain"
+        }
+      ],
+      "overflow": 0
+    },
+    {
+      "id": "mine-pure",
+      "attachmentIds": [],
+      "gallery": {
+        "justify": "flex-end",
+        "left": 16,
+        "right": 324,
+        "top": -23.75,
+        "bottom": 104.25,
+        "beforeBody": true
+      },
+      "bodyText": "",
+      "bodyTop": 0,
+      "bodyBottom": 0,
+      "card": null,
+      "thumbs": [
+        {
+          "tag": "BUTTON",
+          "name": "只有图片.svg",
+          "label": "查看图片：只有图片.svg",
+          "width": 128,
+          "height": 128,
+          "left": 196,
+          "right": 324,
+          "top": -23.75,
+          "bottom": 104.25,
+          "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22400%22%20height%3D%225000%22%20viewBox%3D%220%200%20400%205000%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%2396a474%22%2F%3E%3Ccircle%20cx%3D%22200%22%20cy%3D%222500%22%20r%3D%22100%22%20fill%3D%22%23e7eedc%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2252%25%22%20font-size%3D%2233.333333333333336%22%20text-anchor%3D%22middle%22%20fill%3D%22%23243b35%22%3EPUBLIC%20E%3C%2Ftext%3E%3C%2Fsvg%3E",
+          "loaded": true,
+          "imageWidth": 10.078125,
+          "imageHeight": 125.96875,
+          "naturalWidth": 400,
+          "naturalHeight": 5000,
+          "objectFit": "contain"
+        }
+      ],
+      "overflow": 0
+    },
+    {
+      "id": "mine-failed",
+      "attachmentIds": [
+        "image-broken"
+      ],
+      "gallery": {
+        "justify": "flex-end",
+        "left": 16,
+        "right": 324,
+        "top": 130.25,
+        "bottom": 258.25,
+        "beforeBody": true
+      },
+      "bodyText": "公开同学别人多图：横图、竖图和方图保留原来的顺序。坏图片的文字、引用和失败状态仍可见。发送状态待确认",
+      "bodyTop": 266.25,
+      "bodyBottom": 400.625,
+      "card": null,
+      "thumbs": [
+        {
+          "tag": "BUTTON",
+          "name": "公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名.png",
+          "label": "查看图片：公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名公开练习图片与非常长的文件名.png",
+          "width": 128,
+          "height": 128,
+          "left": 196,
+          "right": 324,
+          "top": 130.25,
+          "bottom": 258.25,
+          "src": null,
+          "loaded": false,
+          "imageWidth": 0,
+          "imageHeight": 0,
+          "naturalWidth": 0,
+          "naturalHeight": 0,
+          "objectFit": null
+        }
+      ],
+      "overflow": 0
+    },
+    {
+      "id": "mine-pdf",
+      "attachmentIds": [
+        "document-pdf"
+      ],
+      "gallery": null,
+      "bodyText": "非图片 PDF 保留文件卡片。",
+      "bodyTop": 458.625,
+      "bodyBottom": 501.8125,
+      "card": {
+        "top": 509.8125,
+        "width": 308,
+        "height": 66
+      },
+      "thumbs": [],
+      "overflow": 0
+    },
+    {
+      "id": "assistant-media",
+      "attachmentIds": [],
+      "gallery": null,
+      "bodyText": "助手图片保留现有卡片展示。助手公开图片.svg图片附件打开",
+      "bodyTop": 607.8125,
+      "bodyBottom": 903.71875,
+      "card": {
+        "top": 643,
+        "width": 308,
+        "height": 260.71875
+      },
+      "thumbs": [],
+      "overflow": 0
+    }
+  ]
+}
