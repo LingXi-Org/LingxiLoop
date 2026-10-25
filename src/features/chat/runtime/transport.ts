@@ -412,7 +412,7 @@ export class ChatTransport {
     if (!request.current()) return
     const current = useChatThreadStore.getState().conversations[conversationId]
     if (current?.messages.some((message) => (
-      message.id === rootId || messageMetadata(message).quotedMessageId === rootId
+      message.id === rootId || messageMetadata(message).threadRootId === rootId || messageMetadata(message).quotedMessageId === rootId
     ))) return
     const envelopes: ImEnvelope[] = []
     let before = 0
@@ -431,9 +431,10 @@ export class ChatTransport {
 
   async sendAppend(conversationId: string, message: AppendMessage, threadRootId: string | null): Promise<void> {
     const text = canonicalizeMentions(textFromAppend(message), mentionRoster(conversationId))
-    const quotedMessageId = threadRootId ?? quoteIdFromAppend(message)
+    const quotedMessageId = quoteIdFromAppend(message) ?? threadRootId
     const payload = attachmentMessage(message.attachments ?? [], text, quotedMessageId,
-      { mentionedIds: mentionedAgentIds(text, conversationId), mentionAll: hasBroadcastMention(text) })
+      { mentionedIds: mentionedAgentIds(text, conversationId), mentionAll: hasBroadcastMention(text),
+        ...(threadRootId && threadRootId !== quotedMessageId ? { threadRootClientMsgNo: threadRootId } : {}) })
     await this.send(conversationId,text,null,quotedMessageId,payload.id,payload)
   }
 
@@ -1051,6 +1052,7 @@ export function filterThreadMessages(
   threadRootId: string | null,
 ): ThreadMessage[] {
   return projectMessageGroups(messages.filter(message => messageMetadata(message).messageKind !== 'tool_activity'
-    && (!threadRootId || message.id === threadRootId || messageMetadata(message).quotedMessageId === threadRootId
+    && (!threadRootId || message.id === threadRootId || messageMetadata(message).threadRootId === threadRootId
+      || messageMetadata(message).quotedMessageId === threadRootId
       || messageMetadata(message).replyBranches?.threadRootId === threadRootId || messageMetadata(message).replyBranches?.rootId === threadRootId)))
 }
