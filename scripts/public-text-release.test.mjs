@@ -160,3 +160,20 @@ test('v3 actual capability and options are exact, while source restoration still
  assert.doesNotThrow(()=>assertPublicTextMetadata(source,p,'source'));assert.throws(()=>assertPublicTextMetadata(source,p));
  assert.throws(()=>assertPublicTextMetadata(target,p,'source'));
 });
+
+test('explicit same57 vision activation permits only absent source to fixed target model',()=>{
+ const p=fixture();p.format='product57-image-host-release/v1';p.visionModelActivation={key:'OPENAI_VISION_MODEL',source:'absent',target:'Qwen/Qwen3-VL-32B-Instruct',providerProofSha256:'a'.repeat(64)};
+ const contract=qualifyImageEnvironments(p),env=which=>JSON.parse(p.imageConfigs[which]).config.Env;
+ assert.deepEqual(normalizeImageEnvironment(env('source'),p.source.sha,contract),normalizeImageEnvironment([...env('target'),'OPENAI_VISION_MODEL=Qwen/Qwen3-VL-32B-Instruct'],p.target.sha,contract));
+ for(const values of [[...env('source'),'OPENAI_VISION_MODEL=other']])assert.throws(()=>normalizeImageEnvironment(values,p.source.sha,contract));
+ for(const values of [env('target'),[...env('target'),'OPENAI_VISION_MODEL=other']])assert.throws(()=>normalizeImageEnvironment(values,p.target.sha,contract));
+ for(const mutate of [q=>q.format='product56-image-host-release/v1',q=>q.visionModelActivation.target='other',q=>q.visionModelActivation.source='empty',q=>q.visionModelActivation.providerProofSha256='bad',q=>q.visionModelActivation.extra=true]){const q=structuredClone(p);mutate(q);assert.throws(()=>qualifyImageEnvironments(q));}
+ const altered=[...env('target'),'OPENAI_VISION_MODEL=Qwen/Qwen3-VL-32B-Instruct','SECRET=changed'];assert.notDeepEqual(normalizeImageEnvironment(env('source'),p.source.sha,contract),normalizeImageEnvironment(altered,p.target.sha,contract));
+});
+
+test('vision runtime optin rejects other product versions and cannot bypass the formal patch guard',()=>{
+ const p=fixture();p.format='runtime-patch-host-release/v1';p.visionModelActivation={key:'OPENAI_VISION_MODEL',source:'absent',target:'Qwen/Qwen3-VL-32B-Instruct',providerProofSha256:'a'.repeat(64)};
+ assert.throws(()=>qualifyImageEnvironments(p),/unchanged product57/);
+ p.source.productVersion=p.target.productVersion=57;
+ assert.throws(()=>qualifyImageEnvironments(p));
+});

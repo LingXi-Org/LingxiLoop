@@ -69,8 +69,9 @@ export function assertNativeBackupReceipt(plan,receipt){
   &&receipt.migrationRehearsal==='not-performed'&&hex.test(receipt.dumpSha256??''),'Fresh source snapshot/restore receipt required')
 }
 export function validateHostPlanShape(plan){
- check(exactKeys(plan,['format','createdAt','source','target','sourceAcceptanceSha256','qualification','stacks','planHash',...([NATIVE_SCHEMA_FORMAT,CASE_COVER55_FORMAT,HOMEWORK56_FORMAT,CASE_SOFT_DELETE57_FORMAT].includes(plan?.format)?['backup']:[]),...(isPublicTextPlan(plan)?['publicText','imageConfigs']:[])])
+ check(exactKeys(plan,['format','createdAt','source','target','sourceAcceptanceSha256','qualification','stacks','planHash',...([NATIVE_SCHEMA_FORMAT,CASE_COVER55_FORMAT,HOMEWORK56_FORMAT,CASE_SOFT_DELETE57_FORMAT].includes(plan?.format)?['backup']:[]),...(isPublicTextPlan(plan)?['publicText','imageConfigs']:[]),...(plan?.visionModelActivation?['visionModelActivation']:[])])
   &&['same-schema-host-release/v1',PRODUCT_SCHEMA_FORMAT,NATIVE_SCHEMA_FORMAT,READER_FORMAT,PRODUCER_FORMAT,TRACE_FORMAT,CONVERSATION_FORMAT,RUN_PRESENTATION_FORMAT,SAME54_FORMAT,RUNTIME_PATCH_FORMAT,CASE_COVER55_FORMAT,SAME55_FORMAT,SAME56_FORMAT,SAME57_FORMAT,HOMEWORK56_FORMAT,CASE_SOFT_DELETE57_FORMAT].includes(plan.format)&&equal(plan,sealHostPlan(plan))&&Number.isFinite(Date.parse(plan.createdAt)),'Invalid sealed host-release plan')
+ check(!plan.visionModelActivation||plan.format===SAME57_FORMAT||plan.format===RUNTIME_PATCH_FORMAT&&plan.source?.productVersion===57&&plan.target?.productVersion===57,'Vision activation requires same57 image or unchanged product57 runtime patch profile')
  if(plan.format===NATIVE_SCHEMA_FORMAT){
   assertNativeSchemaUpgrade(plan.source,plan.target)
   check(plan.backup?.format===2&&plan.backup.profile==='native13-product49'&&equal(plan.backup.source,backupSource(plan.source))
@@ -277,8 +278,8 @@ export async function validateHostPlan(plan,{acceptance,sourceAudit,targetAudit}
    values[which]=content
   }
   if(row.stack!==CORE){
-   assertHostComposeChange(values.source,values.target,plan.source.sha,plan.target.sha,'never')
-   assertHostComposeChange(values.target,values.preparation,plan.target.sha,plan.target.sha,'always')
+   assertHostComposeChange(values.source,values.target,plan.source.sha,plan.target.sha,'never',plan.visionModelActivation)
+   assertHostComposeChange(values.target,values.preparation,plan.target.sha,plan.target.sha,'always',plan.visionModelActivation)
    check((await git(['show','-s','--format=%B',row.target.commit])).includes('[skip deploy]'),'Candidate manifests must suppress legacy rollout')
   }else check(values.source===values.target,'Core template changed')
   files.set(row.stack,values)

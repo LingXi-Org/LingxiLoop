@@ -137,6 +137,10 @@ function fixture(fault={}){
    }
   }
  }
+ if(fault.vision){
+  plan=sealHostPlan({...plan,visionModelActivation:{key:'OPENAI_VISION_MODEL',source:'absent',target:'Qwen/Qwen3-VL-32B-Instruct',providerProofSha256:h}})
+  const perform=t.execute.bind(t);t.execute=async(op,p)=>{const result=await perform(op,p);if(op==='DeployStack'){const c=containers.find(c=>c.stack===p.stack&&c.service===p.services[0]);c.Config.Env.push('OPENAI_VISION_MODEL='+(fault.wrongVision?'other':'Qwen/Qwen3-VL-32B-Instruct'));if(fault.visionOtherEnv)c.Config.Env.push('UNREVIEWED=changed')}return result}
+ }
  const sourceConfigurationProof=[...configs].map(([stack,d])=>({stack,id:d._id.$oid,configSha256:hash(JSON.stringify(d.config))}))
  const onProgress=async e=>events.push(e),ops=createHostReleaseOperations({plan,files,sourceConfigurationProof,transport:t,onProgress,wait:async()=>{},backupExecutor:async({expectedStackId})=>{assert.equal(expectedStackId,'3'.repeat(24));calls.push({op:'SnapshotRestore'});assert.ok(containers.every(c=>!c.State.Running));if(fault.backupUnknown)throw Object.assign(Error('unknown backup'),{uncertain:true});return {...backup,status:'Complete',success:true,updateId:'f'.repeat(24),dumpSha256:h,restoreCountsEqual:true,restoreProvenanceEqual:true,isolatedDatabaseRemoved:true}}})
  return {plan,ops,calls,events,configs,actualFiles,files,containers,transport:t,sourceConfigurationProof,updates,run:()=>runHostRelease({plan,ops,onProgress})}
@@ -472,4 +476,12 @@ test('same57 adapter keeps core source, terminal native receipts and observed he
  const drift=fixture({same57:true});drift.configs.get(APPS[0]).config.environment='changed';await assert.rejects(drift.run());assert.equal(drift.calls.some(c=>c.op==='StopStack'),false);
  const bound=fixture({same57:true,bound:true});await assert.rejects(bound.run());assert.equal(bound.calls.some(c=>c.op==='DeployStack'),false);
  const unknown=fixture({same57:true,unknownWrite:true});await assert.rejects(unknown.run(),e=>e.uncertain);assert.equal(unknown.calls.filter(c=>c.op==='WriteStackFileContents').length,1);assert.equal(unknown.calls.some(c=>c.op==='StopStack'),false);
+});
+
+test('same57 vision activation keeps the complete policy guard and four native deployments',async()=>{
+ const f=fixture({same57:true,vision:true}),core=structuredClone(f.configs.get(CORE));await f.run();
+ assert.equal(f.calls.filter(c=>c.op==='DeployStack').length,4);assert.deepEqual(f.configs.get(CORE),core);
+ assert.ok(f.containers.every(c=>c.Config.Env.includes('OPENAI_VISION_MODEL=Qwen/Qwen3-VL-32B-Instruct')));
+ for(const fault of [{wrongVision:true},{visionOtherEnv:true}]){const bad=fixture({same57:true,vision:true,...fault});await assert.rejects(bad.run());assert.equal(bad.calls.filter(c=>c.op==='DeployStack').length,1)}
+ const wrongSource=fixture({same57:true,vision:true});wrongSource.containers[0].Config.Env.push('OPENAI_VISION_MODEL=other');await assert.rejects(wrongSource.run());assert.equal(wrongSource.calls.some(c=>c.op==='StopStack'),false);
 });

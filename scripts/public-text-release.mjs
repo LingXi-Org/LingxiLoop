@@ -1,3 +1,4 @@
+import {assertVisionModelActivation} from './host-release-compose.mjs'
 // Explicit public-text capability/provenance contracts. No network or product imports.
 import {createHash} from 'node:crypto';
 import {isDeepStrictEqual as equal} from 'node:util';
@@ -131,14 +132,20 @@ export function assertPublicTextMetadata(value,plan,which='target'){
 function envMap(rows){check(Array.isArray(rows),'Image environment unavailable');const map=new Map();for(const x of rows){check(typeof x==='string'&&x.indexOf('=')>0,'Invalid environment entry');const n=x.indexOf('='),k=x.slice(0,n);check(!map.has(k),'Duplicate environment key');map.set(k,x.slice(n+1));}return map;}
 export function qualifyImageEnvironments(plan){
  check(keys(plan.imageConfigs,['source','target']),'Both audited public image configurations required');const configs={},maps={};
+ const activation=plan.visionModelActivation;if(activation){
+  assertVisionModelActivation(activation)
+  if(plan.format===RUNTIME_PATCH_FORMAT){check(plan.source?.productVersion===57&&plan.target?.productVersion===57,'Vision runtime patch requires unchanged product57');assertRuntimePatchPlan(plan.source,plan.target)}
+  else check(plan.format===SAME57_FORMAT,'Vision model activation requires the exact same57 image or product57 runtime patch profile')
+ }
  for(const which of ['source','target']){const raw=plan.imageConfigs[which];check(typeof raw==='string'&&Buffer.byteLength(raw)<=65536&&'sha256:'+createHash('sha256').update(raw).digest('hex')===plan[which].image.configDigest,'Public image config digest differs');configs[which]=JSON.parse(raw).config;maps[which]=envMap(configs[which]?.Env);check(maps[which].get('LINGXILOOP_COMMIT_SHA')===plan[which].sha,'Baked commit mismatch');check(/^22\.\d+\.\d+$/.test(maps[which].get('NODE_VERSION')??''),'Only reviewed Node22 metadata supported');}
  check(equal({...configs.source,Env:null},{...configs.target,Env:null}),'Image startup configuration changed');
  for(const k of new Set([...maps.source.keys(),...maps.target.keys()]))if(!['LINGXILOOP_COMMIT_SHA','NODE_VERSION'].includes(k))check(maps.source.get(k)===maps.target.get(k),'Other baked environment changed');
- return new Map(['source','target'].map(which=>[plan[which].sha,{node:maps[which].get('NODE_VERSION'),config:configs[which]}]));
+ return new Map(['source','target'].map(which=>[plan[which].sha,{node:maps[which].get('NODE_VERSION'),config:configs[which],...(activation?{visionModelActivation:activation,which}:{})}]));
 }
 export function normalizeImageEnvironment(env,source,contract){
  const map=envMap(env),expected=contract.get(source);check(expected&&map.get('LINGXILOOP_COMMIT_SHA')===source&&map.get('NODE_VERSION')===expected.node,'Container metadata differs from audited image');
- return env.filter(x=>!x.startsWith('LINGXILOOP_COMMIT_SHA=')).map(x=>x.startsWith('NODE_VERSION=')?'NODE_VERSION=<audited-image>':x).toSorted();
+ if(expected.visionModelActivation){const {key,target}=expected.visionModelActivation;check(expected.which==='source'?!map.has(key):map.get(key)===target,'Actual vision model differs from explicit source/target activation')}
+ return env.filter(x=>!x.startsWith('LINGXILOOP_COMMIT_SHA=')&&!(expected.visionModelActivation&&x.startsWith('OPENAI_VISION_MODEL='))).map(x=>x.startsWith('NODE_VERSION=')?'NODE_VERSION=<audited-image>':x).toSorted();
 }
 export function assertSeedEquality(value){
  check(keys(value,['readOnly','fullVisibility','canonicalSha256','counts','equal'])&&value.readOnly===true&&value.fullVisibility===true&&value.equal===true&&value.canonicalSha256==='18182ceea150aec2db43a871e6100d6e7793ddcfec326cfd5031266cd84bb2e7'&&equal(value.counts,{missing:0,mismatched:0,plans:1,entitlements:8,planEntitlements:8}),'Canonical education seed differs or cannot be verified');
