@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { AccountAvatar } from '@/components/AccountAvatar'
 import { useParticipants } from '@/features/agents/state'
 import { useAuth } from '@/stores/auth'
 
@@ -11,8 +11,5 @@ export function ForumAvatar({ userId, name, url }: { userId: string; name: strin
   // the authorized forum response as the fallback for those accounts.
   const participant = useParticipants(state => state.byId[userId])
   const src = (self ? self.avatarUrl : participant?.kind === 'human' ? participant.avatarUrl ?? url : url)?.trim() || undefined
-  return <Avatar key={`${userId}:${src ?? ''}`} size="sm" className="mt-1" data-user-id={userId}>
-    <AvatarImage src={src} alt={`${name}的头像`} />
-    <AvatarFallback role="img" aria-label={`${name}未设置头像或头像加载失败`} title="未设置头像或头像加载失败">{name.trim().slice(0, 1) || '?'}</AvatarFallback>
-  </Avatar>
+  return <AccountAvatar userId={userId} name={name} url={src} className="mt-1" />
 }

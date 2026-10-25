@@ -6,7 +6,7 @@ const SOURCE_LIST_SELECT = `source.id,source.kind,source.title,source.mime_type 
   source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",source.status,source.stage,
   source.error,source.is_truncated AS "isTruncated",source.visibility_scope AS "visibilityScope",
   source.owner_user_id AS "ownerUserId",source.created_by_user_id AS "createdByUserId",
-  (SELECT owner.display_name FROM users owner WHERE owner.id=source.owner_user_id) AS "ownerName",
+  owner.display_name AS "ownerName",owner.avatar_url AS "ownerAvatarUrl",
   source.created_by_user_id AS "createdBy",source.created_via AS "createdVia",
   source.created_at AS "createdAt",source.updated_at AS "updatedAt",
   source.origin_client_msg_no AS "originClientMsgNo",source.external_chunk_count AS "chunkCount"`
@@ -15,7 +15,7 @@ const SOURCE_DETAIL_SELECT = `source.id,source.kind,source.title,source.mime_typ
   source.size_bytes AS "sizeBytes",source.original_url AS "originalUrl",source.storage_key AS "storageKey",
   source.status,source.stage,source.error,source.is_truncated AS "isTruncated",
   source.visibility_scope AS "visibilityScope",source.owner_user_id AS "ownerUserId",
-  (SELECT owner.display_name FROM users owner WHERE owner.id=source.owner_user_id) AS "ownerName",
+  owner.display_name AS "ownerName",owner.avatar_url AS "ownerAvatarUrl",
   source.created_by_user_id AS "createdByUserId",source.created_by_user_id AS "createdBy",
   source.created_via AS "createdVia",source.created_at AS "createdAt",source.updated_at AS "updatedAt"`
 
@@ -32,6 +32,7 @@ export interface KnowledgeSourceRow extends Record<string, unknown> {
   createdVia: KnowledgeCreatedVia
   ownerUserId: string
   ownerName?: string
+  ownerAvatarUrl: string | null
   visibilityScope: KnowledgeVisibilityScope
   sizeBytes: number
 }
@@ -99,6 +100,7 @@ export async function updateProject(
 export async function listSources(db: Queryable, companyId: string, projectId: string, userId: string, space?: MaterialSpace) {
   const { rows } = await db.query<KnowledgeSourceRow>(
     `SELECT ${SOURCE_LIST_SELECT} FROM knowledge_sources source
+       LEFT JOIN users owner ON owner.id=source.owner_user_id
       WHERE source.company_id=$1 AND source.project_id=$2 AND source.deleted_at IS NULL
         AND (source.visibility_scope='PROJECT'
           OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$3))
@@ -116,6 +118,7 @@ export async function listConversationSources(
   const { rows } = await db.query<KnowledgeSourceRow>(
     `SELECT ${SOURCE_LIST_SELECT},(exclusion.source_id IS NULL) AS enabled
        FROM knowledge_sources source
+       LEFT JOIN users owner ON owner.id=source.owner_user_id
        LEFT JOIN conversation_source_exclusions exclusion
          ON exclusion.source_id=source.id AND exclusion.conversation_id=$4 AND exclusion.user_id=$3
       WHERE source.company_id=$1 AND source.project_id=$2 AND source.deleted_at IS NULL
@@ -136,6 +139,7 @@ export async function findSource(
 ): Promise<KnowledgeSourceRow | null> {
   const { rows } = await db.query<KnowledgeSourceRow>(
     `SELECT ${SOURCE_DETAIL_SELECT} FROM knowledge_sources source
+       LEFT JOIN users owner ON owner.id=source.owner_user_id
       WHERE source.id=$1 AND source.company_id=$2 AND source.project_id=$3 AND source.deleted_at IS NULL
         AND (source.visibility_scope='PROJECT'
           OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4))`,
