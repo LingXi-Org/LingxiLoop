@@ -9,10 +9,9 @@ which prevents citing the dialogue in an assignment submission.
 The final draft is rebased onto `b7e8bf8aa111fd84f7d92a5a114a0e3444b35217`,
 including the separately owned quoted-retry fix from PR #456.
 
-**Outcome:** the bounded synthetic regression passed. The reported incident is
-not fixed and must remain open. Follow-up implementation targets the confirmed
-observability gap: an unexpected context-loading exception becomes a generic
-public error without a durable, safely scoped operator diagnostic.
+**Outcome:** this draft fixes the observability gap at the context-loading error
+boundary and retains the bounded student-path regression. It does not establish
+or fix the original incident's root cause; #439 must remain open.
 
 Incident-specific operational records remain in the private handoff. This public
 evidence contains only implementation facts and synthetic qualification results.
@@ -159,19 +158,75 @@ responses were not copied into the fixture.
 
 The formal runtime logs unexpected context HTTP exceptions through its supported
 `Logger` extension before returning a generic error to the worker. The public run
-error intentionally omits the underlying exception. Product diagnostics must
-preserve a strict metadata projection in the existing restricted audit store,
-correlated to the authoritative product run binding. They must not persist error
+error intentionally omits the underlying exception. The product now preserves a
+strict metadata projection in the existing restricted audit store, correlated to
+the authoritative product run binding. It does not persist error
 messages, prompts, credentials, provider responses or arbitrary extension fields.
 
-The existing administrator run detail/operations surface is the intended reader.
-Ordinary conversation responses must remain unchanged. Historical records cannot
+The existing platform-administrator run detail/operations surface now includes a
+bounded `contextFailures` collection. It can also be read through the existing
+MCP resource-field tool without requesting message history. Company administrators
+and ordinary conversation responses do not receive these fields. Historical records cannot
 be reconstructed from a generic error string; no backfill is attempted.
 
+The formal runtime's supported `Logger` interface is decorated before Error
+serialization. Only the exact context route is recorded; the decorator removes
+raw errors and query strings from control-plane error logs. The record contains:
+
+- A generated correlation ID, exact run ID and `context_load` stage.
+- Official fixed reason/category, retryability, an allowed exception name,
+  an allowed cause/filesystem code, bounded SQLSTATE and integer HTTP error
+  status when available.
+- At most four source locations from a fixed module allowlist, without absolute
+  paths, function names or raw stacks.
+- The formal runtime version and validated service commit, retained across later
+  runtime upgrades.
+
+The writer resolves tenant/principal ownership from `agent_run_bindings`. A
+failure before binding remains platform-only. The reader receives an identity
+resolved by the formal runtime and checks every available product binding field.
+Both read/write paths validate the strict schema. Persistence uses `audit_events`
+without DDL; pending writes drain during normal shutdown. A database write failure
+emits only a fixed failure code and cannot change the original HTTP response.
+
+Source-level dependency boundaries remain relevant for the next diagnosis:
+`service.loadContext` validates the lease/session, loads product authorization,
+canonical IM history and conditional knowledge/visualization context, then loads
+native memory and rechecks runtime state. The student fixture uses recording IM,
+empty synthetic coursework/source state and a local vector response. Existing
+knowledge sources can activate external retrieval, visualization preparation can
+touch its authorized filesystem directory, and populated memory adds record and
+admission processing after embedding. These branches are not interchangeable
+with a fresh fixture. The formal HTTP client also bounds retries of 5xx/transport
+failures, so one run can have multiple context request diagnostics; each record
+has its own correlation ID. None of these differences is asserted as the incident
+cause.
+
+Validation of this change:
+
+- Focused diagnostic unit tests: **7/7 passed**, including hostile fields,
+  private-marker removal, historical versions, writer rejection and a log hook
+  that cannot interrupt the original error response.
+- One actual formal-runtime HTTP integration: **1/1 passed**, zero skips,
+  4.565 seconds overall. A controlled synthetic context exception returns the
+  unchanged generic HTTP 500, persists a safely projected audit record, and is
+  readable only through the platform-administrator interface. The test checks
+  raw message/service/lease values are absent from both durable records and logs,
+  rejects foreign tenant/session reads, and confirms company-admin run detail has
+  no diagnostic field. No model call is made in this fault-path test.
+
+The diagnostic integration log is
+`/tmp/lingxi-439-diagnostic-integration.log`. This fault is deliberately injected
+and is not represented as a reproduction of the original reported incident.
+
 If no independently established root cause emerges, the next acceptance step is
-one controlled synthetic conversation after the designated release coordinator
-has deployed the diagnostic increment. Capture its run ID and the restricted
-context-failure diagnostic, if one occurs. A successful synthetic turn alone does
+one new, unquoted message in the authorized affected assignment/student flow
+after the designated release coordinator has deployed the diagnostic increment.
+Do not replay historical messages or copy their bodies into a test. Capture its
+run ID and, if it fails, read only that run's `contextFailures`, status and request
+version. The required fields are correlation ID, stage, reason/category, exception
+name, SQLSTATE/cause/filesystem code and HTTP status if present, controlled source locations and service/runtime
+versions. A successful synthetic turn alone does
 not establish that the reported incident is repaired. Report generation and final
 homework submission remain unverified.
 

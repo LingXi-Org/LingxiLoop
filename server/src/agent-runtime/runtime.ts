@@ -28,6 +28,8 @@ import type { Queryable } from '../db/queryable.js'
 import { publicTextDeployment, publicTextModelOptions } from './public-text-deployment.js'
 import { readModelOperation } from '../../../src/lib/runTrace.js'
 import { visualizeSemanticReviewPolicy } from './visualize-workflow-review.js'
+import { createContextDiagnosticsLogger } from './context-diagnostics.js'
+import { recordContextFailure } from './context-diagnostic-store.js'
 
 function positiveInteger(name: string, fallback: number): number {
   const raw = process.env[name]?.trim()
@@ -110,6 +112,9 @@ let control: ReturnType<typeof createLingxiOS> | undefined
 let backgroundRole: 'active' | 'passive' = 'active'
 let previewStore: ReturnType<typeof createRealtimeStore> | undefined
 let objectStore: ReturnType<typeof createRuntimeObjectStore> | undefined
+const contextDiagnostics = createContextDiagnosticsLogger({
+  record: diagnostic => recordContextFailure(pool, diagnostic), serviceCommit: env.COMMIT_SHA,
+})
 
 /** Web/API ownership: ingress, reads, cancellation and approval continuation only. */
 export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
@@ -122,7 +127,7 @@ export function lingxiOSControl(): ReturnType<typeof createLingxiOS> {
     previewStore = previewUrl ? createRealtimeStore(previewUrl) : undefined
     const harness = createProductHarness(createProductTools(lingxiOSControl), lingxiOSControl)
     const { tools } = assembleHarness(harness)
-    control = createLingxiOS({ ...common(), harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
+    control = createLingxiOS({ ...common(), logger: contextDiagnostics.logger, harness, responsePolicy: 'deep', ...createProductContext(tools), delivery: createProductDelivery(lingxiOSControl),
       semanticReviewPolicy: visualizeSemanticReviewPolicy,
       background: { role: backgroundRole },
       performance: { notifications: true, contextSnapshot: true, outboxConcurrency: 4 },
@@ -215,7 +220,10 @@ export async function stopLingxiOSControl(): Promise<void> {
   const current = control
   try { if (current) await (await current).stop() }
   // In-flight memory callbacks must retain this control while its jobs drain.
-  finally { control = undefined; previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined }
+  finally {
+    try { await contextDiagnostics.flush() }
+    finally { control = undefined; previewStore?.close(); objectStore?.close(); previewStore = undefined; objectStore = undefined }
+  }
 }
 
 export function lingxiOSServiceToken(): string {

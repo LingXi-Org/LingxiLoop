@@ -2,6 +2,7 @@ import { educationRouter } from '../education/router.js'
 import { Router } from 'express'
 import { z } from 'zod'
 import { lingxiOSControl } from '../../agent-runtime/runtime.js'
+import { readContextFailures } from '../../agent-runtime/context-diagnostic-store.js'
 import { listNativeDeliveryFailures, retryNativeDelivery } from '../../agents/delivery-operations.js'
 import { pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
@@ -57,7 +58,8 @@ async function readAgentRun(id: string) {
   const runtime = await lingxiOSControl()
   const { items } = await runtime.listRuns({ id, limit: 1 })
   const run = items[0]
-  return run ? { data: { ...run, diagnostics: await runtime.readDiagnostics(run.identity) } as Record<string, unknown>, sensitive: true } : null
+  return run ? { data: { ...run, diagnostics: await runtime.readDiagnostics(run.identity),
+    contextFailures: await readContextFailures(pool, run.identity) } as Record<string, unknown>, sensitive: true } : null
 }
 
 function requestMetadata(request: Parameters<typeof requirePlatformAdmin>[1]) {
@@ -247,7 +249,12 @@ adminRouter.post('/agent-runs/:id/delivery/:channel/retry', safe(async (request,
 
 adminRouter.get('/agent-runs/:id/operations', safe(async (request, response) => {
   const afterSeq = z.coerce.number().int().nonnegative().safe().default(0).parse(request.query.afterSeq)
-  response.json(await inspectPlatformAgentRun(await lingxiOSControl(), String(request.params.id), afterSeq))
+  const operations = await inspectPlatformAgentRun(await lingxiOSControl(), String(request.params.id), afterSeq)
+  const contextFailures = await readContextFailures(pool, operations.run.identity)
+  await audit({ kind: 'platform_admin.sensitive_read', userId: identity(response).id,
+    companyId: operations.run.identity.tenantId, ...requestMetadata(request),
+    detail: { resource: 'agent-runs', resourceId: operations.run.id, field: 'contextFailures', count: contextFailures.length } })
+  response.json({ ...operations, contextFailures })
 }))
 
 adminRouter.post('/agent-runs/:id/revise', safe(async (request, response) => {
