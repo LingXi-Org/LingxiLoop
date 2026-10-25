@@ -1,0 +1,29 @@
+✖ [integration] 453 a vague model rejection remains retryable instead of becoming an input error (3400.498703ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11531.031266
+
+✖ failing tests:
+
+test at server/src/__integration__/homework.test.ts:20:5234
+✖ [integration] 453 a vague model rejection remains retryable instead of becoming an input error (3400.498703ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  'INVALID' !== 'ERROR'
+
+      at TestContext.<anonymous> (/workspace/LingxiLoop/server/src/__integration__/homework.test.ts:1153:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'INVALID',
+    expected: 'ERROR',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,207 @@
+{
+  "transitions": [
+    {
+      "value": "processing",
+      "index": 0,
+      "top": 77,
+      "height": 70,
+      "lineCount": 2,
+      "titleHeight": 20,
+      "descriptionHeight": 20,
+      "status": "处理中",
+      "titleEllipsis": "ellipsis",
+      "titleClipped": true,
+      "titleTimeGap": 6,
+      "iconGaps": [
+        6
+      ],
+      "overflow": 0
+    },
+    {
+      "value": "waiting_input",
+      "index": 0,
+      "top": 77,
+      "height": 70,
+      "lineCount": 2,
+      "titleHeight": 20,
+      "descriptionHeight": 20,
+      "status": "等你回答",
+      "titleEllipsis": "ellipsis",
+      "titleClipped": true,
+      "titleTimeGap": 6,
+      "iconGaps": [
+        6
+      ],
+      "overflow": 0
+    },
+    {
+      "value": "waiting_approval",
+      "index": 0,
+      "top": 77,
+      "height": 70,
+      "lineCount": 2,
+      "titleHeight": 20,
+      "descriptionHeight": 20,
+      "status": "等你审批",
+      "titleEllipsis": "ellipsis",
+      "titleClipped": true,
+      "titleTimeGap": 6,
+      "iconGaps": [
+        6
+      ],
+      "overflow": 0
+    },
+    {
+      "value": "completed",
+      "index": 0,
+      "top": 77,
+      "height": 70,
+      "lineCount": 2,
+      "titleHeight": 20,
+      "descriptionHeight": 20,
+      "status": "已完成",
+      "titleEllipsis": "ellipsis",
+      "titleClipped": true,
+      "titleTimeGap": 6,
+      "iconGaps": [
+        6
+      ],
+      "overflow": 0
+    },
+    {
+      "value": "failed",
+      "index": 0,
+      "top": 77,
+      "height": 70,
+      "lineCount": 2,
+      "titleHeight": 20,
+      "descriptionHeight": 20,
+      "status": "执行失败",
+      "titleEllipsis": "ellipsis",
+      "titleClipped": true,
+      "titleTimeGap": 6,
+      "iconGaps": [
+        6
+      ],
+      "overflow": 0
+    },
+    {
+      "value": "",
+      "index": 0,
+      "top": 77,
+      "height": 70,
+      "lineCount": 2,
+      "titleHeight": 20,
+      "descriptionHeight": 20,
+      "status": null,
+      "titleEllipsis": "ellipsis",
+      "titleClipped": true,
+      "titleTimeGap": 6,
+      "iconGaps": [
+        6
+      ],
+      "overflow": 0
+    }
+  ],
+  "final": {
+    "rows": [
+      {
+        "index": 0,
+        "top": 77,
+        "height": 70,
+        "lineCount": 2,
+        "titleHeight": 20,
+        "descriptionHeight": 20,
+        "status": "处理中",
+        "titleEllipsis": "ellipsis",
+        "titleClipped": true,
+        "titleTimeGap": 6,
+        "iconGaps": [
+          6
+        ],
+        "overflow": 0
+      },
+      {
+        "index": 1,
+        "top": 155,
+        "height": 70,
+        "lineCount": 2,
+        "titleHeight": 20,
+        "descriptionHeight": 20,
+        "status": "处理中",
+        "titleEllipsis": "ellipsis",
+        "titleClipped": true,
+        "titleTimeGap": 6,
+        "iconGaps": [
+          6,
+          28
+        ],
+        "overflow": 0
+      },
+      {
+        "index": 2,
+        "top": 233,
+        "height": 70,
+        "lineCount": 2,
+        "titleHeight": 20,
+        "descriptionHeight": 20,
+        "status": "等你回答",
+        "titleEllipsis": "ellipsis",
+        "titleClipped": true,
+        "titleTimeGap": 6,
+        "iconGaps": [],
+        "overflow": 0
+      },
+      {
+        "index": 3,
+        "top": 311,
+        "height": 70,
+        "lineCount": 2,
+        "titleHeight": 20,
+        "descriptionHeight": 20,
+        "status": "等你审批",
+        "titleEllipsis": "ellipsis",
+        "titleClipped": true,
+        "titleTimeGap": 6,
+        "iconGaps": [
+          6
+        ],
+        "overflow": 0
+      },
+      {
+        "index": 4,
+        "top": 389,
+        "height": 70,
+        "lineCount": 2,
+        "titleHeight": 20,
+        "descriptionHeight": 20,
+        "status": "已完成",
+        "titleEllipsis": "ellipsis",
+        "titleClipped": true,
+        "titleTimeGap": 6,
+        "iconGaps": [],
+        "overflow": 0
+      },
+      {
+        "index": 5,
+        "top": 467,
+        "height": 70,
+        "lineCount": 2,
+        "titleHeight": 20,
+        "descriptionHeight": 20,
+        "status": "执行失败",
+        "titleEllipsis": "ellipsis",
+        "titleClipped": true,
+        "titleTimeGap": 6,
+        "iconGaps": [],
+        "overflow": 0
+      }
+    ],
+    "documentWidth": 1440,
+    "viewport": 1440,
+    "renderedCount": 15,
+    "blockedNetwork": []
+  },
+  "selectedLast": true,
+  "returnedFirst": true
+}

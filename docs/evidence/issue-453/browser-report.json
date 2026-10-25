@@ -1,0 +1,752 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a17184-42b9-7524-b046-38689f93bc2b",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T05:24:38.737Z",
+    "finishedAt": "2026-10-25T05:25:01.029Z",
+    "project": {
+      "id": "lingxiloop-424-homework-validation",
+      "configDigest": "cb958fa52a57ed838ba06cf9a09b5ab3157d90bcbfb37fd9e201ad69c0285e7c"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "970aff9e7295a45e79080e87bb7dd0423ac56cc1",
+      "branch": "fix/issue-453-homework-recheck",
+      "dirty": true
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5194",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "9b0283714edbf946bd89c05d1320faaad7b632d7ecd5ecc45b4ba447b0adff22",
+        "testId": "e2e/homework-validation/validation.e2e.ts::a%20legacy%20invalid%20draft%20can%20be%20explicitly%20rechecked%20unchanged%20without%20duplicate%20requests%20and%20then%20publish%20its%20current%20result",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "a legacy invalid draft can be explicitly rechecked unchanged without duplicate requests and then publish its current result"
+        ],
+        "file": "e2e/homework-validation/validation.e2e.ts",
+        "source": {
+          "file": "e2e/homework-validation/validation.e2e.ts",
+          "line": 16,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a17184-a545-7273-aab3-31bc042baa81",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-25T05:24:40.902Z",
+            "durationMs": 20002,
+            "artifacts": [
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a17184-a545-7273-aab3-31bc042baa81:8"
+                },
+                "path": "web/e2e_homework-validation_validation.e2e.ts__a_20legacy_20invalid_20draft_20can_20be_20explicitly_20rechecked_20u-0f8a6e0d/default/attempt-0/screenshots/001-legacy-invalid-recheck.png",
+                "size": 75181,
+                "sha256": "7c287307abfc1d77e223b215f330092344b344dc9018d7f13af15f85b0d471a1"
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a17184-a545-7273-aab3-31bc042baa81:21"
+                },
+                "path": "web/e2e_homework-validation_validation.e2e.ts__a_20legacy_20invalid_20draft_20can_20be_20explicitly_20rechecked_20u-0f8a6e0d/default/attempt-0/screenshots/002-recheck-specific-result.png",
+                "size": 79034,
+                "sha256": "6eae6a89ff145b93d3286729b087a690894bc0b3e48a7b45158cc592d82d2133"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:0",
+                "index": 0,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/homework-validation/index.html?legacy=1&holdValidate=1",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:41.296Z",
+                "durationMs": 9498,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 17,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:1",
+                "index": 1,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByLabel(\"作业要求\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:50.796Z",
+                "durationMs": 1056,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 18,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:51.854Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 19,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:51.870Z",
+                "durationMs": 1102,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 20,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:4",
+                "index": 4,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"button\", name: \"保存修改\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:52.973Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 21,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:5",
+                "index": 5,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"button\", name: \"确认发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:52.985Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 22,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeEnabled",
+                "label": "getByRole(\"button\", name: \"重新检查\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:52.993Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 23,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.003Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 24,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:8",
+                "index": 8,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "legacy-invalid-recheck",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.011Z",
+                "durationMs": 122,
+                "events": [],
+                "artifacts": [
+                  "01a17184-a545-7273-aab3-31bc042baa81:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 25,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:9",
+                "index": 9,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重新检查\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.134Z",
+                "durationMs": 109,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 26,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"button\", name: \"重新检查\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.245Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 27,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.262Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 28,
+                  "column": 24
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.268Z",
+                "durationMs": 54,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:13",
+                "index": 13,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"正在检查要求与资料，完成后可以确认发布。\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.323Z",
+                "durationMs": 21,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 35,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"button\", name: \"重新检查\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.344Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 36,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:15",
+                "index": 15,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.356Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 37,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.363Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 38,
+                  "column": 34
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.toBeDisabled",
+                "label": "getByRole(\"button\", name: \"确认发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.373Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 42,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.379Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 43,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:19",
+                "index": 19,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:53.384Z",
+                "durationMs": 2991,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 44,
+                  "column": 43
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:20",
+                "index": 20,
+                "kind": "assertion",
+                "api": "expect.not.toContainText",
+                "label": "getByRole(\"alert\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:56.375Z",
+                "durationMs": 1085,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 45,
+                  "column": 47
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "recheck-specific-result",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:57.460Z",
+                "durationMs": 73,
+                "events": [],
+                "artifacts": [
+                  "01a17184-a545-7273-aab3-31bc042baa81:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 46,
+                  "column": 13
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:22",
+                "index": 22,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重试检查\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:57.533Z",
+                "durationMs": 121,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 47,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:23",
+                "index": 23,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"正在检查要求与资料，完成后可以确认发布。\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:57.654Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 48,
+                  "column": 75
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:57.661Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 49,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toBeEnabled",
+                "label": "getByRole(\"button\", name: \"确认发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:24:57.665Z",
+                "durationMs": 2996,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 50,
+                  "column": 69
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:25:00.661Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 51,
+                  "column": 31
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:27",
+                "index": 27,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"确认发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:25:00.668Z",
+                "durationMs": 74,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 58,
+                  "column": 61
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByText(\"已发布\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:25:00.744Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 59,
+                  "column": 58
+                }
+              },
+              {
+                "id": "01a17184-a545-7273-aab3-31bc042baa81:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T05:25:00.751Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/homework-validation/validation.e2e.ts",
+                  "line": 60,
+                  "column": 24
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "6911da38b47c9a67d0bcafd2bd4a5202537785f3a6d09205c6a79e3f4991c0a5",
+        "testId": "e2e/homework-validation/validation.e2e.ts::invalid%20feedback%20is%20visible%20in%20both%20themes%20and%20editing%20requires%20a%20new%20current%20check%20before%20publishing",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "invalid feedback is visible in both themes and editing requires a new current check before publishing"
+        ],
+        "file": "e2e/homework-validation/validation.e2e.ts",
+        "source": {
+          "file": "e2e/homework-validation/validation.e2e.ts",
+          "line": 64,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "2b271b14d8b1d8cbe17116df3b96a032912bcdb9482feb4fc2ff341ee72e26a3",
+        "testId": "e2e/homework-validation/validation.e2e.ts::material%20guidance%20and%20service%20retry%20preserve%20the%20draft%20and%20attachment%20through%20failure%20and%20recovery",
+        "kind": "test",
+        "declarationIndex": 2,
+        "titlePath": [
+          "material guidance and service retry preserve the draft and attachment through failure and recovery"
+        ],
+        "file": "e2e/homework-validation/validation.e2e.ts",
+        "source": {
+          "file": "e2e/homework-validation/validation.e2e.ts",
+          "line": 98,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "44bae338ae2be2b280d48e2a7e1cbe0edaaa844fc78fe614b1357fc4d41927a8",
+        "testId": "e2e/homework-validation/validation.e2e.ts::a%20ready%20receipt%20for%20a%20previous%20revision%20cannot%20publish%20the%20current%20draft",
+        "kind": "test",
+        "declarationIndex": 3,
+        "titlePath": [
+          "a ready receipt for a previous revision cannot publish the current draft"
+        ],
+        "file": "e2e/homework-validation/validation.e2e.ts",
+        "source": {
+          "file": "e2e/homework-validation/validation.e2e.ts",
+          "line": 125,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 4,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 4,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 154215,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

@@ -4,13 +4,62 @@ import { expect } from 'e2e'
 declare global {
   interface Window {
     homeworkValidationFixture: {
-      settle(status: 'READY'): void
-      snapshot(): { homework: { title: string; instructions: string; revision: number; attachments: { key: string; name: string }[] }; validateRequests: number; publishRequests: number; saveRequests: number }
+      settle(status: 'READY' | 'MATERIAL_ERROR'): void
+      releaseValidation(): void
+      snapshot(): { homework: { title: string; instructions: string; revision: number; attachments: { key: string; name: string }[]; validation: { status: string; revision: number | null; feedback: string } }; validateRequests: number; publishRequests: number; saveRequests: number }
     }
   }
 }
 
 const path = '/e2e/homework-validation/index.html'
+
+test('a legacy invalid draft can be explicitly rechecked unchanged without duplicate requests and then publish its current result', async ({ app, browser, screen }) => {
+  await app.open(`${path}?legacy=1&holdValidate=1`)
+  await expect(screen.getByLabel('作业要求', { exact: true })).toContainText('阅读课程提纲，解释一个知识点')
+  await expect(screen.getByRole('alert')).toContainText('检查原因尚不明确')
+  await expect(screen.getByRole('alert')).not.toContainText('作业要求需要修改')
+  await expect(screen.getByRole('button', '保存修改', { exact: true })).toBeDisabled()
+  await expect(screen.getByRole('button', '确认发布', { exact: true })).toBeDisabled()
+  await expect(screen.getByRole('button', '重新检查', { exact: true })).toBeEnabled()
+  const original = await browser.evaluate(() => window.homeworkValidationFixture.snapshot().homework)
+  await app.screenshot('legacy-invalid-recheck')
+  await screen.getByRole('button', '重新检查', { exact: true }).tap()
+  await expect(screen.getByRole('button', '重新检查', { exact: true })).toBeDisabled()
+  expect(await browser.evaluate(() => window.homeworkValidationFixture.snapshot().validateRequests)).toBe(1)
+  await browser.evaluate(() => {
+    const button = [...document.querySelectorAll<HTMLButtonElement>('button')].find(item => item.textContent === '重新检查')!
+    button.click()
+    window.homeworkValidationFixture.releaseValidation()
+    return true
+  })
+  await expect(screen.getByText('正在检查要求与资料，完成后可以确认发布。', { exact: true })).toBeVisible()
+  await expect(screen.getByRole('button', '重新检查', { exact: true })).toHaveCount(0)
+  await expect(screen.getByRole('alert')).toHaveCount(0)
+  const checking = await browser.evaluate(() => window.homeworkValidationFixture.snapshot())
+  expect(checking.validateRequests).toBe(1)
+  expect(checking.saveRequests).toBe(0)
+  expect({ ...checking.homework, validation: original.validation }).toEqual(original)
+  await expect(screen.getByRole('button', '确认发布', { exact: true })).toBeDisabled()
+  await browser.evaluate(() => { window.homeworkValidationFixture.settle('MATERIAL_ERROR'); return true })
+  await expect(screen.getByRole('alert')).toContainText('课程提纲.pptx：未读到可用文字')
+  await expect(screen.getByRole('alert')).not.toContainText('检查原因尚不明确')
+  await app.screenshot('recheck-specific-result')
+  await screen.getByRole('button', '重试检查', { exact: true }).tap()
+  await expect(screen.getByText('正在检查要求与资料，完成后可以确认发布。', { exact: true })).toBeVisible()
+  await browser.evaluate(() => { window.homeworkValidationFixture.settle('READY'); return true })
+  await expect(screen.getByRole('button', '确认发布', { exact: true })).toBeEnabled()
+  const ready = await browser.evaluate(() => window.homeworkValidationFixture.snapshot())
+  expect(ready.homework.revision).toBe(original.revision)
+  expect(ready.homework.validation.revision).toBe(original.revision)
+  expect(ready.homework.instructions).toBe(original.instructions)
+  expect(ready.homework.attachments).toEqual(original.attachments)
+  expect(ready.validateRequests).toBe(2)
+  expect(ready.saveRequests).toBe(0)
+  await screen.getByRole('button', '确认发布', { exact: true }).tap()
+  await expect(screen.getByText('已发布', { exact: true })).toBeVisible()
+  expect(await browser.evaluate(() => window.homeworkValidationFixture.snapshot().publishRequests)).toBe(1)
+  console.log('HOMEWORK_LEGACY_RECHECK', JSON.stringify(ready))
+})
 
 test('invalid feedback is visible in both themes and editing requires a new current check before publishing', async ({ app, browser, screen }) => {
   await app.open(`${path}?failSave=1`)

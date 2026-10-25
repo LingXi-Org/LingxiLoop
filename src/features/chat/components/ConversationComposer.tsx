@@ -32,8 +32,6 @@ import { useChatThreadStore } from '../runtime/store'
 import { canCancelRun } from '../runtime/harness'
 import { getLingxiMessageMetadata } from '../runtime/model'
 import { userFacingError } from '@/lib/userFacingError'
-import { LearningHelpActions } from './LearningHelpActions'
-import { appendLearningHelp } from './learning-help'
 
 const actionClassName = 'h-auto min-h-11 w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-start whitespace-normal motion-reduce:transition-none'
 
@@ -191,10 +189,6 @@ export function ConversationComposer({
             )}
           </div>
         </div>
-        <LearningHelpActions disabled={attachmentDisabled} onSelect={intent => {
-          aui.composer().setText(appendLearningHelp(aui.composer().getState().text, intent))
-          requestAnimationFrame(focusInput)
-        }} />
           </ComposerPrimitive.Root>
           </PopoverAnchor>
           <PopoverContent

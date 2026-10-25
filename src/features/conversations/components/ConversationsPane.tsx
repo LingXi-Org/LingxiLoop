@@ -332,7 +332,8 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
             className="h-full"
             data={conversations}
             computeItemKey={(_, conversation) => conversation.id}
-            defaultItemHeight={isMobile ? 68 : 72}
+            // Two 20px lines + 4px gap + 24px padding + 2px border + 8px row spacing.
+            defaultItemHeight={78}
             increaseViewportBy={{ top: 500, bottom: 500 }}
             components={{ List: ConversationItemGroup, EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-sm font-medium text-foreground">会话加载失败</p><p className="mt-1 text-xs text-muted-foreground">{userFacingError(error, '请稍后重试。')}</p><Button type="button" size="sm" className="mt-3" onClick={() => void useConversations.getState().load()}>重试</Button></div> : loaded ? <p className="px-3 py-8 text-center text-sm text-muted-foreground">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
             itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} />}

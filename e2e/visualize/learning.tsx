@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { GenUiCard } from '@/features/chat/visualize/zcode/gen-ui/components/GenUiCard'
-import { LearningHelpActions } from '@/features/chat/components/LearningHelpActions'
-import { appendLearningHelp } from '@/features/chat/components/learning-help'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { setWorkspaceSession } from '@/lib/workspaceSession'
 import { useAuth } from '@/stores/auth'
@@ -23,7 +21,6 @@ function LearningFixture() {
         <h1 className="text-lg font-semibold">网络划分练习</h1>
         <p className="py-3">阅读拓扑图，保存你的划分判断，再向助教询问需要核对的步骤。</p>
         <textarea aria-label="我的推导" className="w-full rounded border p-3" value={attempt} onChange={e => setAttempt(e.target.value)} />
-        <LearningHelpActions onSelect={intent => setAttempt(text => appendLearningHelp(text, intent))} />
         <button type="button" className="mt-4 rounded border p-2" onClick={() => setVersion(value => value === 1 ? 2 : 1)}>{version === 1 ? '打开后续回复中的下一版' : '对照上一版'}</button>
         <button type="button" className="mt-4 rounded border p-2" onClick={() => {
           const next = actor === 'fixture-student' ? 'fixture-peer' : 'fixture-student'
