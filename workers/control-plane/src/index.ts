@@ -7,6 +7,7 @@ import { type Context, Hono } from 'hono'
 import { handleMcpRequest } from './mcp'
 import { authSchema } from './schema'
 import { sendSmtpEmail } from './smtp'
+import { handleIssueDotEmail } from './issue-dot-email'
 
 type Secrets = {
   BETTER_AUTH_SECRET: string
@@ -37,6 +38,8 @@ const encoder = new TextEncoder()
 const authSettingsCacheKey = 'https://lingxiloop.invalid/auth-settings'
 const authSettingsCache = () => caches.open('lingxiloop-auth-settings')
 const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
+
+app.post('/api/internal/issue-dot-email', (c) => handleIssueDotEmail(c.req.raw, c.env, sendSmtpEmail))
 
 function base64url(bytes: ArrayBuffer | Uint8Array): string {
   const value = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)
@@ -673,3 +676,4 @@ async function proxyAppRequest(c: AppContext): Promise<Response> {
 app.all('/api/*', proxyAppRequest)
 
 export default app
+

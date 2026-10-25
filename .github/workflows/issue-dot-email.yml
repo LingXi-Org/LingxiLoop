@@ -5,11 +5,6 @@ on:
     types: [opened, reopened]
   issue_comment:
     types: [created]
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/issue-dot-email.yml'
-      - '.github/scripts/issue_dot_email.py'
   workflow_dispatch:
     inputs:
       mode:
@@ -25,6 +20,7 @@ on:
 permissions:
   contents: read
   issues: write
+  id-token: write
 
 jobs:
   notify-dot:
@@ -32,8 +28,7 @@ jobs:
       github.repository == 'LingXi-Org/LingxiLoop' &&
       github.ref == 'refs/heads/main' &&
       !github.event.issue.pull_request &&
-      (github.event_name == 'push' ||
-       github.event_name == 'issues' ||
+      (github.event_name == 'issues' ||
        (github.event_name == 'workflow_dispatch' &&
         contains(fromJSON('["leecyang","lyyzka"]'), github.actor)) ||
        (github.event_name == 'issue_comment' &&
@@ -57,8 +52,3 @@ jobs:
         run: python3 .github/scripts/issue_dot_email.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_DOMAIN: ${{ vars.EMAIL_DOMAIN || secrets.EMAIL_DOMAIN }}
-          KOMODO_WEBHOOK_URL: ${{ secrets.KOMODO_WEBHOOK_URL }}
-          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
-          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}

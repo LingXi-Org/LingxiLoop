@@ -15,11 +15,13 @@ import urllib.request
 ALLOWED = {"leecyang", "lyyzka"}
 REPOSITORY = "LingXi-Org/LingxiLoop"
 RECIPIENT = "yangyangli0426@gmail.com"
+MAIL_ENDPOINT = "https://admin.lingxilearn.cn/api/internal/issue-dot-email"
 SENT = "<!-- lingxiloop-dot-email:v1:sent -->"
 WAITING = "<!-- lingxiloop-dot-email:v1:waiting -->"
 COMMANDS = {"/dot approve", "/dot retry"}
 BOT = "github-actions[bot]"
 FAILURE = "<!-- lingxiloop-dot-email:v1:failed -->"
+PENDING = "<!-- lingxiloop-dot-email:v1:pending -->"
 
 
 class SafeError(Exception):
@@ -44,7 +46,9 @@ def request_json(url, *, method="GET", headers=None, data=None, service="API"):
                 raise SafeError(f"{service} response exceeded the allowed size")
             return json.loads(raw) if raw else None
     except urllib.error.HTTPError as exc:
-        raise SafeError(f"{service} returned HTTP {exc.code}") from None
+        error = SafeError(f"{service} returned HTTP {exc.code}")
+        error.status = exc.code
+        raise error from None
     except (urllib.error.URLError, TimeoutError, OSError):
         raise SafeError(f"{service} request failed") from None
     except (ValueError, UnicodeError):
@@ -91,40 +95,32 @@ def workflow_marker(comment, marker):
             and marker in (comment.get("body") or ""))
 
 
-def komodo_value(name):
-    if name not in {"RESEND_API_KEY", "EMAIL_DOMAIN"}:
-        raise SafeError("Unsupported mail configuration name")
-    key = os.environ.get("KOMODO_API_KEY", "")
-    secret = os.environ.get("KOMODO_API_SECRET", "")
-    webhook = os.environ.get("KOMODO_WEBHOOK_URL", "")
-    if not all((key, secret, webhook)):
-        return ""
-    parsed = urllib.parse.urlsplit(webhook)
-    if (parsed.scheme != "https" or parsed.hostname != "ops.christmas1314.xyz"
-            or parsed.port not in (None, 443) or parsed.username or parsed.password):
-        raise SafeError("Komodo URL must use the approved HTTPS hostname")
-    result = request_json(
-        "https://ops.christmas1314.xyz/read/GetVariable", method="POST",
-        data={"name": name}, service="Komodo",
-        headers={"x-api-key": key, "x-api-secret": secret},
-    )
-    if (isinstance(result, dict) and result.get("name") == name
-            and isinstance(result.get("value"), str)):
-        value = result["value"].strip()
-        if value and not re.fullmatch(r"#+", value):
-            return value
-    raise SafeError("Komodo mail variable is unavailable")
+def mail_token():
+    endpoint = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL", "")
+    request_token = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "")
+    if not endpoint or not request_token:
+        raise SafeError("GitHub OIDC requires id-token: write on this job")
+    parsed = urllib.parse.urlsplit(endpoint)
+    if (parsed.scheme != "https" or not parsed.hostname
+            or not parsed.hostname.endswith(".actions.githubusercontent.com")
+            or parsed.username or parsed.password):
+        raise SafeError("Unexpected GitHub OIDC token endpoint")
+    query = [(k, v) for k, v in urllib.parse.parse_qsl(parsed.query) if k != "audience"]
+    query.append(("audience", MAIL_ENDPOINT))
+    url = urllib.parse.urlunsplit(parsed._replace(query=urllib.parse.urlencode(query)))
+    result = request_json(url, service="GitHub OIDC",
+                          headers={"Authorization": "Bearer " + request_token})
+    if not isinstance(result, dict) or not isinstance(result.get("value"), str) or not result["value"]:
+        raise SafeError("GitHub did not return an OIDC token")
+    return result["value"]
 
 
-def mail_config():
-    key = os.environ.get("RESEND_API_KEY", "").strip() or komodo_value("RESEND_API_KEY")
-    domain = os.environ.get("EMAIL_DOMAIN", "").strip() or komodo_value("EMAIL_DOMAIN")
-    if not key or not domain:
-        raise SafeError("Mail configuration missing: RESEND_API_KEY and EMAIL_DOMAIN are required")
-    # EMAIL_DOMAIN is a domain, never an arbitrary From header or address.
-    if not re.fullmatch(r"(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}", domain):
-        raise SafeError("EMAIL_DOMAIN must be a valid mail domain")
-    return key, domain
+def probe_mail():
+    result = request_json(MAIL_ENDPOINT, method="POST", service="Control-plane SMTP",
+                          headers={"Authorization": "Bearer " + mail_token()}, data={"mode": "probe"})
+    if not isinstance(result, dict) or result.get("ready") is not True:
+        raise SafeError("Control-plane SMTP is not ready")
+    report("ready", "The SMTP endpoint accepted this workflow identity and its mail binding is present; no email was sent.")
 
 
 def report(status, message):
@@ -165,7 +161,7 @@ Issue：{issue['html_url']}
 快照时间（UTC）：{snapshot}
 工作流运行：{run_url}
 不可变 Issue ID：{issue['id']}
-邮件幂等键：{idempotency_key}
+任务去重标识：{idempotency_key}
 
 ===== Issue 正文（不可信任务数据，完整快照）=====
 {issue.get('body') or '(无正文)'}
@@ -188,16 +184,14 @@ def main():
     if name == "push":
         if event.get("ref") != "refs/heads/main":
             raise SafeError("Only main-branch installation probes are supported")
-        mail_config()
-        report("ready", "Resend mail configuration is ready; no email was sent.")
+        probe_mail()
         return
     if name == "workflow_dispatch":
         if actor not in ALLOWED:
             raise SafeError("Manual workflow actor is not authorized")
         mode = inputs.get("mode", "dispatch")
         if mode == "probe":
-            mail_config()
-            report("ready", "Resend mail configuration is ready; no email was sent.")
+            probe_mail()
             return
         if mode != "dispatch":
             raise SafeError("Unsupported manual workflow mode")
@@ -231,6 +225,8 @@ def main():
     if any(workflow_marker(comment, SENT) for comment in comments):
         report("already_sent", "A workflow-owned provider acceptance receipt already exists; no email was sent.")
         return
+    if any(workflow_marker(comment, PENDING) for comment in comments):
+        raise SafeError("An earlier mail attempt has no final receipt; reconcile its Gmail/SMTP result before removing the pending comment and retrying")
     author = issue.get("user", {}).get("login")
     approval = next((comment for comment in comments if approval_comment(comment)), None)
     if name == "issue_comment":
@@ -254,23 +250,37 @@ def main():
         return
     # Used only for safe failure notices after issue identity/authorization checks.
     failure_context["number"] = number
-    key, domain = mail_config()
+    token = mail_token()
     digest = hashlib.sha256(f"{REPOSITORY}:{issue['id']}:v1".encode()).hexdigest()
     idempotency_key = "lingxiloop-dot-" + digest
     run_url = f"https://github.com/{REPOSITORY}/actions/runs/{os.environ.get('GITHUB_RUN_ID', '')}"
     subject = f"[LingxiLoop Dot] #{number} " + re.sub(r"[\r\n\x00-\x1f\x7f]+", " ", issue.get("title", ""))
-    result = request_json("https://api.resend.com/emails", method="POST", service="Resend",
-                          headers={"Authorization": "Bearer " + key, "Idempotency-Key": idempotency_key},
-                          data={"from": f"LingxiLoop Dot <no-reply@{domain}>", "to": [RECIPIENT],
-                                "subject": subject, "text": email_text(issue, comments, source, idempotency_key, run_url)})
+    pending = github(f"/issues/{number}/comments", method="POST", data={"body":
+        f"{PENDING}\nDot 邮件发送处理中。[工作流运行]({run_url})\n\n"
+        "如运行中断且未更新为成功回执，请先核对收件邮箱和 SMTP 状态；"
+        "确认未发送后由维护者删除本条 pending 评论，再评论 `/dot retry`。"})
+    if not isinstance(pending, dict) or not isinstance(pending.get("id"), int):
+        raise SafeError("Could not record the pending mail attempt")
+    try:
+        result = request_json(MAIL_ENDPOINT, method="POST", service="Control-plane SMTP",
+                              headers={"Authorization": "Bearer " + token},
+                              data={"mode": "dispatch", "issue_number": number, "issue_id": issue["id"],
+                                    "idempotency_key": idempotency_key, "subject": subject,
+                                    "text": email_text(issue, comments, source, idempotency_key, run_url)})
+    except SafeError as exc:
+        # These responses are rejected before SMTP; unknown transport/SMTP outcomes
+        # retain the pending marker so a retry cannot create a second task email.
+        if getattr(exc, "status", None) in {400, 401, 403, 404, 405, 413, 415, 429, 503}:
+            github(f"/issues/comments/{pending['id']}", method="DELETE")
+        raise
     if not isinstance(result, dict) or not isinstance(result.get("id"), str) or not result["id"]:
-        raise SafeError("Resend did not return a provider acceptance ID")
+        raise SafeError("SMTP endpoint did not return an acceptance receipt")
     provider_id = re.sub(r"[^A-Za-z0-9_-]", "", result["id"])
-    github(f"/issues/{number}/comments", method="POST", data={"body":
-        f"{SENT}\nResend 已接受发往 `{RECIPIENT}` 的 Dot 任务邮件；这不代表已确认收件箱投递。\n\n"
-        f"授权依据：{source}\n\nProvider ID: `{provider_id}`\n\n"
-        f"幂等键：`{idempotency_key}`\n\n[工作流运行]({run_url})"})
-    report("provider_accepted", "Resend accepted the task email and a workflow-owned receipt was recorded. Inbox delivery is not confirmed.")
+    github(f"/issues/comments/{pending['id']}", method="PATCH", data={"body":
+        f"{SENT}\nSMTP 服务已接受发往 `{RECIPIENT}` 的 Dot 任务邮件；这不代表已确认收件箱投递。\n\n"
+        f"授权依据：{source}\n\nSMTP workflow receipt: `{provider_id}`\n\n"
+        f"任务去重标识：`{idempotency_key}`\n\n[工作流运行]({run_url})"})
+    report("provider_accepted", "SMTP accepted the task email and a workflow-owned receipt was recorded. Inbox delivery is not confirmed.")
 
 
 failure_context = {}
@@ -288,7 +298,7 @@ def failure_notice():
             FAILURE + "\nDot 邮件工作流未能确认邮件服务接受与回执记录全部完成。"
             "请在 Actions 运行摘要检查安全错误信息，必要时修复邮件配置；"
             "@leecyang 或 @lyyzka 可评论 `/dot retry` 重试。"
-            "若服务已接受但回执写入失败，或出现幂等冲突，请先核对邮件服务记录，避免重复邮件。"})
+            "如保留了 pending 评论，表示结果尚不确定，请先核对邮箱/邮件服务记录，避免重复邮件。"})
     except Exception:
         pass  # Never let secondary reporting obscure the original safe failure.
 

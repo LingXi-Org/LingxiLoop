@@ -39,36 +39,41 @@
 GitHub Action 负责审核和邮件投递。邮件是给 Dot 的任务交接，不能直接设置
 ChatGPT 内的模型、创建云端编程会话或证明 Dot 已开始执行。
 
-## 邮件配置
+## 邮件配置与身份验证
 
-复用仓库现有 `production` 环境。优先读取 Actions Secret `RESEND_API_KEY` 和
-Variable/Secret `EMAIL_DOMAIN`，发件地址为该已验证域名下的 `no-reply@域名`。
-未配置直接凭据时，沿用仓库 `scripts/run-capability-acceptance.mjs` 的 Komodo 读取方式，
-使用现有 `KOMODO_WEBHOOK_URL`、`KOMODO_API_KEY`、`KOMODO_API_SECRET`，只读取
-`RESEND_API_KEY`、`EMAIL_DOMAIN` 两个变量。
+复用现有 Cloudflare control-plane Worker 的阿里企业邮箱 SMTP：
+发件地址 `no-reply@lingxilearn.cn`，服务器 `smtp.qiye.aliyun.com:465`。
+邮箱密码继续只由现有 Worker Secret `ALIYUN_OTP_EMAIL_PASSWORD` 保管。
 
-Komodo 地址只允许既有 HTTPS 主机 `ops.christmas1314.xyz`。密钥仅用于进程内请求，
-不写入仓库、文件或普通日志。邮件发往固定收件地址，不允许 Issue 内容改变收件人。
-使用 Python 标准库，无需安装产品依赖。
+Action 通过 GitHub OIDC 获取短期身份令牌，调用固定入口
+`https://admin.lingxilearn.cn/api/internal/issue-dot-email`。
+Worker 验证 GitHub 公钥签名、令牌期限、受众、仓库和组织永久 ID、
+`main` 分支、指定工作流文件及 `production` 环境后才处理。
+其他仓库、PR 分支和未经授权的请求不能使用该入口；收发地址均固定。
 
-修改工作流或发送脚本并合入 `main` 时自动执行 `probe`；该步骤检查配置，
-不发送开发邮件。Actions 页面也可手动运行 `probe`。配置缺失或服务拒绝发送时，
+Action 只需要 `contents: read`、`issues: write`、`id-token: write`，
+不需要新增 SMTP/Resend/Komodo 密钥，也不安装产品依赖。
+Worker 复用现有发送实现，只新增一个受限入口，无新增依赖或数据表。
+
+Actions 页面可手动运行 `probe`，验证工作流身份和 SMTP 配置存在，不发送邮件。
+实际 SMTP 认证和收件结果由一次真实发送确认。配置缺失或服务拒绝发送时，
 工作流报错，不留下“已发送”回执。
 
 ## 发送回执与重试
 
-同一 Issue 的运行串行执行，不同 Issue 可以并行。发送成功后由 `github-actions[bot]`
-留下带 `<!-- lingxiloop-dot-email:v1:sent -->` 标记的回执，用户复制的同名标记不会被采信。
-Resend 请求另带由仓库和 Issue 永久 ID 生成的 `Idempotency-Key`。
+同一 Issue 的运行串行执行，不同 Issue 可以并行。发送前由 `github-actions[bot]`
+记录 `<!-- lingxiloop-dot-email:v1:pending -->`；SMTP 确认接受后将同一条评论更新为
+`<!-- lingxiloop-dot-email:v1:sent -->`。用户复制的同名标记不会被采信。
 
-回执表示邮件服务接受请求，实际收件应由邮箱确认。Resend 的幂等窗口为 24 小时；
-如果服务接受请求后运行中断、回执未写入，重试仍应查看具体运行状态，不能把这套流程
-描述为永久、严格的 exactly-once 投递。
+回执表示 SMTP 接受邮件，实际收件应由邮箱确认。SMTP 不提供跨系统事务：
+如果传输中断导致结果不确定，pending 标记会阻止自动重发，避免重复创建开发任务。
+维护者先核对 Gmail/SMTP 记录，确认未发送后删除 pending 评论，再评论 `/dot retry`。
+身份/参数/配置等发送前拒绝会清除 pending 标记，修复后可直接重试。
+同一 Issue 的已发送回执存在时，重新审核、重新打开或重跑均不再次发信。
 
 停止此流程可禁用 Actions 中的 `Issue to ChatGPT Dot email` 工作流。
-撤销代码只需回退本次工作流、脚本和本文，不涉及产品数据或生产镜像。
+若需撤销 SMTP 入口，回退对应 Worker 版本及本次新增路由/文件；不涉及产品数据。
 
 参考：[GitHub Issue 事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issues)、
 [GitHub 评论事件](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#issue_comment)、
-[Resend 发送接口](https://resend.com/docs/api-reference/emails/send-email)、
-[Resend 幂等键](https://resend.com/docs/dashboard/emails/idempotency-keys)。
+[GitHub OIDC](https://docs.github.com/en/actions/reference/security/oidc)。
