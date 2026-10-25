@@ -24,7 +24,7 @@ in the same checkout. CI keeps its original lint/typecheck/build/test commands.
 
 ## Consumer boundaries
 
-Web retains browser dependencies, Vite/TypeScript/Biome/tsx, and visualize
+SPA Web retains browser dependencies, Vite/TypeScript/Biome/tsx, and visualize
 esbuild plus MCP runtime. LingxiOS is required by actual `src` imports of `/ui`,
 HarnessContext and shared-state types; its published transitive runtime stays
 intact. Backend-only root entries, Electron/E2E, Cloudflare/workerd, and shadcn
@@ -35,9 +35,11 @@ consumers, which previously depended on ambient libraries from unrelated tools.
 
 Admin extends Web with Refine, react-router and OpenPlait analytics. Control
 uses Hono, Better Auth, Drizzle, MCP, Zod and its Cloudflare test/deploy toolchain.
+Web CI extends SPA Web with dotenv, pg and ioredis because the existing
+run-updates smoke test imports server identity -> pool/Redis projections.
 Server CI retains the server runtime, TypeScript/Biome/tsx and the React/Tiptap
 consumers reached through server test/typecheck imports. Deploy-contract needs
-LingxiOS metadata/runtime and TypeScript for its contract-source parser.
+LingxiOS metadata/runtime, pg (module-mocked shadow tests), and TypeScript for its contract-source parser.
 Integration adds the visualize esbuild/MCP runtime to server CI. Admin-control
 combines the two required production deploy consumers. Release version checking
 uses builtins and installs no packages; Notebook remains independently managed.
@@ -45,10 +47,11 @@ uses builtins and installs no packages; Notebook remains independently managed.
 | Profile | Locked packages (all platforms) |
 | --- | ---: |
 | web | 1085 |
+| web-ci | 1086 |
 | admin | 1101 |
 | control | 431 |
 | server-ci | 739 |
-| deploy-contract | 80 |
+| deploy-contract | 94 |
 | integration | 754 |
 | admin-control | 1265 |
 
@@ -63,14 +66,29 @@ failed installs are not reported as successful. Host logs are retained at
 | --- | ---: | ---: |
 | Web | 1,115,460,968 | 279,396,211 |
 | Server CI | 671,821,823 | 195,110,109 |
-| Deploy-contract (initial, before adding TypeScript) | 199,715,690 | 60,202,253 |
+| Web CI | 1,115,564,868 | 279,588,527 |
+| Admin | 1,128,083,409 | 281,850,191 |
+| Control | 746,330,144 | 217,905,712 |
+| Deploy-contract | 223,788,175 | 64,756,946 |
+| Integration | 689,883,799 | 199,207,669 |
 
-Passed: generated drift check and both focused graph regressions; clean Web
-install, visualize source verification (223 files) and runtime build (173 inputs,
-633011 output bytes); server lint/typecheck and original smoke test suite.
-Web Vite build, admin/control/deploy-contract full job commands and integration
-runtime checks are being finalized; update this record with their final results.
-No live integration databases were provisioned for this dependency-only change.
+Passed: generated drift check and both focused graph regressions; clean SPA Web
+install and Vite production build (60s), explicit Web typecheck and lint;
+Web CI clean install and127/127 smoke tests; clean server install, lint/typecheck
+and129/129 existing smoke tests; clean admin install, lint/typecheck, tests and
+production build (6.75s); clean control install, lint/typecheck and13/13 Worker
+tests; deploy-contract original core batch and effective-candidate check plus
+46/46 shadow PG tests; integration clean install plus visualize verification
+(223 files) and runtime build (173 inputs,633011 output bytes). License copied
+into generated SPA `dist/licenses/shadcn.txt` was verified.
+
+Control Worker tests explicitly disable automatic SPA PostCSS config loading,
+which previously pulled the unrelated Tailwind pipeline into the worker job.
+`WRANGLER_LOG_PATH` was redirected to a writable temp path for host verification.
+Admin-control's generated union profile is drift-checked, but its deployment
+commands were not executed. No live integration databases were provisioned;
+only dependency installation and the integration job's visualize entrypoints
+were checked. CI on Node22 and Docker OCI checks remain with the integrator.
 
 Failed attempts retained: private package401 with one existing credential;
 subsequent clean installs used the other existing authorized credential.
@@ -79,5 +97,9 @@ rerun uses the shared repository's object history. Temp filesystem exhaustion
 interrupted an install; checkouts were moved to the larger workspace filesystem.
 A helper was mistakenly invoked in the shared root; root manifests were restored
 and a full locked reinstall was started to restore node_modules. Initial full
-reinstall failed on a mirror503; cached retry is in progress. Docker before/after
+reinstall failed on a mirror503; cached retries hit mirror/public-registry503. Root manifests are restored;
+full node_modules restoration remains blocked by14 nonoptional locked tarballs
+(and2 optional nonhost nested sharp packages) unavailable through both original
+mirror URLs and canonical registry URLs. The partial root full installation is
+not a valid completed baseline. Exact cache: `/tmp/lingxi-442-root-restore`. Docker before/after
 OCI evidence is owned and recorded separately by the integrator.

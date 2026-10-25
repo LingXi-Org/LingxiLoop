@@ -6,7 +6,7 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const scope = process.argv[2]
-if (!['web', 'admin', 'control', 'server-ci', 'deploy-contract', 'integration', 'admin-control'].includes(scope)) throw new Error('Unknown dependency scope')
+if (!['web', 'web-ci', 'admin', 'control', 'server-ci', 'deploy-contract', 'integration', 'admin-control'].includes(scope)) throw new Error('Unknown dependency scope')
 const originals = ['package.json', 'package-lock.json'].map(file => [file, readFileSync(resolve(root, file))])
 try {
   for (const [file] of originals) writeFileSync(resolve(root, file), readFileSync(resolve(root, `server/build/${scope}/${file}`)))

@@ -306,13 +306,13 @@ jobs:
         with:
           node-version: "22"
           cache: ${{ matrix.component != 'release' && 'npm' || '' }}
-          cache-dependency-path: ${{ format('server/build/{0}/package-lock.json', matrix.component == 'server' && 'server-ci' || matrix.component == 'release' && 'deploy-contract' || matrix.component) }}
+          cache-dependency-path: ${{ format('server/build/{0}/package-lock.json', matrix.component == 'web' && 'web-ci' || matrix.component == 'server' && 'server-ci' || matrix.component == 'release' && 'deploy-contract' || matrix.component) }}
       # Version synchronization reads JSON with Node builtins; it needs no packages.
       - if: matrix.component != 'open-notebook' && matrix.component != 'release'
         run: |
           node server/scripts/scoped-dependencies.mjs
           node --test server/scripts/scoped-dependencies.test.mjs
-          node server/scripts/install-scoped-dependencies.mjs ${{ matrix.component == 'server' && 'server-ci' || matrix.component }}
+          node server/scripts/install-scoped-dependencies.mjs ${{ matrix.component == 'web' && 'web-ci' || matrix.component == 'server' && 'server-ci' || matrix.component }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - if: matrix.component != 'open-notebook' && matrix.component != 'release'
