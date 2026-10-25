@@ -13,6 +13,7 @@ import { resolveTeacherScope } from './teacher-agent-application.js'
 import { loadHomeworkHelpState } from './homework-help-state.js'
 import { homeworkEvidenceAvailable } from './homework-effects.js'
 import { homeworkDraftRequestId } from './homework-draft-request.js'
+import { LearningApplicationError } from './errors.js'
 
 const id=z.string().trim().min(1).max(200)
 const teacherHomeworkDraftSchema=z.strictObject(homeworkDraftSchema.shape).omit({editorDocument:true,criteriaDocument:true}).extend({homeworkId:id.optional(),expectedRevision:z.number().int().min(1).optional()})
@@ -103,8 +104,18 @@ export const homeworkTeacherTools:ToolDefinition[]=[
     },
     async execute(context,input) {
       const {db,binding,scope}=await teacher(context),{homeworkId,expectedRevision,...draft}=input
+      const create = async () => {
+        const id = await homeworkDraftRequestId(context,binding.courseId)
+        try { return await application(db).draft(scope,binding.courseId,draft,id) }
+        catch (error) {
+          if (error instanceof LearningApplicationError && error.code === 'conflict') {
+            throw new NoEffectError(`草稿已存在或内容已变化。homeworkId=${id}；先用 teacher.homework_overview 读取原草稿，再以当前 expectedRevision 修改，不能另建或直接发布。`,'resource_conflict')
+          }
+          throw error
+        }
+      }
       const detail=homeworkId?await application(db).updateDraft(scope,binding.courseId,homeworkId,{...draft,expectedRevision:expectedRevision!})
-        :await application(db).draft(scope,binding.courseId,draft,await homeworkDraftRequestId(context,binding.courseId))
+        :await create()
       return {ok:true,executionState:'succeeded',value:teacherHomeworkDraftReceipt(detail.homework,binding.courseId)}
     },
     async verify(context,_input,value) {

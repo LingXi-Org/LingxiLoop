@@ -1360,7 +1360,11 @@ test('[integration] teacher draft creation reuses the original committed request
   committed('other-teacher-retry', { retryOfClientMsgNo: 'other-teacher-request' })
   await assert.rejects(invoke('other-teacher-retry', 'draft-other-teacher-retry'), /original committed teacher request is unavailable/)
   await assert.rejects(invoke('invented-source-request', 'draft-invented-source'), /committed teacher request is unavailable/)
-  await assert.rejects(invoke(previous, 'draft-changed-retry', { ...visible, title: 'A silently replaced draft' }), /草稿已存在或内容已变化/)
+  await assert.rejects(invoke(previous, 'draft-changed-retry', { ...visible, title: 'A silently replaced draft' }), error => {
+    assert.match((error as Error).message, /草稿已存在或内容已变化/)
+    assert.ok((error as Error).message.includes(initial.result.homeworkId), 'a lost earlier receipt must leave the existing draft discoverable')
+    return true
+  })
   const unchanged = (await homework.detail(teacher, courseId, initial.result.homeworkId)).homework
   assert.equal(unchanged.title, visible.title)
   assert.equal(unchanged.revision, initial.state.revision)
