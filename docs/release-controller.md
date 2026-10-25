@@ -1,9 +1,18 @@
 # Durable release controller (#495)
 
-Status: implementation and isolated verification in progress. Production still
-uses the retained Komodo path. Do not enable the repository variable
-`RELEASE_CONTROLLER_ENABLED` until the new executors, inventory, probes and
-handoff have been verified. A merged PR is not a production accepted release.
+The release controller is the LingxiLoop product publication protocol and
+[operator skill](../.agents/skills/operate-release-controller/SKILL.md). Product
+mutations use its MCP/CLI, Durable Object/Workflow and fixed host executors; the
+old Komodo trigger is not an alternative release entry. Shared Komodo stacks
+and Core retain their separate maintenance scope.
+
+A real dual-host runtime acceptance was recorded at 2026-10-25 23:34:16 UTC for
+`accept-495-runtime-mcp-197e-8164`, generation 4, after administrator resume
+reused the ten completed host operation IDs. That record is evidence for that
+release, not proof that later recovery, CI enablement or legacy retirement has
+finished. Read the actual recovered qualification, trusted user variable
+readback and retirement receipts before declaring handoff complete. A merged PR
+or queued request is not a production accepted release.
 
 The release API, SQLite Durable Object and Workflow live in `workers/release`.
 One object named by `ENVIRONMENT` owns candidate ordering, desired/accepted
@@ -24,8 +33,8 @@ schema changes currently fail with
 `SCHEMA_CHANGE_REQUIRES_MAINTENANCE_ADAPTER` unless a complete database
 maintenance plan and trusted host profile are supplied. The owner executes
 final zero-write-loss backup, isolated restore verification, and checksum-ledger
-migration after all runtime writers stop. Live database qualification remains
-an open acceptance gate.
+migration after all runtime writers stop. A same-schema runtime acceptance does not qualify a future schema-changing
+migration; that needs its own verified backup/restore and checksum evidence.
 
 ## Operation and recovery
 
@@ -78,8 +87,10 @@ LingxiOS 3.8.12, native14/product57 and the paused candidates. Its
 `appIndexDigest` field is not independently sufficient registry identity:
 match real index, platform manifest, image config and diff IDs before import.
 
-The following concrete group is pending the parent's action-specific approval.
-No listed secret or network resource has been created:
+The following is the historical bootstrap scope and reversal inventory. Required
+release API, executor, Tunnel/Access and backend resources were subsequently
+authorized and provisioned; use their actual per-action receipts rather than
+treating this planning table as current status or new authorization:
 
 | Resource/action | Exact scope, impact and storage | Reversal |
 | --- | --- | --- |
@@ -92,12 +103,13 @@ No listed secret or network resource has been created:
 | Independent backend origin | Proposed `backend.lingxilearn.cn` to existing stable ingress; remove the SPA/auth proxy loop without changing user auth semantics; narrow origin access/HMAC remains mandatory | Restore the prior control Worker version and frontend pointer |
 | Mihomo optional activation | Native pinned binary on A/B; loopback `127.0.0.1:17890`; secret provider; Docker daemon proxy change impacts all local pulls and may require one daemon restart | Restore saved daemon configuration and previous provider; no Docker prune or data-volume changes |
 
-Canonical registry access can use existing verified image caches first; no
-subscription is available, and the task must not guess it or request plaintext
-secrets. The secure input is the environment/provider secret
-`MIHOMO_SUBSCRIPTION_URL`, with its exact HTTPS origin in non-secret
-`MIHOMO_SUBSCRIPTION_ORIGIN`. Proxy activation and real manifest/blob-path
-verification remain pending. See `release-access.md` for the observed inventory.
+The approved private R2 image archive path replaces a subscription dependency.
+CI retains the OCI graph and streams bounded archive parts; hosts verify the
+complete archive, raw config and ordered layers, then prove offline Docker
+load/save identity. R2 mode does not pull a registry or install/change a proxy.
+Mihomo templates remain optional historical preparation, not a release
+prerequisite. Never guess or request a plaintext subscription to bypass a
+missing artifact. See `scripts/release-host/ARTIFACTS.md` for the fixed contract.
 
 No irreversible deletion is proposed. After acceptance, disable only the
 LingxiLoop rollout procedure `6aa8a416b35d27bdd4e12af5` and remove LingxiLoop

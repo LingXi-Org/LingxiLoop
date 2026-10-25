@@ -1,5 +1,10 @@
 # Explicit host release
 
+Historical pre-controller profiles retained for evidence and explicitly reviewed
+ownership rollback. Current LingxiLoop product deployment/recovery uses the
+[release controller](release-controller.md); do not run these old entrypoints
+against controller-owned production.
+
 For image-only releases on the already accepted formal3.8.2/native14/full54
 profile, use `product54-image-host-release/v1` and the preparation/recovery
 instructions in [Product54 image release](product54-image-release.md). This is

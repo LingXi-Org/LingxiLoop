@@ -12,7 +12,7 @@ Before adding complexity for a speculative or vanishingly unlikely race or secur
 
 1. Track the issue, work on an isolated branch, and open a draft PR. Parallel contributors preserve other branches and hand off to the parent thread's designated sole integrator; only that integrator merges the product release and serializes production rollout.
 2. Run focused short regressions and independent review against the final candidate commit. Require successful CI for the exact release commit, formally published upstream dependencies, exact dependency locks, and immutable image identities before rollout. Rerun affected checks after changes; never report an unrun check as passed.
-3. Follow [Operate Komodo Production](.agents/skills/operate-komodo-production/SKILL.md) for rollout and recovery. Verify the actual deployed commit/image digests, runtime and installed schema provenance, Web readiness and both Worker healthchecks. Retain a verifiable Komodo update receipt (`Complete`, `success: true`) and relevant HTTPS checks; request acceptance or an older green result is insufficient.
+3. Follow [Operate Release Controller](.agents/skills/operate-release-controller/SKILL.md) for LingxiLoop product rollout and recovery: immutable manifests, MCP/CLI release operations, durable controller/host receipts and actual HTTPS/business probes. Verify deployed artifact identities, runtime/schema provenance, Web readiness and both Worker healthchecks; a queued request, merge or older green result is insufficient. Use [Operate Komodo Production](.agents/skills/operate-komodo-production/SKILL.md) only for retained shared stacks/Core maintenance or explicitly authorized bootstrap transport, with terminal successful Komodo receipts for those actions.
 4. Diagnose failures, perform authorized reversible recovery, and verify the resulting receipt and health again. Prefer a narrow fix forward; roll back only to a known compatible release, respecting schema/lease rules and preserving durable data. Report the exact failed or pending action and evidence when recovery remains blocked.
 
 Use the current session's authorization and designated integrator. Report completed, failed and unverified work separately. Historical release context is archived in [the maintenance evidence](docs/evidence/issue-370/session-20261019.md).
@@ -30,7 +30,7 @@ Use the current session's authorization and designated integrator. Report comple
 - `server/src/db/migrations/0001_v1_baseline.sql` is immutable. Add one next-numbered, transactional, forward-compatible migration; runtime code never executes DDL. A non-empty database without `schema_migrations` must be rebuilt by operations, never adopted by the app.
 - Use the smallest owning check: web (`lint`, `typecheck`, `test`, `build`); admin/control (`admin:*`/`control:*`); server (`server:*` and affected integration); Open Notebook (its own affected package). Migration and runtime integration changes also require their owning integration coverage.
 - Browser verification uses `tester-army/e2e` and its official `@e2e-dev/web` engine. Do not import or run Playwright directly.
-- Use Komodo's CLI/API update state for production deployment verification; never copy credentials into files or output.
+- Verify product releases through durable controller/host receipts and actual probes; use Komodo CLI/API update state for retained shared infrastructure. Never copy credentials into files or output.
 
 ## Testing
 
