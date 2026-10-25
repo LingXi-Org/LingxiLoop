@@ -24,6 +24,7 @@ export interface ReleaseEnv {
   WORKER_NAMES_JSON: string
   PROBES_JSON: string
   BOOTSTRAP_ENABLED?: string
+  MIHOMO_ORIGIN_SHA256?: string
 }
 export function ledger(env: ReleaseEnv) {
   return env.RELEASES.getByName(env.ENVIRONMENT)

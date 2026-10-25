@@ -144,6 +144,7 @@ it('keeps submission, recovery and executor credentials in separate API roles', 
     expect((await request(`/v1/releases/not-yet-registered/${action}`, 'submission-only')).status).toBe(403)
   }
   expect((await request('/v1/bootstrap', 'submission-only')).status).toBe(403)
+  for (const role of ['submission-only','executor-only']) expect((await request('/v1/bootstrap/mihomo/provider-fetch', role)).status).toBe(403)
   expect((await request(`/v1/releases/${m.releaseId}/backups/main-runtime-a`, 'submission-only', 'GET')).status).toBe(401)
   expect((await request('/v1/accepted', 'executor-only', 'GET')).status).toBe(401)
   expect((await request('/v1/accepted', 'submission-only', 'GET')).status).toBe(200)
