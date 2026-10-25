@@ -36,7 +36,7 @@ export async function gatewayControl(adapter,action,op){
       db.prepare('INSERT INTO gateway_image_observations VALUES (?,?) ON CONFLICT(key) DO UPDATE SET body=excluded.body').run(`${container.Image}:${hash(profile)}`,canonical(metadata))
       db.prepare('INSERT INTO gateway_observations VALUES (?,?) ON CONFLICT(key) DO UPDATE SET body=excluded.body').run(key,canonical(metadata))
     }else{
-      check(container.State?.Pid===0,'GATEWAY_PROCESS_UNCERTAIN','Gateway process shutdown is not proven')
+      if(container.State?.Running!==false||container.State.Pid!==0||![0,143].includes(container.State.ExitCode))throw Object.assign(fault('GATEWAY_PROCESS_UNCERTAIN','Gateway shutdown requires an observed stopped process and exit code 0 or 143',422),{uncertain:true})
       const prior=db.prepare('SELECT body FROM gateway_observations WHERE key=?').get(key)??db.prepare('SELECT body FROM gateway_image_observations WHERE key=?').get(`${container.Image}:${hash(profile)}`);check(prior,'GATEWAY_OBSERVATION_REQUIRED','Stopped gateway has no exact pre-stop configuration/version observation');metadata=JSON.parse(prior.body)
     }
     if(action==='barrier')return{kind:'gateway',fullVisibility:true,drained:!container.State.Running&&container.State.Pid===0,servicesStopped:!container.State.Running&&container.State.Pid===0,configurationVerified:true}
