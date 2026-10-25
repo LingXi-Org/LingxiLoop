@@ -132,6 +132,22 @@ it('requires auth before releasing any production state', async () => {
   const response = await api.fetch(new Request('https://release/v1/accepted'), bindings)
   expect(response.status).toBe(401)
 })
+it('keeps submission, recovery and executor credentials in separate API roles', async () => {
+  const name = 'api-role-isolation', { call } = await setup(name), m = manifest()
+  await call('/register', { manifest: m, manifestHash: await hash(m) })
+  const configured = { ...bindings, ENVIRONMENT: name, RELEASE_API_TOKEN: 'submission-only', RELEASE_ADMIN_TOKEN: 'recovery-only', EXECUTOR_TOKEN: 'executor-only' }
+  const request = (path: string, token: string, method = 'POST') => api.fetch(new Request(`https://release${path}`, { method, headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, ...(method === 'POST' ? { body: '{}' } : {}) }), configured)
+  for (const action of ['resume', 'recover']) {
+    const response = await request(`/v1/releases/${m.releaseId}/${action}`, 'submission-only')
+    expect(response.status).toBe(403)
+    expect(await response.json()).toMatchObject({ error: 'ADMIN_REQUIRED' })
+  }
+  expect((await request('/v1/bootstrap', 'submission-only')).status).toBe(403)
+  expect((await request(`/v1/releases/${m.releaseId}/backups/main-runtime-a`, 'submission-only', 'GET')).status).toBe(401)
+  expect((await request('/v1/accepted', 'executor-only', 'GET')).status).toBe(401)
+  expect((await request('/v1/accepted', 'submission-only', 'GET')).status).toBe(200)
+  expect((await call(`/get?id=${m.releaseId}`)).body).toMatchObject({ workflowId: `${m.releaseId}-0`, generation: 0, status: 'queued' })
+})
 it('never commits an outbox intent if its durable alarm could not be armed', async () => {
   let committed = false
   const context = { ctx: { storage: {
@@ -199,4 +215,38 @@ it('reconciles a committed claim whose response was lost without unlocking it', 
   const result = await execute(name, m.releaseId, 0, { RELEASES: wrapped }, steps)
   expect(result, JSON.stringify(result)).toMatchObject({ status: 'blocked' })
   expect((await call(`/get?id=${m.releaseId}`)).body).toMatchObject({ generation: 1, status: 'blocked' })
+})
+
+it.each(['drain', 'apply'] as const)('uses exact-source recovery only before a %s failure can have changed artifacts', async failure => {
+  const name = `source-abort-${failure}`, stub = bindings.RELEASES.getByName(name)
+  const call = async (path: string, body?: unknown) => {
+    const response = await stub.fetch(new Request(`https://ledger${path}`, body === undefined ? undefined : { method: 'POST', body: JSON.stringify(body) }))
+    expect(response.ok).toBe(true)
+    return response.json() as Promise<ReleaseRecord>
+  }
+  const runtime = { ...target(), adapter: 'main-runtime' as const, resources: ['main-runtime', 'main-db'],
+    artifact: { kind: 'image' as const, digest: `sha256:${'a'.repeat(64)}` }, hostPlan: { mode: 'maintenance' } }
+  const m = manifest(`abort-${failure}`)
+  m.targets = { 'main-runtime-a': { ...runtime, hosts: ['a'] }, 'main-runtime-b': { ...runtime, hosts: ['b'] } }
+  await call('/bootstrap', { accepted: { releaseId: 'baseline', components: Object.fromEntries(Object.entries(m.targets).map(([id, t]) => [id, { ...t, releaseId: 'baseline', appSha: '0'.repeat(40), sequence: 1 }])) },
+    evidence: { zeroInFlight: true, receiptKey: 'handoff/verified.json', handoffId: 'handoff-495', observedAt: new Date().toISOString() } })
+  await call('/register', { manifest: m, manifestHash: await hash(m) })
+  const phases: string[] = []
+  const steps = { ...immediateSteps, do: async (stepName: string, _config: unknown, callback: () => Promise<string>) => {
+    if (/^manifest-/.test(stepName) || /^verify-recovery-/.test(stepName)) return JSON.stringify({ ok: true, value: {} })
+    const phase = /^main-runtime-[ab]-[ab]-(.+)-submit$/.exec(stepName)?.[1]
+    if (phase) {
+      phases.push(phase)
+      return JSON.stringify({ ok: true, value: { status: phase === failure ? 'failed' : 'succeeded' } })
+    }
+    return callback()
+  } } as unknown as WorkflowStep
+  const result = await execute(name, m.releaseId, 0, {}, steps)
+  expect(result).toMatchObject({ status: 'recovered' })
+  const source = failure === 'drain'
+  expect(phases).toContain(source ? 'restore-source' : 'recover')
+  expect(phases).toContain(source ? 'source-undrain' : 'recovery-undrain')
+  expect(phases).not.toContain(source ? 'recover' : 'restore-source')
+  if (source) expect(phases).not.toContain('apply')
+  expect((await call(`/get?id=${m.releaseId}`)).targets.recovery).toEqual({ direction: source ? 'source' : 'compatible-recovery' })
 })

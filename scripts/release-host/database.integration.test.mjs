@@ -12,6 +12,7 @@ import { Executor,Journal } from './executor.mjs'
 import { hash } from './journal.mjs'
 import { manifest,policy,contract } from './fixtures/fake-host.mjs'
 const exec = promisify(execFile)
+const archiveProbe=async(policy,op,{dumpHash})=>({complete:true,dumpHash,manifestHash:op.manifestHash,generation:op.generation})
 
 test('isolated real PostgreSQL snapshot/restore verifies all-table counts and separates cleanup failure', { skip:process.env.RELEASE_HOST_DOCKER_TEST !== '1' },async t=>{
   const binary = process.env.RELEASE_HOST_DOCKER_BIN ?? '/usr/local/bin/docker', directory = await mkdtemp(join(tmpdir(),'release-host-pg-')), container = `lingxi-release-host-fixture-${process.pid}`
@@ -35,7 +36,7 @@ test('isolated real PostgreSQL snapshot/restore verifies all-table counts and se
     CREATE TABLE lingxios.agent_terminal_outbox(LIKE lingxios.agent_delivery_outbox);
     CREATE TABLE public.private_fixture(tenant text,body text); INSERT INTO public.private_fixture VALUES('tenant-a','synthetic row a'),('tenant-b','synthetic row b');`])
   const local = policy(directory), release = manifest(directory), sourceContract={ ...contract,productSchema:1 },targetContract={ ...contract,productSchema:2 }
-  local.dockerBinary=binary; local.database={ container,user:'postgres',database:'postgres',profiles:{ [`14:1:${schemaHash}`]:{ migrationsHash:hash(migrations),protocolVersion:11,contract:sourceContract,requiredCapabilities:contract.capabilities } } }
+  local.dockerBinary=binary; local.archive={baseUrl:'https://archive.fixture.invalid',tokenFile:'/fixed/test-token'};local.database={ container,user:'postgres',database:'postgres',profiles:{ [`14:1:${schemaHash}`]:{ migrationsHash:hash(migrations),protocolVersion:11,contract:sourceContract,requiredCapabilities:contract.capabilities } } }
   const target=release.targets['main-runtime-a']; target.contract=targetContract; target.hostPlan.contract=targetContract; target.hostPlan.recovery.contract=sourceContract
   target.hostPlan.source=structuredClone(target.hostPlan.recovery)
   target.hostPlan.database={ from:{ nativeSchema:14,productSchema:1 },to:{ nativeSchema:14,productSchema:2 },migrations:[{ version:1,checksum },{ version:2,checksum:'c'.repeat(64) }],strategy:'maintenance',rpo:'zero-committed-writes' }
@@ -43,12 +44,14 @@ test('isolated real PostgreSQL snapshot/restore verifies all-table counts and se
   const executor=new Executor({ journal,adapter:new ComposeAdapter(local) }),manifestHash=hash(release);executor.register(release,manifestHash)
   const op={ releaseId:release.releaseId,target:'main-runtime-a',phase:'backup',generation:1,manifestHash,parameters:{} }
   const actual=await databaseEvidence(local,run);assert.equal(actual.verified,true);assert.equal(actual.otherClients,0)
-  const backup=await databaseTool(local,'backup',op,{ run });assert.equal(backup.complete,true);assert.equal(backup.rpo,'zero-committed-writes')
-  assert.equal((await databaseTool(local,'backupObserve',op,{ run })).dumpHash,backup.dumpHash)
+  await assert.rejects(databaseTool(local,'backup',op,{run,archiveUpload:async()=>{throw Object.assign(Error('Injected lost archive response'),{code:'ARCHIVE_UPLOAD_UNCONFIRMED',uncertain:true})},archiveObserve:archiveProbe}),{code:'ARCHIVE_UPLOAD_UNCONFIRMED'})
+  // The real local dump remains; GET-only archive observation can complete the interrupted backup without redumping/reuploading.
+  const backup=await databaseTool(local,'backupObserve',op,{run,archiveObserve:archiveProbe});assert.equal(backup.complete,true);assert.equal(backup.rpo,'zero-committed-writes');assert.equal(backup.archive.dumpHash,backup.dumpHash)
+  assert.equal((await databaseTool(local,'backupObserve',op,{ run,archiveUpload:archiveProbe,archiveObserve:archiveProbe })).dumpHash,backup.dumpHash)
   const cleanupFailureRun=async args=>{ if(args.includes('dropdb'))throw Error('Injected isolated cleanup failure');return run(args) }
-  const restore=await databaseTool(local,'restoreVerify',{ ...op,phase:'restore-verify' },{ run:cleanupFailureRun })
+  const restore=await databaseTool(local,'restoreVerify',{ ...op,phase:'restore-verify' },{ run:cleanupFailureRun,archiveUpload:archiveProbe,archiveObserve:archiveProbe })
   assert.equal(restore.complete,true);assert.equal(restore.countsHash,backup.countsHash);assert.equal(restore.cleanupErrors[0].code,'ISOLATED_DATABASE_CLEANUP_FAILED')
-  const observed=await databaseTool(local,'restoreVerifyObserve',op,{ run });assert.equal(observed.complete,true)
+  const observed=await databaseTool(local,'restoreVerifyObserve',op,{ run,archiveUpload:archiveProbe,archiveObserve:archiveProbe });assert.equal(observed.complete,true)
   const after=await databaseEvidence(local,run);assert.equal(after.nativeSchema,14);assert.equal(after.productSchema,1)
   assert.equal((await run(['exec','--user','postgres',container,'psql','-X','-qAt','-c','SELECT count(*) FROM public.private_fixture'])).trim(),'2')
 })

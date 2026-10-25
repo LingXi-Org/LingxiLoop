@@ -40,3 +40,8 @@ test('lost reload response is resolved from active Nginx generation without repl
   await assert.rejects(f.ingress.set(f.request('main-runtime-b','drain',false)))
   await assert.rejects(f.ingress.set(f.request('main-runtime-a','undrain',true)),{ code:'INGRESS_OUTCOME_UNCERTAIN' })
 })
+test('source-only restoration has independent finite ingress disable/enable keys',async t=>{
+  const f=await setup(t)
+  await f.ingress.set(f.request('main-runtime-a','source-drain',false));assert.equal(f.states['main-runtime-a'].enabled,false)
+  await f.ingress.set(f.request('main-runtime-a','source-undrain',true));assert.equal(f.states['main-runtime-a'].enabled,true)
+})

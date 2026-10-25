@@ -62,9 +62,11 @@ actors require their own fixed settings and actual tests. Canonical public
 registry requests are proxied; private service endpoints remain direct.
 
 One Docker restart on each target host is proposed, separately and inside the
-approved migration maintenance window. Actual live-restore support/state has
-not been host-inspected, so assume containers may stop/restart until proven
-otherwise. On A this can affect PostgreSQL, Redis, WuKongIM and app A; on B it
+approved migration maintenance window. Read-only host inventory subsequently
+confirmed A Docker 29.3.1 with live-restore enabled and B Docker 29.7.2 with
+live-restore disabled. B therefore requires planning for container shutdown;
+A's setting is not a guarantee of uninterrupted availability without an actual
+controlled validation. On A this can affect PostgreSQL, Redis, WuKongIM and app A; on B it
 can affect shared ingress, Notebook/SurrealDB, app B, monitoring, landing and
 LingxiLit. Preserve the named and anonymous data volumes in `release-access.md`.
 Do not begin this restart until the actual inventory, recovery artifacts,
@@ -89,9 +91,9 @@ value. In the user's own trusted terminal, use the existing authenticated
 Sigillo configuration and run:
 
 ```sh
-sigillo projects
-sigillo secrets set MIHOMO_SUBSCRIPTION_URL -p <resolved-project-id> --env prod
-sigillo secrets set MIHOMO_SUBSCRIPTION_ORIGIN -p <resolved-project-id> --env prod
+sigillo --api-url https://sigillo.lingxilearn.cn projects
+sigillo --api-url https://sigillo.lingxilearn.cn secrets set MIHOMO_SUBSCRIPTION_URL -p <resolved-project-id> --env prod
+sigillo --api-url https://sigillo.lingxilearn.cn secrets set MIHOMO_SUBSCRIPTION_ORIGIN -p <resolved-project-id> --env prod
 ```
 
 Choose the unique project **LingxiLoop Control Plane** (the current read-only

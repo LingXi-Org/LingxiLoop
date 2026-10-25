@@ -1,5 +1,5 @@
 import { Journal, fault, hash, identifier, validateRequest } from './journal.mjs'
-import { validateHostPlan } from './adapter.mjs'
+import { validateHostPlan,assertCompatible } from './adapter.mjs'
 
 const safeError = error => ({ code: error.code ?? 'EXECUTION_FAILED', message: error.code ? error.message : 'Executor failed; inspect restricted local diagnostics',
   ...(error.sqlState && /^[A-Z0-9]{5}$/.test(error.sqlState) ? { sqlState: error.sqlState } : {}) })
@@ -26,15 +26,21 @@ export class Executor {
     const resources = this.adapter.resources(op.target,op.phase)
     return {
       compose: await this.adapter.composeArgs(op,'forward'),
+      currentDirection:this.journal.state(op.target).appliedHash===op.manifestHash?this.journal.state(op.target).appliedDirection:'source',
       step: async (name, fn, { sideEffect = false } = {}) => {
         this.journal.assertFence(op.key,resources)
+        if(['source-drain','restore-source','source-undrain'].includes(op.phase))await this.assertSourceRestoreAllowed(op)
         let current = this.journal.get(op.key)
         // Step records are evidence, never automatic instruction to retry an unknown side effect.
         if (current.steps.some(step => step.name === name)) throw fault('STEP_ALREADY_ATTEMPTED', 'An attempted step must be observed before another write')
         const step = { name, sideEffect, status: 'intent', startedAt: new Date().toISOString() }
         this.journal.patch(op.key,{ steps: [...current.steps,step] })
         let result
-        try { result = await fn() } catch (error) { if (sideEffect) error.uncertain = true; throw error }
+        try { result = await fn() } catch (error) {
+          if(sideEffect&&error.outcomeKnown===true&&error.uncertain===false){const latest=this.journal.get(op.key);this.journal.patch(op.key,{steps:latest.steps.map(item=>item.name===name?{...item,status:'failed-known',completedAt:new Date().toISOString()}:item)})}
+          else if(sideEffect)error.uncertain=true
+          throw error
+        }
         if (sideEffect) await this.afterSideEffect?.(name,op)
         this.journal.assertFence(op.key,resources)
         current = this.journal.get(op.key)
@@ -58,6 +64,7 @@ export class Executor {
         }
         return this.journal.finish(key,'succeeded',{ operations: observed, needsIntervention: observed.some(row => row.status === 'uncertain') })
       }
+      if(['source-drain','restore-source','source-undrain'].includes(op.phase))await this.assertSourceRestoreAllowed(op)
       const context = await this.context(op), state = this.journal.state(op.target)
       let result
       switch (op.phase) {
@@ -65,7 +72,7 @@ export class Executor {
           result = await this.adapter.prepare(op,plan,context)
           this.journal.setState(op.target,{ ...this.journal.state(op.target), preparedHashes: { ...this.journal.state(op.target).preparedHashes, [op.manifestHash]: true } })
           break
-        case 'drain': case 'recovery-drain':
+        case 'drain': case 'recovery-drain': case 'source-drain':
           this.requirePrepared(op,state)
           result = await this.adapter.drain(op,plan,context)
           this.journal.setState(op.target,{ ...this.journal.state(op.target), drainedHash: op.manifestHash, drainedGeneration: op.generation })
@@ -84,18 +91,18 @@ export class Executor {
           for (const error of result.cleanupErrors ?? []) this.recordCleanupError(key,error)
           break
         }
-        case 'apply': case 'recover':
+        case 'apply': case 'recover': case 'restore-source':
           this.requirePrepared(op,state)
           if (state.drainedHash !== op.manifestHash || state.drainedGeneration !== op.generation) throw fault('DRAIN_REQUIRED', 'This generation must prove local drain before switching')
           if (op.phase === 'recover') await this.stopRecoveryWorkers(op,context)
-          result = await this.adapter.apply(op,plan,context,op.phase === 'recover' ? 'recovery' : 'forward')
-          this.journal.setState(op.target,{ ...this.journal.state(op.target), appliedDirection: op.phase === 'recover' ? 'recovery' : 'forward', appliedHash: op.manifestHash })
+          result = await this.adapter.apply(op,plan,context,op.phase==='restore-source'?'source':op.phase === 'recover' ? 'recovery' : 'forward')
+          this.journal.setState(op.target,{ ...this.journal.state(op.target), appliedDirection: op.phase==='restore-source'?'source':op.phase === 'recover' ? 'recovery' : 'forward', appliedHash: op.manifestHash })
           break
         case 'verify':
           result = await this.adapter.verify(op,plan,state.appliedDirection ?? 'forward')
           break
-        case 'undrain': case 'recovery-undrain':
-          result = await this.adapter.undrain(op,plan,context,op.phase === 'recovery-undrain' ? 'recovery' : state.appliedDirection ?? 'forward')
+        case 'undrain': case 'recovery-undrain': case 'source-undrain':
+          result = await this.adapter.undrain(op,plan,context,op.phase==='source-undrain'?'source':op.phase === 'recovery-undrain' ? 'recovery' : state.appliedDirection ?? 'forward')
           this.journal.setState(op.target,{ ...this.journal.state(op.target), drainedHash: null, drainedGeneration: null })
           break
       }
@@ -103,7 +110,7 @@ export class Executor {
     } catch (error) {
       this.log({ key, code: error.code ?? 'EXECUTION_FAILED' })
       const current = this.journal.get(key), errors = current.errors
-      errors[op.phase === 'recover' ? 'recovery' : 'forward'] = safeError(error)
+      errors[['recover','restore-source','source-drain','source-undrain'].includes(op.phase) ? 'recovery' : 'forward'] = safeError(error)
       // A subprocess may have exited after Docker accepted the write. Keep its reservations until observation proves completion.
       if (error.uncertain || current.steps.some(step => step.sideEffect && step.status === 'intent')) return this.journal.finish(key,'uncertain',{ needsIntervention: true, observationRequired: true },errors)
       if (op.phase === 'apply' && error.knownApplied) {
@@ -121,8 +128,17 @@ export class Executor {
       return this.journal.finish(key,'failed',{ needsIntervention: true },errors)
     } finally { this.active.delete(key) }
   }
+  async assertSourceRestoreAllowed(op) {
+    const forbidden=this.journal.db.prepare("SELECT key FROM operations WHERE json_extract(body,'$.releaseId')=? AND json_extract(body,'$.manifestHash')=? AND json_extract(body,'$.phase') IN ('migrate','apply','recover') LIMIT 1").get(op.releaseId,op.manifestHash)
+    if(forbidden)throw fault('SOURCE_RESTORE_FORBIDDEN','A migration/application/recovery intent exists for this manifest; exact-source restoration is no longer permitted')
+    const plan=validateHostPlan(this.journal.manifest(op.releaseId,op.manifestHash),op.target,this.adapter.policy),source=plan.source??plan.recovery,state=await this.adapter.state(op)
+    assertCompatible(source.contract,state)
+    if(state.nativeSchema!==source.contract.nativeSchema||state.productSchema!==source.contract.productSchema||source.contract.lingxios&&state.runtime!==source.contract.lingxios)throw fault('SOURCE_STATE_CHANGED','Installed state no longer exactly matches the original source')
+    if(source.contract.migrations&&hash(source.contract.migrations)!==hash((state.migrations??[]).map(({version,checksum})=>({version,checksum}))))throw fault('SOURCE_STATE_CHANGED','Installed migration checksums no longer match the original source')
+  }
   requirePrepared(op,state) { if (!state.preparedHashes?.[op.manifestHash]) throw fault('PREPARE_REQUIRED', 'Target and compatible recovery artifacts must be prepared before drain/apply') }
   async stopRecoveryWorkers(op,context) {
+    if (this.adapter.policy.targets[op.target].adapter !== 'main-runtime') return
     // Check state compatibility before stopping anything; apply checks it again immediately before replacement.
     const plan = validateHostPlan(this.journal.manifest(op.releaseId,op.manifestHash),op.target,this.adapter.policy)
     const { assertCompatible } = await import('./adapter.mjs')
@@ -142,9 +158,9 @@ export class Executor {
       if (op.phase === 'backup') this.journal.setState(op.target,{ ...state,backupHash:{ ...state.backupHash,[op.manifestHash]:true } })
       if (op.phase === 'restore-verify') this.journal.setState(op.target,{ ...state,restoreVerifiedHash:{ ...state.restoreVerifiedHash,[op.manifestHash]:true } })
       if (op.phase === 'prepare') this.journal.setState(op.target,{ ...this.journal.state(op.target), preparedHashes: { ...this.journal.state(op.target).preparedHashes, [op.manifestHash]: true } })
-      if (['drain','recovery-drain'].includes(op.phase)) this.journal.setState(op.target,{ ...this.journal.state(op.target), drainedHash: op.manifestHash, drainedGeneration: op.generation })
-      if (['apply','recover'].includes(op.phase)) this.journal.setState(op.target,{ ...this.journal.state(op.target), appliedHash: op.manifestHash, appliedDirection: op.phase === 'recover' ? 'recovery' : 'forward' })
-      if (['undrain','recovery-undrain'].includes(op.phase)) this.journal.setState(op.target,{ ...this.journal.state(op.target), drainedHash: null, drainedGeneration: null })
+      if (['drain','recovery-drain','source-drain'].includes(op.phase)) this.journal.setState(op.target,{ ...this.journal.state(op.target), drainedHash: op.manifestHash, drainedGeneration: op.generation })
+      if (['apply','recover','restore-source'].includes(op.phase)) this.journal.setState(op.target,{ ...this.journal.state(op.target), appliedHash: op.manifestHash, appliedDirection: op.phase==='restore-source'?'source':op.phase === 'recover' ? 'recovery' : 'forward' })
+      if (['undrain','recovery-undrain','source-undrain'].includes(op.phase)) this.journal.setState(op.target,{ ...this.journal.state(op.target), drainedHash: null, drainedGeneration: null })
       for (const error of result.cleanupErrors ?? []) this.recordCleanupError(op.key,error)
       return this.journal.finish(op.key,'succeeded',{ ...result, observedAfterInterruption: true })
     } catch (error) {

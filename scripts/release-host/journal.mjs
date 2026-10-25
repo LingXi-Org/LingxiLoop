@@ -12,7 +12,7 @@ function sort(value) {
 export const hash = value => `sha256:${createHash('sha256').update(canonical(value)).digest('hex')}`
 export function fault(code, message, status = 409) { return Object.assign(new Error(message), { code, status }) }
 export const operationKey = request => `${request.releaseId}:${request.target}:${request.phase}`
-const phases = new Set(['prepare', 'apply', 'observe', 'verify', 'recover', 'drain', 'undrain', 'backup', 'restore-verify', 'migrate', 'recovery-drain', 'recovery-undrain'])
+const phases = new Set(['prepare', 'apply', 'observe', 'verify', 'recover', 'drain', 'undrain', 'backup', 'restore-verify', 'migrate', 'recovery-drain', 'recovery-undrain', 'source-drain', 'restore-source', 'source-undrain'])
 export const identifier = value => typeof value === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(value) && !value.includes('..')
 export function validateRequest(request) {
   if (!request || Object.keys(request).some(key => !['releaseId','target','phase','generation','manifestHash','parameters'].includes(key)) ||

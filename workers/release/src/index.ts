@@ -1,5 +1,6 @@
 import { assertSource, hash, ReleaseError, requireThat, validateManifest, type Accepted } from '../../../shared/release/protocol'
 import { ledgerCall, type Bootstrap, type ReleaseEnv, type ReleaseRecord } from './types'
+import { handleArchive } from './archive'
 export { ReleaseLedger } from './ledger'
 export { ReleaseWorkflow } from './workflow'
 
@@ -25,6 +26,12 @@ export default {
       if (url.pathname === '/healthz') return Response.json({ service: 'lingxiloop-release', protocol: 1 })
       const token = request.headers.get('authorization')?.replace(/^Bearer /, '') ?? ''
       const admin = await matches(env.RELEASE_ADMIN_TOKEN, token)
+      const archive = /^\/v1\/releases\/([A-Za-z0-9][A-Za-z0-9._-]{0,95})\/backups\/main-runtime-a$/.exec(url.pathname)
+      if (archive) {
+        requireThat(admin || await matches(env.EXECUTOR_TOKEN, token), 'UNAUTHORIZED', 401)
+        const record = await ledgerCall<ReleaseRecord>(env, `/get?id=${encodeURIComponent(archive[1])}`)
+        return await handleArchive(request, env, record)
+      }
       requireThat(admin || await matches(env.RELEASE_API_TOKEN, token), 'UNAUTHORIZED', 401)
       requireThat(request.method === 'GET' || request.headers.get('content-type')?.includes('application/json'), 'JSON_REQUIRED', 415)
       if (request.method === 'GET' && url.pathname === '/v1/accepted') return Response.json(await ledgerCall(env, '/accepted'), { headers: { 'cache-control': 'no-store' } })

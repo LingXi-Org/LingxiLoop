@@ -35,7 +35,7 @@ export function createExecutorServer({ executor, token, ingress, dispatch = key 
     try {
       if (!authorized(request.headers.authorization,token)) return send(401,{ error: { code:'UNAUTHORIZED' } })
       const url = new URL(request.url,'http://localhost')
-      if (request.method === 'GET' && url.pathname === '/health') return send(200,{ ok:true, protocol:'lingxi-release-host/v1', opsShas:executor.adapter.policy.acceptedOpsShas, phases:['prepare','apply','observe','verify','recover','drain','undrain','backup','restore-verify','migrate','recovery-drain','recovery-undrain'] })
+      if (request.method === 'GET' && url.pathname === '/health') return send(200,{ ok:true, protocol:'lingxi-release-host/v1', opsShas:executor.adapter.policy.acceptedOpsShas, phases:['prepare','apply','observe','verify','recover','drain','undrain','backup','restore-verify','migrate','recovery-drain','recovery-undrain','source-drain','restore-source','source-undrain'] })
       if (ingress && request.method === 'POST' && url.pathname === '/ingress') return send(200,await ingress.set(await jsonBody(request)))
       if (ingress && request.method === 'GET' && url.pathname === '/ingress') return send(200,await ingress.observed(url.searchParams.get('target')))
       if (request.method === 'POST' && url.pathname === '/manifests') {

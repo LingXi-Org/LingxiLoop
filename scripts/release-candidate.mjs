@@ -2,6 +2,8 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { createHash } from 'node:crypto'
+import { homedir } from 'node:os'
+import { join } from 'node:path'
 import { isDeepStrictEqual } from 'node:util'
 import { readAccepted, releaseApiUrl } from './ci-scope-cumulative.mjs'
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -118,17 +120,93 @@ export function buildManifest({ accepted, artifacts, appSha, opsSha, sequence, r
 export function verifyAttestationRun(run, appSha, repository) {
   requireProof(run?.conclusion === 'success' && run.head_sha === appSha && run.repository?.full_name === repository, 'contract artifact producer must be a successful same-repository run for the exact app SHA')
 }
-export function imageArtifact(reference, indexDigest, inspect = ref => JSON.parse(execFileSync('docker', ['buildx', 'imagetools', 'inspect', ref, '--raw'], { encoding: 'utf8' })), configInspect = ref => JSON.parse(execFileSync('docker', ['buildx', 'imagetools', 'inspect', ref, '--format', '{{json .Image}}'], { encoding: 'utf8' }))) {
-  if (!/^ghcr\.io\/[a-z0-9_.\/-]+$/.test(reference) || !/^sha256:[a-f0-9]{64}$/.test(indexDigest)) throw new Error('immutable GHCR identity required')
-  const index = inspect(`${reference}@${indexDigest}`)
-  const platformDigest = index.manifests ? index.manifests.find(item => item.platform?.os === 'linux' && item.platform?.architecture === 'amd64')?.digest : indexDigest
-  if (!/^sha256:[a-f0-9]{64}$/.test(platformDigest || '')) throw new Error('linux/amd64 manifest missing')
-  const manifest = platformDigest === indexDigest ? index : inspect(`${reference}@${platformDigest}`)
-  if (!/^sha256:[a-f0-9]{64}$/.test(manifest.config?.digest || '')) throw new Error('image config identity missing')
-  const config = configInspect(`${reference}@${platformDigest}`)
-  if (config.os !== 'linux' || config.architecture !== 'amd64' || !config.rootfs?.diff_ids?.length || config.rootfs.diff_ids.some(value => !/^sha256:[a-f0-9]{64}$/.test(value))) throw new Error('image platform/config layers missing')
-  return { kind: 'image', digest: indexDigest, ref: `${reference}@${indexDigest}`, indexDigest, platformDigest, configDigest: manifest.config.digest, os: config.os, architecture: config.architecture, diffIds: config.rootfs.diff_ids }
+const rawDigest = bytes => `sha256:${digest(bytes)}`
+export function verifiedOciBytes(raw, expected, label, allowCliNewline = false) {
+  if (!(typeof raw === 'string' || raw instanceof Uint8Array)) throw new Error(`OCI_RAW_PROOF_REQUIRED: ${label}`)
+  const bytes = Buffer.from(raw)
+  if (rawDigest(bytes) === expected) return bytes
+  // buildx --raw may append a transport LF. Only strip one byte when the
+  // remaining exact bytes independently match the registry digest.
+  if (allowCliNewline && bytes.at(-1) === 10 && rawDigest(bytes.subarray(0, -1)) === expected) return bytes.subarray(0, -1)
+  throw new Error(`OCI_DIGEST_MISMATCH: ${label}`)
 }
+function ghcrCredentials(env, read, run) {
+  try {
+    const config = JSON.parse(read(join(env.DOCKER_CONFIG || join(homedir(), '.docker'), 'config.json'), 'utf8'))
+    const entry = config.auths?.['ghcr.io'] ?? config.auths?.['https://ghcr.io']
+    if (entry?.auth) {
+      const value = Buffer.from(entry.auth, 'base64').toString('utf8'), separator = value.indexOf(':')
+      if (separator > 0 && separator < value.length - 1) return Buffer.from(value).toString('base64')
+    }
+    const helper = config.credHelpers?.['ghcr.io'] || config.credsStore
+    if (helper && /^[a-zA-Z0-9_-]+$/.test(helper)) {
+      const credential = JSON.parse(run(`docker-credential-${helper}`, ['get'], { input: 'ghcr.io\n', encoding: 'utf8', timeout: 10000, stdio: ['pipe', 'pipe', 'pipe'] }))
+      if (credential.Username && credential.Secret) return Buffer.from(`${credential.Username}:${credential.Secret}`).toString('base64')
+    }
+  } catch { /* A registry-login config is preferred; CI's scoped token is the fallback. */ }
+  if (env.GITHUB_TOKEN && env.GITHUB_ACTOR) return Buffer.from(`${env.GITHUB_ACTOR}:${env.GITHUB_TOKEN}`).toString('base64')
+  throw new Error('GHCR_AUTH_UNAVAILABLE')
+}
+export async function ghcrConfigBlob(reference, configDigest, { fetcher = fetch, env = process.env, read = readFileSync, run = execFileSync } = {}) {
+  if (!/^ghcr\.io\/[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)+$/.test(reference) || !sha256(configDigest)) throw new Error('immutable GHCR identity required')
+  const repository = reference.slice('ghcr.io/'.length), credentials = ghcrCredentials(env, read, run)
+  const tokenUrl = new URL('https://ghcr.io/token')
+  tokenUrl.searchParams.set('service', 'ghcr.io'); tokenUrl.searchParams.set('scope', `repository:${repository}:pull`)
+  const safeFetch = async (url, options) => {
+    try { return await fetcher(url, { ...options, signal: AbortSignal.timeout(30000) }) }
+    catch { throw new Error('GHCR_RAW_REQUEST_FAILED') }
+  }
+  const tokenResponse = await safeFetch(tokenUrl, { headers: { authorization: `Basic ${credentials}` }, redirect: 'error' })
+  if (!tokenResponse.ok) throw new Error(`GHCR_TOKEN_HTTP_${tokenResponse.status}`)
+  let token
+  try { const result = await tokenResponse.json(); token = result.token || result.access_token } catch { throw new Error('GHCR_TOKEN_RESPONSE_INVALID') }
+  if (!token || typeof token !== 'string') throw new Error('GHCR_TOKEN_RESPONSE_INVALID')
+  let response = await safeFetch(`https://ghcr.io/v2/${repository}/blobs/${configDigest}`, { headers: { authorization: `Bearer ${token}` }, redirect: 'manual' })
+  for (let hop = 0; [301, 302, 303, 307, 308].includes(response.status) && hop < 3; hop++) {
+    let location
+    try { location = new URL(response.headers.get('location')) } catch { throw new Error('GHCR_BLOB_REDIRECT_INVALID') }
+    if (location.protocol !== 'https:' || location.username || location.password || !['ghcr.io', 'pkg-containers.githubusercontent.com'].includes(location.hostname)) throw new Error('GHCR_BLOB_REDIRECT_UNTRUSTED')
+    await response.body?.cancel()
+    // The signed GHCR CDN URL authorizes its own download. Neither the Docker
+    // credential nor the short-lived pull token is forwarded to that host.
+    response = await safeFetch(location, { redirect: 'manual' })
+  }
+  if (!response.ok) throw new Error(`GHCR_CONFIG_HTTP_${response.status}`)
+  try { return Buffer.from(await response.arrayBuffer()) } catch { throw new Error('GHCR_CONFIG_BODY_FAILED') }
+}
+export async function imageArtifact(reference, indexDigest, inspectRaw = ref => execFileSync('docker', ['buildx', 'imagetools', 'inspect', ref, '--raw'], { timeout: 60000, maxBuffer: 8 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] }), configRaw = ghcrConfigBlob) {
+  if (!/^ghcr\.io\/[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)+$/.test(reference) || !sha256(indexDigest)) throw new Error('immutable GHCR identity required')
+  let rawIndex
+  try { rawIndex = await inspectRaw(`${reference}@${indexDigest}`) } catch { throw new Error('OCI_RAW_INDEX_UNAVAILABLE') }
+  const indexBytes = verifiedOciBytes(rawIndex, indexDigest, 'index', true)
+  let index
+  try { index = JSON.parse(indexBytes.toString('utf8')) } catch { throw new Error('OCI_INDEX_JSON_INVALID') }
+  if (index.schemaVersion !== 2) throw new Error('OCI_INDEX_SCHEMA_UNSUPPORTED')
+  let platformDigest = indexDigest, platformDescriptor
+  if (index.manifests) {
+    const platforms = index.manifests.filter(item => item.platform?.os === 'linux' && item.platform?.architecture === 'amd64')
+    if (platforms.length !== 1 || !sha256(platforms[0].digest)) throw new Error('OCI_AMD64_MANIFEST_NOT_UNIQUE')
+    platformDescriptor = platforms[0]; platformDigest = platformDescriptor.digest
+  }
+  let rawManifest = indexBytes
+  if (platformDigest !== indexDigest) {
+    try { rawManifest = await inspectRaw(`${reference}@${platformDigest}`) } catch { throw new Error('OCI_RAW_MANIFEST_UNAVAILABLE') }
+  }
+  const manifestBytes = verifiedOciBytes(rawManifest, platformDigest, 'manifest', true)
+  if (platformDescriptor?.size !== undefined && platformDescriptor.size !== manifestBytes.length) throw new Error('OCI_MANIFEST_SIZE_MISMATCH')
+  let manifest
+  try { manifest = JSON.parse(manifestBytes.toString('utf8')) } catch { throw new Error('OCI_MANIFEST_JSON_INVALID') }
+  if (manifest.schemaVersion !== 2 || !sha256(manifest.config?.digest)) throw new Error('OCI_CONFIG_DESCRIPTOR_INVALID')
+  const rawConfig = await configRaw(reference, manifest.config.digest)
+  const configBytes = verifiedOciBytes(rawConfig, manifest.config.digest, 'config')
+  if (manifest.config.size !== undefined && manifest.config.size !== configBytes.length) throw new Error('OCI_CONFIG_SIZE_MISMATCH')
+  let config
+  try { config = JSON.parse(configBytes.toString('utf8')) } catch { throw new Error('OCI_CONFIG_JSON_INVALID') }
+  if (config.os !== 'linux' || config.architecture !== 'amd64' || config.rootfs?.type !== 'layers' || !Array.isArray(config.rootfs.diff_ids) || !config.rootfs.diff_ids.length || config.rootfs.diff_ids.some(value => !sha256(value))) throw new Error('image platform/config layers missing')
+  return { kind: 'image', digest: indexDigest, ref: `${reference}@${indexDigest}`, indexDigest, platformDigest, configDigest: manifest.config.digest, os: config.os, architecture: config.architecture, diffIds: config.rootfs.diff_ids,
+    ociProof: { index: indexBytes.toString('base64'), manifest: manifestBytes.toString('base64'), config: configBytes.toString('base64') } }
+}
+
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   const [command, ...args] = process.argv.slice(2)
   if (command === 'verify-attestation-run') {
@@ -139,7 +217,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
     verifyAttestationRun(await response.json(), process.env.GITHUB_SHA, process.env.GITHUB_REPOSITORY)
   } else if (command === 'image') {
     const [reference, indexDigest, destination] = args
-    writeFileSync(destination, JSON.stringify(imageArtifact(reference, indexDigest)))
+    writeFileSync(destination, JSON.stringify(await imageArtifact(reference, indexDigest)))
   } else if (command === 'submit') {
     const appSha = process.env.GITHUB_SHA
     // Only the current main head enters the automatic queue. A late older run

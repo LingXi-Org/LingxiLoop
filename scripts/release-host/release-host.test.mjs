@@ -163,9 +163,49 @@ test('schema transition source and compatible recovery can be different prepared
   assert.equal(result.status,'succeeded')
   assert.equal(f.host.data.containers.web.Image,oldImage.configDigest)
   const recovery=JSON.parse(await readFile(join(f.directory,release.releaseId,'main-runtime-a-recovery.json'),'utf8'))
-  assert.equal(recovery.services.web.image,newImage.ref)
+  assert.equal(recovery.services.web.image,newImage.configDigest)
 })
 test('manifest operation-tool identity must be supported by the installed fixed executor',async t=>{
   const f=await setup(t),release=structuredClone(f.release);release.releaseId='unsupported-ops';release.opsSha='c'.repeat(40)
   assert.throws(()=>f.executor.register(release,hash(release)),{code:'OPS_VERSION_MISMATCH'})
+})
+test('prepare and drain preflight reject missing/unavailable ingress or source readiness before any writer stop',async t=>{
+  for(const failure of ['missing','unavailable','readiness']){
+    const f=await setup(t),original=f.adapter.control.bind(f.adapter)
+    if(failure==='missing')delete f.local.targets['main-runtime-a'].controls.ingress
+    else f.adapter.control=async(local,action,body,method)=>{if(action===(failure==='unavailable'?'ingressState':'readiness'))throw fault('CONTROL_UNAVAILABLE','Unavailable fixed control');return original(local,action,body,method)}
+    const result=await f.run('prepare');assert.equal(result.status,'failed');assert.equal(f.host.data.calls.some(args=>args.includes('stop')||args.includes('up')),false)
+  }
+  const f=await setup(t);assert.equal((await f.run('prepare')).status,'succeeded');delete f.local.targets['main-runtime-a'].controls.ingressState
+  assert.equal((await f.run('drain')).status,'failed');assert.equal(f.host.data.calls.some(args=>args.includes('stop')),false)
+})
+test('known pre-migration archive failure restores exact source even when recovery is target-schema-only',async t=>{
+  const f=await setup(t),release=structuredClone(f.release),target=release.targets['main-runtime-a'];target.hostPlan.source=structuredClone(target.hostPlan.recovery);target.hostPlan.recovery.contract={...target.hostPlan.recovery.contract,productSchema:58};release.releaseId='known-backup-failure'
+  const manifestHash=hash(release);f.executor.register(release,manifestHash)
+  const op=phase=>f.request(phase,phase==='prepare'?0:1,{releaseId:release.releaseId,manifestHash}),run=async phase=>{const accepted=f.executor.submit(op(phase));return f.executor.run(accepted.operation.key)}
+  assert.equal((await run('prepare')).status,'succeeded');assert.equal((await run('drain')).status,'succeeded')
+  const backup=f.journal.accept(op('backup'),f.adapter.resources('main-runtime-a','backup')).operation
+  f.journal.finish(backup.key,'failed',{needsIntervention:false},{forward:{code:'ARCHIVE_UPLOAD_REJECTED'},recovery:null,cleanup:[]})
+  for(const phase of ['source-drain','restore-source','source-undrain']){const result=await run(phase);assert.equal(result.status,'succeeded',JSON.stringify(result))}
+  assert.equal(f.host.data.containers.web.Image,oldImage.configDigest);assert.equal(f.host.data.ingress.enabled,true)
+  assert.equal(f.journal.get(backup.key).errors.forward.code,'ARCHIVE_UPLOAD_REJECTED')
+})
+for(const phase of ['migrate','apply','recover'])test(`source restoration refuses even an unknown ${phase} intent`,async t=>{
+  const f=await setup(t);await prepared(f)
+  const prior=f.executor.submit(f.request(phase)).operation;f.journal.patch(prior.key,{status:'uncertain'})
+  const before=f.host.data.calls.length
+  await assert.rejects(f.executor.assertSourceRestoreAllowed(f.request('restore-source')),{code:'SOURCE_RESTORE_FORBIDDEN'})
+  assert.equal(f.host.data.calls.slice(before).some(args=>args.includes('stop')||args.includes('up')),false)
+})
+test('source restoration refuses changed installed schema despite broad source support declarations',async t=>{
+  const f=await setup(t),release=structuredClone(f.release);release.releaseId='source-state-changed';release.targets['main-runtime-a'].hostPlan.source=structuredClone(release.targets['main-runtime-a'].hostPlan.recovery);release.targets['main-runtime-a'].hostPlan.source.contract.supportedProductSchemas=[57,58]
+  const manifestHash=hash(release);f.executor.register(release,manifestHash);f.adapter.state=async()=>({...f.release.targets['main-runtime-a'].contract,productSchema:58,verified:true,requiredCapabilities:[]})
+  await assert.rejects(f.executor.assertSourceRestoreAllowed(f.request('restore-source',1,{releaseId:release.releaseId,manifestHash})),{code:'SOURCE_STATE_CHANGED'})
+})
+
+test('trusted helper known failure is terminal without hiding unknown side-effect failures',async t=>{
+  const f=await setup(t);await prepared(f)
+  const op=f.executor.submit(f.request('apply')).operation,context=await f.executor.context(op)
+  await assert.rejects(context.step('known-read-only-backup',async()=>{throw Object.assign(fault('ARCHIVE_TOO_LARGE','Verified dump retained'),{outcomeKnown:true,uncertain:false})},{sideEffect:true}))
+  assert.equal(f.journal.get(op.key).steps.at(-1).status,'failed-known')
 })

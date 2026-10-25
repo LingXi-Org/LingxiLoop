@@ -1,5 +1,5 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers'
-import { canonical, databasePlan, orderedTargets, ReleaseError, requireThat, type Manifest, type TargetId } from '../../../shared/release/protocol'
+import { canonical, databasePlan, orderedTargets, ReleaseError, requireThat, type TargetId } from '../../../shared/release/protocol'
 import { activateWorker, hostOperation, installManifest, prepareWorker, settled, successful, verifyTarget } from './adapters'
 import { ledgerCall, type ReleaseEnv, type ReleaseRecord } from './types'
 
@@ -32,6 +32,10 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
     if (['superseded', 'accepted', 'recovered', 'failed'].includes(record.status)) return { status: record.status }
     const manifest = record.manifest; retryLimit = manifest.policy.retryLimit; const targets = orderedTargets(manifest)
     const observations: Record<string, unknown> = {}; const changed: TargetId[] = []
+    // Set before dispatch, not after a reply: even a failed migration or apply
+    // may have changed persistent state. Only an earlier known failure can
+    // restore the exact source; hosts independently check their durable intent.
+    let mutationSubmitted = false
     // A resumed owned release may have effects from an earlier run.
     let applying = record.generation > 0
     const transition = (status: string, phase: string, extra: Record<string, unknown> = {}) => ledgerCall<ReleaseRecord>(this.env, '/transition', { releaseId, workflowId: event.instanceId, status, phase, generation: record.generation, targets: observations, ...extra })
@@ -88,6 +92,7 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
       await durable('applying', () => transition('active', 'apply'))
       applying = true
       if (record.resumeMode === 'recover') {
+        mutationSubmitted = true
         changed.push(...targets)
         throw new ReleaseError('OPERATOR_REQUESTED_RECOVERY')
       }
@@ -105,9 +110,10 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
           if (database) {
             await hostPhase('main-runtime-a', 'backup')
             await hostPhase('main-runtime-a', 'restore-verify')
+            mutationSubmitted = true
             await hostPhase('main-runtime-a', 'migrate')
           }
-          for (const id of runtime) { await hostPhase(id, 'apply'); await hostPhase(id, 'verify') }
+          for (const id of runtime) { mutationSubmitted = true; await hostPhase(id, 'apply'); await hostPhase(id, 'verify') }
           for (const id of runtime) await hostPhase(id, 'undrain')
           for (const id of runtime) observations[`${id}:verification`] = await durable(`business-${id}`, retry, () => verifyTarget(this.env, manifest.targets[id]!))
           runtimeDone = true
@@ -115,9 +121,10 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
         }
         // Add before submitting: a lost response must still be reconciled.
         changed.push(target)
-        if (t.artifact.kind === 'worker') observations[target] = await durable(`apply-${target}`, retry, async () => { await authorize(); return activateWorker(this.env, t) })
+        if (t.artifact.kind === 'worker') { mutationSubmitted = true; observations[target] = await durable(`apply-${target}`, retry, async () => { await authorize(); return activateWorker(this.env, t) }) }
         else {
           await hostPhase(target, 'drain')
+          mutationSubmitted = true
           await hostPhase(target, 'apply')
           await hostPhase(target, 'verify')
           await hostPhase(target, 'undrain')
@@ -129,8 +136,6 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
         return true
       })
       await durable('accept', () => transition('accepted', 'verified'))
-      try { await durable('github-result', retry, () => this.report(manifest, 'success')) }
-      catch { await ledgerCall(this.env, '/note', { releaseId, workflowId: event.instanceId, cleanup: 'GITHUB_STATUS_WRITE_FAILED' }) }
       return { releaseId, status: 'accepted', generation: record.generation }
     } catch (error) {
       // Claim may have committed even when its response was lost. Refresh
@@ -153,17 +158,19 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
         return { releaseId, status: 'blocked', error: code }
       }
       try {
+        const restoreSource = !mutationSubmitted && changed.length > 0 && changed.every(id => manifest.targets[id]!.artifact.kind === 'image')
+        observations.recovery = { direction: restoreSource ? 'source' : 'compatible-recovery' }
         await durable('recovering', () => transition('recovering', 'recover', { errors: { forward: code } }))
         const recoveringHosts = changed.filter(id => manifest.targets[id]!.artifact.kind === 'image')
-        await Promise.all(recoveringHosts.map(id => hostPhase(id, 'recovery-drain')))
+        await Promise.all(recoveringHosts.map(id => hostPhase(id, restoreSource ? 'source-drain' : 'recovery-drain')))
         for (const target of changed.reverse()) {
           const t = manifest.targets[target]!
           if (t.artifact.kind === 'worker') await durable(`recover-${target}`, retry, async () => { await authorize(); return activateWorker(this.env, t, true) })
-          else { await hostPhase(target, 'recover') }
+          else { await hostPhase(target, restoreSource ? 'restore-source' : 'recover') }
           // Public verification follows restored admission below.
 
         }
-        for (const target of recoveringHosts) await hostPhase(target, 'recovery-undrain')
+        for (const target of recoveringHosts) await hostPhase(target, restoreSource ? 'source-undrain' : 'recovery-undrain')
         for (const target of changed) await durable(`verify-recovery-${target}`, retry, () => verifyTarget(this.env, manifest.targets[target]!, true))
         await durable('recovered', () => transition('recovered', 'recovered', { effectsSettled: true, error: code }))
         return { releaseId, status: 'recovered', error: code }
@@ -172,13 +179,5 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
         return { releaseId, status: 'blocked', error: code }
       }
     }
-  }
-  private async report(manifest: Manifest, state: 'success' | 'failure') {
-    if (!this.env.GITHUB_TOKEN || !this.env.GITHUB_REPOSITORY) return { skipped: 'GITHUB_REPORTING_NOT_CONFIGURED' }
-    const response = await fetch(`https://api.github.com/repos/${this.env.GITHUB_REPOSITORY}/statuses/${manifest.appSha}`, { method: 'POST', headers: {
-      authorization: `Bearer ${this.env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json', 'user-agent': 'LingxiLoop-release', 'content-type': 'application/json',
-    }, body: JSON.stringify({ state, context: `production/${this.env.ENVIRONMENT}`, description: `Release ${manifest.releaseId}: ${state === 'success' ? 'accepted' : 'failed'}` }) })
-    requireThat(response.ok, 'GITHUB_STATUS_WRITE_FAILED')
-    return { state }
   }
 }

@@ -2,7 +2,7 @@
   "version": 1,
   "listen": {
     "host": "127.0.0.1",
-    "port": 9465
+    "port": 17951
   },
   "stateDirectory": "/var/lib/lingxi-release",
   "tokenFile": "/run/credentials/lingxi-release-host.service/executor-token",
@@ -44,7 +44,7 @@
       "controls": {
         "state": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/local-control.mjs",
             "/etc/lingxi-release/policy.json",
@@ -54,7 +54,7 @@
         },
         "barrier": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/local-control.mjs",
             "/etc/lingxi-release/policy.json",
@@ -64,7 +64,7 @@
         },
         "readiness": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/local-control.mjs",
             "/etc/lingxi-release/policy.json",
@@ -74,7 +74,7 @@
         },
         "backup": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/database-tools.mjs",
             "/etc/lingxi-release/policy.json",
@@ -84,7 +84,7 @@
         },
         "backupObserve": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/database-tools.mjs",
             "/etc/lingxi-release/policy.json",
@@ -94,7 +94,7 @@
         },
         "restoreVerify": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/database-tools.mjs",
             "/etc/lingxi-release/policy.json",
@@ -104,7 +104,7 @@
         },
         "restoreVerifyObserve": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/database-tools.mjs",
             "/etc/lingxi-release/policy.json",
@@ -114,7 +114,7 @@
         },
         "migrate": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/database-tools.mjs",
             "/etc/lingxi-release/policy.json",
@@ -124,7 +124,7 @@
         },
         "migrateObserve": {
           "argv": [
-            "/usr/bin/node",
+            "/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node",
             "--experimental-sqlite",
             "/opt/lingxi-release/current/scripts/release-host/database-tools.mjs",
             "/etc/lingxi-release/policy.json",
@@ -134,15 +134,15 @@
         },
         "ingress": {
           "url": "https://release-host-b.example.invalid/ingress",
-          "tokenFile": "/run/credentials/lingxi-release-host.service/ingress-executor-token",
-          "accessClientIdFile": "/run/credentials/lingxi-release-host.service/access-client-id",
-          "accessClientSecretFile": "/run/credentials/lingxi-release-host.service/access-client-secret"
+          "tokenFile": "/etc/lingxi-release/secrets/ingress-executor-token",
+          "accessClientIdFile": "/etc/lingxi-release/secrets/access-client-id",
+          "accessClientSecretFile": "/etc/lingxi-release/secrets/access-client-secret"
         },
         "ingressState": {
           "url": "https://release-host-b.example.invalid/ingress?target=main-runtime-a",
-          "tokenFile": "/run/credentials/lingxi-release-host.service/ingress-executor-token",
-          "accessClientIdFile": "/run/credentials/lingxi-release-host.service/access-client-id",
-          "accessClientSecretFile": "/run/credentials/lingxi-release-host.service/access-client-secret"
+          "tokenFile": "/etc/lingxi-release/secrets/ingress-executor-token",
+          "accessClientIdFile": "/etc/lingxi-release/secrets/access-client-id",
+          "accessClientSecretFile": "/etc/lingxi-release/secrets/access-client-secret"
         }
       }
     }
@@ -156,5 +156,10 @@
   },
   "acceptedOpsShas": [
     "REPLACE_WITH_EXACT_INSTALLED_OPS_COMMIT_40_HEX"
-  ]
+  ],
+  "archive": {
+    "baseUrl": "https://release.example.invalid",
+    "tokenFile": "/etc/lingxi-release/secrets/archive-token",
+    "timeoutMs": 60000
+  }
 }

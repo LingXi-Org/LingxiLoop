@@ -5,7 +5,7 @@ credentials-file: /etc/cloudflared/credentials.json
 # Tunnel transport is independent of Docker daemon's HTTP proxy.
 ingress:
   - hostname: release-host-a.example.invalid
-    service: http://127.0.0.1:9465
+    service: http://127.0.0.1:17951
     originRequest:
       access:
         required: true

@@ -7,6 +7,8 @@ import { createHash } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import {inspectQualifiedImage} from './image-identity.mjs'
+import { uploadArchive,observeArchive } from './archive.mjs'
 import { databaseEvidence } from './local-control.mjs'
 import { runDocker } from './adapter.mjs'
 import { canonical, hash, fault } from './journal.mjs'
@@ -52,7 +54,7 @@ function sameSchemas(actual,expected) { return actual.nativeSchema === expected.
 function inventoryMatches(actual,migrations) { return actual.migrations?.length === migrations.length && actual.migrations.every((row,index) => row.version === migrations[index].version && row.checksum === migrations[index].checksum) }
 
 /** All database destinations and argv come from trusted local policy. In particular stdin cannot select a dump path or database name. */
-export async function databaseTool(policy,action,op,{ run = (args,options = {}) => runDocker(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' }),stream = (args,options) => dockerStream(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' }) } = {}) {
+export async function databaseTool(policy,action,op,{ run = (args,options = {}) => runDocker(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' }),stream = (args,options) => dockerStream(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' }),archiveUpload = uploadArchive,archiveObserve = observeArchive } = {}) {
   const plan = registeredPlan(policy,op), database = policy.database, local = policy.targets[op.target]
   const directory = join(policy.stateDirectory,op.releaseId,'database')
   await mkdir(directory,{ recursive:true,mode:0o700 })
@@ -60,9 +62,13 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
   const migrationContainer = `lingxi_migrate_${createHash('sha256').update(`${op.releaseId}:${op.manifestHash}`).digest('hex').slice(0,24)}`
   const isolated = `lingxi_verify_${createHash('sha256').update(`${op.releaseId}:${op.manifestHash}`).digest('hex').slice(0,24)}`
   const readBackup = async () => {
-    const receipt = JSON.parse(await readFile(backupFile,'utf8'))
+    let receipt
+    try { receipt=JSON.parse(await readFile(backupFile,'utf8')) } catch(error) { if(error.code!=='ENOENT')throw error;receipt=JSON.parse(await readFile(join(directory,'local-backup.json'),'utf8')) }
     requireThat(receipt.complete === true && receipt.manifestHash === op.manifestHash && receipt.dumpHash === await fileDigest(dump),'BACKUP_INVALID','Backup hash or immutable receipt is invalid')
-    return receipt
+    requireThat(policy.archive,'ARCHIVE_POLICY_REQUIRED','A confirmed immutable remote archive is required before database progression')
+    const archived=await archiveObserve(policy,op,{dumpPath:dump,dumpHash:receipt.dumpHash})
+    requireThat(archived.complete===true&&archived.dumpHash===receipt.dumpHash,'ARCHIVE_NOT_CONFIRMED','Remote backup archive identity is not confirmed')
+    return {...receipt,archive:archived}
   }
   const assertDrained = async () => {
     const actual = await databaseEvidence(policy,run)
@@ -79,8 +85,13 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     const after = await assertDrained()
     requireThat(hash(after.migrations) === hash(source.migrations) && hash(await tableCounts(policy,database.database,run)) === hash(counts),'BACKUP_SOURCE_CHANGED','Committed source rows changed across the final maintenance snapshot')
     const receipt = { complete:true,manifestHash:op.manifestHash,dumpHash:await fileDigest(dump),source:{ nativeSchema:source.nativeSchema,productSchema:source.productSchema,migrationsHash:hash(source.migrations) },countsHash:hash(counts),rpo:'zero-committed-writes' }
-    await writeReceipt(backupFile,receipt)
-    return receipt
+    await writeReceipt(join(directory,'local-backup.json'),receipt)
+    requireThat(policy.archive,'ARCHIVE_POLICY_REQUIRED','A confirmed immutable remote archive is required before database progression')
+    const archive=await archiveUpload(policy,op,{dumpPath:dump,dumpHash:receipt.dumpHash})
+    requireThat(archive.complete===true&&archive.dumpHash===receipt.dumpHash,'ARCHIVE_NOT_CONFIRMED','Remote backup archive identity is not confirmed')
+    const archivedReceipt={...receipt,archive}
+    await writeReceipt(backupFile,archivedReceipt)
+    return archivedReceipt
   }
   if (action === 'restoreVerifyObserve') {
     const receipt = JSON.parse(await readFile(verifiedFile,'utf8'))
@@ -109,9 +120,11 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     return receipt
   }
   if (action === 'migrateObserve') {
+    await readBackup()
     const [container] = JSON.parse(await run(['container','inspect',migrationContainer]))
     const migration = local.migration
-    requireThat(container?.Image === plan.images[migration?.imageService]?.configDigest && container.State?.Status === 'exited' && container.State.Running === false && container.State.ExitCode === 0, 'MIGRATION_OUTCOME_UNRESOLVED', 'A retained exact-image one-off with successful final exit is required to prove all migration side effects completed')
+    const identity=await inspectQualifiedImage(run,plan.images[migration?.imageService])
+    requireThat(identity&&container?.Image === identity.localImageId && container.State?.Status === 'exited' && container.State.Running === false && container.State.ExitCode === 0, 'MIGRATION_OUTCOME_UNRESOLVED', 'A retained exact-image one-off with successful final exit is required to prove all migration side effects completed')
     const actual = await databaseEvidence(policy,run)
     requireThat(sameSchemas(actual,plan.database.to) && inventoryMatches(actual,plan.database.migrations),'MIGRATION_OUTCOME_UNRESOLVED','Installed schema/checksum ledger does not prove complete target migration')
     return { complete:true,nativeSchema:actual.nativeSchema,productSchema:actual.productSchema,migrationsHash:hash(actual.migrations) }
@@ -124,11 +137,12 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     requireThat(migration && /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/.test(migration.service) && plan.images[migration.imageService],'MIGRATION_NOT_CONFIGURED','A fixed one-off migration service and qualified image are required')
     const compose = ['compose','--project-name',local.project,'--env-file',local.envFile,'--file',local.composeFile,'--file',join(policy.stateDirectory,op.releaseId,`${op.target}-forward.json`)]
     const config = JSON.parse(await run([...compose,'config','--format','json'])), spec = config.services?.[migration.service]
-    requireThat(spec && !spec.build && spec.image === plan.images[migration.imageService].ref && spec.pull_policy === 'never' && spec.restart === 'no' && !spec.privileged && !(spec.volumes?.length) && canonical(spec.command) === canonical(['npm','run','db:migrate']),'MIGRATION_NOT_CONFIGURED','Migration service must be the fixed offline packaged migration command')
+    const identity=await inspectQualifiedImage(run,plan.images[migration.imageService])
+    requireThat(identity&&spec && !spec.build && spec.image === identity.localImageId && spec.pull_policy === 'never' && spec.restart === 'no' && !spec.privileged && !(spec.volumes?.length) && canonical(spec.command) === canonical(['npm','run','db:migrate']),'MIGRATION_NOT_CONFIGURED','Migration service must be the fixed offline packaged migration command')
     const connection = new URL(spec.environment?.DATABASE_URL)
     requireThat(['postgres:','postgresql:'].includes(connection.protocol) && connection.hostname === database.migrationHostname && decodeURIComponent(connection.pathname.slice(1)) === database.database && decodeURIComponent(connection.username) === database.user, 'MIGRATION_DESTINATION_MISMATCH', 'The fixed migration environment does not address the independently verified database')
     await run([...compose,'run','--name',migrationContainer,'--no-deps','--pull','never','--env','LINGXIOS_SCHEMA_UPGRADE_DRAINED=true',migration.service],{ timeout:1800000 })
-    return databaseTool(policy,'migrateObserve',op,{ run,stream })
+    return databaseTool(policy,'migrateObserve',op,{ run,stream,archiveUpload,archiveObserve })
   }
   throw fault('UNSUPPORTED_DATABASE_ACTION','Only fixed backup, isolated restore verification and ledger-checked migration actions are supported')
 }
@@ -138,4 +152,8 @@ async function main() {
   for await (const chunk of process.stdin) { input += chunk; if (input.length > 1024*1024) throw Error('Input exceeds limit') }
   process.stdout.write(JSON.stringify(await databaseTool(JSON.parse(await readFile(policyPath,'utf8')),action,JSON.parse(input))))
 }
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main().catch(error => { process.stdout.write(JSON.stringify({ error:{ code:error.code ?? 'DATABASE_TOOL_FAILED',message:error.code ? error.message : 'Trusted database helper failed',...(error.sqlState ? { sqlState:error.sqlState } : {}) } })); process.exitCode = 1 })
+const knownReadOnlyFailures=new Set(['DATABASE_SOURCE_CHANGED','DATABASE_WRITERS_ACTIVE','BACKUP_INVALID','BACKUP_SOURCE_CHANGED','RESTORE_VERIFY_MISMATCH','ARCHIVE_POLICY_REQUIRED','ARCHIVE_ENDPOINT_INVALID','ARCHIVE_TIMEOUT_INVALID','ARCHIVE_TOO_LARGE','LOCAL_BACKUP_HASH_MISMATCH','ARCHIVE_TOKEN_INVALID','ARCHIVE_IDENTITY_CONFLICT','ARCHIVE_UPLOAD_REJECTED','ARCHIVE_METADATA_REJECTED'])
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main().catch(error => {
+  const known=['backup','restoreVerify'].includes(process.argv[3])&&knownReadOnlyFailures.has(error.code)&&error.uncertain!==true
+  process.stdout.write(JSON.stringify({error:{code:error.code??'DATABASE_TOOL_FAILED',message:error.code?error.message:'Trusted database helper failed',...(error.sqlState?{sqlState:error.sqlState}:{}),...(known?{outcomeKnown:true,uncertain:false}:error.uncertain===true?{uncertain:true}:{})}}));process.exitCode=1
+})

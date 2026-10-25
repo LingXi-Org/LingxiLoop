@@ -31,7 +31,7 @@ export class NginxIngress {
     return task
   }
   async perform({ target,generation,enabled,releaseId,phase }) {
-    if (!identifier(releaseId) || !['drain','undrain','recovery-drain','recovery-undrain'].includes(phase) || !this.policy.backends[target] || !Number.isSafeInteger(generation) || generation < 1 || typeof enabled !== 'boolean') throw fault('INVALID_INGRESS_REQUEST','Target, positive generation and enabled boolean are required',422)
+    if (!identifier(releaseId) || !['drain','undrain','recovery-drain','recovery-undrain','source-drain','source-undrain'].includes(phase) || !this.policy.backends[target] || !Number.isSafeInteger(generation) || generation < 1 || typeof enabled !== 'boolean') throw fault('INVALID_INGRESS_REQUEST','Target, positive generation and enabled boolean are required',422)
     const key = `${releaseId}:${target}:${generation}:${phase}:${enabled ? 'enable' : 'disable'}`
     const prior = this.journal.db.prepare('SELECT * FROM ingress_operations WHERE key=?').get(key)
     const fence = this.journal.db.prepare('SELECT generation,release_id FROM ingress_state WHERE target=?').get(target)

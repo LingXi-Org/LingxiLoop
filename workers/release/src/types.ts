@@ -23,8 +23,6 @@ export interface ReleaseEnv {
   CLOUDFLARE_ACCOUNT_ID: string
   WORKER_NAMES_JSON: string
   PROBES_JSON: string
-  GITHUB_TOKEN?: string
-  GITHUB_REPOSITORY?: string
   BOOTSTRAP_ENABLED?: string
 }
 export function ledger(env: ReleaseEnv) {

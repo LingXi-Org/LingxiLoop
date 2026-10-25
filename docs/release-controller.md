@@ -140,6 +140,23 @@ controller/executor recovery exercise and LingxiLoop old-path retirement.
 Queue/build/download/drain/startup/verify/recovery timings must come from those
 real receipts. No performance target is claimed from local unit tests.
 
+Actual preparation has advanced beyond the initial proposal: both hosts now
+have the fixed private Node 22.23.3 runtime and executor revision `20697f0e`,
+with verified installation receipts; the services were not started. Executor
+and ingress bearer credentials were delivered through X25519/HKDF/AES-GCM and
+only hashes returned. Submission/admin/executor secrets exist in Sigillo.
+The private R2 bucket exists. The initial Cloudflare token's DNS read,
+Tunnel-create and Access-service-token-create actions were explicitly denied
+with HTTP 403; those actions have stopped pending new valid permission
+evidence. After an explicitly authorized credential update, both exact Tunnels,
+Access apps with service-token-only policies and their DNS records were created
+and read back. Their connector and Access credentials were delivered encrypted
+to the corresponding hosts. The additional controller API hostname was
+separately confirmed; binding and live API-role verification are still pending.
+See `release-cloudflare-provision.md` and the restricted per-step handoff
+receipts. Live target policies, controller binding, TLS transport and adoption
+acceptance remain pending; installed inactive code is not a deployed release.
+
 An independent read-only review of commit `7cbd4a79` found four concrete races:
 resumed preparation releasing an unknown old effect, lost claim responses
 leaving no recovery entry, concurrent resume/recover attempts, and an outbox

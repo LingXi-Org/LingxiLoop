@@ -46,7 +46,7 @@ jobs:
       - run: npx --no-install vitest run --config workers/release/vitest.config.ts
       - name: Prepare isolated PostgreSQL fixture
         run: docker pull pgvector/pgvector:pg16
-      - run: node --experimental-sqlite --test scripts/release/*.test.mjs scripts/release-host/*.test.mjs scripts/mihomo/*.test.mjs
+      - run: node --experimental-sqlite --test scripts/release/*.test.mjs scripts/release/bootstrap-host/*.test.mjs scripts/release/provision-cloudflare/*.test.mjs scripts/release-host/*.test.mjs scripts/mihomo/*.test.mjs
         env:
           RELEASE_HOST_DOCKER_TEST: '1'
           RELEASE_HOST_DOCKER_BIN: /usr/bin/docker

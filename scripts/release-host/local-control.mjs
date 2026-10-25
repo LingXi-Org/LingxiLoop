@@ -1,37 +1,17 @@
 #!/usr/bin/env node
 // Fixed, independent, read-only database evidence and readiness helper. Never accepts a command or SQL from stdin.
 import { readFile } from 'node:fs/promises'
+import {networkInterfaces} from 'node:os'
+import {isIP} from 'node:net'
+import {inspectQualifiedImage} from './image-identity.mjs'
 import { DatabaseSync } from 'node:sqlite'
-import { join, resolve } from 'node:path'
+import { isAbsolute,join,resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { runDocker, validateContract } from './adapter.mjs'
 import { hash, fault } from './journal.mjs'
 
-export const STATE_SQL = `BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY;
-SET LOCAL statement_timeout='5s'; SET LOCAL lock_timeout='1s'; SET LOCAL idle_in_transaction_session_timeout='10s';
-SELECT jsonb_build_object(
- 'readOnly',current_setting('transaction_read_only')='on',
- 'fullVisibility',(SELECT rolsuper OR pg_has_role(current_user,'pg_read_all_stats','MEMBER') FROM pg_roles WHERE rolname=current_user),
- 'nativeSchema',(SELECT version FROM lingxios.schema_version WHERE singleton),
- 'installedSchema',(SELECT schema_version FROM public.lingxios_installation WHERE singleton),
- 'runtime',(SELECT runtime_version FROM public.lingxios_installation WHERE singleton),
- 'protocolVersion',(SELECT protocol_version FROM public.lingxios_installation WHERE singleton),
- 'schemaHash',(SELECT schema_sha256 FROM public.lingxios_installation WHERE singleton),
- 'migrationCount',(SELECT count(*) FROM public.schema_migrations),
- 'productSchema',(SELECT max(version) FROM public.schema_migrations),
- 'migrations',(SELECT jsonb_agg(jsonb_build_object('version',version,'name',name,'checksum',checksum) ORDER BY version) FROM public.schema_migrations),
- 'liveWork',(SELECT count(*) FROM lingxios.agent_work_items WHERE status='leased' AND lease_expires_at>NOW()),
- 'liveSession',(SELECT count(*) FROM lingxios.agent_os_session_leases WHERE expires_at>NOW()),
- 'liveAttempts',(SELECT count(*) FROM lingxios.agent_attempts WHERE ended_at IS NULL AND lease_expires_at>NOW()),
- 'liveCapture',(SELECT count(*) FROM lingxios.agent_memory_capture WHERE completed_at IS NULL AND claim_token IS NOT NULL AND claim_until>NOW()),
- 'liveOutbox',((SELECT count(*) FROM lingxios.agent_delivery_outbox WHERE delivered_at IS NULL AND claim_token IS NOT NULL AND available_at>NOW())+
-  (SELECT count(*) FROM lingxios.agent_run_events WHERE delivered_at IS NULL AND claim_token IS NOT NULL AND available_at>NOW())+
-  (SELECT count(*) FROM lingxios.agent_model_budget_calls WHERE delivered_at IS NULL AND claim_token IS NOT NULL AND available_at>NOW())+
-  (SELECT count(*) FROM lingxios.agent_terminal_outbox WHERE delivered_at IS NULL AND claim_token IS NOT NULL AND available_at>NOW())),
- 'otherClients',(SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND backend_type='client backend' AND pid<>pg_backend_pid()),
- 'prepared',(SELECT count(*) FROM pg_prepared_xacts WHERE database=current_database())
-)::text;
-COMMIT;`
+import { STATE_SQL } from './pg-client.mjs'
+export { STATE_SQL } from './pg-client.mjs'
 
 export function qualifyDatabaseEvidence(actual, database) {
   const profile = database.profiles?.[`${actual.nativeSchema}:${actual.productSchema}:${actual.schemaHash}`]
@@ -45,11 +25,37 @@ export function qualifyDatabaseEvidence(actual, database) {
 }
 export async function databaseEvidence(policy, run = (args,options = {}) => runDocker(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' })) {
   const database = policy.database
-  if (!database || ![database.container,database.user,database.database].every(value => /^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(value ?? ''))) throw fault('DATABASE_NOT_CONFIGURED','Trusted local PostgreSQL identity and qualified profiles are required')
-  const raw = await run(['exec','--user','postgres',database.container,'psql','--no-psqlrc','--quiet','--tuples-only','--no-align','--username',database.user,'--dbname',database.database,'--set','ON_ERROR_STOP=1','--set','VERBOSITY=sqlstate','--command',STATE_SQL])
+  if (!database) throw fault('DATABASE_NOT_CONFIGURED','Trusted local PostgreSQL identity and qualified profiles are required')
+  let raw
+  if (database.transport === 'cached-client') {
+    if (!/^sha256:[a-f0-9]{64}$/.test(database.clientImage??'') || !isAbsolute(database.envFile??'') || (database.clientWorkdir??'/app') !== '/app') throw fault('DATABASE_CLIENT_POLICY_INVALID','Cached observer requires an exact inspected local image ID, fixed /app workdir and trusted environment file')
+    const configuredScript=policy.clientScript??'/opt/lingxi-release/current/scripts/release-host/pg-client.mjs'
+    const script=resolve(configuredScript)
+    if (!isAbsolute(configuredScript) || script.includes(',')) throw fault('DATABASE_CLIENT_POLICY_INVALID','Observer source must be a fixed trusted local file')
+    const images=JSON.parse(await run(['image','inspect',database.clientImage]))
+    if (images.length!==1 || images[0].Id!==database.clientImage || images[0].Os!=='linux' || !['amd64','arm64'].includes(images[0].Architecture)) throw fault('DATABASE_CLIENT_IMAGE_MISMATCH','Cached observer image does not match its exact local platform identity')
+    try {
+      raw=await run(['run','--rm','--pull','never','--network','host','--read-only','--cap-drop','ALL','--pids-limit','32','--memory','128m','--security-opt','no-new-privileges','--workdir','/app','--env-file',database.envFile,'--mount',`type=bind,source=${script},target=/opt/release/pg-client.mjs,readonly`,'--entrypoint','node',database.clientImage,'/opt/release/pg-client.mjs'],{timeout:30000})
+    } catch(error) {
+      let output
+      try {if((error.cause?.stdout?.length??0)<=1024*1024)output=JSON.parse(error.cause?.stdout??'')} catch {}
+      if(output?.error?.code==='PG_CLIENT_FAILED')throw Object.assign(fault('PG_CLIENT_FAILED','Fixed read-only database observer failed',502),...(/^[A-Z0-9]{5}$/.test(output.error.sqlState??'')?[{sqlState:output.error.sqlState}]:[]))
+      throw error
+    }
+  } else {
+    if (database.transport && database.transport!=='local-container' || ![database.container,database.user,database.database].every(value=>/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}$/.test(value??''))) throw fault('DATABASE_NOT_CONFIGURED','Trusted local PostgreSQL identity and qualified profiles are required')
+    raw=await run(['exec','--user','postgres',database.container,'psql','--no-psqlrc','--quiet','--tuples-only','--no-align','--username',database.user,'--dbname',database.database,'--set','ON_ERROR_STOP=1','--set','VERBOSITY=sqlstate','--command',STATE_SQL])
+  }
+
   return qualifyDatabaseEvidence(JSON.parse(raw.trim()),database)
 }
-export async function localControl(policy, action, op, { run = runDocker, fetcher = fetch } = {}) {
+export function assertLocalReadinessUrl(url,interfaces=networkInterfaces()) {
+  if(url.protocol==='https:')return
+  const address=url.hostname.replace(/^\[|\]$/g,'')
+  const owned=Object.values(interfaces).flat().some(row=>row?.address===address)
+  if(url.protocol!=='http:'||!isIP(address)||!(['127.0.0.1','::1'].includes(address)||owned))throw fault('INVALID_POLICY','Readiness requires HTTPS or an HTTP literal address proved to belong to this host')
+}
+export async function localControl(policy, action, op, { run = (args,options={})=>runDocker(args,{...options,binary:policy.dockerBinary??'/usr/bin/docker'}), fetcher = fetch,interfaces=networkInterfaces } = {}) {
   const local = policy.targets?.[op.target]
   if (!local) throw fault('UNKNOWN_TARGET','Target is not enabled on this host')
   if (action === 'state') return databaseEvidence(policy,run)
@@ -68,15 +74,16 @@ export async function localControl(policy, action, op, { run = runDocker, fetche
       const state = db.prepare('SELECT body FROM node_state WHERE target=?').get(op.target)
       direction = op.direction ?? (state ? JSON.parse(state.body).appliedDirection : null) ?? 'forward'
     } finally { db.close() }
-    const plan = manifest.targets[op.target].hostPlan, descriptor = direction === 'recovery' ? plan.recovery : plan
+    const plan = manifest.targets[op.target].hostPlan, descriptor = direction==='source'?(plan.source??plan.recovery):direction === 'recovery' ? plan.recovery : plan
     for (const [service,spec] of Object.entries(local.services)) if (spec.role === 'web') {
       const ids = (await run(['ps','--all','--quiet','--filter',`label=com.docker.compose.project=${local.project}`,'--filter',`label=com.docker.compose.service=${service}`])).trim().split(/\s+/).filter(Boolean)
       if (ids.length !== 1 || !/^[a-f0-9]{12,64}$/.test(ids[0])) throw fault('READINESS_UNPROVEN','Expected one local Web container')
       const [container] = JSON.parse(await run(['container','inspect',ids[0]]))
-      if (container.Image !== descriptor.images[service].configDigest || !container.State.Running || container.State.Health?.Status !== 'healthy') throw fault('READINESS_UNPROVEN','Actual Web image or health is not qualified')
+      const identity=await inspectQualifiedImage(run,descriptor.images[service])
+      if (!identity || container.Image !== identity.localImageId || !container.State.Running || container.State.Health?.Status !== 'healthy') throw fault('READINESS_UNPROVEN','Actual Web image or health is not qualified')
     }
     const url = new URL(local.readinessUrl)
-    if (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['127.0.0.1','localhost','[::1]'].includes(url.hostname))) throw fault('INVALID_POLICY','Readiness needs a trusted HTTPS or loopback URL')
+    assertLocalReadinessUrl(url,interfaces())
     const response = await fetcher(url,{ redirect:'error',signal:AbortSignal.timeout(5000) })
     await response.body?.cancel()
     if (!response.ok) throw fault('READINESS_UNPROVEN','Actual Web/control readiness failed')

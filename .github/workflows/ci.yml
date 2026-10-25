@@ -26,8 +26,8 @@ on:
         default: false
 
 concurrency:
-  group: lingxiloop-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ${{ vars.RELEASE_CONTROLLER_ENABLED == 'true' && format('lingxiloop-{0}', github.sha) || format('lingxiloop-{0}', github.ref) }}
+  cancel-in-progress: ${{ vars.RELEASE_CONTROLLER_ENABLED != 'true' && github.ref != 'refs/heads/main' }}
 
 permissions:
   actions: read
@@ -747,6 +747,9 @@ jobs:
     needs: [changes, checks, integration, publish, prepare-static]
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    outputs:
+      release_id: ${{ steps.register.outputs.release_id }}
+      app_sha: ${{ steps.register.outputs.app_sha }}
     steps:
       - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
@@ -781,12 +784,15 @@ jobs:
           node server/scripts/scoped-dependencies.mjs
           node server/scripts/install-scoped-dependencies.mjs server-ci
       - name: Register qualified candidate with the single release controller
+        id: register
         env:
           RELEASE_API_URL: ${{ vars.RELEASE_API_URL }}
           RELEASE_API_TOKEN: ${{ secrets.RELEASE_API_TOKEN }}
           RELEASE_OPS_SHA: ${{ vars.RELEASE_OPS_SHA }}
           RELEASE_CONTRACT_FILE: ${{ inputs.release_contract_run_id != '' && 'release-contract-input/release-contracts.json' || '' }}
-        run: node scripts/release-candidate.mjs submit
+        run: |
+          node scripts/release-candidate.mjs submit
+          node scripts/release/github-report.mjs emit
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -794,4 +800,36 @@ jobs:
           path: |
             release-manifest.json
             release-submission.json
+          retention-days: 30
+
+
+  report-release:
+    if: >-
+      always() && vars.RELEASE_CONTROLLER_ENABLED == 'true' &&
+      needs.register-candidate.result == 'success' && needs.register-candidate.outputs.release_id != ''
+    needs: [register-candidate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      deployments: write
+      statuses: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: { node-version: "22" }
+      - name: Observe durable release and report the production outcome
+        id: report
+        env:
+          RELEASE_ID: ${{ needs.register-candidate.outputs.release_id }}
+          RELEASE_API_URL: ${{ vars.RELEASE_API_URL }}
+          RELEASE_API_TOKEN: ${{ secrets.RELEASE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/release/github-report.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-github-report-${{ github.sha }}-${{ github.run_attempt }}
+          path: release-github-report.json
+          if-no-files-found: warn
           retention-days: 30

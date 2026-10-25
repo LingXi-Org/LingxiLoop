@@ -78,7 +78,34 @@ remain host/controller responsibilities; the JSON input supplies no approval
 boolean and no arbitrary commands.
 
 Image receipts retain separate registry index, linux/amd64 manifest, image
-config and uncompressed layer digests. Host plans replace service image
+config and uncompressed layer digests. `ociProof` additionally carries
+`{index, manifest, config}` as base64 of the exact raw registry bytes, with each
+SHA-256 checked against its graph descriptor before recording the artifact.
+The selected platform manifest and config sizes are checked when declared.
+Parsed JSON is used to read the graph, never reserialized as raw proof.
+
+CI reads raw index/platform bytes from `docker buildx imagetools inspect --raw`.
+If buildx appends one transport LF, that single byte is removed only when the
+remaining exact bytes match the expected registry SHA-256; arbitrary trimming,
+CRLF removal and reconstructed JSON are rejected. Config bytes come from an
+authenticated GHCR `/v2/<repository>/blobs/<configDigest>` request. The helper
+uses the existing Docker registry-login configuration/credential helper, or
+CI's scoped `GITHUB_TOKEN` with `GITHUB_ACTOR`, to obtain a short-lived
+repository-pull token, following the [GitHub Container registry authentication
+contract](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+The raw blob endpoint follows the [OCI Distribution
+specification](https://github.com/opencontainers/distribution-spec/blob/main/spec.md).
+Credentials stay in memory and HTTP headers. A GHCR
+signed blob-CDN redirect is followed without forwarding either registry
+credential or pull token; token values and signed URLs never enter the proof,
+argv or diagnostics. Missing raw proof, authentication or digest mismatch fails
+closed.
+
+The OCI config digest is distinct from an engine's local image identifier.
+Docker's containerd image store may expose the OCI index as `.Id` and as the
+container image identity. The host adapter must verify the raw graph and its
+actual engine descriptor before accepting that mapping; CI does not assert
+that an arbitrary local ID equals the config digest. Host plans replace service image
 identities, preserve effective configuration/volumes, and prepare accepted image
 identities as recovery. Runtime plans use maintenance mode until real mixed
 version/checkpoint compatibility is established. Frontend targets depend on

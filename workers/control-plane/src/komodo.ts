@@ -13,6 +13,7 @@ export type KomodoEnv = {
   KOMODO_TARGETS_JSON: string
   KOMODO_API_KEY: string
   KOMODO_API_SECRET: string
+  RELEASE_CONTROLLER_ENABLED?: string
 }
 
 type KomodoTarget = { stack: string }
@@ -88,6 +89,7 @@ export async function readKomodoLogs(env: KomodoEnv, name: KomodoTargetName,
 
 export async function runKomodoStackAction(env: KomodoEnv, name: KomodoTargetName,
   action: 'deploy' | 'start' | 'stop' | 'restart'): Promise<unknown> {
+  if (env.RELEASE_CONTROLLER_ENABLED === 'true' && name !== 'uptime') throw new Error('RELEASE_CONTROLLER_OWNS_TARGET: use lingxiloop_release_* tools')
   const operation = { deploy: 'DeployStack', start: 'StartStack', stop: 'StopStack', restart: 'RestartStack' }[action]
   return request(env, 'execute', operation, { stack: stack(env, name) })
 }

@@ -1,5 +1,5 @@
 # LingxiLoop RAG-only image. SurrealDB runs as a separate service.
-FROM accel.way2api.fun/docker.io/library/python:3.12-slim-trixie AS rag-backend-builder
+FROM docker.io/library/python:3.12-slim-trixie AS rag-backend-builder
 
 # Install build dependencies (uv downloads pre-built wheels for most packages)
 RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
@@ -7,7 +7,7 @@ RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-reco
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv using the official method
-COPY --from=accel.way2api.fun/ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ ENV TIKTOKEN_CACHE_DIR=/app/tiktoken-cache
 RUN mkdir -p /app/tiktoken-cache && \
     .venv/bin/python -c "import tiktoken; tiktoken.get_encoding('o200k_base')"
 
-FROM accel.way2api.fun/docker.io/library/python:3.12-slim-trixie AS lingxiloop-rag
+FROM docker.io/library/python:3.12-slim-trixie AS lingxiloop-rag
 
 RUN apt-get update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
     curl \
