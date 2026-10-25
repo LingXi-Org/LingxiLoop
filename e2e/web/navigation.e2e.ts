@@ -166,8 +166,8 @@ for (const phase of ['creating', 'opening'] as const) {
   test(`course creation respects newer navigation while ${phase}`, { ...memberSession(), ...mutationPermission, tags: ['web', 'navigation', 'mutations'] }, async ({ app, screen, browser }) => {
     await app.open(room)
     await expect(browser.locator('[contenteditable="true"]')).toBeVisible()
-    await screen.getByRole('navigation', '工作区与功能').getByRole('button', 'Agent').tap()
-    await expect(browser.locator('[data-ui-page="agents"]')).toBeVisible()
+    await screen.getByRole('navigation', '工作区与功能').getByRole('button', '论坛', { exact: true }).tap()
+    await expect(browser.locator('[data-ui-page="forum"]')).toBeVisible()
     let release = () => {}
     let requestPending = false
     const gate = new Promise<void>((resolve) => { release = resolve })

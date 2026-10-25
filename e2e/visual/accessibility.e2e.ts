@@ -23,9 +23,9 @@ for (const theme of ['light', 'dark']) {
       })
     })
     for (const ratio of ratios) expect(ratio).toBeGreaterThanOrEqual(4.5)
-    await browser.locator('[data-workspace-view="agents"]').focus()
+    await browser.locator('[data-workspace-view="learning"]').focus()
     await browser.keyboard.press('Enter')
-    await expect(browser.locator('[data-ui-page="agents"]')).toBeVisible()
+    await expect(browser.locator('[data-ui-page="learning"]')).toBeVisible()
   })
 }
 

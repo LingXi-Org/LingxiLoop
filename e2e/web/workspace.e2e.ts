@@ -55,7 +55,7 @@ test.describe('Member workspace', { ...memberSession(), tags: ['web', 'workspace
   test('all top-level learner surfaces load without an error panel', async ({ app, browser, screen }) => {
     await app.open('/?project=e2e-classroom')
     await expect(screen.getByRole('navigation', '工作区与功能').getByRole('button', '资料', { exact: true })).toBeHidden()
-    for (const [name, view] of [['Agent', 'agents'], ['学习概览', 'learning'], ['课程资料', 'course-materials'], ['论坛', 'forum'], ['对话', 'conversations']]) {
+    for (const [name, view] of [['学习概览', 'learning'], ['课程资料', 'course-materials'], ['论坛', 'forum'], ['对话', 'conversations']]) {
       await screen.getByRole('navigation', '工作区与功能').getByRole('button', name).tap()
       await expect(browser.locator(`[data-ui-page="${view}"]`)).toBeVisible()
       await expect(browser.locator(`[data-ui-page="${view}"] [data-resource-skeleton], [data-ui-page="${view}"] [data-skeleton-region], [data-ui-page="${view}"] [aria-busy="true"]`)).toHaveCount(0)

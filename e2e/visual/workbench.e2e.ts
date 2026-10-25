@@ -23,7 +23,7 @@ for (const theme of ['dark', 'light']) {
     expect(geometry.overflow).toBe(false)
     await expect(browser.locator('[data-slot="sidebar"] [aria-current="page"]')).toHaveAttribute('data-variant', 'muted')
     await app.screenshot(`chat-1440-${theme}`)
-    for (const [name, view] of [['Agent', 'agents'], ['学习概览', 'learning'], ['资料', 'library']]) {
+    for (const [name, view] of [['学习概览', 'learning'], ['资料', 'library']]) {
       await screen.getByRole('navigation', '工作区与功能').getByRole('button', name).tap()
       await expect(browser.locator(`[data-ui-page="${view}"]`)).toBeVisible()
       await expect(browser.locator(`[data-ui-page="${view}"] [aria-busy="true"], [data-ui-page="${view}"] [data-skeleton-region]`)).toHaveCount(0)

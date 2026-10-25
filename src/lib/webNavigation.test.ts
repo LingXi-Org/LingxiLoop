@@ -54,3 +54,17 @@ test('unknown pages still fall back to conversations and forum remains independe
     assert.equal(window.location.search, '?project=course-a&view=forum&post=post-a&type=discussion')
   })
 })
+
+test('retired Agent links use the conversation fallback and replace the old URL once', () => {
+  for (const project of ['', 'project=course-a&']) {
+    withLocation(`/?${project}view=agents&conversation=old-chat`, (writes) => {
+      const destination = readWebDestination()
+      assert.deepEqual(destination, { projectId: project ? 'course-a' : null, view: 'conversations', conversationId: null, explicit: true, invalidView: true })
+      assert.equal(safeAuthReturnPath(new URLSearchParams(window.location.search)), `/?${project}view=conversations`)
+      writeWebDestination(destination, 'replace')
+      writeWebDestination(readWebDestination(), 'replace')
+      assert.deepEqual(writes, [{ mode: 'replace', path: `/?${project}view=conversations` }])
+      assert.equal(readWebDestination().invalidView, false)
+    })
+  }
+})
