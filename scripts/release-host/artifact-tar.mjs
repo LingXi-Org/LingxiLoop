@@ -81,7 +81,7 @@ async function parseTar(stream,image){
     if(!item.size||used.has(name)||graphBlobs.has(name)&&item.rawHash===`sha256:${name.split('/').at(-1)}`||/^[a-f0-9]{64}\/(?:json|VERSION)$/.test(name))continue
     // Docker classic storage additionally exports content-addressed v1 compatibility metadata.
     const value=item.bytes?(()=>{try{return JSON.parse(item.bytes)}catch{return null}})():null
-    check(/^blobs\/sha256\/[a-f0-9]{64}$/.test(name)&&item.rawHash===`sha256:${name.split('/').at(-1)}`&&value&&/^[a-f0-9]{64}$/.test(value.id??'')&&Object.keys(value).every(key=>['id','parent','comment','created','container','container_config','docker_version','config','architecture','os','author'].includes(key))&&value.os===image.os&&value.architecture===image.architecture,'ARCHIVE_UNEXPECTED_MEMBER')
+    check(/^blobs\/sha256\/[a-f0-9]{64}$/.test(name)&&item.rawHash===`sha256:${name.split('/').at(-1)}`&&value&&/^[a-f0-9]{64}$/.test(value.id??'')&&(!Object.hasOwn(value,'parent')||/^[a-f0-9]{64}$/.test(value.parent))&&Object.keys(value).every(key=>['id','parent','comment','created','container','container_config','docker_version','config','architecture','os','author'].includes(key))&&value.os===image.os&&(!Object.hasOwn(value,'architecture')||value.architecture===image.architecture),'ARCHIVE_UNEXPECTED_MEMBER')
   }
   return{configDigest:image.configDigest,diffIds:image.diffIds,tag:image.archive.tag,files:count}
 }

@@ -33,7 +33,7 @@ function normalizedMounts(rows){
  return {type,source,target,readOnly}}).sort((a,b)=>a.target<b.target?-1:a.target>b.target?1:0)
  check(new Set(result.map(m=>m.target)).size===result.length,'DUPLICATE_MOUNT_TARGET');return result
 }
-const helper=(file,action,timeoutMs=30000)=>({argv:[NODE,'--experimental-sqlite',`/opt/lingxi-release/current/scripts/release-host/${file}`,POLICY,action],timeoutMs})
+const helper=(opsSha,file,action,timeoutMs=30000)=>({argv:[NODE,'--experimental-sqlite',`/opt/lingxi-release/versions/${opsSha}/scripts/release-host/${file}`,POLICY,action],timeoutMs})
 const ingress=(id,state=false)=>({url:`https://release-b.lingxilearn.cn/ingress${state?`?target=${id}`:''}`,tokenFile:SECRET+'ingress-executor-token',accessClientIdFile:SECRET+'access-client-id',accessClientSecretFile:SECRET+'access-client-secret'})
 function publicImage(image){return Object.fromEntries(['kind','ref','digest','indexDigest','platformDigest','configDigest','os','architecture','variant','diffIds'].filter(k=>image[k]!==undefined).map(k=>[k,structuredClone(image[k])]))}
 function cleanComponentFacts(id,f){
@@ -62,6 +62,7 @@ export function generateAdoption(evidence,{intendedOpsSha}={}){
  check(intendedOpsSha===undefined||/^[a-f0-9]{40}$/.test(intendedOpsSha),'INVALID_INTENDED_OPS_SHA')
  const pending=[],add=(code,target,detail)=>pending.push({code,target,detail}),policies={},components={},imageEvidence={},profiles={},preserved={}
  add('INSTALLED_OPS_AND_POLICY_RECEIPTS_REQUIRED','environment','An intended SHA is not proof of installed executor bytes or policy readback.')
+ if(!intendedOpsSha)add('EXACT_OPS_SHA_REQUIRED','environment','CLI helper argv are omitted until an exact executor SHA can bind their installed version paths.')
  add('ZERO_IN_FLIGHT_HANDOFF_REQUIRED','environment','No old-publisher stop/zero-in-flight handoff receipt is present in these facts.')
  add('ACCEPTED_RELEASE_ID_SEQUENCE_REQUIRED','environment','Allocate accepted release identity/sequence only during the serialized handoff.')
  let db,contract
@@ -73,7 +74,7 @@ export function generateAdoption(evidence,{intendedOpsSha}={}){
   const host=evidence.hosts[side],inventory=host.inventory,targets=host.profile.receipt?.targets??host.profile.targets
   check(inventory?.version===1&&inventory.root===true&&inventory.architecture==='x86_64'&&targets&&(host.profile.receipt??host.profile).complete===true,'HOST_FACTS_UNQUALIFIED')
   preserved[side]=inventory.containers.map(c=>({container:c.name,project:c.labels['com.docker.compose.project'],service:c.labels['com.docker.compose.service'],mounts:normalizedMounts(c.mounts)}))
-  const policy={version:1,listen:{host:'127.0.0.1',port:17951},stateDirectory:'/var/lib/lingxi-release',tokenFile:'/run/credentials/lingxi-release-host.service/executor-token',dockerBinary:'/usr/bin/docker',artifactTransport:'r2',acceptedOpsShas:intendedOpsSha?[intendedOpsSha]:[],archive:{baseUrl:'https://release.lingxilearn.cn',tokenFile:SECRET+'executor-token',timeoutMs:60000},targets:{}}
+  const policy={version:1,listen:{host:'127.0.0.1',port:17951},stateDirectory:'/var/lib/lingxi-release',tokenFile:'/run/credentials/lingxi-release-host.service/executor-token',dockerBinary:'/usr/bin/docker',artifactTransport:'r2',acceptedOpsShas:intendedOpsSha?[intendedOpsSha]:[],...(intendedOpsSha?{clientScript:`/opt/lingxi-release/versions/${intendedOpsSha}/scripts/release-host/pg-client.mjs`}:{}),archive:{baseUrl:'https://release.lingxilearn.cn',tokenFile:SECRET+'executor-token',timeoutMs:60000},targets:{}}
   policies[side]={readyForInstallation:false,installed:false,policy}
   for(const [id,[adapter,project,services]] of Object.entries(definitions[side])){
    const f=targets[id]
@@ -102,8 +103,10 @@ export function generateAdoption(evidence,{intendedOpsSha}={}){
      check(db&&f.runtime.nativeSchemaHash===db.schemaHash&&equal(migrations(f.runtime.migrations),migrations(db.migrations)),'DATABASE_PACKAGE_LEDGER_MISMATCH')
      if(contract)check(equal(contract,targetContract),'RUNTIME_CONTRACT_MISMATCH');contract=targetContract
      local.databaseOwner=side==='a';local.migration={service:'db-migrate',imageService:'lingxiloop'};local.qualifiedRollingContracts=[]
-     for(const action of ['state','barrier','readiness'])local.controls[action]=helper('local-control.mjs',action)
-     if(side==='a')for(const action of ['backup','backupObserve','restoreVerify','restoreVerifyObserve','migrate','migrateObserve'])local.controls[action]=helper('database-tools.mjs',action,1800000)
+     if(intendedOpsSha){
+      for(const action of ['state','barrier','readiness'])local.controls[action]=helper(intendedOpsSha,'local-control.mjs',action)
+      if(side==='a')for(const action of ['backup','backupObserve','restoreVerify','restoreVerifyObserve','migrate','migrateObserve'])local.controls[action]=helper(intendedOpsSha,'database-tools.mjs',action,1800000)
+     }
      local.controls.ingress=ingress(id);local.controls.ingressState=ingress(id,true);local.readinessUrl=null
      add('LOCAL_READINESS_ENDPOINT_REQUIRED',id,'Bind and verify the actual host HTTP readiness route; no URL is guessed from a port number.')
      policy.database={transport:'cached-client',clientImage:f.services.lingxiloop.localImageId,clientWorkdir:'/app',envFile:f.environmentFile,profiles:{[`${db.nativeSchema}:${db.productSchema}:${db.schemaHash}`]:{contract:targetContract,migrationsHash:hash(migrations(db.migrations)),protocolVersion:db.protocolVersion,requiredCapabilities:targetContract.capabilities}}}
