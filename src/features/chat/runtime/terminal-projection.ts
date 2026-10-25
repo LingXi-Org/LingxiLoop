@@ -1,6 +1,7 @@
 import type { ThreadMessage } from '@assistant-ui/react'
 import { getLingxiMessageMetadata as metadata, messageText } from './model'
 import { isRunMessage } from './harness'
+import { terminalFeedbackScopeSchema } from '@/lib/terminalFeedback'
 
 /** A terminal IM receipt and the run snapshot describe the same outcome.
  * Keep the canonical messages intact; fold only an exact match into its run's
@@ -14,11 +15,18 @@ export function projectRunTerminals(messages: readonly ThreadMessage[]): ThreadM
   for (const message of messages) {
     const value = metadata(message), view = value.harness
     if (message.role !== 'assistant' || !isRunMessage(value) || !view || view.runId !== value.runId
-      || message.id !== `run-${value.runId}` || (view.lifecycle !== 'failed' && view.lifecycle !== 'cancelled')
-      || message.status?.type !== 'incomplete' || message.status.reason !== (view.lifecycle === 'cancelled' ? 'cancelled' : 'error')) continue
-    runs.set(key(message, view.requestVersion, view.lifecycle), message)
+      || message.id !== `run-${value.runId}` || !['failed', 'cancelled', 'succeeded'].includes(view.lifecycle ?? '')
+      || message.status?.type !== 'incomplete' || !['error', 'cancelled'].includes(message.status.reason)) continue
+    const status = message.status.reason === 'cancelled' ? 'cancelled' : 'failed'
+    if (view.lifecycle === 'succeeded') {
+      const feedback = value.terminalFeedback
+      if (!feedback || typeof feedback !== 'object' || Reflect.get(feedback, 'requestVersion') !== view.requestVersion
+        || Reflect.get(feedback, 'status') !== status) continue
+    } else if (view.lifecycle !== status) continue
+    runs.set(key(message, view.requestVersion, status), message)
   }
-  const candidates = new Map<string, { messageId: string; id: string; text: string }[]>()
+  type Notice = NonNullable<ReturnType<typeof metadata>['terminalNotice']>
+  const candidates = new Map<string, { messageId: string; notice: Notice }[]>()
   for (const message of messages) {
     const value = metadata(message), version = value.requestVersion, id = value.terminalFeedbackId, status = value.terminalStatus
     if (message.role !== 'system' || value.senderKind !== 'system' || !value.runId
@@ -31,19 +39,25 @@ export function projectRunTerminals(messages: readonly ThreadMessage[]): ThreadM
     if (feedback !== undefined && (!feedback || typeof feedback !== 'object'
       || Reflect.get(feedback, 'id') !== id || Reflect.get(feedback, 'requestVersion') !== version
       || Reflect.get(feedback, 'status') !== status)) continue
-    candidates.set(run.id, [...(candidates.get(run.id) ?? []), { messageId: message.id, id, text }])
+    const scope = terminalFeedbackScopeSchema.safeParse({ scopeVersion: value.terminalScopeVersion, scope: value.terminalScope })
+    candidates.set(run.id, [...(candidates.get(run.id) ?? []), { messageId: message.id,
+      notice: { id, text, runId: value.runId, requestVersion: version, status, ...(scope.success ? scope.data : {}) } }])
   }
-  const details = new Map<string, { id: string; text: string }>(), hidden = new Set<string>()
+  const details = new Map<string, Notice>(), hidden = new Set<string>()
   for (const [runId, receipts] of candidates) {
     // A conflicting feedback identity is evidence to retain, not guess away.
-    if (new Set(receipts.map(receipt => receipt.id)).size !== 1) continue
-    const { id, text } = receipts[0]
-    details.set(runId, { id, text })
+    if (new Set(receipts.map(receipt => receipt.notice.id)).size !== 1) continue
+    details.set(runId, receipts[0].notice)
     for (const receipt of receipts) hidden.add(receipt.messageId)
   }
   return messages.filter(message => !hidden.has(message.id)).map(message => {
     const terminalNotice = details.get(message.id)
-    return terminalNotice ? { ...message, metadata: { ...message.metadata,
-      custom: { ...message.metadata.custom, terminalNotice } } } as ThreadMessage : message
+    const value = metadata(message), previous = value.terminalNotice, view = value.harness
+    const stale = previous && (!view || value.runId !== previous.runId || view.requestVersion !== previous.requestVersion
+      || message.status?.type !== 'incomplete' || message.status.reason !== (previous.status === 'cancelled' ? 'cancelled' : 'error'))
+    if (!terminalNotice && !stale) return message
+    const { terminalNotice: _previous, ...custom } = message.metadata.custom
+    return { ...message, metadata: { ...message.metadata,
+      custom: { ...custom, ...(terminalNotice ? { terminalNotice } : {}) } } } as ThreadMessage
   })
 }

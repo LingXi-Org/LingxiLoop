@@ -3,8 +3,10 @@ import test from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { AssistantStream, AssistantTransportDecoder, AssistantTransportDeltaTracker } from 'assistant-stream'
 import type { RunState, RunStreamEvent } from '@lyyzka/lingxios/ui'
+import type { TerminalFeedback } from '@lyyzka/lingxios'
 import { RunStreamProjection, assistantRunResponse } from '../agent-runtime/assistant-transport.js'
 import type { AgentRunSnapshot } from '../../../src/lib/agentRunSnapshot.js'
+import type { Queryable } from '../db/queryable.js'
 
 // Failure cases: split UTF-8 frames; stale/duplicate drafts; gaps and retractions;
 // leaked memory names/summaries/payloads; lost cancellation, approvals or citations;
@@ -24,6 +26,83 @@ export function runState(status: RunState['run']['status'] = 'leased'): RunState
 const draft = (text: string): RunStreamEvent => ({ type: 'preview', preview: {
   kind: 'snapshot', runId: 'run', fence: 1, requestVersion: 1, attemptId: 'attempt', seq: 1, draft: text,
 } })
+
+test('successful main answer retains its outcome while a matching failed follow-up becomes a scoped error', async () => {
+  const projection = new RunStreamProjection('run', true)
+  projection.apply({ type: 'state', state: runState('succeeded') })
+  assert.equal(projection.snapshot.message.status?.type, 'complete')
+  const feedback: TerminalFeedback = { id: 'feedback', rootWorkId: 'run', requestVersion: 1, reason: 'execution_failed', status: 'failed',
+    failedCount: 1, cancelledCount: 0, notStartedCount: 2, notStartedAgentIds: [], createdAt: '2026-10-25T00:00:00Z', suppressAgentWake: true }
+  const api = { readTerminal: async () => ({ feedback, delivery: 'pending' as const }) }
+  const identity = { tenantId: 'company', agentId: 'agent', sessionId: 'session', principalId: 'human', runId: 'run' }
+  await projection.syncTerminal(api,identity)
+  const message = projection.snapshot.message
+  assert.deepEqual(message.status, { type: 'incomplete', reason: 'error' })
+  const harness = message.metadata.custom.harness as { lifecycle: string; goalOutcome: { status: string } }
+  assert.equal(harness.lifecycle, 'succeeded')
+  assert.equal(harness.goalOutcome.status, 'satisfied')
+  assert.ok(message.content.some(part => part.type === 'text' && part.text === '最终正文'))
+  const terminal = message.metadata.custom.terminalFeedback as { scope: string; scopeVersion: number; text: string; delivery: string }
+  assert.equal(terminal.scope, 'follow_up')
+  assert.equal(terminal.scopeVersion, 1)
+  assert.equal(terminal.delivery, 'pending', 'this is notification delivery, not answer delivery')
+  assert.match(terminal.text, /已有答复已发送.*1 项协作失败.*2 项协作未启动/)
+  const main = runState('succeeded')
+  const committed = projection.committed(main.message!, { resultId: main.run.resultId!, fence: main.run.resultFence! })
+  assert.equal(committed.message.status?.type, 'complete', 'the durable main-result receipt must not inherit successor failure')
+  assert.equal(committed.message.metadata.custom.terminalFeedback, undefined)
+  assert.deepEqual(projection.snapshot.message.status, { type: 'incomplete', reason: 'error' }, 'read projection retains the aggregate failure')
+  await projection.syncTerminal({ readTerminal: async () => ({ feedback: { ...feedback, rootWorkId: 'other' }, delivery: 'delivered' }) }, identity)
+  assert.equal(projection.snapshot.message.status?.type, 'complete', 'another root cannot mark this answer failed')
+  await projection.syncTerminal({ readTerminal: async () => ({ feedback: { ...feedback, requestVersion: 2 }, delivery: 'delivered' }) }, identity)
+  assert.equal(projection.snapshot.message.status?.type, 'complete', 'another request cannot mark this answer failed')
+  await projection.syncTerminal(api,identity)
+  projection.apply({ type: 'state', state: { ...runState(), run: { ...runState().run, requestVersion: 2, fence: 2 } } })
+  await projection.syncTerminal(api,identity)
+  assert.equal(projection.snapshot.message.status?.type, 'running')
+  assert.equal(projection.snapshot.message.metadata.custom.terminalFeedback, undefined)
+})
+
+test('terminal notification cancellation is projected without changing successful root lifecycle', async () => {
+  const projection = new RunStreamProjection('run', true)
+  projection.apply({ type: 'state', state: runState('succeeded') })
+  await projection.syncTerminal({ readTerminal: async () => ({ feedback: { id: 'cancelled-follow-up', rootWorkId: 'run', requestVersion: 1,
+    reason: 'cancelled', status: 'cancelled', failedCount: 0, cancelledCount: 1, notStartedCount: 0, notStartedAgentIds: [],
+    createdAt: '2026-10-25T00:00:00Z', suppressAgentWake: true }, delivery: 'delivered' }) },
+  { tenantId: 'company', agentId: 'agent', sessionId: 'session', principalId: 'human', runId: 'run' })
+  assert.deepEqual(projection.snapshot.message.status, { type: 'incomplete', reason: 'cancelled' })
+  assert.equal((projection.snapshot.message.metadata.custom.terminalFeedback as { scope: string }).scope, 'follow_up')
+})
+
+test('finalization scope requires an accepted echo for this exact result and fence', async () => {
+  const projection = new RunStreamProjection('run', true), main = runState('succeeded')
+  projection.apply({ type: 'state', state: main })
+  const accepted = projection.committed(main.message!, { resultId: 'result', fence: 1 }).message
+  const payload = { ...accepted, metadata: { ...accepted.metadata, custom: { ...accepted.metadata.custom, sourceMessageId: 'accepted-message' } } }
+  const row = { client_nonce: 'accepted-message', channel_id: 'room', channel_type: 2, payload,
+    echo: { messageId: 'wk-message', messageSeq: 1, clientMsgNo: 'accepted-message', channelId: 'room', channelType: 2,
+      fromUid: 'agent', timestamp: 1, payload } }
+  let rows = [row]
+  const database = { query: async (_sql: string, params: unknown[]) => {
+    assert.deepEqual(params, ['run','company','agent','human','session',null,'result','1','1'])
+    return { rows }
+  } } as unknown as Queryable
+  const identity = { tenantId: 'company', agentId: 'agent', sessionId: 'session', principalId: 'human', runId: 'run' }
+  const api = { readTerminal: async () => ({ feedback: { id: 'feedback', rootWorkId: 'run', requestVersion: 1, reason: 'execution_failed' as const,
+    status: 'failed' as const, failedCount: 1, cancelledCount: 0, notStartedCount: 0, notStartedAgentIds: [], createdAt: '', suppressAgentWake: true as const },
+  delivery: 'pending' as const }) }
+  projection.apply({ type: 'state', state: { ...main, delivery: 'failed' } })
+  await projection.syncTerminal(api,identity,undefined,database)
+  assert.equal((projection.snapshot.message.metadata.custom.terminalFeedback as { scope: string }).scope, 'finalization')
+  rows = [{ ...row, echo: { ...row.echo, fromUid: 'other-agent' } }]
+  await projection.syncTerminal(api,identity,undefined,database)
+  assert.equal((projection.snapshot.message.metadata.custom.terminalFeedback as { scope: string }).scope, 'delivery')
+  const changedPayload = { ...payload, metadata: { ...payload.metadata, custom: { ...payload.metadata.custom,
+    harness: { ...(accepted.metadata.custom.harness as object), messageFence: 2 } } } }
+  rows = [{ ...row, payload: changedPayload, echo: { ...row.echo, payload: changedPayload } }]
+  await projection.syncTerminal(api,identity,undefined,database)
+  assert.equal((projection.snapshot.message.metadata.custom.terminalFeedback as { scope: string }).scope, 'delivery')
+})
 function nativeBody(events: RunStreamEvent[]) {
   const bytes = new TextEncoder().encode(events.map(event => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join(''))
   return new ReadableStream<Uint8Array>({ start(controller) {

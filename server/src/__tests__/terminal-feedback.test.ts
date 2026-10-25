@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { RunIdentity, RunState, TerminalFeedback } from '@lyyzka/lingxios'
-import { terminalFailure, terminalFeedbackText } from '../agent-runtime/terminal-feedback.js'
+import { terminalFailure, terminalFeedbackText, terminalFeedbackScope } from '../agent-runtime/terminal-feedback.js'
 
 const identity: RunIdentity = { tenantId: 'synthetic-company', agentId: 'synthetic-agent', sessionId: 'synthetic-session', principalId: 'synthetic-human', runId: 'synthetic-root' }
 const feedback: TerminalFeedback = { id: 'synthetic-terminal', rootWorkId: identity.runId, requestVersion: 2, status: 'failed', reason: 'execution_failed',
@@ -30,7 +30,37 @@ test('only the matching delivered result permits an already-sent claim', () => {
     { ...delivered(), run: { ...delivered().run, resultFence: 2 } },
     { ...delivered(), run: { ...delivered().run, requestVersion: 1 } },
     { ...delivered(), message: null },
+    { ...delivered(), message: { ...delivered().message!, runId: 'another-root' } },
+    { ...delivered(), run: { ...delivered().run, status: 'failed' as const } },
   ]) assert.doesNotMatch(terminalFeedbackText(feedback, value, null), /已有答复已发送/)
+})
+
+test('terminal scope follows current result and accepted receipt evidence, never visible text', () => {
+  assert.equal(terminalFeedbackScope(feedback, state()), 'response')
+  assert.equal(terminalFeedbackScope(feedback, delivered()), 'follow_up')
+  const failedDelivery = { ...delivered(), delivery: 'failed' as const }
+  assert.equal(terminalFeedbackScope(feedback, failedDelivery), 'delivery')
+  assert.equal(terminalFeedbackScope(feedback, failedDelivery, 'accepted-message'), 'finalization')
+  assert.equal(terminalFeedbackScope(feedback, { ...delivered(), delivery: 'pending' }), 'unknown')
+  assert.equal(terminalFeedbackScope(feedback, { ...delivered(), delivery: 'pending' }, 'accepted-message'), 'finalization')
+  for (const value of [
+    { ...failedDelivery, run: { ...failedDelivery.run, resultFence: 2 } },
+    { ...failedDelivery, run: { ...failedDelivery.run, requestVersion: 1 } },
+    { ...failedDelivery, message: { ...failedDelivery.message!, runId: 'another-root' } },
+    { ...failedDelivery, run: { ...failedDelivery.run, status: 'failed' as const } },
+  ]) assert.equal(terminalFeedbackScope(feedback, value, 'accepted-message'), 'unknown')
+  const unfinished = { ...delivered(), run: { ...state().run }, delivery: null }
+  assert.equal(terminalFeedbackScope(feedback, unfinished), 'response', 'visible body cannot prove delivery')
+})
+
+test('delivery and accepted finalization failures preserve their scope and do not blame answer generation', () => {
+  const failedDelivery = { ...delivered(), delivery: 'failed' as const }
+  const deliveryText = terminalFeedbackText(feedback, failedDelivery, 'protocol')
+  assert.match(deliveryText, /答复已生成.*发送未能确认/)
+  assert.doesNotMatch(deliveryText, /已有答复已发送|答复格式有误|当前答复未能完成|发送新消息/)
+  const finalizationText = terminalFeedbackText(feedback, failedDelivery, null, [], 'finalization')
+  assert.match(finalizationText, /答复已发送.*收尾未能完成/)
+  assert.doesNotMatch(finalizationText, /后续协作未全部完成|发送新消息/)
 })
 
 test('a delivered root retains the actual follow-up stop reason and not-started count', () => {

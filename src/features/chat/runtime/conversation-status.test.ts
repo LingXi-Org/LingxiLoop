@@ -16,3 +16,11 @@ test('conversation list states follow durable waits, actor permissions and termi
   assert.equal(conversationRunStatus([run('waiting', 'awaiting_input'), run('succeeded', 'satisfied')]), '等你回答')
   assert.equal(conversationRunStatus([run('waiting', 'awaiting_input', { runConnection: 'inaccessible' })]), '已无访问权限')
 })
+
+test('a succeeded main run cannot hide its matching failed collaboration in the conversation status', () => {
+  const message = { ...run('succeeded', 'satisfied', { runId: 'main',
+    harness: { runId: 'main', lifecycle: 'succeeded', requestVersion: 2, goalOutcome: { status: 'satisfied' } },
+    terminalFeedback: { id: 'feedback', requestVersion: 2, status: 'failed', scopeVersion: 1, scope: 'follow_up' },
+  }), status: { type: 'incomplete', reason: 'error' }, content: [] } as ThreadMessage
+  assert.equal(conversationRunStatus([message]), '后续协作未完成')
+})

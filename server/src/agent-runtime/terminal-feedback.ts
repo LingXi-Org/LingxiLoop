@@ -1,7 +1,30 @@
 import type { createLingxiOS, RunIdentity, RunState, RuntimeOperationContext, TerminalFeedback } from '@lyyzka/lingxios'
+import type { TerminalScope } from '../../../src/lib/terminalFeedback.js'
 
 type Runtime = Awaited<ReturnType<typeof createLingxiOS>>
 export type TerminalFailure = 'protocol' | 'timeout' | null
+
+/** The result and message must belong to this terminal root and current fence.
+ * A partial public answer or a previous request's result is not a receipt. */
+export function terminalResult(feedback: TerminalFeedback, state: RunState) {
+  if (state.run.id !== feedback.rootWorkId || state.run.requestVersion !== feedback.requestVersion
+    || state.run.status !== 'succeeded' || !state.run.resultId || state.run.resultFence !== state.run.fence
+    || state.message?.runId !== state.run.id || state.message.envelope.requestVersion !== feedback.requestVersion) return
+  return { resultId: state.run.resultId, requestVersion: state.run.requestVersion, fence: state.run.fence }
+}
+
+export function terminalFeedbackScope(feedback: TerminalFeedback, state: RunState, acceptedReference?: string): TerminalScope {
+  if (state.run.id !== feedback.rootWorkId || state.run.requestVersion !== feedback.requestVersion) return 'unknown'
+  if (terminalResult(feedback, state)) {
+    if (state.delivery === 'delivered') return 'follow_up'
+    // The caller resolves this through readDeliveredReference, which checks the
+    // authorized result/request/fence and the recorded IM acceptance echo.
+    if (acceptedReference) return 'finalization'
+    return state.delivery === 'failed' ? 'delivery' : 'unknown'
+  }
+  if (!state.run.resultId && (state.run.status === 'failed' || state.run.status === 'cancelled')) return 'response'
+  return 'unknown'
+}
 
 /** Read only structured diagnostics for this terminal request/fence. Never infer
  * a cause from private exception text or an elapsed duration. */
@@ -32,10 +55,9 @@ export async function terminalFailure(
 
 export function terminalFeedbackText(
   feedback: TerminalFeedback, state: RunState, failure: TerminalFailure, notStartedNames: readonly string[] = [],
+  scope: TerminalScope = terminalFeedbackScope(feedback, state),
 ): string {
-  const delivered = state.run.id === feedback.rootWorkId && state.run.requestVersion === feedback.requestVersion
-    && state.run.resultId !== null && state.run.resultFence === state.run.fence && state.delivery === 'delivered'
-    && state.message?.envelope.requestVersion === feedback.requestVersion
+  const delivered = scope === 'follow_up'
   const reasons = {
     context_limit: '当前执行超出了可处理的上下文范围，可以缩小材料范围后继续。',
     budget_limit: '本轮预算已达上限，部分工作未能继续。',
@@ -57,10 +79,14 @@ export function terminalFeedbackText(
     interrupted: '后续协作在恢复过程中中断。',
     execution_failed: '后续协作未全部完成。',
   } as const
-  const parts = [delivered ? `已有答复已发送，${followUpReasons[feedback.reason]}` : reasons[feedback.reason]]
+  const parts = [delivered ? `已有答复已发送，${followUpReasons[feedback.reason]}`
+    : scope === 'delivery' ? '答复已生成，发送未能确认。请刷新进度确认发送状态。'
+      : scope === 'finalization' ? '答复已发送，本轮收尾未能完成。请刷新进度查看当前状态。'
+        : scope === 'unknown' ? '本轮执行未能确认完成。请刷新进度查看当前状态。' : reasons[feedback.reason]]
   if (feedback.failedCount) parts.push(`${delivered ? '后续有' : '本轮有'} ${feedback.failedCount} 项${delivered ? '协作' : '执行'}失败。`)
   if (feedback.cancelledCount) parts.push(`${delivered ? '后续有' : '本轮有'} ${feedback.cancelledCount} 项${delivered ? '协作' : '执行'}已取消。`)
   if (feedback.notStartedCount) parts.push(`本轮有 ${feedback.notStartedCount} 项协作未启动${notStartedNames.length ? `（${notStartedNames.join('、')}）` : ''}。`)
-  parts.push('已完成的操作会保留，你可以发送新消息继续。')
+  parts.push(scope === 'response' || scope === 'follow_up'
+    ? '已完成的操作会保留，你可以发送新消息继续。' : '已完成的操作会保留。')
   return parts.join(' ')
 }

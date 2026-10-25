@@ -2,7 +2,7 @@ import { readRunPresentationVersion } from './identity.js'
 import { AssistantStream, AssistantTransportEncoder, type AssistantStreamChunk, type AssistantTransportStateOperation } from 'assistant-stream'
 import type { ReadonlyJSONValue } from 'assistant-stream/utils'
 import { consumeAssistantMessage, consumeRunStreamEvent, consumePublicTextAttempts, createRunView, type AssistantMessage, type RunStreamEvent, type PublicTextAttempt } from '@lyyzka/lingxios/ui'
-import type { createLingxiOS, RunIdentity, RuntimeOperationContext, RunTraceSnapshot } from '@lyyzka/lingxios'
+import type { createLingxiOS, RunIdentity, RunState, RuntimeOperationContext, RunTraceSnapshot } from '@lyyzka/lingxios'
 import type { AgentRunSnapshot, RunDisplayState } from '../../../src/lib/agentRunSnapshot.js'
 import { createNativeMessage } from '../im/message-types.js'
 import { archivedPublicText, runMessageParts, runMessageStatus, harnessToolParts, type HarnessToolPart } from './message-projection.js'
@@ -16,6 +16,8 @@ import type { Queryable } from '../db/queryable.js'
 import { readQuestionnaireWait } from './questionnaire-projection.js'
 import { projectActivityTasks } from './activity-tasks.js'
 import { readDeliveredReference } from './delivery-reference.js'
+import { terminalFeedbackScope, terminalFeedbackText, terminalResult } from './terminal-feedback.js'
+import type { TerminalScope } from '../../../src/lib/terminalFeedback.js'
 
 /** LingxiOS owns event ordering/fences; only public native messages cross HTTP. */
 export class RunStreamProjection {
@@ -34,7 +36,8 @@ export class RunStreamProjection {
   private deliveredReference?: { resultId: string; requestVersion: number; fence: number; sourceMessageId: string }
   private durableDraft = ''
   private questionnaireWait: { questionId: string; requestVersion: number } | null = null
-  private terminalFeedback: { id: string; requestVersion: number; reason: string; status: string; delivery: string } | null = null
+  private terminalFeedback: { id: string; requestVersion: number; reason: string; status: 'failed' | 'cancelled'; delivery: string; scopeVersion: 1; scope: TerminalScope; text?: string } | null = null
+  private terminalState: RunState | null = null
   needsResync = false
 
   constructor(runId: string, private readonly canControl: boolean,
@@ -60,6 +63,7 @@ export class RunStreamProjection {
     const before = this.view
     this.view = consumeRunStreamEvent(before, item)
     if (this.view.requestVersion !== before.requestVersion || this.view.fence !== before.fence || this.view.lifecycle !== before.lifecycle) {
+      this.terminalFeedback = null
       if (this.nativeTrace !== undefined) this.nativeTrace = null
       this.nativeTraceAvailable = false
     }
@@ -77,6 +81,7 @@ export class RunStreamProjection {
     this.needsResync = item.type === 'preview' && item.preview.kind === 'delta'
       && this.view !== before && this.view.preview === null
     if (item.type === 'state' && this.view !== before) {
+      this.terminalState = item.state
       this.createdAt = item.state.run.createdAt
       this.error = item.state.run.error ? userFacingError(item.state.run.error, '这次任务未能完成，请稍后重试。') : null
     }
@@ -142,11 +147,25 @@ export class RunStreamProjection {
       ? await readQuestionnaireWait(identity, this.view.requestVersion, database) : null
   }
 
-  async syncTerminal(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readTerminal'>, identity: RunIdentity, operation?: RuntimeOperationContext): Promise<void> {
+  async syncTerminal(api: Pick<Awaited<ReturnType<typeof createLingxiOS>>, 'readTerminal'>, identity: RunIdentity, operation?: RuntimeOperationContext, database?: Queryable): Promise<void> {
+    const view = this.view
     const terminal = await api.readTerminal(identity,operation)
-    this.terminalFeedback = terminal && terminal.feedback.requestVersion === this.view.requestVersion
+    if (this.view.requestVersion !== view.requestVersion || this.view.fence !== view.fence || this.view.lifecycle !== view.lifecycle
+      || this.view.resultId !== view.resultId || this.view.messageFence !== view.messageFence || this.view.delivery !== view.delivery) return
+    const state = this.terminalState
+    const currentState = state && state.run.id === view.runId && state.run.requestVersion === view.requestVersion
+      && state.run.fence === view.fence && state.run.status === view.lifecycle && state.run.resultId === view.resultId
+      && state.delivery === view.delivery ? state : null
+    const committed = terminal && currentState ? terminalResult(terminal.feedback, currentState) : undefined
+    const acceptedReference = committed && currentState?.delivery !== 'delivered'
+      ? await readDeliveredReference(identity, committed, database) : undefined
+    if (this.view.requestVersion !== view.requestVersion || this.view.fence !== view.fence || this.view.lifecycle !== view.lifecycle
+      || this.view.resultId !== view.resultId || this.view.messageFence !== view.messageFence || this.view.delivery !== view.delivery) return
+    const scope = terminal && currentState ? terminalFeedbackScope(terminal.feedback,currentState,acceptedReference) : 'unknown'
+    this.terminalFeedback = terminal && terminal.feedback.rootWorkId === view.runId && terminal.feedback.requestVersion === view.requestVersion
       ? { id: terminal.feedback.id,requestVersion: terminal.feedback.requestVersion,reason: terminal.feedback.reason,
-          status: terminal.feedback.status,delivery: terminal.delivery } : null
+          status: terminal.feedback.status,delivery: terminal.delivery,scopeVersion: 1,scope,
+          ...(state ? { text: terminalFeedbackText(terminal.feedback,state,null,[],scope) } : {}) } : null
   }
 
   async syncDeliveredReference(identity: RunIdentity, database?: Queryable): Promise<void> {
@@ -167,7 +186,9 @@ export class RunStreamProjection {
   committed(message: AssistantMessage, commit: { resultId: string; fence: number }): AgentRunSnapshot {
     if (this.view.requestVersion > message.envelope.requestVersion || this.view.messageFence > commit.fence) throw new Error('stale committed delivery')
     this.view = { ...consumeAssistantMessage(this.view,message,commit), delivery: 'delivered' }
-    return this.snapshot
+    // The accepted IM echo proves this committed main result. Aggregate
+    // collaboration failure is projected separately when reading the run.
+    return this.projectSnapshot(false)
   }
 
   activityPage(offset: number, attentionOnly = false) {
@@ -188,6 +209,10 @@ export class RunStreamProjection {
   }
 
   get snapshot(): AgentRunSnapshot {
+    return this.projectSnapshot(true)
+  }
+
+  private projectSnapshot(includeTerminal: boolean): AgentRunSnapshot {
     if (!this.createdAt) throw new Error('run state must precede message updates')
     const { message, draft: _draft, preview: _preview, publicTextParts: _publicTextParts, publicTextAttempts: _publicTextAttempts,
       publicTextCommit: _publicTextCommit, ...control } = this.view
@@ -210,8 +235,10 @@ export class RunStreamProjection {
     const latestCommentary = activity.filter(part => activityAnnotation(part)?.kind === 'commentary').at(-1)
     if (latestCommentary && !recent.includes(latestCommentary)) { recent.shift(); recent.push(latestCommentary) }
     const selected = new Set([...recent, ...attention.slice(-40)])
+    const terminal = includeTerminal && this.terminalFeedback?.requestVersion === this.view.requestVersion
+      && ['succeeded','failed','cancelled'].includes(this.view.lifecycle ?? '') ? this.terminalFeedback : null
     const input = { id: `run-${this.view.runId}`, role: 'assistant' as const, createdAt: this.createdAt,
-      content: parts, status: runMessageStatus(this.view),
+      content: parts, status: terminal ? { type: 'incomplete' as const, reason: terminal.status === 'cancelled' ? 'cancelled' as const : 'error' as const } : runMessageStatus(this.view),
       custom: { runId: this.view.runId, harness, harnessControl: this.canControl, activityPresentation: { version: 1 },
         ...(activityContext.tasks ? { activityTasks: activityContext.tasks } : {}),
         runTrace: this.traceSnapshot(),
@@ -222,7 +249,7 @@ export class RunStreamProjection {
         ...(this.identity?.principalId ? { controlPrincipalId: this.identity.principalId } : {}),
         ...(this.identity?.threadId ? { replyToClientMsgNo: this.identity.threadId } : {}),
         ...(this.error ? { harnessError: this.error } : {}),
-        ...(this.terminalFeedback?.requestVersion === this.view.requestVersion ? { terminalFeedback: this.terminalFeedback } : {}),
+        ...(terminal ? { terminalFeedback: terminal } : {}),
         ...(this.sourceRef ? { sourceRef: this.sourceRef } : {}),
         ...(this.view.lifecycle === 'succeeded' && this.view.delivery === 'delivered' && this.deliveredReference?.resultId === this.view.resultId
           && this.deliveredReference.requestVersion === this.view.requestVersion && this.deliveredReference.fence === this.view.messageFence
@@ -286,7 +313,7 @@ export async function readRunProjection(api: Awaited<ReturnType<typeof createLin
   if (!current) throw new Error('run not found')
   projection.apply({ type: 'state',state: current })
   await projection.syncApprovals(api,identity,operation)
-  await projection.syncTerminal(api,identity,operation)
+  await projection.syncTerminal(api,identity,operation,database)
   await projection.syncQuestionnaire(identity,database)
   await projection.syncDeliveredReference(identity,database)
   await Promise.all([projection.syncPresentation(identity, presentationSignal),

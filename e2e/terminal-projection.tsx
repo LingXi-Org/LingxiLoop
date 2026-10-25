@@ -10,9 +10,16 @@ import { useParticipants } from '@/features/agents/state'
 import { useConversations } from '@/features/conversations/store'
 import { createNativeMessage } from '@/lib/nativeMessage'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { chatTransport } from '@/features/chat/runtime/transport'
 import '@/styles/globals.css'
 
 if (!import.meta.env.DEV && import.meta.env.MODE !== 'interactive-test') throw new Error('This fixture requires the isolated test build')
+const followUp = new URLSearchParams(location.search).has('follow-up')
+const actions = { refreshes: 0, sends: 0 }
+const record = () => { document.documentElement.dataset.terminalActions = JSON.stringify(actions) }
+chatTransport.refreshRun = async () => { actions.refreshes++; record() }
+chatTransport.send = async () => { actions.sends++; record(); return true }
+record()
 const agent = { id: 'agent', kind: 'agent' as const, name: '合成助手', initial: '助', avatarBg: '', status: 'avail' as const }
 useParticipants.setState({ byId: { agent } })
 useConversations.setState({ list: [{ id: 'room', readOnly: false, members: ['human', 'agent'] }] as ReturnType<typeof useConversations.getState>['list'] })
@@ -24,14 +31,20 @@ function message(id: string, role: 'user' | 'assistant' | 'system', seq: number,
 }
 const question = (id: string, seq: number) => message(`user-${id}`, 'user', seq, '二加二等于几？')
 function run(id: string, seq: number, success = false) {
-  return { ...message(`run-${id}`, 'assistant', seq, success ? '四是二加二的结果。' : '', {
+  const scoped = followUp && id === 'one'
+  const reply = message(`run-${id}`, 'assistant', seq, success ? '四是二加二的结果。' : scoped ? '合成任务清单已交付。' : '', {
     runId: id, sourceRef: `user-${id}`, refs: { agentId: 'agent' },
-    ...(!success ? { terminalFeedback: { id: `feedback-${id}`, requestVersion: 1, status: 'failed', reason: 'model_unavailable', delivery: 'delivered' } } : {}),
-    harness: { ...createRunView(id), lifecycle: success ? 'succeeded' : 'failed', requestVersion: 1, fence: 1, artifacts: [] },
-  }), status: success ? { type: 'complete', reason: 'stop' } : { type: 'incomplete', reason: 'error' } } as ThreadMessage
+    ...(!success ? { terminalFeedback: { id: `feedback-${id}`, requestVersion: 1, status: 'failed', reason: 'model_unavailable', delivery: 'delivered',
+      ...(scoped ? { scopeVersion: 1, scope: 'follow_up', text: '已有答复已发送，后续协作未全部完成。后续有 1 项协作失败。' } : {}) } } : {}),
+    harness: { ...createRunView(id), lifecycle: success || scoped ? 'succeeded' : 'failed', requestVersion: 1, fence: 1, artifacts: [] },
+  })
+  return { ...reply, content: scoped ? [...reply.content, { type: 'text', text: '已查询合成任务',
+    providerMetadata: { lingxiloop: { activity: { version: 1, id: 'lookup', kind: 'commentary', label: '查询任务' } } } }] : reply.content,
+    status: success ? { type: 'complete', reason: 'stop' } : { type: 'incomplete', reason: 'error' } } as ThreadMessage
 }
 const receipt = message('terminal-feedback-one', 'system', 3, '合成服务故障，已完成的操作会保留。',
-  { runId: 'one', requestVersion: 1, terminalFeedbackId: 'feedback-one', terminalStatus: 'failed' })
+  { runId: 'one', requestVersion: 1, terminalFeedbackId: 'feedback-one', terminalStatus: 'failed',
+    ...(followUp ? { terminalScopeVersion: 1, terminalScope: 'follow_up' } : {}) })
 const first = [question('one', 1), run('one', 2), receipt], next = [question('two', 4), run('two', 5, true)]
 function Fixture() {
   const [canonical, setCanonical] = useState(() => [...first, ...(sessionStorage.getItem('issue-326-next') === '1' ? next : [])])

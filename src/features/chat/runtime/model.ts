@@ -1,6 +1,7 @@
 import { serializeMessage, type NativeMessage } from '@/lib/nativeMessage'
 import type { ThreadMessage } from '@assistant-ui/react'
 import type { RunDisplayState } from '@/lib/agentRunSnapshot'
+import type { TerminalScope } from '@/lib/terminalFeedback'
 export type { HarnessToolPart } from '@/lib/agentRunSnapshot'
 
 export type LingxiDeliveryStatus = 'sending' | 'sent' | 'failed'
@@ -72,7 +73,7 @@ export interface LingxiMessageMetadata extends Record<string, unknown> {
   harnessControl?: boolean
   harnessError?: string
   /** Public durable terminal explanation, folded into the matching run for display. */
-  terminalNotice?: { id: string; text: string }
+  terminalNotice?: { id: string; text: string; runId: string; requestVersion: number; status: 'failed' | 'cancelled'; scopeVersion?: 1; scope?: TerminalScope }
   runConnection?: 'checking' | 'released' | 'inaccessible' | 'missing' | 'unauthenticated'
   regenerateOfClientMsgNo?: string
   retryOfClientMsgNo?: string

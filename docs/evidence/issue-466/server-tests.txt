@@ -1,0 +1,90 @@
+✔ v2 accepted source keeps the same answer identity through the commit-read gap and native handoff (35.370939ms)
+✔ superseded candidates and new requests reset the answer identity without reviving the old committed answer (15.28807ms)
+✔ validated homework locators remain results while resolved approvals become process receipts (0.870529ms)
+✔ activity annotations retain original event order and changing watermarks for replay merges (3.518198ms)
+✔ a newer execution fence cannot reuse an older accepted answer identity or suppress the current v2 answer (26.548867ms)
+✔ unknown side effects remain current attention in a bounded satisfied run (16.884511ms)
+✔ rehydrating old rich tool events does not invent a display purpose (3.247652ms)
+✔ committed citation data stays valid on the strict wire and different source versions remain distinct (3.16015ms)
+✔ replaced answer drafts have an explicit transcript identity; acceptance retains the current answer until commit (29.064759ms)
+✔ failure and cancellation retain the latest partial answer and factual status (4.241345ms)
+✔ successful main answer retains its outcome while a matching failed follow-up becomes a scoped error (28.400691ms)
+✔ terminal notification cancellation is projected without changing successful root lifecycle (1.267284ms)
+✔ finalization scope requires an accepted echo for this exact result and fence (3.21972ms)
+[redis] Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[redis sub] Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+✔ an authorized prepared snapshot is delivered before an idle upstream emits any event (35.77176ms)
+✔ native state operations stream text once, retract it, and end with canonical content (24.081028ms)
+✔ projection owns gaps, cancellation, failures, approvals and filtered tool/memory replay (12.08784ms)
+✔ truncated native frames and old browser wire format fail instead of falling back (2.607901ms)
+[redis sub] Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[redis] Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[redis] Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+[redis sub] Error: connect ECONNREFUSED 127.0.0.1:6379
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1864:16) {
+  errno: -111,
+  code: 'ECONNREFUSED',
+  syscall: 'connect',
+  address: '127.0.0.1',
+  port: 6379
+}
+✔ prefetched upstream failure survives downstream backpressure (247.263949ms)
+✔ commit handoff and tool activity preserve the live answer part (6.664327ms)
+✔ every changing public snapshot round-trips through the actual stream decoder (24.182356ms)
+✔ concurrent protocol responses retain separate prior state and control permissions (8.74187ms)
+✔ JSON normalization, structural replacements and append paths keep every wire state exact (7.609308ms)
+(node:3687) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:3687) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ terminal port preserves accepted feedback, fences stale versions and never wakes agents (1166.467822ms)
+✔ root delivery and failed successors have separate scope without negating an existing answer (3.028863ms)
+✔ only the matching delivered result permits an already-sent claim (0.348584ms)
+✔ terminal scope follows current result and accepted receipt evidence, never visible text (0.214633ms)
+✔ delivery and accepted finalization failures preserve their scope and do not blame answer generation (0.2199ms)
+✔ a delivered root retains the actual follow-up stop reason and not-started count (0.206801ms)
+✔ protocol, timeout and ordinary provider failures keep distinct safe wording (0.289525ms)
+✔ structured terminal failure belongs to the current request and fence; raw text is never classification (0.458899ms)
+✔ diagnostic pagination is bounded and the same callback operation is propagated (10.133463ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3206.30222
