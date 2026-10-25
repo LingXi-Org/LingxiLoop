@@ -1,6 +1,8 @@
 """Development-only generator for entirely synthetic issue #424 fixtures."""
 from pathlib import Path
 from pptx import Presentation
+from pptx.chart.data import CategoryChartData
+from pptx.enum.chart import XL_CHART_TYPE
 from pptx.util import Inches
 from PIL import Image
 import io
@@ -32,6 +34,21 @@ Image.new('RGB', (8, 8), 'white').save(picture, format='PNG')
 picture.seek(0)
 slide.shapes.add_picture(picture, Inches(1), Inches(1))
 deck.save(root / 'image-only.pptx')
+
+deck = Presentation()
+slide = deck.slides.add_slide(deck.slide_layouts[5])
+slide.shapes.title.text = 'Synthetic chart 图表'
+chart = CategoryChartData()
+chart.categories = ['Input 输入', 'Output 输出']
+chart.add_series('Synthetic series 合成数据', (2, 5))
+slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, Inches(1), Inches(2), Inches(7), Inches(4), chart)
+deck.save(root / 'chart.pptx')
+
+if '--encrypted' in sys.argv:
+    import msoffcrypto
+    with (root / 'material.pptx').open('rb') as source, (root / 'encrypted.pptx').open('wb') as destination:
+        msoffcrypto.OfficeFile(source).encrypt('synthetic-fixture-password', destination)
+
 with zipfile.ZipFile(root / 'expanded-limit.pptx', 'w', compression=zipfile.ZIP_DEFLATED) as archive:
     archive.writestr('ppt/slides/slide1.xml', b' ' * (32 * 1024 * 1024 + 1))
 

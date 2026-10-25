@@ -259,3 +259,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
+
+## shadcn runtime stylesheet
+
+`src/styles/vendor/shadcn/tailwind.css` is the unmodified runtime stylesheet from
+`shadcn@4.19.0`, `package/dist/tailwind.css`, distributed at
+https://www.npmjs.com/package/shadcn/v/4.19.0 under the MIT license.
+The root npm lock records the source tarball integrity; the adjacent README
+records its SHA-256 and update procedure. The license is retained alongside the
+source and in `public/licenses/shadcn.txt`, which Vite copies into the SPA.
+The shadcn CLI remains available through the full development installation.

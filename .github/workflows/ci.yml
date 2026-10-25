@@ -75,6 +75,9 @@ jobs:
               - '.npmrc'
               - 'package.json'
               - 'package-lock.json'
+              - 'server/build/**'
+              - 'server/scripts/scoped-dependencies*'
+              - 'server/scripts/install-scoped-dependencies.mjs'
             lint_config:
               - 'biome.json'
             test_runner:
@@ -303,15 +306,20 @@ jobs:
         with:
           node-version: "22"
           cache: ${{ matrix.component != 'release' && 'npm' || '' }}
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: ${{ format('server/build/{0}/package-lock.json', matrix.component == 'server' && 'server-ci' || matrix.component == 'release' && 'deploy-contract' || matrix.component) }}
       # Version synchronization reads JSON with Node builtins; it needs no packages.
       - if: matrix.component != 'open-notebook' && matrix.component != 'release'
-        run: npm ci --prefer-offline
+        run: |
+          node server/scripts/scoped-dependencies.mjs
+          node --test server/scripts/scoped-dependencies.test.mjs
+          node server/scripts/install-scoped-dependencies.mjs ${{ matrix.component == 'server' && 'server-ci' || matrix.component }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - if: matrix.component != 'open-notebook' && matrix.component != 'release'
         name: Record installed dependency footprint
-        run: du -sb node_modules
+        run: |
+          du -sb node_modules
+          du -sb "$(npm config get cache)"
       - if: matrix.component == 'web'
         run: node --test --test-name-pattern='SPA image' scripts/production-rag-contract.test.mjs
       - if: matrix.component == 'web'
@@ -346,6 +354,9 @@ jobs:
         run: npm run server:lint && npm run server:typecheck && npm run server:test && node --test scripts/test-selectors.test.mjs
         env:
           CI_TEST_FILES: ${{ needs.changes.outputs.server_tests }}
+      - if: matrix.component == 'server'
+        name: Verify OfficeParser runtime pruning against product fixtures
+        run: node server/scripts/test-officeparser-runtime-prune.mjs node_modules server/src/modules/learning/homework-presentation.ts
       - if: matrix.component == 'control'
         run: npm run control:lint && npm run control:typecheck && npm run control:test
       - if: matrix.component == 'open-notebook'
@@ -421,8 +432,8 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: package-lock.json
-      - run: npm ci --prefer-offline
+          cache-dependency-path: server/build/integration/package-lock.json
+      - run: node server/scripts/scoped-dependencies.mjs && node server/scripts/install-scoped-dependencies.mjs integration
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - run: npm run verify:visualize && npm run build:visualize-runtime
@@ -565,8 +576,8 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: package-lock.json
-      - run: npm ci --prefer-offline
+          cache-dependency-path: server/build/admin-control/package-lock.json
+      - run: node server/scripts/scoped-dependencies.mjs && node server/scripts/install-scoped-dependencies.mjs admin-control
         env:
           NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       - name: Build Refine before production changes
