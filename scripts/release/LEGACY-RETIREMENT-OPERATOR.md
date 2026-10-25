@@ -31,6 +31,14 @@ The shared source is bound to SHA-256
 `cca6816135ad1781c342493f3dbde3148728aff1ea20519a1e2a9799ee14ba69`,
 including ingress pin `816433430c71887905bf277d6ced523cc92f6674`.
 
+Runtime qualification is independently bound to reviewed PR #507 exact head
+`d378bcda174783da88b5e42b93e05e97afb4b68b` (`OPS_SHA`), whose two CI runs
+40246725054/40246725060 succeeded. Its merge commit is not the runtime Ops pin.
+The retained ingress route bytes are unchanged, so `INGRESS_SOURCE_SHA` remains
+the previously qualified 816 commit. Shared source/rollback hashes and the seven
+approved metadata updates therefore remain unchanged. This is a required version
+binding, not evidence that d378 has been deployed or automatically qualified.
+
 ## Root-supplied evidence bundle, version 1
 
 The owning test constructs a **synthetic, network-free test fixture**, not a
@@ -39,7 +47,7 @@ receipts below; do not replace them with `accepted:true` or `zeroInFlight:true`.
 The `evidenceHash` export hashes recursively sorted JSON, prefixed `sha256:`.
 `receiptText` and the CLI evidence-file hash use their exact original bytes.
 
-* `opsSha`: the exact `816433430c71887905bf277d6ced523cc92f6674`.
+* `opsSha`: the exact `d378bcda174783da88b5e42b93e05e97afb4b68b`.
 * `runtime`: `{manifest, record, verified}`. `manifest` is the actual registered
   complete A/B runtime manifest; `record` is its current authenticated
   `/v1/releases/<id>` response with status `accepted`; `verified` is the actual
@@ -66,9 +74,12 @@ The `evidenceHash` export hashes recursively sorted JSON, prefixed `sha256:`.
   `verified.json` is required.
 * `controller.userReadback`: `{source:"parent-trusted-user-readback",messageId,
   observedAt,text,sha256,values:{RELEASE_CONTROLLER_ENABLED:"true",
-  RELEASE_OPS_SHA:<exact-816-sha>}}`. `sha256` binds the trusted user's original
+  RELEASE_OPS_SHA:"d378bcda174783da88b5e42b93e05e97afb4b68b"}}`. `sha256` binds the trusted user's original
   text. The current known false receipt cannot pass this check. The actor does
   not retry the already denied Variables/Secrets API or switch identities.
+  These are the required final Variables values, not a claim that a user has
+  already supplied this readback. The earlier 816 acceptance and manually
+  continued gen5 recovery cannot satisfy the new d378 qualification gate.
 * `controller.ci`: actual provider exports `{run,dispatch,baseline,jobs,artifacts}`
   for a successful **main publish_only=true** workflow dispatch. `dispatch` is
   the original request with `{ref:"main",inputs:{publish_only:true}}`. `run` is

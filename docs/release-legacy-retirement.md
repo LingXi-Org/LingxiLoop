@@ -117,11 +117,15 @@ recorded. After review, the integrator may set only this field through
 `UpdateStack` and read it back; no PullStack/RunSync/Deploy is needed or authorized
 by this preparation.
 
-Before using the pin, the integrator must ensure that the exact Git object is
-published and readable by the existing Komodo repo access. If a squash or
-cherry-pick changes the route-fix commit SHA, replace the pin with the final
-published commit containing these exact bytes and revalidate the source hash.
-Do not use a still-unpublished object or float back to `main` as a fallback.
+The published 816 object remains the qualified ingress source independently of
+the runtime operations version. The fixed retirement operator now requires
+runtime/recovery and trusted `RELEASE_OPS_SHA` readback to match reviewed PR #507
+head `d378bcda174783da88b5e42b93e05e97afb4b68b`; required controller enablement is
+`RELEASE_CONTROLLER_ENABLED=true`. These are execution prerequisites, not claims
+that this new Ops version has already been deployed or automatically qualified.
+Do not change the existing ingress pin/source hashes merely because runtime Ops
+changes, or float back to `main` as a fallback. See the exact
+[operator inputs](../scripts/release/LEGACY-RETIREMENT-OPERATOR.md).
 
 ## Serialized execution and verification
 

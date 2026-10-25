@@ -8,7 +8,8 @@ import{execFileSync}from'node:child_process'
 import{isDeepStrictEqual as equal}from'node:util'
 import{claimProcessLock}from'../release-host/server.mjs'
 
-export const OPS_SHA='816433430c71887905bf277d6ced523cc92f6674'
+export const OPS_SHA='d378bcda174783da88b5e42b93e05e97afb4b68b'
+export const INGRESS_SOURCE_SHA='816433430c71887905bf277d6ced523cc92f6674'
 export const SHARED_SHA='cca6816135ad1781c342493f3dbde3148728aff1ea20519a1e2a9799ee14ba69'
 export const OLD_SOURCE_SHA='5e2fa5e7ec7fb401ae4021a8b8730ecd127a77bf5f73be0b4c49bb9d8ba987e9'
 const SNAPSHOT_SHA='03edb2e2a383229c4b9596a80b67f222fedf3e4d4266664eecd7ec81b09640c7'
@@ -71,21 +72,21 @@ export function validateEvidence(e,{now=Date.now()}={}){
 const getOp=o=>o.kind==='Stack'?'GetStack':o.kind==='Procedure'?'GetProcedure':'GetResourceSync',param=o=>({[o.kind==='Stack'?'stack':o.kind==='Procedure'?'procedure':'sync']:o.id}),strip=(config,keys)=>Object.fromEntries(Object.entries(config).filter(([k])=>!keys.includes(k)))
 export function buildPlan(e,snapshot,sharedSource,oldSource){
  validateEvidence(e);check(snapshot?.readOnly===true&&snapshot.observedAt==='2026-10-25T23:05:56.429Z'&&snapshot.coreVersion?.version==='2.3.3','LEGACY_SNAPSHOT_REQUIRED')
- check(rawHash(sharedSource)===SHARED_SHA&&sharedSource.includes(`commit = "${OPS_SHA}"`)&&rawHash(oldSource)===OLD_SOURCE_SHA,'REVIEWED_SOURCE_HASH_REQUIRED')
+ check(rawHash(sharedSource)===SHARED_SHA&&sharedSource.includes(`commit = "${INGRESS_SOURCE_SHA}"`)&&rawHash(oldSource)===OLD_SOURCE_SHA,'REVIEWED_SOURCE_HASH_REQUIRED')
  const objects=[...snapshot.stacks.map(x=>({...x,kind:'Stack'})),...snapshot.procedures.map(x=>({...x,kind:'Procedure'})),...snapshot.syncs.map(x=>({...x,kind:'ResourceSync'}))]
  for(const id of Object.values(IDS))check(objects.some(o=>o.id===id),'LEGACY_OBJECT_ID_MISMATCH')
  const sync=objects.find(o=>o.id===IDS.sync);check(sync.flags.managed===false&&sync.flags.delete===false&&sync.fileContentsHash===OLD_SOURCE_SHA,'UNSAFE_SYNC_BASELINE')
  const syncPatch={repo:'',linked_repo:'',files_on_host:false,file_contents:sharedSource,resource_path:['deploy/komodo/shared-resources.toml'],managed:false,delete:false,webhook_enabled:false}
- const steps=[{id:IDS.sync,kind:'ResourceSync',config:syncPatch},{id:IDS.procedure,kind:'Procedure',config:{schedule_enabled:false,webhook_enabled:false}},...[IDS.core,IDS.a,IDS.b,IDS.knowledge].map(id=>({id,kind:'Stack',config:{webhook_enabled:false,poll_for_updates:false,auto_update:false,auto_update_all_services:false}})),{id:IDS.ingress,kind:'Stack',config:{commit:OPS_SHA}}]
- const rollbackSource=oldSource.replace('branch = "main"\n',`branch = "main"\ncommit = "${OPS_SHA}"\n`)
+ const steps=[{id:IDS.sync,kind:'ResourceSync',config:syncPatch},{id:IDS.procedure,kind:'Procedure',config:{schedule_enabled:false,webhook_enabled:false}},...[IDS.core,IDS.a,IDS.b,IDS.knowledge].map(id=>({id,kind:'Stack',config:{webhook_enabled:false,poll_for_updates:false,auto_update:false,auto_update_all_services:false}})),{id:IDS.ingress,kind:'Stack',config:{commit:INGRESS_SOURCE_SHA}}]
+ const rollbackSource=oldSource.replace('branch = "main"\n',`branch = "main"\ncommit = "${INGRESS_SOURCE_SHA}"\n`)
  check(rawHash(rollbackSource)==='f92e316937d35ca93ae3c26cbccc7789492f37085731f789f17b9e2596b0e024','ROLLBACK_SOURCE_HASH_MISMATCH')
- return{identity:validateEvidence(e),objects,steps,rollback:{sourceCommit:'33e97c9f98606f22f2762e5cab2bc66ccd2291ff',sourceSha256:OLD_SOURCE_SHA,sourceWithIngressPinSha256:rawHash(rollbackSource),fields:steps.map(step=>({id:step.id,kind:step.kind,config:step.id===IDS.sync?{...sync.source,managed:false,delete:false,webhook_enabled:sync.flags.webhook_enabled,file_contents_sha256:rawHash(rollbackSource)}:step.id===IDS.ingress?{commit:OPS_SHA}:Object.fromEntries(Object.keys(step.config).map(k=>[k,objects.find(o=>o.id===step.id).flags[k]]))}))}}
+ return{identity:validateEvidence(e),objects,steps,rollback:{sourceCommit:'33e97c9f98606f22f2762e5cab2bc66ccd2291ff',sourceSha256:OLD_SOURCE_SHA,sourceWithIngressPinSha256:rawHash(rollbackSource),fields:steps.map(step=>({id:step.id,kind:step.kind,config:step.id===IDS.sync?{...sync.source,managed:false,delete:false,webhook_enabled:sync.flags.webhook_enabled,file_contents_sha256:rawHash(rollbackSource)}:step.id===IDS.ingress?{commit:INGRESS_SOURCE_SHA}:Object.fromEntries(Object.keys(step.config).map(k=>[k,objects.find(o=>o.id===step.id).flags[k]]))}))}}
 }
 // Materialize reviewed restore bodies only in memory. This never submits or automatically
 // re-enables a publisher; the root operator must establish exclusive rollback ownership first.
 export function rollbackBodies(plan,oldSource){
  check(rawHash(oldSource)===OLD_SOURCE_SHA,'ROLLBACK_SOURCE_HASH_MISMATCH')
- const source=oldSource.replace('branch = "main"\n',`branch = "main"\ncommit = "${OPS_SHA}"\n`)
+ const source=oldSource.replace('branch = "main"\n',`branch = "main"\ncommit = "${INGRESS_SOURCE_SHA}"\n`)
  check(rawHash(source)===plan.rollback.sourceWithIngressPinSha256,'ROLLBACK_SOURCE_HASH_MISMATCH')
  return plan.rollback.fields.map(row=>{const config={...row.config};if(row.id===IDS.sync){delete config.file_contents_sha256;config.file_contents=source}return{operation:`Update${row.kind}`,body:{id:row.id,config}}})
 }
