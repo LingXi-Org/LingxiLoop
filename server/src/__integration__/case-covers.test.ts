@@ -194,14 +194,27 @@ test('worker timeout settles and persists bounded retry without accepting late g
   assert.equal((await pool.query('SELECT * FROM organization_case_cover_assets')).rows.length,0)
 })
 
-test('deletion cascades cover state and prevents an in-flight writeback',async()=>{
+test('logical deletion retains covers and fences pending, in-flight and backfill work',async()=>{
   const draft=await app.create(teacher,content()), job=await claim();assert.ok(job)
-  await pool.query('DELETE FROM organization_cases WHERE id=$1',[draft.id])
+  await app.remove(teacher,draft.id,draft.version)
   assert.equal(await complete(job),false)
-  assert.equal((await pool.query('SELECT * FROM organization_case_cover_jobs')).rows.length,0)
+  assert.equal((await pool.query('SELECT status FROM organization_case_cover_jobs WHERE id=$1',[job.id])).rows[0].status,'cancelled')
   const ready=await app.create(teacher,content()), readyJob=await claim();assert.ok(readyJob);await complete(readyJob)
-  await pool.query('DELETE FROM organization_cases WHERE id=$1',[ready.id])
-  assert.equal((await pool.query('SELECT * FROM organization_case_cover_assets')).rows.length,0)
+  const oldCover=(await app.detail(teacher,ready.id,'manage')).generatedCover!
+  await app.remove(teacher,ready.id,ready.version)
+  const request=await api(teacher.userId)
+  assert.equal((await request(oldCover.previewUrl!)).status,404)
+  assert.equal((await request(oldCover.interactiveUrl!)).status,404)
+  assert.equal((await pool.query('SELECT * FROM organization_case_cover_assets')).rows.length,1)
+  await assert.rejects(app.retryCover(teacher,ready.id,'draft',oldCover.fingerprint,oldCover.generation),{status:404})
+  const pending=await app.create(teacher,content('Pending'))
+  await app.remove(teacher,pending.id,pending.version)
+  assert.equal((await app.backfillCovers(teacher)).scanned,0)
+  assert.equal(await claim(),null)
+  assert.equal((await pool.query("SELECT 1 FROM organization_case_cover_jobs WHERE status IN ('pending','generating')")).rows.length,0)
+  const survivor=await app.create(teacher,content('Survivor')), survivorJob=await claim();assert.ok(survivorJob)
+  assert.equal(await complete(survivorJob),true)
+  assert.equal((await app.detail(teacher,survivor.id,'manage')).generatedCover!.status,'ready')
 })
 
 

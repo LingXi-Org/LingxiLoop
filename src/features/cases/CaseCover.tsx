@@ -1,4 +1,6 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { BookImage, LoaderCircle, RefreshCw, TriangleAlert } from 'lucide-react'
+import { coverPointerAt, type CoverPointer } from './cover-vm/geometry'
 import { http } from '@/api/core/http'
 import { useTheme } from '@/stores/theme'
 import { caseCoverBudget, coverAssetPath } from './cover/sandbox'
@@ -7,7 +9,7 @@ function UnavailablePreview({ onFailure }: { onFailure?: () => void }) {
   useEffect(() => { onFailure?.() }, [onFailure])
   return null
 }
-const CaseCoverPreview = lazy(() => import('./cover-vm/CaseCoverPreview').catch(() => ({ default: UnavailablePreview })))
+const loadCaseCoverPreview = () => import('./cover-vm/CaseCoverPreview').catch(() => ({ default: UnavailablePreview }))
 
 /** Structurally matches the server-selected descriptor; never selects draft/published in the browser. */
 export interface CaseCoverDescriptor {
@@ -38,20 +40,22 @@ function useMedia(query: string) {
   return matches
 }
 
-export function CaseCover({ cover, fallbackUrl, title, scopeKey, className = '', onRetry }: {
+export function CaseCover({ cover, fallbackUrl, title, scopeKey, className = '', onRetry, busy = false, onRefresh }: {
   cover?: CaseCoverDescriptor | null
   fallbackUrl?: string | null
   title: string
   /** Includes authenticated user and organization; a change destroys old sandbox/fetches. */
   scopeKey: string
   className?: string
+  busy?: boolean
+  onRefresh?: () => void
   onRetry?: (cover: CaseCoverDescriptor) => Promise<unknown>
 }) {
   const identity = `${scopeKey}:${caseCoverIdentity(cover)}:${fallbackUrl ?? ''}`
-  return <ScopedCaseCover key={identity} {...{ cover, fallbackUrl, title, className, onRetry }} scopeKey={identity} />
+  return <ScopedCaseCover key={identity} {...{ cover, fallbackUrl, title, className, onRetry, busy, onRefresh }} scopeKey={identity} />
 }
 
-function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, scopeKey }: Parameters<typeof CaseCover>[0]) {
+function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, busy, onRefresh, scopeKey }: Parameters<typeof CaseCover>[0]) {
   const { theme } = useTheme()
   const reducedMotion = useMedia('(prefers-reduced-motion: reduce)')
   const finePointer = useMedia('(hover: hover) and (pointer: fine)')
@@ -59,7 +63,9 @@ function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, scopeK
   const [visible, setVisible] = useState(false)
   const [foreground, setForeground] = useState(true)
   const [hovered, setHovered] = useState(false)
-  const [engaged, setEngaged] = useState(false)
+  const [pointer, setPointer] = useState<CoverPointer | null>(null)
+  const [assetRevision, setAssetRevision] = useState(0)
+  const CaseCoverPreview = useMemo(() => lazy(loadCaseCoverPreview), [assetRevision])
   const [program, setProgram] = useState('')
   const [failedInteraction, setFailedInteraction] = useState(false)
   const [failedPreview, setFailedPreview] = useState(false)
@@ -71,7 +77,7 @@ function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, scopeK
   const readyTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const interactionFailed = useCallback(() => { setFailedInteraction(true); setProgram(''); setReady(false) }, [])
   const interactionReady = useCallback(() => { if (readyTimeout.current) clearTimeout(readyTimeout.current); setReady(true) }, [])
-  const active = visible && foreground && !reducedMotion && !failedInteraction && (hovered || engaged)
+  const active = visible && foreground && !reducedMotion && !failedInteraction && finePointer && hovered
   const description = cover?.alt?.trim() || `${title}的案例封面`
   const preview = !failedPreview ? cover?.previewUrl : null
   const image = preview || (!failedOriginal ? fallbackUrl : null)
@@ -94,7 +100,7 @@ function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, scopeK
   useEffect(() => {
     if (!active || !cover?.interactiveUrl) { setProgram(''); setReady(false); return }
     const abort = new AbortController()
-    const release = caseCoverBudget.acquire(() => { abort.abort(); setProgram(''); setReady(false); setEngaged(false); setHovered(false) })
+    const release = caseCoverBudget.acquire(() => { abort.abort(); setProgram(''); setReady(false); setHovered(false) })
     setReady(false)
     try {
       const path = coverAssetPath(cover.interactiveUrl)
@@ -108,28 +114,39 @@ function ScopedCaseCover({ cover, fallbackUrl, title, className, onRetry, scopeK
       }).catch(() => { if (!abort.signal.aborted) setFailedInteraction(true) })
     } catch { setFailedInteraction(true) }
     return () => { abort.abort(); if (readyTimeout.current) clearTimeout(readyTimeout.current); release(); setProgram(''); setReady(false) }
-  }, [active, cover?.interactiveUrl, interactionFailed])
+  }, [active, cover?.interactiveUrl, interactionFailed, assetRevision])
   const retry = async () => {
-    if (!cover?.canRetry || !onRetry || retrying) return
+    if (!cover?.canRetry || !onRetry || retrying || busy) return
     const epoch = ++retryEpoch.current
     setRetrying(true); setRetryError(false)
     try { await onRetry(cover) } catch { if (retryEpoch.current === epoch) setRetryError(true) }
     finally { if (retryEpoch.current === epoch) setRetrying(false) }
   }
 
+  const reloadAssets = () => {
+    setFailedInteraction(false); setFailedPreview(false); setFailedOriginal(false)
+    setAssetRevision(value => value + 1)
+  }
+  const trackPointer = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!finePointer || event.pointerType !== 'mouse') return
+    setPointer(coverPointerAt(event.clientX, event.clientY, event.currentTarget.getBoundingClientRect()))
+    setHovered(true)
+  }
+  const assetFailed = failedPreview || failedOriginal || failedInteraction
+  const corner = 'absolute bottom-1 start-1 z-10 flex items-center gap-1 rounded bg-background/90 px-2 py-1 text-xs text-muted-foreground'
+  const control = 'rounded underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50'
   return <div className={`relative ${className ?? ''}`} data-case-cover="" data-cover-status={cover?.status ?? 'original'}>
     <div ref={container} className="relative isolate aspect-[5/4] w-full overflow-hidden rounded-md bg-muted/30"
-      onPointerEnter={event => { if (finePointer && event.pointerType === 'mouse') setHovered(true) }}
-      onPointerLeave={() => setHovered(false)} style={{ touchAction: 'pan-y' }}>
-      {image ? <img src={image} alt={imageDescription} width={400} height={320} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain" style={{ objectFit: preview ? 'contain' : 'cover' }} onError={() => { if (preview) setFailedPreview(true); else setFailedOriginal(true) }} />
-        : <div role="img" aria-label={description} className="flex h-full items-center justify-center text-xs text-muted-foreground">案例封面</div>}
+      onPointerEnter={trackPointer} onPointerMove={trackPointer}
+      onPointerLeave={() => { setHovered(false); setPointer(null) }} style={{ touchAction: 'pan-y' }}>
+      {image ? <img key={assetRevision} src={image} alt={imageDescription} width={400} height={320} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" style={{ objectFit: 'cover', objectPosition: 'center' }} onError={() => { if (preview) setFailedPreview(true); else setFailedOriginal(true) }} />
+        : <div role="img" aria-label={description} className="flex h-full items-center justify-center text-muted-foreground/40"><BookImage aria-hidden="true" className="size-10" /></div>}
       {program && <Suspense fallback={null}><CaseCoverPreview program={program} altText={description} scopeKey={scopeKey}
-        active={active} reducedMotion={reducedMotion} theme={theme} engaged={engaged} onReady={interactionReady} onFailure={interactionFailed}
-        className={`absolute inset-0 h-full w-full ${ready ? '' : 'pointer-events-none'}`} /></Suspense>}
-      {cover?.interactiveUrl && !reducedMotion && !failedInteraction && <button type="button" aria-label={`交互封面：${title}`} aria-pressed={engaged} onClick={() => setEngaged(value => !value)}
-        className="absolute bottom-1 end-1 z-10 rounded bg-background/90 px-2 py-1 text-xs text-foreground shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">{engaged ? '静止' : '交互'}</button>}
+        active={active} reducedMotion={reducedMotion} theme={theme} pointer={pointer} onReady={interactionReady} onFailure={interactionFailed}
+        className={`absolute inset-0 h-full w-full pointer-events-none ${ready ? '' : 'opacity-0'}`} /></Suspense>}
     </div>
-    {caseCoverPending(cover) && <span className="sr-only" role="status">封面正在生成，完成后自动更新。</span>}
-    {cover?.status === 'failed' && cover.canRetry && onRetry && <div className="absolute bottom-1 start-1 z-10 rounded bg-background/90 px-2 py-1 text-xs text-muted-foreground"><span>封面暂未生成。</span><button type="button" disabled={retrying} onClick={() => void retry()} className="ms-1 rounded underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-ring">{retrying ? '正在重试…' : '重试封面'}</button>{retryError && <span role="status">重试失败，请稍后再试。</span>}</div>}
+    {caseCoverPending(cover) ? <div className={corner} role="status"><LoaderCircle aria-hidden="true" className="size-3 motion-safe:animate-spin"/><span>{cover?.status === 'pending' ? '等待生成' : '生成中'}</span>{onRefresh && <button type="button" aria-label="刷新封面状态" disabled={busy} onClick={onRefresh} className={control}><RefreshCw aria-hidden="true" className="size-3"/></button>}</div>
+      : cover?.status === 'failed' && cover.canRetry && onRetry ? <div className={corner}><TriangleAlert aria-hidden="true" className="size-3"/><span>生成失败</span><button type="button" disabled={busy || retrying} onClick={() => void retry()} className={control}>{retrying ? '正在重试…' : '重试封面'}</button>{retryError && <span role="status">重试失败</span>}</div> : null}
+    {assetFailed && <div className="absolute top-1 start-1 z-10 rounded bg-background/90 px-2 py-1 text-xs"><button type="button" className={control} onClick={reloadAssets}>重新加载封面</button></div>}
   </div>
 }

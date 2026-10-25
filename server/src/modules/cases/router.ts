@@ -12,6 +12,7 @@ casesRouter.get('/cases',safe(async (req,res) => { res.json(await app.list(await
 casesRouter.get('/cases/:id',safe(async (req,res) => { res.json(await app.detail(await requireCompany(req),String(req.params.id),caseViewSchema.parse(req.query.view))) }))
 casesRouter.post('/cases',safe(async (req,res) => { res.status(201).json(await app.create(await requireCompany(req),caseContentSchema.parse(req.body))) }))
 casesRouter.put('/cases/:id',safe(async (req,res) => { const {version,...content}=caseSaveSchema.parse(req.body); res.json(await app.save(await requireCompany(req),String(req.params.id),content,version)) }))
+casesRouter.delete('/cases/:id',safe(async (req,res) => { const {version}=caseVersionSchema.parse(req.body); res.json(await app.remove(await requireCompany(req),String(req.params.id),version)) }))
 for (const [path,method] of [['publish','publish'],['unpublish','unpublish'],['retry-index','retry']] as const) {
   casesRouter.post(`/cases/:id/${path}`,safe(async (req,res) => { const {version}=caseVersionSchema.parse(req.body); res.json(await app[method](await requireCompany(req),String(req.params.id),version)) }))
 }

@@ -27,10 +27,14 @@ test('case links preserve the selected view and organization across reloads', ()
   assert.equal(caseViewFromSearch(reader.search), 'reader')
 })
 
-test('list and detail requests explicitly select reader or manage and retain cancellation', async () => {
-  const calls: { path: string; signal?: AbortSignal }[] = []
+test('case requests retain view, cancellation, and versioned deletion contracts', async () => {
+  const calls: { path: string; signal?: AbortSignal; method?: string; body?: BodyInit | null }[] = []
+  const deleted = { deleted: true, id: 'case /1' }
   mock.module('../../api/core/http.ts', { namedExports: {
-    http: async (path: string, init: RequestInit) => { calls.push({ path, signal: init.signal ?? undefined }); return {} },
+    http: async (path: string, init: RequestInit) => {
+      calls.push({ path, signal: init.signal ?? undefined, method: init.method, body: init.body })
+      return init.method === 'DELETE' ? deleted : {}
+    },
   } })
   try {
     const { casesApi } = await import('./api')
@@ -44,5 +48,7 @@ test('list and detail requests explicitly select reader or manage and retain can
     assert.equal(new URL(calls[2].path, 'https://api.invalid').searchParams.get('q'), 'query')
     assert.equal(new URL(calls[2].path, 'https://api.invalid').searchParams.get('category'), 'category')
     assert.equal(new URL(calls[3].path, 'https://api.invalid').pathname, '/cases/case%20%2F1')
+    assert.equal(await casesApi.remove({ id: 'case /1', version: 7 }), deleted)
+    assert.deepEqual(calls[4], { path: '/cases/case%20%2F1', signal: undefined, method: 'DELETE', body: JSON.stringify({ version: 7 }) })
   } finally { mock.restoreAll() }
 })

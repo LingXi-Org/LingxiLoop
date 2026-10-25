@@ -1,0 +1,127 @@
+{
+  "developmentBase": "9e3bfd892fa53f22dddbc00e98f466c21ce01b7d",
+  "rebasedOnto": "ab0b57334f99d2c2d8470a9777197bc15c7293fd",
+  "originalSaveIncident": "Not reproduced; no original account/browser/error evidence supplied",
+  "integration": {
+    "command": "node --import tsx --experimental-test-module-mocks --test --test-concurrency=1 --test-force-exit server/src/__integration__/case-cover-migration.test.ts server/src/__integration__/case-covers.test.ts server/src/__integration__/case-delete-migration.test.ts server/src/__integration__/organization-cases.test.ts",
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0,
+    "exitCode": 0,
+    "breakdown": {
+      "organizationCases": 15,
+      "caseCovers": 13,
+      "product55Migration": 2,
+      "product57Migration": 1
+    },
+    "receipt": "../issue-451/backend-integration.log",
+    "earlierAuthoringOnlyTimings": "integration-timings.json"
+  },
+  "focusedFrontend": {
+    "passed": 40,
+    "failed": 0,
+    "skipped": 0,
+    "exitCode": 0,
+    "breakdown": {
+      "submission": 10,
+      "viewApi": 3,
+      "coverPresentationGeometrySession": 14,
+      "pollingRecovery": 13
+    }
+  },
+  "webBuild": {
+    "command": "npm run build",
+    "exitCode": 0,
+    "includesWebTypecheck": true
+  },
+  "serverTypecheck": {
+    "command": "npm run server:typecheck",
+    "exitCode": 0
+  },
+  "scopedLint": {
+    "finalChangedFiles": 12,
+    "exitCode": 0,
+    "initialAuthoringFiles": 14
+  },
+  "e2eTypecheck": {
+    "command": "node node_modules/typescript/bin/tsc -p docs/evidence/issue-449/tsconfig.e2e-focused.json",
+    "exitCode": 0
+  },
+  "httpFixture": {
+    "exitCode": 0,
+    "syntheticCases": 1,
+    "checkGroups": 6,
+    "fixedStates": 8,
+    "modelCalls": 0,
+    "receipt": "http-results.json",
+    "successfulSoftDeletions": 1
+  },
+  "browser": {
+    "status": "blocked before launch by existing invalid SUID sandbox helper",
+    "testsStarted": 0,
+    "assertions": 0,
+    "screenshots": 0,
+    "screencasts": 0,
+    "evidence": "browser-preflight-and-checks.json"
+  },
+  "unchanged": [
+    "runtime dependency locks",
+    "security/network settings",
+    "retained original case snapshots and assets",
+    "historical cover rows"
+  ],
+  "sourceSha256": {
+    "e2e.case-authoring-covers.config.ts": "ba7247757e1893143c99318db62c6ad29ffe9adc274d629e8aeb8ed43dd19407",
+    "e2e/cases/api.ts": "ca0eeb36c5727a86f570af20c484fce2ea54e72989638e811d70a8a3a2149a0f",
+    "e2e/cases/authoring-cover-fixture.ts": "68ef889a03eb91df95e739704c0a607622bfe5ebded4544cb71fda1e6bfa55cb",
+    "e2e/cases/authoring-cover-http-check.mjs": "12c5d855872695d0b0fa101d9d14c1dd9798b70fdf220b54eec8645d2c4bb811",
+    "e2e/cases/authoring-covers.e2e.ts": "dd503e17826a39530bd0d18552efbba24f835b11f673be34da11f9b6b353540d",
+    "e2e/cases/browser.e2e.ts": "71bd7350cceb767c94c423bb6efd7b49ce2317c9f559adff494ec733e0119329",
+    "e2e/cases/run-authoring-covers.mjs": "70f988bbe01c19eecb1a07a8c3de0704012a4bb4fa1e50fcc6613df6441c90ba",
+    "server/docker/lingxiloop-server.Dockerfile.dockerignore": "857d40da97466b31cdce15c1d98c38f84451a137f0476fb4571afde64aa9a25c",
+    "server/src/__integration__/case-covers.test.ts": "2059f78e7649d88b32001d3c9b7f49aa4d10d89858c15ab0f905e48a273bf4db",
+    "server/src/__integration__/case-delete-migration.test.ts": "c9d7f42bdb2379ad26b06b3971920d45f9fafe696e3587fa3821c9b49d1c34ea",
+    "server/src/__integration__/organization-cases.test.ts": "c0e9f97fb5a365cf78c37591e1550e877ee4870b6b11c3d4106149622e6e38a2",
+    "server/src/__tests__/runtime-patch-profile.test.ts": "88494bada1220c5988fc659b899018fd67300244cb98cf181e02d6b2a780f299",
+    "server/src/db/migrate.ts": "17cd05b5a9e4fae4a76a160f644420ee32d33ac875af6da4af5d0eaf721ba24f",
+    "server/src/db/migrations/0057_case_soft_delete.sql": "f42124684d66f1387267f6da653ec2b255c2fa4a9f6dccd6179a3a5fbb4607a0",
+    "server/src/db/runtime-profile.ts": "b8a46d6fb2e9e21ebb78e102bd57dbe6d479d95eab1b948904ffcd786d907f81",
+    "server/src/modules/cases/application.ts": "767b354b76aa59eca2a3c4a4dd284794927555a9144bcde0795a3bd85b176899",
+    "server/src/modules/cases/cover-repository.ts": "62bfc3dcdfdc536e2650eb7d2057089e3ad14bcc8de2a5107897e193623572a4",
+    "server/src/modules/cases/router.ts": "484d8e35deff0fa1c85d8b7d9a21f9ea3f06b2bea3ec783c967ca7c99e81fa55",
+    "src/features/cases/CaseCover.test.tsx": "8b8f9f1941ec6626a1730ed7b408394717973f551013d2330e824cb36715c49f",
+    "src/features/cases/CaseCover.tsx": "cb038a9f8e41c145e34a296b1b51dfa487c2610fa8cc249e43a68ec0ed737a3e",
+    "src/features/cases/CasesPage.tsx": "9b3fa977b6a42c3b9eac1b042fda8e9b808b3108cfc78fd54f1ea656b7db49d4",
+    "src/features/cases/api.ts": "21f9fd6a3abeb882230f7ad4aea8f655cf7accc6b47eafee0bfa57bac3375241",
+    "src/features/cases/case-view.test.ts": "90430766ba5357ecac9808da5ac6b39de43262308a2327e759f1a9d74b9137cf",
+    "src/features/cases/cover-vm/CaseCoverPreview.tsx": "062086ae367a7a02d829d8ff0a48f204942db2b1586f38e90a509dbd3de4417f",
+    "src/features/cases/cover-vm/geometry.test.ts": "ffa37b541ae71ae2596c29280a42f32c2ced8869bce5e8bfc861eeaf17ab9faa",
+    "src/features/cases/cover-vm/geometry.ts": "d3a19a9e4314c7a190e411b64da130041371b4be8462fd8e015c6c912cf8d139",
+    "src/features/cases/cover-vm/session.test.ts": "8f315141fa76c2f04f099315485cb756a1d520ec4821ba2bb96d2ba34ea3f9d2",
+    "src/features/cases/cover/cover.test.ts": "82f7cc1049bb98b3fbeccae9139d93ba96152197dc6aa8fd356b4a12e934bce2",
+    "src/features/cases/cover/polling.ts": "2d30b013e484f27b5ecd01a03e21d769a8f23c6676bf5c4b1efeca3dcb4ff80a",
+    "src/features/cases/cover/useCaseCoverPolling.ts": "e0d137474bb20fd851e1973a790b54860bd6e65e836e718e3b3e8ae0a1af7af7",
+    "src/features/cases/submission.test.ts": "28cbf53d04d3bfb2fe7067f9fae2aec1220542341af85d44899f253aab4ed356",
+    "src/features/cases/submission.ts": "db17eb2a92f95eb67778e2623e79f4d352400f817067a911d218b0efcd79d625"
+  },
+  "runtimeBoundary": {
+    "passed": 8,
+    "failed": 0,
+    "exitCode": 0,
+    "receipt": "../issue-451/runtime-profile.log"
+  },
+  "spaContext": {
+    "command": "node --test --test-name-pattern='SPA image' scripts/production-rag-contract.test.mjs",
+    "passed": 1,
+    "failed": 0,
+    "exitCode": 0
+  },
+  "initialCi": {
+    "sha": "8ca37688edf5c0bc72379d0ab2a725ef781d9181",
+    "runId": 40165436381,
+    "conclusion": "failure",
+    "integration": "success",
+    "failure": "SPA transitive graph: missing cover-vm/geometry.ts in context; exact allowlist entry added and focused graph check passed"
+  },
+  "releasePrerequisite": "Sole release coordinator must add exact product57 upgrade/release profile; old images lacking tombstone filtering cannot safely serve after deletions."
+}
