@@ -3,26 +3,65 @@ import { after, before, test } from 'node:test'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createWorker } from '@lyyzka/lingxios/worker'
 import type OpenAI from 'openai'
+import { ProductRuntimePolicy } from '../agent-runtime/context.js'
+import { receiveAgentRequest } from '../agent-runtime/receive.js'
+import { lingxiOSControl } from '../agent-runtime/runtime.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
-import { receiveAgentRequest } from '../agent-runtime/receive.js'
-import { ProductRuntimePolicy } from '../agent-runtime/context.js'
-import { lingxiOSControl } from '../agent-runtime/runtime.js'
-import { imMessagesApplication } from '../im/messages-facade.js'
+import { env } from '../env.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
+import { imMessagesApplication } from '../im/messages-facade.js'
 import { __setLlmClientOverrideForTesting } from '../llm.js'
 import { learningApplication } from '../modules/learning/facade.js'
-import { HomeworkApplication } from '../modules/learning/homework-application.js'
 import { captureConversationEvidence } from '../modules/learning/forum-evidence.js'
-import { runLearningEffects } from '../modules/learning/worker.js'
+import { HomeworkApplication } from '../modules/learning/homework-application.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
-import { installRecordingWukong } from './_recording-wukong.js'
+import { runLearningEffects } from '../modules/learning/worker.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
+import { installRecordingWukong } from './_recording-wukong.js'
 
 let im: Awaited<ReturnType<typeof installRecordingWukong>> | undefined
 let worker: ReturnType<typeof createWorker> | undefined
-before(async () => { await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong() })
-after(async () => { __setLlmClientOverrideForTesting(null); await worker?.stop(); await teardownAll(); await im?.close() })
+const originalFetch = globalThis.fetch
+const embeddingEnvironment = ['LINGXILOOP_DISABLE_EMBEDDINGS', 'AGENT_OS_EMBEDDING_DIMENSIONS', 'AGENT_OS_EMBEDDING_INPUT_COST_MICROS_PER_MILLION'] as const
+const originalEmbeddingEnvironment = embeddingEnvironment.map(name => process.env[name])
+let embeddingRequests = 0
+before(async () => {
+  // Enable the real native semantic path; replace only its external transport.
+  process.env.LINGXILOOP_DISABLE_EMBEDDINGS = '0'
+  process.env.AGENT_OS_EMBEDDING_DIMENSIONS = '1024'
+  process.env.AGENT_OS_EMBEDDING_INPUT_COST_MICROS_PER_MILLION = '1'
+  const embeddingUrl = new URL(env.OPENAI_BASE_URL).href.replace(/\/+$/, '') + '/embeddings'
+  globalThis.fetch = async (input, init) => {
+    const url = new URL(input instanceof Request ? input.url : String(input))
+    if (url.href === embeddingUrl) {
+      assert.equal(init?.method, 'POST')
+      assert.equal(typeof init?.body, 'string')
+      const request = JSON.parse(init!.body as string) as { model: string; input: string[] }
+      assert.equal(request.model, env.OPENAI_EMBEDDING_MODEL)
+      assert.ok(Array.isArray(request.input) && request.input.length > 0)
+      embeddingRequests++
+      return Response.json({ object: 'list', model: request.model,
+        data: request.input.map((_text, index) => ({ object: 'embedding', index,
+          embedding: Array.from({ length: 1024 }, (_, dimension) => dimension === 0 ? 1 : 0) })),
+        usage: { prompt_tokens: 10, total_tokens: 10 } })
+    }
+    assert.ok(['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname), 'student fixture must not issue an external request')
+    return originalFetch(input, init)
+  }
+  await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong()
+})
+after(async () => {
+  try { __setLlmClientOverrideForTesting(null); await worker?.stop(); await teardownAll(); await im?.close() }
+  finally {
+    globalThis.fetch = originalFetch
+    embeddingEnvironment.forEach((name, index) => {
+      const value = originalEmbeddingEnvironment[index]
+      if (value === undefined) delete process.env[name]
+      else process.env[name] = value
+    })
+  }
+})
 
 // Distinguish a fresh student generation failure from quoted retry behavior.
 // All product ACLs, admission, runtime context, delivery and evidence checks are
@@ -100,9 +139,16 @@ test('fresh invited student receives an unquoted bound-homework reply with reada
   const identity = accepted.runs[0]
   assert.equal(identity.principalId, studentId)
   const api = await lingxiOSControl()
-  let modelCalls = 0, sawQuestion = false, sawAssignment = false
+  let modelCalls = 0, sawQuestion = false, sawAssignment = false, sawSemanticRecall = false
+  let initialContextError: unknown
   const usage = { available: true, inputTokens: 100, outputTokens: 40 }
-  worker = createWorker({ controlPlane: api,
+  worker = createWorker({ controlPlane: { connectWorker(input) {
+    const host = api.connectWorker(input)
+    return { ...host, async loadInitialContext(...args) {
+      try { return await host.loadInitialContext!(...args) }
+      catch (error) { initialContextError = error; throw error }
+    } } satisfies typeof host
+  } },
     policy: new ProductRuntimePolicy(),
     worker: { id: 'fresh-student-dialogue', concurrency: 1, shutdownGraceMs: 1_000 },
     resources: { model: 1, python: 1 },
@@ -113,6 +159,7 @@ test('fresh invited student receives an unquoted bound-homework reply with reada
         const context = JSON.stringify({ instructions: request.instructions, items: request.items })
         sawQuestion ||= context.includes(question)
         sawAssignment ||= context.includes(assignment.title)
+        sawSemanticRecall ||= context.includes('hybrid_pending') || context.includes('"hybrid"')
         return { output: [{ role: 'assistant', content: reply }], text: reply, model: 'fresh-student-local-fixture', usage }
       },
       async structured() { return { value: { missing: [] }, model: 'fresh-student-local-fixture', usage } },
@@ -123,6 +170,9 @@ test('fresh invited student receives an unquoted bound-homework reply with reada
   const deadline = Date.now() + 20_000
   let state = await api.readRunState(identity)
   while (state?.delivery !== 'delivered') {
+    // Keep the local synthetic exception/stack visible if the same pre-model
+    // stage fails; production intentionally persists only a fixed public error.
+    if (state?.run.status === 'failed' && initialContextError) throw initialContextError
     assert.notEqual(state?.run.status, 'failed', `fresh student generation failed: ${state?.run.error ?? 'unspecified failure'}`)
     assert.ok(Date.now() < deadline, `fresh student delivery timed out: status=${state?.run.status}, delivery=${state?.delivery}`)
     await delay(25)
@@ -132,11 +182,16 @@ test('fresh invited student receives an unquoted bound-homework reply with reada
   assert.ok(modelCalls > 0)
   assert.equal(sawQuestion, true)
   assert.equal(sawAssignment, true, 'the student model context must include its bound published homework')
+  assert.ok(embeddingRequests > 0, 'native memory context must issue a real embedding-driver request to the local transport')
+  assert.equal(sawSemanticRecall, true, 'native semantic recall must finish its SQL path before generation')
   const replies = im!.messages.filter(message => message.channelId === thread.channelId && message.fromUid === agentId
     && message.payload.role === 'assistant' && nativeText(message.payload) === reply)
   assert.equal(replies.length, 1, 'exactly one generated assistant reply must reach canonical IM history')
   assert.ok((await pool.query('SELECT 1 FROM llm_calls WHERE company_id=$1 AND run_id=$2', [companyId, identity.runId])).rows.length,
     'the deterministic native worker call must use the product ledger')
+  const embeddingLedgerRows = (await pool.query(`SELECT id FROM llm_calls WHERE company_id=$1 AND run_id=$2
+    AND purpose='lingxios.embedding' AND measured=TRUE`, [companyId, identity.runId])).rows.length
+  assert.ok(embeddingLedgerRows > 0, 'native embedding usage must settle into the shared product ledger')
   const references = [{ channelId: thread.channelId, messageIds: [clientMsgNo, replies[0].clientMsgNo] }]
   const evidence = await captureConversationEvidence(pool, scope, projectId, references)
   assert.deepEqual(evidence[0].messages.map(({ id, role, text }) => ({ id, role, text })), [
@@ -146,7 +201,7 @@ test('fresh invited student receives an unquoted bound-homework reply with reada
   const progress = (await homework.detail(scope, courseId, assignment.id)).student!
   assert.equal(progress.hasLearningRecord, true)
   console.info(JSON.stringify({ scenario: 'fresh-invited-student-bound-homework-dialogue',
-    studentRole: 'STUDENT', quoted: false, modelCalls, delivery: state.delivery,
+    studentRole: 'STUDENT', quoted: false, modelCalls, embeddingRequests, embeddingLedgerRows, semanticRecall: sawSemanticRecall, delivery: state.delivery,
     assistantReplies: replies.length, canonicalEvidenceMessages: evidence[0].messages.length,
     hasLearningRecord: progress.hasLearningRecord, reportAndSubmission: 'not_exercised' }))
 })

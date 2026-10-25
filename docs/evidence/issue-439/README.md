@@ -6,17 +6,16 @@ This investigation starts from `9e3bfd892fa53f22dddbc00e98f466c21ce01b7d`
 on `fix/439-learning-dialogue-submission`. The report says a student admitted to
 a course cannot complete a learning dialogue because assistant replies fail,
 which prevents citing the dialogue in an assignment submission.
+The final draft is rebased onto `b7e8bf8aa111fd84f7d92a5a114a0e3444b35217`,
+including the separately owned quoted-retry fix from PR #456.
 
-**Outcome:** the one primary-homework regression passed. No independent product
-defect was established; this change adds diagnostic coverage and leaves the
-reported failure unresolved.
+**Outcome:** the bounded synthetic regression passed. The reported incident is
+not fixed and must remain open. Follow-up implementation targets the confirmed
+observability gap: an unexpected context-loading exception becomes a generic
+public error without a durable, safely scoped operator diagnostic.
 
-The issue attachment shows several failed assistant executions of about three
-seconds and later messages that quote earlier retry requests. It does not expose
-the first execution's error category/code or a submission request/response.
-The reporter's private production conversation URL was not opened. No private
-student conversation, production record, provider response, or runtime log was
-queried.
+Incident-specific operational records remain in the private handoff. This public
+evidence contains only implementation facts and synthetic qualification results.
 
 The quoted retry pattern overlaps issue #447, owned by another environment.
 Its message actions, quote ingress, runtime history, transport, and quote-preview
@@ -71,8 +70,10 @@ homework route:
    LLM-ledger entry, readable canonical student/assistant evidence, and
    `hasLearningRecord` in the homework's student state.
 
-The product authorization/context/delivery integration is real. Only model
-responses and the external IM service are deterministic local fixtures. No
+The product authorization/context/delivery integration is real. Model responses
+and the external IM service are deterministic local fixtures. The initial pass
+also inherited the integration runner's disabled embeddings, so it did not
+exercise production semantic recall. No
 successful validation, assistant-message, or report row is inserted to manufacture
 a pass. The scenario makes no external model calls and cannot establish live
 provider acceptance. All accounts, coursework, and messages are synthetic.
@@ -127,16 +128,54 @@ it was moved to a reversible `/tmp` backup to use the repository CI's root-only
 installation layout. No package manifest, dependency lock, source policy, or
 runtime protocol was changed to resolve that environment mismatch.
 
-## Remaining diagnostic boundary
+### Qualification of the observed failure stage
 
-The original failure remains unresolved without the first unquoted run's
-sanitized failure stage/category/code and caller-visible error. The current
-authorized run-snapshot endpoint can expose `harnessError`, but it has not been
-called against the private production conversation. A synthetic pass would
-establish only the exercised student path; it would not prove that the reported
-failure is fixed or that #447 caused the original failure.
+To exercise the context-loading stage, the same scenario was updated to enable native embeddings and semantic recall. Only the configured
+embedding URL receives a synthetic 1024-dimensional response; other external
+requests fail the fixture, and the original fetch function/environment are
+restored afterward. The actual embedding driver, budget settlement, semantic SQL,
+memory scopes, and product ACLs execute. The fixture also preserves a local
+`loadInitialContext` exception before the runtime replaces it with a public
+message, so an actual local failure would retain its cause.
 
-No production deployment, production database migration, credential/security change,
-authorization relaxation, independent review, or broad reproduction matrix is
-part of this investigation. Issue #439 must remain open until the actual failure
-is diagnosed and the affected behavior is accepted.
+The updated scenario passed **1/1, zero skips**, in 4.631 seconds overall
+(1.518 seconds for the scenario): one embedding request, one measured embedding
+ledger row, completed native semantic recall, one chat-model call, one durable
+reply, and two canonical evidence messages. Log:
+`/tmp/lingxi-439-semantic-result.log`. The first invocation in the recreated test
+environment stopped before executing the scenario because the required
+`LINGXILOOP_INVITE_BASE_URL` was absent; using CI's localhost value resolved that
+setup error. It was not a reproduction of the production context failure.
+The updated file's focused Biome check (including import organization), server
+typecheck (`/tmp/lingxi-439-semantic-typecheck.log`), and diff whitespace check
+passed. Exact final-commit CI is reported on the draft PR.
+
+This narrows the unverified difference to production-specific context/state or
+runtime service behavior. It neither simulates the missing production exception
+nor establishes a product fix. Historical private context and real provider
+responses were not copied into the fixture.
+
+## Diagnostic implementation and remaining boundary
+
+The formal runtime logs unexpected context HTTP exceptions through its supported
+`Logger` extension before returning a generic error to the worker. The public run
+error intentionally omits the underlying exception. Product diagnostics must
+preserve a strict metadata projection in the existing restricted audit store,
+correlated to the authoritative product run binding. They must not persist error
+messages, prompts, credentials, provider responses or arbitrary extension fields.
+
+The existing administrator run detail/operations surface is the intended reader.
+Ordinary conversation responses must remain unchanged. Historical records cannot
+be reconstructed from a generic error string; no backfill is attempted.
+
+If no independently established root cause emerges, the next acceptance step is
+one controlled synthetic conversation after the designated release coordinator
+has deployed the diagnostic increment. Capture its run ID and the restricted
+context-failure diagnostic, if one occurs. A successful synthetic turn alone does
+not establish that the reported incident is repaired. Report generation and final
+homework submission remain unverified.
+
+No production deployment, production database migration, credential/security
+change, authorization relaxation, independent review or broad reproduction matrix
+is part of this branch. The designated release coordinator owns deployment, and
+issue #439 remains open until the actual failure is diagnosed and accepted.
