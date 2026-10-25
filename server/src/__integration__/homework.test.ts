@@ -1116,8 +1116,9 @@ test('[integration] 424 material and service failures remain distinct and same-r
 })
 
 test('[integration] 424 input rejection and malformed model responses do not validate a newer draft', async () => {
-  const draft = await homework.draft(teacher, courseId, visible)
-  modelReplies.push({ valid: false, feedback: '请将验收标准中的对话次数改为可独立解释的学习成果。' })
+  const draft = await homework.draft(teacher, courseId, { ...visible, criteria: ['Complete 10 conversation turns.'] })
+  modelReplies.push({ valid: false, issues: [{ field: 'criteria', excerpt: 'Complete 10 conversation turns.',
+    reason: '对话次数不能说明学生独立掌握了知识。', suggestion: '改为独立解释三角形与矩形的面积关系，并应用到一个新例子。' }] })
   await runLearningEffects()
   let detail = await homework.detail(teacher, courseId, draft.homework.id)
   assert.equal(detail.homework.validation.status, 'INVALID')
@@ -1140,6 +1141,61 @@ test('[integration] 424 input rejection and malformed model responses do not val
   assert.equal((await call(teacher, path(ready.id, '/publish'), 'POST', {
     expectedRevision: detail.homework.revision, visibleHash: detail.homework.visibleHash, idempotencyKey: '424-stale-validation',
   })).status, 409)
+})
+
+// #453: historical ambiguous INVALID must recover without rewriting or replacing
+// readable attachments; a fresh ungrounded denial must not blame teacher content.
+test('[integration] 453 a vague model rejection remains retryable instead of becoming an input error', async () => {
+  const draft = await homework.draft(teacher, courseId, visible)
+  modelReplies.push({ valid: false, feedback: '无法验证作业要求或完整读取材料，请检查内容、提供可读取的文字材料后重试。' })
+  await runLearningEffects()
+  const failed = (await homework.detail(teacher, courseId, draft.homework.id)).homework
+  assert.equal(failed.validation.status, 'ERROR')
+  assert.equal(failed.canPublish, false)
+  assert.match(failed.validation.feedback, /重试|重新检查/)
+  assert.doesNotMatch(failed.validation.feedback, /请检查内容|作业要求需要修改/)
+})
+
+test('[integration] 453 historical INVALID rechecks the unchanged PPTX and publishes only the current READY revision', async () => {
+  const { storage } = await import('../storage.js')
+  const key = `attachments/${companyId}/historical-chapter.pptx`
+  const bytes = await readFile(new URL('../__tests__/fixtures/homework-presentations/material.pptx', import.meta.url))
+  await storage.put(key, bytes, 'application/vnd.openxmlformats-officedocument.presentationml.presentation')
+  await pool.query(`INSERT INTO uploaded_files(storage_key,company_id,owner_user_id,company_period_id)
+    SELECT $1,$2,$3,period_id FROM company_memberships WHERE company_id=$2 AND user_id=$3 AND ended_at IS NULL`, [key, companyId, teacher.userId])
+  const draft = await homework.draft(teacher, courseId, { ...visible, title: '合成章节练习',
+    instructions: '独立说明加法，并说明输入和输出的关系。', criteria: ['独立说明加法。', '解释输入输出关系。'], attachments: [{ key, name: 'historical-chapter.pptx' }] })
+  await pool.query(`UPDATE homeworks SET validation_status='INVALID',validated_revision=revision,validation_feedback=$2 WHERE id=$1`,
+    [draft.homework.id, '无法验证作业要求或完整读取材料，请检查内容、提供可读取的文字材料后重试。'])
+  await pool.query("UPDATE learning_effects SET status='completed' WHERE effect_key=$1 AND kind='homework.validate'", [draft.homework.id])
+  const original = (await homework.detail(teacher, courseId, draft.homework.id)).homework
+  const publish = { expectedRevision: original.revision, visibleHash: original.visibleHash, idempotencyKey: '453-historical-pptx' }
+  assert.equal((await call(teacher, path(original.id, '/publish'), 'POST', publish)).status, 409)
+  const retried = await call(teacher, path(original.id, '/validate'), 'POST', { expectedRevision: original.revision })
+  assert.equal(retried.status, 200)
+  const pending = (await retried.json() as Awaited<ReturnType<HomeworkApplication['detail']>>).homework
+  assert.equal(pending.validation.status, 'PENDING')
+  assert.equal(pending.validation.feedback, '')
+  assert.equal(pending.validation.revision, null)
+  for (const field of ['title', 'instructions', 'criteria', 'attachments', 'links', 'dueAt', 'revision', 'visibleHash'] as const) {
+    assert.deepEqual(pending[field], original[field], `historical retry retains ${field}`)
+  }
+  assert.equal((await call(teacher, path(original.id, '/validate'), 'POST', { expectedRevision: original.revision })).status, 200)
+  assert.equal((await call(teacher, path(original.id, '/publish'), 'POST', publish)).status, 409)
+  modelReplies.push({ valid: true, feedback: '章节文字已读取，可以确认发布。' })
+  await runLearningEffects()
+  const checked = (await homework.detail(teacher, courseId, original.id)).homework
+  assert.equal(checked.validation.status, 'READY')
+  assert.equal(checked.validation.revision, original.revision)
+  assert.equal(checked.validation.feedback, '章节文字已读取，可以确认发布。')
+  const request = lastModelRequest as { messages: Array<{ role: string; content: string }> }
+  const input = JSON.parse(request.messages.find(message => message.role === 'user')!.content) as { materials: Array<{ source: string; text: string; hash: string }> }
+  assert.equal(input.materials[0].source, key)
+  assert.match(input.materials[0].text, /独立说明加法/)
+  assert.match(input.materials[0].text, /Input 输入/)
+  const calls = await pool.query<{ count: number }>("SELECT count(*)::int AS count FROM llm_calls WHERE company_id=$1 AND purpose='homework.validate'", [companyId])
+  assert.equal(calls.rows[0].count, 1, 'Repeated retry queues one fresh validation')
+  assert.equal((await homework.publish(teacher, courseId, original.id, publish)).homework.status, 'PUBLISHED')
 })
 
 test('[integration] 424 uploaded PPTX text reaches validation and the current draft can be published', async () => {

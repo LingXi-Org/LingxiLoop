@@ -39,6 +39,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
   const [links, setLinks] = useState(''), [attachments, setAttachments] = useState<Homework['attachments']>([])
   const [dirty, setDirty] = useState(false), [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState('')
   const pending = useRef<{ revision: number; key: string } | null>(null)
+  const rechecking = useRef(false)
   const epoch = useRef(0), dirtyRef = useRef(false)
   const install = useCallback((next: Homework) => {
     epoch.current++; dirtyRef.current = false
@@ -87,11 +88,11 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
         </section>
         <div className="space-y-2"><Label htmlFor={`${id}-due`}>截止时间</Label><Input id={`${id}-due`} className="max-w-xs" type="datetime-local" value={dueAt} disabled={disabled} onChange={event => edited(() => setDueAt(event.target.value))} /></div>
         <HomeworkValidation validation={homework.validation} dirty={dirty} busy={disabled} onRetry={async () => {
-          if (disabled || dirtyRef.current) return
-          epoch.current++; setBusy(true); setError('')
+          if (disabled || dirtyRef.current || rechecking.current || homework.validation.status === 'PENDING') return
+          rechecking.current = true; epoch.current++; setBusy(true); setError('')
           try { install((await homeworkApi.validate(courseId, homeworkId, homework.revision)).homework) }
           catch (reason) { setError(`${userFacingError(reason, '检查未能开始，请重试。')} 当前输入和附件已保留。`) }
-          finally { setBusy(false) }
+          finally { rechecking.current = false; setBusy(false) }
         }} />
         {!homework.canEditDraft && <p className="text-sm text-muted-foreground">请由发起这份作业的教师确认发布。</p>}
         <div className="flex flex-wrap gap-2">
