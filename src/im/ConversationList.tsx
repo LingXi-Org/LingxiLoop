@@ -122,14 +122,16 @@ export function ConversationListItemContent({
       </ItemMedia>
       <ItemContent className="min-w-0">
         <div className="flex min-w-0 items-center gap-1.5">
-          <ItemTitle className={cn('block min-w-0 flex-1 truncate', conversation.pinned && 'font-semibold')}>{conversation.title}</ItemTitle>
+          <ItemTitle className={cn('block min-w-0 flex-1 truncate leading-5', conversation.pinned && 'font-semibold')}>{conversation.title}</ItemTitle>
           <span className={cn('flex shrink-0 items-center gap-1 whitespace-nowrap', secondaryText)}>
             <span className="text-xs tabular-nums">{conversation.lastAt}</span>
           </span>
         </div>
-        {runStatus && <span className="text-xs text-muted-foreground" aria-label={`任务状态：${runStatus}`}>{runStatus}</span>}
-        <ItemDescription className={cn('flex min-w-0 items-center gap-1.5', !selected && typingNames.length > 0 && 'text-primary')}>
-          <span className="min-w-0 flex-1 truncate">{typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}</span>
+        <ItemDescription className={cn('line-clamp-none flex min-w-0 items-center gap-1.5 leading-5', !selected && typingNames.length > 0 && 'text-primary')}>
+          <span className="min-w-0 flex-1 truncate">
+            {runStatus && <><span className="text-muted-foreground" aria-label={`任务状态：${runStatus}`}>{runStatus}</span><span aria-hidden> · </span></>}
+            {typingNames.length > 0 ? `${typingNames.join('、')} 正在输入…` : <PreviewText body={conversation.preview || '还没有消息'} />}
+          </span>
           {conversation.pinned && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已置顶" title="已置顶"><HugeiconsIcon icon={PinIcon} strokeWidth={2} className="size-3.5" /></span>}
           {muted && <span className="inline-flex size-4 shrink-0 items-center justify-center" aria-label="已静音" title="已静音"><HugeiconsIcon icon={NotificationOff01Icon} strokeWidth={2} className="size-3.5" /></span>}
         </ItemDescription>

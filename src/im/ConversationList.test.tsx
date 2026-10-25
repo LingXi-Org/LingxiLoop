@@ -4,9 +4,10 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { load } from 'cheerio'
 import type { Conversation } from '@/types'
 
+let presence: { typingAgentIds: string[]; runStatus: string | null } = { typingAgentIds: [], runStatus: null }
 mock.module('@/features/chat/runtime/store', { namedExports: { useChatThreadStore: (select: (state: { conversations: object }) => unknown) => select({ conversations: {} }) } })
-mock.module('@/features/chat/runtime', { namedExports: { useConversationPresence: () => ({ typingAgentIds: [] }) } })
-mock.module('@/features/agents/state', { namedExports: { useParticipants: (select: (state: { byId: object }) => unknown) => select({ byId: {} }) } })
+mock.module('@/features/chat/runtime', { namedExports: { useConversationPresence: () => presence } })
+mock.module('@/features/agents/state', { namedExports: { useParticipants: (select: (state: { byId: object }) => unknown) => select({ byId: { speaker: { id: 'speaker', name: '陈晨' } } }) } })
 mock.module('@/stores/auth', { namedExports: { useMe: () => 'me' } })
 mock.module('@/features/conversations/store', { namedExports: { isMuted: (conversation: Conversation) => Boolean(conversation.muted) } })
 mock.module('@/components/Avatar', { namedExports: { Avatar: () => null } })
@@ -32,4 +33,26 @@ test('an unopened conversation exposes the authorized durable waiting summary wi
   const $ = load(renderToStaticMarkup(<ConversationListItemContent conversation={conversation} />))
   assert.equal($('[aria-label="任务状态：等你回答"]').length, 1)
   assert.match($.text(), /已有消息/)
+})
+
+test('run status, typing and preview share one summary line with status first and typing before preview', () => {
+  const base = { id: 'row', kind: 'group', title: '长标题'.repeat(20), members: [], lastAt: '12:30', preview: '消息摘要'.repeat(20), pinned: true, muted: true, unread: 4 } as unknown as Conversation
+  for (const status of [null, '处理中', '等你回答', '已完成', '执行失败']) for (const typing of [false, true]) {
+    presence = { typingAgentIds: typing ? ['me', 'speaker'] : [], runStatus: status }
+    const $ = load(renderToStaticMarkup(<ConversationListItemContent conversation={base} />))
+    const content = $('[data-slot="item-content"]')
+    const summary = $('[data-slot="item-description"]')
+    assert.equal(content.children().length, 2, 'title and one summary row regardless of run state')
+    assert.equal(summary.length, 1)
+    assert.equal(summary.find('[aria-label^="任务状态："]').length, status ? 1 : 0)
+    assert.equal(summary.text(), (status ? `${status} · ` : '') + (typing ? '陈晨 正在输入…' : base.preview))
+    assert.equal($('[aria-label="已置顶"]').length, 1)
+    assert.equal($('[aria-label="已静音"]').length, 1)
+    assert.equal($('[aria-label="4 条未读消息"]').length, 1)
+    assert.match(content.children().first().text(), /12:30$/)
+  }
+  presence = { typingAgentIds: ['me'], runStatus: null }
+  const $ = load(renderToStaticMarkup(<ConversationListItemContent conversation={{ ...base, preview: '' }} />))
+  assert.equal($('[data-slot="item-description"]').text(), '还没有消息')
+  presence = { typingAgentIds: [], runStatus: null }
 })
