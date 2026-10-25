@@ -1,0 +1,22 @@
+[
+  {
+    "mode": "normal",
+    "formHeight": 134,
+    "toolbarHeight": 72,
+    "visibleChildren": 2,
+    "helpPresent": true,
+    "helpButtons": 3,
+    "horizontalOverflow": 0,
+    "blockedNetwork": []
+  },
+  {
+    "mode": "compact",
+    "formHeight": 134,
+    "toolbarHeight": 72,
+    "visibleChildren": 2,
+    "helpPresent": true,
+    "helpButtons": 3,
+    "horizontalOverflow": 0,
+    "blockedNetwork": []
+  }
+]

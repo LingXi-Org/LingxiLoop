@@ -1,0 +1,14 @@
+body { margin: 0; overflow: auto; }
+.fixture-shell { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; padding: 12px; min-height: 740px; }
+.fixture-list { height: 700px; min-width: 0; border: 1px solid var(--border); }
+.fixture-right { min-width: 0; display: flex; flex-direction: column; }
+.fixture-controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; font-size: 12px; }
+.fixture-controls button, .fixture-controls select { border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; background: var(--background); }
+.fixture-composer { display: flex; flex: 1; flex-direction: column; justify-content: flex-end; min-width: 0; }
+.fixture-message-space { flex: 1; padding: 16px; font-size: 14px; color: var(--muted-foreground); }
+@media (max-width: 600px) {
+  .fixture-shell { display: flex; flex-direction: column; padding: 8px; gap: 8px; min-height: 0; }
+  .fixture-list { height: 610px; }
+  .fixture-composer { min-height: 140px; }
+  .fixture-message-space { padding: 8px; min-height: 25px; }
+}

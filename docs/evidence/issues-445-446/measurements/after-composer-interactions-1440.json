@@ -1,0 +1,23 @@
+{
+  "sent": {
+    "text": "第一行公开尝试\n第二行推导",
+    "attachmentCount": 1
+  },
+  "menuBounds": {
+    "left": 440,
+    "right": 1376,
+    "bottom": 630,
+    "composerTop": 638
+  },
+  "final": {
+    "formHeight": 54,
+    "toolbarHeight": 36,
+    "visibleChildren": 1,
+    "helpPresent": false,
+    "helpButtons": 0,
+    "horizontalOverflow": 0,
+    "blockedNetwork": []
+  },
+  "stoppedWithDraft": true,
+  "switchedAndRemounted": true
+}
