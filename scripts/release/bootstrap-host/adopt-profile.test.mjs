@@ -1,6 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {createHash} from 'node:crypto'
+import {mkdtemp,cp,symlink,writeFile,rm} from 'node:fs/promises'
+import {tmpdir} from 'node:os'
+import {join,basename} from 'node:path'
+import {fileURLToPath} from 'node:url'
+import {spawnSync} from 'node:child_process'
 import {generateAdoption,deriveRuntimeContract,APP_SHA} from './adopt-profile.mjs'
 import {qualifyDatabaseEvidence} from '../../release-host/local-control.mjs'
 const sha=x=>createHash('sha256').update(x).digest('hex'),h=x=>'sha256:'+sha(x)
@@ -47,4 +52,24 @@ test('preserves complete homes and anonymous dependency mounts, excludes environ
 test('mount and database drift omit unsafe targets and retain explicit missing evidence',()=>{
  const e=fixture();e.hosts.a.profile.receipt.targets['main-runtime-a'].services.worker.mounts=[];e.database.state.schemaHash='f'.repeat(64)
  const r=generateAdoption(e);assert.equal(r.accepted.componentTemplates['main-runtime-a'],undefined);assert.equal(r.accepted.componentTemplates['main-runtime-b'],undefined);assert.ok(r.pending.some(p=>p.code==='COMPLETE_MOUNT_INVENTORY_MISMATCH'));assert.ok(r.pending.some(p=>p.code==='DATABASE_PACKAGE_LEDGER_MISMATCH'));assert.ok(r.preservedInventory.a.some(c=>c.mounts.some(m=>m.source==='original-homes-a')))
+})
+test('all generated CLI helpers and the cached PG source bind the supplied exact executor SHA',()=>{
+ const opsSha='e'.repeat(40),r=generateAdoption(fixture(),{intendedOpsSha:opsSha}),root=`/opt/lingxi-release/versions/${opsSha}/scripts/release-host`
+ for(const side of ['a','b']){
+  const policy=r.policies[side].policy;assert.equal(policy.clientScript,`${root}/pg-client.mjs`);assert.deepEqual(policy.acceptedOpsShas,[opsSha])
+  const controls=policy.targets[`main-runtime-${side}`].controls
+  for(const endpoint of Object.values(controls))if(endpoint.argv){assert.equal(endpoint.argv[0],'/opt/lingxi-release/node-v22.23.3-linux-x64/bin/node');assert.equal(endpoint.argv[1],'--experimental-sqlite');assert.equal(endpoint.argv[2],`${root}/${['state','barrier','readiness'].includes(endpoint.argv[4])?'local-control.mjs':'database-tools.mjs'}`);assert.equal(endpoint.argv[3],'/etc/lingxi-release/policy.json')}
+ }
+ assert.equal(JSON.stringify(r).includes('/opt/lingxi-release/current/'),false)
+ const draft=generateAdoption(fixture());assert.equal(Object.values(draft.policies.a.policy.targets['main-runtime-a'].controls).some(endpoint=>endpoint.argv),false);assert.equal(draft.policies.a.policy.clientScript,undefined);assert.ok(draft.pending.some(p=>p.code==='EXACT_OPS_SHA_REQUIRED'))
+})
+test('real copied helper CLIs execute through generated version paths while current symlinks silently skip their main guard',async t=>{
+ const opsSha='e'.repeat(40),directory=await mkdtemp(join(tmpdir(),'release-helper-entry-')),version=join(directory,'versions',opsSha),source=fileURLToPath(new URL('../../release-host/',import.meta.url)),policyPath=join(directory,'test-policy.json')
+ t.after(()=>rm(directory,{recursive:true,force:true}));await cp(source,join(version,'scripts','release-host'),{recursive:true});await symlink(version,join(directory,'current'),'dir');await writeFile(policyPath,'{}')
+ const controls=generateAdoption(fixture(),{intendedOpsSha:opsSha}).policies.a.policy.targets['main-runtime-a'].controls
+ for(const [endpoint,code]of [[controls.state,'UNKNOWN_TARGET'],[controls.backup,'DATABASE_OWNER_REQUIRED']]){
+  const args=endpoint.argv.slice(1);args[1]=args[1].replace('/opt/lingxi-release',directory);args[2]=policyPath
+  const executed=spawnSync(process.execPath,args,{input:JSON.stringify({target:'fixture'}),encoding:'utf8',timeout:10000});assert.equal(executed.status,1,executed.stderr);assert.equal(JSON.parse(executed.stdout).error.code,code)
+  args[1]=join(directory,'current','scripts','release-host',basename(args[1]));const skipped=spawnSync(process.execPath,args,{input:JSON.stringify({target:'fixture'}),encoding:'utf8',timeout:10000});assert.equal(skipped.status,0,skipped.stderr);assert.equal(skipped.stdout,'')
+ }
 })
