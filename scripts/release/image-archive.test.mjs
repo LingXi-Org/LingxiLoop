@@ -134,13 +134,18 @@ test('raw source proof is required before pulling or saving', async () => {
   await assert.rejects(verifySource({ ...source, configDigest: hash('wrong config') }), /ARCHIVE_SOURCE_MISMATCH/)
   await assert.rejects(verifySource({ ...source, ociProof: { ...source.ociProof, config: Buffer.from('wrong bytes').toString('base64') } }), /OCI_DIGEST_MISMATCH/)
 })
-test('archive CLI is only called inside enabled controller CI step; GHA uploads metadata only', async () => {
+test('archive staging permits configured publish-only bootstrap while candidate registration stays disabled', async () => {
   const workflow = await readFile(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8')
   const step = workflow.slice(workflow.indexOf('        name: Record registry index'), workflow.indexOf('  update-manifests:'))
-  assert.ok(workflow.slice(0, workflow.indexOf('        name: Record registry index')).endsWith("      - if: vars.RELEASE_CONTROLLER_ENABLED == 'true'\n"))
+  const guard = "vars.RELEASE_CONTROLLER_ENABLED == 'true' || (github.ref == 'refs/heads/main' && inputs.publish_only && vars.RELEASE_API_URL != '')"
+  assert.ok(workflow.slice(0, workflow.indexOf('        name: Record registry index')).endsWith(`      - if: ${guard}\n`))
+  assert.ok(step.includes(`      - if: ${guard}\n        uses: actions/upload-artifact@v4`))
   assert.match(step, /node scripts\/release\/image-archive.mjs "release-artifacts\/\$COMPONENT\/artifact.json"/)
   assert.match(step, /path: release-artifacts\//)
   assert.doesNotMatch(step, /path:.*RUNNER_TEMP|RELEASE_ADMIN_TOKEN|EXECUTOR_TOKEN/)
+  const registration = workflow.slice(workflow.indexOf('  register-candidate:'), workflow.indexOf('  report-release:'))
+  assert.match(registration, /!inputs\.publish_only/)
+  assert.match(registration, /vars\.RELEASE_CONTROLLER_ENABLED == 'true'/)
 })
 
 // Opt in explicitly: a local Unix socket with no production DOCKER_HOST.

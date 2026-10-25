@@ -9,6 +9,17 @@ import { prepareWorker } from './adapters'
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers'
 
 const bindings = env as unknown as ReleaseEnv
+async function controlledLedger(name: string) {
+  const stub = bindings.RELEASES.getByName(name)
+  // These tests dispatch Workflow steps manually. Keep the real durable alarm
+  // armed, but prevent its wall-clock dispatcher from racing manual execution
+  // or isolated-storage teardown on a loaded CI runner.
+  await runInDurableObject(stub, async (_instance, state) => {
+    const setAlarm = state.storage.setAlarm.bind(state.storage)
+    state.storage.setAlarm = (_time, options) => setAlarm(Date.now() + 86_400_000, options)
+  })
+  return stub
+}
 const contract = { nativeSchema: 14, productSchema: 57, api: 'v1', worker: '3.8.12', checkpoint: '3.8.12', control: 'v1', capabilities: ['case-soft-delete-filter'] }
 function target(): Target {
   return { adapter: 'web-static', resources: ['main-frontend'], dependsOn: [], fromReleaseId: 'baseline', hosts: [],
@@ -21,7 +32,7 @@ function manifest(id = 'release-1', sequence = 2): Manifest {
 }
 const accepted = (): Accepted => ({ releaseId: 'baseline', components: { 'main-frontend': { ...target(), releaseId: 'baseline', appSha: '0'.repeat(40), sequence: 1 } } })
 async function setup(name: string) {
-  const stub = bindings.RELEASES.getByName(name)
+  const stub = await controlledLedger(name)
   const call = async <T = ReleaseRecord>(path: string, body?: unknown) => {
     const response = await stub.fetch(new Request(`https://ledger${path}`, body === undefined ? undefined : { method: 'POST', body: JSON.stringify(body) }))
     return { status: response.status, body: await response.json() as T }
@@ -225,7 +236,7 @@ it('reconciles a committed claim whose response was lost without unlocking it', 
 })
 
 it.each(['drain', 'apply'] as const)('uses exact-source recovery only before a %s failure can have changed artifacts', async failure => {
-  const name = `source-abort-${failure}`, stub = bindings.RELEASES.getByName(name)
+  const name = `source-abort-${failure}`, stub = await controlledLedger(name)
   const call = async (path: string, body?: unknown) => {
     const response = await stub.fetch(new Request(`https://ledger${path}`, body === undefined ? undefined : { method: 'POST', body: JSON.stringify(body) }))
     expect(response.ok).toBe(true)
