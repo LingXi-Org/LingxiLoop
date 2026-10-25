@@ -11,6 +11,14 @@ import { storage } from '../../storage.js'
 import { createKnowledgeAgentApplication } from './agent-application.js'
 import { KnowledgeApplication } from './application.js'
 import { MAX_SOURCE_BYTES, openNotebookEnabled } from './policy.js'
+import { openNotebookClient } from './provider.js'
+import { KnowledgeSourceSearchApplication } from './source-search.js'
+
+export const knowledgeSourceSearchApplication = new KnowledgeSourceSearchApplication(pool, {
+  notebookEnabled: openNotebookEnabled,
+  ensureNotebook: ensureProjectNotebook,
+  client: openNotebookClient,
+})
 
 export const knowledgeApplication = new KnowledgeApplication(pool, {
   transaction: (work) => withTransaction(pool, work),

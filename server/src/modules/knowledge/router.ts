@@ -10,10 +10,11 @@ import {
   moveConversationRequestSchema,
   presignSourceRequestSchema,
   sourceSelectionRequestSchema,
+  sourceSearchRequestSchema,
   updateProjectRequestSchema,
   updateSourceRequestSchema,
 } from './contracts.js'
-import { knowledgeApplication } from './facade.js'
+import { knowledgeApplication, knowledgeSourceSearchApplication } from './facade.js'
 
 export const knowledgeRouter = Router()
 
@@ -75,6 +76,17 @@ knowledgeRouter.get('/projects/:id/sources/:sourceId', safe(async (req, res) => 
   const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
   try { res.json(await knowledgeApplication.source(workspace, String(req.params.sourceId))) }
   catch (error) { mapKnowledgeError(error) }
+}))
+
+knowledgeRouter.post('/projects/:id/sources/:sourceId/search', safe(async (req, res) => {
+  const workspace = await requireWorkspace(req, String(req.params.id), 'knowledge:read')
+  const input = parse(sourceSearchRequestSchema.safeParse(req.body ?? {}))
+  const controller = new AbortController()
+  const abort = () => { if (!res.writableEnded) controller.abort() }
+  res.once('close', abort)
+  try { res.json(await knowledgeSourceSearchApplication.search(workspace, String(req.params.sourceId), input, controller.signal)) }
+  catch (error) { mapKnowledgeError(error) }
+  finally { res.off('close', abort) }
 }))
 
 knowledgeRouter.post('/projects/:id/sources', safe(async (req, res) => {

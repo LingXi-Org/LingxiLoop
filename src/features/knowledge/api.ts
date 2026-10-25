@@ -7,6 +7,7 @@ import type { WorkspaceSummary } from '@/types'
 import type {
   ConversationSourceSelection,
   KnowledgeSource,
+  KnowledgeSourceSearch,
   ProjectMaterials,
 } from './contracts'
 
@@ -97,6 +98,10 @@ export const knowledgeApi = {
       })
   },
   getProjectSource: (projectId: string, sourceId: string) => http<KnowledgeSource>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}`),
+  searchProjectSource: (projectId: string, sourceId: string, input: { query: string; limit?: number; indexVersion?: string }, signal?: AbortSignal) =>
+    http<KnowledgeSourceSearch>(`/projects/${encodeURIComponent(projectId)}/sources/${encodeURIComponent(sourceId)}/search`, {
+      method: 'POST', signal, headers: { 'x-project-id': projectId }, body: JSON.stringify(input),
+    }),
   uploadProjectSource: (projectId: string, file: File, onPending?: () => void) => uploadSource(`/projects/${encodeURIComponent(projectId)}/sources`, projectId, file, onPending),
   addProjectTextSource: async (projectId: string, input: { title?: string; text: string }) => {
     const fingerprint = JSON.stringify(['text', projectId, input])

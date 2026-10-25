@@ -1,6 +1,33 @@
 import type { Queryable } from '../../db/queryable.js'
 import { caseSourceVersion } from '../cases/evidence.js'
 
+export interface KnowledgeSourceIndexState {
+  id: string
+  title: string
+  mimeType: string | null
+  status: string
+  externalSourceId: string | null
+  chunkCount: number
+  updatedAt: string
+}
+
+/** Same project/private boundary as source detail; never accepts an external id from the browser. */
+export async function findKnowledgeSourceIndexState(db: Queryable, input: {
+  companyId: string; projectId: string; userId: string; sourceId: string
+}): Promise<KnowledgeSourceIndexState | null> {
+  const { rows } = await db.query<KnowledgeSourceIndexState>(
+    `SELECT source.id,source.title,source.mime_type AS "mimeType",source.status,
+            source.external_source_id AS "externalSourceId",source.external_chunk_count AS "chunkCount",
+            source.updated_at::text AS "updatedAt"
+       FROM knowledge_sources source
+      WHERE source.id=$1 AND source.company_id=$2 AND source.project_id=$3 AND source.deleted_at IS NULL
+        AND (source.visibility_scope='PROJECT'
+          OR (source.visibility_scope='PRIVATE' AND source.owner_user_id=$4))`,
+    [input.sourceId, input.companyId, input.projectId, input.userId],
+  )
+  return rows[0] ?? null
+}
+
 export interface KnowledgeRetrievalSource {
   id: string
   title: string

@@ -36,6 +36,21 @@ export interface KnowledgeCitation {
   marker: string
 }
 
+export interface KnowledgeSourceSearch {
+  sourceId: string
+  indexVersion: string | null
+  status: 'matched' | 'no_matches' | 'processing' | 'not_indexed' | 'stale'
+  /** Exact text snapshot for the returned UTF-16 offsets. Never original-file layout coordinates. */
+  extractedText: string | null
+  matches: Array<{
+    sourceId: string
+    sourceTitle: string
+    chunkId: string
+    excerpt: string
+    anchor: { type: 'extracted_text'; start: number; end: number } | null
+  }>
+}
+
 export interface ConversationSourceSelection {
   conversationId: string
   sources: Array<{ sourceId: string; title: string; status: KnowledgeSourceStatus; enabled: boolean }>
