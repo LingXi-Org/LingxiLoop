@@ -92,4 +92,4 @@ reads retain their normal bounded timeout.
 The integration does **not** establish actual semantic retrieval quality or
 completed PDF/Markdown ingestion. Real Notebook query and browser acceptance
 remain with the parent integrator after #474; the final combined candidate
-still needs its independent review and CI.
+still needs CI. No independent review is requested or performed in this task.
