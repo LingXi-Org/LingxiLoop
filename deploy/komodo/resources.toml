@@ -108,6 +108,7 @@ WUKONG_USER_TOKEN_SECRET = [[WUKONG_USER_TOKEN_SECRET]]
 OPENAI_API_KEY = [[OPENAI_API_KEY]]
 OPENAI_BASE_URL = [[OPENAI_BASE_URL]]
 OPENAI_MODEL = deepseek-ai/DeepSeek-V4.1-Flash
+OPENAI_VISION_MODEL = Qwen/Qwen3-VL-32B-Instruct
 OPENAI_EMBEDDING_MODEL = Pro/BAAI/bge-m3
 # Derive admission rates from this model tariff and the explicit exchange rate.
 AGENT_OS_INPUT_COST_MICROS_PER_MILLION =
@@ -155,6 +156,7 @@ WUKONG_USER_TOKEN_SECRET = [[WUKONG_USER_TOKEN_SECRET]]
 OPENAI_API_KEY = [[OPENAI_API_KEY]]
 OPENAI_BASE_URL = [[OPENAI_BASE_URL]]
 OPENAI_MODEL = deepseek-ai/DeepSeek-V4.1-Flash
+OPENAI_VISION_MODEL = Qwen/Qwen3-VL-32B-Instruct
 OPENAI_EMBEDDING_MODEL = Pro/BAAI/bge-m3
 # Derive admission rates from this model tariff and the explicit exchange rate.
 AGENT_OS_INPUT_COST_MICROS_PER_MILLION =

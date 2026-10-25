@@ -7,7 +7,7 @@ x-logging: &logging
     max-file: "3"
 
 x-runtime: &runtime
-  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:6d4c0311cbb3967612c9ab3f23489d6a4cae0fe5
+  image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:a5ad6af17da10a4cf34fb2d80fd8cf47c3542962
   pull_policy: never
   restart: unless-stopped
   environment: &runtime-environment
@@ -51,6 +51,7 @@ x-runtime: &runtime
     LINGXIOS_CONTROL_URL: http://lingxiloop:5182
     OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-Pro/BAAI/bge-m3}
     OPENAI_IMAGE_MODEL: ${OPENAI_IMAGE_MODEL:-}
+    OPENAI_VISION_MODEL: ${OPENAI_VISION_MODEL:-}
     OTEL_DEPLOYMENT_ENVIRONMENT: production
     OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
@@ -106,7 +107,7 @@ services:
 
   worker:
     <<: *runtime
-    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:6d4c0311cbb3967612c9ab3f23489d6a4cae0fe5
+    image: accel.way2api.fun/ghcr.io/lingxi-org/lingxiloop-server:a5ad6af17da10a4cf34fb2d80fd8cf47c3542962
     environment:
       <<: *runtime-environment
       NODE_OPTIONS: --max-old-space-size=640

@@ -1,0 +1,170 @@
+{
+  "targets": {
+    "notebook": {
+      "adapter": "open-notebook",
+      "project": "REPLACE_WITH_EXISTING_KNOWLEDGE_PROJECT",
+      "composeFile": "/etc/lingxi-release/components/notebook-compose.yml",
+      "envFile": "/etc/lingxi-release/secrets/notebook.env",
+      "services": {
+        "open-notebook": {
+          "role": "component",
+          "mounts": [
+            {
+              "type": "volume",
+              "source": "REPLACE_WITH_ORIGINAL_NOTEBOOK_DATA_VOLUME",
+              "target": "/app/data",
+              "readOnly": false
+            }
+          ]
+        }
+      },
+      "component": {
+        "imageProfiles": {
+          "sha256:REPLACE_WITH_ACTUAL_DOCKER_LOCAL_ID": {
+            "kind": "notebook-rag",
+            "contract": {
+              "nativeSchema": 0,
+              "productSchema": 1,
+              "api": "notebook-rag-v1",
+              "worker": "surreal-commands-v1",
+              "checkpoint": "notebook-quiescent-commands-v1",
+              "control": "notebook-rag-readyz-v1",
+              "capabilities": [
+                "notebook.rag-schema-v1"
+              ]
+            },
+            "storage": {
+              "kind": "notebook-rag-surreal-v2",
+              "schemaVersion": 1,
+              "namespace": "REPLACE_WITH_OBSERVED_NAMESPACE",
+              "database": "REPLACE_WITH_OBSERVED_ACTIVE_DATABASE",
+              "databaseInfoHash": "sha256:REPLACE_WITH_REVIEWED_INFO_FOR_DB_HASH"
+            },
+            "sourceEvidence": {
+              "mode": "repo",
+              "repository": "https://github.com/LingXi-Org/LingxiLoop.git",
+              "commit": "REPLACE_WITH_EXACT_REPO_COMMIT"
+            },
+            "repository": {
+              "directory": "/REPLACE_WITH_EXISTING_EXACT_REPO_WORKTREE",
+              "files": [
+                {
+                  "repositoryPath": "third_party/open-notebook/open_notebook/rag/runtime.py",
+                  "containerPath": "/app/open_notebook/rag/runtime.py",
+                  "sha256": "REPLACE_WITH_REVIEWED_COMMITTED_AND_RUNNING_FILE_HASH"
+                }
+              ]
+            },
+            "metadata": {
+              "files": [
+                {
+                  "path": "/app/open_notebook/rag/runtime.py",
+                  "sha256": "REPLACE_WITH_REVIEWED_RUNNING_FILE_HASH"
+                }
+              ]
+            },
+            "allowedStopExitCodes": [
+              0
+            ],
+            "localImageId": "sha256:REPLACE_WITH_ACTUAL_DOCKER_LOCAL_ID",
+            "localIdKind": "REPLACE_WITH_OBSERVED_config_index_OR_platform"
+          }
+        },
+        "dependencies": {
+          "surrealdb": {
+            "project": "REPLACE_WITH_EXISTING_KNOWLEDGE_PROJECT",
+            "service": "surrealdb",
+            "image": {
+              "ref": "docker.io/surrealdb/surrealdb@sha256:REPLACE_INDEX_DIGEST",
+              "indexDigest": "sha256:REPLACE_INDEX_DIGEST",
+              "platformDigest": "sha256:REPLACE_PLATFORM_DIGEST",
+              "configDigest": "sha256:REPLACE_CONFIG_DIGEST",
+              "diffIds": [
+                "sha256:REPLACE_ORDERED_DIFF_IDS"
+              ],
+              "os": "linux",
+              "architecture": "amd64"
+            },
+            "version": "REPLACE_WITH_ACTUAL_BINARY_VERSION",
+            "versionOutputSha256": "REPLACE_WITH_ACTUAL_VERSION_OUTPUT_SHA256",
+            "mounts": [
+              {
+                "type": "volume",
+                "source": "REPLACE_WITH_ORIGINAL_SURREAL_VOLUME",
+                "target": "/home/nonroot",
+                "readOnly": false
+              },
+              {
+                "type": "volume",
+                "source": "REPLACE_WITH_EXISTING_ANONYMOUS_DATA_VOLUME_NAME",
+                "target": "/data",
+                "readOnly": false
+              },
+              {
+                "type": "volume",
+                "source": "REPLACE_WITH_EXISTING_ANONYMOUS_LOGS_VOLUME_NAME",
+                "target": "/logs",
+                "readOnly": false
+              }
+            ]
+          }
+        },
+        "surreal": {
+          "dependency": "surrealdb",
+          "network": "REPLACE_WITH_EXISTING_DOCKER_NETWORK"
+        }
+      }
+    },
+    "wukongim": {
+      "adapter": "wukongim",
+      "project": "REPLACE_WITH_EXISTING_CORE_PROJECT",
+      "composeFile": "/etc/lingxi-release/components/core-compose.yml",
+      "envFile": "/etc/lingxi-release/secrets/core.env",
+      "services": {
+        "wukongim": {
+          "role": "component",
+          "mounts": [
+            {
+              "type": "volume",
+              "source": "REPLACE_WITH_ORIGINAL_WUKONG_WAL_VOLUME",
+              "target": "/var/lib/wukongim",
+              "readOnly": false
+            }
+          ]
+        }
+      },
+      "component": {
+        "imageProfiles": {
+          "sha256:REPLACE_WITH_ACTUAL_WUKONG_CONFIG_DIGEST": {
+            "kind": "wukongim",
+            "contract": {
+              "nativeSchema": 0,
+              "productSchema": 0,
+              "api": "wukongim-v1",
+              "worker": "wukongim-delivery-v1",
+              "checkpoint": "wukongim-raft-wal-v1",
+              "control": "wukongim-readyz-v1",
+              "capabilities": [
+                "wukongim.reviewed-raftstore-writer"
+              ]
+            },
+            "storage": {
+              "kind": "wukongim-audited-writer-and-retained-volume",
+              "compatibilityEvidenceHash": "sha256:REPLACE_WITH_REVIEWED_STORAGE_COMPATIBILITY_EVIDENCE"
+            },
+            "metadata": {
+              "buildInfoSha256": "REPLACE_WITH_BUILD_INFO_FILE_HASH",
+              "upstreamCommit": "REPLACE_WITH_EXACT_UPSTREAM_COMMIT",
+              "raftstoreFixCommit": "REPLACE_WITH_EXACT_FIX_COMMIT",
+              "binarySha256": "REPLACE_WITH_ACTUAL_INSTALLED_EXECUTABLE_HASH"
+            },
+            "allowedStopExitCodes": [
+              0
+            ]
+          }
+        },
+        "dependencies": {}
+      }
+    }
+  }
+}
