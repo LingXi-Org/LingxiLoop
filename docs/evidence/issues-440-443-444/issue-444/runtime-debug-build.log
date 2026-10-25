@@ -1,0 +1,44 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.04kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for accel.way2api.fun/docker.io/library/alpine:3.19
+#2 DONE 0.8s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [runtime 1/4] FROM accel.way2api.fun/docker.io/library/alpine:3.19@sha256:6baf43584bcb78f2e5847d1de515f23499913ac9f12bdf834811a3145eb11ca1
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 247B done
+#5 DONE 0.0s
+
+#6 [builder 1/1] COPY out /out
+#6 CACHED
+
+#7 [runtime 2/4] RUN --mount=type=secret,id=environment-ca export SSL_CERT_FILE=/run/secrets/environment-ca && apk add --no-cache ca-certificates
+#7 CACHED
+
+#8 [runtime 3/4] WORKDIR /app
+#8 CACHED
+
+#9 [runtime 4/4] COPY server/wukongim/wukongim.toml /etc/wukongim/wukongim.toml
+#9 CACHED
+
+#10 [debug 1/2] COPY --from=builder /out/wukongim.debug /usr/local/bin/wukongim
+#10 DONE 0.2s
+
+#11 [debug 2/2] COPY --from=builder /out/build-info.txt /usr/local/share/wukongim/build-info.txt
+#11 DONE 0.1s
+
+#12 exporting to image
+#12 exporting layers
+#12 exporting layers 0.6s done
+#12 writing image sha256:2e8063c6ca65b2e437bfeeb0d10d9e6f3f616951a4e32aede6b9884fddb1be95 done
+#12 naming to docker.io/library/issue444:debug done
+#12 DONE 0.6s

@@ -3,6 +3,7 @@
 Usage: python measure.py BASELINE_TAR RELEASE_TAR DEBUG_BINARY RELEASE_BINARY
 Docker-save contains uncompressed layer tars. gzip level=6, mtime=0 matches a
 reproducible OCI gzip encoding; it does not claim a registry transfer measurement.
+Writes real OCI layouts next to each input tar, with suffix .oci.
 """
 import gzip
 import hashlib
@@ -27,10 +28,22 @@ def binary(path):
 
 
 def image(path):
+    layout = Path(path).with_suffix('.oci')
+    blobs = layout / 'blobs' / 'sha256'
+    blobs.mkdir(parents=True, exist_ok=True)
+
+    def blob(data, media_type):
+        digest = hashlib.sha256(data).hexdigest()
+        (blobs / digest).write_bytes(data)
+        return {'mediaType': media_type, 'digest': 'sha256:' + digest, 'size': len(data)}
+
     with tarfile.open(path) as archive:
         manifest = json.load(archive.extractfile('manifest.json'))[0]
-        config = json.load(archive.extractfile(manifest['Config']))
+        config_bytes = archive.extractfile(manifest['Config']).read()
+        config = json.loads(config_bytes)
+        config_descriptor = blob(config_bytes, 'application/vnd.oci.image.config.v1+json')
         layers = []
+        descriptors = []
         for name in manifest['Layers']:
             data = archive.extractfile(name).read()
             with tarfile.open(fileobj=io.BytesIO(data)) as layer:
@@ -38,13 +51,22 @@ def image(path):
                 contents = sum(member.size for member in files if member.isfile())
                 has_binary = any(member.name.lstrip('./') == 'usr/local/bin/wukongim' for member in files)
             compressed = gzip.compress(data, compresslevel=6, mtime=0)
+            descriptors.append(blob(compressed, 'application/vnd.oci.image.layer.v1.tar+gzip'))
             layers.append({'diffId': 'sha256:' + hashlib.sha256(data).hexdigest(),
                            'uncompressedTarBytes': len(data), 'fileContentBytes': contents,
                            'gzipBytes': len(compressed),
                            'gzipDigest': 'sha256:' + hashlib.sha256(compressed).hexdigest(),
                            'containsWukongBinary': has_binary})
         assert [row['diffId'] for row in layers] == config['rootfs']['diff_ids']
+        image_manifest = {'schemaVersion': 2, 'mediaType': 'application/vnd.oci.image.manifest.v1+json',
+                          'config': config_descriptor, 'layers': descriptors}
+        descriptor = blob(json.dumps(image_manifest, separators=(',', ':')).encode(),
+                          image_manifest['mediaType'])
+        descriptor['platform'] = {'architecture': config['architecture'], 'os': config['os']}
+        (layout / 'index.json').write_text(json.dumps({'schemaVersion': 2, 'manifests': [descriptor]}))
+        (layout / 'oci-layout').write_text('{"imageLayoutVersion":"1.0.0"}')
         return {'os': config['os'], 'architecture': config['architecture'], 'layers': layers,
+                'ociManifest': descriptor,
                 'gzipLayerBytes': sum(row['gzipBytes'] for row in layers),
                 'uncompressedLayerTarBytes': sum(row['uncompressedTarBytes'] for row in layers),
                 'layerFileContentBytes': sum(row['fileContentBytes'] for row in layers)}
