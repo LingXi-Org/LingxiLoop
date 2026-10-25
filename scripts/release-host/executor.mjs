@@ -42,6 +42,14 @@ export class Executor {
           else if(sideEffect)error.uncertain=true
           throw error
         }
+        // Retain only the fixed ingress lost-response proof, never a helper's
+        // full response, URL, headers or arbitrary diagnostic fields.
+        if (result?.observedAfterUnknown === true && ['CONTROL_UNAVAILABLE','CONTROL_REJECTED'].includes(result.originalError?.code)) {
+          const originalError = {code:result.originalError.code}
+          if (Number.isInteger(result.originalError.httpStatus) && result.originalError.httpStatus >= 500 && result.originalError.httpStatus <= 599) originalError.httpStatus = result.originalError.httpStatus
+          current = this.journal.get(op.key)
+          this.journal.patch(op.key,{steps:current.steps.map(item => item.name === name ? {...item,observedAfterUnknown:true,originalError} : item)})
+        }
         if (sideEffect) await this.afterSideEffect?.(name,op)
         this.journal.assertFence(op.key,resources)
         current = this.journal.get(op.key)
