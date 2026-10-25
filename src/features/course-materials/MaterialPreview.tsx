@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Download, RotateCcw } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -14,16 +14,19 @@ import { type MaterialContext, fileKind, materialQueryKey, sourceStatusLabel } f
 import { materialsQueryClient } from './queries'
 
 const OriginalFileViewer = lazy(() => import('./OriginalFileViewer'))
+const MaterialSegments = lazy(() => import('./MaterialSegments'))
 
 export function MaterialPreview({ source, context, onClose, onDownload, downloadBusy }: {
   source: KnowledgeSource; context: MaterialContext; onClose(): void; onDownload(source: KnowledgeSource): void; downloadBusy: boolean
 }) {
+  const [mode, setMode] = useState('original')
   const detail = useQuery({ queryKey: [...materialQueryKey(context), 'detail', source.id],
     queryFn: () => knowledgeApi.getProjectSource(context.projectId, source.id),
     refetchInterval: query => ['upload_pending', 'queued', 'processing'].includes(query.state.data?.status ?? '') ? 2000 : false,
   }, materialsQueryClient)
   const file = detail.data ?? source
   const stored = file.status === 'stored' || file.stage === 'stored_only'
+  const indexed = file.status === 'ready' && (file.chunkCount ?? 0) > 0
   return <Dialog open onOpenChange={open => { if (!open) onClose() }}>
     <DialogContent className="max-h-[85dvh] gap-0 overflow-hidden p-0 sm:max-w-6xl">
       <DialogHeader className="border-b p-6 pe-14"><DialogTitle className="break-words leading-6">{file.title}</DialogTitle>
@@ -35,8 +38,8 @@ export function MaterialPreview({ source, context, onClose, onDownload, download
             : <>
               {file.capabilities?.canDownload && <Button variant="outline" disabled={downloadBusy} onClick={() => onDownload(file)}><Download />{downloadBusy ? '正在下载…' : '下载原文件'}</Button>}
               {file.originalUrl && <Button asChild variant="outline"><a href={file.originalUrl} target="_blank" rel="noreferrer">打开原始网页</a></Button>}
-              <Tabs defaultValue="original" className="mt-4 min-w-0">
-                <TabsList aria-label="资料预览方式"><TabsTrigger value="original">原文件</TabsTrigger><TabsTrigger value="parsed">解析文本</TabsTrigger></TabsList>
+              <Tabs value={mode === 'semantic' && !indexed ? 'original' : mode} onValueChange={setMode} className="mt-4 min-w-0">
+                <TabsList aria-label="资料预览方式"><TabsTrigger value="original">原文件</TabsTrigger><TabsTrigger value="parsed">解析文本</TabsTrigger>{indexed && <TabsTrigger value="semantic">语义命中</TabsTrigger>}</TabsList>
                 <TabsContent value="original" className="min-w-0">
                   {file.kind === 'file' && file.capabilities?.canDownload && !['archive', 'unknown'].includes(fileKind(file))
                     ? <Suspense fallback={<ResourceSkeleton variant="detail" label="正在加载原文件预览器" />}><OriginalFileViewer key={[...materialQueryKey(context), file.id].join('|')} source={file} context={context} /></Suspense>
@@ -48,6 +51,9 @@ export function MaterialPreview({ source, context, onClose, onDownload, download
                       : file.status === 'failed' ? '文本解析失败，仍可查看原文件。'
                         : file.status === 'ready' ? '此资料暂无解析文本。' : '资料正在解析，请稍后查看文本。'}</p>}
                   {file.isTruncated && <p className="mt-3 text-xs text-muted-foreground">解析文本不完整，可切换到原文件查看。</p>}
+                </TabsContent>
+                <TabsContent value="semantic">
+                  {mode === 'semantic' && indexed && <Suspense fallback={<ResourceSkeleton variant="detail" label="正在加载知识片段" />}><MaterialSegments source={file} context={context} /></Suspense>}
                 </TabsContent>
               </Tabs>
               {file.status === 'ready' && <ConversationSourceToggle projectId={context.projectId} sourceId={file.id} />}

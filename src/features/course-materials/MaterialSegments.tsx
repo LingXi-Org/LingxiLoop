@@ -30,7 +30,7 @@ function ScopedMaterialSegments({ source, context }: { source: KnowledgeSource; 
   const current = useAuth(state => state.user?.id === context.userId && state.activeCompanyId === context.companyId)
   const search = useQuery({
     queryKey: [...materialQueryKey(context), 'semantic', source.id, source.updatedAt, request],
-    enabled: current && source.status === 'ready' && !!request,
+    enabled: current && source.status === 'ready' && (source.chunkCount ?? 0) > 0 && !!request,
     queryFn: async ({ signal }) => {
       const response = await knowledgeApi.searchProjectSource(context.projectId, source.id, {
         query: request!.query, ...(request!.indexVersion ? { indexVersion: request!.indexVersion } : {}),
@@ -42,8 +42,8 @@ function ScopedMaterialSegments({ source, context }: { source: KnowledgeSource; 
   }, materialsQueryClient)
   const result = search.data?.sourceId === source.id ? search.data : undefined
   const text = result?.extractedText ?? ''
-  const textSource = useMemo(() => ({ kind: 'text' as const, text, fileName: `${source.title}.txt`,
-    identityKey: `${source.id}:${result?.indexVersion ?? ''}` }), [text, source.title, source.id, result?.indexVersion])
+  const textSource = useMemo(() => ({ kind: 'blob' as const, blob: new Blob([text], { type: 'text/plain' }), fileName: `${source.title}.txt`,
+    identityKey: JSON.stringify([...materialQueryKey(context), source.id, result?.indexVersion ?? '']) }), [text, source.title, source.id, result?.indexVersion, context.companyId, context.userId, context.projectId, context.space])
   const matches = result?.status === 'matched' && result.indexVersion ? result.matches : []
   const active = matches.find(match => match.chunkId === (previewId ?? selectedId))
   const highlight = active ? evidenceLineRange(text, active) : null
@@ -59,7 +59,7 @@ function ScopedMaterialSegments({ source, context }: { source: KnowledgeSource; 
     setRequest({ query: value, ...(refresh || !result?.indexVersion ? {} : { indexVersion: result.indexVersion }), attempt: (request?.attempt ?? 0) + 1 })
   }
   if (!current) return null
-  if (source.status !== 'ready') return <p className="p-4 text-sm text-muted-foreground">{['queued', 'processing'].includes(source.status)
+  if (source.status !== 'ready' || (source.chunkCount ?? 0) < 1) return <p className="p-4 text-sm text-muted-foreground">{['queued', 'processing'].includes(source.status)
     ? '资料正在建立索引，请稍后再查找片段。' : '此资料暂无可检索的知识片段，可切换到原文件查看。'}</p>
   return <section aria-label="资料语义检索" className="min-w-0 space-y-4">
     <form className="flex flex-wrap items-end gap-2" onSubmit={event => { event.preventDefault(); submit() }}>
