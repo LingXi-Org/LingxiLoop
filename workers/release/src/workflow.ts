@@ -19,7 +19,7 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
           try { return JSON.stringify({ ok: true, value: await callback() }) }
           catch (error) {
             const code = error instanceof ReleaseError ? error.code : (error as { code?: string }).code
-            const transient = /^(?:REMOTE_HTTP_(?:429|502|503|504)|EXECUTOR_QUERY_UNAVAILABLE|TRANSPORT_OUTCOME_UNKNOWN|OPERATION_OUTCOME_UNKNOWN)$/.test(code ?? '')
+            const transient = /^(?:REMOTE_HTTP_(?:429|502|503|504)|EXECUTOR_QUERY_UNAVAILABLE|PROBE_QUERY_UNAVAILABLE|TRANSPORT_OUTCOME_UNKNOWN|OPERATION_OUTCOME_UNKNOWN)$/.test(code ?? '')
             if (transient && attempt < retryLimit) { await new Promise(resolve => setTimeout(resolve, 500 * 2 ** attempt)); continue }
             return JSON.stringify({ ok: false, error: code && /^[A-Z][A-Z0-9_]+$/.test(code) ? code : 'STEP_OUTCOME_UNKNOWN' })
           }

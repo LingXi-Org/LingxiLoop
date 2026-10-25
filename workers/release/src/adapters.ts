@@ -83,10 +83,15 @@ export async function verifyTarget(env: ReleaseEnv, target: Target, recovery = f
   for (const id of [...target.verification.readiness, target.verification.businessProbe]) {
     const probe = probes[id]
     requireThat(probe && new URL(probe.url).protocol === 'https:', 'PROBE_NOT_CONFIGURED')
-    const response = await fetch(probe.url, { redirect: 'manual', signal: AbortSignal.timeout(20_000), headers: probe.header })
+    let response: Response
+    try { response = await fetch(probe.url, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(20_000), headers: probe.header }) }
+    catch { throw new ReleaseError('PROBE_QUERY_UNAVAILABLE', 503) }
     requireThat(response.status === probe.status, 'BUSINESS_PROBE_FAILED')
     if (probe.json) {
-      const body = await response.json() as Record<string, unknown>
+      let body: Record<string, unknown>
+      try { body = await response.json() as Record<string, unknown> }
+      catch { throw new ReleaseError('PROBE_QUERY_UNAVAILABLE', 503) }
+      requireThat(body && typeof body === 'object' && !Array.isArray(body), 'BUSINESS_PROBE_CONTENT_MISMATCH')
       for (const [key, value] of Object.entries(probe.json)) requireThat(canonical(body[key]) === canonical(value), 'BUSINESS_PROBE_CONTENT_MISMATCH')
     }
     records[id] = { status: response.status }

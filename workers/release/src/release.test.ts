@@ -268,3 +268,30 @@ it.each(['drain', 'apply'] as const)('uses exact-source recovery only before a %
   if (source) expect(phases).not.toContain('apply')
   expect((await call(`/get?id=${m.releaseId}`)).targets.recovery).toEqual({ direction: source ? 'source' : 'compatible-recovery' })
 })
+
+it('retries a sanitized read-only probe body failure within its fixed budget without repeating completed host mutations', async () => {
+  const name = 'readonly-probe-retry', stub = await controlledLedger(name)
+  const call = async (path: string, body?: unknown) => {
+    const response = await stub.fetch(new Request(`https://ledger${path}`, body === undefined ? undefined : { method: 'POST', body: JSON.stringify(body) }))
+    expect(response.ok).toBe(true); return response.json() as Promise<ReleaseRecord>
+  }
+  const runtime = { ...target(), adapter: 'main-runtime' as const, resources: ['main-runtime', 'main-db'], artifact: { kind: 'image' as const, digest: `sha256:${'a'.repeat(64)}` }, hostPlan: { mode: 'maintenance' } }
+  const m = manifest('readonly-probe-retry'); m.targets = { 'main-runtime-a': { ...runtime, hosts: ['a'] }, 'main-runtime-b': { ...runtime, hosts: ['b'] } }
+  await call('/bootstrap', { accepted: { releaseId: 'baseline', components: Object.fromEntries(Object.entries(m.targets).map(([id, t]) => [id, { ...t, releaseId: 'baseline', appSha: '0'.repeat(40), sequence: 1 }])) }, evidence: { zeroInFlight: true, receiptKey: 'handoff/verified.json', handoffId: 'handoff-495', observedAt: new Date().toISOString() } })
+  await call('/register', { manifest: m, manifestHash: await hash(m) })
+  const phases: string[] = [], steps = { ...immediateSteps, do: async (stepName: string, _config: unknown, callback: () => Promise<string>) => {
+    if (/^manifest-/.test(stepName)) return JSON.stringify({ ok: true, value: {} })
+    if (/^main-runtime-[ab]-[ab]-.+-submit$/.test(stepName)) { phases.push(stepName); return JSON.stringify({ ok: true, value: { status: 'succeeded' } }) }
+    return callback()
+  } } as unknown as WorkflowStep
+  fetchMock.activate(); fetchMock.disableNetConnect()
+  const probes = fetchMock.get('https://readonly-probe.example')
+  probes.intercept({ path: '/ready', method: 'GET' }).reply(200, 'lost/truncated JSON')
+  probes.intercept({ path: '/ready', method: 'GET' }).reply(200, { ready: true }).times(2)
+  probes.intercept({ path: '/business', method: 'GET' }).reply(200, '{}').times(2)
+  try {
+    const result = await execute(name, m.releaseId, 0, { PROBES_JSON: JSON.stringify({ ready: { url: 'https://readonly-probe.example/ready', status: 200, json: { ready: true } }, login: { url: 'https://readonly-probe.example/business', status: 200 } }) }, steps)
+    expect(result).toMatchObject({ status: 'accepted' }); expect(phases).toHaveLength(10); expect(new Set(phases).size).toBe(10)
+    fetchMock.assertNoPendingInterceptors()
+  } finally { fetchMock.deactivate() }
+})

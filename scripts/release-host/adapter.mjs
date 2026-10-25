@@ -162,10 +162,34 @@ export class ComposeAdapter {
     if (endpoint.tokenFile) headers.authorization = `Bearer ${(await readFile(endpoint.tokenFile, 'utf8')).trim()}`
     if (endpoint.accessClientIdFile) headers['CF-Access-Client-Id'] = (await readFile(endpoint.accessClientIdFile,'utf8')).trim()
     if (endpoint.accessClientSecretFile) headers['CF-Access-Client-Secret'] = (await readFile(endpoint.accessClientSecretFile,'utf8')).trim()
+    const observeIngress = async error => {
+      if (action !== 'ingress' || method !== 'POST') throw error
+      // The POST is never repeated. Only its independently configured, same-auth
+      // state reader can prove the exact desired generation after a lost reply.
+      try {
+        const reader = local.controls?.ingressState, writerUrl = new URL(endpoint.url), readerUrl = new URL(reader?.url)
+        requireValue(writerUrl.origin === readerUrl.origin && writerUrl.pathname === readerUrl.pathname &&
+          ['tokenFile','accessClientIdFile','accessClientSecretFile'].every(key => endpoint[key] === reader[key]),
+          'CONTROL_PREFLIGHT_MISMATCH','Ingress observation endpoint/authentication differs')
+        requireValue(Number.isSafeInteger(body.generation) && typeof body.enabled === 'boolean','INGRESS_UNPROVEN','Exact ingress state is required')
+        const observed = await this.control(local,'ingressState',body,'GET')
+        requireValue(observed?.generation === body.generation && observed.enabled === body.enabled,'INGRESS_UNPROVEN','Ingress generation or enabled state is not proven')
+        return { enabled:observed.enabled,generation:observed.generation,observedAfterUnknown:true,
+          originalError:{code:error.code,...(error.httpStatus ? {httpStatus:error.httpStatus} : {})} }
+      } catch (observationError) {
+        const code = /^[A-Z][A-Z0-9_]+$/.test(observationError.code ?? '') ? observationError.code : 'CONTROL_UNAVAILABLE'
+        error.message += `; ingress readback unconfirmed (${code})`
+        throw error
+      }
+    }
     let response
     try { response = await this.fetcher(endpoint.url, { method, headers, ...(method === 'GET' ? {} : { body: canonical(body) }), signal: AbortSignal.timeout(endpoint.timeoutMs ?? 10000), redirect: 'error' }) }
-    catch { throw Object.assign(fault('CONTROL_UNAVAILABLE', `Independent ${action} control is unavailable`, 502), { uncertain: method !== 'GET' }) }
-    if (!response.ok) throw Object.assign(fault('CONTROL_REJECTED', `Independent ${action} control rejected the operation`, 502), { uncertain: method !== 'GET' })
+    catch { return observeIngress(Object.assign(fault('CONTROL_UNAVAILABLE', `Independent ${action} control is unavailable`, 502), { uncertain: method !== 'GET' })) }
+    if (!response.ok) {
+      const error = Object.assign(fault('CONTROL_REJECTED', `Independent ${action} control rejected the operation (HTTP ${response.status})`, 502), { uncertain: method !== 'GET',httpStatus:response.status })
+      if (response.status >= 500 && response.status <= 599) return observeIngress(error)
+      throw error
+    }
     try { return await response.json() } catch { throw Object.assign(fault('CONTROL_INVALID_RESPONSE', `Independent ${action} control returned invalid evidence`, 502), { uncertain: method !== 'GET' }) }
   }
   async composeArgs(op, direction) {
@@ -291,7 +315,7 @@ export class ComposeAdapter {
       for (const [service,spec] of Object.entries(local.services)) if (spec.role === 'worker') {
         await context.step(`stop:${service}`, () => this.run([...context.compose,'stop','--timeout',String(this.policy.stopTimeoutSeconds ?? 150),service]), { sideEffect:true })
       }
-      await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op,enabled:false }), { sideEffect:true })
+      const ingressChange = await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op,enabled:false }), { sideEffect:true })
       const ingress = await this.control(local,'ingressState',op,'GET')
       requireValue(ingress.enabled === false && ingress.generation === op.generation, 'INGRESS_UNPROVEN', 'Stable ingress must confirm backend removal')
       for (const [service,spec] of Object.entries(local.services)) if (spec.role !== 'worker') {
@@ -304,7 +328,7 @@ export class ComposeAdapter {
         if (Date.now() >= deadline) throw fault('DRAIN_TIMEOUT','Maintenance writers stopped but live leases remain; task state is preserved')
         await this.wait(this.policy.pollIntervalMs ?? 1000)
       }
-      return { drained:true,ingress:false,mode:'maintenance' }
+      return { drained:true,ingress:false,mode:'maintenance',...(ingressChange?.observedAfterUnknown ? {ingressObservation:ingressChange} : {}) }
     }
     const evidence = await context.step('worker-admission-drain', () => this.control(local,'drain',{ ...op, mode: plan.mode }), { sideEffect: true })
     requireValue(evidence?.admissionClosed === true && (plan.mode === 'rolling' || evidence.writesStopped === true), 'DRAIN_UNPROVEN', 'Admission or maintenance write barrier is not proven')
@@ -313,13 +337,13 @@ export class ComposeAdapter {
       if (Date.now() >= deadline) throw fault('DRAIN_TIMEOUT', 'Task/lease/checkpoint barrier did not drain within the fixed budget')
       await this.wait(this.policy.pollIntervalMs ?? 1000)
     }
-    await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op, enabled: false }), { sideEffect: true })
+    const ingressChange = await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op, enabled: false }), { sideEffect: true })
     const ingress = await this.control(local,'ingressState',op,'GET')
     requireValue(ingress.enabled === false && ingress.generation === op.generation, 'INGRESS_UNPROVEN', 'Stable ingress has not confirmed backend removal')
     for (const [service, spec] of Object.entries(local.services)) if (spec.role === 'worker') {
       await context.step(`stop:${service}`, () => this.run([...(context.compose), 'stop','--timeout',String(this.policy.stopTimeoutSeconds ?? 150), service]), { sideEffect: true })
     }
-    return { drained: true, ingress: false, mode: plan.mode }
+    return { drained: true, ingress: false, mode: plan.mode,...(ingressChange?.observedAfterUnknown ? {ingressObservation:ingressChange} : {}) }
   }
   async apply(op, plan, context, direction = 'forward') {
     const local = this.policy.targets[op.target], descriptor = direction === 'source' ? (plan.source??plan.recovery) : direction === 'recovery' ? plan.recovery : plan
@@ -380,10 +404,10 @@ export class ComposeAdapter {
     const local = this.policy.targets[op.target]
     if (local.adapter !== 'main-runtime') return {drained:false,component:local.adapter,noIngressChange:true}
     if (plan.mode === 'rolling') await context.step('worker-admission-open', () => this.control(local,'undrain',op), { sideEffect: true })
-    await context.step('ingress-enable', () => this.control(local,'ingress',{ ...op, enabled: true }), { sideEffect: true })
+    const ingressChange = await context.step('ingress-enable', () => this.control(local,'ingress',{ ...op, enabled: true }), { sideEffect: true })
     const ingress = await this.control(local,'ingressState',op,'GET')
     requireValue(ingress.enabled === true && ingress.generation === op.generation, 'INGRESS_UNPROVEN', 'Stable ingress has not confirmed backend restoration')
-    return { drained: false, ingress: true }
+    return { drained: false, ingress: true,...(ingressChange?.observedAfterUnknown ? {ingressObservation:ingressChange} : {}) }
   }
   async observe(op, plan) {
     const local = this.policy.targets[op.target]
