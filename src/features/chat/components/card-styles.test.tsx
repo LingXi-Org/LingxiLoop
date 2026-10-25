@@ -20,6 +20,22 @@ test('attachment previews preserve file types and route storage IDs through the 
   assert.doesNotMatch(unsafe, /href=|<img/)
 })
 
+test('compact image previews retain the original authenticated source and reject unsafe sources without changing document cards', () => {
+  const image = renderToStaticMarkup(<AttachmentCard variant="thumbnail" filename="原图.png" mimeType="image/png" data="attachments/course/原图.png" sourceType="id" />)
+  assert.match(image, /data-slot="attachment-thumbnail"/)
+  assert.match(image, /aria-label="查看图片：原图.png"/)
+  assert.match(image, /src="\/api\/files\?key=attachments%2Fcourse%2F%E5%8E%9F%E5%9B%BE.png"/)
+  assert.doesNotMatch(image, /data-slot="file-root"|打开附件/)
+  const original = 'data:image/png;base64,original-upload-bytes'
+  assert.ok(renderToStaticMarkup(<AttachmentCard variant="thumbnail" filename="原图.png" mimeType="image/png" data={original} sourceType="url" />).includes(`src="${original}"`))
+  const unsafe = renderToStaticMarkup(<AttachmentCard variant="thumbnail" filename="坏图.png" mimeType="image/png" data="javascript:alert(1)" sourceType="url" />)
+  assert.doesNotMatch(unsafe, /<button|<img|href=/)
+  assert.match(unsafe, /图片预览不可用/)
+  const document = renderToStaticMarkup(<AttachmentCard variant="thumbnail" filename="报告.pdf" mimeType="application/pdf" data="document-id" sourceType="id" />)
+  assert.match(document, /data-slot="attachment-card"/)
+  assert.match(document, /打开附件：报告.pdf/)
+})
+
 test('poll lists retain single and multiple selection semantics and collapse submitted choices into a receipt', () => {
   const props = { title: '评审时间', options: [{ value: 'a', label: '周二', description: '10:00' }, { value: 'b', label: '周三', disabled: true }], value: ['a'], submitted: false, closed: false, onChange: () => {}, onSubmit: () => {} }
   for (const multiple of [true, false]) {

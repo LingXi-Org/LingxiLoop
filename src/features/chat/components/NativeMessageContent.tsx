@@ -31,6 +31,10 @@ const GroupOwnsFooter = createContext(false)
 const LastBodyIndex = createContext(-1)
 const PartPresentation = createContext<{ Text: TextMessagePartComponent; footer: ReactNode; mediaFooter: ReactNode }>({ Text: DefaultText, footer: null, mediaFooter: null })
 
+function isImagePart(part: { type: string; mimeType?: string }) {
+  return part.type === 'image' || part.type === 'file' && part.mimeType?.startsWith('image/')
+}
+
 function SourcePart(part: SourceMessagePartProps) {
   return <MessageFooterContents inset={false}>
     {part.sourceType === 'url'
@@ -81,14 +85,15 @@ function NativePart({ Text = DefaultText, footer = null, mediaFooter = null }: {
   const aui = useAui()
   const readOnly = useContext(ReadOnlyMessage)
   const part = useAuiState(state => state.part)
+  const userMessage = useAuiState(state => state.message.role === 'user')
   const requestVersion = useAuiState(state => (state.message.metadata.custom.harness as RunDisplayState | undefined)?.requestVersion)
   let content: ReactNode
   switch (part.type) {
     case 'text': content = <VisualizeText part={part} Text={Text} readOnly={readOnly} />; break
     case 'reasoning': content = <Reasoning streaming={part.status.type === 'running'}><MarkdownText agent /></Reasoning>; break
     case 'source': content = <SourcePart {...part} />; break
-    case 'image': content = <AttachmentCard filename={part.filename ?? '图片'} data={part.image} mimeType="image/*" sourceType="url" />; break
-    case 'file': content = <AttachmentCard filename={part.filename ?? '附件'} data={part.data} mimeType={part.mimeType} sourceType={part.sourceType} />; break
+    case 'image': content = <AttachmentCard filename={part.filename ?? '图片'} data={part.image} mimeType="image/*" sourceType="url" variant={userMessage ? 'thumbnail' : 'card'} />; break
+    case 'file': content = <AttachmentCard filename={part.filename ?? '附件'} data={part.data} mimeType={part.mimeType} sourceType={part.sourceType} variant={userMessage ? 'thumbnail' : 'card'} />; break
     case 'data': content = <BusinessMessagePart {...part} readOnly={readOnly} />; break
     case 'generative-ui': content = <MessageFooterContents inset={false}><MessagePrimitive.GenerativeUI components={generativeComponents} /></MessageFooterContents>; break
     case 'tool-call': content = <NativeTool key={`${part.approval?.id ?? part.toolCallId}:${requestVersion ?? ''}`} {...part} addResult={aui.part.addToolResult} resume={aui.part.resumeToolCall} respondToApproval={aui.part.respondToToolApproval} readOnly={readOnly}>
@@ -172,7 +177,14 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
     : 'complete'
   const statusLabel = { running: '处理中', 'requires-action': '等待处理', complete: '处理过程', cancelled: '已取消', incomplete: '未完成', error: '处理失败' }[status]
   const attachments = message.role === 'user' ? message.attachments : []
-  const body = presentation.filter(item => item.region === 'body')
+  const inlineImages = message.role === 'user' ? presentation.filter(item => item.region === 'body' && isImagePart(item.part)) : []
+  const attachmentImages = attachments.flatMap(attachment => attachment.content.flatMap((part, index) => isImagePart(part) ? [{ attachment, part, index }] : []))
+  const body = presentation.filter(item => item.region === 'body' && !inlineImages.includes(item))
+  const otherAttachments = attachments.flatMap(attachment => {
+    const parts = attachment.content.map((part, index) => ({ part, index })).filter(({ part }) => !isImagePart(part))
+    return parts.length ? [{ attachment, parts }] : []
+  })
+  const imageOnly = (inlineImages.length > 0 || attachmentImages.length > 0) && body.length === 0 && otherAttachments.length === 0
   const decisions = presentation.filter(item => item.region === 'attention')
   const lastBodyIndex = body.findLast(item => item.part.type !== 'data' || item.part.name !== 'citation-claims')?.index ?? -1
   const display = { Text, footer, mediaFooter }
@@ -183,19 +195,28 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
       open={activityOpen} onOpenChange={open => { setActivityOpen(open); if (open && history.entries.length === 0 && history.hasMore && !history.isLoading) history.loadMore() }}
       trace={trace ? <TraceWaterfall key={trace.root.id} trace={trace} selectedSpanId={selectedTraceSpanId}
         selectionVersion={traceSelection.version} onSelectedSpanChange={id => setTraceSelection(current => ({ ...current, scope: traceScope, id }))} /> : undefined} />}
+    {(inlineImages.length > 0 || attachmentImages.length > 0) && <div data-message-region="user-images" className={`flex min-w-0 flex-wrap gap-2 ${custom.isMine ? 'justify-end' : 'justify-start'}`}>
+      {inlineImages.map(item => <MessagePrimitive.PartByIndex key={item.key} index={item.index} components={indexedComponents} />)}
+      {attachmentImages.map(({ attachment, part, index }) => <div key={`${attachment.id}:${index}`} data-native-attachment={attachment.id} className="min-w-0">
+        <MessagePartBoundary resetKey={part}>
+          {part.type === 'image' ? <AttachmentCard filename={part.filename ?? attachment.name} data={part.image} mimeType={attachment.contentType?.startsWith('image/') ? attachment.contentType : 'image/*'} sourceType="url" variant="thumbnail" />
+            : part.type === 'file' ? <AttachmentCard filename={part.filename ?? attachment.name} data={part.data} mimeType={part.mimeType} sourceType={part.sourceType} variant="thumbnail" /> : null}
+        </MessagePartBoundary>
+      </div>)}
+    </div>}
+    {imageOnly && <MessageFooterContents inset={false}>{mediaFooter}</MessageFooterContents>}
     <div data-message-region="body" className="grid min-w-0 gap-2 empty:hidden">
       {body.map(item => <MessagePrimitive.PartByIndex key={item.key} index={item.index} components={indexedComponents} />)}
     </div>
-    {body.length === 0 && <MessageFooterContents inset={false}>{footer}</MessageFooterContents>}
+    {body.length === 0 && !imageOnly && <MessageFooterContents inset={false}>{footer}</MessageFooterContents>}
     <div data-message-region="attention" className="grid min-w-0 gap-2 empty:hidden"><GroupOwnsFooter.Provider value={true}>
       {decisions.map(item => <MessagePrimitive.PartByIndex key={item.key} index={item.index} components={indexedComponents} />)}
       {attention}
     </GroupOwnsFooter.Provider></div>
-    {attachments.map(attachment => <div key={attachment.id} data-native-attachment={attachment.id} className="grid min-w-0 gap-1">
-      {attachment.content.map((part, index) => <MessageFooterContext.Provider key={index} value={!message.content.length && attachment === attachments.at(-1) && index === attachment.content.length - 1 ? mediaFooter : null}>
+    {otherAttachments.map(({ attachment, parts }) => <div key={attachment.id} data-native-attachment={attachment.id} className="grid min-w-0 gap-1">
+      {parts.map(({ part, index }) => <MessageFooterContext.Provider key={index} value={!message.content.length && attachment === otherAttachments.at(-1)?.attachment && index === parts.at(-1)?.index ? mediaFooter : null}>
         <MessagePartBoundary resetKey={part}>
-          {part.type === 'image' ? <AttachmentCard filename={part.filename ?? attachment.name} data={part.image} mimeType={attachment.contentType ?? 'image/*'} sourceType="url" />
-            : part.type === 'file' ? <AttachmentCard filename={part.filename ?? attachment.name} data={part.data} mimeType={part.mimeType} sourceType={part.sourceType} />
+          {part.type === 'file' ? <AttachmentCard filename={part.filename ?? attachment.name} data={part.data} mimeType={part.mimeType} sourceType={part.sourceType} />
             : part.type === 'text' ? <p className="whitespace-pre-wrap break-words">{part.text}</p>
             : part.type === 'data' ? <BusinessMessagePart {...part} status={{ type: 'complete' }} readOnly={readOnly} />
             : <p role="alert">不支持的附件内容</p>}
