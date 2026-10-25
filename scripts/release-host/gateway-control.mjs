@@ -62,8 +62,12 @@ export async function gatewayPrepare(adapter,op,plan){
 export async function gatewayDrain(adapter,op,plan,context){
   const local=adapter.policy.targets[op.target],direction=op.phase==='source-drain'?'source':op.phase==='recovery-drain'?'recovery':'forward',descriptor=direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:plan,identities=await adapter.resolveImages(descriptor.images,local),actual=await adapter.containers(op)
   if(Object.entries(actual).every(([service,container])=>container.Image===identities[service].localImageId&&container.State.Running&&container.State.Health?.Status==='healthy')){await adapter.verify(op,plan,direction);return{drained:true,unchanged:true,noServiceChange:true}}
+  const timeout=adapter.policy.stopTimeoutSeconds??30
+  check(plan.mode==='maintenance'&&Number.isSafeInteger(timeout)&&timeout>0,'GATEWAY_POLICY_REQUIRED','Gateway fast shutdown requires maintenance and a fixed positive stop timeout')
   await adapter.control(local,'state',op,'GET')
-  for(const service of Object.keys(local.services))await context.step(`gateway:stop:${service}`,()=>adapter.run([...context.compose,'stop','--timeout',String(adapter.policy.stopTimeoutSeconds??30),service]),{sideEffect:true})
-  check(await adapter.barrier(op),'GATEWAY_DRAIN_UNPROVEN','Only the fixed gateway service must be stopped before replacement')
-  return{drained:true,gatewayOnly:true,hotDrainVerified:false}
+  // TERM closes active connections during maintenance. Docker's manual-stop semantics also
+  // suppress unless-stopped restarts; an exec signal alone would let the old container restart.
+  for(const service of Object.keys(local.services))await context.step(`gateway:stop:${service}`,()=>adapter.run(['container','stop','--signal','SIGTERM','--timeout',String(timeout),actual[service].Id],{timeout:Math.max(120000,(timeout+5)*1000)}),{sideEffect:true})
+  try{check(await adapter.barrier(op),'GATEWAY_DRAIN_UNPROVEN','Only the fixed gateway service must be stopped before replacement')}catch(error){throw Object.assign(error,{uncertain:true})}
+  return{drained:true,gatewayOnly:true,hotDrainVerified:false,stopMode:'maintenance-fast-shutdown',maintenanceConnectionsClosed:true}
 }

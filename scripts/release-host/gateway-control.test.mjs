@@ -8,7 +8,7 @@ import {configurationFingerprint} from './adapter.mjs'
 import {fixture,baseConfig,oldImage,newImage} from './fixtures/fake-host.mjs'
 import {hash,fault} from './journal.mjs'
 const rawHash=value=>createHash('sha256').update(value).digest('hex'),contract={nativeSchema:0,productSchema:0,api:'gateway-v1',worker:'none',checkpoint:'none',control:'nginx-healthz-v1',capabilities:['gateway.proxy-v1']},version='nginx version: nginx/1.29.0\n',oldConfig='upstream app { server 10.20.0.2:5183; }\n',newConfig='upstream app { server 10.20.0.2:5183; server 127.0.0.1:5183; }\n'
-async function setup(t,{unchanged=false,stopExitCode=0,stopResponseLost=false,requireChown=false}={}){
+async function setup(t,{unchanged=false,stopExitCode=0,stopResponseLost=false,stopStillRunning=false,requireChown=false}={}){
   const directory=await mkdtemp(join(tmpdir(),'release-gateway-')),f=fixture(directory,{storeKind:'index',offline:true}),id='4'.repeat(64)
   t.after(async()=>{f.journal.close();await rm(directory,{recursive:true,force:true})})
   f.host.data.containers.gateway={...structuredClone(f.host.data.containers.web),Id:id,Mounts:[]};const mainBefore=JSON.stringify({web:f.host.data.containers.web,worker:f.host.data.containers.worker})
@@ -22,6 +22,7 @@ async function setup(t,{unchanged=false,stopExitCode=0,stopResponseLost=false,re
     if(args[0]==='ps'&&args.at(-1).endsWith('=gateway')){f.host.data.calls.push(args);return id}
     if(args[0]==='container'&&args[2]===id){f.host.data.calls.push(args);return JSON.stringify([f.host.data.containers.gateway])}
     if(args[0]==='exec'&&args[1]===id){f.host.data.calls.push(args);if(args[2]==='nginx'&&args[3]==='-v'){assert.equal(options.captureStderr,true);return version}if(args[2]==='nginx'&&args[3]==='-T')return corrupt?'unexpected config':f.host.data.containers.gateway.Image===newImage.indexDigest?newConfig:oldConfig;return ''}
+    if(args[0]==='container'&&args[1]==='stop'){f.host.data.calls.push(args);assert.deepEqual(args,['container','stop','--signal','SIGTERM','--timeout',String(f.adapter.policy.stopTimeoutSeconds??30),id]);assert.ok(options.timeout>=(f.adapter.policy.stopTimeoutSeconds??30)*1000);const pending=f.journal.unresolved().find(op=>op.target==='gateway'&&op.status==='running');assert.ok(pending.steps.some(step=>step.name==='gateway:stop:gateway'&&step.sideEffect===true&&step.status==='intent'));const actual=f.host.data.containers.gateway;if(!stopStillRunning)actual.State={...actual.State,Running:false,Pid:0,Status:'exited',ExitCode:stopExitCode};if(stopResponseLost)throw Object.assign(fault('DOCKER_COMMAND_FAILED','Fast-stop response was lost'),{uncertain:true});return ''}
     if(args[0]==='run'){f.host.data.calls.push(args);assert.ok(['-t','-v','-T'].includes(args.at(-1)));assert.equal(args[args.indexOf('--entrypoint')+1],'nginx');assert.equal(args[args.indexOf('--pull')+1],'never');if(requireChown&&(!args.includes('--cap-add')||args[args.indexOf('--cap-add')+1]!=='CHOWN'))throw fault('DOCKER_COMMAND_FAILED','Nginx tmpfs client_temp chown failed: Operation not permitted');if(args.at(-1)==='-v')return version;if(args.at(-1)==='-T')return args.includes(newImage.indexDigest)?newConfig:oldConfig;return ''}
     if(args[0]==='compose'&&(args.includes('stop')||args.includes('up'))){assert.equal(args.at(-1),'gateway');f.host.data.calls.push(args);const actual=f.host.data.containers.gateway;if(args.includes('stop')){actual.State={...actual.State,Running:false,Pid:0,Status:'exited',ExitCode:stopExitCode};if(stopResponseLost)throw Object.assign(fault('DOCKER_COMMAND_FAILED','Stop response was lost'),{uncertain:true})}else actual.State={...actual.State,Running:true,Pid:222,Health:{Status:'healthy'}},actual.Image=args.find(value=>value.endsWith('gateway-recovery.json'))?oldImage.indexDigest:(unchanged?oldImage:newImage).indexDigest;return ''}
     return original(args,options)
@@ -35,6 +36,10 @@ test('gateway changes only its fixed service and can restore the cached source w
   assert.equal(f.host.data.containers.gateway.Image,oldImage.indexDigest);assert.equal(JSON.stringify({web:f.host.data.containers.web,worker:f.host.data.containers.worker}),f.mainBefore)
   assert.ok(f.host.data.calls.filter(args=>args[0]==='compose'&&(args.includes('up')||args.includes('stop'))).every(args=>args.at(-1)==='gateway'))
   assert.equal(f.host.data.calls.some(args=>args.includes('psql')||args.includes('db-migrate')||args.includes('ingress')),false)
+})
+test('changed gateway maintenance overrides SIGQUIT with an exact-ID Docker SIGTERM stop and durable intent',async t=>{
+  for(const timeout of [undefined,150]){const f=await setup(t);if(timeout!==undefined)f.adapter.policy.stopTimeoutSeconds=timeout;assert.equal((await f.phase('prepare')).status,'succeeded');const result=await f.phase('drain');assert.equal(result.status,'succeeded',JSON.stringify(result));assert.equal(result.result.stopMode,'maintenance-fast-shutdown');assert.equal(result.result.maintenanceConnectionsClosed,true)
+  assert.deepEqual(f.host.data.calls.filter(args=>args[0]==='container'&&args[1]==='stop'),[['container','stop','--signal','SIGTERM','--timeout',String(timeout??30),f.id]]);assert.equal(f.host.data.calls.some(args=>args[0]==='compose'&&args.includes('stop')||args[0]==='update'||args[0]==='exec'&&args[3]==='-s'),false);assert.equal(JSON.stringify({web:f.host.data.containers.web,worker:f.host.data.containers.worker}),f.mainBefore)}
 })
 test('same gateway image adoption is read-only and does not claim hot drain without a configuration mount',async t=>{
   const f=await setup(t,{unchanged:true})
@@ -65,4 +70,8 @@ test('gateway stop timeout exit 137 stays uncertain, retains its reservation and
 test('lost stop response is reconciled from an allowed actual exit code without repeating the stop',async t=>{
   const f=await setup(t,{stopExitCode:143,stopResponseLost:true});assert.equal((await f.phase('prepare')).status,'succeeded');const result=await f.phase('drain');assert.equal(result.status,'uncertain');assert.equal(result.errors.forward.code,'DOCKER_COMMAND_FAILED')
   assert.equal((await f.executor.reconcile(result)).status,'succeeded');assert.equal(f.host.data.calls.filter(args=>args.includes('stop')).length,1)
+})
+test('unproven fast-stop readback retains the lock and observation never repeats the command',async t=>{
+  const f=await setup(t,{stopStillRunning:true});assert.equal((await f.phase('prepare')).status,'succeeded');const result=await f.phase('drain');assert.equal(result.status,'uncertain');assert.equal(result.errors.forward.code,'GATEWAY_DRAIN_UNPROVEN');await assert.rejects(f.phase('apply'),{code:'RESOURCE_BUSY'})
+  assert.equal((await f.executor.reconcile(result)).status,'uncertain');assert.equal(f.host.data.calls.filter(args=>args[0]==='container'&&args[1]==='stop').length,1);assert.equal(f.host.data.calls.some(args=>args[0]==='compose'&&(args.includes('up')||args.includes('stop'))),false)
 })
