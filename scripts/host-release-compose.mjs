@@ -11,8 +11,21 @@ export function parsePublicCompose(source){
  if(r.error||r.status!==0)throw Error('Public Compose validation failed')
  try{return JSON.parse(r.stdout)}catch{throw Error('Public Compose validation failed')}
 }
-export function assertHostComposeChange(source,target,sourceSha,targetSha,pullPolicy='never'){
+export function assertVisionModelActivation(value){
+ if(!value||!equal(Object.keys(value).sort(),['key','providerProofSha256','source','target'])||value.key!=='OPENAI_VISION_MODEL'||value.source!=='absent'||value.target!=='Qwen/Qwen3-VL-32B-Instruct'||!/^[a-f0-9]{64}$/.test(value.providerProofSha256??''))throw Error('Only the explicitly evidenced fixed vision model activation is supported')
+ return value
+}
+export function assertHostComposeChange(source,target,sourceSha,targetSha,pullPolicy='never',visionModelActivation){
  const before=parsePublicCompose(source),after=parsePublicCompose(target)
+ if(visionModelActivation){
+  const activation=assertVisionModelActivation(visionModelActivation)
+  const normalize=(a,b)=>{
+   if(!a||!b||b[activation.key]!==activation.target||(sourceSha===targetSha?a[activation.key]!==activation.target:Object.hasOwn(a,activation.key)))throw Error('Vision model source/target manifest differs from explicit activation')
+   delete a[activation.key];delete b[activation.key]
+  }
+  for(const service of ['lingxiloop','worker'])normalize(before.services?.[service]?.environment,after.services?.[service]?.environment)
+  for(const [k,v] of Object.entries(before))if(k.startsWith('x-')&&v?.environment)normalize(v.environment,after[k]?.environment)
+ }
  const names=Object.keys(before.services??{}).sort()
  if(!equal(names,Object.keys(after.services??{}).sort())||!services.every(s=>names.includes(s))||names.some(s=>![...services,'gateway'].includes(s)))throw Error('Unexpected application services')
  for(const service of services){
