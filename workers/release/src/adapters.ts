@@ -12,7 +12,7 @@ async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   if (!response.ok) throw new ReleaseError(response.status === 401 || response.status === 403 ? 'AUTHENTICATION_FAILED' : `REMOTE_HTTP_${response.status}`, response.status >= 500 ? 503 : 409)
   return response.json() as Promise<T>
 }
-function executor(env: ReleaseEnv, host: string) {
+export function executor(env: ReleaseEnv, host: string) {
   const endpoint = (JSON.parse(env.EXECUTORS_JSON) as Record<string, string>)[host]
   requireThat(endpoint && new URL(endpoint).protocol === 'https:' && new URL(endpoint).pathname === '/' && !new URL(endpoint).username && !new URL(endpoint).password, 'EXECUTOR_NOT_CONFIGURED')
   const headers: Record<string, string> = { authorization: `Bearer ${env.EXECUTOR_TOKEN}`, 'content-type': 'application/json' }

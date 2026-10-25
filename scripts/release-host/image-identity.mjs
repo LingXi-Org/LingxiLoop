@@ -1,6 +1,8 @@
 import {createHash} from 'node:crypto'
 import {isDeepStrictEqual as equal} from 'node:util'
-import {fault} from './journal.mjs'
+import {readFile,lstat} from 'node:fs/promises'
+import {join} from 'node:path'
+import {fault,hash} from './journal.mjs'
 const digest=value=>/^sha256:[a-f0-9]{64}$/.test(value??'')
 const indexTypes=new Set(['application/vnd.oci.image.index.v1+json','application/vnd.docker.distribution.manifest.list.v2+json'])
 const manifestTypes=new Set(['application/vnd.oci.image.manifest.v1+json','application/vnd.docker.distribution.manifest.v2+json'])
@@ -59,13 +61,41 @@ export function assertImageIdentity(actual,image,profile){
   return{localImageId:actual.Id,localIdKind,indexDigest:image.indexDigest,platformDigest:image.platformDigest,configDigest:image.configDigest}
 }
 export function imageReferences(image){return[...new Set([image.ref,image.localImageId,image.indexDigest,image.platformDigest,image.configDigest].filter(Boolean))]}
-export async function inspectQualifiedImage(run,image,profile){
+export const archiveIdentityHash=image=>hash(Object.fromEntries(['ref','indexDigest','platformDigest','configDigest','ociProof','os','architecture','variant','diffIds'].filter(key=>image[key]!==undefined).map(key=>[key,image[key]])))
+export const archiveReceiptPath=(stateDirectory,image)=>join(stateDirectory,'artifacts','identities',`${image.configDigest.slice(7)}.json`)
+export function assertArchiveImageIdentity(actual,image,receipt){
+  validateImage(image);const graph=verifyOciProof(image)
+  check(receipt?.version===1&&receipt.state==='verified'&&receipt.artifactHash===archiveIdentityHash(image)&&receipt.configDigest===image.configDigest&&digest(receipt.archiveSha256)&&receipt.tag===`localhost/lingxi-release-cache:sha256-${image.configDigest.slice(7)}`&&receipt.roundTrip?.configDigest===image.configDigest&&equal(receipt.roundTrip.diffIds,image.diffIds),'Archive identity requires its exact root-owned completed load/roundtrip receipt')
+  check(actual&&actual.Id===receipt.localImageId&&actual.Os===image.os&&actual.Architecture===image.architecture&&actual.RootFS?.Type==='layers'&&equal(actual.RootFS.Layers,image.diffIds)&&equal(actual.Descriptor??null,receipt.descriptor)&&actual.RepoTags?.includes(receipt.tag),'Archive-loaded image platform, tag, descriptor or ordered rootfs changed')
+  const kind=actual.Descriptor?.digest===actual.Id&&indexTypes.has(actual.Descriptor.mediaType)?'index':actual.Descriptor?.digest===actual.Id&&manifestTypes.has(actual.Descriptor.mediaType)?'platform':actual.Id===image.configDigest?'config':null
+  check(kind&&kind===receipt.localIdKind&&hash(actual.Config??{})===receipt.configurationHash,'Archive-loaded image local ID/configuration no longer matches daemon readback evidence')
+  for(const key of ['Env','Cmd','Entrypoint','WorkingDir','User','Healthcheck','Volumes','ExposedPorts','Labels','Shell','StopSignal'])if(Object.hasOwn(graph.config.config??{},key)){
+    const a=actual.Config?.[key],b=graph.config.config[key],empty=v=>v===undefined||v===null||v===''||Array.isArray(v)&&!v.length||typeof v==='object'&&v!==null&&!Object.keys(v).length
+    check(equal(a,b)||empty(a)&&empty(b),'Archive-loaded image configuration disagrees with the OCI config')
+  }
+  return{localImageId:actual.Id,localIdKind:kind,identity:'archive-verified',indexDigest:image.indexDigest,platformDigest:image.platformDigest,configDigest:image.configDigest,archiveSha256:receipt.archiveSha256}
+}
+async function receiptFor(image,stateDirectory){
+  if(!stateDirectory||image.kind==='local-qualified')return null
+  const path=archiveReceiptPath(stateDirectory,image);let info
+  try{info=await lstat(path)}catch(error){if(error.code==='ENOENT')return null;throw error}
+  check(info.isFile()&&!info.isSymbolicLink()&&info.uid===process.getuid()&&(info.mode&0o077)===0&&info.size<65536,'Archive identity receipt must be private and owned by the executor user')
+  try{return JSON.parse(await readFile(path,'utf8'))}catch{throw fault('IMAGE_IDENTITY_MISMATCH','Archive identity receipt is invalid',422)}
+}
+export async function inspectQualifiedImage(run,image,profile,{stateDirectory}={}){
   validateImage(image,profile)
+  const receipt=await receiptFor(image,stateDirectory)
+  if(receipt){let rows;try{rows=JSON.parse(await run(['image','inspect',receipt.localImageId]))}catch(error){if(!(error.code==='IMAGE_NOT_FOUND'||error.cause?.code===1&&/No such image/.test(error.cause.stderr??'')))throw error}if(rows){check(rows.length===1,'Archive receipt must resolve exactly one image');return assertArchiveImageIdentity(rows[0],image,receipt)}}
   for(const reference of imageReferences(image)){
     let rows
     try{rows=JSON.parse(await run(['image','inspect',reference]))}catch(error){if(error.code==='IMAGE_NOT_FOUND'||error.cause?.code===1&&/No such image/.test(error.cause.stderr??''))continue;throw error}
     check(rows?.length===1,'Image inspection did not resolve exactly one local artifact')
-    return assertImageIdentity(rows[0],image,profile)
+    try{return assertImageIdentity(rows[0],image,profile)}catch(error){
+      // A saved image can retain the config ID but lose registry RepoDigests. Its fixed cache tag
+      // is only a hint to perform the independent archive readback; it grants no image identity.
+      if(image.archive&&error.code==='IMAGE_IDENTITY_MISMATCH'&&rows[0].RepoTags?.includes(image.archive.tag))continue
+      throw error
+    }
   }
   return null
 }

@@ -3,6 +3,7 @@ import { ledgerCall, type Bootstrap, type ReleaseEnv, type ReleaseRecord } from 
 import { handleArchive } from './archive'
 import { BOOTSTRAP_PATHS, handleBootstrapArtifact } from './bootstrap-artifact'
 import { PROVIDER_FETCH_PATH, handleProviderFetch } from './provider-fetch'
+import { ARTIFACT_BLOB_PREFIX, handleArtifactBlob } from './artifact-blobs'
 export { ReleaseLedger } from './ledger'
 export { ReleaseWorkflow } from './workflow'
 
@@ -28,6 +29,12 @@ export default {
       if (url.pathname === '/healthz') return Response.json({ service: 'lingxiloop-release', protocol: 1 })
       const token = request.headers.get('authorization')?.replace(/^Bearer /, '') ?? ''
       const admin = await matches(env.RELEASE_ADMIN_TOKEN, token)
+      if (url.pathname.startsWith(ARTIFACT_BLOB_PREFIX)) {
+        const submit = await matches(env.RELEASE_API_TOKEN, token), exec = await matches(env.EXECUTOR_TOKEN, token)
+        requireThat(admin || submit || exec, 'UNAUTHORIZED', 401)
+        requireThat(admin || (request.method === 'PUT' ? submit : request.method === 'HEAD' ? submit || exec : exec), 'ARTIFACT_ROLE_REQUIRED', 403)
+        return await handleArtifactBlob(request, env)
+      }
       if (url.pathname === PROVIDER_FETCH_PATH) {
         requireThat(admin, 'ADMIN_REQUIRED', 403)
         return await handleProviderFetch(request, env)

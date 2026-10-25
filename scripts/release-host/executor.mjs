@@ -7,6 +7,7 @@ const safeError = error => ({ code: error.code ?? 'EXECUTION_FAILED', message: e
 export class Executor {
   constructor({ journal, adapter, afterSideEffect, log = () => {} }) {
     this.journal = journal; this.adapter = adapter; this.active = new Set(); this.afterSideEffect = afterSideEffect; this.log = log
+    if(adapter.artifacts)adapter.artifacts.journal=journal
   }
   register(manifest, manifestHash) {
     if (!manifest || manifest.version !== 1 || !identifier(manifest.releaseId) || !manifest.targets || !/^[a-f0-9]{40}$/.test(manifest.appSha ?? '') || !/^[a-f0-9]{40}$/.test(manifest.opsSha ?? '') || manifest.checks?.commit !== manifest.appSha || manifest.checks?.conclusion !== 'success' || !Number.isSafeInteger(manifest.sequence) || manifest.sequence < 1 || !Number.isFinite(Date.parse(manifest.createdAt)) || hash(manifest) !== manifestHash) throw fault('INVALID_MANIFEST', 'Manifest identity or canonical hash is invalid', 422)

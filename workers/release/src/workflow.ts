@@ -1,16 +1,18 @@
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers'
-import { canonical, databasePlan, orderedTargets, ReleaseError, requireThat, type TargetId } from '../../../shared/release/protocol'
+import { archivedImages, canonical, databasePlan, orderedTargets, ReleaseError, requireThat, type TargetId } from '../../../shared/release/protocol'
+import { hostArtifactStatus, relayArtifactPart } from './artifact-transfer'
 import { activateWorker, hostOperation, installManifest, prepareWorker, settled, successful, verifyTarget } from './adapters'
 import { ledgerCall, type ReleaseEnv, type ReleaseRecord } from './types'
 
 const retry = { retries: { limit: 0, delay: '1 second' as const }, timeout: '2 minutes' as const }
+const artifactRetry = { ...retry, timeout: '8 minutes' as const }
 export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId: string; attempt: number }> {
   async run(event: WorkflowEvent<{ releaseId: string; attempt: number }>, step: WorkflowStep) {
     const { releaseId } = event.payload
     let retryLimit = 0
     // Persist JSON envelopes so a provider exception cannot lose an unknown-
     // outcome code, and all durable step outputs have a JSON-only wire shape.
-    const durable = async <T>(name: string, configOrFn: typeof retry | (() => Promise<T>), fn?: () => Promise<T>): Promise<T> => {
+    const durable = async <T>(name: string, configOrFn: typeof retry | typeof artifactRetry | (() => Promise<T>), fn?: () => Promise<T>): Promise<T> => {
       const callback = typeof configOrFn === 'function' ? configOrFn : fn!
       const output = await step.do(name, typeof configOrFn === 'function' ? retry : configOrFn, async () => {
         for (let attempt = 0; ; attempt++) {
@@ -77,7 +79,22 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
       // while the old application is still running.
       for (const target of targets) {
         if (manifest.targets[target]!.artifact.kind === 'worker') await durable(`prepare-${target}`, retry, () => prepareWorker(this.env, manifest.targets[target]!))
-        else await hostPhase(target, 'prepare')
+        else {
+          for (const host of manifest.targets[target]!.hosts) for (const image of archivedImages(manifest.targets[target]!)) {
+            const cached = await durable(`artifact-cache-${target}-${host}-${image.configDigest.slice(7)}`, retry, async () => {
+              await authorize()
+              return { ready: (await hostArtifactStatus(this.env, host, manifest, record.manifestHash, target, image)).imageReady }
+            })
+            if (cached.ready) continue
+            for (let index = 0; index < image.archive.parts.length; index++) {
+              await durable(`artifact-${target}-${host}-${image.configDigest.slice(7)}-${index}`, artifactRetry, async () => {
+                await authorize()
+                return relayArtifactPart(this.env, host, manifest, record.manifestHash, target, image, index)
+              })
+            }
+          }
+          await hostPhase(target, 'prepare')
+        }
       }
       let claimed = false
       for (let n = 0; n < 120; n++) {

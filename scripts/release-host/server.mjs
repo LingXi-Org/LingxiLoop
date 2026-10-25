@@ -43,6 +43,14 @@ export function createExecutorServer({ executor, token, ingress, dispatch = key 
         if (Object.keys(body).some(key => !['manifest','manifestHash'].includes(key))) throw fault('INVALID_REQUEST','Manifest registration fields are fixed',400)
         return send(201,executor.register(body.manifest,body.manifestHash))
       }
+      if(request.method==='POST'&&url.pathname==='/artifact-status')return send(200,await executor.adapter.artifacts.status(await jsonBody(request,4096)))
+      if(request.method==='PUT'&&url.pathname==='/artifact-parts'){
+        if(!/^application\/octet-stream(?:;|$)/i.test(request.headers['content-type']??''))throw fault('CONTENT_TYPE_REQUIRED','application/octet-stream is required',415)
+        const fields=['release-id','target','manifest-hash','config-digest','part-index'].map(name=>request.headers[`x-lingxi-${name}`])
+        if(fields.some(value=>typeof value!=='string')||!/^\d{1,4}$/.test(fields[4]))throw fault('INVALID_ARTIFACT_REQUEST','The fixed artifact identity headers and part index are required',400)
+        const[releaseId,target,manifestHash,configDigest,partIndex]=fields
+        return send(200,await executor.adapter.artifacts.put({releaseId,target,manifestHash,configDigest},Number(partIndex),request))
+      }
       if (request.method === 'GET' && url.pathname === '/operations') {
         const key = url.searchParams.get('key')
         if (!key || key.length > 400 || url.searchParams.size !== 1) throw fault('INVALID_KEY','One operation key is required',400)
@@ -63,7 +71,7 @@ export function createExecutorServer({ executor, token, ingress, dispatch = key 
       return send(404,{ error:{ code:'NOT_FOUND' } })
     } catch (error) { send(error.status ?? 500,{ error:{ code:error.code ?? 'INTERNAL_ERROR', message:error.code ? error.message : 'Restricted host diagnostics contain details' } }) }
   })
-  server.requestTimeout = 15000
+  server.requestTimeout = 75000
   server.headersTimeout = 10000
   server.keepAliveTimeout = 5000
   server.waitForDispatch = () => Promise.allSettled([...pending])

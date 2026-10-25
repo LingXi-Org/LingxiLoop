@@ -51,7 +51,7 @@ export async function componentInventory(policy,target,run) {
   for(const [name,spec] of Object.entries(local.component.dependencies??{})) {
     check(identifier(name)&&identifier(spec.project)&&identifier(spec.service)&&validImageId(spec.image?.configDigest??spec.image?.localImageId),'COMPONENT_POLICY_INVALID','A storage dependency requires a fixed service, project and qualified image')
     const actual=await inspectService(run,spec.project,spec.service);assertComponentMounts(actual,spec)
-    const identity=await inspectQualifiedImage(run,spec.image,spec.localImageProfile)
+    const identity=await inspectQualifiedImage(run,spec.image,spec.localImageProfile,{stateDirectory:policy.stateDirectory})
     check(identity&&actual.Image===identity.localImageId&&actual.State?.Running&&!actual.State.Restarting&&actual.State.Health?.Status==='healthy','COMPONENT_DEPENDENCY_UNHEALTHY','Read-only storage dependency image/readiness differs from the reviewed identity')
     if (spec.version) {const version=await run(['exec',actual.Id,'/surreal','version']);check(rawHash(version)===spec.versionOutputSha256&&version.includes(spec.version),'COMPONENT_DEPENDENCY_VERSION_CHANGED','Actual Surreal binary version differs from the qualified persistent storage dependency')}
     dependencies[name]=actual
@@ -125,7 +125,7 @@ export async function componentControl(policy,action,op,{run=(args,options={})=>
     const profiles=[],versions={}
     for(const [service,container] of Object.entries(inventory.services)) {
       let profile,identity
-      for(const descriptor of [plan?.source??plan?.recovery,plan,plan?.recovery]){const image=descriptor?.images?.[service];if(!image)continue;const candidate=componentProfile(local,image);if(!candidate)continue;const resolved=await inspectQualifiedImage(run,image,candidate);if(resolved?.localImageId===container.Image){profile=candidate;identity=resolved;break}}
+      for(const descriptor of [plan?.source??plan?.recovery,plan,plan?.recovery]){const image=descriptor?.images?.[service];if(!image)continue;const candidate=componentProfile(local,image);if(!candidate)continue;const resolved=await inspectQualifiedImage(run,image,candidate,{stateDirectory:policy.stateDirectory});if(resolved?.localImageId===container.Image){profile=candidate;identity=resolved;break}}
       check(profile&&profile.contract&&profile.storage,'COMPONENT_PROFILE_UNQUALIFIED','Actual component image has no reviewed storage/protocol profile');profiles.push(profile)
       const key=`${op.target}:${service}:${container.Id}:${container.Image}:${hash(profile)}`
       let metadata

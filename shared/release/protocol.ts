@@ -20,6 +20,41 @@ export type Artifact = {
   kind: 'image' | 'worker'; digest?: string; workerName?: string; versionId?: string
   hash?: string; [key: string]: unknown
 }
+export const MAX_ARTIFACT_PART_BYTES = 8 * 1024 * 1024
+export type ImageArchive = {
+  version: 1; format: 'docker-save+gzip'; sha256: string; size: number; uncompressedSize: number
+  tag: string; parts: { sha256: string; size: number }[]
+}
+export type ArchivedImage = { configDigest: string; archive: ImageArchive }
+export function validateImageArchive(input: unknown, configDigest: string): ImageArchive {
+  const a = input as ImageArchive
+  requireThat(a && a.version === 1 && a.format === 'docker-save+gzip' && digest.test(a.sha256) && digest.test(configDigest) &&
+    a.tag === `localhost/lingxi-release-cache:sha256-${configDigest.slice(7)}` &&
+    Number.isSafeInteger(a.size) && a.size > 0 && a.size <= 8 * 1024 ** 3 &&
+    Number.isSafeInteger(a.uncompressedSize) && a.uncompressedSize > 0 && a.uncompressedSize <= 16 * 1024 ** 3 &&
+    Array.isArray(a.parts) && a.parts.length > 0 && a.parts.length <= 2048 &&
+    a.parts.every(p => digest.test(p.sha256) && Number.isSafeInteger(p.size) && p.size > 0 && p.size <= MAX_ARTIFACT_PART_BYTES) &&
+    a.parts.reduce((sum, p) => sum + p.size, 0) === a.size, 'INVALID_IMAGE_ARCHIVE', 400)
+  return a
+}
+/** Only image descriptors belonging to this target, including its recovery/source. */
+export function archivedImages(target: Target): ArchivedImage[] {
+  const result = new Map<string, ArchivedImage>()
+  const plan = target.hostPlan
+  for (const descriptor of [plan, plan?.source, plan?.recovery] as (Record<string, unknown> | undefined)[]) {
+    if (!descriptor?.images || typeof descriptor.images !== 'object') continue
+    for (const value of Object.values(descriptor.images)) {
+      requireThat(value && typeof value === 'object', 'INVALID_IMAGE_DESCRIPTOR', 400)
+      const image = value as ArchivedImage
+      if (image.archive === undefined) continue
+      validateImageArchive(image.archive, image.configDigest)
+      const previous = result.get(image.configDigest)
+      requireThat(!previous || canonical(previous.archive) === canonical(image.archive), 'CONFLICTING_IMAGE_ARCHIVE', 400)
+      result.set(image.configDigest, image)
+    }
+  }
+  return [...result.values()]
+}
 export type DatabasePlan = {
   from: { nativeSchema: number; productSchema: number }
   to: { nativeSchema: number; productSchema: number }
@@ -94,7 +129,7 @@ export function validateManifest(input: unknown): Manifest {
     requireThat(t.artifact && ['image', 'worker'].includes(t.artifact.kind), 'INVALID_ARTIFACT', 400)
     if (t.artifact.kind === 'worker') {
       requireThat(['web-static', 'admin-worker'].includes(t.adapter) && id.test(t.artifact.workerName ?? '') && workerVersion.test(t.artifact.versionId ?? '') && digest.test(t.artifact.hash ?? '') && !t.hosts.length, 'UNPINNED_WORKER', 400)
-    } else requireThat(digest.test(t.artifact.digest ?? '') && t.hosts.length > 0 && t.hostPlan, 'UNPINNED_IMAGE', 400)
+    } else { requireThat(digest.test(t.artifact.digest ?? '') && t.hosts.length > 0 && t.hostPlan, 'UNPINNED_IMAGE', 400); archivedImages(t) }
     requireThat(t.verification && Array.isArray(t.verification.readiness) && t.verification.readiness.length > 0 && t.verification.readiness.every(value => typeof value === 'string' && id.test(value)) && typeof t.verification.businessProbe === 'string' && id.test(t.verification.businessProbe), 'MISSING_VERIFICATION', 400)
   }
   orderedTargets(m)

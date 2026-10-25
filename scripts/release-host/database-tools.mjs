@@ -123,7 +123,7 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     await readBackup()
     const [container] = JSON.parse(await run(['container','inspect',migrationContainer]))
     const migration = local.migration
-    const identity=await inspectQualifiedImage(run,plan.images[migration?.imageService])
+    const identity=await inspectQualifiedImage(run,plan.images[migration?.imageService],undefined,{stateDirectory:policy.stateDirectory})
     requireThat(identity&&container?.Image === identity.localImageId && container.State?.Status === 'exited' && container.State.Running === false && container.State.ExitCode === 0, 'MIGRATION_OUTCOME_UNRESOLVED', 'A retained exact-image one-off with successful final exit is required to prove all migration side effects completed')
     const actual = await databaseEvidence(policy,run)
     requireThat(sameSchemas(actual,plan.database.to) && inventoryMatches(actual,plan.database.migrations),'MIGRATION_OUTCOME_UNRESOLVED','Installed schema/checksum ledger does not prove complete target migration')
@@ -137,7 +137,7 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     requireThat(migration && /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/.test(migration.service) && plan.images[migration.imageService],'MIGRATION_NOT_CONFIGURED','A fixed one-off migration service and qualified image are required')
     const compose = ['compose','--project-name',local.project,'--env-file',local.envFile,'--file',local.composeFile,'--file',join(policy.stateDirectory,op.releaseId,`${op.target}-forward.json`)]
     const config = JSON.parse(await run([...compose,'config','--format','json'])), spec = config.services?.[migration.service]
-    const identity=await inspectQualifiedImage(run,plan.images[migration.imageService])
+    const identity=await inspectQualifiedImage(run,plan.images[migration.imageService],undefined,{stateDirectory:policy.stateDirectory})
     requireThat(identity&&spec && !spec.build && spec.image === identity.localImageId && spec.pull_policy === 'never' && spec.restart === 'no' && !spec.privileged && !(spec.volumes?.length) && canonical(spec.command) === canonical(['npm','run','db:migrate']),'MIGRATION_NOT_CONFIGURED','Migration service must be the fixed offline packaged migration command')
     const connection = new URL(spec.environment?.DATABASE_URL)
     requireThat(['postgres:','postgresql:'].includes(connection.protocol) && connection.hostname === database.migrationHostname && decodeURIComponent(connection.pathname.slice(1)) === database.database && decodeURIComponent(connection.username) === database.user, 'MIGRATION_DESTINATION_MISMATCH', 'The fixed migration environment does not address the independently verified database')

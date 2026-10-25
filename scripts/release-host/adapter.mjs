@@ -7,6 +7,8 @@ import { validateImage,assertImageIdentity,inspectQualifiedImage } from './image
 import { canonical, fault, hash, identifier } from './journal.mjs'
 import {gatewayControl,gatewayDrain,gatewayPrepare,validateGatewayPlan} from './gateway-control.mjs'
 import { componentControl,componentDrain,componentProfile,validateComponentPlan,assertComponentMounts } from './component-control.mjs'
+import {ArtifactCache} from './artifact-cache.mjs'
+import {validateArchive} from './artifact-tar.mjs'
 
 const exec = promisify(execFile)
 const digest = value => /^sha256:[a-f0-9]{64}$/.test(value ?? '')
@@ -60,6 +62,7 @@ export function validatePolicy(policy) {
   requireValue(policy?.version === 1 && isAbsolute(policy.stateDirectory) && policy.targets && typeof policy.targets === 'object', 'INVALID_POLICY', 'Trusted local policy is invalid')
   requireValue(Array.isArray(policy.acceptedOpsShas) && policy.acceptedOpsShas.length > 0 && policy.acceptedOpsShas.every(value => /^[a-f0-9]{40}$/.test(value)), 'INVALID_POLICY', 'The actual installed executor operation commit allowlist is required')
   if (policy.dockerBinary) requireValue(isAbsolute(policy.dockerBinary), 'INVALID_POLICY', 'Docker executable must be an absolute trusted local path')
+  requireValue(policy.artifactTransport===undefined||['registry','r2'].includes(policy.artifactTransport),'INVALID_POLICY','Image artifact transport must be registry or r2')
   for (const [target, value] of Object.entries(policy.targets)) {
     requireValue(identifier(target) && adapters.has(value.adapter) && identifier(value.project) && isAbsolute(value.composeFile) && isAbsolute(value.envFile) &&
       value.services && Object.keys(value.services).length > 0, 'INVALID_POLICY', 'Target must name a fixed Compose project, file, environment and services')
@@ -94,6 +97,7 @@ export function validateHostPlan(manifest, target, policy) {
     validateContract(plan.source.contract)
     for (const image of Object.values(plan.source.images)) validateImage(image,componentProfile(local,image))
   }
+  for(const descriptor of [plan,plan.source,plan.recovery])for(const image of Object.values(descriptor?.images??{}))if(image.archive)validateArchive(image)
   if (plan.database) {
     if (local.databaseOwner) requireValue(policy.archive && typeof policy.archive.baseUrl === 'string' && policy.archive.baseUrl.startsWith('https://') && isAbsolute(policy.archive.tokenFile ?? ''), 'ARCHIVE_POLICY_REQUIRED', 'Database preparation requires a trusted immutable archive endpoint and local credential reference')
     requireValue(plan.source, 'SOURCE_REQUIRED', 'Schema-changing plans must distinguish the actual source from compatible recovery')
@@ -132,6 +136,7 @@ async function atomicJson(path, data) {
 export class ComposeAdapter {
   constructor(policy, { run, runGit, fetcher = fetch, wait = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
     this.policy = validatePolicy(policy); this.run = run ?? ((args,options = {}) => runDocker(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' })); this.fetcher = fetcher; this.wait = wait; this.runGit = runGit
+    this.artifacts=new ArtifactCache(this.policy,{run:this.run})
   }
   resources(target, phase) {
     const local = this.policy.targets[target]
@@ -178,7 +183,7 @@ export class ComposeAdapter {
   }
   async inspectImage(image,local) {
     const profile=local?componentProfile(local,image):Object.values(this.policy.targets).map(target=>componentProfile(target,image)).find(Boolean)
-    return inspectQualifiedImage(this.run,image,profile)
+    return inspectQualifiedImage(this.run,image,profile,{stateDirectory:this.policy.stateDirectory})
   }
   async resolveImages(images,local) {
     const resolved={}
@@ -201,7 +206,10 @@ export class ComposeAdapter {
         let identity=await this.inspectImage(image,local)
         if (!identity) {
           requireValue(image.kind !== 'local-qualified', 'OFFLINE_IMAGE_MISSING', 'A qualified local source cannot be fetched or rebuilt by the executor')
-          await context.step(`pull:${direction}:${image.configDigest ?? image.localImageId}`, () => this.run(['image','pull','--platform',`${image.os}/${image.architecture}`,image.ref]), { sideEffect: false })
+          if(this.policy.artifactTransport==='r2'){
+            requireValue(image.archive,'OFFLINE_IMAGE_MISSING','R2 mode accepts only registered archive artifacts or strictly qualified existing local images')
+            await this.artifacts.ensure(image)
+          }else await context.step(`pull:${direction}:${image.configDigest ?? image.localImageId}`, () => this.run(['image','pull','--platform',`${image.os}/${image.architecture}`,image.ref]), { sideEffect: false })
           identity=await this.inspectImage(image,local)
           requireValue(identity, 'IMAGE_MISSING', 'Pulled artifact is not present after download')
           prepared.push({...identity,reused:false})
@@ -406,8 +414,16 @@ export class ComposeAdapter {
       return { drained: false, observed: true }
     }
     if (op.phase === 'prepare') {
+      for(const descriptor of [plan,plan.recovery])for(const image of Object.values(descriptor.images))if(image.archive)await this.artifacts.status({releaseId:op.releaseId,target:op.target,manifestHash:op.manifestHash,configDigest:image.configDigest})
       for (const descriptor of [plan,plan.recovery]) for (const image of Object.values(descriptor.images)) requireValue(await this.inspectImage(image,local), 'OBSERVATION_UNRESOLVED', 'Preparation cache is incomplete')
-      for (const direction of ['forward','recovery']) {const descriptor=direction==='forward'?plan:plan.recovery,identities=await this.resolveImages(descriptor.images,local);this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,direction)),'config','--format','json'])),local,descriptor,identities)}
+      const source=plan.source??plan.recovery,sourceIds=await this.resolveImages(source.images,local),actual=await this.containers(op)
+      requireValue(Object.entries(actual).every(([service,container])=>container.Image===sourceIds[service].localImageId),'SOURCE_IMAGE_CHANGED','Preparation recovery requires the exact original source service images')
+      if(local.adapter==='main-runtime')await this.preflight(op,plan,{direction:'source',requireReadiness:true})
+      else await this.control(local,'readiness',op,'GET')
+      // These deterministic private configuration files are safe to reconstruct after a completed cache load.
+      // No download, Docker load, business update or uncertain daemon command is replayed.
+      for (const [direction,descriptor] of [['source',source],['forward',plan],['recovery',plan.recovery]]) {const identities=await this.resolveImages(descriptor.images,local);await this.overlay(op,descriptor.images,direction,identities);this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,direction)),'config','--format','json'])),local,descriptor,identities)}
+      if(local.adapter==='gateway')await gatewayPrepare(this,op,plan)
       return { offlineReady: true, observed: true }
     }
     throw fault('OBSERVATION_UNRESOLVED', 'This operation requires explicit independent evidence')
