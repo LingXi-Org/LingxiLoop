@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: attachment previews preserve file types and route storage IDs through the authenticated file endpoint
+ok 1 - attachment previews preserve file types and route storage IDs through the authenticated file endpoint
+  ---
+  duration_ms: 22.067037
+  type: 'test'
+  ...
+# Subtest: compact image previews retain the original authenticated source and reject unsafe sources without changing document cards
+ok 2 - compact image previews retain the original authenticated source and reject unsafe sources without changing document cards
+  ---
+  duration_ms: 11.971345
+  type: 'test'
+  ...
+# Subtest: poll lists retain single and multiple selection semantics and collapse submitted choices into a receipt
+ok 3 - poll lists retain single and multiple selection semantics and collapse submitted choices into a receipt
+  ---
+  duration_ms: 5.83835
+  type: 'test'
+  ...
+# Subtest: progress cards show the current step
+ok 4 - progress cards show the current step
+  ---
+  duration_ms: 1.349114
+  type: 'test'
+  ...
+# Subtest: delivery manifests and previews expose labelled actions without unauthenticated download links
+ok 5 - delivery manifests and previews expose labelled actions without unauthenticated download links
+  ---
+  duration_ms: 4.290834
+  type: 'test'
+  ...
+# Subtest: one submission commits all attachments in order with one identity and one question
+ok 6 - one submission commits all attachments in order with one identity and one question
+  ---
+  duration_ms: 77.910054
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4248.157532

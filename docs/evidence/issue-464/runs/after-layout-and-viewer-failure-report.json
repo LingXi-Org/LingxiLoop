@@ -1,0 +1,4295 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a1727e-4a05-75d5-96ac-4c5fa995508a",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "failed",
+    "exitCode": 1,
+    "startedAt": "2026-10-25T09:57:22.104Z",
+    "finishedAt": "2026-10-25T09:57:44.780Z",
+    "project": {
+      "id": "lingxiloop-user-images-464",
+      "configDigest": "29f7c045dc76c2520b3c0a7ff03ea2cf525c736e53fca41e294fd9207d0b6f61"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "561968bdec077816955676461df7d3ac81af765b",
+      "branch": "fix/464-user-image-thumbnails",
+      "dirty": false
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5246",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "dee9d8ac23e7f5351a0145ace6cb32c3c2414dfcc234de7b00e51f3dce6c1275",
+        "testId": "e2e/user-images/images.e2e.ts::user%20image%20thumbnails%20retain%20identity%20and%20alignment%20above%20text%20at%20desktop%20and%20narrow%20widths",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "user image thumbnails retain identity and alignment above text at desktop and narrow widths"
+        ],
+        "file": "e2e/user-images/images.e2e.ts",
+        "source": {
+          "file": "e2e/user-images/images.e2e.ts",
+          "line": 16,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-25T09:57:22.845Z",
+            "durationMs": 4310,
+            "artifacts": [
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:6"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/001-after-mine-single-1280.png",
+                "size": 78493,
+                "sha256": "1bac2a82bec5e6a12fc6a0ee12e8c263ac3235a7df9146cd9c23ecb829ba3a72"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:9"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/002-after-other-many-1280.png",
+                "size": 78498,
+                "sha256": "abff8d1d6c4b44192ff4ad8866f7b0bbaba098b78d1d1cb4994c0f57168ca24a"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:12"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/003-after-mine-pure-1280.png",
+                "size": 76834,
+                "sha256": "4397a411cec014196ab434231ae9350f1b7165fd76498168d3e9d234227328fd"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:3",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:15"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/004-after-mine-failed-1280.png",
+                "size": 75273,
+                "sha256": "a686817e52336b4b42608eb76cd1164d9518a194ea3aaa1b178f78cc6c7b2299"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:4",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:18"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/005-after-mine-pdf-1280.png",
+                "size": 66286,
+                "sha256": "d7df3bf02c59d66016e7913192bf72c3372821d9d2db79ae3f7cbd8572e67d0d"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:5",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:21"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/006-after-assistant-media-1280.png",
+                "size": 66129,
+                "sha256": "433ae9d53318b383c84f80442f01be1dd884312e4bdd95d2a41157dba8a5b80c"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:6",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:42"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/007-after-mine-single-390.png",
+                "size": 43813,
+                "sha256": "0339f16afc96242f5d9a443400b3ff559d970556e8cbeb07238e14ab408672ab"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:7",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:45"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/008-after-other-many-390.png",
+                "size": 43805,
+                "sha256": "326b2896226a8055f6ff8b55318eeeb976d51b91c2959358c6dbaa90be705f09"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:8",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:48"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/009-after-mine-pure-390.png",
+                "size": 57635,
+                "sha256": "384e59bfa0b2ca1d0d3f59669281973f57c98e702c6bc46fdbba3ea770f295d4"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:9",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:51"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/010-after-mine-failed-390.png",
+                "size": 62007,
+                "sha256": "b30c37fbf8931478f5d37ad5f50907498cef8b2449e4ef05d11df0dec90350c6"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:10",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:54"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/011-after-mine-pdf-390.png",
+                "size": 57720,
+                "sha256": "13041e5a0b95fe41d680b8840db7d50a6736e11ec1974ce595e48f1a37e5cb2e"
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:11",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-4f1d-7f6c-96d0-e416baf14296:57"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__user_20image_20thumbnails_20retain_20identity_20and_20alignment_20above_20text_2-cf7c4b84/default/attempt-0/screenshots/012-after-assistant-media-390.png",
+                "size": 57817,
+                "sha256": "65f818a445c21c38fcc036088611063b624a180e93c47f99898fcf20cee359ea"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:22.916Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1280,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 18,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/user-images/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:22.918Z",
+                "durationMs": 892,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 19,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:23.812Z",
+                "durationMs": 248,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 20,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:3",
+                "index": 3,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.060Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 21,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:4",
+                "index": 4,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.084Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:5",
+                "index": 5,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.090Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:6",
+                "index": 6,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-mine-single-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.099Z",
+                "durationMs": 175,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:7",
+                "index": 7,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.274Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:8",
+                "index": 8,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.281Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:9",
+                "index": 9,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-other-many-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.290Z",
+                "durationMs": 112,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:10",
+                "index": 10,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.403Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.412Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:12",
+                "index": 12,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-mine-pure-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.415Z",
+                "durationMs": 109,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.524Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine-failed\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.529Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 28,
+                  "column": 73
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:15",
+                "index": 15,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-mine-failed-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.536Z",
+                "durationMs": 122,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:3"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.658Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.663Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:18",
+                "index": 18,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-mine-pdf-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.667Z",
+                "durationMs": 116,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:4"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.784Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.788Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:21",
+                "index": 21,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-assistant-media-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.791Z",
+                "durationMs": 108,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:5"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.899Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 31,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:23",
+                "index": 23,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"] [aria-label=\\\"已送达\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.912Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 112,
+                  "column": 85
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"mine-pure\\\"] [aria-label=\\\"发送中\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.934Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 113,
+                  "column": 83
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine-failed\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.943Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 114,
+                  "column": 87
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:26",
+                "index": 26,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine-failed\\\"] [role=\\\"group\\\"][aria-label=\\\"未确认消息操作\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.949Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 115,
+                  "column": 103
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"核对并重试发送\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.956Z",
+                "durationMs": 24,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 116,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:28",
+                "index": 28,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"移除待发消息\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.980Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 117,
+                  "column": 73
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.988Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 118,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:30",
+                "index": 30,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重新挂载消息\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:24.992Z",
+                "durationMs": 144,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 123,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:25.136Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 124,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:25.147Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 118,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:25.151Z",
+                "durationMs": 372,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 126,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:25.523Z",
+                "durationMs": 95,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 127,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:35",
+                "index": 35,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:25.618Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 118,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:36",
+                "index": 36,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:25.623Z",
+                "durationMs": 29,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 18,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:37",
+                "index": 37,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/user-images/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:25.653Z",
+                "durationMs": 215,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 19,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:38",
+                "index": 38,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:25.869Z",
+                "durationMs": 166,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 20,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:39",
+                "index": 39,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.035Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 21,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:40",
+                "index": 40,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.049Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:41",
+                "index": 41,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.052Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:42",
+                "index": 42,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-mine-single-390",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.062Z",
+                "durationMs": 120,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:6"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.182Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:44",
+                "index": 44,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.185Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:45",
+                "index": 45,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-other-many-390",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.188Z",
+                "durationMs": 63,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:7"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:46",
+                "index": 46,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.251Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:47",
+                "index": 47,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.255Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:48",
+                "index": 48,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-mine-pure-390",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.257Z",
+                "durationMs": 86,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:8"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:49",
+                "index": 49,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.344Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:50",
+                "index": 50,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine-failed\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.347Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 28,
+                  "column": 73
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:51",
+                "index": 51,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-mine-failed-390",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.352Z",
+                "durationMs": 85,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:9"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:52",
+                "index": 52,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.438Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:53",
+                "index": 53,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.441Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:54",
+                "index": 54,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-mine-pdf-390",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.445Z",
+                "durationMs": 81,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:10"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:55",
+                "index": 55,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.526Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 23,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:56",
+                "index": 56,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.531Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 24,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:57",
+                "index": 57,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-assistant-media-390",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.534Z",
+                "durationMs": 91,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-4f1d-7f6c-96d0-e416baf14296:artifact:11"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 29,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:58",
+                "index": 58,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.625Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 31,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:59",
+                "index": 59,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"] [aria-label=\\\"已送达\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.636Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 112,
+                  "column": 85
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:60",
+                "index": 60,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id=\\\"mine-pure\\\"] [aria-label=\\\"发送中\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.645Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 113,
+                  "column": 83
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:61",
+                "index": 61,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine-failed\\\"] [data-quote-preview]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.650Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 114,
+                  "column": 87
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:62",
+                "index": 62,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[data-msg-id=\\\"mine-failed\\\"] [role=\\\"group\\\"][aria-label=\\\"未确认消息操作\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.656Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 115,
+                  "column": 103
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:63",
+                "index": 63,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"核对并重试发送\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.661Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 116,
+                  "column": 74
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:64",
+                "index": 64,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "getByRole(\"button\", name: \"移除待发消息\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.673Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 117,
+                  "column": 73
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:65",
+                "index": 65,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.680Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 118,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:66",
+                "index": 66,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "getByRole(\"button\", name: \"重新挂载消息\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.684Z",
+                "durationMs": 98,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 123,
+                  "column": 65
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:67",
+                "index": 67,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.783Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 124,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:68",
+                "index": 68,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.791Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 118,
+                  "column": 36
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:69",
+                "index": 69,
+                "kind": "resource",
+                "api": "browser.reload",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:26.795Z",
+                "durationMs": 225,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 126,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:70",
+                "index": 70,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[data-msg-id]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:27.020Z",
+                "durationMs": 107,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 127,
+                  "column": 52
+                }
+              },
+              {
+                "id": "01a1727e-4f1d-7f6c-96d0-e416baf14296:71",
+                "index": 71,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:27.127Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 118,
+                  "column": 36
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "f7195aa19a93c91b6d285d2c8aa877a91a72ba2ef0464a6e7fe8e76aa524dea0",
+        "testId": "e2e/user-images/images.e2e.ts::thumbnails%20open%20the%20existing%20image%20viewer%20by%20pointer%20and%20Enter%20with%20zoom%20and%20focus%20return",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "thumbnails open the existing image viewer by pointer and Enter with zoom and focus return"
+        ],
+        "file": "e2e/user-images/images.e2e.ts",
+        "source": {
+          "file": "e2e/user-images/images.e2e.ts",
+          "line": 133,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "failed",
+        "attempts": [
+          {
+            "id": "01a1727e-5ff5-764a-9989-5709faf719b7",
+            "index": 0,
+            "status": "failed",
+            "startedAt": "2026-10-25T09:57:27.157Z",
+            "durationMs": 17573,
+            "artifacts": [
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a1727e-5ff5-764a-9989-5709faf719b7:13"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__thumbnails_20open_20the_20existing_20image_20viewer_20by_20pointer_20and_20Enter-bf3da6c4/default/attempt-0/screenshots/001-after-viewer-pointer-1280.png",
+                "size": 118274,
+                "sha256": "3908cb330527c5d1cefd8659dca8559067820146dde68a41e3f9dcad30116ccb"
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:artifact:1",
+                "kind": "log",
+                "mediaType": "text/plain",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__thumbnails_20open_20the_20existing_20image_20viewer_20by_20pointer_20and_20Enter-bf3da6c4/default/attempt-0/failure/screen.txt",
+                "size": 3533,
+                "sha256": "a9a1455523c3d1f819251dce6f1033232c64294a97fbad918e1ac1bbad7b5d28"
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "attempt"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__thumbnails_20open_20the_20existing_20image_20viewer_20by_20pointer_20and_20Enter-bf3da6c4/default/attempt-0/screenshots/002-failure.png",
+                "size": 78485,
+                "sha256": "010f318530787a2c87b76d43fad756697c79250d987f52450facbaf30b73c227"
+              }
+            ],
+            "error": {
+              "category": "test",
+              "code": "ASSERTION_FAILED",
+              "message": "expect.poll(...).toBe(...) timed out after 15000 ms\nlast: expected false to be true",
+              "retryable": false,
+              "phase": "body",
+              "source": {
+                "file": "e2e/user-images/images.e2e.ts",
+                "line": 164,
+                "column": 7
+              }
+            },
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "failure": {
+              "url": "http://127.0.0.1:5246/e2e/user-images/index.html",
+              "screen": "01a1727e-5ff5-764a-9989-5709faf719b7:artifact:1",
+              "screenshot": "01a1727e-5ff5-764a-9989-5709faf719b7:artifact:2"
+            },
+            "steps": [
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:27.194Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1280,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 135,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/user-images/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:27.195Z",
+                "durationMs": 864,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 136,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.059Z",
+                "durationMs": 248,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 137,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.307Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 149,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"] [data-slot=\\\"attachment-thumbnail\\\"]\").nth(0)",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.323Z",
+                "durationMs": 77,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 150,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"] [data-slot=\\\"attachment-thumbnail\\\"]\").nth(0)",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.400Z",
+                "durationMs": 144,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 151,
+                  "column": 50
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.544Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 154,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.556Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 155,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.563Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 156,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.568Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 157,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.573Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 158,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "+",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.580Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 159,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:12",
+                "index": 12,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.591Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 160,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:13",
+                "index": 13,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-viewer-pointer-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:28.603Z",
+                "durationMs": 577,
+                "events": [],
+                "artifacts": [
+                  "01a1727e-5ff5-764a-9989-5709faf719b7:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 161,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:14",
+                "index": 14,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.181Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 162,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:15",
+                "index": 15,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.201Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 163,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.216Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:17",
+                "index": 17,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.321Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.424Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.529Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.632Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:21",
+                "index": 21,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.737Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.841Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:23",
+                "index": 23,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:29.945Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:24",
+                "index": 24,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.050Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:25",
+                "index": 25,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.156Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:26",
+                "index": 26,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.262Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:27",
+                "index": 27,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.365Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.470Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.576Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.680Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:31",
+                "index": 31,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.787Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:32",
+                "index": 32,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.891Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:30.996Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:34",
+                "index": 34,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.100Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:35",
+                "index": 35,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.204Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:36",
+                "index": 36,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.311Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:37",
+                "index": 37,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.415Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:38",
+                "index": 38,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.520Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:39",
+                "index": 39,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.624Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:40",
+                "index": 40,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.731Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:41",
+                "index": 41,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.837Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:42",
+                "index": 42,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:31.947Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:43",
+                "index": 43,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.055Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:44",
+                "index": 44,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.159Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:45",
+                "index": 45,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.264Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:46",
+                "index": 46,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.375Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:47",
+                "index": 47,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.482Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:48",
+                "index": 48,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.589Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:49",
+                "index": 49,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.703Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:50",
+                "index": 50,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.813Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:51",
+                "index": 51,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:32.919Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:52",
+                "index": 52,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.030Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:53",
+                "index": 53,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.140Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:54",
+                "index": 54,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.246Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:55",
+                "index": 55,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.351Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:56",
+                "index": 56,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.455Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:57",
+                "index": 57,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.561Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:58",
+                "index": 58,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.668Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:59",
+                "index": 59,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.772Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:60",
+                "index": 60,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.877Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:61",
+                "index": 61,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:33.981Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:62",
+                "index": 62,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.086Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:63",
+                "index": 63,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.190Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:64",
+                "index": 64,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.297Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:65",
+                "index": 65,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.402Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:66",
+                "index": 66,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.509Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:67",
+                "index": 67,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.613Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:68",
+                "index": 68,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.719Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:69",
+                "index": 69,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.823Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:70",
+                "index": 70,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:34.927Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:71",
+                "index": 71,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.033Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:72",
+                "index": 72,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.137Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:73",
+                "index": 73,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.243Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:74",
+                "index": 74,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.348Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:75",
+                "index": 75,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.452Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:76",
+                "index": 76,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.557Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:77",
+                "index": 77,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.661Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:78",
+                "index": 78,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.767Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:79",
+                "index": 79,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.872Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:80",
+                "index": 80,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:35.977Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:81",
+                "index": 81,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.082Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:82",
+                "index": 82,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.186Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:83",
+                "index": 83,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.291Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:84",
+                "index": 84,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.397Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:85",
+                "index": 85,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.501Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:86",
+                "index": 86,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.605Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:87",
+                "index": 87,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.711Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:88",
+                "index": 88,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.815Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:89",
+                "index": 89,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:36.919Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:90",
+                "index": 90,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.023Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:91",
+                "index": 91,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.128Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:92",
+                "index": 92,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.232Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:93",
+                "index": 93,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.336Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:94",
+                "index": 94,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.442Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:95",
+                "index": 95,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.546Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:96",
+                "index": 96,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.650Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:97",
+                "index": 97,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.754Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:98",
+                "index": 98,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.858Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:99",
+                "index": 99,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:37.963Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:100",
+                "index": 100,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.067Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:101",
+                "index": 101,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.171Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:102",
+                "index": 102,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.276Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:103",
+                "index": 103,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.391Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:104",
+                "index": 104,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.494Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:105",
+                "index": 105,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.599Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:106",
+                "index": 106,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.704Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:107",
+                "index": 107,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.809Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:108",
+                "index": 108,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:38.914Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:109",
+                "index": 109,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.035Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:110",
+                "index": 110,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.139Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:111",
+                "index": 111,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.249Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:112",
+                "index": 112,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.353Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:113",
+                "index": 113,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.461Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:114",
+                "index": 114,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.567Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:115",
+                "index": 115,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.671Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:116",
+                "index": 116,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.779Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:117",
+                "index": 117,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.884Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:118",
+                "index": 118,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:39.990Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:119",
+                "index": 119,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.095Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:120",
+                "index": 120,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.199Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:121",
+                "index": 121,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.307Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:122",
+                "index": 122,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.411Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:123",
+                "index": 123,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.518Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:124",
+                "index": 124,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.623Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:125",
+                "index": 125,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.728Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:126",
+                "index": 126,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.833Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:127",
+                "index": 127,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:40.937Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:128",
+                "index": 128,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.041Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:129",
+                "index": 129,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.146Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:130",
+                "index": 130,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.252Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:131",
+                "index": 131,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.357Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:132",
+                "index": 132,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.462Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:133",
+                "index": 133,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.566Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:134",
+                "index": 134,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.671Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:135",
+                "index": 135,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.775Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:136",
+                "index": 136,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.882Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:137",
+                "index": 137,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:41.986Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:138",
+                "index": 138,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.091Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:139",
+                "index": 139,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.198Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:140",
+                "index": 140,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.302Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:141",
+                "index": 141,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.409Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:142",
+                "index": 142,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.528Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:143",
+                "index": 143,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.642Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:144",
+                "index": 144,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.752Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:145",
+                "index": 145,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.867Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:146",
+                "index": 146,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:42.976Z",
+                "durationMs": 17,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:147",
+                "index": 147,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:43.097Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:148",
+                "index": 148,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:43.219Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:149",
+                "index": 149,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:43.379Z",
+                "durationMs": 31,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:150",
+                "index": 150,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:43.514Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:151",
+                "index": 151,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:43.629Z",
+                "durationMs": 22,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:152",
+                "index": 152,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:43.757Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:153",
+                "index": 153,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:43.874Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:154",
+                "index": 154,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:44.004Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a1727e-5ff5-764a-9989-5709faf719b7:155",
+                "index": 155,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T09:57:44.121Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 164,
+                  "column": 39
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 2,
+      "executed": 2,
+      "passed": 1,
+      "failed": 1,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 964602,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}

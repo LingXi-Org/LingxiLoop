@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useRef, useState, type ComponentProps, type CSSProperties } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { isElectron, isMac, trafficLightInset } from '@/lib/runtime'
@@ -21,12 +21,13 @@ interface ImageViewerProps {
   src: string
   name: string
   onClose: () => void
+  onCloseAutoFocus?: ComponentProps<typeof DialogContent>['onCloseAutoFocus']
 }
 
 const MIN_SCALE = 0.1
 const MAX_SCALE = 12
 
-export function ImageViewer({ src, name, onClose }: ImageViewerProps) {
+export function ImageViewer({ src, name, onClose, onCloseAutoFocus }: ImageViewerProps) {
   const [scale, setScale] = useState(1)
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
@@ -139,7 +140,8 @@ export function ImageViewer({ src, name, onClose }: ImageViewerProps) {
     <Dialog open onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent
         showCloseButton={false}
-        className="fixed inset-0 top-0 left-0 z-[1000] flex h-screen max-h-none w-screen max-w-none translate-x-0 translate-y-0 select-none items-center justify-center rounded-none bg-foreground/95 p-0 text-background ring-0 backdrop-blur-sm"
+        onCloseAutoFocus={onCloseAutoFocus}
+        className="fixed inset-0 top-0 left-0 z-[1000] flex h-screen max-h-none w-screen max-w-none translate-x-0 translate-y-0 select-none items-center justify-center overflow-hidden rounded-none bg-foreground/95 p-0 text-background ring-0 backdrop-blur-sm sm:max-w-none"
         style={noDrag}
         onClick={onClose}
       >

@@ -1,0 +1,1486 @@
+{
+  "schemaVersion": "report-1",
+  "run": {
+    "id": "01a17280-f076-7206-b587-d1396533e19b",
+    "specVersion": "0.1",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T10:00:15.848Z",
+    "finishedAt": "2026-10-25T10:00:21.785Z",
+    "project": {
+      "id": "lingxiloop-user-images-464",
+      "configDigest": "29f7c045dc76c2520b3c0a7ff03ea2cf525c736e53fca41e294fd9207d0b6f61"
+    },
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v22.23.3"
+    },
+    "vcs": {
+      "commit": "487046498b6b665581191b2c20a2aa761fa3976d",
+      "branch": "fix/464-user-image-thumbnails",
+      "dirty": false
+    },
+    "targets": [
+      {
+        "id": "web",
+        "index": 0,
+        "platform": "web",
+        "baseOrigin": "http://127.0.0.1:5246",
+        "environment": "test",
+        "engine": {
+          "name": "web",
+          "version": "0.12.0",
+          "spiVersion": 1
+        },
+        "capabilities": [
+          "actions",
+          "artifacts",
+          "browser",
+          "keyboard",
+          "location",
+          "observation",
+          "pointer",
+          "state"
+        ],
+        "artifactCapabilities": [
+          "screenshot",
+          "trace",
+          "video"
+        ],
+        "stateCapability": true
+      }
+    ],
+    "serialGroups": [],
+    "results": [
+      {
+        "id": "dee9d8ac23e7f5351a0145ace6cb32c3c2414dfcc234de7b00e51f3dce6c1275",
+        "testId": "e2e/user-images/images.e2e.ts::user%20image%20thumbnails%20retain%20identity%20and%20alignment%20above%20text%20at%20desktop%20and%20narrow%20widths",
+        "kind": "test",
+        "declarationIndex": 0,
+        "titlePath": [
+          "user image thumbnails retain identity and alignment above text at desktop and narrow widths"
+        ],
+        "file": "e2e/user-images/images.e2e.ts",
+        "source": {
+          "file": "e2e/user-images/images.e2e.ts",
+          "line": 16,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": false,
+        "status": "skipped",
+        "skip": {
+          "cause": "filtered",
+          "reason": "title does not match --grep"
+        },
+        "attempts": []
+      },
+      {
+        "id": "f7195aa19a93c91b6d285d2c8aa877a91a72ba2ef0464a6e7fe8e76aa524dea0",
+        "testId": "e2e/user-images/images.e2e.ts::thumbnails%20open%20the%20existing%20image%20viewer%20by%20pointer%20and%20Enter%20with%20zoom%20and%20focus%20return",
+        "kind": "test",
+        "declarationIndex": 1,
+        "titlePath": [
+          "thumbnails open the existing image viewer by pointer and Enter with zoom and focus return"
+        ],
+        "file": "e2e/user-images/images.e2e.ts",
+        "source": {
+          "file": "e2e/user-images/images.e2e.ts",
+          "line": 133,
+          "column": 1
+        },
+        "targetId": "web",
+        "platform": "web",
+        "agent": "default",
+        "repeat": 0,
+        "tags": [],
+        "selected": true,
+        "status": "passed",
+        "attempts": [
+          {
+            "id": "01a17280-f5da-7e99-a373-da4712513a47",
+            "index": 0,
+            "status": "passed",
+            "startedAt": "2026-10-25T10:00:16.603Z",
+            "durationMs": 5155,
+            "artifacts": [
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:artifact:0",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a17280-f5da-7e99-a373-da4712513a47:15"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__thumbnails_20open_20the_20existing_20image_20viewer_20by_20pointer_20and_20Enter-bf3da6c4/default/attempt-0/screenshots/001-after-viewer-pointer-1280.png",
+                "size": 38465,
+                "sha256": "aa07adb7333c018ecb1f893faef1eeb648184c8ec3c0ddff89c41ce5afe7433b"
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:artifact:1",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a17280-f5da-7e99-a373-da4712513a47:32"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__thumbnails_20open_20the_20existing_20image_20viewer_20by_20pointer_20and_20Enter-bf3da6c4/default/attempt-0/screenshots/002-after-viewer-keyboard-1280.png",
+                "size": 39716,
+                "sha256": "4187594fda2bd55fe5ab472bae5343fd63caa596f36e37aecf9566d2f959164f"
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:artifact:2",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a17280-f5da-7e99-a373-da4712513a47:53"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__thumbnails_20open_20the_20existing_20image_20viewer_20by_20pointer_20and_20Enter-bf3da6c4/default/attempt-0/screenshots/003-after-viewer-pointer-390.png",
+                "size": 24465,
+                "sha256": "bc5384937bf4c23bbc3d570e44458798dda40d09cc59a750ccc17e3b4413b83a"
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:artifact:3",
+                "kind": "screenshot",
+                "mediaType": "image/png",
+                "redaction": "complete",
+                "producer": {
+                  "kind": "step",
+                  "stepId": "01a17280-f5da-7e99-a373-da4712513a47:69"
+                },
+                "path": "web/e2e_user-images_images.e2e.ts__thumbnails_20open_20the_20existing_20image_20viewer_20by_20pointer_20and_20Enter-bf3da6c4/default/attempt-0/screenshots/004-after-viewer-keyboard-390.png",
+                "size": 24376,
+                "sha256": "0a2a860114b8cc722b4cd1986daa44fd3d3d22ae94d8878cd100027627155b39"
+              }
+            ],
+            "secondaryErrors": [],
+            "cleanup": "complete",
+            "steps": [
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:0",
+                "index": 0,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:16.680Z",
+                "durationMs": 1,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 1280,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 135,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:1",
+                "index": 1,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/user-images/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:16.682Z",
+                "durationMs": 916,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 136,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:2",
+                "index": 2,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:17.599Z",
+                "durationMs": 218,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 137,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:3",
+                "index": 3,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:17.817Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 149,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:4",
+                "index": 4,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"] [data-slot=\\\"attachment-thumbnail\\\"]\").nth(0)",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:17.829Z",
+                "durationMs": 90,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 150,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:5",
+                "index": 5,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"] [data-slot=\\\"attachment-thumbnail\\\"]\").nth(0)",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:17.921Z",
+                "durationMs": 141,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 151,
+                  "column": 50
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:6",
+                "index": 6,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.063Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 154,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:7",
+                "index": 7,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.076Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 155,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:8",
+                "index": 8,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.087Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 156,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:9",
+                "index": 9,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.094Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 157,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:10",
+                "index": 10,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.108Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 158,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:11",
+                "index": 11,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.113Z",
+                "durationMs": 118,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 159,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:12",
+                "index": 12,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.231Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 163,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:13",
+                "index": 13,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "+",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.237Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 173,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:14",
+                "index": 14,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.247Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 174,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:15",
+                "index": 15,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-viewer-pointer-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:18.254Z",
+                "durationMs": 847,
+                "events": [],
+                "artifacts": [
+                  "01a17280-f5da-7e99-a373-da4712513a47:artifact:0"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 175,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:16",
+                "index": 16,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.101Z",
+                "durationMs": 19,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 176,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:17",
+                "index": 17,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.120Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 177,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:18",
+                "index": 18,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.128Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 178,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:19",
+                "index": 19,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.232Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 178,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:20",
+                "index": 20,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.236Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 149,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:21",
+                "index": 21,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"other-many\\\"] [data-slot=\\\"attachment-thumbnail\\\"]\").nth(1)",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.240Z",
+                "durationMs": 15,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 150,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:22",
+                "index": 22,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.255Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 152,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:23",
+                "index": 23,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.282Z",
+                "durationMs": 12,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 154,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:24",
+                "index": 24,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.294Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 155,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:25",
+                "index": 25,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.301Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 156,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:26",
+                "index": 26,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.307Z",
+                "durationMs": 9,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 157,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:27",
+                "index": 27,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.317Z",
+                "durationMs": 27,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 158,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:28",
+                "index": 28,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.344Z",
+                "durationMs": 245,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 159,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:29",
+                "index": 29,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.589Z",
+                "durationMs": 16,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 163,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:30",
+                "index": 30,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "+",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.607Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 173,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:31",
+                "index": 31,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.616Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 174,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:32",
+                "index": 32,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-viewer-keyboard-1280",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:19.624Z",
+                "durationMs": 543,
+                "events": [],
+                "artifacts": [
+                  "01a17280-f5da-7e99-a373-da4712513a47:artifact:1"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 175,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:33",
+                "index": 33,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.168Z",
+                "durationMs": 20,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 176,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:34",
+                "index": 34,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.188Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 177,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:35",
+                "index": 35,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.195Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 178,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:36",
+                "index": 36,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.299Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 178,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:37",
+                "index": 37,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.304Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 181,
+                  "column": 26
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:38",
+                "index": 38,
+                "kind": "resource",
+                "api": "browser.setViewport",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.310Z",
+                "durationMs": 23,
+                "events": [],
+                "artifacts": [],
+                "viewport": {
+                  "width": 390,
+                  "height": 1000,
+                  "scale": 1
+                },
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 135,
+                  "column": 19
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:39",
+                "index": 39,
+                "kind": "app",
+                "api": "app.open",
+                "label": "/e2e/user-images/index.html",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.333Z",
+                "durationMs": 371,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 136,
+                  "column": 15
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:40",
+                "index": 40,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.705Z",
+                "durationMs": 113,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 137,
+                  "column": 66
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:41",
+                "index": 41,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.819Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 149,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:42",
+                "index": 42,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"] [data-slot=\\\"attachment-thumbnail\\\"]\").nth(0)",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.826Z",
+                "durationMs": 69,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 150,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:43",
+                "index": 43,
+                "kind": "locator",
+                "api": "locator.tap",
+                "label": "locator(\"[data-msg-id=\\\"mine-single\\\"] [data-slot=\\\"attachment-thumbnail\\\"]\").nth(0)",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.895Z",
+                "durationMs": 95,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 151,
+                  "column": 50
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:44",
+                "index": 44,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.990Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 154,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:45",
+                "index": 45,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:20.996Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 155,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:46",
+                "index": 46,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.009Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 156,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:47",
+                "index": 47,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.014Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 157,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:48",
+                "index": 48,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.023Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 158,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:49",
+                "index": 49,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.028Z",
+                "durationMs": 46,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 159,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:50",
+                "index": 50,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.074Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 163,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:51",
+                "index": 51,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "+",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.078Z",
+                "durationMs": 7,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 173,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:52",
+                "index": 52,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.085Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 174,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:53",
+                "index": 53,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-viewer-pointer-390",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.091Z",
+                "durationMs": 204,
+                "events": [],
+                "artifacts": [
+                  "01a17280-f5da-7e99-a373-da4712513a47:artifact:2"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 175,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:54",
+                "index": 54,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.295Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 176,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:55",
+                "index": 55,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.308Z",
+                "durationMs": 14,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 177,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:56",
+                "index": 56,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.322Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 178,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:57",
+                "index": 57,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.325Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 149,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:58",
+                "index": 58,
+                "kind": "locator",
+                "api": "locator.focus",
+                "label": "locator(\"[data-msg-id=\\\"other-many\\\"] [data-slot=\\\"attachment-thumbnail\\\"]\").nth(1)",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.329Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 150,
+                  "column": 20
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:59",
+                "index": 59,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Enter",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.342Z",
+                "durationMs": 25,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 152,
+                  "column": 35
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:60",
+                "index": 60,
+                "kind": "assertion",
+                "api": "expect.toBeVisible",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.367Z",
+                "durationMs": 10,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 154,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:61",
+                "index": 61,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.378Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 155,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:62",
+                "index": 62,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.384Z",
+                "durationMs": 8,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 156,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:63",
+                "index": 63,
+                "kind": "assertion",
+                "api": "expect.toHaveAttribute",
+                "label": "locator(\"[role=\\\"dialog\\\"] img\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.392Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 157,
+                  "column": 60
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:64",
+                "index": 64,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.397Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 158,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:65",
+                "index": 65,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.401Z",
+                "durationMs": 88,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 159,
+                  "column": 21
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:66",
+                "index": 66,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.489Z",
+                "durationMs": 4,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 163,
+                  "column": 38
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:67",
+                "index": 67,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "+",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.494Z",
+                "durationMs": 5,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 173,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:68",
+                "index": 68,
+                "kind": "assertion",
+                "api": "expect.toContainText",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.499Z",
+                "durationMs": 6,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 174,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:69",
+                "index": 69,
+                "kind": "app",
+                "api": "app.screenshot",
+                "label": "after-viewer-keyboard-390",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.505Z",
+                "durationMs": 205,
+                "events": [],
+                "artifacts": [
+                  "01a17280-f5da-7e99-a373-da4712513a47:artifact:3"
+                ],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 175,
+                  "column": 17
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:70",
+                "index": 70,
+                "kind": "resource",
+                "api": "browser.keyboard.press",
+                "label": "Escape",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.710Z",
+                "durationMs": 13,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 176,
+                  "column": 30
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:71",
+                "index": 71,
+                "kind": "assertion",
+                "api": "expect.toHaveCount",
+                "label": "locator(\"[role=\\\"dialog\\\"]\")",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.723Z",
+                "durationMs": 11,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 177,
+                  "column": 28
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:72",
+                "index": 72,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.734Z",
+                "durationMs": 3,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 178,
+                  "column": 39
+                }
+              },
+              {
+                "id": "01a17280-f5da-7e99-a373-da4712513a47:73",
+                "index": 73,
+                "kind": "resource",
+                "api": "browser.evaluate",
+                "label": "",
+                "status": "passed",
+                "startedAt": "2026-10-25T10:00:21.737Z",
+                "durationMs": 2,
+                "events": [],
+                "artifacts": [],
+                "source": {
+                  "file": "e2e/user-images/images.e2e.ts",
+                  "line": 181,
+                  "column": 26
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "errors": [],
+    "summary": {
+      "discovered": 2,
+      "selected": 1,
+      "executed": 1,
+      "passed": 1,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "limits": {
+      "maxAgentContextBytes": 16384,
+      "maxLedgerBytes": 8192,
+      "maxObservationBytes": 262144,
+      "maxEventsPerStep": 1000,
+      "maxModelTokensPerCall": 64000
+    },
+    "usage": {
+      "discoveredResults": 2,
+      "maxAgentContextBytes": 0,
+      "maxLedgerBytes": 0,
+      "maxObservationBytes": 0,
+      "artifactBytes": 127022,
+      "downloads": 0,
+      "events": 0,
+      "modelTokens": 0,
+      "maxModelCallsInStep": 0,
+      "maxActionStepsInStep": 0
+    }
+  }
+}
