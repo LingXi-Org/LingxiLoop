@@ -1,0 +1,612 @@
+--- upstream/src/app/(main)/dashboard/file-manager/_components/file-list-view.tsx
++++ src/features/course-materials/file-list-view.tsx
+@@ -1,88 +1,65 @@
+-"use client";
++// Adapted from Studio Admin, MIT © 2024 Mohammed Arham Khan.
++// Fixed source and changes: third_party/studio-admin/README.md.
++import { ArrowDown, ArrowUp, LoaderCircle } from 'lucide-react'
++import { Avatar, AvatarFallback } from '@/components/ui/avatar'
++import { Badge } from '@/components/ui/badge'
++import { Button } from '@/components/ui/button'
++import { Checkbox } from '@/components/ui/checkbox'
++import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
++import type { KnowledgeSource } from '../knowledge/contracts'
++import { dateLabel, fileIcons, fileKind, fileKindLabels, type MaterialSort, sizeLabel, sourceStatusLabel } from './data'
++import { FileActions, type FileActionsProps } from './file-actions'
+ 
+-import { useState } from "react";
+-
+-import { cn } from "cn";
+-import { Star } from "lucide-react";
+-
+-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+-import { Badge } from "@/components/ui/badge";
+-import { Button } from "@/components/ui/button";
+-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+-
+-import { type FileManagerFile, fileIcons } from "./data";
+-import { FileActions } from "./file-actions";
+-
+-interface FileListViewProps {
+-  files: FileManagerFile[];
++interface FileListViewProps extends Omit<FileActionsProps, 'file' | 'busy'> {
++  files: KnowledgeSource[]; publicSpace: boolean; selected: Set<string>; busyIds: Set<string>; sort: MaterialSort
++  onSelect(id: string, selected: boolean): void; onSelectAll(selected: boolean): void; onSort(value: MaterialSort): void
+ }
+-
+-export function FileListView({ files }: FileListViewProps) {
+-  const [listFiles, setListFiles] = useState(files);
+-
+-  function toggleStar(fileId: string) {
+-    setListFiles((current) => current.map((file) => (file.id === fileId ? { ...file, starred: !file.starred } : file)));
+-  }
+-
++export function FileListView({ files, publicSpace, selected, busyIds, sort, onSelect, onSelectAll, onSort, ...actions }: FileListViewProps) {
++  const allSelected = files.length > 0 && files.every(file => selected.has(file.id))
++  const sortHead = (column: 'name' | 'modified' | 'size', label: string) => <Button variant="ghost" size="sm" className="-ms-2 gap-1 px-2 text-xs text-muted-foreground" onClick={() => onSort(`${column}-${sort === `${column}-asc` ? 'desc' : 'asc'}`)}>
++    {label}{sort.startsWith(column) && (sort.endsWith('asc') ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />)}
++  </Button>
++  const ariaSort = (column: string) => sort.startsWith(column) ? sort.endsWith('asc') ? 'ascending' as const : 'descending' as const : undefined
+   return (
+-    <Table>
++    <Table aria-label="课程资料列表" className="min-w-[680px]">
+       <TableHeader>
+-        <TableRow>
+-          <TableHead className="pl-0">Name</TableHead>
+-          <TableHead className="hidden md:table-cell">Owner</TableHead>
+-          <TableHead className="hidden lg:table-cell">Modified</TableHead>
+-          <TableHead className="hidden sm:table-cell">Size</TableHead>
+-          <TableHead className="w-20">
+-            <span className="sr-only">Actions</span>
+-          </TableHead>
++        <TableRow className="bg-muted/25 hover:bg-muted/25">
++          <TableHead className="w-12 ps-4"><Checkbox aria-label="选择当前列表全部资料" checked={allSelected ? true : selected.size > 0 ? 'indeterminate' : false} onCheckedChange={checked => onSelectAll(checked === true)} /></TableHead>
++          <TableHead className="min-w-56" aria-sort={ariaSort('name')}>{sortHead('name', '文件名称')}</TableHead>
++          <TableHead className="text-xs text-muted-foreground">格式</TableHead>
++          {publicSpace && <TableHead className="text-xs text-muted-foreground">上传教师</TableHead>}
++          <TableHead aria-sort={ariaSort('modified')}>{sortHead('modified', '修改时间')}</TableHead>
++          <TableHead aria-sort={ariaSort('size')}>{sortHead('size', '大小')}</TableHead>
++          <TableHead className="w-16"><span className="sr-only">资料操作</span></TableHead>
+         </TableRow>
+       </TableHeader>
+       <TableBody>
+-        {listFiles.map((file) => {
+-          const FileIcon = fileIcons[file.kind];
+-
++        {files.map(file => {
++          const kind = fileKind(file)
++          const FileIcon = fileIcons[kind]
++          const busy = busyIds.has(file.id)
++          const owner = file.ownerName || '课程教师'
+           return (
+-            <TableRow key={file.id}>
+-              <TableCell className="pl-0">
++            <TableRow key={file.id} data-state={selected.has(file.id) ? 'selected' : undefined}>
++              <TableCell className="ps-4"><Checkbox aria-label={`选择：${file.title}`} checked={selected.has(file.id)} onCheckedChange={checked => onSelect(file.id, checked === true)} /></TableCell>
++              <TableCell>
+                 <div className="flex min-w-0 items-center gap-3">
+-                  <FileIcon className="text-muted-foreground size-5 shrink-0" />
+-                  <Button variant="link" size="sm" className="h-auto max-w-72 justify-start px-0">
+-                    <span className="truncate">{file.name}</span>
+-                  </Button>
+-                  {file.shared && (
+-                    <Badge variant="outline" className="hidden xl:inline-flex">
+-                      Shared
+-                    </Badge>
+-                  )}
++                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted/60"><FileIcon className="size-5 text-muted-foreground" /></span>
++                  <div className="min-w-0">
++                    <Button variant="link" size="sm" className="h-auto max-w-72 justify-start px-0 text-foreground" aria-label={`查看资料：${file.title}`} onClick={() => actions.onOpen(file)}><span className="truncate">{file.title}</span></Button>
++                    <span className={`mt-1 block text-xs ${file.status === 'failed' ? 'text-destructive' : 'text-muted-foreground'}`}>{busy && <LoaderCircle className="me-1 inline size-3 animate-spin motion-reduce:animate-none" />}{sourceStatusLabel(file)}</span>
++                  </div>
+                 </div>
+               </TableCell>
+-              <TableCell className="hidden md:table-cell">
+-                <div className="flex items-center gap-2">
+-                  <Avatar size="sm">
+-                    <AvatarFallback>{file.ownerInitials}</AvatarFallback>
+-                  </Avatar>
+-                  <span>{file.owner}</span>
+-                </div>
+-              </TableCell>
+-              <TableCell className="text-muted-foreground hidden lg:table-cell">{file.modifiedAt}</TableCell>
+-              <TableCell className="text-muted-foreground hidden sm:table-cell">{file.size}</TableCell>
+-              <TableCell>
+-                <div className="flex items-center justify-end">
+-                  <Button
+-                    variant="ghost"
+-                    size="icon-sm"
+-                    aria-label={file.starred ? `Unstar ${file.name}` : `Star ${file.name}`}
+-                    onClick={() => toggleStar(file.id)}
+-                  >
+-                    <Star className={cn(file.starred && "fill-current")} />
+-                  </Button>
+-                  <FileActions file={file} onToggleStar={() => toggleStar(file.id)} />
+-                </div>
+-              </TableCell>
++              <TableCell><Badge variant="outline" className="font-normal text-muted-foreground">{fileKindLabels[kind]}</Badge></TableCell>
++              {publicSpace && <TableCell><div className="flex items-center gap-2"><Avatar size="sm"><AvatarFallback>{owner.slice(0, 2)}</AvatarFallback></Avatar><span className="max-w-32 truncate">{owner}</span></div></TableCell>}
++              <TableCell className="text-xs tabular-nums text-muted-foreground"><time dateTime={file.updatedAt}>{dateLabel(file.updatedAt)}</time></TableCell>
++              <TableCell className="text-xs tabular-nums text-muted-foreground">{sizeLabel(file.sizeBytes)}</TableCell>
++              <TableCell><div className="flex items-center justify-end"><FileActions file={file} busy={busy} {...actions} /></div></TableCell>
+             </TableRow>
+-          );
++          )
+         })}
+       </TableBody>
+     </Table>
+-  );
++  )
+ }
+--- upstream/src/app/(main)/dashboard/file-manager/_components/file-manager-toolbar.tsx
++++ src/features/course-materials/file-manager-toolbar.tsx
+@@ -1,86 +1,47 @@
+-import { ArrowUpDown, Search, SlidersHorizontal } from "lucide-react";
++// Adapted from Studio Admin, MIT © 2024 Mohammed Arham Khan.
++// Fixed source and changes: third_party/studio-admin/README.md.
++import { ArrowUpDown, Search, SlidersHorizontal, Upload } from 'lucide-react'
++import { Button } from '@/components/ui/button'
++import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
++import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
++import { SelectField } from '@/components/ui/select-field'
++import { fileKindLabels, type MaterialFormat, type MaterialSort, materialSortLabels } from './data'
+ 
+-import { Button } from "@/components/ui/button";
+-import {
+-  DropdownMenu,
+-  DropdownMenuContent,
+-  DropdownMenuGroup,
+-  DropdownMenuLabel,
+-  DropdownMenuRadioGroup,
+-  DropdownMenuRadioItem,
+-  DropdownMenuSeparator,
+-  DropdownMenuSub,
+-  DropdownMenuSubContent,
+-  DropdownMenuSubTrigger,
+-  DropdownMenuTrigger,
+-} from "@/components/ui/dropdown-menu";
+-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+-
+-export function FileManagerToolbar() {
++export function FileManagerToolbar({ search, format, sort, onSearch, onFormat, onSort, onUpload, uploadLabel }: {
++  search: string; format: MaterialFormat; sort: MaterialSort
++  onSearch(value: string): void; onFormat(value: MaterialFormat): void; onSort(value: MaterialSort): void
++  onUpload?: () => void; uploadLabel: string
++}) {
+   return (
+     <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+-      <InputGroup className="md:max-w-lg">
+-        <InputGroupInput placeholder="Search files and folders..." aria-label="Search files and folders" />
+-        <InputGroupAddon>
+-          <Search />
+-        </InputGroupAddon>
++      <InputGroup className="border-border bg-background md:max-w-lg">
++        <InputGroupInput type="search" placeholder="搜索文件名称或上传教师…" aria-label="搜索课程资料" value={search} onChange={event => onSearch(event.target.value)} />
++        <InputGroupAddon><Search /></InputGroupAddon>
+       </InputGroup>
+       <div className="flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
++        <SelectField ariaLabel="资料格式" className="w-36" value={format} onValueChange={onFormat}
++          options={[{ value: 'all', label: '全部格式' }, ...Object.entries(fileKindLabels).map(([value, label]) => ({ value: value as MaterialFormat, label }))]} />
+         <DropdownMenu>
+-          <DropdownMenuTrigger asChild>
+-            <Button variant="outline" size="sm">
+-              <SlidersHorizontal data-icon="inline-start" />
+-              Filter & sort
+-            </Button>
+-          </DropdownMenuTrigger>
+-          <DropdownMenuContent align="end" className="w-48">
++          <DropdownMenuTrigger asChild><Button variant="outline" className="h-9"><SlidersHorizontal />筛选与排序</Button></DropdownMenuTrigger>
++          <DropdownMenuContent align="end" className="w-56">
+             <DropdownMenuGroup>
+-              <DropdownMenuLabel>Show</DropdownMenuLabel>
+-              <DropdownMenuRadioGroup value="all">
+-                <DropdownMenuRadioItem value="all">All files</DropdownMenuRadioItem>
+-                <DropdownMenuRadioItem value="starred">Starred</DropdownMenuRadioItem>
+-                <DropdownMenuRadioItem value="shared">Shared</DropdownMenuRadioItem>
++              <DropdownMenuLabel><ArrowUpDown className="me-2 inline size-4" />排序方式</DropdownMenuLabel>
++              <DropdownMenuRadioGroup value={sort} onValueChange={value => onSort(value as MaterialSort)}>
++                {Object.entries(materialSortLabels).map(([value, label]) => <DropdownMenuRadioItem key={value} value={value}>{label}</DropdownMenuRadioItem>)}
+               </DropdownMenuRadioGroup>
+             </DropdownMenuGroup>
+             <DropdownMenuSeparator />
+             <DropdownMenuGroup>
+-              <DropdownMenuSub>
+-                <DropdownMenuSubTrigger>
+-                  <SlidersHorizontal />
+-                  File type
+-                </DropdownMenuSubTrigger>
+-                <DropdownMenuSubContent sideOffset={8}>
+-                  <DropdownMenuGroup>
+-                    <DropdownMenuRadioGroup value="all">
+-                      <DropdownMenuRadioItem value="all">All types</DropdownMenuRadioItem>
+-                      <DropdownMenuRadioItem value="archive">Archive</DropdownMenuRadioItem>
+-                      <DropdownMenuRadioItem value="design">Design</DropdownMenuRadioItem>
+-                      <DropdownMenuRadioItem value="document">Document</DropdownMenuRadioItem>
+-                      <DropdownMenuRadioItem value="pdf">PDF</DropdownMenuRadioItem>
+-                      <DropdownMenuRadioItem value="spreadsheet">Spreadsheet</DropdownMenuRadioItem>
+-                    </DropdownMenuRadioGroup>
+-                  </DropdownMenuGroup>
+-                </DropdownMenuSubContent>
+-              </DropdownMenuSub>
+-              <DropdownMenuSub>
+-                <DropdownMenuSubTrigger>
+-                  <ArrowUpDown />
+-                  Sort by
+-                </DropdownMenuSubTrigger>
+-                <DropdownMenuSubContent sideOffset={8}>
+-                  <DropdownMenuGroup>
+-                    <DropdownMenuRadioGroup value="modified">
+-                      <DropdownMenuRadioItem value="modified">Last modified</DropdownMenuRadioItem>
+-                      <DropdownMenuRadioItem value="name">Name</DropdownMenuRadioItem>
+-                      <DropdownMenuRadioItem value="size">File size</DropdownMenuRadioItem>
+-                    </DropdownMenuRadioGroup>
+-                  </DropdownMenuGroup>
+-                </DropdownMenuSubContent>
+-              </DropdownMenuSub>
++              <DropdownMenuLabel>格式</DropdownMenuLabel>
++              <DropdownMenuRadioGroup value={format} onValueChange={value => onFormat(value as MaterialFormat)}>
++                <DropdownMenuRadioItem value="all">全部格式</DropdownMenuRadioItem>
++                {Object.entries(fileKindLabels).map(([value, label]) => <DropdownMenuRadioItem key={value} value={value}>{label}</DropdownMenuRadioItem>)}
++              </DropdownMenuRadioGroup>
+             </DropdownMenuGroup>
+           </DropdownMenuContent>
+         </DropdownMenu>
++        {onUpload && <Button onClick={onUpload} className="h-9 gap-2"><Upload />{uploadLabel}</Button>}
+       </div>
+     </div>
+-  );
++  )
+ }
+--- upstream/src/app/(main)/dashboard/file-manager/_components/file-actions.tsx
++++ src/features/course-materials/file-actions.tsx
+@@ -1,53 +1,36 @@
+-import { Download, MoreVertical, Share2, Star, Trash2 } from "lucide-react";
++// Adapted from Studio Admin, MIT © 2024 Mohammed Arham Khan.
++// Fixed source and changes: third_party/studio-admin/README.md.
++import { Download, Eye, MoreVertical, Pencil, RotateCcw, Trash2 } from 'lucide-react'
++import { Button } from '@/components/ui/button'
++import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
++import type { KnowledgeSource } from '../knowledge/contracts'
+ 
+-import { Button } from "@/components/ui/button";
+-import {
+-  DropdownMenu,
+-  DropdownMenuContent,
+-  DropdownMenuGroup,
+-  DropdownMenuItem,
+-  DropdownMenuSeparator,
+-  DropdownMenuTrigger,
+-} from "@/components/ui/dropdown-menu";
+-
+-import type { FileManagerFile } from "./data";
+-
+-interface FileActionsProps {
+-  file: FileManagerFile;
+-  onToggleStar: () => void;
++export interface FileActionsProps {
++  file: KnowledgeSource; readOnly: boolean; busy: boolean
++  onOpen(file: KnowledgeSource): void; onDownload(file: KnowledgeSource): void
++  onRename(file: KnowledgeSource): void; onDelete(file: KnowledgeSource): void; onRetry(file: KnowledgeSource): void
+ }
+-
+-export function FileActions({ file, onToggleStar }: FileActionsProps) {
++export function FileActions({ file, readOnly, busy, onOpen, onDownload, onRename, onDelete, onRetry }: FileActionsProps) {
++  const canRename = !readOnly && file.capabilities?.canRename
++  const canDelete = !readOnly && file.capabilities?.canDelete
+   return (
+     <DropdownMenu>
+       <DropdownMenuTrigger asChild>
+-        <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${file.name}`}>
++        <Button variant="ghost" size="icon-sm" disabled={busy} aria-label={`资料操作：${file.title}`}>
+           <MoreVertical />
+         </Button>
+       </DropdownMenuTrigger>
+       <DropdownMenuContent className="w-48" align="end">
+         <DropdownMenuGroup>
+-          <DropdownMenuItem onSelect={onToggleStar}>
+-            <Star />
+-            {file.starred ? "Remove from starred" : "Add to starred"}
+-          </DropdownMenuItem>
+-          <DropdownMenuItem>
+-            <Download />
+-            Download
+-          </DropdownMenuItem>
+-          <DropdownMenuItem>
+-            <Share2 />
+-            Copy share link
+-          </DropdownMenuItem>
++          <DropdownMenuItem onSelect={() => onOpen(file)}><Eye />查看资料</DropdownMenuItem>
++          {file.capabilities?.canDownload && <DropdownMenuItem onSelect={() => onDownload(file)}><Download />下载原文件</DropdownMenuItem>}
++          {canRename && <DropdownMenuItem onSelect={() => onRename(file)}><Pencil />重命名</DropdownMenuItem>}
++          {canRename && file.status === 'failed' && <DropdownMenuItem onSelect={() => onRetry(file)}><RotateCcw />重新解析</DropdownMenuItem>}
+         </DropdownMenuGroup>
+-        <DropdownMenuSeparator />
+-        <DropdownMenuGroup>
+-          <DropdownMenuItem variant="destructive">
+-            <Trash2 />
+-            Move to trash
+-          </DropdownMenuItem>
+-        </DropdownMenuGroup>
++        {canDelete && <><DropdownMenuSeparator /><DropdownMenuGroup>
++          <DropdownMenuItem variant="destructive" onSelect={() => onDelete(file)}><Trash2 />删除资料</DropdownMenuItem>
++        </DropdownMenuGroup></>}
+       </DropdownMenuContent>
+     </DropdownMenu>
+-  );
++  )
+ }
+--- upstream/src/app/(main)/dashboard/file-manager/_components/data.ts
++++ src/features/course-materials/data.ts
+@@ -1,209 +1,68 @@
+-import { File, FileArchive, FileChartColumn, FileImage, FileText } from "lucide-react";
++// Adapted from Studio Admin, MIT © 2024 Mohammed Arham Khan.
++// Fixed source and changes: third_party/studio-admin/README.md.
++import { File, FileArchive, FileChartColumn, FileImage, FileText, Globe, Presentation } from 'lucide-react'
++import type { KnowledgeSource } from '../knowledge/contracts'
+ 
+-export type FileKind = "document" | "spreadsheet" | "design" | "pdf" | "archive";
+-export type FileManagerView = "grid" | "list";
+-
++export type MaterialSpace = 'public' | 'private'
++export interface MaterialContext { companyId: string; userId: string; projectId: string; space: MaterialSpace }
++export const materialQueryKey = (context: MaterialContext) => ['course-materials', context.companyId, context.userId, context.projectId, context.space] as const
++export type FileKind = 'pdf' | 'document' | 'presentation' | 'spreadsheet' | 'markdown' | 'text' | 'image' | 'archive' | 'web' | 'unknown'
+ export const fileIcons = {
+-  archive: FileArchive,
+-  design: FileImage,
+-  document: FileText,
+-  pdf: File,
+-  spreadsheet: FileChartColumn,
+-} satisfies Record<FileKind, typeof File>;
+-
++  archive: FileArchive, image: FileImage, document: FileText, pdf: File, spreadsheet: FileChartColumn,
++  presentation: Presentation, markdown: FileText, text: FileText, web: Globe, unknown: File,
++} satisfies Record<FileKind, typeof File>
+ export const fileKindLabels: Record<FileKind, string> = {
+-  archive: "Archive",
+-  design: "Design",
+-  document: "Document",
+-  pdf: "PDF",
+-  spreadsheet: "Spreadsheet",
+-};
+-
+-export interface FileManagerFolder {
+-  id: string;
+-  name: string;
+-  fileCount: number;
+-  size: string;
+-  updatedAt: string;
++  archive: '压缩包', image: '图片', document: 'Word', pdf: 'PDF', spreadsheet: 'Excel / CSV',
++  presentation: 'PPT', markdown: 'Markdown', text: '文本 / JSON', web: '网页', unknown: '其他',
+ }
+-
+-export interface FileManagerFile {
+-  id: string;
+-  name: string;
+-  kind: FileKind;
+-  size: string;
+-  owner: string;
+-  ownerInitials: string;
+-  modifiedAt: string;
+-  shared: boolean;
+-  starred: boolean;
++export const materialMimes: Record<string, string> = {
++  pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
++  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
++  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
++  md: 'text/markdown', txt: 'text/plain', csv: 'text/csv', json: 'application/json',
++  jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', zip: 'application/zip',
+ }
+-
+-export const folders: FileManagerFolder[] = [
+-  {
+-    id: "brand-assets",
+-    name: "Brand assets",
+-    fileCount: 24,
+-    size: "1.8 GB",
+-    updatedAt: "12 min ago",
+-  },
+-  {
+-    id: "product-design",
+-    name: "Product design",
+-    fileCount: 38,
+-    size: "4.6 GB",
+-    updatedAt: "Yesterday",
+-  },
+-  {
+-    id: "legal-documents",
+-    name: "Legal documents",
+-    fileCount: 16,
+-    size: "840 MB",
+-    updatedAt: "Jul 29",
+-  },
+-  {
+-    id: "research",
+-    name: "Research",
+-    fileCount: 11,
+-    size: "620 MB",
+-    updatedAt: "Jul 27",
+-  },
+-  {
+-    id: "marketing",
+-    name: "Marketing",
+-    fileCount: 29,
+-    size: "2.3 GB",
+-    updatedAt: "Jul 25",
+-  },
+-  {
+-    id: "team-resources",
+-    name: "Team resources",
+-    fileCount: 18,
+-    size: "1.2 GB",
+-    updatedAt: "Jul 22",
+-  },
+-];
+-
+-export const files: FileManagerFile[] = [
+-  {
+-    id: "product-roadmap",
+-    name: "Product roadmap 2027.pdf",
+-    kind: "pdf",
+-    size: "8.4 MB",
+-    owner: "Arham Khan",
+-    ownerInitials: "AK",
+-    modifiedAt: "5 minutes ago",
+-    shared: true,
+-    starred: true,
+-  },
+-  {
+-    id: "design-system",
+-    name: "Design system foundations.fig",
+-    kind: "design",
+-    size: "24.1 MB",
+-    owner: "Aiy",
+-    ownerInitials: "AY",
+-    modifiedAt: "2 hours ago",
+-    shared: true,
+-    starred: false,
+-  },
+-  {
+-    id: "campaign-performance",
+-    name: "Campaign performance.xlsx",
+-    kind: "spreadsheet",
+-    size: "2.7 MB",
+-    owner: "Ammar Khan",
+-    ownerInitials: "AM",
+-    modifiedAt: "Yesterday",
+-    shared: false,
+-    starred: false,
+-  },
+-  {
+-    id: "research-notes",
+-    name: "Customer research notes.docx",
+-    kind: "document",
+-    size: "1.2 MB",
+-    owner: "Aiy",
+-    ownerInitials: "AY",
+-    modifiedAt: "Jul 29, 2026",
+-    shared: true,
+-    starred: true,
+-  },
+-  {
+-    id: "release-assets",
+-    name: "Release assets.zip",
+-    kind: "archive",
+-    size: "186 MB",
+-    owner: "Arham Khan",
+-    ownerInitials: "AK",
+-    modifiedAt: "Jul 28, 2026",
+-    shared: false,
+-    starred: false,
+-  },
+-  {
+-    id: "handoff-checklist",
+-    name: "Handoff checklist.pdf",
+-    kind: "pdf",
+-    size: "940 KB",
+-    owner: "Ammar Khan",
+-    ownerInitials: "AM",
+-    modifiedAt: "Jul 26, 2026",
+-    shared: true,
+-    starred: false,
+-  },
+-  {
+-    id: "quarterly-budget",
+-    name: "Quarterly budget forecast.xlsx",
+-    kind: "spreadsheet",
+-    size: "3.8 MB",
+-    owner: "Arham Khan",
+-    ownerInitials: "AK",
+-    modifiedAt: "Jul 24, 2026",
+-    shared: true,
+-    starred: false,
+-  },
+-  {
+-    id: "mobile-app-prototype",
+-    name: "Mobile app prototype.fig",
+-    kind: "design",
+-    size: "18.6 MB",
+-    owner: "Ammar Khan",
+-    ownerInitials: "AM",
+-    modifiedAt: "Jul 23, 2026",
+-    shared: true,
+-    starred: true,
+-  },
+-  {
+-    id: "partnership-agreement",
+-    name: "Partnership agreement.docx",
+-    kind: "document",
+-    size: "620 KB",
+-    owner: "Ammar Khan",
+-    ownerInitials: "AM",
+-    modifiedAt: "Jul 21, 2026",
+-    shared: false,
+-    starred: false,
+-  },
+-  {
+-    id: "product-launch-brief",
+-    name: "Product launch brief.pdf",
+-    kind: "pdf",
+-    size: "4.2 MB",
+-    owner: "Arham Khan",
+-    ownerInitials: "AK",
+-    modifiedAt: "Jul 19, 2026",
+-    shared: true,
+-    starred: false,
+-  },
+-  {
+-    id: "brand-exports",
+-    name: "Brand exports.zip",
+-    kind: "archive",
+-    size: "72 MB",
+-    owner: "Arham Khan",
+-    ownerInitials: "AK",
+-    modifiedAt: "Jul 17, 2026",
+-    shared: false,
+-    starred: false,
+-  },
+-];
++export function fileKind(file: Pick<KnowledgeSource, 'title' | 'mimeType' | 'kind'>): FileKind {
++  if (file.kind === 'url') return 'web'
++  const mime = file.mimeType?.toLowerCase() ?? ''
++  const ext = file.title.split('.').at(-1)?.toLowerCase() ?? ''
++  if (mime === 'application/pdf') return 'pdf'
++  if (mime.startsWith('image/')) return 'image'
++  if (/wordprocessingml|msword/.test(mime)) return 'document'
++  if (/presentation|powerpoint/.test(mime)) return 'presentation'
++  if (/spreadsheet|excel|csv/.test(mime)) return 'spreadsheet'
++  if (/zip|compressed|archive/.test(mime)) return 'archive'
++  if (mime === 'text/markdown') return 'markdown'
++  if (mime === 'text/plain' || mime === 'application/json') return 'text'
++  return ({ pdf: 'pdf', doc: 'document', docx: 'document', ppt: 'presentation', pptx: 'presentation',
++    xls: 'spreadsheet', xlsx: 'spreadsheet', csv: 'spreadsheet', md: 'markdown', txt: 'text', json: 'text',
++    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', webp: 'image', zip: 'archive', rar: 'archive' } as Record<string, FileKind>)[ext] ?? 'unknown'
++}
++export type MaterialFormat = 'all' | FileKind
++export type MaterialSort = 'modified-desc' | 'modified-asc' | 'name-asc' | 'name-desc' | 'size-desc' | 'size-asc'
++export const materialSortLabels: Record<MaterialSort, string> = {
++  'modified-desc': '修改时间：由新到旧', 'modified-asc': '修改时间：由旧到新',
++  'name-asc': '名称：A–Z', 'name-desc': '名称：Z–A', 'size-desc': '大小：由大到小', 'size-asc': '大小：由小到大',
++}
++export function filterAndSortFiles(files: KnowledgeSource[], search: string, format: MaterialFormat, sort: MaterialSort) {
++  const query = search.trim().toLocaleLowerCase()
++  return files.filter(file => (format === 'all' || fileKind(file) === format)
++    && `${file.title} ${file.ownerName ?? ''}`.toLocaleLowerCase().includes(query)).sort((a, b) => {
++    const direction = sort.endsWith('-asc') ? 1 : -1
++    const value = sort.startsWith('name') ? a.title.localeCompare(b.title, 'zh-CN', { numeric: true })
++      : sort.startsWith('size') ? a.sizeBytes - b.sizeBytes
++        : (Date.parse(a.updatedAt) || 0) - (Date.parse(b.updatedAt) || 0)
++    return value * direction || a.id.localeCompare(b.id)
++  })
++}
++export function sizeLabel(bytes: number) {
++  if (!bytes) return '—'
++  if (bytes < 1024) return `${bytes} B`
++  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`
++  return `${(bytes / 1024 ** 2).toFixed(1)} MB`
++}
++export const dateLabel = (date: string) => new Date(date).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
++export function sourceStatusLabel(source: KnowledgeSource) {
++  if (source.status === 'stored' || source.stage === 'stored_only') return '仅保存原文件'
++  return ({ upload_pending: '等待上传完成', queued: '等待解析', processing: '正在解析', ready: '可查看', failed: source.kind === 'file' && source.capabilities?.canDownload ? '原文件已保存 · 内容解析失败' : '内容解析失败' })[source.status] ?? '状态暂不可用'
++}

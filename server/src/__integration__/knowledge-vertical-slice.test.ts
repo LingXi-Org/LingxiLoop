@@ -1,5 +1,11 @@
 import assert from 'node:assert/strict'
 import { after, before, beforeEach, test } from 'node:test'
+import { createServer, type Server } from 'node:http'
+import express from 'express'
+import type { AuthedRequest } from '../auth.js'
+import { HttpError } from '../http/errors.js'
+import { filesRouter } from '../modules/platform/files-router.js'
+import { storage } from '../storage.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { ForbiddenError } from '../modules/access/public.js'
@@ -8,8 +14,10 @@ import { MAX_SOURCE_BYTES } from '../modules/knowledge/policy.js'
 import {
   claimIngestionJob,
   completeIngestion,
+  findVisibleSourceExternalId,
   markExternalSource,
   recordIngestionFailure,
+  softDeleteTenantSource,
 } from '../modules/knowledge/ingestion-repository.js'
 import {
   findKnowledgeRetrievalProject,
@@ -34,14 +42,20 @@ const objectMimes = new Map<string, string>()
 const sourceTextCalls: string[] = []
 const retryCalls: string[] = []
 const deleteCalls: string[] = []
+let notebookEnabled = true
+let downloadServer: Server
+let downloadBaseUrl: string
 const application = new KnowledgeApplication(pool, {
   transaction: (work) => withTransaction(pool, work),
-  notebookEnabled: () => true,
+  notebookEnabled: () => notebookEnabled,
   ensureNotebook: async () => undefined,
   syncNotebookMetadata: async () => undefined,
   sourceText: async (sourceId) => { sourceTextCalls.push(sourceId); return 'extracted' },
   retrySource: async (sourceId) => { retryCalls.push(sourceId) },
-  deleteSource: async (sourceId) => { deleteCalls.push(sourceId) },
+  deleteSource: async (sourceId, companyId, projectId, userId) => {
+    deleteCalls.push(sourceId)
+    await softDeleteTenantSource(pool, { sourceId, companyId, projectId, userId })
+  },
   putObject: async (key, body, mime) => {
     objects.set(key, body); objectSizes.set(key, body.byteLength); objectMimes.set(key, mime)
   },
@@ -53,11 +67,30 @@ const application = new KnowledgeApplication(pool, {
     sizeBytes: objectSizes.get(key) ?? objects.get(key)?.byteLength ?? 0,
     contentType: objectMimes.get(key) ?? null,
   }),
+  readObjectBounded: async (key, maxBytes) => {
+    const body = objects.get(key)
+    if (!body || body.byteLength > maxBytes) throw new Error('object missing or oversized')
+    return Buffer.from(body)
+  },
   publicUrl: async (key) => `https://r2.invalid/${key}`,
   maxSourceBytes: MAX_SOURCE_BYTES,
 })
 
-before(async () => { await ensureSchemaOnce() })
+before(async () => {
+  await ensureSchemaOnce()
+  const app = express()
+  // Inject only the test identity; every file request still runs the real permission resolver.
+  app.use((req, _res, next) => { (req as AuthedRequest).authUserId = String(req.headers['x-test-user-id'] ?? ''); next() })
+  app.use(filesRouter)
+  app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    res.status(error instanceof HttpError ? error.status : 500).json({ error: String(error) })
+  })
+  downloadServer = createServer(app)
+  await new Promise<void>(resolve => downloadServer.listen(0, '127.0.0.1', resolve))
+  const address = downloadServer.address()
+  assert.ok(address && typeof address !== 'string')
+  downloadBaseUrl = `http://127.0.0.1:${address.port}`
+})
 beforeEach(async () => {
   await resetAllTables()
   objects.clear()
@@ -66,6 +99,7 @@ beforeEach(async () => {
   sourceTextCalls.length = 0
   retryCalls.length = 0
   deleteCalls.length = 0
+  notebookEnabled = true
   await pool.query(
     `INSERT INTO companies (id,name,slug,type,plan_id)
      VALUES ($1,'Knowledge Slice','knowledge-slice','EDUCATION','plan-education'),
@@ -96,7 +130,10 @@ beforeEach(async () => {
       SAME_COMPANY_PROJECT_ID],
   )
 })
-after(async () => { await teardownAll() })
+after(async () => {
+  if (downloadServer) await new Promise<void>((resolve, reject) => downloadServer.close(error => error ? reject(error) : resolve()))
+  await teardownAll()
+})
 
 test('[integration] knowledge source creation keeps explicit tenant and project ownership', async () => {
   const projects = await application.projects(COMPANY_ID, USER_ID) as Array<{
@@ -234,6 +271,11 @@ test('[integration] Source authorization is PROJECT plus only the current user P
   assert.deepEqual(await idsVisibleTo(STUDENT_C_ID), [thirdStudentPrivate.id, teacherProject.id].sort())
   assert.deepEqual(await idsVisibleTo(TEACHER_ID), [teacherProject.id])
   assert.deepEqual(await idsVisibleTo(USER_ID), [teacherProject.id])
+  for (const userId of [TEACHER_ID, STUDENT_B_ID]) {
+    assert.equal(await findVisibleSourceExternalId(pool, {
+      companyId: COMPANY_ID, projectId: PROJECT_ID, userId, sourceId: studentPrivate.id,
+    }), null)
+  }
 
   const retrievalConversationId = 'knowledge-retrieval-authorization'
   await pool.query(
@@ -305,6 +347,118 @@ test('[integration] Source authorization is PROJECT plus only the current user P
     retryCalls: [studentPrivate.id],
     deleteCalls: [studentPrivate.id],
   })
+})
+
+test('[integration] course materials store each original format, refresh, and enforce actual course capabilities', async () => {
+  const scope = (userId: string) => ({ userId, companyId: COMPANY_ID, projectId: PROJECT_ID })
+  const fixtures: Array<[string, string, Buffer]> = [
+    ['lesson.pdf', 'application/pdf', Buffer.from('%PDF-1.7\noriginal pdf')],
+    ['lesson.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', Buffer.from('PK\x03\x04[Content_Types].xml word/document.xml')],
+    ['lesson.pptx', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', Buffer.from('PK\x03\x04[Content_Types].xml ppt/presentation.xml')],
+    ['lesson.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', Buffer.from('PK\x03\x04[Content_Types].xml xl/workbook.xml')],
+    ['notes.md', 'text/markdown', Buffer.from('# original markdown')],
+    ['image.jpg', 'image/jpeg', Buffer.from([255, 216, 255, 224, 12, 34, 56])],
+    ['image.png', 'image/png', Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 12, 34, 56])],
+    ['archive.zip', 'application/zip', Buffer.from([80, 75, 5, 6, 0, 0, 0, 0])],
+  ]
+  const { KNOWLEDGE_ATTACHMENT_MIMES } = await import('../modules/knowledge/policy.js')
+  const ids: string[] = []
+  for (const [name, mime, body] of fixtures) {
+    const input = { idempotencyKey: `original-roundtrip-${name}`, name, mime, size: body.length } as Parameters<typeof application.presignSource>[2]
+    const pending = await application.presignSource(scope(STUDENT_A_ID), null, input)
+    assert.equal((await application.presignSource(scope(STUDENT_A_ID), null, input)).id, pending.id)
+    await assert.rejects(application.presignSource(scope(STUDENT_A_ID), null, { ...input, size: input.size + 1 }), /already used/)
+    const key = (await pool.query<{ storage_key: string }>('SELECT storage_key FROM knowledge_sources WHERE id=$1', [pending.id])).rows[0]!.storage_key
+    objects.set(key, body)
+    await storage.put(key, body, mime)
+    const complete = await application.completeUpload(scope(STUDENT_A_ID), pending.id)
+    const expectedStatus = KNOWLEDGE_ATTACHMENT_MIMES.has(mime) ? 'queued' : 'stored'
+    assert.equal(complete.status, expectedStatus)
+    assert.equal((await application.completeUpload(scope(STUDENT_A_ID), pending.id)).status, expectedStatus)
+    await assert.rejects(application.presignSource(scope(STUDENT_A_ID), null, input), /already used/)
+    const detail = await application.source(scope(STUDENT_A_ID), pending.id)
+    assert.equal(detail.originalFileUrl, `https://r2.invalid/${key}`)
+    assert.deepEqual(objects.get(key), body)
+    const download = await fetch(`${downloadBaseUrl}/files?key=${encodeURIComponent(key)}`, { headers: { 'x-test-user-id': STUDENT_A_ID } })
+    assert.equal(download.status, 200)
+    assert.deepEqual(Buffer.from(await download.arrayBuffer()), body)
+    assert.equal(detail.sizeBytes, body.length)
+    assert.equal(detail.mimeType, mime)
+    assert.deepEqual(detail.capabilities, { canDownload: true, canRename: true, canDelete: true })
+    const jobs = await pool.query('SELECT 1 FROM knowledge_source_jobs WHERE source_id=$1', [pending.id])
+    assert.equal(jobs.rowCount, expectedStatus === 'queued' ? 1 : 0)
+    for (const userId of [STUDENT_B_ID, TEACHER_ID]) {
+      const denied = await fetch(`${downloadBaseUrl}/files?key=${encodeURIComponent(key)}`, { headers: { 'x-test-user-id': userId } })
+      assert.equal(denied.status, 404)
+      await assert.rejects(application.source(scope(userId), pending.id))
+      await assert.rejects(application.editSource(scope(userId), pending.id, { title: 'stolen' }))
+      await assert.rejects(application.delete(scope(userId), pending.id))
+      await assert.rejects(application.completeUpload(scope(userId), pending.id))
+    }
+    ids.push(pending.id)
+  }
+  const refreshed = await application.materials(scope(STUDENT_A_ID), 'private')
+  assert.equal(refreshed.capabilities.canUpload, true)
+  assert.deepEqual(refreshed.sources.map(source => source.id).sort(), ids.sort())
+  assert.deepEqual((await application.materials(scope(STUDENT_B_ID), 'private')).sources, [])
+  assert.deepEqual((await application.materials(scope(TEACHER_ID), 'private')).sources, [])
+  assert.equal((await application.materials(scope(TEACHER_ID), 'private')).capabilities.canUpload, false)
+  assert.equal((await application.materials(scope(STUDENT_A_ID), 'public')).capabilities.canUpload, false)
+  assert.equal((await application.materials(scope(TEACHER_ID), 'public')).capabilities.canUpload, true)
+})
+
+test('[integration] global teacher labels cannot substitute for the actual course role', async () => {
+  await pool.query(`UPDATE company_memberships SET role='TEACHER' WHERE company_id=$1 AND user_id=$2`, [COMPANY_ID, STUDENT_A_ID])
+  await pool.query(`UPDATE company_memberships SET role='STUDENT' WHERE company_id=$1 AND user_id=$2`, [COMPANY_ID, TEACHER_ID])
+  for (const [userId, visibility] of [[STUDENT_A_ID, 'PRIVATE'], [TEACHER_ID, 'PROJECT']] as const) {
+    const scope = { userId, companyId: COMPANY_ID, projectId: PROJECT_ID }
+    const created = await application.presignSource(scope, null, { idempotencyKey: 'actual-course-role', name: 'notes.txt', mime: 'text/plain', size: 5 })
+    const row = (await pool.query<{ visibility_scope: string; owner_user_id: string }>('SELECT visibility_scope,owner_user_id FROM knowledge_sources WHERE id=$1', [created.id])).rows[0]!
+    assert.equal(row.visibility_scope, visibility)
+    assert.equal(row.owner_user_id, userId)
+    assert.equal((await application.materials(scope, 'public')).capabilities.canUpload, visibility === 'PROJECT')
+    if (visibility === 'PROJECT') {
+      const key = (await pool.query<{ storage_key: string }>('SELECT storage_key FROM knowledge_sources WHERE id=$1', [created.id])).rows[0]!.storage_key
+      objects.set(key, Buffer.from('hello'))
+      await storage.put(key, Buffer.from('hello'), 'text/plain')
+      await application.completeUpload(scope, created.id)
+      const studentView = await application.materials({ ...scope, userId: STUDENT_B_ID }, 'public')
+      assert.deepEqual(studentView.sources[0]?.capabilities, { canDownload: true, canRename: false, canDelete: false })
+      for (const userId of [STUDENT_A_ID, STUDENT_B_ID]) {
+        const response = await fetch(`${downloadBaseUrl}/files?key=${encodeURIComponent(key)}`, { headers: { 'x-test-user-id': userId } })
+        assert.equal(response.status, 200)
+        assert.equal(await response.text(), 'hello')
+      }
+      await assert.rejects(application.editSource({ ...scope, userId: STUDENT_B_ID }, created.id, { title: 'forbidden' }))
+      await assert.rejects(application.source({ ...scope, projectId: SAME_COMPANY_PROJECT_ID }, created.id))
+      await assert.rejects(application.source({ ...scope, companyId: OTHER_COMPANY_ID, projectId: OTHER_PROJECT_ID }, created.id))
+    }
+  }
+})
+
+test('[integration] originals remain usable with indexing disabled and malformed uploads stay pending', async () => {
+  notebookEnabled = false
+  const scope = { userId: STUDENT_A_ID, companyId: COMPANY_ID, projectId: PROJECT_ID }
+  const pending = await application.presignSource(scope, null, { idempotencyKey: 'offline-original', name: 'notes.txt', mime: 'text/plain', size: 5 })
+  const key = (await pool.query<{ storage_key: string }>('SELECT storage_key FROM knowledge_sources WHERE id=$1', [pending.id])).rows[0]!.storage_key
+  objects.set(key, Buffer.from('hello'))
+  await storage.put(key, Buffer.from('hello'), 'text/plain')
+  assert.equal((await application.completeUpload(scope, pending.id)).status, 'stored')
+  await application.editSource(scope, pending.id, { title: 'renamed.txt' })
+  assert.equal((await application.source(scope, pending.id)).title, 'renamed.txt')
+  assert.equal((await application.materials(scope, 'private')).sources[0]?.stage, 'stored_only')
+  await application.delete(scope, pending.id)
+  assert.deepEqual(deleteCalls, [pending.id])
+  assert.deepEqual((await application.materials(scope, 'private')).sources, [])
+  assert.equal((await fetch(`${downloadBaseUrl}/files?key=${encodeURIComponent(key)}`, { headers: { 'x-test-user-id': STUDENT_A_ID } })).status, 404)
+  const malformed = await application.presignSource(scope, null, { idempotencyKey: 'malformed-original', name: 'fake.png', mime: 'image/png', size: 5 })
+  const malformedKey = (await pool.query<{ storage_key: string }>('SELECT storage_key FROM knowledge_sources WHERE id=$1', [malformed.id])).rows[0]!.storage_key
+  objects.set(malformedKey, Buffer.from('hello'))
+  await assert.rejects(application.completeUpload(scope, malformed.id), /declared format/)
+  assert.equal((await application.source(scope, malformed.id)).status, 'upload_pending')
+  await storage.put(malformedKey, Buffer.from('hello'), 'image/png')
+  assert.equal((await fetch(`${downloadBaseUrl}/files?key=${encodeURIComponent(malformedKey)}`, { headers: { 'x-test-user-id': STUDENT_A_ID } })).status, 404)
+  assert.equal((await pool.query('SELECT 1 FROM knowledge_source_jobs WHERE source_id=$1', [malformed.id])).rowCount, 0)
 })
 
 test('[integration] presigned upload confirmation rejects a mismatched R2 object size', async () => {

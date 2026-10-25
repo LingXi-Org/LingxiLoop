@@ -34,6 +34,20 @@ export function knowledgeSourceVisibilityScope(
   return role === 'TEACHER' ? 'PROJECT' : 'PRIVATE'
 }
 
+export function knowledgeSourceCapabilities(context: ResolvedAccessContext, source: {
+  id: string; kind: string; status: string; visibilityScope: 'PRIVATE' | 'PROJECT'; ownerUserId: string; createdByUserId: string
+}) {
+  const actorUserId = context.actorUserId
+  const allowed = evaluatePolicy({ actorUserId, action: 'knowledge:manage',
+    companyId: context.company.id, projectId: context.project?.id,
+    resource: { type: 'knowledge_source', id: source.id },
+  }, context, { companyId: context.company.id, projectId: context.project?.id ?? null,
+    createdBy: source.createdByUserId, visibilityScope: source.visibilityScope, ownerUserId: source.ownerUserId,
+    conversationMembers: null, leaderId: null, status: null,
+  }) === 'ALLOWED'
+  return { canDownload: source.kind === 'file' && source.status !== 'upload_pending', canRename: allowed, canDelete: allowed }
+}
+
 const ALL_COMPANY_ROLES = ['TEACHER', 'STUDENT'] as const satisfies readonly CompanyRole[]
 const COMPANY_MANAGERS = ['TEACHER'] as const satisfies readonly CompanyRole[]
 const ALL_PROJECT_ROLES = ['TEACHER', 'STUDENT'] as const satisfies readonly ProjectRole[]

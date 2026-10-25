@@ -1,5 +1,6 @@
 import {
   ChartHistogramIcon,
+  FolderLibraryIcon,
   MessageMultiple01Icon,
   Settings02Icon,
 } from '@hugeicons/core-free-icons'
@@ -10,6 +11,7 @@ export type LearningDashboardSection =
   | 'overview'
   | 'members'
   | 'forum'
+  | 'materials'
   | 'settings'
   | 'status'
 
@@ -23,6 +25,7 @@ export interface LearningDashboardMenuItem {
 const LEARNER_MENU: LearningDashboardMenuItem[] = [
   { section: 'overview', label: '学习概览', icon: ChartHistogramIcon },
   { section: 'forum', label: '论坛', icon: MessageMultiple01Icon },
+  { section: 'materials', label: '课程资料', icon: FolderLibraryIcon },
 ]
 
 const MANAGEMENT_MENU: LearningDashboardMenuItem[] = [
@@ -32,7 +35,7 @@ const MANAGEMENT_MENU: LearningDashboardMenuItem[] = [
 type NavigationContext = Pick<LearningSpace, 'perspective' | 'canManage' | 'courseId'>
 
 export function getLearningDashboardMenu(input: NavigationContext): LearningDashboardMenuItem[] {
-  const menu = LEARNER_MENU.filter(item => item.section !== 'forum' || input.courseId)
+  const menu = LEARNER_MENU.filter(item => !['forum', 'materials'].includes(item.section) || input.courseId)
   return input.perspective === 'teacher' && input.canManage && input.courseId
     ? [...menu, ...MANAGEMENT_MENU]
     : menu
@@ -53,7 +56,7 @@ export function isLearningDashboardSectionAvailable(
 }
 
 const SECTION_VIEWS = {
-  overview: 'learning', forum: 'forum', settings: 'courses',
+  overview: 'learning', forum: 'forum', materials: 'course-materials', settings: 'courses',
   members: 'course-members', status: 'course-status',
 } as const satisfies Partial<Record<LearningDashboardSection, ViewKey['view']>>
 

@@ -26,6 +26,7 @@ export const LEARNING_SECTION_COPY: Record<
   overview: { title: '学习概览' },
   members: { title: '成员与邀请' },
   forum: { title: '论坛' },
+  materials: { title: '课程资料' },
   settings: { title: '课程设置' },
   status: { title: '课程状态' },
 }

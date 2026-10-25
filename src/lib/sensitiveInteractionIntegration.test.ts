@@ -13,7 +13,7 @@ test('sensitive actions retain confirmation prompts', () => {
     '../features/documents/components/DocumentEditor.tsx',
     '../features/companies/components/InvitePeopleModal.tsx',
     '../components/WorkspaceChrome.tsx',
-    '../features/knowledge/components/ProjectSourceLibrary.tsx',
+    '../features/course-materials/CourseMaterialsPage.tsx',
     '../features/conversations/components/ConversationsPane.tsx',
   ]) assert.match(read(path), /confirmSensitiveAction|promptSensitiveAction/, `${path} bypasses Alert Dialog`)
 })
