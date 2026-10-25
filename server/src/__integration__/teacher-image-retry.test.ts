@@ -28,6 +28,7 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR
 const transcription = 'SYNTHETIC-VISION-465: IP 192.0.2.17/24; fill in the network address and broadcast address.'
 const originalAt = '2026-10-24T09:30:00.000Z', originalTimestamp = Date.parse(originalAt) / 1000
 const principalId = 'test-owner', visionModel = 'vision-fixture-465'
+const originalVisionModel = env.OPENAI_VISION_MODEL
 let companyId: string
 let im: Awaited<ReturnType<typeof installRecordingWukong>>
 let worker: ReturnType<typeof createWorker>
@@ -38,6 +39,7 @@ const visionInputs: { exactBytes: boolean; thinkingDisabled: boolean; model: str
 const observations: { layout: string; attempt: number; originalTask: boolean; imageReference: boolean; imageContent: boolean; originalTime: boolean; courseContext: boolean }[] = []
 
 before(async () => {
+  env.OPENAI_VISION_MODEL = visionModel
   await ensureSchemaOnce(); await resetAllTables(); im = await installRecordingWukong()
   const seeded = await seedCompanyWithAgent(); companyId = seeded.companyId
   await seedUserMembership(principalId, companyId)
@@ -70,6 +72,7 @@ after(async () => {
     syntheticProtocolFixture: true, imageBytes: png.length, visionInputs, actualWorkerModelCalls: modelInputs.length, observations,
     limitations: ['No original production image or run records', 'No OCR quality claim', 'No draft/publish tool effect executed'] }, null, 2) + '\n')
   __setLlmClientOverrideForTesting(null)
+  env.OPENAI_VISION_MODEL = originalVisionModel
   await worker?.stop(); await teardownAll(); await im?.close()
 })
 
