@@ -11,7 +11,7 @@ import { createNativeMessage } from '@/lib/nativeMessage'
 import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
 import type { LingxiMessageMetadata } from '../runtime/model'
-import { harnessFailure } from '../runtime/harness'
+import { terminalFailurePresentation } from '../runtime/terminal-presentation'
 import { chatTransport } from '../runtime/transport'
 import { copyMessageText, useMessageCopyText } from './MessageActions'
 
@@ -30,7 +30,7 @@ export function AssistantMessageActions() {
   })
   const [copied, setCopied] = useState(false)
   const copyTimer = useRef<number | null>(null)
-  const [pending, setPending] = useState<'rating' | 'regenerate' | null>(null)
+  const [pending, setPending] = useState<'rating' | 'regenerate' | 'refresh' | null>(null)
   const inFlight = useRef(false)
   useEffect(() => () => { if (copyTimer.current !== null) window.clearTimeout(copyTimer.current) }, [])
   async function copy() {
@@ -45,6 +45,7 @@ export function AssistantMessageActions() {
   const retryDisabled = readOnly || !replyTo || pending !== null || threadRunning
   const regenerating = pending === 'regenerate' || message.status?.type === 'running'
   const view = metadata.harness
+  const failure = terminalFailurePresentation(message)
   const outcome = view?.goalOutcome
   const incompleteOutcome = message.status?.type === 'incomplete' && message.status.reason === 'other'
     && view?.runId === metadata.runId && outcome?.requestVersion === view?.requestVersion
@@ -85,10 +86,26 @@ export function AssistantMessageActions() {
     } catch (error) { toast.error(userFacingError(error, '重新生成请求发送失败，请重试。')) }
     finally { inFlight.current = false; setPending(null) }
   }
+  async function refresh() {
+    if (inFlight.current || !metadata.runId || !view) return
+    const current = aui.message.getState().metadata.custom as LingxiMessageMetadata
+    if (current.runId !== metadata.runId || current.harness?.requestVersion !== view.requestVersion) return
+    inFlight.current = true
+    setPending('refresh')
+    try {
+      await chatTransport.refreshRun({ conversationId: current.conversationId, agentId: current.senderId, runId: current.runId,
+        ...(current.threadRootId ? { threadId: current.threadRootId } : {}) })
+    } catch (error) { toast.error(userFacingError(error, '进度刷新失败，请稍后重试。')) }
+    finally { inFlight.current = false; setPending(null) }
+  }
   return <>
     <MessagePrimitive.Error>
-      <ErrorState title="回复生成失败" detail={metadata.terminalNotice?.text ?? (metadata.harnessError ? harnessFailure(metadata.harnessError) : '消息生成失败，请重试。')}
-        retrying={pending === 'regenerate'} onRetry={() => void regenerate()} disabled={retryDisabled} className="mt-2" />
+      {failure && <ErrorState title={failure.title} detail={failure.detail}
+        retrying={pending === 'regenerate' || pending === 'refresh'}
+        retryLabel={failure.recovery === 'refresh' ? '刷新进度' : '重新生成回复'}
+        retryingLabel={pending === 'refresh' ? '正在刷新进度' : '正在重新生成'}
+        onRetry={failure.recovery === 'delivery' ? undefined : failure.recovery === 'refresh' ? () => void refresh() : () => void regenerate()}
+        disabled={failure.recovery === 'refresh' ? pending !== null || !metadata.runId : retryDisabled} className="mt-2" />}
     </MessagePrimitive.Error>
     {incompleteOutcome && <div data-run-outcome={incompleteOutcome} role="status" className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
       <span>{pending === 'regenerate' ? '正在重试' : '答复尚未完成'}</span>

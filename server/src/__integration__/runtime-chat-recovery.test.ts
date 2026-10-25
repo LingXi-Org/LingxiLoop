@@ -11,6 +11,7 @@ import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { createProductDelivery } from '../agent-runtime/delivery.js'
 import { readRunProjection } from '../agent-runtime/assistant-transport.js'
+import { nativeText } from '../im/message-types.js'
 import { ensureSchemaOnce, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 import { installRecordingWukong } from './_recording-wukong.js'
 
@@ -105,9 +106,13 @@ for (const scenario of [
       await until(async () => (await api.readTerminal(run))?.delivery === 'delivered')
       const terminal = (await api.readTerminal(run))!
       const projection = (await readRunProjection(api, run, true)).snapshot.message
+      const notices = messages().filter(message => message.payload.role === 'system')
+      assert.equal(notices.length, 1)
       assert.deepEqual(projection.metadata.custom.terminalFeedback, { id: terminal.feedback.id, requestVersion: terminal.feedback.requestVersion,
-        reason: terminal.feedback.reason, status: 'failed', delivery: 'delivered' })
-      assert.equal(messages().filter(message => message.payload.role === 'system').length, 1)
+        reason: terminal.feedback.reason, status: 'failed', delivery: 'delivered', scopeVersion: 1, scope: 'response',
+        text: nativeText(notices[0].payload) })
+      assert.equal(notices[0].payload.metadata.custom.terminalScopeVersion, 1)
+      assert.equal(notices[0].payload.metadata.custom.terminalScope, 'response')
       await createProductDelivery(lingxiOSControl).deliverTerminal!(claimed.get(run.runId)!, terminal.feedback,
         { signal: AbortSignal.timeout(5000), deadlineAt: new Date(Date.now() + 5000).toISOString() })
       assert.equal(messages().filter(message => message.payload.role === 'system').length, 1, 'terminal replay must not send again')

@@ -244,8 +244,8 @@ test('failed streamed replies retain prose and show the official error banner wi
   const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
   assert.match($.text(), /正文1/)
   const error = $('[data-slot="error-state"][role="alert"]')
-  assert.match(error.text(), /回复生成失败.*超时/)
-  assert.equal(error.find('button').text(), '重试')
+  assert.match(error.text(), /回复未完成.*超时/)
+  assert.equal(error.find('button').text(), '重新生成回复')
   assert.match(error.attr('class') ?? '', /rounded-2xl.*bg-red-500/)
 })
 
@@ -269,9 +269,49 @@ test('terminal feedback shares the run error or cancellation display and retains
     assert.equal(getLingxiMessageMetadata(projected[0]).sourceRef, 'original-question')
     if (lifecycle === 'failed') {
       assert.equal($('[data-slot="error-state"]').length, 1)
-      assert.equal($('[data-slot="error-state"] button').text(), '重试')
+      assert.equal($('[data-slot="error-state"] button').text(), '刷新进度')
     } else assert.equal($('[data-slot="error-state"]').length, 0)
   }
+})
+
+test('structured terminal scopes keep the answer and agree on process, failure and recovery labels', () => {
+  for (const [scope, title, label] of [
+    ['follow_up', '回答已生成，后续协作未完成', '后续协作未完成'],
+    ['finalization', '答复已发送，收尾未完成', '收尾未完成'],
+    ['delivery', '答复投递未完成', '投递未完成'],
+    ['unknown', '本轮执行未完成', '执行未完成'],
+  ] as const) {
+    const reply = { ...message('1'), id: 'run-run', status: { type: 'incomplete', reason: 'error' },
+      content: [{ type: 'text', text: '已展示的任务清单' }, { type: 'text', text: '已查询任务',
+        providerMetadata: { lingxiloop: { activity: { version: 1, id: 'lookup', kind: 'commentary', label: '查询任务' } } } }],
+      metadata: { custom: { ...getLingxiMessageMetadata(message('1')), runId: 'run', sourceRef: 'question',
+        harness: { ...createRunView('run'), lifecycle: 'failed', requestVersion: 1, fence: 1, artifacts: [] },
+        terminalFeedback: { id: 'feedback', requestVersion: 1, status: 'failed', delivery: 'delivered', scopeVersion: 1, scope,
+          text: '对应步骤未完成，已完成的操作会保留。' },
+      } } } as ThreadMessage
+    const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+    assert.match($.text(), /已展示的任务清单/)
+    assert.equal($('[data-slot="error-state"] p').first().text(), title)
+    assert.match($('[data-slot="run-activity"]').text(), new RegExp(label))
+    assert.doesNotMatch($('[data-slot="run-activity"]').text(), /处理失败/)
+    const retry = $('[data-slot="error-state"] button')
+    assert.equal(retry.text(), scope === 'delivery' ? '' : '刷新进度')
+    assert.doesNotMatch($('[data-slot="error-state"]').text(), /回复生成失败/)
+    assert.equal($('[aria-label="重新生成回复"]').length, 1, 'whole-answer regeneration stays a separate action')
+  }
+})
+
+test('cancelled follow-up remains visible when the main run itself succeeded', () => {
+  const detail = '已有答复已发送，后续协作已取消。'
+  const reply = { ...message('1'), id: 'run-run', status: { type: 'incomplete', reason: 'cancelled' }, metadata: { custom: {
+    ...getLingxiMessageMetadata(message('1')), runId: 'run',
+    harness: { ...createRunView('run'), lifecycle: 'succeeded', requestVersion: 1, artifacts: [] },
+    terminalFeedback: { id: 'feedback', requestVersion: 1, status: 'cancelled', scopeVersion: 1, scope: 'follow_up', text: detail },
+  } } } as ThreadMessage
+  const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
+  assert.match($.text(), /正文1/)
+  assert.match($.text(), new RegExp(detail))
+  assert.equal($('[data-slot="error-state"]').length, 0)
 })
 
 // Failure cases: incoming humans mistaken for agents; long replies center avatars;

@@ -14,7 +14,8 @@ import { conversationHandoffMentions } from './conversation-handoff.js'
 import type { MentionTarget } from '../mentions.js'
 import { participantDisplayName } from '../../../src/lib/participantDisplayName.js'
 import { assertCanvasRequestCurrent } from '../modules/canvas/index.js'
-import { terminalFailure, terminalFeedbackText } from './terminal-feedback.js'
+import { terminalFailure, terminalFeedbackText, terminalFeedbackScope, terminalResult } from './terminal-feedback.js'
+import { readDeliveredReference } from './delivery-reference.js'
 
 export { approvalView } from './approval-public-view.js'
 
@@ -43,6 +44,10 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
         if (!payload) {
           const state = await api.readRunState(identity, scope)
           if (!state || state.run.requestVersion !== feedback.requestVersion) return
+          const committed = terminalResult(feedback, state)
+          const acceptedReference = committed && state.delivery !== 'delivered'
+            ? await readDeliveredReference(identity, committed, database) : undefined
+          const terminalScope = terminalFeedbackScope(feedback, state, acceptedReference)
           const failure = ['execution_failed', 'model_unavailable'].includes(feedback.reason)
             ? await terminalFailure(api, identity, state, scope) : null
           const recipients = new Set(work.conversation?.audience.participantIds ?? [])
@@ -51,9 +56,10 @@ export function createProductDelivery(control: () => ReturnType<typeof createLin
             WHERE company_id=$1 AND id=ANY($2::text[]) AND kind='agent' AND departed_at IS NULL ORDER BY id LIMIT 8`,
           [work.tenantId,visible])).rows.map(row => participantDisplayName(row).slice(0,80)) : []
           payload = createNativeMessage({ id: clientNonce,role: 'system',createdAt: feedback.createdAt,
-            content: [{ type: 'text',text: terminalFeedbackText(feedback, state, failure, names) }],
+            content: [{ type: 'text',text: terminalFeedbackText(feedback, state, failure, names, terminalScope) }],
             custom: { runId: work.id,requestVersion: feedback.requestVersion,controlPrincipalId: work.principalId,
               terminalFeedbackId: feedback.id,terminalStatus: feedback.status,terminalReason: feedback.reason,suppressAgentWake: true,
+              terminalScopeVersion: 1,terminalScope,
               ...(work.threadId ? { replyToClientMsgNo: work.threadId } : {}) } })
         }
         context.signal.throwIfAborted()

@@ -18,7 +18,8 @@ function message(id: string, role: 'user' | 'assistant' | 'system', custom: Reco
 function run(id = 'one', version = 1, lifecycle = 'failed'): ThreadMessage {
   const value = message(`run-${id}`, 'assistant', { runId: id, sourceRef: `user-${id}`, refs: { agentId: 'agent' },
     harness: { ...createRunView(id), lifecycle, requestVersion: version, fence: version, artifacts: [] } }, 'Preserved answer.')
-  return { ...value, status: lifecycle === 'leased' ? { type: 'running' } : { type: 'incomplete', reason: lifecycle === 'cancelled' ? 'cancelled' : 'error' } } as ThreadMessage
+  return { ...value, metadata: { ...value.metadata, custom: { ...value.metadata.custom, sourceMessageId: undefined } },
+    status: lifecycle === 'leased' ? { type: 'running' } : { type: 'incomplete', reason: lifecycle === 'cancelled' ? 'cancelled' : 'error' } } as ThreadMessage
 }
 function terminal(id = 'one', version = 1, status = 'failed') {
   return message(`terminal-feedback-${id}`, 'system', { runId: id, requestVersion: version,
@@ -101,4 +102,17 @@ test('explicit regeneration removes an old branch terminal notice without mergin
   assert.equal(projected[0].id, 'run-two')
   assert.equal(metadata(projected[0]).terminalNotice?.id, 'feedback-two')
   assert.equal(metadata(projected[0]).replyBranches?.ids.length, 2)
+})
+
+test('terminal scope survives exact receipt folding and a newer request drops the derived notice', () => {
+  const original = run()
+  const feedback = terminal()
+  const scoped = { ...feedback, metadata: { ...feedback.metadata, custom: { ...feedback.metadata.custom,
+    terminalScopeVersion: 1, terminalScope: 'follow_up' } } } as ThreadMessage
+  const [projected] = project([original, scoped])
+  assert.equal(metadata(projected).terminalNotice?.scope, 'follow_up')
+  assert.equal(metadata(projected).terminalNotice?.requestVersion, 1)
+  const newer = { ...projected, status: { type: 'complete', reason: 'stop' }, metadata: { ...projected.metadata,
+    custom: { ...projected.metadata.custom, harness: { ...metadata(projected).harness!, requestVersion: 2, fence: 2, lifecycle: 'succeeded' } } } } as ThreadMessage
+  assert.equal(metadata(project([newer, scoped])[0]).terminalNotice, undefined)
 })

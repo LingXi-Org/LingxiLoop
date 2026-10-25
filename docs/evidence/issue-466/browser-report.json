@@ -1,0 +1,55 @@
+{
+  "format": "Summary of official e2e report",
+  "fullReport": ".e2e/issue-466/report.json",
+  "fullReportSha256": "626d117d4a931989260f39f0ac5c5f7790da2c45c79cad40766035c5c13cf5bd",
+  "run": {
+    "id": "01a17280-b376-7cfd-8251-dd136d245f00",
+    "runner": {
+      "name": "e2e",
+      "version": "0.17.0"
+    },
+    "status": "passed",
+    "exitCode": 0,
+    "startedAt": "2026-10-25T10:00:00.456Z",
+    "finishedAt": "2026-10-25T10:00:16.921Z",
+    "environment": {
+      "ci": false,
+      "trustNoticeShown": false,
+      "os": "linux 6.18.55",
+      "arch": "x64",
+      "runtime": "node v24.19.0"
+    },
+    "vcs": {
+      "commit": "06e4a364f1355ae2c6bc027f84aa8674b88c6e4e",
+      "branch": "codex/issue-466-terminal-scope",
+      "dirty": true
+    },
+    "summary": {
+      "discovered": 176,
+      "selected": 2,
+      "executed": 2,
+      "passed": 2,
+      "failed": 0,
+      "interrupted": 0,
+      "flaky": 0,
+      "skipped": 0
+    },
+    "errors": []
+  },
+  "results": [
+    {
+      "titlePath": [
+        "terminal identity survives replay and reload without hiding a later identical question"
+      ],
+      "file": "e2e/web/terminal-projection.e2e.ts",
+      "status": "passed"
+    },
+    {
+      "titlePath": [
+        "a delivered answer with failed follow-up refreshes its original progress without resending the answer"
+      ],
+      "file": "e2e/web/terminal-projection.e2e.ts",
+      "status": "passed"
+    }
+  ]
+}

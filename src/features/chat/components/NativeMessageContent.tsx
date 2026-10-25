@@ -8,6 +8,7 @@ import { Reasoning } from '@/components/assistant-ui/elements/reasoning'
 import { AgentPlan, type AgentPlanStep } from '@/components/assistant-ui/elements/agent-plan'
 import { Button } from '@/components/ui/button'
 import { activityAnnotation, isAnswerRevision, readActivityTasks } from '@/lib/runActivity'
+import { terminalFailurePresentation } from '../runtime/terminal-presentation'
 import { useRunActivityHistory } from '../runtime/useRunActivityHistory'
 import { HistoryActivityScope } from '../runtime/HistoryActivityScope'
 import { MemoryTool } from './MemoryTool'
@@ -175,7 +176,9 @@ export function NativeMessageContent({ Text = DefaultText, footer = null, mediaF
     : message.status?.type === 'requires-action' ? 'requires-action'
     : message.status?.type === 'incomplete' ? message.status.reason === 'cancelled' ? 'cancelled' : message.status.reason === 'error' ? 'error' : 'incomplete'
     : 'complete'
-  const statusLabel = { running: '处理中', 'requires-action': '等待处理', complete: '处理过程', cancelled: '已取消', incomplete: '未完成', error: '处理失败' }[status]
+  const statusLabel = status === 'error' || status === 'cancelled'
+    ? terminalFailurePresentation(message)?.statusLabel ?? (status === 'cancelled' ? '已取消' : '执行未完成')
+    : { running: '处理中', 'requires-action': '等待处理', complete: '处理过程', incomplete: '未完成' }[status]
   const attachments = message.role === 'user' ? message.attachments : []
   const inlineImages = message.role === 'user' ? presentation.filter(item => item.region === 'body' && isImagePart(item.part)) : []
   const attachmentImages = attachments.flatMap(attachment => attachment.content.flatMap((part, index) => isImagePart(part) ? [{ attachment, part, index }] : []))
