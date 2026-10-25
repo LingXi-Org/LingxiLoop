@@ -88,7 +88,7 @@ which previously pulled the unrelated Tailwind pipeline into the worker job.
 Admin-control's generated union profile is drift-checked, but its deployment
 commands were not executed. No live integration databases were provisioned;
 only dependency installation and the integration job's visualize entrypoints
-were checked. CI on Node22 and Docker OCI checks remain with the integrator.
+were checked. Node 22 CI subsequently passed all selected jobs, including database-backed integration; see [the combined delivery evidence](../issue-441-442/README.md).
 
 Failed attempts retained: private package401 with one existing credential;
 subsequent clean installs used the other existing authorized credential.
