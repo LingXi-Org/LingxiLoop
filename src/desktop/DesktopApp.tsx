@@ -44,7 +44,6 @@ import { InfoPane } from './InfoPane'
 import { ThreadDrawer } from './ThreadDrawer'
 import { WorkspaceRail } from './WorkspaceRail'
 import { useLearningSpaces } from './useLearningSpaces'
-import { AgentsPage } from '@/features/agents/components/AgentsPage'
 
 const CasesPage = lazy(() => import('@/features/cases/CasesPage').then((module) => ({ default: module.CasesPage })))
 const CanvasView = lazy(() => import('@/features/canvas/components/CanvasView').then((module) => ({ default: module.CanvasView })))
@@ -152,7 +151,7 @@ export function DesktopApp() {
     return () => window.removeEventListener('keydown', onKeyDown, true)
   }, [commandPaletteOpen, isMobile, selectedConversationId, view])
 
-  const dashboardOpen = !['conversations', 'agents'].includes(view)
+  const dashboardOpen = view !== 'conversations'
   const handleSidebarLayoutChanged = (_layout: Record<string, number>, meta: LayoutChangedMeta) => {
     if (!meta.isUserInteraction) return
     const width = document.querySelector<HTMLElement>('[data-panel="conversations"]')?.getBoundingClientRect().width
@@ -243,7 +242,7 @@ export function DesktopApp() {
                 onChooseWorkspace={chooseWorkspace}
               />
             </Suspense>
-          ) : view === 'agents' ? <AgentsPage key={selectedWorkspaceId} onChooseWorkspace={chooseWorkspace} onOpenTeachingWorkspace={openTeachingWorkspace} /> : isMobile ? (
+          ) : isMobile ? (
             <div className="h-full min-h-0 min-w-0" data-mobile-conversation-page={mobileChatOpen ? 'chat' : 'list'}>
               <Activity mode={mobileChatOpen ? 'visible' : 'hidden'}>
                 <ChatPane

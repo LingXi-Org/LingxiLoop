@@ -6,7 +6,7 @@ export interface WebDestination {
   conversationId: string | null
 }
 
-const views: ViewKey['view'][] = ['conversations', 'agents', 'cases', 'forum', 'course-materials', 'learning', 'courses', 'course-members', 'course-status']
+const views: ViewKey['view'][] = ['conversations', 'cases', 'forum', 'course-materials', 'learning', 'courses', 'course-members', 'course-status']
 let navigationEpoch = 0
 
 export const beginWebNavigation = () => ++navigationEpoch

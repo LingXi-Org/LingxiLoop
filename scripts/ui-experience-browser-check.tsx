@@ -13,7 +13,6 @@ import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { WorkspaceSkeleton } from '@/components/WorkspaceSkeleton'
 import { AuthScreen } from '@/components/AuthScreen'
 import { ConversationSkeleton } from '@/features/chat/components/ConversationSkeleton'
-import { AgentsPage, AgentsSkeleton } from '@/features/agents/components/AgentsPage'
 import { CanvasView } from '@/features/canvas/components/CanvasView'
 import { CanvasSkeleton } from '@/features/canvas/components/CanvasSkeleton'
 import { DocumentSkeleton } from '@/features/documents/components/DocumentSkeleton'
@@ -90,7 +89,6 @@ window.fetch = async (input, init) => {
 
 const gallery: Record<string, ReactNode> = {
   '启动外壳': <WorkspaceSkeleton />, '会话与回复串': <ConversationSkeleton />,
-  'Agent': <AgentsSkeleton />,
   '资料文件夹': <SourceFoldersSkeleton />, '资料卡片': <SourceCardsSkeleton />,
   '文档': <DocumentSkeleton />, '画布': <CanvasSkeleton />, '演示文稿': <PresentationSkeleton />,
   '后台启动': <AdminShellSkeleton />, '后台概览': <AdminDashboardSkeleton />,
@@ -262,7 +260,7 @@ function App() {
   }
   return <div className="flex h-dvh min-w-0 flex-col bg-background text-foreground">
     <header className={`${new URLSearchParams(location.search).get('capture') === '1' ? 'hidden' : 'flex'} shrink-0 flex-wrap items-center gap-2 border-b p-2 text-xs`}>
-      <label>界面 <select aria-label="验收界面" value={surface} onChange={event => setSurface(event.target.value)}>{['骨架总览','主应用','Agent','画布','资料','动效与焦点','文档编辑','演示文稿','登录'].map(name => <option key={name}>{name}</option>)}</select></label>
+      <label>界面 <select aria-label="验收界面" value={surface} onChange={event => setSurface(event.target.value)}>{['骨架总览','主应用','画布','资料','动效与焦点','文档编辑','演示文稿','登录'].map(name => <option key={name}>{name}</option>)}</select></label>
       {surface === '骨架总览' && <select aria-label="骨架页面" value={selected} onChange={event => setSelected(event.target.value)}>{Object.keys(gallery).map(name => <option key={name}>{name}</option>)}</select>}
       <Button size="sm" variant="outline" onClick={() => document.documentElement.classList.toggle('dark')}>切换主题</Button>
       <Button size="sm" variant="outline" onClick={() => openSettingsDialog()}>设置弹窗</Button>
@@ -276,7 +274,6 @@ function App() {
       {surface === '骨架总览' && gallery[selected]}
       {surface === '主应用' && <DesktopApp />}
       {surface === '登录' && <AuthScreen />}
-      {surface === 'Agent' && <AgentsPage />}
 
       {surface === '画布' && <CanvasView canvasId={canvas.id} />}
       {surface === '资料' && <div className="p-4"><ProjectSourceLibrary key={revision} projectId="workspace-personal" canManage /></div>}

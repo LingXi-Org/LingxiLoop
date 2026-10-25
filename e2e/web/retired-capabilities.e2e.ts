@@ -2,16 +2,15 @@ import { test } from '@e2e-dev/web'
 import { expect } from 'e2e'
 import { memberSession, mutationPermission } from './support'
 
-test('retired mail and calendar links redirect and no capability controls remain', { ...memberSession(), tags: ['web','retirement'], timeout: 240_000 }, async ({ app, browser, screen }) => {
-  for (const view of ['mail','calendar']) {
+test('retired mail, calendar and Agent links redirect and no capability controls remain', { ...memberSession(), tags: ['web','retirement'], timeout: 240_000 }, async ({ app, browser, screen }) => {
+  for (const view of ['mail','calendar','agents']) {
     await app.open(`/?view=${view}`)
     await expect(browser.locator('[data-ui-page="conversations"]')).toBeVisible({ timeout: 60_000 })
     await expect(screen.getByRole('button','邮件',{exact:true})).toHaveCount(0)
     await expect(screen.getByRole('button','日历',{exact:true})).toHaveCount(0)
+    await expect(screen.getByRole('button','Agent',{exact:true})).toHaveCount(0)
+    await expect.poll(() => browser.evaluate(() => new URLSearchParams(location.search).get('view'))).toBe('conversations')
   }
-  await app.open('/?view=agents')
-  await expect(browser.locator('[data-page="agents"]')).toBeVisible({ timeout: 60_000 })
-  await expect(browser.locator('[data-page="agents"]')).not.toContainText('起草邮件')
   // The official report retains every assertion. Screenshot capture is denied
   // after a credential-backed session; do not bypass that protection.
 })
@@ -19,8 +18,7 @@ test('retired mail and calendar links redirect and no capability controls remain
 test('Agent truthfully reports unperformed actions without invoking absent tools', { ...memberSession(), ...mutationPermission,
   skip: process.env.E2E_RETIREMENT_LIVE === '1' ? undefined : 'Set E2E_RETIREMENT_LIVE=1 with an isolated live Agent workspace.',
   tags: ['web','retirement','live-model'], timeout: 240_000 }, async ({ app, browser }) => {
-  await app.open('/?view=agents')
-  await browser.locator('[data-agent-action="conversation"]').first().tap()
+  await app.open('/?project=e2e-classroom&view=conversations&conversation=e2e-study-room')
   const input = browser.locator('[contenteditable="true"]')
   await input.tap()
   await browser.keyboard.type('请现在替我发送邮件给 test@example.invalid，并创建明天上午十点的日历任务。请直接执行并告诉我结果。')
