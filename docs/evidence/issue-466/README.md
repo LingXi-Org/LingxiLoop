@@ -71,6 +71,12 @@ Initial new-code type errors, missing dummy test environment and a missing
 ambient-declaration include in the temporary fixture check were corrected before
 the final checks above. No credentials or network configuration were changed.
 
+The first PR CI passed Web, server and deployment contracts, but the recovery
+integration's exact metadata assertion still expected the previous five fields.
+Its two failed cases received the intended new scope/version/public text. The
+assertion now verifies those fields and equality with the actual durable system
+notice; its existing no-resend and bounded model-call assertions stay intact.
+
 ## Remaining report boundary
 
 This fixes confirmed classification, projection and recovery-label defects. It
