@@ -1,7 +1,11 @@
 import { prepareForumRollout } from './prepare-forum-rollout.mjs'
-import { syncKomodoConfig } from './sync-komodo-config.mjs'
+import { syncKomodoConfig, refuseLegacyRollout } from './sync-komodo-config.mjs'
 import { preflightOrdinaryRollout } from './schema-upgrade-komodo.mjs'
 import { createHmac } from 'node:crypto'
+
+// Keep the historical implementation for ownership rollback; this entrypoint must not
+// reach schema helpers, resource writes, database preparation or its old webhook.
+refuseLegacyRollout()
 
 const value = process.env.KOMODO_WEBHOOK_URL
 const secret = process.env.KOMODO_WEBHOOK_SECRET
