@@ -61,3 +61,9 @@ test('homework product56 accepts complete55 without weakening historical or runt
   assert.throws(()=>assertFull54InstallBoundary(56,'3.8.12',54),/historical package/)
   assert.throws(()=>assertMigrationRuntime(true,true,{...current,runtime:'3.8.12',publicText:3},PUBLIC_PURPOSE_SCHEMA_HASH,true,true),/0053 requires/)
 })
+
+test('case deletion product57 accepts complete product upgrades without admitting partial history',()=>{
+  for(const count of [0,54,55,56,57]) assert.doesNotThrow(()=>assertFull54InstallBoundary(count,'3.8.12',57))
+  for(const count of [1,10,49,53,58]) assert.throws(()=>assertFull54InstallBoundary(count,'3.8.12',57),/historical package/)
+  assert.throws(()=>assertFull54InstallBoundary(57,'3.8.12',56),/historical package/)
+})

@@ -48,6 +48,7 @@ export const casesApi = {
   detail: (id: string, view: CaseView = 'reader', signal?: AbortSignal) => http<CaseArticle>(`${base(id)}?${new URLSearchParams({ view })}`, { signal }),
   save: (input: CaseInput, article?: CaseArticle) => http<CaseArticle>(article ? base(article.id) : '/cases', { method: article ? 'PUT' : 'POST', body: JSON.stringify({ ...input, ...(article ? { version: article.version } : {}) }) }),
   action: (article: CaseArticle, action: 'publish' | 'unpublish' | 'retry-index') => http<CaseArticle>(`${base(article.id)}/${action}`, { method: 'POST', body: JSON.stringify({ version: article.version }) }),
+  remove: (article: Pick<CaseArticle, 'id' | 'version'>) => http<{ deleted: true; id: string }>(base(article.id), { method: 'DELETE', body: JSON.stringify({ version: article.version }) }),
   retryCover: (article: CaseArticle, snapshot: 'draft'|'published' = 'draft') => {
     const cover = article.generatedCover
     if (!cover) return Promise.reject(new Error('当前案例没有可重试的封面'))

@@ -3,12 +3,13 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import './cases.css'
 import { CaseCodeBlock } from './CaseCodeBlock'
-import { ArrowLeft, ImagePlus, LockKeyhole, MoreHorizontal, Pencil, Plus, Search } from 'lucide-react'
+import { ArrowLeft, ImagePlus, LockKeyhole, MoreHorizontal, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { markdownText, usableDocument } from '@/features/content-editor/document'
 import { ContentEditor, ContentDocumentView } from '@/features/content-editor'
 import { useAuth } from '@/stores/auth'
@@ -48,6 +49,8 @@ export function CasesPage() {
   const [busy, setBusy] = useState(false)
   const [submissionStage, setSubmissionStage] = useState<'saving' | 'publishing' | null>(null)
   const [preview, setPreview] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<CaseArticle | null>(null)
+  const [deleteError, setDeleteError] = useState('')
   const heading = useRef<HTMLHeadingElement>(null)
   const coverUpload = useRef<HTMLInputElement>(null)
   const operationEpoch = useRef(0)
@@ -63,6 +66,7 @@ export function CasesPage() {
     currentScope.current = companyId
     mutationPending.current = false; setBusy(false); setEditing(false); setPreview(false); setInput(empty)
     setSubmissionStage(null); setNotice('')
+    setDeleteTarget(null); setDeleteError('')
     setArticle(null); setList({ items: [], categories: [], canManage: false, view: currentView.current })
     return () => { currentScope.current = null; operationEpoch.current += 1 }
   }, [companyId, userId])
@@ -73,6 +77,7 @@ export function CasesPage() {
     adoptedId.current = null
     currentView.current = nextView
     mutationPending.current = false; setBusy(false); setSubmissionStage(null)
+    setDeleteTarget(null); setDeleteError('')
     setArticle(null)
     if (viewChanged) setList({ items: [], categories: [], canManage: false, view: nextView })
     setId(next); setView(nextView); setRevision(value => value + 1)
@@ -163,6 +168,28 @@ export function CasesPage() {
     try { const next = await casesApi.action(article, kind); if (!operation.current()) return; setArticle(next); setNotice(kind === 'unpublish' ? '案例已下架，学生不可阅读或检索。' : '已提交索引重试。') }
     catch (reason) { if (operation.current()) setError(userFacingError(reason, '操作失败，请重试。')) }
     finally { operation.finish() }
+  }
+  const requestDelete = (target: CaseArticle) => {
+    if (!managing || target.view !== 'manage' || !target.canManage || mutationPending.current) return
+    setDeleteTarget(target); setDeleteError('')
+  }
+  const deleteCase = async () => {
+    const target = deleteTarget
+    if (!target || target.view !== 'manage' || !target.canManage) return
+    const operation = startMutation()
+    if (!operation) return
+    setDeleteError('')
+    try {
+      await casesApi.remove(target)
+      if (!operation.current()) return
+      setList(current => ({ ...current, items: current.items.filter(item => item.id !== target.id) }))
+      setDeleteTarget(null)
+      if (id === target.id) navigate(undefined, 'manage')
+      else setRevision(value => value + 1)
+      setNotice('案例已删除。')
+    } catch (reason) {
+      if (operation.current()) setDeleteError(`删除失败。${userFacingError(reason, '请重试。')}`)
+    } finally { operation.finish() }
   }
   const retryCover = async (target: CaseArticle) => {
     if (target.view !== 'manage') return
@@ -285,6 +312,8 @@ export function CasesPage() {
               {article.status === 'published' && <DropdownMenuItem onSelect={() => void action('unpublish')}>下架案例</DropdownMenuItem>}
               {article.indexStatus === 'failed' && <DropdownMenuItem onSelect={() => void action('retry-index')}>重试索引</DropdownMenuItem>}
               <DropdownMenuItem disabled>知识索引：{article.indexStatus === 'ready' ? '已同步' : article.indexStatus === 'failed' ? '同步失败' : article.indexStatus ? '正在同步' : '未发布'}</DropdownMenuItem>
+              <DropdownMenuSeparator/>
+              <DropdownMenuItem variant="destructive" onSelect={() => requestDelete(article)}><Trash2 aria-hidden="true"/>删除案例</DropdownMenuItem>
             </DropdownMenuContent></DropdownMenu>
           </>}
         </div>
@@ -319,13 +348,32 @@ export function CasesPage() {
           <div className="case-grid-cover relative"><CaseCover cover={item.generatedCover} fallbackUrl={item.cover} title={item.title} scopeKey={`${coverScope}:${item.id}`}
             className="h-full [&>div:first-child]:h-full [&>div:first-child]:aspect-auto" busy={busy} onRefresh={refreshCoverStatus}
             onRetry={managing && item.view === 'manage' && item.canManage ? () => retryCover(item) : undefined}/></div>
-          <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="case-grid-link">
-            <div className="case-grid-meta"><time dateTime={item.publishedAt ?? item.createdAt ?? item.updatedAt}>{date(item)}</time><span>·</span><span>{item.category || '未分类'}</span>{managing && item.status !== 'published' && <span>{statusLabels[item.status]}</span>}</div>
-            <h2>{item.title}</h2><p>{markdownText(item.summary)}</p>
-          </a>
+          <div className="flex items-start gap-2">
+            <a href={articleUrl(item.id)} onClick={event => { if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) { event.preventDefault(); navigate(item.id) } }} className="case-grid-link min-w-0 flex-1">
+              <div className="case-grid-meta"><time dateTime={item.publishedAt ?? item.createdAt ?? item.updatedAt}>{date(item)}</time><span>·</span><span>{item.category || '未分类'}</span>{managing && item.status !== 'published' && <span>{statusLabels[item.status]}</span>}</div>
+              <h2>{item.title}</h2><p>{markdownText(item.summary)}</p>
+            </a>
+            {managing && item.view === 'manage' && item.canManage && <DropdownMenu>
+              <DropdownMenuTrigger asChild><Button type="button" className="mt-2" variant="ghost" size="icon-sm" aria-label={`更多案例操作：${item.title}`} disabled={busy}><MoreHorizontal/></Button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end"><DropdownMenuItem variant="destructive" onSelect={() => requestDelete(item)}><Trash2 aria-hidden="true"/>删除案例</DropdownMenuItem></DropdownMenuContent>
+            </DropdownMenu>}
+          </div>
         </article>)}</div>
         {!list.items.length && !error && <div className="py-12 text-center"><h2 className="text-sm font-medium">{search || category ? '没有找到匹配的案例' : '还没有案例'}</h2><p className="mt-2 text-sm text-muted-foreground">{search || category ? '试试其他关键词或分类。' : managing ? '新建案例并发布后，组织内的学生即可阅读。' : '教师发布案例后，你可以在这里阅读。'}</p></div>}
       </> : null}
     </div>
+    <AlertDialog open={deleteTarget !== null} onOpenChange={open => { if (!open && !busy) { setDeleteTarget(null); setDeleteError('') } }}>
+      <AlertDialogContent aria-busy={busy}>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="break-words">删除案例“{deleteTarget?.title}”？</AlertDialogTitle>
+          <AlertDialogDescription>删除后，该案例将从案例库和搜索中移除，已有链接和附件将不可访问。</AlertDialogDescription>
+        </AlertDialogHeader>
+        {deleteError && <p role="alert" className="text-sm text-destructive">{deleteError}</p>}
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={busy}>取消</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" disabled={busy} onClick={event => { event.preventDefault(); void deleteCase() }}>{busy ? '正在删除…' : '删除'}</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </main>
 }

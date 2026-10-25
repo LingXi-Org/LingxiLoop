@@ -121,4 +121,37 @@ test('one synthetic case retains acknowledged authoring and renders fixed cover 
     await expect(screen.getByRole('button', '重新加载封面', { exact: true })).toBeVisible()
     await app.screenshot(`449-cover-${state}`)
   }
+
+  // Delete is the final operation on the same synthetic case, across list/detail entry points.
+  await screen.getByRole('button', '返回案例库', { exact: true }).tap()
+  await screen.getByRole('button', `更多案例操作：${title}`, { exact: true }).tap()
+  await screen.getByRole('menuitem', '删除案例', { exact: true }).tap()
+  const dialog = screen.getByRole('alertdialog')
+  await expect(dialog).toContainText(title)
+  await dialog.getByRole('button', '取消', { exact: true }).tap()
+  await expect(dialog).toHaveCount(0)
+  const cancelledDelete = (await request(browser, `/api/fixture-authoring-cover/${article.id}/persistence`)).data
+  expect(cancelledDelete.deleted_at).toBe(null)
+  expect(cancelledDelete.mutations.filter((item: { method: string }) => item.method === 'DELETE').length).toBe(0)
+  await app.open(`/cases/${article.id}?project=cases-classroom&view=cases&caseView=manage`)
+  await screen.getByRole('button', '更多案例操作', { exact: true }).tap()
+  await screen.getByRole('menuitem', '删除案例', { exact: true }).tap()
+  expect((await request(browser, '/api/fixture-authoring-cover/fail-next/delete', 'POST')).status).toBe(200)
+  await dialog.getByRole('button', '删除', { exact: true }).tap()
+  await expect(dialog.getByRole('alert')).toContainText('删除失败')
+  const failedDelete = (await request(browser, `/api/fixture-authoring-cover/${article.id}/persistence`)).data
+  expect(failedDelete.deleted_at).toBe(null)
+  expect((await request(browser, `/api/cases/${article.id}?view=manage`)).status).toBe(200)
+  expect(failedDelete.mutations.filter((item: { method: string }) => item.method === 'DELETE').map((item: { status: number }) => item.status)).toEqual([503])
+  await dialog.getByRole('button', '删除', { exact: true }).tap()
+  await expect(dialog).toHaveCount(0)
+  await expect(browser).toHaveURL(/\/cases\?[^#]*caseView=manage/)
+  await expect(screen.getByRole('status').first()).toContainText('案例已删除')
+  await expect(screen.getByRole('heading', title, { exact: true })).toHaveCount(0)
+  const deleted = (await request(browser, `/api/fixture-authoring-cover/${article.id}/persistence`)).data
+  expect(deleted.deleted_at).not.toBe(null)
+  expect(deleted.mutations.filter((item: { method: string }) => item.method === 'DELETE').map((item: { status: number }) => item.status)).toEqual([503, 200])
+  expect((await request(browser, `/api/cases/${article.id}?view=manage`)).status).toBe(404)
+  expect((await request(browser, `/api/cases/${article.id}`)).status).toBe(404)
+  await app.screenshot('451-soft-delete-returns-to-management-list')
 })

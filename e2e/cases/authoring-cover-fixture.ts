@@ -27,19 +27,19 @@ export async function installAuthoringCoverFixture(app: Express) {
   const knownJobs = new Map<string, string>()
   const states = new Map<string, CoverFixtureState>()
   const mutations: { method: string; path: string; status: number }[] = []
-  let failNext: 'save' | 'publish' | null = null
+  let failNext: 'save' | 'publish' | 'delete' | null = null
   app.use('/api/fixture-authoring-cover', express.json({ limit: '4kb' }), (req, res, next) => {
     if (/cases-role=(student|outsider)/.test(req.headers.cookie ?? '')) { res.sendStatus(403); return }
     next()
   })
   app.get('/api/fixture-authoring-cover/manual.svg', (_req, res) => res.type('image/svg+xml').send(staticSvg))
   app.post('/api/fixture-authoring-cover/fail-next/:kind', (req, res) => {
-    if (req.params.kind !== 'save' && req.params.kind !== 'publish') { res.sendStatus(400); return }
+    if (req.params.kind !== 'save' && req.params.kind !== 'publish' && req.params.kind !== 'delete') { res.sendStatus(400); return }
     failNext = req.params.kind
     res.json({ failure: failNext, synthetic: true })
   })
   app.get('/api/fixture-authoring-cover/:id/persistence', async (req, res) => {
-    const result = await pool.query(`SELECT id,version,status,draft,published,published_version FROM organization_cases
+    const result = await pool.query(`SELECT id,version,status,draft,published,published_version,deleted_at FROM organization_cases
       WHERE id=$1 AND company_id='cases-school' AND draft->>'title' LIKE $2`, [req.params.id, syntheticTitlePrefix + '%'])
     if (!result.rows[0]) { res.sendStatus(404); return }
     res.json({ ...result.rows[0], mutations, fixtureState: states.get(req.params.id), synthetic: true })
@@ -87,9 +87,10 @@ export async function installAuthoringCoverFixture(app: Express) {
     if (assetCase && states.get(assetCase[1]) === 'asset-failed') { res.sendStatus(503); return }
     const saving = (req.method === 'POST' && req.path === '/api/cases') || (req.method === 'PUT' && /^\/api\/cases\/[^/]+$/.test(req.path))
     const publishing = req.method === 'POST' && /^\/api\/cases\/[^/]+\/publish$/.test(req.path)
-    if (saving || publishing) {
+    const deleting = req.method === 'DELETE' && /^\/api\/cases\/[^/]+$/.test(req.path)
+    if (saving || publishing || deleting) {
       res.once('finish', () => mutations.push({ method: req.method, path: req.path, status: res.statusCode }))
-      if ((saving && failNext === 'save') || (publishing && failNext === 'publish')) {
+      if ((saving && failNext === 'save') || (publishing && failNext === 'publish') || (deleting && failNext === 'delete')) {
         failNext = null
         res.status(503).json({ error: 'Synthetic fixture transport failure' }); return
       }

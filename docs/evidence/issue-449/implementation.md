@@ -1,6 +1,6 @@
-# Cases authoring and automatic cover continuation (#448 / #449)
+# Cases authoring, automatic covers and logical deletion (#448 / #449 / #451)
 
-Baseline: `9e3bfd892fa53f22dddbc00e98f466c21ce01b7d`. The reported production
+Development baseline: `9e3bfd892fa53f22dddbc00e98f466c21ce01b7d`. The reported production
 failure affecting all draft saves/publications has **not been reproduced**;
 the original account, browser and error remain unidentified. This change fixes
 observable code gaps and provides a runnable, isolated acceptance fixture. It
@@ -28,12 +28,23 @@ does not assert that every original incident or visual requirement is verified.
   visible/online. It does not enqueue or regenerate anything.
 - Historical cover backfill UI and its unused browser API facade are removed.
   Existing historical rows are untouched. The server endpoint is not invoked;
-  permission rules, queue/worker generation, storage and schema are unchanged.
+  no historical cover generation or backfill is performed.
+
+- Manager cards and detail menus offer a controlled, title-specific deletion
+  confirmation. Cancellation sends no request; busy controls prevent duplicates;
+  a failed request retains the case and permits retry. Acknowledged deletion
+  removes the row and returns detail to the management list, preserving filters.
+- Versioned `DELETE /cases/:id` checks organization and current management rights
+  under the existing transaction locks. Migration 0057 adds `deleted_at`; original
+  snapshots and attachments remain stored. Tombstones disappear from reads,
+  retrieval and direct assets; source invalidation and cover cancellation fence
+  pending work and late worker completions. See [deletion evidence](../issue-451/implementation.md).
 
 ## Executed checks
 
-- **26/26** owning PostgreSQL/HTTP integration checks passed, zero skipped:
-  organization cases (13) and case covers (13). The added HTTP case saves an
+- **31/31** owning PostgreSQL/HTTP integration checks passed, zero skipped:
+  organization cases (15), case covers (13), product55 migration (2) and
+  product57 migration (1). The added HTTP case saves an
   incomplete draft, rejects empty publication without losing it, then persists
   matching native summary/body and publishes the acknowledged version while
   its automatic cover is still pending. Existing worker-delay/failure,
@@ -44,9 +55,12 @@ does not assert that every original incident or visual requirement is verified.
   Submission tests establish orchestration behavior; their initial missing
   helper failure is not evidence of reproducing the reported production fault.
 - Web build (including typecheck), server typecheck, scoped lint and diff checks
-  passed. Focused E2E typecheck and official collection selected one workflow.
-- [HTTP fixture receipt](http-results.json): one synthetic case, five contract
-  groups, eight fixed cover states, zero model calls. Fixed SVG/program assets
+  passed. Runtime boundary checks passed **8/8**. The initial CI image graph
+  check identified missing crop geometry in the Docker context; the exact
+  source allowlist entry was added and the owning image graph check passed.
+  Focused E2E typecheck and official collection selected one workflow.
+- [HTTP fixture receipt](http-results.json): one synthetic case, six contract
+  groups, eight fixed cover states, one acknowledged soft deletion, zero model calls. Fixed SVG/program assets
   are transport/state fixtures, not proof of live model generation.
 
 ## Remaining acceptance
@@ -59,6 +73,10 @@ and homepage hover recordings are all **unexecuted**. A valid normal-sandbox
 browser is required to run the prepared [single workflow](browser-acceptance.md).
 
 No independent review, other issue work, merge, deployment, production data read
-or production write was performed. Product changes are restricted to the cases
-page/API/submission helper, cover presentation/coordinates and bounded polling;
-server changes consist only of the focused integration regression.
+or production write was performed. Product changes stay within cases authoring, deletion, cover presentation/coordinates
+and bounded polling, plus the owning migration/runtime detection and Docker source
+context. Original assets are retained; derived index cleanup follows existing policy.
+
+The sole release coordinator must supply an exact product57 upgrade/release profile
+before production rollout; current host-release contracts stop at product56. This
+branch does not relax them or execute production migrations.

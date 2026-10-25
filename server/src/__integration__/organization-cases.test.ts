@@ -85,6 +85,90 @@ async function publish(title?: string) {
   return application.publish(teacher, draft.id, draft.version)
 }
 
+// Delete failures: unauthorized/stale requests must preserve the case; retained
+// snapshots, attachments and stale external hits must cease all product access.
+test('[integration] delete enforces tenant, manage permission and current version and retains all three lifecycle states', async () => {
+  const manager = await api(teacher.userId), reader = await api(student.userId), foreign = await api(outsider.userId)
+  const draft = await application.create(teacher, content('Delete draft'))
+  assert.equal((await reader(`/cases/${draft.id}`, 'DELETE', { version: draft.version })).status, 403)
+  assert.equal((await foreign(`/cases/${draft.id}`, 'DELETE', { version: draft.version }, outsider.companyId)).status, 404)
+  assert.ok([403,404].includes((await foreign(`/cases/${draft.id}`, 'DELETE', { version: draft.version })).status))
+  await pool.query("UPDATE companies SET status='READ_ONLY' WHERE id=$1", [companyId])
+  assert.equal((await manager(`/cases/${draft.id}`, 'DELETE', { version: draft.version })).status, 403)
+  await pool.query("UPDATE companies SET status='ACTIVE' WHERE id=$1", [companyId])
+  for (const input of [{}, { version: 0 }, { version: draft.version, unexpected: true }]) {
+    assert.equal((await manager(`/cases/${draft.id}`, 'DELETE', input)).status, 400)
+  }
+  const saved = await application.save(colleague, draft.id, content('Updated draft'), draft.version)
+  assert.equal((await manager(`/cases/${draft.id}`, 'DELETE', { version: draft.version })).status, 409)
+  assert.equal((await application.detail(teacher, draft.id, 'manage')).version, saved.version)
+  const live = await publish('Delete live'), offLive = await publish('Delete unpublished')
+  const off = await application.unpublish(teacher, offLive.id, offLive.version)
+  const survivor = await publish('Surviving case')
+  for (const current of [saved, live, off]) {
+    const attempts = await Promise.all([manager(`/cases/${current.id}`, 'DELETE', { version: current.version }), manager(`/cases/${current.id}`, 'DELETE', { version: current.version })])
+    assert.deepEqual(attempts.map(result => result.status).sort(), [200,404], 'concurrent deletes mutate once')
+    const response = attempts.find(result => result.status === 200)!
+    assert.deepEqual(await response.json(), { deleted: true, id: current.id })
+    assert.equal((await manager(`/cases/${current.id}?view=manage`)).status, 404)
+    assert.equal((await reader(`/cases/${current.id}`)).status, 404)
+    assert.equal((await manager(`/cases/${current.id}`, 'DELETE', { version: current.version })).status, 404)
+    const retained = (await pool.query('SELECT * FROM organization_cases WHERE id=$1', [current.id])).rows[0]
+    assert.ok(retained.deleted_at)
+    assert.equal(retained.version, current.version + 1)
+    assert.equal(retained.status, current.status)
+    assert.equal(retained.draft.title, current.title)
+    assert.equal((await pool.query('SELECT status FROM organization_case_cover_jobs WHERE case_id=$1', [current.id])).rows[0].status, 'cancelled')
+    assert.equal((await manager(`/cases/${current.id}`, 'PUT', { ...content(), version: current.version + 1 })).status, 404)
+    for (const action of ['publish', 'unpublish', 'retry-index']) assert.equal((await manager(`/cases/${current.id}/${action}`, 'POST', { version: current.version + 1 })).status, 404)
+  }
+  for (const view of ['manage', 'reader']) {
+    const result = await caseJson<'list'>(await manager(`/cases?view=${view}`))
+    assert.deepEqual(result.items.map(item => item.id), [survivor.id])
+    assert.equal((await caseJson<'list'>(await manager(`/cases?view=${view}&q=Delete`))).items.length, 0)
+  }
+  assert.equal((await application.detail(student, survivor.id)).title, 'Surviving case')
+})
+
+test('[integration] deleted cases retain assets but reject direct files, stale retrieval and in-flight index completion', async () => {
+  recordNotebook()
+  const draft = await application.create(teacher, content())
+  const file = await application.uploadFile(teacher, draft.id, 'application/pdf', Buffer.from('retained attachment').toString('base64'))
+  const saved = await application.save(teacher, draft.id, { ...content(), body: `[Attachment](${file.url})` }, draft.version)
+  const live = await application.publish(teacher, draft.id, saved.version), source = await readySource(live.id)
+  const survivor = await publish('Retained other case'), survivorSource = await readySource(survivor.id)
+  const request = await api(teacher.userId)
+  assert.equal((await request(file.url.slice('/api'.length))).status, 200)
+  let removal: Promise<unknown> | undefined
+  mock.method(openNotebookClient, 'search', async () => {
+    removal ??= application.remove(teacher, live.id, live.version)
+    await removal
+    return [{ id: 'stale', parent_id: source.external_source_id, content: 'Deleted case' }]
+  })
+  assert.equal((await retrieveKnowledgeState(retrieval())).citations.length, 0)
+  assert.deepEqual((await listCaseRetrievalSources(pool, companyId)).map(item => item.id), [survivorSource.id])
+  assert.equal((await request(file.url.slice('/api'.length))).status, 404)
+  assert.equal(await canReadCaseFile(pool, file.key, teacher.userId), false)
+  assert.equal(await canReadCaseFile(pool, file.key, student.userId), false)
+  assert.equal((await storage.readObject(file.key)).toString(), 'retained attachment')
+  assert.ok((await pool.query('SELECT 1 FROM organization_case_images WHERE storage_key=$1', [file.key])).rows.length)
+  assert.ok((await pool.query('SELECT deleted_at FROM knowledge_sources WHERE id=$1', [source.id])).rows[0].deleted_at)
+  assert.equal((await pool.query('SELECT status FROM knowledge_source_jobs WHERE source_id=$1', [source.id])).rows[0].status, 'failed')
+
+  const processing = await publish('Delete while indexing'), inFlightSource = await sourceOf(processing.id)
+  mock.method(openNotebookClient, 'createTextSource', async (input: { idempotencyKey: string }) => {
+    await application.remove(colleague, processing.id, processing.version)
+    return { id: `external-${input.idempotencyKey}`, status: 'ready', embedded_chunks: 1 }
+  })
+  // Leave only this case queued so the worker exercises the deleted lease.
+  await pool.query("UPDATE knowledge_source_jobs SET status='completed' WHERE source_id<>$1", [inFlightSource.id])
+  assert.equal(await runKnowledgeWorkerOnce('delete-index-fixture'), true)
+  const retained = (await pool.query('SELECT * FROM knowledge_sources WHERE id=$1', [inFlightSource.id])).rows[0]
+  assert.ok(retained.deleted_at)
+  assert.notEqual(retained.status, 'ready')
+  assert.equal((await pool.query('SELECT status FROM knowledge_source_jobs WHERE source_id=$1', [inFlightSource.id])).rows[0].status, 'failed')
+})
+
 test('[integration] incomplete drafts persist and native content publishes without waiting for an automatic cover', async () => {
   const request = await api(teacher.userId)
   const created = await request('/cases', 'POST', { ...content('Incomplete case'), summary: '', body: '' })
@@ -405,7 +489,7 @@ test('[integration] cases use existing worker ingestion, bounded failure/retry a
 })
 
 test('[integration] publication, removal and retry share worker job-before-source lock order', async () => {
-  for (const action of ['publish', 'unpublish', 'retry'] as const) {
+  for (const action of ['publish', 'unpublish', 'retry', 'remove'] as const) {
     const live = await publish(`Lock ordering ${action}`)
     const source = await sourceOf(live.id)
     const worker = await pool.connect()

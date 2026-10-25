@@ -67,6 +67,20 @@ export async function checkAuthoringCoverHttp(baseURL) {
     states.push({ state, descriptor: detail.data.generatedCover?.status ?? null, version: detail.data.version })
   }
   checks.push('eight fixed fixture states persist and real API assets preserve their HTTP contract')
-  return { checks, states, caseId: id, version: published.data.version, synthetic: true, modelCalls: 0,
+  const deleted = await request(`/api/cases/${id}`, 'DELETE', { version: published.data.version })
+  assert.equal(deleted.status, 200)
+  assert.deepEqual(deleted.data, { deleted: true, id })
+  const tombstone = await request(`/api/fixture-authoring-cover/${id}/persistence`)
+  assert.equal(tombstone.status, 200)
+  assert.ok(tombstone.data.deleted_at)
+  assert.equal(tombstone.data.draft.body, input.body)
+  assert.equal((await request(`/api/cases/${id}?view=manage`)).status, 404)
+  assert.equal((await request(`/api/cases/${id}`)).status, 404)
+  const managementList = await request(`/api/cases?view=manage&q=${encodeURIComponent(title)}`)
+  assert.equal(managementList.status, 200)
+  assert.ok(managementList.data.items.every(item => item.id !== id))
+  checks.push('real DELETE retains a SQL tombstone while both GET views return 404 and management list omits the case')
+  return { checks, states, caseId: id, version: published.data.version, deletedAt: tombstone.data.deleted_at,
+    deleteResult: deleted.data, synthetic: true, modelCalls: 0,
     scope: 'HTTP→API→PostgreSQL fixture contract only; UI, worker execution, crop and video unverified' }
 }

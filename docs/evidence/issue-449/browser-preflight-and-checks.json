@@ -1,5 +1,5 @@
 {
-  "recordedAt": "2026-10-25T05:17:49.060839+00:00",
+  "recordedAt": "2026-10-25T05:29:38.616810+00:00",
   "browserStatus": "blocked_at_read_only_preflight",
   "browserLaunched": false,
   "officialBrowserRunId": null,
@@ -17,10 +17,10 @@
   "sourceSha256": {
     "e2e/cases/api.ts": "ca0eeb36c5727a86f570af20c484fce2ea54e72989638e811d70a8a3a2149a0f",
     "e2e/cases/browser.e2e.ts": "71bd7350cceb767c94c423bb6efd7b49ce2317c9f559adff494ec733e0119329",
-    "e2e/cases/authoring-cover-fixture.ts": "0487fd691c2f2b93186b1dea67fc58775cb262338425cdbf00a4ba87476e1924",
-    "e2e/cases/authoring-cover-http-check.mjs": "601145608eccd4515de77de2aa558429af023c5e779f73e3b5ad08143212ab88",
+    "e2e/cases/authoring-cover-fixture.ts": "68ef889a03eb91df95e739704c0a607622bfe5ebded4544cb71fda1e6bfa55cb",
+    "e2e/cases/authoring-cover-http-check.mjs": "12c5d855872695d0b0fa101d9d14c1dd9798b70fdf220b54eec8645d2c4bb811",
     "e2e/cases/run-authoring-covers.mjs": "70f988bbe01c19eecb1a07a8c3de0704012a4bb4fa1e50fcc6613df6441c90ba",
-    "e2e/cases/authoring-covers.e2e.ts": "a3343b9a423d88e408cebbeaac8329848df8866c787287b5f2bc1389fc4e5b38",
+    "e2e/cases/authoring-covers.e2e.ts": "dd503e17826a39530bd0d18552efbba24f835b11f673be34da11f9b6b353540d",
     "e2e.case-authoring-covers.config.ts": "ba7247757e1893143c99318db62c6ad29ffe9adc274d629e8aeb8ed43dd19407",
     "docs/evidence/issue-449/tsconfig.e2e-focused.json": "f701d4bceba3a44b2ae973c030ec31dc7277a9f6723f4b6a0a92997a03e98226"
   },
@@ -31,19 +31,41 @@
     "focusedE2ETypecheck": 0,
     "officialSingleWorkflowCollection": 0
   },
-  "httpContractCheckGroups": 5,
+  "httpContractCheckGroups": 6,
   "fixedSyntheticStates": 8,
   "liveModelCalls": 0,
   "cleanup": {
     "api53107": "closed",
     "web53108": "closed",
-    "databases": "task-owned synthetic services retained for parent"
+    "databases": "task-owned synthetic services retained for parent",
+    "after451": "HTTP wrapper completed its task-owned child cleanup; no additional port check requested/performed"
   },
   "unrun": [
     "browser UI save/publish/reload assertions",
     "actual browser VM execution and homepage-card first hover with stationary pointer",
     "visual fallback/crop comparison",
     "screenshots and screencast",
-    "broader browser matrix"
-  ]
+    "broader browser matrix",
+    "UI delete cancellation with no request, controlled DELETE 503 retention, and successful retry returning to management list"
+  ],
+  "successfulHttpDeleteCount": 1,
+  "httpDeleteResult": {
+    "deleted": true,
+    "sqlDeletedAtNonNull": true,
+    "readerGetStatus": 404,
+    "managementGetStatus": 404,
+    "managementListOmitsCase": true
+  },
+  "checksFor451": {
+    "focusedFixtureTypecheckExit": 0,
+    "officialCollectionExit": 0,
+    "collectedWorkflowCount": 1,
+    "httpSmokeExit": 0,
+    "httpSmokeRuns": 1,
+    "syntheticCaseCount": 1,
+    "fixedCoverStateCount": 8,
+    "namedHttpCheckGroups": 6,
+    "modelCalls": 0,
+    "browserExecutions": 0
+  }
 }

@@ -13,7 +13,8 @@
       "real PUT returns next acknowledged version",
       "GET and direct SQL snapshot match acknowledged native summary/body/version",
       "publish uses latest version and real reader GET returns published content",
-      "eight fixed fixture states persist and real API assets preserve their HTTP contract"
+      "eight fixed fixture states persist and real API assets preserve their HTTP contract",
+      "real DELETE retains a SQL tombstone while both GET views return 404 and management list omits the case"
     ],
     "states": [
       {
@@ -57,13 +58,18 @@
         "version": 3
       }
     ],
-    "caseId": "case-00919a75-248d-4637-a041-59c3a556b0a1",
+    "caseId": "case-82439fe7-39e1-4985-9db7-ee1e8e69dcd6",
     "version": 3,
+    "deletedAt": "2026-10-25T05:29:12.365Z",
+    "deleteResult": {
+      "deleted": true,
+      "id": "case-82439fe7-39e1-4985-9db7-ee1e8e69dcd6"
+    },
     "synthetic": true,
     "modelCalls": 0,
     "scope": "HTTP→API→PostgreSQL fixture contract only; UI, worker execution, crop and video unverified"
   },
   "browserAssertions": 0,
   "reproduce": "node e2e/cases/run-authoring-covers.mjs --http-only",
-  "finishedAt": "2026-10-25T05:16:27.362Z"
+  "finishedAt": "2026-10-25T05:29:12.437Z"
 }
