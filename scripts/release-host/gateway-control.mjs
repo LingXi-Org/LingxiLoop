@@ -50,7 +50,7 @@ export async function gatewayPrepare(adapter,op,plan){
   for(const descriptor of [plan,plan.recovery])for(const image of Object.values(descriptor.images)){
     const identity=await adapter.inspectImage(image,local);check(identity,'OFFLINE_IMAGE_MISSING','Gateway syntax preflight requires a qualified cached image')
     if(Object.values(actual).some(container=>container.Image===identity.localImageId&&container.State.Running&&container.State.Health?.Status==='healthy'))continue
-    const args=['run','--rm','--pull','never','--network','none','--read-only','--cap-drop','ALL','--pids-limit','32','--memory','64m','--tmpfs','/var/cache/nginx:noexec,nosuid,size=8m','--tmpfs','/var/run:noexec,nosuid,size=1m']
+    const args=['run','--rm','--pull','never','--network','none','--read-only','--cap-drop','ALL','--cap-add','CHOWN','--pids-limit','32','--memory','64m','--tmpfs','/var/cache/nginx:noexec,nosuid,size=8m','--tmpfs','/var/run:noexec,nosuid,size=1m']
     for(const spec of Object.values(local.services))for(const mount of spec.mounts){check(mount.readOnly===true&&!mount.source.includes(',')&&!mount.target.includes(','),'GATEWAY_POLICY_REQUIRED','Gateway preflight accepts only its fixed read-only configuration mounts');args.push('--mount',`type=${mount.type},source=${mount.source},target=${mount.target},readonly`)}
     await adapter.run([...args,'--entrypoint','nginx',identity.localImageId,'-t'])
     const profile=local.gateway.imageProfiles[image.configDigest],version=await adapter.run([...args,'--entrypoint','nginx',identity.localImageId,'-v'],{captureStderr:true}),configuration=await adapter.run([...args,'--entrypoint','nginx',identity.localImageId,'-T'])

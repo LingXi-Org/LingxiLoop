@@ -8,7 +8,7 @@ import {configurationFingerprint} from './adapter.mjs'
 import {fixture,baseConfig,oldImage,newImage} from './fixtures/fake-host.mjs'
 import {hash,fault} from './journal.mjs'
 const rawHash=value=>createHash('sha256').update(value).digest('hex'),contract={nativeSchema:0,productSchema:0,api:'gateway-v1',worker:'none',checkpoint:'none',control:'nginx-healthz-v1',capabilities:['gateway.proxy-v1']},version='nginx version: nginx/1.29.0\n',oldConfig='upstream app { server 10.20.0.2:5183; }\n',newConfig='upstream app { server 10.20.0.2:5183; server 127.0.0.1:5183; }\n'
-async function setup(t,{unchanged=false,stopExitCode=0,stopResponseLost=false}={}){
+async function setup(t,{unchanged=false,stopExitCode=0,stopResponseLost=false,requireChown=false}={}){
   const directory=await mkdtemp(join(tmpdir(),'release-gateway-')),f=fixture(directory,{storeKind:'index',offline:true}),id='4'.repeat(64)
   t.after(async()=>{f.journal.close();await rm(directory,{recursive:true,force:true})})
   f.host.data.containers.gateway={...structuredClone(f.host.data.containers.web),Id:id,Mounts:[]};const mainBefore=JSON.stringify({web:f.host.data.containers.web,worker:f.host.data.containers.worker})
@@ -22,7 +22,7 @@ async function setup(t,{unchanged=false,stopExitCode=0,stopResponseLost=false}={
     if(args[0]==='ps'&&args.at(-1).endsWith('=gateway')){f.host.data.calls.push(args);return id}
     if(args[0]==='container'&&args[2]===id){f.host.data.calls.push(args);return JSON.stringify([f.host.data.containers.gateway])}
     if(args[0]==='exec'&&args[1]===id){f.host.data.calls.push(args);if(args[2]==='nginx'&&args[3]==='-v'){assert.equal(options.captureStderr,true);return version}if(args[2]==='nginx'&&args[3]==='-T')return corrupt?'unexpected config':f.host.data.containers.gateway.Image===newImage.indexDigest?newConfig:oldConfig;return ''}
-    if(args[0]==='run'){f.host.data.calls.push(args);assert.ok(['-t','-v','-T'].includes(args.at(-1)));assert.equal(args[args.indexOf('--entrypoint')+1],'nginx');assert.equal(args[args.indexOf('--pull')+1],'never');if(args.at(-1)==='-v')return version;if(args.at(-1)==='-T')return args.includes(newImage.indexDigest)?newConfig:oldConfig;return ''}
+    if(args[0]==='run'){f.host.data.calls.push(args);assert.ok(['-t','-v','-T'].includes(args.at(-1)));assert.equal(args[args.indexOf('--entrypoint')+1],'nginx');assert.equal(args[args.indexOf('--pull')+1],'never');if(requireChown&&(!args.includes('--cap-add')||args[args.indexOf('--cap-add')+1]!=='CHOWN'))throw fault('DOCKER_COMMAND_FAILED','Nginx tmpfs client_temp chown failed: Operation not permitted');if(args.at(-1)==='-v')return version;if(args.at(-1)==='-T')return args.includes(newImage.indexDigest)?newConfig:oldConfig;return ''}
     if(args[0]==='compose'&&(args.includes('stop')||args.includes('up'))){assert.equal(args.at(-1),'gateway');f.host.data.calls.push(args);const actual=f.host.data.containers.gateway;if(args.includes('stop')){actual.State={...actual.State,Running:false,Pid:0,Status:'exited',ExitCode:stopExitCode};if(stopResponseLost)throw Object.assign(fault('DOCKER_COMMAND_FAILED','Stop response was lost'),{uncertain:true})}else actual.State={...actual.State,Running:true,Pid:222,Health:{Status:'healthy'}},actual.Image=args.find(value=>value.endsWith('gateway-recovery.json'))?oldImage.indexDigest:(unchanged?oldImage:newImage).indexDigest;return ''}
     return original(args,options)
   }
@@ -43,6 +43,16 @@ test('same gateway image adoption is read-only and does not claim hot drain with
 })
 test('unexpected effective Nginx config blocks preparation before gateway or main services are stopped',async t=>{
   const f=await setup(t);f.setCorrupt(true);const result=await f.phase('prepare');assert.equal(result.status,'failed');assert.equal(result.errors.forward.code,'GATEWAY_CONFIGURATION_MISMATCH');assert.equal(f.host.data.calls.some(args=>args.includes('stop')||args.includes('up')),false)
+})
+test('isolated Nginx preflight retains only CHOWN for temporary cache directories and preserves all sandbox limits',async t=>{
+  const f=await setup(t,{requireChown:true}),result=await f.phase('prepare');assert.equal(result.status,'succeeded',JSON.stringify(result))
+  const probes=f.host.data.calls.filter(args=>args[0]==='run');assert.deepEqual(probes.map(args=>args.at(-1)),['-t','-v','-T'])
+  for(const args of probes){
+    assert.deepEqual(args.flatMap((arg,index)=>arg==='--cap-add'?[args[index+1]]:[]),['CHOWN']);assert.deepEqual(args.flatMap((arg,index)=>arg==='--cap-drop'?[args[index+1]]:[]),['ALL']);assert.ok(args.indexOf('--cap-drop')<args.indexOf('--cap-add'))
+    assert.ok(args.includes('--read-only'));assert.ok(args.includes('--rm'));assert.equal(args[args.indexOf('--network')+1],'none');assert.equal(args[args.indexOf('--pull')+1],'never');assert.equal(args[args.indexOf('--pids-limit')+1],'32');assert.equal(args[args.indexOf('--memory')+1],'64m')
+    assert.deepEqual(args.flatMap((arg,index)=>arg==='--tmpfs'?[args[index+1]]:[]),['/var/cache/nginx:noexec,nosuid,size=8m','/var/run:noexec,nosuid,size=1m']);assert.equal(args.includes('--mount'),false);assert.equal(args.includes('--volume'),false);assert.equal(args.includes('--privileged'),false);assert.equal(args.includes('--user'),false)
+  }
+  assert.equal(f.host.data.calls.some(args=>args.includes('stop')||args.includes('up')),false);assert.equal(JSON.stringify({web:f.host.data.containers.web,worker:f.host.data.containers.worker}),f.mainBefore)
 })
 test('gateway drain requires a confirmed stopped process with exit code 0 or 143',async t=>{
   for(const stopExitCode of [0,143]){const f=await setup(t,{stopExitCode});assert.equal((await f.phase('prepare')).status,'succeeded');assert.equal((await f.phase('drain')).status,'succeeded');assert.equal(f.host.data.containers.gateway.State.ExitCode,stopExitCode);assert.equal(JSON.stringify({web:f.host.data.containers.web,worker:f.host.data.containers.worker}),f.mainBefore)}
