@@ -1,16 +1,7 @@
-.cases-page { height: 100%; overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; container: cases / inline-size; }
-.case-library-shell { max-width: 1414px; margin-inline: auto; padding: 38px 32px 48px; }
+.cases-page.learning-page-surface { height: 100%; overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; container-name: cases learning-page; container-type: inline-size; }
 .case-detail-shell { padding: 24px 16px 48px; }
 .case-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
 .case-detail-toolbar { max-width: 1180px; margin-inline: auto; margin-bottom: 20px; }
-.case-library-title { font-size: 32px; font-weight: 700; line-height: 1.3; }
-.case-library-title:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
-.case-library-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-.cases-page .case-library-filters input { padding-inline-start: 36px; }
-.case-library-filters label > svg { z-index: 1; }
-.case-category-tabs { display: flex; flex: 1; flex-wrap: wrap; gap: 32px; }
-.case-category-tabs button { padding: 16px 8px; border-bottom: 3px solid transparent; color: var(--muted-foreground); font-size: 14px; white-space: nowrap; }
-.case-category-tabs button[aria-pressed=true] { color: var(--primary); border-color: var(--primary); font-weight: 600; }
 .cases-page button:focus-visible, .case-grid-link:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .case-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0 32px; }
 .case-grid > article { position: relative; min-width: 0; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
@@ -76,10 +67,6 @@
   .case-body { padding-inline: 16px; }
 }
 @container cases (max-width: 703px) {
-  .case-library-shell { padding: 24px 20px; }
-  .case-library-filters { padding-bottom: 16px; }
-  .case-category-tabs { flex-basis: 100%; gap: 12px; }
-  .case-library-title { font-size: 28px; }
   .case-title, .cases-page .case-title-input { font-size: 30px; }
   .case-detail-toolbar { gap: 12px; }
   .case-summary, .case-body { font-size: 16px; }

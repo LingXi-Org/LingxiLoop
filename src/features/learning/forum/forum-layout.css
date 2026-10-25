@@ -1,19 +1,9 @@
-.forum-feed { max-width: 1324px; margin-inline: auto; padding: 56px 32px 48px; }
+.forum-page.learning-page-surface { container: learning-grid learning-page / inline-size; }
 .forum-page [hidden] { display: none !important; }
-.forum-feed-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
-.forum-feed-heading h1 { font-size: 40px; font-weight: 700; line-height: 1.3; letter-spacing: -.02em; }
-.forum-feed-heading > button { min-width: 112px; }
-.forum-top-tabs { display: flex; flex-wrap: wrap; gap: 32px; border-bottom: 1px solid var(--border); }
-.forum-top-tabs button { padding: 16px 12px; font-size: 18px; border-bottom: 2px solid transparent; }
-.forum-top-tabs button[aria-pressed=true] { border-color: var(--primary); font-weight: 600; }
-.forum-top-tabs button:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
-.forum-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-block: 18px 20px; }
 .forum-tools > div:first-child { flex-basis: 280px; }
 .forum-page .forum-tools input[type=search] { padding-inline-start: 36px; }
 .forum-tools > div > svg { z-index: 1; }
 .forum-tools > button { font-size: 16px; }
-.forum-feed > .forum-focus-stage { margin-bottom: 24px; }
-.forum-feed .forum-focus-composer[data-forum-composer-expanded=false] { padding: 10px 14px; }
 .forum-feed .forum-list > [data-memo-card] { margin: 0; padding: 24px 4px 28px; border: 0; border-radius: 0; box-shadow: none; gap: 14px; }
 .forum-feed .forum-list > [data-memo-card] + [data-memo-card] { border-top: 1px solid var(--border); }
 .forum-feed .forum-list [data-slot=memo-header-meta] { font-size: 16px; gap: 10px; }
@@ -34,15 +24,8 @@
 .forum-mobile-header { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); padding: 4px 12px; }
 @container learning-grid (max-width: 880px) {
   .forum-document { margin-inline: 24px; }
-  .forum-feed { padding: 32px 24px; }
 }
 @container learning-grid (max-width: 640px) {
-  .forum-feed { padding: 24px 16px; }
-  .forum-feed-heading h1 { font-size: 30px; }
-  .forum-feed-heading { margin-bottom: 16px; }
-  .forum-top-tabs { gap: 12px; }
-  .forum-top-tabs button { padding: 12px 8px; font-size: 16px; }
-  .forum-tools { gap: 4px; }
   .forum-tools > div:first-child { flex-basis: 100%; margin-bottom: 8px; }
   .forum-tools > button { font-size: 14px; }
   .forum-feed .forum-list [data-slot=memo-header-meta] { font-size: 14px; }

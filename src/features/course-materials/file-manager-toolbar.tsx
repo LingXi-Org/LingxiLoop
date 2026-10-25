@@ -5,20 +5,21 @@ import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import { SelectField } from '@/components/ui/select-field'
+import { cn } from '@/lib/utils'
 import { fileKindLabels, type MaterialFormat, type MaterialSort, materialSortLabels } from './data'
 
-export function FileManagerToolbar({ search, format, sort, onSearch, onFormat, onSort, onUpload, uploadLabel }: {
+export function FileManagerToolbar({ search, format, sort, onSearch, onFormat, onSort, onUpload, uploadLabel, className }: {
   search: string; format: MaterialFormat; sort: MaterialSort
   onSearch(value: string): void; onFormat(value: MaterialFormat): void; onSort(value: MaterialSort): void
-  onUpload?: () => void; uploadLabel: string
+  onUpload?: () => void; uploadLabel: string; className?: string
 }) {
   return (
-    <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-      <InputGroup className="border-border bg-background md:max-w-lg">
+    <div className={cn('flex flex-col gap-3 xl:flex-row xl:items-center', className)}>
+      <InputGroup className="learning-page-search border-border bg-background md:max-w-lg">
         <InputGroupInput type="search" placeholder="搜索文件名称…" aria-label="搜索课程资料" value={search} onChange={event => onSearch(event.target.value)} />
         <InputGroupAddon><Search /></InputGroupAddon>
       </InputGroup>
-      <div className="flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
+      <div className="learning-page-toolbar-controls flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
         <SelectField ariaLabel="资料格式" className="w-36" value={format} onValueChange={onFormat}
           options={[{ value: 'all', label: '全部格式' }, ...Object.entries(fileKindLabels).map(([value, label]) => ({ value: value as MaterialFormat, label }))]} />
         <DropdownMenu>

@@ -1,5 +1,10 @@
 import { test, type Browser } from '@e2e-dev/web'
-import { expect } from 'e2e'
+import { expect, type TestFixtures } from 'e2e'
+
+async function openHomework(screen: TestFixtures['screen']) {
+  await screen.getByRole('button', '发布', { exact: true }).tap()
+  await screen.getByRole('menuitem', '发布作业', { exact: true }).tap()
+}
 
 
 async function observeReactKeys(browser:Browser,reset=true) {
@@ -29,7 +34,7 @@ test('381 header opens homework authoring without navigating to chat', async ({ 
   await app.open('/?project=e2e-classroom&view=forum')
   await expect(screen.getByLabel('搜索学习论坛')).toBeVisible({ timeout: 120000 })
   await observeReactKeys(browser)
-  await screen.getByRole('button', '发布作业', { exact: true }).tap()
+  await openHomework(screen)
   await expect(screen.getByRole('region', '创建课程作业')).toBeVisible()
   expect(await browser.evaluate(() => new URL(location.href).searchParams.get('view'))).toBe('forum')
   expect(await browser.evaluate(() => new URL(location.href).searchParams.has('conversation'))).toBe(false)
@@ -47,7 +52,7 @@ test('381 saved human draft survives lost response and publishes once to the stu
   await open('teacher')
   await observeReactKeys(browser)
   const before=await counts()
-  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await openHomework(screen)
   const form=screen.getByRole('region','创建课程作业')
   await form.getByLabel('作业标题',{exact:true}).fill(title)
   await form.getByLabel('作业要求',{exact:true}).fill('说明三角形面积公式并计算底为8高为5的面积。')
@@ -72,7 +77,7 @@ test('381 saved human draft survives lost response and publishes once to the stu
   await browser.evaluate(async id=>(await fetch(`/api/fixture-teacher-homework/${id}/ready`,{method:'POST'})).ok,id)
   await browser.reload()
   await observeReactKeys(browser,false)
-  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await openHomework(screen)
   await expect(card.getByRole('button','确认发布',{exact:true})).toBeEnabled({timeout:15000})
   await browser.evaluate(()=>{
     const target=window as unknown as {issue381Errors:string[]};target.issue381Errors=[]
@@ -112,7 +117,7 @@ test('381 authoring cancels late assistant navigation and isolates course drafts
   await browser.evaluate(async()=>(await fetch('/api/fixture-teacher-entry/hold',{method:'POST'})).ok)
   await screen.getByRole('button','教师助手',{exact:true}).tap()
   await expect(screen.getByRole('button','教师助手',{exact:true})).toBeDisabled()
-  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await openHomework(screen)
   await expect(screen.getByRole('region','创建课程作业')).toBeVisible()
   await screen.getByRole('region','创建课程作业').getByLabel('作业标题',{exact:true}).fill('仅属于原课程的草稿')
   await browser.evaluate(async()=>(await fetch('/api/fixture-teacher-entry/pass',{method:'POST'})).ok)
@@ -121,10 +126,10 @@ test('381 authoring cancels late assistant navigation and isolates course drafts
   await browser.evaluate(()=>{history.pushState({},'', '/?project=forum-other&view=forum');dispatchEvent(new PopStateEvent('popstate'));return true})
   await expect(screen.getByText('Other Forum Course',{exact:true}).first()).toBeVisible()
   await expect(screen.getByRole('region','创建课程作业')).toBeHidden()
-  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await openHomework(screen)
   await expect(screen.getByRole('region','创建课程作业').getByLabel('作业标题',{exact:true})).toHaveValue('')
   await app.open('/?project=e2e-classroom&view=forum')
-  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await openHomework(screen)
   await expect(screen.getByRole('region','创建课程作业').getByLabel('作业标题',{exact:true})).toHaveValue('仅属于原课程的草稿')
   await screen.getByRole('region','创建课程作业').getByLabel('作业标题',{exact:true}).focus()
   expect(await browser.evaluate(()=>document.activeElement?.tagName ?? null)).toBe('INPUT')
@@ -137,7 +142,7 @@ test('381 late creation receipt cannot overwrite newer edits after returning to 
   await app.open('/?project=e2e-classroom&view=forum')
   await expect(screen.getByLabel('搜索学习论坛')).toBeVisible({timeout:120000})
   await observeReactKeys(browser)
-  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await openHomework(screen)
   const form=screen.getByRole('region','创建课程作业')
   await form.getByLabel('作业标题',{exact:true}).fill('381 原请求草稿')
   await form.getByLabel('作业要求',{exact:true}).fill('说明计算过程。')
@@ -159,7 +164,7 @@ test('381 late creation receipt cannot overwrite newer edits after returning to 
   await expect(screen.getByText('Other Forum Course',{exact:true}).first()).toBeVisible()
   await navigate('e2e-classroom')
   await expect(screen.getByLabel('搜索学习论坛')).toBeVisible()
-  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await openHomework(screen)
   await expect(form).toHaveCount(1)
   await form.getByLabel('作业标题',{exact:true}).fill('381 返回后新的未保存编辑')
   await expect.poll(()=>browser.evaluate(()=>{
@@ -171,7 +176,7 @@ test('381 late creation receipt cannot overwrite newer edits after returning to 
   await browser.evaluate(async()=>{await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));return true})
   await browser.reload()
   await observeReactKeys(browser,false)
-  await screen.getByRole('button','发布作业',{exact:true}).tap()
+  await openHomework(screen)
   await expect(form.getByLabel('作业标题',{exact:true})).toHaveValue('381 返回后新的未保存编辑')
   await expect(form.getByRole('button','保存并检查草稿',{exact:true})).toBeEnabled()
   await noKeyWarnings(browser)
