@@ -1,0 +1,184 @@
+[integration selected] selected 1/124 file(s): agent-quote-model-input.test.ts
+TAP version 13
+# Subtest: first send resolves the complete old committed quote at actual model input and deduplicates replay
+not ok 1 - first send resolves the complete old committed quote at actual model input and deduplicates replay
+  ---
+  duration_ms: 1258.875421
+  type: 'test'
+  location: '/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:2:5139'
+  failureType: 'testCodeFailure'
+  error: |-
+    the entire committed quote A, including bytes beyond preview and history, must reach actual model input
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    assertGrounded (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:114:10)
+    TestContext.<anonymous> (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:128:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3)
+  ...
+# Subtest: a failed agent retry restores original B and its old A after refreshed history lookup
+not ok 2 - a failed agent retry restores original B and its old A after refreshed history lookup
+  ---
+  duration_ms: 317.565023
+  type: 'test'
+  location: '/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:2:5851'
+  failureType: 'testCodeFailure'
+  error: |-
+    the entire committed quote A, including bytes beyond preview and history, must reach actual model input
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    assertGrounded (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:114:10)
+    TestContext.<anonymous> (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:140:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: regenerating a delivered assistant restores sourceRef B and quoted A
+not ok 3 - regenerating a delivered assistant restores sourceRef B and quoted A
+  ---
+  duration_ms: 478.230121
+  type: 'test'
+  location: '/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:2:6854'
+  failureType: 'testCodeFailure'
+  error: |-
+    the entire committed quote A, including bytes beyond preview and history, must reach actual model input
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    assertGrounded (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:114:10)
+    TestContext.<anonymous> (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:152:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: ordinary messages retain their own text and current identity
+ok 4 - ordinary messages retain their own text and current identity
+  ---
+  duration_ms: 412.72857
+  type: 'test'
+  ...
+# Subtest: the selected quote stays distinct from thread scope and quoted mentions cannot wake peers
+not ok 5 - the selected quote stays distinct from thread scope and quoted mentions cannot wake peers
+  ---
+  duration_ms: 418.23067
+  type: 'test'
+  location: '/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:2:8564'
+  failureType: 'testCodeFailure'
+  error: |-
+    thread scope must use the explicit root
+    + actual - expected
+    
+    + 'quote-thread-scope-A'
+    - 'scope-root'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'scope-root'
+  actual: 'quote-thread-scope-A'
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:177:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: missing and cross-channel quote targets cannot add foreign source text
+not ok 6 - missing and cross-channel quote targets cannot add foreign source text
+  ---
+  duration_ms: 426.797268
+  type: 'test'
+  location: '/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:2:9437'
+  failureType: 'testCodeFailure'
+  error: 'the exact missing source must be explicit at model boundary'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:195:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: old quoted attachment content reaches the model through the committed quote
+not ok 7 - old quoted attachment content reaches the model through the committed quote
+  ---
+  duration_ms: 447.288412
+  type: 'test'
+  location: '/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:2:10477'
+  failureType: 'testCodeFailure'
+  error: |-
+    the entire committed quote A, including bytes beyond preview and history, must reach actual model input
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    assertGrounded (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:114:10)
+    TestContext.<anonymous> (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:209:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# Subtest: an unavailable quoted attachment retains status without exposing its bytes
+not ok 8 - an unavailable quoted attachment retains status without exposing its bytes
+  ---
+  duration_ms: 424.360562
+  type: 'test'
+  location: '/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:2:11931'
+  failureType: 'testCodeFailure'
+  error: |-
+    the entire committed quote A, including bytes beyond preview and history, must reach actual model input
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    assertGrounded (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:114:10)
+    TestContext.<anonymous> (/tmp/lingxiloop-447-baseline/server/src/__integration__/agent-quote-model-input.test.ts:231:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    async Test.run (node:internal/test_runner/test:1389:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:960:7)
+  ...
+# {"ts":"2026-10-25T05:19:46.378Z","level":"info","msg":"worker stopped","workerId":"quote-input-fixture","timedOut":false}
+1..8
+# tests 8
+# suites 0
+# pass 1
+# fail 7
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 6994.163057
+[integration file] agent-quote-model-input.test.ts duration_ms=7025 exit=1
+[integration result] mode=selected files=1 duration_ms=7025 exit=1
