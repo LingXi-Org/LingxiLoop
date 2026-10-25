@@ -274,7 +274,7 @@ export function CasesPage() {
     <div className="case-hero-copy">
       {editing && <div hidden={preview}>
         <label><span className="sr-only">标题</span><Textarea required maxLength={200} disabled={busy} className="case-title-input" placeholder="案例标题" rows={1} value={input.title} onChange={event => editInput(value => ({...value, title: event.target.value}))}/></label>
-        <div className="case-summary case-inline-editor"><ContentEditor legacyFormat="markdown" label="摘要" compact value={input.summary} document={input.summaryDocument} maxLength={2000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(summary, summaryDocument) => editInput(value => ({...value, summary, summaryDocument}))}/></div>
+        <div className="case-summary case-inline-editor"><span className="case-editor-label" aria-hidden="true">摘要</span><ContentEditor legacyFormat="markdown" label="摘要" compact value={input.summary} document={input.summaryDocument} maxLength={2000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(summary, summaryDocument) => editInput(value => ({...value, summary, summaryDocument}))}/></div>
       </div>}
       {(!editing || preview) && <div><h2 className="case-title">{content.title}</h2><div className="case-summary">{usableDocument(content.summaryDocument, content.summary) ? <ContentDocumentView document={content.summaryDocument}/> : <p>{content.summary}</p>}</div></div>}
       {editing && !preview ? <div className="case-edit-metadata">
@@ -334,7 +334,7 @@ export function CasesPage() {
         <fieldset disabled={busy} className="min-w-0">
           <section aria-label={preview ? '案例预览' : '编辑案例'}>{hero}
             <div className="case-body-divider"><div data-case-body className="case-body">
-              <div hidden={preview} className="case-inline-editor"><ContentEditor legacyFormat="markdown" label="正文" value={input.body} document={input.editorDocument} maxLength={200000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(body, editorDocument) => editInput(value => ({...value, body, editorDocument}))}/></div>
+              <div hidden={preview} className="case-inline-editor"><span className="case-editor-label" aria-hidden="true">正文</span><ContentEditor legacyFormat="markdown" label="正文" value={input.body} document={input.editorDocument} maxLength={200000} disabled={busy} uploadFile={file => uploadAsset(file)} onChange={(body, editorDocument) => editInput(value => ({...value, body, editorDocument}))}/></div>
               {preview && body(input)}
             </div></div>
           </section>

@@ -16,6 +16,12 @@
 @custom-variant dark (&:is(.dark *));
 @config "../../tailwind.config.ts";
 
+/* Extend the actual vertical scroll hosts, not the clipped desktop shell or
+ * horizontal code/table scrollers. Stable gutters survive empty/loaded states
+ * and modal scroll locks; overlay scrollbars keep their native zero-width gap. */
+@utility overflow-y-auto { scrollbar-gutter: stable; }
+@utility overflow-y-scroll { scrollbar-gutter: stable; }
+
 :root {
   /* Product aliases derive from the canonical shadcn/Luma tokens below.
    * They remain only while feature CSS is migrated to semantic utilities. */

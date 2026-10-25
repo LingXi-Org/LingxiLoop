@@ -1,4 +1,4 @@
-.cases-page { height: 100%; overflow-y: auto; overscroll-behavior: contain; container: cases / inline-size; }
+.cases-page { height: 100%; overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; container: cases / inline-size; }
 .case-library-shell { max-width: 1414px; margin-inline: auto; padding: 38px 32px 48px; }
 .case-detail-shell { padding: 24px 16px 48px; }
 .case-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
@@ -47,9 +47,14 @@
 .case-body .case-markdown th { background: var(--muted); font-weight: 500; }
 .case-body pre { max-width: 100%; overflow-x: auto; font-size: 14px; }
 .case-body > div { min-width: 0; }
+.case-inline-editor { min-width: 0; max-width: 100%; }
+.case-editor-label { position: sticky; inset-block-start: 8px; z-index: 1; display: block; width: fit-content; max-width: 100%; margin-bottom: 12px; padding: 2px 6px; border-radius: 4px; background: var(--background); color: var(--muted-foreground); font-size: 14px; line-height: 1.5; }
 .cases-page .case-inline-editor .content-editor { border: 0; border-radius: 0; background: transparent; }
 .cases-page .case-inline-editor .content-editor:focus-within { outline: none; }
-.cases-page .case-inline-editor .bn-editor:focus-visible { outline: none; border-radius: 0; box-shadow: -2px 0 0 var(--ring); }
+.cases-page .case-inline-editor .bn-editor:focus-visible { outline: none; box-shadow: none; }
+.case-inline-editor:has(.bn-editor:focus-visible) > .case-editor-label { outline: 2px solid var(--ring); outline-offset: 2px; color: var(--foreground); }
+.cases-page .case-inline-editor :is(.bn-container, .bn-editor) { min-width: 0; max-width: 100%; }
+.cases-page .case-inline-editor [data-content-type=codeBlock] > pre { max-width: 100%; overflow-x: auto; }
 .cases-page .case-body [data-content-type=heading][data-level="2"] { --level: 26px; }
 .cases-page .case-body [data-content-type=heading][data-level="3"] { --level: 22px; }
 .cases-page .case-inline-editor .bn-editor { padding: 0; background: transparent; font-size: inherit; line-height: inherit; }
