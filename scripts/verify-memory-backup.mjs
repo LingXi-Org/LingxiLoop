@@ -136,11 +136,20 @@ cleanup() {
   if [ "$fifo_open" = 1 ]; then exec 9>&-; fi
   if [ -n "$holder" ]; then kill "$holder" 2>/dev/null; wait "$holder" 2>/dev/null; fi
   if [ "$created" = 1 ]; then
+    cleanup_stage=guard; cleanup_rc=1
     if [ "$verify_db" != ${quote(isolatedDatabase)} ] || [ "$verify_db" = "$POSTGRES_DB" ]; then
-      result=1; stage=cleanup-guard
-    elif ! timeout --foreground -k 10 60 dropdb -h postgres -U "$POSTGRES_USER" --maintenance-db=postgres "$verify_db" >/dev/null 2>&1; then
-      result=1; stage=cleanup-database
+      if [ "$result" = 0 ]; then stage=cleanup-guard; fi
+      result=1
+    else
+      cleanup_stage=database
+      PGOPTIONS='-c statement_timeout=110000 -c lock_timeout=10000 -c row_security=off -c search_path=public' timeout --foreground -k 5 120 dropdb -h postgres -U "$POSTGRES_USER" --maintenance-db=postgres "$verify_db" >/dev/null 2>&1
+      cleanup_rc=$?
+      if [ "$cleanup_rc" != 0 ]; then
+        if [ "$result" = 0 ]; then stage=cleanup-database; fi
+        result=1
+      fi
     fi
+    printf '${prefix}CLEANUP_STAGE=%s\\n${prefix}CLEANUP_RC=%s\\n' "$cleanup_stage" "$cleanup_rc"
   fi
   if [ -n "$work" ]; then rm -f "$work"/* 2>/dev/null; rmdir "$work" 2>/dev/null; fi
   if [ "$result" = 0 ] && [ "$success" = 1 ]; then
@@ -235,7 +244,7 @@ success=1
   // Only this outer timeout owns a process group. Inner --foreground timeouts
   // keep clients in that group so overall TERM interrupts the shell's wait and
   // reaches cleanup before KILL. Do not add --foreground to the outer timeout.
-  return `exec timeout -k 75 3900 sh -ec ${quote(inner)} memory-backup "$1"`
+  return `exec timeout -k 125 3900 sh -ec ${quote(inner)} memory-backup "$1"`
 }
 
 export function parseMemoryBackupReceipt(plan,update) {
@@ -317,8 +326,11 @@ export async function executeMemoryBackup({plan,apiKey,apiSecret,signal,onProgre
     if(update.status==='Complete'&&update.success===false) {
       const logs=(update.logs ?? []).map(l=>typeof l.stdout==='string'?l.stdout:'').join('\n')
       const stage=/^MEMORY_BACKUP_FAILED_STAGE=([a-z-]{1,48})$/m.exec(logs)?.[1]
+      const cleanupStage=/^MEMORY_BACKUP_CLEANUP_STAGE=(guard|database)$/m.exec(logs)?.[1]
+      const cleanupRc=/^MEMORY_BACKUP_CLEANUP_RC=(0|[1-9][0-9]{0,2})$/m.exec(logs)?.[1]
+      const cleanup=cleanupStage&&cleanupRc!==undefined&&Number(cleanupRc)<=255?{stage:cleanupStage,rc:Number(cleanupRc)}:undefined
       return {status:'Complete',success:false,updateId,attempt:plan.attempt,isolatedDatabase:plan.isolatedDatabase,
-        commandHash:plan.commandHash,...(stage?{failedStage:stage}:{}),migrationRehearsal:'not-performed'}
+        commandHash:plan.commandHash,...(stage?{failedStage:stage}:{}),...(cleanup?{cleanup}:{}),migrationRehearsal:'not-performed'}
     }
     return parseMemoryBackupReceipt(plan,update)
   } catch {
