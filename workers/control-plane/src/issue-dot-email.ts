@@ -19,7 +19,7 @@ function response(status: number, body: Record<string, unknown>): Response {
   });
 }
 
-function decode(part: string): Uint8Array {
+function decode(part: string) {
   if (!/^[A-Za-z0-9_-]+$/.test(part)) throw new AuthError();
   const value = atob(part.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - part.length % 4) % 4));
   return Uint8Array.from(value, character => character.charCodeAt(0));
