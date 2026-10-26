@@ -25,18 +25,66 @@ export function effectiveWorkerVariables(id, env = process.env) {
   }
   return values
 }
-export async function putImmutableObject(key, bytes, { account, bucket, token, contentType = 'application/octet-stream', fetcher = fetch }) {
+export const R2_REQUEST_INTERVAL_MS = 350
+export const RETENTION_CONCURRENCY = 3
+// One process-wide cadence covers GET and PUT starts; slow bodies may overlap.
+export function createR2RequestPacer({ now = () => performance.now(), wait = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
+  let nextStart = 0, turn = Promise.resolve()
+  return begin => {
+    const started = turn.then(async () => {
+      let delay
+      while ((delay = nextStart - now()) > 0) await wait(Math.ceil(delay))
+      nextStart = now() + R2_REQUEST_INTERVAL_MS
+      return { response: begin() }
+    })
+    turn = started.then(() => {}, () => {})
+    return started.then(({ response }) => response)
+  }
+}
+const processR2Request = createR2RequestPacer()
+export async function putImmutableObject(key, bytes, { account, bucket, token, contentType = 'application/octet-stream', fetcher = fetch, requestPacer = processR2Request }) {
   if (!account || !bucket || !token) throw new Error('R2 artifact storage credentials/configuration missing')
   const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/r2/buckets/${encodeURIComponent(bucket)}/objects/${key.split('/').map(encodeURIComponent).join('/')}`
   const headers = { authorization: `Bearer ${token}` }
-  const existing = await fetcher(url, { headers, redirect: 'error', signal: AbortSignal.timeout(20000) })
+  const request = async init => {
+    try { return await requestPacer(() => fetcher(url, { ...init, redirect: 'error', signal: AbortSignal.timeout(20000) })) }
+    catch { throw new Error('R2_REQUEST_UNCONFIRMED') }
+  }
+  const existing = await request({ headers })
   if (existing.ok) {
-    if (hash(new Uint8Array(await existing.arrayBuffer())) !== hash(bytes)) throw new Error(`IMMUTABLE_ARTIFACT_CONFLICT: ${key}`)
+    let body
+    try { body = new Uint8Array(await existing.arrayBuffer()) } catch { throw new Error('R2_READ_UNCONFIRMED') }
+    if (hash(body) !== hash(bytes)) throw new Error('IMMUTABLE_ARTIFACT_CONFLICT')
     return
   }
   if (existing.status !== 404) throw new Error(`R2 lookup failed: HTTP ${existing.status}`)
-  const response = await fetcher(url, { method: 'PUT', redirect: 'error', signal: AbortSignal.timeout(20000), headers: { ...headers, 'content-type': contentType, 'cache-control': 'public, max-age=31536000, immutable' }, body: bytes })
+  const response = await request({ method: 'PUT', headers: { ...headers, 'content-type': contentType, 'cache-control': 'public, max-age=31536000, immutable' }, body: bytes })
   if (!response.ok) throw new Error(`R2 upload failed: HTTP ${response.status}`)
+}
+export async function retainStaticAssets(directory, files, options, onProgress = () => {}) {
+  const assets = files.filter(file => immutable.test(`/${file.path}`))
+  let next = 0, completed = 0, failure
+  const fetcher = options.fetcher || fetch
+  const guardedFetch = (...args) => {
+    if (failure) throw new Error('R2_RETENTION_STOPPED')
+    return fetcher(...args)
+  }
+  onProgress({ completed, total: assets.length })
+  const worker = async () => {
+    while (!failure && next < assets.length) {
+      const file = assets[next++]
+      try {
+        const extension = file.path.split('.').at(-1)
+        const contentType = { js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml', json: 'application/json', woff2: 'font/woff2' }[extension] || 'application/octet-stream'
+        let bytes
+        try { bytes = readFileSync(resolve(directory, file.path)) } catch { throw new Error('R2_ASSET_READ_FAILED') }
+        await putImmutableObject(`chunks/${file.path}`, bytes, { ...options, fetcher: guardedFetch, contentType })
+        onProgress({ completed: ++completed, total: assets.length })
+      } catch (error) { failure ??= error }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(RETENTION_CONCURRENCY, assets.length) }, worker))
+  if (failure) throw failure
 }
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   const [command, id, directory, config] = process.argv.slice(2)
@@ -54,11 +102,9 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
       const options = { account: process.env.CLOUDFLARE_ACCOUNT_ID, bucket: process.env.RELEASE_ARTIFACT_BUCKET || 'lingxiloop-releases', token: process.env.CLOUDFLARE_API_TOKEN }
       // Never prune old chunks during release. Retirement requires an explicit
       // controller GC after both accepted and recovery windows expire.
-      for (const file of files.filter(file => immutable.test(`/${file.path}`))) {
-        const extension = file.path.split('.').at(-1)
-        const contentType = { js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml', json: 'application/json', woff2: 'font/woff2' }[extension] || 'application/octet-stream'
-        await putImmutableObject(`chunks/${file.path}`, readFileSync(resolve(directory, file.path)), { ...options, contentType })
-      }
+      await retainStaticAssets(directory, files, options, ({ completed, total }) => {
+        if (completed % 50 === 0 || completed === total) console.log(`Retained assets: ${completed}/${total}`)
+      })
     }
   } else if (command === 'record') {
     const { hash: artifactHash, configurationVersion } = JSON.parse(readFileSync(`${output}/inventory.json`, 'utf8'))
