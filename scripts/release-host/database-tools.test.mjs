@@ -62,8 +62,8 @@ function patchHelper(f,{lost=false,commit=true}={}){
  return {calls,setState:value=>state=value,run:async(argv,body)=>{
   const action=argv.at(-1);calls.push({argv,body:structuredClone(body)})
   assert.deepEqual(body,f.patch);assert.equal(argv[0],'/usr/bin/docker');assert.ok(argv.includes('--no-deps'));assert.equal(argv[argv.indexOf('--pull')+1],'never');assert.ok(argv.includes('--interactive'));assert.ok(argv.includes('--no-TTY'));assert.ok(argv.includes('--rm'));assert.equal(argv[argv.indexOf('--entrypoint')+1],'node');assert.deepEqual(argv.slice(-4),['--import','tsx','server/src/runtime-patch-bin.ts',action]);assert.ok(!argv.some(a=>a.includes('postgresql:')))
-  const base={action,source:'3.8.12',target:'3.8.13',schema:14,product:57,planHash:runtimePatchPlanHash(f.patch)}
-  if(action==='apply'){assert.ok(argv.includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED=true'));if(commit){state='target';f.setRuntime('3.8.13')}if(lost)throw Error('Simulated lost COMMIT response');return {...base,complete:true,updated:1}}
+  const base={action,source:'3.8.12',target:'3.8.14',schema:14,product:57,planHash:runtimePatchPlanHash(f.patch)}
+  if(action==='apply'){assert.ok(argv.includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED=true'));if(commit){state='target';f.setRuntime('3.8.14')}if(lost)throw Error('Simulated lost COMMIT response');return {...base,complete:true,updated:1}}
   assert.ok(!argv.includes('LINGXIOS_SCHEMA_UPGRADE_DRAINED=true'));return {...base,complete:state==='target',state,observationOnly:true}
  }}
 }
@@ -101,7 +101,7 @@ test('CAS observer target boolean alone cannot substitute exact independent runt
  const f=await setup(t,{patch:true}),h=patchHelper(f),opts=patchOptions(f,h)
  await databaseTool(f.local,'migrate',f.op,opts)
  f.setRuntime('3.8.12');await assert.rejects(databaseTool(f.local,'migrateObserve',f.op,opts),{code:'RUNTIME_PATCH_OUTCOME_UNRESOLVED'})
- f.setRuntime('3.8.13');f.setExitCode(137);await assert.rejects(databaseTool(f.local,'migrateObserve',f.op,opts),{code:'MIGRATION_OUTCOME_UNRESOLVED'})
+ f.setRuntime('3.8.14');f.setExitCode(137);await assert.rejects(databaseTool(f.local,'migrateObserve',f.op,opts),{code:'MIGRATION_OUTCOME_UNRESOLVED'})
  assert.equal(h.calls.filter(c=>c.argv.at(-1)==='apply').length,1)
 })
 test('lost migration subprocess reply after CAS only observes its retained one-off, never replays either write',async t=>{

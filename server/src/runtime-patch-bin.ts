@@ -17,7 +17,7 @@ export function parseRuntimePatchInput(raw:string):{source:RuntimePatchDescripto
  }
  assertRuntimePatchDescriptors(value.source,value.target)
  check(/^sha512-[A-Za-z0-9+/]{86}==$/.test(value.target.integrity)&&
-  /^https:\/\/npm\.pkg\.github\.com\/download\/@lyyzka\/lingxios\/3\.8\.13\/[a-f0-9]{40}$/.test(value.target.tarball))
+  /^https:\/\/npm\.pkg\.github\.com\/download\/@lyyzka\/lingxios\/3\.8\.14\/[a-f0-9]{40}$/.test(value.target.tarball))
  return value
 }
 async function main(){

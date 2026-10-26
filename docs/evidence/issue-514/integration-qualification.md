@@ -57,3 +57,27 @@ Upstream OS PR69 (`3e9da60fca07a7b158e19385dde3973661c74179`) is separately
 owned and still needs its final successful checks and formal package release.
 Its dependency lock is not invented here. Issue #519 remains separately owned.
 No production service/configuration/database writes occurred in this work.
+
+## Formal SDK3.8.14 integration qualification (2026-10-26)
+
+OS PR70 merged at `f24784b1c91a8591eeb4a921b9ac4db7bab4cb2c` after PR gate
+40281567356. Exact main gate40282798553 succeeded; tag `v3.8.14` matches that
+commit. Formal publish40284557881 succeeded. Registry readback:
+
+- version3.8.14, tarball suffix `5b177d9189351a4058258e018f5033c10e901bb7`;
+- SRI `sha512-kaZatUgHwW9RNckzg7yYumQ1HCCUvPLQksQvGbDdo5GO70iRsL+NV+/9Xaae82+XMzYztBO8f2klVDemzwCQ4Q==`;
+- actual installed public tuple runtime3.8.14/native14/control11/kernel2/publicText3/runTrace1/assistantMessage2.
+
+Root/server manifests and locks now pin that exact formal package; generated
+scoped dependency manifests/locks match. The privileged product57 CAS and host
+validation now accept exactly SDK3.8.12→3.8.14, preserving all57 migration names
+and checksums. This includes OS69 while preserving #491/#510/#511/#517 work.
+PR521's0058 is a separate subsequent product58 migration, not part of this CAS.
+
+Actual disposable local PostgreSQL with formal SDK14: **3pass0skip,2.598s**.
+Verified one-row provenance CAS with no DDL/ledger/business mutation, unknown
+COMMIT read-only reconciliation/no replay, and refusal with checkpoint/client/
+ledger drift. Fixture container and its volumes were removed after the test.
+Host runtime patch/database tool tests: **22pass0skip,0.562s**. Server TypeScript
+and lint passed. Final exact product CI is still required; previous SDK13 CI
+and PG qualification are not substituted for SDK14 results.

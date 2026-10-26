@@ -77,13 +77,13 @@ const migrations57=readdirSync(new URL('../db/migrations/',import.meta.url)).sor
  version:Number(file.slice(0,4)),name:file.slice(5,-4),checksum:createHash('sha256').update(readFileSync(new URL('../db/migrations/'+file,import.meta.url))).digest('hex'),
 }))
 const source57={runtime:'3.8.12',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:57,migrations:migrations57}
-const target57={...source57,runtime:'3.8.13'}
-test('product57 exact12 to13 CAS qualifies the entire real named57 inventory without changing native schema',async()=>{
+const target57={...source57,runtime:'3.8.14'}
+test('product57 exact12 to14 CAS qualifies the entire real named57 inventory without changing native schema',async()=>{
  assert.doesNotThrow(()=>assertRuntimePatchDescriptors(source57,target57))
  assert.deepEqual(await loadRuntimePatchInventory(57),migrations57)
 })
 test('product57 CAS refuses other runtime transitions, partial/renamed/rewritten inventory and schema drift',()=>{
- for(const mutate of [(d:typeof target57)=>{d.runtime='3.8.14'},(d:typeof target57)=>{d.productVersion=56},
+ for(const mutate of [(d:typeof target57)=>{d.runtime='3.8.15'},(d:typeof target57)=>{d.productVersion=56},
   (d:typeof target57)=>{d.migrations.pop()},(d:typeof target57)=>{d.migrations[0].name='renamed'},
   (d:typeof target57)=>{d.migrations[0].checksum='b'.repeat(64)},(d:typeof target57)=>{d.schema=15},
   (d:typeof target57)=>{d.protocol=12},(d:typeof target57)=>{d.schemaHash='b'.repeat(64)}]){
@@ -92,7 +92,7 @@ test('product57 CAS refuses other runtime transitions, partial/renamed/rewritten
  assert.throws(()=>assertRuntimePatchDescriptors({...source57,runtime:'3.8.11'},target57))
  assert.throws(()=>assertRuntimePatchDescriptors(target57,source57))
 })
-const published57={...target57,integrity:'sha512-'+Buffer.alloc(64,1).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.13/'+'a'.repeat(40)}
+const published57={...target57,integrity:'sha512-'+Buffer.alloc(64,1).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.14/'+'a'.repeat(40)}
 test('fixed product57 CLI accepts only complete source/target descriptors, with no SQL, argv, URL or file inputs',()=>{
  const input={source:source57,target:published57}
  assert.deepEqual(parseRuntimePatchInput(JSON.stringify(input)),input)
@@ -100,7 +100,7 @@ test('fixed product57 CLI accepts only complete source/target descriptors, with 
   (d:typeof input)=>{d.target.tarball='https://other.invalid/package'},
   (d:typeof input)=>{d.target.integrity='sha512-not-integrity'},
   (d:typeof input)=>{d.target.migrations[0].name="x'; DROP TABLE"},
-  (d:typeof input)=>{d.source.runtime='3.8.13'}]){
+  (d:typeof input)=>{d.source.runtime='3.8.14'}]){
   const bad=structuredClone(input);change(bad);assert.throws(()=>parseRuntimePatchInput(JSON.stringify(bad)))
  }
  assert.throws(()=>parseRuntimePatchInput(' '.repeat(64*1024+1)))

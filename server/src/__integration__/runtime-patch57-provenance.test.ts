@@ -7,10 +7,10 @@ import {packageResources,releaseVersions} from '@lyyzka/lingxios'
 import {applyPublishedRuntimePatch,loadRuntimePatchInventory,observePublishedRuntimePatch,runtimePatchPlanHash} from '../db/runtime-patch.js'
 import {loadLockedRuntimePackage,PUBLIC_PURPOSE_SCHEMA_HASH} from '../db/runtime-profile.js'
 
-// The current SDK12 business batch can run without claiming qualification of13.
+// The current SDK12 business batch can run without claiming qualification of14.
 // No fake version, schema, registry lock or public export substitution is used.
-const actual13=String(releaseVersions.runtime)==='3.8.13'
-const options={skip:actual13?false:'Requires the actual formal3.8.13 package and matching locks; stale SDK is not qualification'}
+const actual14=String(releaseVersions.runtime)==='3.8.14'
+const options={skip:actual14?false:'Requires the actual formal3.8.14 package and matching locks; stale SDK is not qualification'}
 async function isolated(run:(db:Pool)=>Promise<void>){
  const url=new URL(process.env.DATABASE_URL??'')
  assert.ok(['postgres:','postgresql:'].includes(url.protocol)&&['127.0.0.1','localhost','postgres'].includes(url.hostname)&&!url.search&&!url.hash)
@@ -22,10 +22,10 @@ async function isolated(run:(db:Pool)=>Promise<void>){
  try{await run(db)}finally{await db.end();await admin.query(`DROP DATABASE "${name}"`);await admin.end()}
 }
 async function setup(db:Pool){
- const locked=await loadLockedRuntimePackage();assert.equal(locked.runtime,'3.8.13')
+ const locked=await loadLockedRuntimePackage();assert.equal(locked.runtime,'3.8.14')
  const schema=await readFile(packageResources().schema,'utf8')
  assert.equal(createHash('sha256').update(schema).digest('hex'),PUBLIC_PURPOSE_SCHEMA_HASH)
- assert.deepEqual(releaseVersions,{runtime:'3.8.13',controlPlane:11,kernel:2,schema:14,assistantMessage:2,publicText:3,runTrace:1})
+ assert.deepEqual(releaseVersions,{runtime:'3.8.14',controlPlane:11,kernel:2,schema:14,assistantMessage:2,publicText:3,runTrace:1})
  const migrations=await loadRuntimePatchInventory(57)
  await db.query(schema)
  await db.query(`CREATE TABLE public.schema_migrations(version integer PRIMARY KEY,name text NOT NULL,checksum text NOT NULL);
@@ -33,7 +33,7 @@ async function setup(db:Pool){
  CREATE TABLE public.business_fixture(id integer PRIMARY KEY,value text); INSERT INTO public.business_fixture VALUES(1,'preserve');`)
  for(const m of migrations)await db.query('INSERT INTO public.schema_migrations VALUES($1,$2,$3)',[m.version,m.name,m.checksum])
  const source={runtime:'3.8.12',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:57,migrations}
- const target={...source,runtime:'3.8.13',integrity:locked.integrity,tarball:locked.tarball}
+ const target={...source,runtime:'3.8.14',integrity:locked.integrity,tarball:locked.tarball}
  await db.query('INSERT INTO public.lingxios_installation(runtime_version,schema_version,protocol_version,schema_sha256) VALUES($1,$2,$3,$4)',[source.runtime,source.schema,source.protocol,source.schemaHash])
  return {source,target}
 }
@@ -44,8 +44,8 @@ test('published product57 CAS changes exactly one provenance row, no DDL/ledger/
  CREATE EVENT TRIGGER forbid_patch57_ddl ON ddl_command_start EXECUTE FUNCTION forbid_patch57_ddl()`)
  const pending=await observePublishedRuntimePatch(db,source,target);assert.equal(pending.complete,false);assert.equal(pending.state,'source')
  assert.deepEqual(await snapshot(db),before)
- assert.deepEqual(await applyPublishedRuntimePatch(db,source,target),{source:'3.8.12',target:'3.8.13',schema:14,product:57,updated:1})
- const after=await snapshot(db);assert.equal(after[0].runtime_version,'3.8.13')
+ assert.deepEqual(await applyPublishedRuntimePatch(db,source,target),{source:'3.8.12',target:'3.8.14',schema:14,product:57,updated:1})
+ const after=await snapshot(db);assert.equal(after[0].runtime_version,'3.8.14')
  assert.deepEqual((await db.query('SELECT * FROM public.schema_migrations ORDER BY version')).rows,ledger)
  assert.deepEqual((await db.query('SELECT * FROM public.business_fixture')).rows,[{id:1,value:'preserve'}])
  await assert.rejects(applyPublishedRuntimePatch(db,source,target),/source provenance changed/)
@@ -64,7 +64,7 @@ test('product57 unknown COMMIT is observed read-only, not replayed; mixed proven
   }})
  }} as unknown as Pool
  await assert.rejects(applyPublishedRuntimePatch(lostCommit,source,target),error=>(error as {uncertain?:boolean}).uncertain===true)
- assert.equal((await snapshot(db))[0].runtime_version,'3.8.13')
+ assert.equal((await snapshot(db))[0].runtime_version,'3.8.14')
  const observedQueries:string[]=[]
  const observer={connect:async()=>{
   const client=await db.connect()
@@ -77,7 +77,7 @@ test('product57 unknown COMMIT is observed read-only, not replayed; mixed proven
  assert.equal((await observePublishedRuntimePatch(observer,source,target)).complete,true)
  assert.ok(observedQueries.includes('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY'))
  assert.ok(observedQueries.every(sql=>!/^\s*(UPDATE|INSERT|DELETE|ALTER|CREATE|DROP)\b/i.test(sql)))
- await db.query("UPDATE public.lingxios_installation SET runtime_version='3.8.14'")
+ await db.query("UPDATE public.lingxios_installation SET runtime_version='3.8.15'")
  await assert.rejects(observePublishedRuntimePatch(db,source,target),/unknown provenance/)
 }))
 test('product57 CAS blocks retained checkpoints, concurrent clients and complete ledger name drift',options,async()=>isolated(async db=>{

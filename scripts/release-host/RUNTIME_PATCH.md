@@ -6,10 +6,10 @@
 runtimePatch: {
   source: {runtime:'3.8.12',schema:14,protocol:11,schemaHash:'<64 lowercase hex>',
     productVersion:57,migrations:[/* all 57 ordered {version,name,checksum} */]},
-  target: {runtime:'3.8.13',schema:14,protocol:11,schemaHash:'<same hash>',
+  target: {runtime:'3.8.14',schema:14,protocol:11,schemaHash:'<same hash>',
     productVersion:57,migrations:[/* exactly the same named inventory */],
     integrity:'sha512-<formal package SRI>',
-    tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.13/<40 lowercase hex>'}
+    tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.14/<40 lowercase hex>'}
 }
 ```
 
@@ -23,4 +23,4 @@ Before apply, the helper must independently observe the exact source and the hos
 
 Unknown CAS outcome or a restarted process never replays CAS. `migrateObserve` launches only the fixed read-only observer. Observed source keeps the operation unresolved. If observed target and the independent target profile, runtime, protocol, schema hash, exact 57 names/checksums, all drain barriers and backup/restore evidence agree, and no migration dispatch intent exists, it can prove the equivalent postcondition of this strictly unchanged product57 inventory. Its receipt says `migrationExecution:'not-attempted'` and `equivalentPostcondition:'unchanged-product57-exact-target-provenance'`; it does not claim the command ran. Once dispatch intent exists, only the original retained successful one-off proves completion. No GET observation starts a migration, creates a new operation, clears a lock or retries a write. Helper errors disclose no raw output or connection values.
 
-Boundary tests use a fake Docker/CLI interface with real immutable host journal, backup files and persisted intent files. They cover committed CAS with lost reply, source observation after unknown, lost migration reply, exact target provenance, exit137, archive/restore gates and remote parameter refusal. Formal SDK13 image/package and disposable PostgreSQL validation remain release qualification requirements; this host-only change has not run those live tests and performs no production action.
+Boundary tests use a fake Docker/CLI interface with real immutable host journal, backup files and persisted intent files. They cover committed CAS with lost reply, source observation after unknown, lost migration reply, exact target provenance, exit137, archive/restore gates and remote parameter refusal. Formal SDK14 image/package and disposable PostgreSQL validation remain release qualification requirements; this host-only change has not run those live tests and performs no production action.

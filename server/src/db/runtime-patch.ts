@@ -26,7 +26,7 @@ export function assertRuntimePatchDescriptors(source:RuntimePatchDescriptor,targ
  check(source.productVersion===target.productVersion,'Runtime patch cannot change product schema')
  const product=target.productVersion
  check(product===54||product===57,'Unreviewed runtime patch product')
- if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.13','Product57 runtime patch is restricted to exact3.8.12 to3.8.13')
+ if(product===57)check(source.runtime==='3.8.12'&&target.runtime==='3.8.14','Product57 runtime patch is restricted to exact3.8.12 to3.8.14')
  for(const d of [source,target]){
   assertCurrentRuntimeProfile({runtime:d.runtime,schema:d.schema,controlPlane:d.protocol,publicText:currentPublicTextVersion(d.runtime),runTrace:1},d.schemaHash,d.runtime)
   check(d.migrations?.length===product,`Runtime patch requires complete product${product}`)
@@ -73,8 +73,8 @@ async function patchResources(source:RuntimePatchDescriptor,target:RuntimePatchD
  const schema=await readFile(packageResources().schema,'utf8')
  check(hash(schema)===target.schemaHash,'Executing native schema bytes changed')
  if(target.productVersion===57){
-  check(equal(releaseVersions,{runtime:'3.8.13',controlPlane:11,kernel:2,schema:14,assistantMessage:2,publicText:3,runTrace:1}),
-   'Product57 requires the complete formal3.8.13 public protocol tuple')
+  check(equal(releaseVersions,{runtime:'3.8.14',controlPlane:11,kernel:2,schema:14,assistantMessage:2,publicText:3,runTrace:1}),
+   'Product57 requires the complete formal3.8.14 public protocol tuple')
  }
  const tables=[...schema.matchAll(/^CREATE TABLE (lingxios\.[a-z_]+)\s*\(/gm)].map(m=>m[1])
  check(tables.length>0,'Executing native schema has no tables')
