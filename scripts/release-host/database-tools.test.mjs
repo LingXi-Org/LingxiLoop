@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Executor,Journal } from './executor.mjs'
 import { ComposeAdapter } from './adapter.mjs'
-import { databaseTool } from './database-tools.mjs'
+import { databaseTool,databaseToolFailure } from './database-tools.mjs'
 import {databaseFixture} from './fixtures/runtime-patch.mjs'
 import {runtimePatchPlanHash} from './runtime-patch.mjs'
 import { hash } from './journal.mjs'
@@ -194,5 +194,28 @@ test('restore runtime preflight refuses target or malformed proof instead of acc
   const helper=async(argv,body)=>{const proof=await f.h.run(argv,body);return response==='target'?{...proof,state:'target',complete:true}:{...proof,planHash:'sha256:'+'0'.repeat(64)}}
   await assert.rejects(databaseTool(f.local,'restoreVerify',{...f.op,phase:'restore-verify'},{...f.options,helper}),{code:'RUNTIME_PATCH_PREFLIGHT_REFUSED',outcomeKnown:true,uncertain:false})
   await assertNoPatchWrites(f);await assert.rejects(readFile(join(f.databaseDirectory,'restore-verified.json')),{code:'ENOENT'})
+ }
+})
+test('archive diagnostics survive the actual helper process and journal while secret-bearing extra fields are dropped',async t=>{
+ const f=await setup(t),secret='private-token-and-signed-url',events=[
+  {phase:'metadata-before',outcome:'absent',httpStatus:404,elapsedMs:3},
+  {phase:'upload',outcome:'timeout',elapsedMs:60001},
+  {phase:'metadata-after',outcome:'absent',httpStatus:404,elapsedMs:4},
+ ],expected={version:1,readAfter:'absent',events}
+ const error=Object.assign(Error('ARCHIVE_UPLOAD_UNCONFIRMED'),{code:'ARCHIVE_UPLOAD_UNCONFIRMED',uncertain:true,archiveDiagnostics:{version:1,token:secret,readAfter:secret,events:events.map(row=>({...row,url:secret,headers:{authorization:secret},message:secret}))}})
+ const wire=databaseToolFailure(error,'backup');assert.deepEqual(wire.error.archiveDiagnostics,expected);assert.equal(JSON.stringify(wire).includes(secret),false)
+ // The adapter and journal independently project the safe schema at their boundaries.
+ wire.error.archiveDiagnostics.url=secret;wire.error.archiveDiagnostics.events[1].headers={authorization:secret}
+ f.local.targets[f.op.target].controls.backup={argv:fixedErrorArgv(wire.error)}
+ f.journal.setState(f.op.target,{preparedHashes:{[f.op.manifestHash]:true},drainedHash:f.op.manifestHash,drainedGeneration:f.op.generation})
+ const op=f.executor.submit({...f.op,phase:'backup'}).operation,result=await f.executor.run(op.key)
+ assert.equal(result.status,'uncertain');assert.deepEqual(result.errors.forward.archiveDiagnostics,expected)
+ assert.equal(JSON.stringify(result).includes(secret),false);assert.equal(f.journal.state(f.op.target).backupHash?.[f.op.manifestHash],undefined)
+ assert.deepEqual(f.journal.get(op.key).errors.forward.archiveDiagnostics,expected)
+})
+test('malformed archive diagnostics do not change helper failure classification or enter the wire',()=>{
+ for(const diagnostics of [{version:1,events:[{phase:'upload',outcome:'secret',elapsedMs:1}]},{version:1,events:Array(4).fill({phase:'upload',outcome:'timeout',elapsedMs:1})},{version:1,events:[{phase:'upload',outcome:'timeout',elapsedMs:Infinity}]}]){
+  const wire=databaseToolFailure(Object.assign(Error('ARCHIVE_UPLOAD_REJECTED'),{code:'ARCHIVE_UPLOAD_REJECTED',archiveDiagnostics:diagnostics}),'backup')
+  assert.equal(wire.error.archiveDiagnostics,undefined);assert.equal(wire.error.outcomeKnown,true);assert.equal(wire.error.uncertain,false)
  }
 })
