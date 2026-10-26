@@ -84,18 +84,35 @@ diagnostic action.
 
 ## Validation status
 
-The implementation is prepared for formally published LingxiOS 3.8.13. The
-previously installed 3.8.12 package has no `runtimeFailure` API. The authoring
-environment did not start or create PostgreSQL/Redis services and did not run
-the integration test. The designated integrator must install the formal locked
-release and run this single owning regression; retain its TAP output and the
-integration runner's timing receipt before claiming qualification. Static CLI
-validation is recorded separately and is not a passing runtime regression.
+The formal registry package is now installed and pinned to `3.8.13` in both
+root/server manifests and locks. Its registry integrity is
+`sha512-K2NFX9a6C/EIWp+wNM/zGbGCweTuQqk+UXQNA3LL/X5Cd93dnMXNYDheFLuq4gHXLkgkOoXp01YYlY2gcfTOIA==`;
+the tarball ends in `4c4b353d0843064868ec6a0df0fdd57433f860fa`.
+Installed public exports report runtime 3.8.13, schema 14, control-plane 11,
+publicText 3 and runTrace 1. The native schema SHA-256 remains
+`c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f`.
 
-Authoring checks passed: `node --check scripts/qualify-worker-failure.mjs`,
-in-process CLI target validation and `--dry-run` (including non-loopback,
-non-test, URL-host-override and missing-explicit-environment rejection), the
-integration file's TypeScript syntax transpilation and Biome lint, and whitespace
-validation.
-These checks opened no PostgreSQL or Redis connection and did not validate the
-3.8.13 type contract or execute either controlled Worker failure.
+Completed owning checks:
+
+- `npm run server:typecheck` passed. The first formal-package typecheck found
+  two fixture inference errors; explicit diagnostic types fixed them before
+  the passing run.
+- `node scripts/qualify-worker-failure.mjs` passed against a fresh local
+  pgvector/PostgreSQL 16 test database and dedicated Redis DB 15. Exactly one
+  integration file/test ran, covering both controlled failure boundaries and
+  platform/company-admin authorization. It made zero model calls, IM sends or
+  assignment submissions. See [TAP](worker-failure.tap) and
+  [runner receipt](worker-failure-timings.json).
+- Focused server lint, CLI syntax and whitespace checks passed.
+
+The updated candidate is based on current main after the release-controller
+cutover. This PR no longer modifies any legacy host-release/runtime-patch
+implementation or tests. Product deployment belongs to the designated release
+controller publisher; this work performed no production operation.
+
+This proves the restricted diagnostic chain, not the historical business root
+cause. Earlier failures cannot be backfilled. After deployment, confirm the
+actual service/runtime versions and inspect the next authorized failed run's
+`workerFailure` through the platform resource-content or run-operations API.
+Do not close #439 until the original learning conversation and assignment flow
+have separately passed the required acceptance.

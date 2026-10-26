@@ -73,6 +73,7 @@ export async function qualifyWorkerFailure(argv = process.argv.slice(2), env = p
     WUKONG_API_TOKEN: 'synthetic-worker-failure-no-im',
     WUKONG_WEBHOOK_SECRET: 'synthetic-worker-failure-no-im',
     WUKONG_USER_TOKEN_SECRET: 'synthetic-worker-failure-no-im',
+    LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:9',
     RESEND_API_KEY: '',
     ALERT_WEBHOOK_URL: '',
     LINGXILOOP_COMMIT_SHA: 'unknown',

@@ -152,8 +152,8 @@ test('native Worker persists distinct restore and binding-save failures behind t
     for (const secret of secrets) assert.equal(serialized.includes(secret), false, 'raw body, stack and credentials must remain private')
   }
   for (const [index, identity] of identities.entries()) {
-    const diagnostics = await reader.readDiagnostics(identity)
-    const diagnostic = diagnostics?.runtimeFailure
+    const diagnostics: { runtimeFailure: RuntimeFailureDiagnostic | null } | null = await reader.readDiagnostics(identity)
+    const diagnostic: RuntimeFailureDiagnostic | null | undefined = diagnostics?.runtimeFailure
     assert.ok(diagnostic)
     diagnosticByRun.set(identity.runId, diagnostic)
     assert.equal(diagnostic.schemaVersion, 1)

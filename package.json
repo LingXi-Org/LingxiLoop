@@ -106,7 +106,7 @@
     "@jitl/quickjs-wasmfile-release-sync": "0.32.0",
     "@lezer/highlight": "1.2.3",
     "@lezer/markdown": "1.6.4",
-    "@lyyzka/lingxios": "3.8.12",
+    "@lyyzka/lingxios": "3.8.13",
     "@mantine/core": "8.3.18",
     "@mantine/hooks": "8.3.18",
     "@modelcontextprotocol/ext-apps": "2.0.0",
