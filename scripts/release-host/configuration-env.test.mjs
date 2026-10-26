@@ -6,6 +6,7 @@ import {tmpdir} from 'node:os'
 import {fixture,baseConfig,oldImage} from './fixtures/fake-host.mjs'
 import {configurationFingerprint,validatePolicy} from './adapter.mjs'
 import {hash,fault} from './journal.mjs'
+import {createExecutorServer} from './server.mjs'
 
 const privateValue='private-env-fixture-do-not-log',vision='Qwen/Qwen3-VL-32B-Instruct'
 const values=text=>Object.fromEntries(text.trim().split('\n').map(row=>{const at=row.indexOf('=');return[row.slice(0,at),row.slice(at+1)]}))
@@ -119,4 +120,92 @@ test('knownApplied cannot bypass an unknown up receipt or an unrecognized actual
   else f.adapter.waitHealthy=async()=>{f.host.data.containers.web.Config.Env.push('UNAPPROVED_FIXTURE=present');throw Object.assign(fault('STARTUP_TIMEOUT','Known health failure'),{knownApplied:true})}
   const result=await f.run('apply');assert.equal(result.status,'uncertain');assert.equal(f.host.data.calls.filter(a=>a.includes('up')).length,1);assert.equal(f.journal.db.prepare('SELECT count(*) AS n FROM reservations').get().n,2)
  }
+})
+async function partialForward(t){
+ const f=await setup(t);await f.run('prepare');await f.run('drain')
+ const control=f.adapter.control.bind(f.adapter)
+ f.adapter.control=async(local,action,body,method)=>{if(action==='readiness'&&body.direction==='forward')throw fault('READINESS_UNPROVEN','Fixed readiness observation failed');return control(local,action,body,method)}
+ const apply=await f.run('apply');assert.equal(apply.status,'failed');assert.deepEqual(apply.steps.map(s=>[s.name,s.status]),[['forward:up:web','completed']]);assert.equal(f.host.data.containers.web.State.Running,true);assert.equal(f.host.data.containers.worker.State.Running,false)
+ return f
+}
+test('partial known forward apply can resume the same untouched recovery-drain operation and restore source env without replaying up',async t=>{
+ const f=await partialForward(t),op=f.executor.submit(f.request('recovery-drain')).operation
+ f.journal.patch(op.key,{status:'uncertain',errors:{forward:{code:'CONFIGURATION_DIRECTION_UNPROVEN',message:'Original context failed before steps'},recovery:null,cleanup:[]}})
+ const before=f.host.data.calls.length,result=await f.executor.run(op.key)
+ assert.equal(result.status,'succeeded');assert.equal(result.operationId,op.operationId);assert.equal(result.generation,op.generation);assert.equal(result.errors.forward.code,'CONFIGURATION_DIRECTION_UNPROVEN')
+ assert.equal(result.steps.filter(s=>s.name==='stop:web').length,1);assert.equal(result.steps.filter(s=>s.name==='stop:worker').length,1)
+ const calls=f.host.data.calls.slice(before),stops=calls.filter(a=>a.includes('stop'))
+ assert.deepEqual(stops.map(a=>[a.at(-1),a[a.indexOf('--env-file')+1]]),[['worker',f.sourceFile],['web',f.forwardFile]])
+ assert.equal(calls.some(a=>a.includes('up')),false);assert.equal(JSON.stringify(result).includes(privateValue),false)
+ assert.equal((await f.run('recover')).status,'succeeded');assert.equal((await f.run('recovery-undrain')).status,'succeeded')
+ const ups=f.host.data.calls.filter(a=>a.includes('up'));assert.deepEqual(ups.map(a=>a[a.indexOf('--env-file')+1]),[f.forwardFile,f.sourceFile,f.sourceFile])
+})
+test('an already stopped maintenance drain only reconciles after every local writer and exact ingress generation are observed',async t=>{
+ const f=await setup(t);await f.run('prepare');await f.run('drain')
+ const op=f.executor.submit(f.request('recovery-drain')).operation
+ f.journal.patch(op.key,{steps:['stop:worker','ingress-disable','stop:web'].map(name=>({name,sideEffect:true,status:'completed'}))})
+ f.journal.finish(op.key,'failed',{needsIntervention:true},{forward:{code:'DRAIN_TIMEOUT',message:'Other host not stopped'},recovery:null,cleanup:[]})
+ f.host.data.containers.web.State.Running=true;f.host.data.containers.web.State.Pid=123
+ const before=f.host.data.calls.filter(a=>a.includes('stop')||a.includes('up')).length
+ assert.equal((await f.executor.reconcile(f.journal.get(op.key))).status,'uncertain')
+ f.host.data.containers.web.State.Running=false;f.host.data.containers.web.State.Pid=0;f.host.data.ingress.generation=2
+ assert.equal((await f.executor.reconcile(f.journal.get(op.key))).status,'uncertain')
+ f.host.data.ingress.generation=op.generation;f.host.options.busy=true
+ assert.equal((await f.executor.reconcile(f.journal.get(op.key))).status,'uncertain')
+ f.host.options.busy=false
+ assert.equal((await f.executor.reconcile(f.journal.get(op.key))).status,'succeeded')
+ assert.equal(f.host.data.calls.filter(a=>a.includes('stop')||a.includes('up')).length,before)
+})
+
+test('unknown up, actual image/env mismatch, stale fencing or a started drain never authorize untouched-drain continuation',async t=>{
+ for(const failure of ['unknown-up','image','environment','generation','started-drain','different-error']){
+  const f=await partialForward(t),op=f.executor.submit(f.request('recovery-drain')).operation
+  f.journal.patch(op.key,{status:'uncertain',errors:{forward:{code:'CONFIGURATION_DIRECTION_UNPROVEN'},recovery:null,cleanup:[]}})
+  if(failure==='unknown-up'){const apply=f.journal.get(f.request('apply').releaseId+':main-runtime-a:apply');f.journal.patch(apply.key,{steps:apply.steps.map(s=>({...s,status:'intent'}))})}
+  if(failure==='image')f.host.data.containers.web.Image='sha256:'+'0'.repeat(64)
+  if(failure==='environment')f.host.data.containers.web.Config.Env.push('UNAPPROVED_FIXTURE=present')
+  if(failure==='generation')f.journal.db.prepare('UPDATE fences SET generation=?').run(op.generation+1)
+  if(failure==='started-drain')f.journal.patch(op.key,{steps:[{name:'stop:worker',sideEffect:true,status:'intent'}]})
+  if(failure==='different-error')f.journal.patch(op.key,{errors:{forward:{code:'CONTROL_REJECTED'},recovery:null,cleanup:[]}})
+  const before=f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length
+  assert.equal((await f.executor.run(op.key)).status,'uncertain',failure)
+  assert.equal(f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length,before,failure)
+ }
+})
+test('authenticated duplicate POST resumes only untouched recovery-drain; GET and startup remain read-only',async t=>{
+ const f=await partialForward(t),op=f.executor.submit(f.request('recovery-drain')).operation
+ f.journal.patch(op.key,{status:'uncertain',errors:{forward:{code:'CONFIGURATION_DIRECTION_UNPROVEN'},recovery:null,cleanup:[]}})
+ const token='fixed-endpoint-fixture-token-495-long',server=createExecutorServer({executor:f.executor,token})
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>{server.close(resolve);server.closeAllConnections()}))
+ const base=`http://127.0.0.1:${server.address().port}`,headers={authorization:`Bearer ${token}`,'content-type':'application/json'},before=f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length
+ const read=await fetch(base+'/operations?key='+encodeURIComponent(op.key),{headers});assert.equal((await read.json()).status,'uncertain')
+ await f.executor.reconcileStartup()
+ assert.equal(f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length,before)
+ const replies=await Promise.all([1,2,3].map(()=>fetch(base+'/operations',{method:'POST',headers,body:JSON.stringify(f.request('recovery-drain'))})))
+ for(const response of replies){assert.equal(response.status,202);assert.equal((await response.json()).operationId,op.operationId)}
+ await server.waitForDispatch();const result=f.journal.get(op.key)
+ assert.equal(result.status,'succeeded');assert.equal(result.operationId,op.operationId);assert.equal(result.generation,op.generation)
+ const stops=f.host.data.calls.filter(a=>a.includes('stop')).slice(-2);assert.deepEqual(stops.map(a=>a.at(-1)),['worker','web'])
+ assert.equal(f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length,before+2)
+ const again=await fetch(base+'/operations',{method:'POST',headers,body:JSON.stringify(f.request('recovery-drain'))});assert.equal(again.status,202);await again.body.cancel();await server.waitForDispatch()
+ assert.equal(f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length,before+2)
+})
+
+test('authenticated GET observes a completed-stop DRAIN_TIMEOUT without replay; unknown or missing steps are never resumed',async t=>{
+ const f=await setup(t);await f.run('prepare');await f.run('drain')
+ const op=f.executor.submit(f.request('recovery-drain')).operation,steps=['stop:worker','ingress-disable','stop:web'].map(name=>({name,sideEffect:true,status:'completed'}))
+ f.journal.patch(op.key,{steps});f.journal.finish(op.key,'failed',{needsIntervention:true},{forward:{code:'DRAIN_TIMEOUT',message:'Original global barrier timeout'},recovery:null,cleanup:[]})
+ const token='fixed-get-fixture-token-495-long-value',server=createExecutorServer({executor:f.executor,token})
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>{server.close(resolve);server.closeAllConnections()}))
+ const url=`http://127.0.0.1:${server.address().port}/operations?key=${encodeURIComponent(op.key)}`,headers={authorization:`Bearer ${token}`},before=f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length
+ for(const invalid of [steps.slice(0,-1),steps.map((s,i)=>i===0?{...s,status:'intent'}:s)]){
+  f.journal.patch(op.key,{steps:invalid});assert.equal(f.executor.canObserveStoppedRecoveryDrain(f.journal.get(op.key)),false)
+  const response=await fetch(url,{headers});assert.equal((await response.json()).status,'failed')
+ }
+ f.journal.patch(op.key,{steps});f.host.options.busy=true
+ const pending=await fetch(url,{headers});assert.equal((await pending.json()).status,'uncertain')
+ f.host.options.busy=false
+ const response=await fetch(url,{headers}),result=await response.json()
+ assert.equal(result.status,'succeeded');assert.equal(result.operationId,op.operationId);assert.equal(result.generation,op.generation);assert.equal(result.errors.forward.code,'DRAIN_TIMEOUT')
+ assert.deepEqual(result.steps,steps);assert.equal(f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length,before)
 })

@@ -333,20 +333,24 @@ export class ComposeAdapter {
   async drain(op, plan, context) {
     const local = this.policy.targets[op.target]
     if(local.adapter==='main-runtime')await this.preflight(op,plan,{direction:op.phase==='source-drain'?'source':op.phase==='recovery-drain'?'recovery':context.currentDirection??'source',requireReadiness:op.phase!=='recovery-drain',allowStopped:op.phase==='source-drain'})
-    if(local.configurationFiles){const direction=context.currentDirection,descriptor=direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:plan;await this.configurationEvidence(op,descriptor,direction,await this.containers(op),await this.resolveImages(descriptor.images,local))}
+    if(local.configurationFiles){
+      const actual=await this.containers(op)
+      if(context.serviceDirections){for(const direction of ['source','forward']){const services=Object.keys(local.services).filter(service=>context.serviceDirections[service]===direction);if(services.length){const descriptor=direction==='source'?(plan.source??plan.recovery):plan;await this.configurationEvidence(op,descriptor,direction,actual,await this.resolveImages(descriptor.images,local),services)}}}
+      else{const direction=context.currentDirection,descriptor=direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:plan;await this.configurationEvidence(op,descriptor,direction,actual,await this.resolveImages(descriptor.images,local))}
+    }
     if (local.adapter === 'gateway') return gatewayDrain(this,op,plan,context)
     if (local.adapter !== 'main-runtime') return componentDrain(this,op,plan,context)
     if (plan.mode === 'maintenance') {
       // SIGTERM follows the installed Worker's bounded shutdown/checkpoint contract.
       // Keep local Web/control alive until its dependent Worker has stopped.
       for (const [service,spec] of Object.entries(local.services)) if (spec.role === 'worker') {
-        await context.step(`stop:${service}`, () => this.run([...context.compose,'stop','--timeout',String(this.policy.stopTimeoutSeconds ?? 150),service]), { sideEffect:true })
+        await context.step(`stop:${service}`, () => this.run([...(context.composeByService?.[service]??context.compose),'stop','--timeout',String(this.policy.stopTimeoutSeconds ?? 150),service]), { sideEffect:true })
       }
       await context.step('ingress-disable', () => this.control(local,'ingress',{ ...op,enabled:false }), { sideEffect:true })
       const ingress = await this.control(local,'ingressState',op,'GET')
       requireValue(ingress.enabled === false && ingress.generation === op.generation, 'INGRESS_UNPROVEN', 'Stable ingress must confirm backend removal')
       for (const [service,spec] of Object.entries(local.services)) if (spec.role !== 'worker') {
-        await context.step(`stop:${service}`, () => this.run([...context.compose,'stop','--timeout',String(this.policy.stopTimeoutSeconds ?? 150),service]), { sideEffect:true })
+        await context.step(`stop:${service}`, () => this.run([...(context.composeByService?.[service]??context.compose),'stop','--timeout',String(this.policy.stopTimeoutSeconds ?? 150),service]), { sideEffect:true })
       }
       const containers = await this.containers(op)
       requireValue(Object.values(containers).every(container => !container.State.Running && container.State.Pid === 0), 'WRITER_NOT_STOPPED', 'Local writer shutdown is not proven')
@@ -456,7 +460,7 @@ export class ComposeAdapter {
     if (['apply','recover','verify','restore-source'].includes(op.phase)) return this.verify(op,plan,op.phase==='restore-source'?'source':op.phase === 'recover' ? 'recovery' : 'forward')
     if (['drain','recovery-drain','source-drain'].includes(op.phase)) {
       const local = this.policy.targets[op.target], ingress = await this.control(local,'ingressState',op,'GET'), containers = await this.containers(op)
-      requireValue(await this.barrier(op) && ingress.enabled === false && Object.entries(local.services).every(([service,spec]) => spec.role !== 'worker' || !containers[service].State.Running), 'OBSERVATION_UNRESOLVED', 'Drain completion is not proven')
+      requireValue(await this.barrier(op) && ingress.enabled === false && ingress.generation===op.generation && Object.entries(local.services).every(([service,spec]) => plan.mode==='maintenance' ? !containers[service].State.Running && containers[service].State.Pid===0 : spec.role !== 'worker' || !containers[service].State.Running), 'OBSERVATION_UNRESOLVED', 'Drain completion is not proven')
       return { drained: true, observed: true }
     }
     if (['undrain','recovery-undrain','source-undrain'].includes(op.phase)) {

@@ -58,7 +58,7 @@ export function createExecutorServer({ executor, token, ingress, dispatch = key 
         if (url.searchParams.getAll('waitSeconds').length > 1 || !/^\d{1,2}(?:\.\d{1,3})?$/.test(waitValue) || Number(waitValue) > 45) throw fault('INVALID_WAIT_SECONDS','waitSeconds must be between 0 and 45 with at most millisecond precision',400)
         const deadline = Date.now() + Number(waitValue) * 1000
         let operation = executor.journal.get(key)
-        if (operation && ['running','uncertain'].includes(operation.status) && !executor.active.has(key)) operation = await executor.reconcile(operation)
+        if (operation && (['running','uncertain'].includes(operation.status) || executor.canObserveStoppedRecoveryDrain?.(operation) === true) && !executor.active.has(key)) operation = await executor.reconcile(operation)
         // Wait only on this existing journal record. This GET never dispatches
         // an intent or repeats a side effect; inactive unknown results retain
         // the existing read-only observation at entry and once at the boundary.
@@ -67,14 +67,14 @@ export function createExecutorServer({ executor, token, ingress, dispatch = key 
           operation = executor.journal.get(key)
         }
         if (response.destroyed) return
-        if (Number(waitValue) > 0 && operation && ['running','uncertain'].includes(operation.status) && !executor.active.has(key)) operation = await executor.reconcile(operation)
+        if (Number(waitValue) > 0 && operation && (['running','uncertain'].includes(operation.status) || executor.canObserveStoppedRecoveryDrain?.(operation) === true) && !executor.active.has(key)) operation = await executor.reconcile(operation)
         return operation ? send(200,operation) : send(404,{ error:{ code:'OPERATION_NOT_FOUND' } })
       }
       if (request.method === 'POST' && url.pathname === '/operations') {
         const { operation,created } = executor.submit(await jsonBody(request))
         // submit's FULL SQLite transaction is committed before the 202 can be written.
         send(202,operation)
-        if (created) {
+        if (created || executor.canResumeUnstartedRecoveryDrain?.(operation) === true) {
           const work = new Promise(resolve => setImmediate(resolve)).then(() => dispatch(operation.key))
           pending.add(work); work.finally(() => pending.delete(work)).catch(() => {})
         }
