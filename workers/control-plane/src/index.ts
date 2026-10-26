@@ -5,6 +5,7 @@ import { admin, captcha, emailOTP } from 'better-auth/plugins'
 import { drizzle } from 'drizzle-orm/d1'
 import { type Context, Hono } from 'hono'
 import { handleMcpRequest } from './mcp'
+import { diagnosticCredential, diagnosticPath, diagnosticResponse } from './diagnostics'
 import { authSchema } from './schema'
 import { sendSmtpEmail } from './smtp'
 import { handleIssueDotEmail } from './issue-dot-email'
@@ -19,6 +20,7 @@ type Secrets = {
   SIGILLO_PROVIDER_URL: string
   MCP_SERVICE_TOKEN: string
   MCP_AUTH_USER_ID: string
+  DIAGNOSTIC_KEYS_JSON?: string
   KOMODO_API_KEY: string
   KOMODO_API_SECRET: string
   KOMODO_TARGETS_JSON: string
@@ -469,6 +471,35 @@ app.post('/api/control/bootstrap-business-identity', async (c) => {
   const link = await ensureAdminBusinessIdentity(c, session)
   return link instanceof Response ? link : c.json({ ok: true, appUserId: link.app_user_id })
 })
+
+app.all('/api/diagnostics/*', diagnosticRequest)
+app.all('/api/diagnostics', diagnosticRequest)
+
+async function diagnosticRequest(c: AppContext): Promise<Response> {
+  c.header('cache-control', 'no-store')
+  const credentialId = await diagnosticCredential(c.req.raw, c.env.DIAGNOSTIC_KEYS_JSON)
+  if (!credentialId) return c.json({ error: 'unauthorized' }, 401)
+  if (c.req.header('origin')) return c.json({ error: 'direct diagnostic clients only' }, 403)
+  if (c.req.method !== 'GET') return c.json({ error: 'read-only credential' }, 405, { Allow: 'GET' })
+  const path = diagnosticPath(c.req.raw)
+  if (!path) return c.json({ error: 'unsupported diagnostic query' }, 400)
+  const identity = await c.env.DB.prepare(`SELECT u.id AS auth_user_id,l.app_user_id
+      FROM user u JOIN app_user_links l ON l.auth_user_id=u.id
+      WHERE u.id=? AND u.role='admin' AND u.banned=0 AND l.suspended_at IS NULL LIMIT 1`)
+    .bind(c.env.MCP_AUTH_USER_ID).first<{ auth_user_id: string; app_user_id: string }>()
+  if (!identity) return c.json({ error: 'diagnostic administrator unavailable' }, 403)
+  await c.env.DB.prepare(`INSERT INTO control_audit(id,actor_user_id,action,resource,reason,detail,created_at) VALUES(?,?,?,?,?,?,?)`)
+    .bind(crypto.randomUUID(), identity.auth_user_id, 'diagnostics:read', 'production-diagnostics',
+      'tester diagnostic read', JSON.stringify({ credentialId, view: c.req.query('view') ?? 'runs' }), Date.now()).run()
+  try {
+    const response = await originRequest(c.env, path, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(30_000) },
+      { authUserId: identity.auth_user_id, appUserId: identity.app_user_id, platformAdmin: true })
+    const secrets = [c.req.header('authorization')?.slice(7), ...Object.entries(c.env)
+      .filter(([key, value]) => /TOKEN|SECRET|PASSWORD|API_KEY|KEYS_JSON/.test(key) && typeof value === 'string').map(([, value]) => value)]
+      .filter((value): value is string => typeof value === 'string')
+    return diagnosticResponse(response, secrets)
+  } catch { return c.json({ error: 'diagnostic upstream unavailable' }, 502) }
+}
 
 app.all('/api/mcp', async (c) => {
   const origin = c.req.header('origin')
