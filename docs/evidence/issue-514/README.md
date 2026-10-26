@@ -259,3 +259,30 @@ All6 A/10 B container identities, start times, image IDs and complete mounts
 were checked; host pending operations/reservations0. No product version switched.
 These manual repairs and extra authorization are recorded failures/interventions,
 not an automatic first-success or end-to-end release qualification.
+
+## Actual daemon pull and route retirement
+
+A single immutable registry pull on A completed with the existing canonical
+OCI verifier in **7.845s**, including load and identity readback, one pull attempt.
+The canonical reference was absent beforehand; layer cache state is unknown.
+B's pull exited successfully; its initial benchmark verifier wrongly assumed
+Docker's local ID must equal the config digest. Docker29 instead exposed the
+verified index ID. No second B pull occurred: canonical read-only verification
+completed later. Its first command/failed-verification interval was13.521s;
+completion of qualification required the later readback (0.670s operation,
+07:38:36.873UTC start). Do not describe13.521s as a self-contained successful
+qualification or compare either warm/unknown-cache value against cold downloads.
+
+The canonical verifier proves index
+`sha256:59b699b4bf3941521c08d2d36890675caa8aad52882b46ff457abe62f025ee1b`,
+platform `sha256:ff39d11ffd4ff08d315ade1548c49f6414d268aa27a2ea5fcead8b8307369fdc`,
+config `sha256:a49c1c6925cbd4644e793785143b37e17b8257ae8c3393aa38dee606fd6d1739`,
+and28 ordered uncompressed layers on both hosts. These were download/load tests;
+no application was switched and neither sample is an accepted release.
+
+The selected candidate removes CI image archive save/compress/upload, the host
+R2 downloader/loader and part-upload RPC. Explicit registry policy checks the
+actual daemon proxy before bounded pulls. Historical source image receipts and
+all database/business R2 data remain. Legacy relay code is a test fixture only.
+Installed executors/policies still require the final exact qualified rollout;
+repository cleanup alone does not claim the production publishing path changed.

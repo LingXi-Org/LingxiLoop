@@ -7,7 +7,6 @@ const safeError = error => ({ code: error.code ?? 'EXECUTION_FAILED', message: e
 export class Executor {
   constructor({ journal, adapter, afterSideEffect, log = () => {} }) {
     this.journal = journal; this.adapter = adapter; this.active = new Set(); this.afterSideEffect = afterSideEffect; this.log = log
-    if(adapter.artifacts)adapter.artifacts.journal=journal
     adapter.recordControlRead=(op,receipt)=>{
       const key=`${op.releaseId}:${op.target}:${op.phase}`,current=journal.get(key)
       if(!current || current.manifestHash!==op.manifestHash || current.generation!==op.generation)return

@@ -8,7 +8,6 @@ import { validateImage,assertImageIdentity,inspectQualifiedImage } from './image
 import { canonical, fault, hash, identifier } from './journal.mjs'
 import {gatewayControl,gatewayDrain,gatewayPrepare,validateGatewayPlan} from './gateway-control.mjs'
 import { componentControl,componentDrain,componentProfile,validateComponentPlan,assertComponentMounts } from './component-control.mjs'
-import {ArtifactCache} from './artifact-cache.mjs'
 import {validateArchive} from './artifact-tar.mjs'
 import {configurationFiles,validateConfigurationPolicy} from './configuration-files.mjs'
 
@@ -64,7 +63,7 @@ export function validatePolicy(policy) {
   requireValue(policy?.version === 1 && isAbsolute(policy.stateDirectory) && policy.targets && typeof policy.targets === 'object', 'INVALID_POLICY', 'Trusted local policy is invalid')
   requireValue(Array.isArray(policy.acceptedOpsShas) && policy.acceptedOpsShas.length > 0 && policy.acceptedOpsShas.every(value => /^[a-f0-9]{40}$/.test(value)), 'INVALID_POLICY', 'The actual installed executor operation commit allowlist is required')
   if (policy.dockerBinary) requireValue(isAbsolute(policy.dockerBinary), 'INVALID_POLICY', 'Docker executable must be an absolute trusted local path')
-  requireValue(policy.artifactTransport===undefined||['registry','r2'].includes(policy.artifactTransport),'INVALID_POLICY','Image artifact transport must be registry or r2')
+  requireValue(policy.artifactTransport===undefined||policy.artifactTransport==='registry','INVALID_POLICY','Image distribution is registry only; retire the old R2 transport policy')
   for (const [target, value] of Object.entries(policy.targets)) {
     requireValue(identifier(target) && adapters.has(value.adapter) && identifier(value.project) && isAbsolute(value.composeFile) && isAbsolute(value.envFile) &&
       value.services && Object.keys(value.services).length > 0, 'INVALID_POLICY', 'Target must name a fixed Compose project, file, environment and services')
@@ -140,7 +139,6 @@ async function atomicJson(path, data) {
 export class ComposeAdapter {
   constructor(policy, { run, runGit, fetcher = fetch, wait = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
     this.policy = validatePolicy(policy); this.run = run ?? ((args,options = {}) => runDocker(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' })); this.fetcher = fetcher; this.wait = wait; this.runGit = runGit
-    this.artifacts=new ArtifactCache(this.policy,{run:this.run,fetcher:(...args)=>this.fetcher(...args)})
   }
   resources(target, phase) {
     const local = this.policy.targets[target]
@@ -223,12 +221,13 @@ export class ComposeAdapter {
   async prepareImage(op,image,local,context,direction){
     let identity=await this.inspectImage(image,local)
     if(identity)return{...identity,reused:true,direction}
-    requireValue(direction!=='source'||this.policy.artifactTransport==='r2','OFFLINE_IMAGE_MISSING','Qualified source image is absent from the local cache')
+    requireValue(direction!=='source','OFFLINE_IMAGE_MISSING','Qualified source image must remain in the local cache')
     requireValue(image.kind!=='local-qualified','OFFLINE_IMAGE_MISSING','A qualified local source cannot be fetched or rebuilt by the executor')
-    if(this.policy.artifactTransport==='r2'){
-      requireValue(image.archive,'OFFLINE_IMAGE_MISSING','R2 mode accepts only registered archive artifacts or strictly qualified existing local images')
-      await this.artifacts.prepare({releaseId:op.releaseId,target:op.target,manifestHash:op.manifestHash,configDigest:image.configDigest})
-    }else await context.step(`pull:${direction}:${image.configDigest??image.localImageId}`,()=>this.run(['image','pull','--platform',`${image.os}/${image.architecture}`,image.ref]),{sideEffect:false})
+    if(this.policy.artifactTransport==='registry'){
+      const info=JSON.parse(await this.run(['info','--format','{{json .}}']))
+      requireValue(info.HttpProxy==='http://127.0.0.1:17890'&&info.HttpsProxy==='http://127.0.0.1:17890','REGISTRY_PROXY_UNQUALIFIED','The approved loopback daemon proxy must be active before pulling')
+    }
+    await context.step(`pull:${direction}:${image.configDigest??image.localImageId}`,()=>this.run(['image','pull','--platform',`${image.os}/${image.architecture}`,image.ref],{timeout:180000}),{sideEffect:false})
     identity=await this.inspectImage(image,local)
     requireValue(identity,'IMAGE_MISSING','Downloaded artifact is not present after preparation')
     return{...identity,reused:false,direction}
@@ -472,7 +471,6 @@ export class ComposeAdapter {
       return { drained: false, observed: true }
     }
     if (op.phase === 'prepare') {
-      for(const descriptor of [plan,plan.recovery])for(const image of Object.values(descriptor.images))if(image.archive)await this.artifacts.status({releaseId:op.releaseId,target:op.target,manifestHash:op.manifestHash,configDigest:image.configDigest})
       for (const descriptor of [plan,plan.recovery]) for (const image of Object.values(descriptor.images)) requireValue(await this.inspectImage(image,local), 'OBSERVATION_UNRESOLVED', 'Preparation cache is incomplete')
       const source=plan.source??plan.recovery,sourceIds=await this.resolveImages(source.images,local),actual=await this.containers(op)
       requireValue(Object.entries(actual).every(([service,container])=>container.Image===sourceIds[service].localImageId),'SOURCE_IMAGE_CHANGED','Preparation recovery requires the exact original source service images')

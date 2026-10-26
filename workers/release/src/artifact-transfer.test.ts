@@ -1,7 +1,7 @@
 import { env, fetchMock } from 'cloudflare:test'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { archivedImages, validateImageArchive, type ArchivedImage, type Manifest, type Target } from '../../../shared/release/protocol'
-import { relayArtifactPart } from './artifact-transfer'
+import { relayArtifactPart } from './artifact-transfer.fixture'
 import type { ReleaseEnv } from './types'
 const bindings = env as unknown as ReleaseEnv
 const configDigest = `sha256:${'a'.repeat(64)}`
