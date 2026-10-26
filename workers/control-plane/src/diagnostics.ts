@@ -1,4 +1,6 @@
 import { z } from 'zod'
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { boundedResponseText, redact } from './mcp'
 
 const keysSchema = z.array(z.object({
@@ -29,14 +31,12 @@ export async function diagnosticCredential(request: Request, configured?: string
   return hash === key.sha256 ? key.id : null
 }
 
-export function diagnosticPath(request: Request): string | null {
-  const url = new URL(request.url)
-  if (url.pathname !== '/api/diagnostics' || url.search.length > 6000) return null
-  const parsed = querySchema.safeParse(Object.fromEntries(url.searchParams))
+function diagnosticPath(input: unknown): string | null {
+  const parsed = querySchema.safeParse(input)
   if (!parsed.success) return null
   const { view, id, afterSeq, ...filters } = parsed.data
   if (view === 'run' || view === 'operations') {
-    if (!id || [...url.searchParams.keys()].some(key => key !== 'view' && key !== 'id' && !(view === 'operations' && key === 'afterSeq'))) return null
+    if (!id || (view === 'run' && afterSeq !== undefined)) return null
     return view === 'run' ? `/api/admin/resources/agent-runs/${id}` : `/api/admin/agent-runs/${id}/operations${afterSeq === undefined ? '' : `?afterSeq=${afterSeq}`}`
   }
   if (id || afterSeq !== undefined) return null
@@ -44,6 +44,26 @@ export function diagnosticPath(request: Request): string | null {
   const query = new URLSearchParams()
   for (const [key, value] of Object.entries(filters)) if (value !== undefined) query.set(key, String(value))
   return `/api/admin/resources/${resource}?${query}`
+}
+
+export async function handleDiagnosticMcpRequest(request: Request, version: string,
+  read: (path: string, view: string) => Promise<Response>): Promise<Response> {
+  const server = new McpServer({ name: 'lingxiloop-readonly-diagnostics', version })
+  server.registerTool('lingxiloop_diagnostics', {
+    description: 'Read production failures only: runs (filter/search), run (id), operations (id, afterSeq pagination), llm-calls, or delivery-failures. No production mutations are authorized.',
+    inputSchema: querySchema.shape,
+    annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true },
+  }, async input => {
+    const path = diagnosticPath(input)
+    if (!path) return { isError: true, content: [{ type: 'text', text: 'Unsupported diagnostic query' }] }
+    try {
+      const response = await read(path, input.view)
+      return { ...(response.ok ? {} : { isError: true }), content: [{ type: 'text', text: await response.text() }] }
+    } catch { return { isError: true, content: [{ type: 'text', text: 'Diagnostic read unavailable' }] } }
+  })
+  const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true })
+  await server.connect(transport)
+  try { return await transport.handleRequest(request) } finally { await server.close() }
 }
 
 export async function diagnosticResponse(response: Response, secrets: string[]): Promise<Response> {
