@@ -108,8 +108,13 @@ explicit contract/capabilities, original durable mounts and installed named
 probes. Prepare both runtime hosts before any drain. Same-schema qualification
 does not authorize a schema change. A schema-changing plan requires the fixed
 maintenance barrier, final zero-write-loss backup, isolated restore verification
-and exact checksum ledger before migration; it cannot automatically undo DB
-commits or run an incompatible old image.
+and exact checksum ledger before migration by default; it cannot automatically
+undo DB commits or run an incompatible old image. The explicitly authorized
+[test-data exception](../../../docs/release-test-data-mode.md) uses this same
+single entry and immutable contract qualification, with trusted local opt-in.
+It skips backup/isolated restore only for same-SDK/native forward product
+migrations. Report the lack of a data recovery point; never mark skipped backup
+work successful. No async backup architecture is required or implied.
 
 The DO/Workflow owns generations and resource locks; the host journal records
 intent before acceptance and side effects. Wait for actual host phase completion,

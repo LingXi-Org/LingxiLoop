@@ -58,7 +58,7 @@ export function archivedImages(target: Target): ArchivedImage[] {
 export type DatabasePlan = {
   from: { nativeSchema: number; productSchema: number }
   to: { nativeSchema: number; productSchema: number }
-  strategy: 'maintenance'; rpo: 'zero-committed-writes'
+  strategy: 'maintenance'; rpo: 'zero-committed-writes' | 'test-data-no-backup'
   migrations: { version: number; checksum: string }[]
 }
 export function databasePlan(target: Target): DatabasePlan | undefined {
@@ -159,9 +159,12 @@ export function assertSource(m: Manifest, accepted: Accepted) {
         // plan. Its real host policy and helpers enforce backup, restoration,
         // writer isolation, published package provenance and migration ledger.
         const owner = m.targets['main-runtime-a']; const database = owner && databasePlan(owner)
+        const testData = database?.rpo === 'test-data-no-backup' && database.from?.nativeSchema === database.to?.nativeSchema &&
+          !!current.contract.lingxios && current.contract.lingxios === target.contract.lingxios &&
+          database.to?.productSchema > database.from?.productSchema && !('runtimePatch' in database)
         requireThat(target.adapter === 'main-runtime' && m.targets['main-runtime-b'] && owner && database &&
           owner.hostPlan?.mode === 'maintenance' && m.targets['main-runtime-b'].hostPlan?.mode === 'maintenance' &&
-          database.strategy === 'maintenance' && database.rpo === 'zero-committed-writes' &&
+          database.strategy === 'maintenance' && (database.rpo === 'zero-committed-writes' || testData) &&
           database.from?.nativeSchema === current.contract.nativeSchema && database.from?.productSchema === current.contract.productSchema &&
           database.to?.nativeSchema === target.contract.nativeSchema && database.to?.productSchema === target.contract.productSchema &&
           database.to?.nativeSchema >= database.from?.nativeSchema && database.to?.productSchema >= database.from?.productSchema &&

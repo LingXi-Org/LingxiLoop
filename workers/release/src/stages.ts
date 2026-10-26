@@ -42,7 +42,8 @@ export function forwardStages(manifest: Manifest): ReleaseStage[] {
       if (runtimeDone) continue
       requireThat(runtime.includes('main-runtime-a') && runtime.includes('main-runtime-b'), 'MAINTENANCE_REQUIRES_BOTH_NODES')
       host(runtime, 'drain')
-      if (databasePlan(manifest.targets['main-runtime-a']!)) for (const phase of ['backup', 'restore-verify', 'migrate']) host(['main-runtime-a'], phase)
+      const database = databasePlan(manifest.targets['main-runtime-a']!)
+      if (database) for (const phase of database.rpo === 'test-data-no-backup' ? ['migrate'] : ['backup', 'restore-verify', 'migrate']) host(['main-runtime-a'], phase)
       for (const target of runtime) { host([target], 'apply'); host([target], 'verify') }
       host(runtime, 'undrain'); runtimeDone = true
     } else if (t.artifact.kind === 'worker') plan.push({ key: `activate-${id}`, kind: 'worker', targets: [id] })

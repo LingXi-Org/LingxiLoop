@@ -155,8 +155,9 @@ export class Executor {
         case 'backup': case 'restore-verify': case 'migrate': {
           this.requirePrepared(op,state)
           if (!plan.database || state.drainedHash !== op.manifestHash || state.drainedGeneration !== op.generation) throw fault('DRAIN_REQUIRED','Database phases require this generation to prove maintenance drain')
-          if (op.phase !== 'backup' && !state.backupHash?.[op.manifestHash]) throw fault('BACKUP_REQUIRED','A verified source backup is required before this database phase')
-          if (op.phase === 'migrate' && !state.restoreVerifiedHash?.[op.manifestHash]) throw fault('RESTORE_VERIFY_REQUIRED','Isolated restore verification is required before migration')
+          const testMigration = op.phase === 'migrate' && plan.database.rpo === 'test-data-no-backup'
+          if (!testMigration && op.phase !== 'backup' && !state.backupHash?.[op.manifestHash]) throw fault('BACKUP_REQUIRED','A verified source backup is required before this database phase')
+          if (plan.database.rpo !== 'test-data-no-backup' && op.phase === 'migrate' && !state.restoreVerifiedHash?.[op.manifestHash]) throw fault('RESTORE_VERIFY_REQUIRED','Isolated restore verification is required before migration')
           const action = op.phase === 'restore-verify' ? 'restoreVerify' : op.phase
           result = await context.step(`database:${action}`, () => this.adapter.control(this.adapter.policy.targets[op.target],action,op), { sideEffect:true })
           if (result?.complete !== true) throw fault('DATABASE_RECEIPT_INVALID','Fixed database helper has not proved completion')

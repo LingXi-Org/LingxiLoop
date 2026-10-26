@@ -213,3 +213,16 @@ test('SDK12 to SDK14 attestation must bind the exact fixed CAS57 package and unc
   const f=runtimePatch57Fixture();for(const o of Object.values(f.attestation.targets))mutate(o);assert.throws(()=>buildManifest(f),/CONTRACT_CHANGE_REQUIRES_ATTESTATION/)
  }
 })
+
+test('explicit test-data migration stays source-qualified and is never inherited by ordinary releases',()=>{
+  const f=migrationFixture()
+  for(const t of Object.values(f.attestation.targets))t.hostPlan.database.rpo='test-data-no-backup'
+  const result=buildManifest(f)
+  assert.equal(result.targets['main-runtime-a'].hostPlan.database.rpo,'test-data-no-backup')
+  const nextAccepted={releaseId:result.releaseId,components:Object.fromEntries(Object.entries(result.targets).map(([id,t])=>[id,{...t,releaseId:result.releaseId,appSha:result.appSha,sequence:2}]))}
+  const ordinary=buildManifest({...f,accepted:nextAccepted,sequence:3,attestation:undefined})
+  assert.equal(ordinary.targets['main-runtime-a'].hostPlan.database,undefined)
+
+  for(const t of Object.values(f.attestation.targets))t.hostPlan.database.to.nativeSchema=15
+  assert.throws(()=>buildManifest(f))
+})

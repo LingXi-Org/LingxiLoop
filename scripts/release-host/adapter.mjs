@@ -1,4 +1,5 @@
 import {archiveDiagnosticFields} from './archive-diagnostics.mjs'
+import {authorizedTestDataMode} from './data-protection.mjs'
 import {prepareCache} from './cache-pull.mjs'
 import { controlRead } from './control-read.mjs'
 import { execFile, spawn } from 'node:child_process'
@@ -105,11 +106,12 @@ export function validateHostPlan(manifest, target, policy) {
   for(const descriptor of [plan,plan.source??plan.recovery,plan.recovery])configurationFiles(local,descriptor.configurationHash)
   for(const descriptor of [plan,plan.source,plan.recovery])for(const image of Object.values(descriptor?.images??{}))if(image.archive)validateArchive(image)
   if (plan.database) {
-    if (local.databaseOwner) requireValue(policy.archive && typeof policy.archive.baseUrl === 'string' && policy.archive.baseUrl.startsWith('https://') && isAbsolute(policy.archive.tokenFile ?? ''), 'ARCHIVE_POLICY_REQUIRED', 'Database preparation requires a trusted immutable archive endpoint and local credential reference')
+    const testData = authorizedTestDataMode(plan,policy)
+    if (local.databaseOwner && !testData) requireValue(policy.archive && typeof policy.archive.baseUrl === 'string' && policy.archive.baseUrl.startsWith('https://') && isAbsolute(policy.archive.tokenFile ?? ''), 'ARCHIVE_POLICY_REQUIRED', 'Database preparation requires a trusted immutable archive endpoint and local credential reference')
     requireValue(plan.source, 'SOURCE_REQUIRED', 'Schema-changing plans must distinguish the actual source from compatible recovery')
     const db = plan.database
     validateRuntimePatch(db)
-    requireValue(plan.mode === 'maintenance' && db.strategy === 'maintenance' && db.rpo === 'zero-committed-writes' && [db.from?.nativeSchema,db.from?.productSchema,db.to?.nativeSchema,db.to?.productSchema].every(Number.isSafeInteger) && Array.isArray(db.migrations) && db.migrations.length === db.to.productSchema && db.migrations.every((item,index) => item.version === index + 1 && /^[a-f0-9]{64}$/.test(item.checksum)), 'INVALID_DATABASE_PLAN', 'Database plan requires maintenance, zero-write-loss and a complete ordered checksum inventory')
+    requireValue(plan.mode === 'maintenance' && db.strategy === 'maintenance' && [db.from?.nativeSchema,db.from?.productSchema,db.to?.nativeSchema,db.to?.productSchema].every(Number.isSafeInteger) && Array.isArray(db.migrations) && db.migrations.length === db.to.productSchema && db.migrations.every((item,index) => item.version === index + 1 && /^[a-f0-9]{64}$/.test(item.checksum)), 'INVALID_DATABASE_PLAN', 'Database plan requires maintenance, explicit data protection and a complete ordered checksum inventory')
     requireValue(db.to.nativeSchema === plan.contract.nativeSchema && db.to.productSchema === plan.contract.productSchema, 'INVALID_DATABASE_PLAN', 'Database target schema must equal the target artifact contract')
   }
   if (local.adapter === 'gateway') validateGatewayPlan(local,plan)

@@ -62,3 +62,9 @@ test('resume initialization wait is bounded and process restart preserves its de
  await runRelease({manifest,mode:'resume',previous:saved},deps)
  assert.equal(clock,30000);assert.equal(writes,1)
 })
+
+test('single entry records explicit test-data protection separately from acceptance',async()=>{
+  const input={...manifest,targets:{'main-runtime-a':{hostPlan:{database:{rpo:'test-data-no-backup'}}}}}
+  const result=await runRelease({manifest:input,mode:'preflight'},{call:async method=>method==='get'?missing():{}})
+  assert.equal(result.dataProtectionMode,'test-data-no-backup');assert.equal(result.status,'preflight-passed')
+})

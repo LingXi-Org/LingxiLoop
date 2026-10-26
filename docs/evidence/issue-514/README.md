@@ -307,3 +307,42 @@ transport retry after an absent readback, releases unused error response bodies,
 and retains both attempts and allowlisted transport codes. Authentication,
 quota, TLS, identity and permanent DNS errors do not retry. Local fault tests are
 qualification evidence; production success is still required.
+
+## Accepted business deliveries (2026-10-26)
+
+[Exact same-attempt stage timings and durable proof identities](accepted-samples.json):
+
+| Release | Single command | Controller execution | Stage queue | Result |
+| --- | ---: | ---: | ---: | --- |
+| CAS57 / SDK3.8.14 / app80b5bcb3 | 557.755s | 506.138s | 44.760s | accepted generation14 |
+| product58 / app4af7c700, attempt2 | 755.342s | 701.858s | 49.041s | accepted generation15 |
+
+Both used host Ops036190c1, one submission, zero client retries and no manual
+controller intervention or recovery stages inside these successful commands.
+Product58 used the approved Worker code3ba41099; its manifest transfer to B took
+26.997s and succeeded within the corrected60s allowance. Ops selectors stayed036.
+Its main image came from exact CI40344540467 and static version from40345178964,
+both app4af7c700. Five final HTTPS probes returned200,166 Workflows were terminal,
+and A/B had zero outstanding operations/reservations at16:23UTC.
+
+CAS57's backup stage was232.049s, including214.489s upload; isolated restore35.592s,
+CAS/migration37.201s and serial app switch95.750s. Product58's backup was246.838s,
+including228.670s upload; isolated restore31.896s, migration14.167s, switch96.380s.
+Nested upload times and overlapping A/B pulls must not be added again. Product58
+prepare205.734s included parallel A200.092s/B145.897s pulls. CAS57 prepare used
+already-qualified cached images. Both successful upload attempts returnedHTTP201.
+
+Keep previous failures separate: Ops036's waiting-task refusal recovered in
+524.998s; the specifically authorized SDK12 cancellation and readback preceded
+CAS57's successful new attempt. Product58's first attempt blocked on the old20s
+manifest timeout (124.885s), one manual resume remained blocked (263.634s cumulative),
+and its original budget expired15:56:41.862UTC. It never migrated or became accepted.
+Only after zero-inflight proof and explicit approval was attempt2 started. Historic
+Docker proxy repairs consumed A3/B1 restarts; neither successful business attempt
+restarted Docker. Approval/repair waiting outside the command is not zero time.
+
+There are now two accepted samples but **zero comparable historical accepted
+samples**, so no defensible production end-to-end speedup factor. Historical
+recovered/incomplete runs are not successful baselines. The test-data mode removes
+specified backup/restore stages only when explicitly approved; no production
+sample or speedup is claimed for that code-only option.

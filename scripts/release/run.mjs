@@ -21,7 +21,7 @@ export async function runRelease({manifest,mode='publish',budgetMs=2_400_000,pre
   if(!manifest?.releaseId||!manifest.appSha||!manifest.opsSha||manifest.checks?.commit!==manifest.appSha||manifest.checks?.conclusion!=='success')throw fail('QUALIFIED_MANIFEST_REQUIRED')
   const identity=fingerprint(manifest)
   if(previous&&(previous.manifestHash!==identity||previous.mode!==mode))throw fail('RUN_CHECKPOINT_CONFLICT')
-  const receipt=previous??{version:1,releaseId:manifest.releaseId,appSha:manifest.appSha,opsSha:manifest.opsSha,manifestHash:identity,mode,startedAt:now(),deadline:now()+budgetMs,requests:0,retries:0,submissions:0,stages:[],status:'preflight'}
+  const receipt=previous??{version:1,releaseId:manifest.releaseId,appSha:manifest.appSha,opsSha:manifest.opsSha,manifestHash:identity,mode,dataProtectionMode:manifest.targets?.['main-runtime-a']?.hostPlan?.database?.rpo??'no-database-change',startedAt:now(),deadline:now()+budgetMs,requests:0,retries:0,submissions:0,stages:[],status:'preflight'}
   const checkpoint=()=>{receipt.observedAt=now();save(receipt)}
   const stage=async(name,fn)=>{const row={name,startedAt:now()};receipt.stages.push(row);checkpoint();try{return await fn()}catch(error){row.error=safe(error);throw error}finally{row.completedAt=now();checkpoint()}}
   const request=async(method,args)=>{if(now()>=receipt.deadline)throw fail('RUN_DEADLINE_EXCEEDED');receipt.requests++;checkpoint();return call(method,args,{timeoutMs:Math.min(30_000,receipt.deadline-now())})}
@@ -164,8 +164,8 @@ if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
     process.chdir(resolve(dirname(fileURLToPath(import.meta.url)),'../..'))
     const previous=existsSync(path)?JSON.parse(readFileSync(path,'utf8')):undefined
     const result=await runRelease({manifest,mode,previous},{qualify:qualifySource,save:value=>atomicReceipt(path,value),progress:value=>console.error(JSON.stringify(value))})
-    console.log(JSON.stringify({releaseId:result.releaseId,status:result.status,error:result.error??null,receipt:path,elapsedSeconds:((result.completedAt??result.observedAt)-result.startedAt)/1000,retries:result.retries,productionAccepted:result.status==='accepted'}))
-    console.error(`Release ${result.releaseId}: ${result.status}. Receipt: ${path}. ${result.status==='accepted'?'Controller accepted this candidate.':result.status==='recovered'?'Controller restored the compatible release; candidate not accepted.':'Production acceptance is not established.'}`)
+    console.log(JSON.stringify({releaseId:result.releaseId,status:result.status,error:result.error??null,receipt:path,dataProtectionMode:result.dataProtectionMode??null,elapsedSeconds:((result.completedAt??result.observedAt)-result.startedAt)/1000,retries:result.retries,productionAccepted:result.status==='accepted'}))
+    console.error(`Release ${result.releaseId}: ${result.status}. Receipt: ${path}. ${result.dataProtectionMode==='test-data-no-backup'?'Test data: no migration backup or isolated restore; committed data changes have no guaranteed rollback. ':''}${result.status==='accepted'?'Controller accepted this candidate.':result.status==='recovered'?'Controller restored the compatible release; candidate not accepted.':'Production acceptance is not established.'}`)
     process.exitCode=['accepted','preflight-passed'].includes(result.status)?0:result.status==='recovered'?2:1
     }
   }catch(error){console.error(JSON.stringify({status:'preflight-failed',error:safe(error),productionAccepted:false}));process.exitCode=1}
