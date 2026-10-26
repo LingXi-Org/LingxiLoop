@@ -61,6 +61,15 @@ the safe nodes, records a resumable receipt, and refuses file drift or a running
 proxy. It never silently enables certificate bypass. Native validation grants
 Mihomo only the exact already-approved provider path through `SAFE_PATHS`; the
 service drop-in grants only its corresponding systemd credential file.
+For an explicitly authorized same-image download measurement, run
+`scripts/release/run.sh route-benchmark a|b registry|r2 <qualified-manifest.json> [1|3]`.
+Use the same concurrency for compared routes. Each sample has a 180-second work
+budget plus at most 25 seconds for outstanding socket cleanup, zero implicit retries, complete object
+size/hash checks, no local download-cache reuse, and separate failure receipts.
+It reads existing registry/executor credentials only in host memory. Registry
+requests use the approved loopback proxy with normal TLS; R2 uses the existing
+direct route. It does not load images or switch applications, so report this as
+download evidence, never as an end-to-end publication speedup.
 
 `preflight` checks the existing environment, exact app CI, exact operations CI,
 existing release identity and controller plan. `publish` performs those same
