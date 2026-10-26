@@ -71,10 +71,10 @@ export function createExecutorServer({ executor, token, ingress, dispatch = key 
         return operation ? send(200,operation) : send(404,{ error:{ code:'OPERATION_NOT_FOUND' } })
       }
       if (request.method === 'POST' && url.pathname === '/operations') {
-        const { operation,created } = executor.submit(await jsonBody(request))
+        const { operation,created,resumed } = executor.submit(await jsonBody(request))
         // submit's FULL SQLite transaction is committed before the 202 can be written.
         send(202,operation)
-        if (created || executor.canResumeUnstartedRecoveryDrain?.(operation) === true) {
+        if (created || resumed === true || executor.canResumeUnstartedRecoveryDrain?.(operation) === true) {
           const work = new Promise(resolve => setImmediate(resolve)).then(() => dispatch(operation.key))
           pending.add(work); work.finally(() => pending.delete(work)).catch(() => {})
         }

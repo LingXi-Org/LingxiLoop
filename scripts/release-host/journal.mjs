@@ -62,7 +62,7 @@ export class Journal {
       result: row.result ? JSON.parse(row.result) : null, errors: JSON.parse(row.errors), steps: JSON.parse(row.steps),
       createdAt: row.created_at, updatedAt: row.updated_at }
   }
-  accept(request, resources) {
+  accept(request, resources, {resumeUnstartedRecover=false} = {}) {
     validateRequest(request)
     return this.tx(() => {
       const key = operationKey(request), requestHash = hash(request)
@@ -72,7 +72,25 @@ export class Journal {
         const fence = this.db.prepare('SELECT generation,release_id FROM fences WHERE resource=?').get(resource)
         if (fence && (fence.generation > request.generation || fence.generation === request.generation && fence.release_id !== request.releaseId)) throw fault('STALE_GENERATION', 'A newer execution generation owns this resource')
       }
-      if (existing) return { operation: this.get(key), created: false }
+      if (existing) {
+        const op=this.get(key)
+        if(resumeUnstartedRecover && op.phase==='recover' && op.status==='failed' && op.steps.length===0 && op.errors.recovery?.code==='CONTROL_UNAVAILABLE'){
+          const state=this.state(op.target)
+          if(state.drainedHash!==op.manifestHash || state.drainedGeneration!==op.generation || state.preparedHashes?.[op.manifestHash]!==true)throw fault('DRAIN_REQUIRED','Original generation must still prove prepared maintenance drain before recovery continuation')
+          // This FULL transaction only reacquires free original resources. It
+          // never changes fences, steals a reservation or allocates a new operation.
+          for(const resource of resources){
+            const fence=this.db.prepare('SELECT generation,release_id FROM fences WHERE resource=?').get(resource)
+            if(fence?.generation!==op.generation || fence.release_id!==op.releaseId)throw fault('STALE_GENERATION','Original recovery generation no longer owns every resource fence')
+            if(this.db.prepare('SELECT operation_key FROM reservations WHERE resource=?').get(resource))throw fault('RESOURCE_BUSY','An existing resource owner prevents recovery continuation')
+          }
+          const errors={...op.errors,originalRecoveryFailure:op.errors.originalRecoveryFailure??op.errors.recovery}
+          for(const resource of resources)this.db.prepare('INSERT INTO reservations VALUES (?,?)').run(resource,key)
+          this.db.prepare('UPDATE operations SET status=?,errors=?,updated_at=? WHERE key=?').run('intent',canonical(errors),new Date().toISOString(),key)
+          return {operation:this.get(key),created:false,resumed:true}
+        }
+        return { operation:op, created:false }
+      }
       if (request.phase !== 'observe') for (const resource of resources) {
         const lock = this.db.prepare('SELECT operation_key FROM reservations WHERE resource=?').get(resource)
         if (lock) throw fault('RESOURCE_BUSY', `Resource has an unresolved operation: ${lock.operation_key}`)
