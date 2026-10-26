@@ -5,12 +5,15 @@ type Operation = { operationId?: string; key?: string; status: string; result?: 
 const success = new Set(['complete', 'succeeded', 'success'])
 export function settled(operation: Operation): boolean { return success.has(operation.status) || operation.status === 'failed' }
 export function successful(operation: Operation): boolean { return success.has(operation.status) }
+function queryFailure(error: unknown, fallback: string) {
+  return new ReleaseError(error instanceof Error && error.message === 'Too many subrequests.' ? 'WORKFLOW_SUBREQUEST_LIMIT' : fallback, 503)
+}
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response
   try { response = await fetch(url, { ...init, redirect: 'manual', signal: AbortSignal.timeout(20_000) }) }
-  catch { throw new ReleaseError('TRANSPORT_OUTCOME_UNKNOWN', 503) }
+  catch (error) { throw queryFailure(error, 'TRANSPORT_OUTCOME_UNKNOWN') }
   if (!response.ok) throw new ReleaseError(response.status === 401 || response.status === 403 ? 'AUTHENTICATION_FAILED' : `REMOTE_HTTP_${response.status}`, response.status >= 500 ? 503 : 409)
-  return response.json() as Promise<T>
+  try { return await response.json() as T } catch (error) { throw queryFailure(error, 'TRANSPORT_OUTCOME_UNKNOWN') }
 }
 export function executor(env: ReleaseEnv, host: string) {
   const endpoint = (JSON.parse(env.EXECUTORS_JSON) as Record<string, string>)[host]
@@ -26,13 +29,15 @@ export async function installManifest(env: ReleaseEnv, host: string, manifest: M
   const { endpoint, headers } = executor(env, host)
   return jsonFetch(`${endpoint.replace(/\/$/, '')}/manifests`, { method: 'POST', headers, body: JSON.stringify({ manifest, manifestHash }) })
 }
-export async function hostOperation(env: ReleaseEnv, host: string, manifest: Manifest, manifestHash: string, target: TargetId, phase: string, generation: number, submit = true): Promise<Operation> {
+export async function hostOperation(env: ReleaseEnv, host: string, manifest: Manifest, manifestHash: string, target: TargetId, phase: string, generation: number, submit = true, waitSeconds = 0): Promise<Operation> {
+  requireThat(Number.isFinite(waitSeconds) && waitSeconds >= 0 && waitSeconds <= 45, 'INVALID_OPERATION_WAIT')
   const { endpoint, headers } = executor(env, host)
   const base = endpoint.replace(/\/$/, ''); const key = `${manifest.releaseId}:${target}:${phase}`
+  const query = `${base}/operations?key=${encodeURIComponent(key)}${waitSeconds > 0 ? `&waitSeconds=${Number(waitSeconds.toFixed(3))}` : ''}`
   let observed: Response
-  try { observed = await fetch(`${base}/operations?key=${encodeURIComponent(key)}`, { headers, redirect: 'manual', signal: AbortSignal.timeout(20_000) }) }
-  catch { throw new ReleaseError('EXECUTOR_QUERY_UNAVAILABLE', 503) }
-  if (observed.ok) return observed.json() as Promise<Operation>
+  try { observed = await fetch(query, { method: 'GET', headers, redirect: 'manual', signal: AbortSignal.timeout(Math.ceil(waitSeconds * 1000) + 20_000) }) }
+  catch (error) { throw queryFailure(error, 'EXECUTOR_QUERY_UNAVAILABLE') }
+  if (observed.ok) { try { return await observed.json() as Operation } catch (error) { throw queryFailure(error, 'EXECUTOR_QUERY_UNAVAILABLE') } }
   requireThat(observed.status === 404, observed.status === 401 || observed.status === 403 ? 'AUTHENTICATION_FAILED' : 'EXECUTOR_QUERY_UNAVAILABLE')
   if (!submit) return { key, status: 'absent' }
   // POST can be retried only with this exact key and exact parameter hash.
@@ -40,9 +45,12 @@ export async function hostOperation(env: ReleaseEnv, host: string, manifest: Man
   try {
     return await jsonFetch<Operation>(`${base}/operations`, { method: 'POST', headers, body: JSON.stringify({ releaseId: manifest.releaseId, target, phase, generation, manifestHash, parameters: {} }) })
   } catch (error) {
-    if (error instanceof ReleaseError && error.code === 'AUTHENTICATION_FAILED') throw error
+    if (error instanceof ReleaseError && ['AUTHENTICATION_FAILED', 'WORKFLOW_SUBREQUEST_LIMIT'].includes(error.code)) throw error
     try { return await jsonFetch<Operation>(`${base}/operations?key=${encodeURIComponent(key)}`, { headers }) }
-    catch { throw new ReleaseError('OPERATION_OUTCOME_UNKNOWN', 503) }
+    catch (queryError) {
+      if (queryError instanceof ReleaseError && queryError.code === 'WORKFLOW_SUBREQUEST_LIMIT') throw queryError
+      throw new ReleaseError('OPERATION_OUTCOME_UNKNOWN', 503)
+    }
   }
 }
 async function cloudflare<T>(env: ReleaseEnv, workerName: string, suffix: string, init?: RequestInit): Promise<T> {
@@ -69,7 +77,8 @@ export async function activateWorker(env: ReleaseEnv, target: Target, recovery =
   if (await workerVersion(env, target) === artifact.versionId) return { versionId: artifact.versionId, reconciled: true }
   try {
     await cloudflare(env, artifact.workerName!, '/deployments', { method: 'POST', body: JSON.stringify({ strategy: 'percentage', versions: [{ version_id: artifact.versionId, percentage: 100 }] }) })
-  } catch {
+  } catch (error) {
+    if (error instanceof ReleaseError && error.code === 'WORKFLOW_SUBREQUEST_LIMIT') throw error
     requireThat(await workerVersion(env, target) === artifact.versionId, 'WORKER_DEPLOYMENT_OUTCOME_UNKNOWN')
   }
   requireThat(await workerVersion(env, target) === artifact.versionId, 'WORKER_VERSION_MISMATCH')
@@ -85,12 +94,12 @@ export async function verifyTarget(env: ReleaseEnv, target: Target, recovery = f
     requireThat(probe && new URL(probe.url).protocol === 'https:', 'PROBE_NOT_CONFIGURED')
     let response: Response
     try { response = await fetch(probe.url, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(20_000), headers: probe.header }) }
-    catch { throw new ReleaseError('PROBE_QUERY_UNAVAILABLE', 503) }
+    catch (error) { throw queryFailure(error, 'PROBE_QUERY_UNAVAILABLE') }
     requireThat(response.status === probe.status, 'BUSINESS_PROBE_FAILED')
     if (probe.json) {
       let body: Record<string, unknown>
       try { body = await response.json() as Record<string, unknown> }
-      catch { throw new ReleaseError('PROBE_QUERY_UNAVAILABLE', 503) }
+      catch (error) { throw queryFailure(error, 'PROBE_QUERY_UNAVAILABLE') }
       requireThat(body && typeof body === 'object' && !Array.isArray(body), 'BUSINESS_PROBE_CONTENT_MISMATCH')
       for (const [key, value] of Object.entries(probe.json)) requireThat(canonical(body[key]) === canonical(value), 'BUSINESS_PROBE_CONTENT_MISMATCH')
     }

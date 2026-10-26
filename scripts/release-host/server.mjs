@@ -53,9 +53,21 @@ export function createExecutorServer({ executor, token, ingress, dispatch = key 
       }
       if (request.method === 'GET' && url.pathname === '/operations') {
         const key = url.searchParams.get('key')
-        if (!key || key.length > 400 || url.searchParams.size !== 1) throw fault('INVALID_KEY','One operation key is required',400)
+        if (!key || key.length > 400 || url.searchParams.getAll('key').length !== 1 || [...url.searchParams.keys()].some(key => !['key','waitSeconds'].includes(key))) throw fault('INVALID_KEY','One operation key is required',400)
+        const waitValue = url.searchParams.get('waitSeconds') ?? '0'
+        if (url.searchParams.getAll('waitSeconds').length > 1 || !/^\d{1,2}(?:\.\d{1,3})?$/.test(waitValue) || Number(waitValue) > 45) throw fault('INVALID_WAIT_SECONDS','waitSeconds must be between 0 and 45 with at most millisecond precision',400)
+        const deadline = Date.now() + Number(waitValue) * 1000
         let operation = executor.journal.get(key)
         if (operation && ['running','uncertain'].includes(operation.status) && !executor.active.has(key)) operation = await executor.reconcile(operation)
+        // Wait only on this existing journal record. This GET never dispatches
+        // an intent or repeats a side effect; inactive unknown results retain
+        // the existing read-only observation at entry and once at the boundary.
+        while (operation && !['succeeded','failed'].includes(operation.status) && Date.now() < deadline && !response.destroyed) {
+          await new Promise(resolve => setTimeout(resolve,Math.min(250,deadline-Date.now())))
+          operation = executor.journal.get(key)
+        }
+        if (response.destroyed) return
+        if (Number(waitValue) > 0 && operation && ['running','uncertain'].includes(operation.status) && !executor.active.has(key)) operation = await executor.reconcile(operation)
         return operation ? send(200,operation) : send(404,{ error:{ code:'OPERATION_NOT_FOUND' } })
       }
       if (request.method === 'POST' && url.pathname === '/operations') {

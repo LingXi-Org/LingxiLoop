@@ -6,19 +6,21 @@ import { ledgerCall, type ReleaseEnv, type ReleaseRecord } from './types'
 
 const retry = { retries: { limit: 0, delay: '1 second' as const }, timeout: '2 minutes' as const }
 const artifactRetry = { ...retry, timeout: '8 minutes' as const }
+const observationRetry = { ...retry, timeout: '5 minutes' as const }
+const errorCode = (error: unknown) => error instanceof Error && error.message === 'Too many subrequests.' ? 'WORKFLOW_SUBREQUEST_LIMIT' : (error as { code?: string })?.code
 export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId: string; attempt: number }> {
   async run(event: WorkflowEvent<{ releaseId: string; attempt: number }>, step: WorkflowStep) {
     const { releaseId } = event.payload
     let retryLimit = 0
     // Persist JSON envelopes so a provider exception cannot lose an unknown-
     // outcome code, and all durable step outputs have a JSON-only wire shape.
-    const durable = async <T>(name: string, configOrFn: typeof retry | typeof artifactRetry | (() => Promise<T>), fn?: () => Promise<T>): Promise<T> => {
+    const durable = async <T>(name: string, configOrFn: typeof retry | typeof artifactRetry | typeof observationRetry | (() => Promise<T>), fn?: () => Promise<T>): Promise<T> => {
       const callback = typeof configOrFn === 'function' ? configOrFn : fn!
       const output = await step.do(name, typeof configOrFn === 'function' ? retry : configOrFn, async () => {
         for (let attempt = 0; ; attempt++) {
           try { return JSON.stringify({ ok: true, value: await callback() }) }
           catch (error) {
-            const code = error instanceof ReleaseError ? error.code : (error as { code?: string }).code
+            const code = errorCode(error)
             const transient = /^(?:REMOTE_HTTP_(?:429|502|503|504)|EXECUTOR_QUERY_UNAVAILABLE|PROBE_QUERY_UNAVAILABLE|TRANSPORT_OUTCOME_UNKNOWN|OPERATION_OUTCOME_UNKNOWN)$/.test(code ?? '')
             if (transient && attempt < retryLimit) { await new Promise(resolve => setTimeout(resolve, 500 * 2 ** attempt)); continue }
             return JSON.stringify({ ok: false, error: code && /^[A-Z][A-Z0-9_]+$/.test(code) ? code : 'STEP_OUTCOME_UNKNOWN' })
@@ -49,13 +51,20 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
     const hostPhase = async (target: TargetId, phase: string) => {
       const t = manifest.targets[target]!
       for (const host of t.hosts) {
-        const operation = await durable(`${target}-${host}-${phase}-submit`, retry, async () => { await authorize(); return hostOperation(this.env, host, manifest, record.manifestHash, target, phase, phase === 'prepare' ? 0 : record.generation) })
-        let current = operation
-        // Fixed bounded program waiting never invokes a model. Callback events
-        // can wake the Workflow sooner; a missed event is reconciled by key.
-        for (let n = 0; !settled(current) && n < Math.ceil(manifest.policy.drainSeconds / 5); n++) {
-          await step.sleep(`${target}-${host}-${phase}-wait-${n}`, '5 seconds')
-          current = await durable(`${target}-${host}-${phase}-observe-${n}`, retry, () => hostOperation(this.env, host, manifest, record.manifestHash, target, phase, phase === 'prepare' ? 0 : record.generation, false))
+        const submission = await durable(`${target}-${host}-${phase}-submit`, retry, async () => {
+          await authorize()
+          const deadline = Date.now() + manifest.policy.drainSeconds * 1000
+          return { operation: await hostOperation(this.env, host, manifest, record.manifestHash, target, phase, phase === 'prepare' ? 0 : record.generation), deadline }
+        })
+        let current = submission.operation
+        // One bounded same-key GET waits on the host journal. The persisted
+        // deadline is reused on durable replay; it never grants a new budget.
+        for (let n = 0; !settled(current) && n < Math.ceil(manifest.policy.drainSeconds / 45); n++) {
+          current = await durable(`${target}-${host}-${phase}-observe-${n}`, observationRetry, () => {
+            const remaining = submission.deadline - Date.now()
+            requireThat(remaining > 0, 'OPERATION_WAIT_BUDGET_UNKNOWN')
+            return hostOperation(this.env, host, manifest, record.manifestHash, target, phase, phase === 'prepare' ? 0 : record.generation, false, Math.min(45, remaining / 1000))
+          })
         }
         requireThat(settled(current), 'OPERATION_OUTCOME_UNKNOWN')
         observations[`${target}:${host}:${phase}`] = current
@@ -155,6 +164,13 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
       await durable('accept', () => transition('accepted', 'verified'))
       return { releaseId, status: 'accepted', generation: record.generation }
     } catch (error) {
+      // Capacity exhaustion cannot authorize more recovery mutations or a new
+      // Workflow. Persist blocked if the provider still permits the fenced DO
+      // transition; if that fails too, the existing locks remain held.
+      if (errorCode(error) === 'WORKFLOW_SUBREQUEST_LIMIT') {
+        await durable('capacity-blocked', () => transition('blocked', 'reconcile', { error: 'WORKFLOW_SUBREQUEST_LIMIT', errors: { forward: 'WORKFLOW_SUBREQUEST_LIMIT' } }))
+        return { releaseId, status: 'blocked', error: 'WORKFLOW_SUBREQUEST_LIMIT' }
+      }
       // Claim may have committed even when its response was lost. Refresh
       // ownership before deciding whether a failure is pre-mutation.
       try { record = await ledgerCall<ReleaseRecord>(this.env, `/get?id=${encodeURIComponent(releaseId)}`) } catch {
@@ -163,7 +179,7 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
       if (record.workflowId !== event.instanceId) return { status: 'superseded-attempt' }
       if (['accepted', 'recovered', 'failed', 'superseded'].includes(record.status)) return { releaseId, status: record.status }
       applying ||= record.generation > 0
-      const code = error instanceof ReleaseError ? error.code : /^[A-Z][A-Z0-9_]+$/.test((error as Error).message ?? '') ? (error as Error).message : 'WORKFLOW_STEP_FAILED'
+      const code = errorCode(error) ?? (/^[A-Z][A-Z0-9_]+$/.test((error as Error).message ?? '') ? (error as Error).message : 'WORKFLOW_STEP_FAILED')
       if (!applying) {
         await durable('prepare-failed', () => transition('failed', 'prepare', { error: code, effectsSettled: true, errors: { forward: code } }))
         return { releaseId, status: 'failed', error: code }
@@ -191,9 +207,10 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
         for (const target of changed) await durable(`verify-recovery-${target}`, retry, () => verifyTarget(this.env, manifest.targets[target]!, true))
         await durable('recovered', () => transition('recovered', 'recovered', { effectsSettled: true, error: code }))
         return { releaseId, status: 'recovered', error: code }
-      } catch {
-        await durable('recovery-blocked', () => transition('blocked', 'recover', { error: code, errors: { forward: code, recovery: 'RECOVERY_NOT_VERIFIED' } }))
-        return { releaseId, status: 'blocked', error: code }
+      } catch (recoveryError) {
+        const capacity = errorCode(recoveryError) === 'WORKFLOW_SUBREQUEST_LIMIT'
+        await durable('recovery-blocked', () => transition('blocked', 'recover', { error: capacity ? 'WORKFLOW_SUBREQUEST_LIMIT' : code, errors: { forward: code, recovery: capacity ? 'WORKFLOW_SUBREQUEST_LIMIT' : 'RECOVERY_NOT_VERIFIED' } }))
+        return { releaseId, status: 'blocked', error: capacity ? 'WORKFLOW_SUBREQUEST_LIMIT' : code }
       }
     }
   }
