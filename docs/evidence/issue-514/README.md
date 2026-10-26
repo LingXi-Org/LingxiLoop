@@ -244,3 +244,18 @@ legacy receipt hashes by bounded exact permutations, never ignores mount drift.
 A separate corrected attempt retains those prior records and its own deadline.
 The candidate now validates with actual daemon flags. Additional A restart
 permission was requested because its initial approved attempt was consumed.
+
+Subsequent actual maintenance readback: both A and B now report phase `complete`,
+proxy active and live-restore enabled. A candidate config hash
+`835a0520ed23eb8fa822d65649009b23c5986c0da9589917ed0d8c635eb5a6c3`, B
+`fa0360e3bd7669065150091ea0a4c2623c4f91d4911466b7071008ebb7a3aa2a`.
+A's additional corrected restart was explicitly approved separately. B had one
+actual restart; its initial prewrite failure performed none. Docker's actual
+`HttpProxy`/`HttpsProxy` casing initially caused a false unconfirmed receipt;
+a read-only observation then proved the active settings, and continuation
+completed the receipt without repeating the restart. Local regression now uses
+those actual field names and tests mount-order equivalence versus real RW drift.
+All6 A/10 B container identities, start times, image IDs and complete mounts
+were checked; host pending operations/reservations0. No product version switched.
+These manual repairs and extra authorization are recorded failures/interventions,
+not an automatic first-success or end-to-end release qualification.
