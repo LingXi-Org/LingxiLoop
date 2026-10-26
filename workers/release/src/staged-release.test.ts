@@ -204,6 +204,24 @@ describe('production staged Workflow with actual SQLite ledger', () => {
     expect(net.writes.some(key => key.includes('recover'))).toBe(false)
     await runInDurableObject(state.stub, async (_instance, storage) => expect(storage.storage.sql.exec('SELECT * FROM locks').toArray().length).toBeGreaterThan(0))
   })
+  it('gives database phases a finite ten-minute window without extending service-drain budgets', async () => {
+    for (const phase of ['backup','restore-verify','migrate','drain']) {
+      const state=await setup(`database-budget-${phase}`),record=await state.get(),owner={releaseId:record.releaseId,workflowId:record.workflowId}
+      await state.call('/initialize',owner)
+      await runInDurableObject(state.stub,async (_instance,storage)=>{
+        const row=storage.storage.sql.exec('SELECT data FROM releases WHERE id=?',record.releaseId).toArray()[0]
+        const value=JSON.parse(String(row.data));value.checkpoint.plan[0]={key:phase,kind:'host',phase,targets:['main-runtime-a']}
+        storage.storage.sql.exec('UPDATE releases SET data=? WHERE id=?',JSON.stringify(value),record.releaseId)
+      })
+      const before=Date.now(),budget=phase==='drain'?90000:600000
+      const result=await state.call<{deadline:number}>('/deadline',{...owner,stage:phase,key:'original'})
+      expect(result.deadline).toBeGreaterThanOrEqual(before+budget);expect(result.deadline).toBeLessThanOrEqual(Date.now()+budget)
+      await state.call('/transition',{...owner,generation:0,status:'blocked',phase:'reconcile'})
+      const resumed=await state.call('/resume',{releaseId:record.releaseId,expectedWorkflowId:owner.workflowId}),fresh={...owner,workflowId:resumed.workflowId}
+      await state.call('/initialize',fresh)
+      expect(await state.call('/deadline',{...fresh,stage:phase,key:'original'})).toEqual(result)
+    }
+  })
   it('persists the same budget and deadline across resume and fences the old owner', async () => {
     const state = await setup('staged-budget'), record = await state.get(), owner = { releaseId: record.releaseId, workflowId: record.workflowId }
     const initialized = await state.call('/initialize', owner), stage = initialized.checkpoint!.plan[0].key

@@ -23,6 +23,8 @@ export async function uploadArchive(policy, op, { dumpPath, dumpHash, fetcher = 
   try { base = new URL(archive.baseUrl) } catch { throw fail('ARCHIVE_ENDPOINT_INVALID') }
   if (base.protocol !== 'https:' || base.username || base.password || base.pathname !== '/' || base.search || base.hash) throw fail('ARCHIVE_ENDPOINT_INVALID')
   const timeoutMs = archive.timeoutMs ?? 60000
+  const uploadTimeoutMs = archive.uploadTimeoutMs ?? 300000
+  if (!Number.isInteger(uploadTimeoutMs) || uploadTimeoutMs < 100 || uploadTimeoutMs > 300000) throw fail('ARCHIVE_TIMEOUT_INVALID')
   if (!Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 300000) throw fail('ARCHIVE_TIMEOUT_INVALID')
   const info = await stat(dumpPath)
   if (!info.isFile() || info.size < 1 || info.size > MAX_ARCHIVE_BYTES) throw fail('ARCHIVE_TOO_LARGE')
@@ -51,7 +53,7 @@ export async function uploadArchive(policy, op, { dumpPath, dumpHash, fetcher = 
   // the only reconciliation; this helper never blindly uploads a second time.
   const body = createReadStream(dumpPath)
   try {
-    const response = await fetcher(url, { method: 'POST', headers: { ...headers, 'content-type': 'application/octet-stream', 'content-length': String(info.size), 'x-lingxi-dump-sha256': dumpHash }, body, duplex: 'half', redirect: 'error', signal: AbortSignal.timeout(timeoutMs) })
+    const response = await fetcher(url, { method: 'POST', headers: { ...headers, 'content-type': 'application/octet-stream', 'content-length': String(info.size), 'x-lingxi-dump-sha256': dumpHash }, body, duplex: 'half', redirect: 'error', signal: AbortSignal.timeout(uploadTimeoutMs) })
     if (!response.ok && response.status < 500) throw fail('ARCHIVE_UPLOAD_REJECTED')
     if (response.ok) {
       const receipt = await response.json()
