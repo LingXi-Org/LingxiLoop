@@ -1,6 +1,14 @@
-# Bounded operation observation candidate (#495)
+# Bounded operation observation (#495)
 
-This code is a software candidate; it has not been deployed or qualified in
+The original isolated long-poll candidate below is now integrated with the
+semantic-stage controller and direct private-R2 host preparation described in
+[`workers/release/FREE-PLAN.md`](../../workers/release/FREE-PLAN.md). Its trace
+measurements remain historical; the staged implementation supersedes the
+monolithic capacity boundary. No production qualification is implied by tests.
+
+## Original candidate evidence
+
+The original long-poll-only code was a software candidate; it had not been deployed or qualified in
 production. It does not change the frozen d378 Ops, credentials, network policy,
 POST idempotency, resource fences, generations or Workflow identity.
 

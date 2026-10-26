@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { assertSource, canRecover, canSupersede, hash, validateManifest, type Accepted, type Manifest, type Target } from '../../../shared/release/protocol'
 import type { ReleaseEnv, ReleaseRecord } from './types'
 import api from './index'
-import { ReleaseWorkflow } from './workflow'
+import { ReleaseWorkflow } from './legacy-workflow.fixture'
 import { ReleaseLedger } from './ledger'
 import { prepareWorker } from './adapters'
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers'
@@ -193,7 +193,7 @@ it('rejects a credential-bearing upstream redirect instead of following it', asy
   } finally { fetchMock.deactivate() }
 })
 
-// Exercise the actual Workflow control code with real DO persistence while
+// Exercise the frozen v1 compatibility runner with real DO persistence while
 // making waits immediate. Remote responses are fault-injected, not claimed as
 // live Cloudflare or host qualification.
 const immediateSteps = {
