@@ -23,10 +23,42 @@ export class Executor {
     validateHostPlan(manifest,request.target,this.adapter.policy)
     return this.journal.accept(request,this.adapter.resources(request.target,request.phase))
   }
+  canResumeUnstartedRecoveryDrain(op) {
+    return op?.phase==='recovery-drain' && op.status==='uncertain' && op.steps?.length===0 &&
+      op.errors?.forward?.code==='CONFIGURATION_DIRECTION_UNPROVEN' && !this.active.has(op.key) &&
+      this.adapter.policy.targets[op.target]?.adapter==='main-runtime' && Boolean(this.adapter.policy.targets[op.target].configurationFiles)
+  }
+  canObserveStoppedRecoveryDrain(op) {
+    if(op?.phase!=='recovery-drain' || op.status!=='failed' || op.errors?.forward?.code!=='DRAIN_TIMEOUT' || this.active.has(op.key))return false
+    const local=this.adapter.policy.targets[op.target],plan=this.journal.manifest(op.releaseId,op.manifestHash).targets[op.target]?.hostPlan
+    if(local?.adapter!=='main-runtime' || plan?.mode!=='maintenance')return false
+    const expected=new Set(['ingress-disable',...Object.keys(local.services).map(service=>`stop:${service}`)])
+    if(op.steps.length!==expected.size || new Set(op.steps.map(step=>step.name)).size!==expected.size || !op.steps.every(step=>step.sideEffect===true && step.status==='completed' && expected.has(step.name)))return false
+    return this.adapter.resources(op.target,op.phase).every(resource=>{
+      const fence=this.journal.db.prepare('SELECT generation,release_id FROM fences WHERE resource=?').get(resource),lock=this.journal.db.prepare('SELECT operation_key FROM reservations WHERE resource=?').get(resource)
+      return fence?.generation===op.generation && fence.release_id===op.releaseId && (!lock || lock.operation_key===op.key)
+    })
+  }
+  async partialForwardEvidence(op,plan,record) {
+    try {
+      if(record?.releaseId!==op.releaseId || record.manifestHash!==op.manifestHash || record.generation!==op.generation || record.target!==op.target || record.phase!=='apply')throw Error('Unrelated operation')
+      const local=this.adapter.policy.targets[op.target],groups={source:[],forward:[]},directions={}
+      if(record.steps.some(step=>step.sideEffect && (step.status!=='completed' || /:up:/.test(step.name) && !Object.keys(local.services).some(service=>step.name===`forward:up:${service}`))))throw Error('Unknown service side effect')
+      for(const service of Object.keys(local.services)){
+        const steps=record.steps.filter(step=>step.sideEffect && step.name===`forward:up:${service}`)
+        if(steps.length>1)throw Error('Ambiguous service history')
+        const direction=steps.length?'forward':'source';groups[direction].push(service);directions[service]=direction
+      }
+      if(!groups.forward.length)throw Error('No completed forward service')
+      const actual=await this.adapter.containers(op)
+      for(const direction of ['source','forward'])if(groups[direction].length){const descriptor=direction==='source'?(plan.source??plan.recovery):plan;await this.adapter.configurationEvidence(op,descriptor,direction,actual,await this.adapter.resolveImages(descriptor.images,local),groups[direction])}
+      return directions
+    }catch{throw Object.assign(fault('CONFIGURATION_DIRECTION_UNPROVEN','Completed service history and actual image/environment do not prove a safe recovery direction'),{uncertain:true})}
+  }
   async context(op) {
     const resources = this.adapter.resources(op.target,op.phase)
     const state=this.journal.state(op.target),local=this.adapter.policy.targets[op.target],plan=this.journal.manifest(op.releaseId,op.manifestHash).targets[op.target].hostPlan
-    let currentDirection=state.appliedHash===op.manifestHash?state.appliedDirection:'source'
+    let currentDirection=state.appliedHash===op.manifestHash?state.appliedDirection:'source',serviceDirections
     if(local.configurationFiles&&op.phase!=='prepare'){
       const mutationPhases=['apply','recover','restore-source'],unproven=()=>Object.assign(fault('CONFIGURATION_DIRECTION_UNPROVEN','Current configuration cannot be inferred while a service update is unproven'),{uncertain:true})
       for(const pending of this.journal.unresolved())if(pending.target===op.target&&mutationPhases.includes(pending.phase)&&(pending.key!==op.key||pending.status==='uncertain'||pending.steps.some(s=>s.sideEffect&&/:up:/.test(s.name))))throw unproven()
@@ -35,13 +67,15 @@ export class Executor {
       const performed=mutationPhases.map(phase=>this.journal.get(`${op.releaseId}:${op.target}:${phase}`)).filter(row=>row?.manifestHash===op.manifestHash&&(applied(row.result)||row.steps.some(s=>s.sideEffect&&/:up:/.test(s.name)))).sort((a,b)=>a.createdAt.localeCompare(b.createdAt)),latest=performed.at(-1)
       if(latest?.status==='succeeded'&&applied(latest.result)&&configuration(latest.result.direction)&&configuration(latest.result.direction).configurationHash===latest.result.configurationHash)currentDirection=latest.result.direction
       else if(latest?.status==='failed'&&latest.result?.recovered===true&&latest.result.recovery?.applied===true&&latest.result.recovery.direction==='recovery'&&latest.result.recovery.configurationHash===plan.recovery.configurationHash)currentDirection='recovery'
+      else if(latest?.phase==='apply' && latest.status==='failed' && (op.phase==='recovery-drain' || op.phase==='recover' && state.drainedHash===op.manifestHash && state.drainedGeneration===op.generation)){serviceDirections=await this.partialForwardEvidence(op,plan,latest);currentDirection='mixed'}
       else if(latest||state.appliedHash===op.manifestHash)throw unproven()
       else currentDirection='source'
     }
-    const direction=local.configurationFiles?(op.phase==='prepare'?'source':currentDirection):'forward',descriptor=direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:plan
+    const direction=local.configurationFiles?(op.phase==='prepare'?'source':currentDirection==='mixed'?'forward':currentDirection):'forward',descriptor=direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:plan
     return {
       compose: await this.adapter.composeArgs(op,direction,descriptor),
       currentDirection,
+      ...(serviceDirections?{serviceDirections,composeByService:Object.fromEntries(await Promise.all(Object.entries(serviceDirections).map(async([service,direction])=>[service,await this.adapter.composeArgs(op,direction,direction==='source'?(plan.source??plan.recovery):plan)])))}:{}),
       step: async (name, fn, { sideEffect = false } = {}) => {
         this.journal.assertFence(op.key,resources)
         if(['source-drain','restore-source','source-undrain'].includes(op.phase))await this.assertSourceRestoreAllowed(op)
@@ -75,9 +109,10 @@ export class Executor {
   async run(key) {
     if (this.active.has(key)) return this.journal.get(key)
     const op = this.journal.get(key)
-    if (!op || op.status !== 'intent') return op
+    const resumed=this.canResumeUnstartedRecoveryDrain(op)
+    if (!op || op.status !== 'intent' && !resumed) return op
     this.active.add(key)
-    this.journal.patch(key,{ status: 'running' })
+    if(!resumed)this.journal.patch(key,{ status: 'running' })
     let context
     try {
       const manifest = this.journal.manifest(op.releaseId,op.manifestHash), plan = validateHostPlan(manifest,op.target,this.adapter.policy)
@@ -89,7 +124,15 @@ export class Executor {
         return this.journal.finish(key,'succeeded',{ operations: observed, needsIntervention: observed.some(row => row.status === 'uncertain') })
       }
       if(['source-drain','restore-source','source-undrain'].includes(op.phase))await this.assertSourceRestoreAllowed(op)
-      context = await this.context(op);const state = this.journal.state(op.target)
+      if(resumed){
+        this.journal.assertFence(op.key,this.adapter.resources(op.target,op.phase))
+        context=await this.context(op)
+        const fresh=this.journal.get(op.key)
+        if(fresh.status!=='uncertain'||fresh.steps.length!==0||fresh.operationId!==op.operationId)throw Object.assign(fault('CONFIGURATION_DIRECTION_UNPROVEN','Only an untouched recovery drain can continue'),{uncertain:true})
+        this.journal.assertFence(op.key,this.adapter.resources(op.target,op.phase))
+        this.journal.patch(key,{status:'running'})
+      }
+      context ??= await this.context(op);const state = this.journal.state(op.target)
       let result
       switch (op.phase) {
         case 'prepare':
@@ -134,6 +177,7 @@ export class Executor {
     } catch (error) {
       this.log({ key, code: error.code ?? 'EXECUTION_FAILED' })
       const current = this.journal.get(key), errors = current.errors
+      if(resumed && current.status==='uncertain')return this.journal.finish(key,'uncertain',{needsIntervention:true,observationRequired:true,observationError:safeError(error)},errors)
       errors[['recover','restore-source','source-drain','source-undrain'].includes(op.phase) ? 'recovery' : 'forward'] = safeError(error)
       // A subprocess may have exited after Docker accepted the write. Keep its reservations until observation proves completion.
       if (error.uncertain || current.steps.some(step => step.sideEffect && step.status === 'intent')) return this.journal.finish(key,'uncertain',{ needsIntervention: true, observationRequired: true },errors)
@@ -146,14 +190,7 @@ export class Executor {
             // match source. Any unknown step or private metadata mismatch keeps
             // ownership instead of authorizing another up.
             try{
-              const current=this.journal.get(op.key),actual=await this.adapter.containers(op),groups={source:[],forward:[]}
-              for(const service of Object.keys(this.adapter.policy.targets[op.target].services)){
-                const steps=current.steps.filter(s=>s.name===`forward:up:${service}`&&s.sideEffect)
-                if(steps.some(s=>s.status!=='completed'))throw fault('CONFIGURATION_DIRECTION_UNPROVEN','A service up remains unproven')
-                groups[steps.length?'forward':'source'].push(service)
-              }
-              if(!groups.forward.length)throw fault('CONFIGURATION_DIRECTION_UNPROVEN','No completed forward up proves a configuration change')
-              for(const direction of ['source','forward'])if(groups[direction].length){const descriptor=direction==='source'?(plan.source??plan.recovery):plan;await this.adapter.configurationEvidence(op,descriptor,direction,actual,await this.adapter.resolveImages(descriptor.images,this.adapter.policy.targets[op.target]),groups[direction])}
+              await this.partialForwardEvidence(op,plan,this.journal.get(op.key))
             }catch(proofError){proofError.uncertain=true;throw proofError}
           }
           if(!context)throw Object.assign(fault('CONFIGURATION_DIRECTION_UNPROVEN','Original execution context is unavailable'),{uncertain:true})

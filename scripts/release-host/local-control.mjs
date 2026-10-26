@@ -79,7 +79,7 @@ export async function localControl(policy, action, op, { run = (args,options={})
       const ids = (await run(['ps','--all','--quiet','--filter',`label=com.docker.compose.project=${local.project}`,'--filter',`label=com.docker.compose.service=${service}`])).trim().split(/\s+/).filter(Boolean)
       if (ids.length !== 1 || !/^[a-f0-9]{12,64}$/.test(ids[0])) throw fault('READINESS_UNPROVEN','Expected one local Web container')
       const [container] = JSON.parse(await run(['container','inspect',ids[0]]))
-      const identity=await inspectQualifiedImage(run,descriptor.images[service])
+      const identity=await inspectQualifiedImage(run,descriptor.images[service],undefined,{stateDirectory:policy.stateDirectory})
       if (!identity || container.Image !== identity.localImageId || !container.State.Running || container.State.Health?.Status !== 'healthy') throw fault('READINESS_UNPROVEN','Actual Web image or health is not qualified')
     }
     const url = new URL(local.readinessUrl)
