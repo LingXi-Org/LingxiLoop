@@ -20,6 +20,10 @@ on:
         description: Verify and publish immutable images without changing production manifests or deploying
         type: boolean
         default: false
+      stage_only:
+        description: Prepare immutable images and Worker versions without registering or deploying a release
+        type: boolean
+        default: false
       deploy_admin_control:
         description: Deploy only the admin and control-plane Worker from main with scope admin-control
         type: boolean
@@ -567,7 +571,7 @@ jobs:
 
   update-manifests:
     if: >-
-      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !inputs.publish_only && !contains(github.event.head_commit.message, '[skip deploy]') &&
+      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !inputs.publish_only && !inputs.stage_only && !contains(github.event.head_commit.message, '[skip deploy]') &&
       github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped') &&
@@ -610,7 +614,7 @@ jobs:
 
   deploy:
     if: >-
-      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
+      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !inputs.stage_only && !contains(github.event.head_commit.message, '[skip deploy]') &&
       github.ref == 'refs/heads/main' &&
       (github.event_name == 'push' ||
        (github.event_name == 'workflow_dispatch' && inputs.scope == 'admin-control' &&
@@ -660,7 +664,7 @@ jobs:
 
   rollout:
     if: >-
-      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !contains(github.event.head_commit.message, '[skip deploy]') &&
+      vars.RELEASE_CONTROLLER_ENABLED != 'true' && always() && !inputs.stage_only && !contains(github.event.head_commit.message, '[skip deploy]') &&
       github.ref == 'refs/heads/main' && (github.event_name == 'push' || needs.changes.outputs.release == 'true') &&
       needs.update-manifests.result == 'success' &&
       (needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
@@ -742,7 +746,7 @@ jobs:
   register-candidate:
     if: >-
       always() && vars.RELEASE_CONTROLLER_ENABLED == 'true' &&
-      github.ref == 'refs/heads/main' && !inputs.publish_only &&
+      github.ref == 'refs/heads/main' && !inputs.publish_only && !inputs.stage_only &&
       !contains(github.event.head_commit.message, '[skip deploy]') &&
       needs.changes.result == 'success' && needs.checks.result == 'success' &&
       (needs.integration.result == 'success' || needs.integration.result == 'skipped') &&
