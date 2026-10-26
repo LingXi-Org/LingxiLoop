@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {archiveDiagnosticFields} from './archive-diagnostics.mjs'
 import { spawn } from 'node:child_process'
 import { createReadStream, createWriteStream } from 'node:fs'
 import { readFile, mkdir, open } from 'node:fs/promises'
@@ -219,7 +220,10 @@ async function main() {
   process.stdout.write(JSON.stringify(await databaseTool(JSON.parse(await readFile(policyPath,'utf8')),action,JSON.parse(input))))
 }
 const knownReadOnlyFailures=new Set(['DATABASE_SOURCE_CHANGED','DATABASE_WRITERS_ACTIVE','BACKUP_INVALID','BACKUP_SOURCE_CHANGED','RESTORE_VERIFY_MISMATCH','RUNTIME_PATCH_PREFLIGHT_REFUSED','ARCHIVE_POLICY_REQUIRED','ARCHIVE_ENDPOINT_INVALID','ARCHIVE_TIMEOUT_INVALID','ARCHIVE_TOO_LARGE','LOCAL_BACKUP_HASH_MISMATCH','ARCHIVE_TOKEN_INVALID','ARCHIVE_IDENTITY_CONFLICT','ARCHIVE_UPLOAD_REJECTED','ARCHIVE_METADATA_REJECTED'])
+export function databaseToolFailure(error,action) {
+  const known=['backup','restoreVerify'].includes(action)&&knownReadOnlyFailures.has(error.code)&&error.uncertain!==true
+  return {error:{...archiveDiagnosticFields(error),code:error.code??'DATABASE_TOOL_FAILED',message:error.code?error.message:'Trusted database helper failed',...(error.sqlState?{sqlState:error.sqlState}:{}),...(known?{outcomeKnown:true,uncertain:false}:error.uncertain===true?{uncertain:true}:{})}}
+}
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main().catch(error => {
-  const known=['backup','restoreVerify'].includes(process.argv[3])&&knownReadOnlyFailures.has(error.code)&&error.uncertain!==true
-  process.stdout.write(JSON.stringify({error:{code:error.code??'DATABASE_TOOL_FAILED',message:error.code?error.message:'Trusted database helper failed',...(error.sqlState?{sqlState:error.sqlState}:{}),...(known?{outcomeKnown:true,uncertain:false}:error.uncertain===true?{uncertain:true}:{})}}));process.exitCode=1
+  process.stdout.write(JSON.stringify(databaseToolFailure(error,process.argv[3])));process.exitCode=1
 })

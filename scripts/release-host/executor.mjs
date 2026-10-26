@@ -1,7 +1,8 @@
+import {archiveDiagnosticFields} from './archive-diagnostics.mjs'
 import { Journal, fault, hash, identifier, validateRequest } from './journal.mjs'
 import { validateHostPlan,assertCompatible } from './adapter.mjs'
 
-const safeError = error => ({ code: error.code ?? 'EXECUTION_FAILED', message: error.code ? error.message : 'Executor failed; inspect restricted local diagnostics',
+const safeError = error => ({ ...archiveDiagnosticFields(error),code: error.code ?? 'EXECUTION_FAILED', message: error.code ? error.message : 'Executor failed; inspect restricted local diagnostics',
   ...(error.sqlState && /^[A-Z0-9]{5}$/.test(error.sqlState) ? { sqlState: error.sqlState } : {}) })
 
 export class Executor {

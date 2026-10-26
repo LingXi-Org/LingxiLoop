@@ -1,3 +1,4 @@
+import {archiveDiagnosticFields} from './archive-diagnostics.mjs'
 import {prepareCache} from './cache-pull.mjs'
 import { controlRead } from './control-read.mjs'
 import { execFile, spawn } from 'node:child_process'
@@ -37,7 +38,7 @@ export async function runFixedHelper(argv, body, timeout = 30000) {
     const timer = setTimeout(() => { child.kill('SIGKILL'); fail() },timeout)
     child.once('error',() => { clearTimeout(timer); fail() })
     child.stdout.on('data',chunk => { output += chunk; if (output.length > 1024 * 1024) { child.kill('SIGKILL'); fail() } })
-    child.once('close',code => { clearTimeout(timer); if (settled) return; if (code !== 0) { try { const parsed = JSON.parse(output); if (parsed.error?.code) { settled = true; reject(Object.assign(fault(parsed.error.code,parsed.error.message ?? 'Trusted local helper rejected the operation',502),{ sqlState:parsed.error.sqlState,...(parsed.error.outcomeKnown===true&&parsed.error.uncertain===false?{outcomeKnown:true,uncertain:false}:parsed.error.uncertain===true?{uncertain:true}:{}) })); return } } catch {} return fail() } try { const value = JSON.parse(output); settled = true; resolve(value) } catch { fail() } })
+    child.once('close',code => { clearTimeout(timer); if (settled) return; if (code !== 0) { try { const parsed = JSON.parse(output); if (parsed.error?.code) { settled = true; reject(Object.assign(fault(parsed.error.code,parsed.error.message ?? 'Trusted local helper rejected the operation',502),{ ...archiveDiagnosticFields(parsed.error),sqlState:parsed.error.sqlState,...(parsed.error.outcomeKnown===true&&parsed.error.uncertain===false?{outcomeKnown:true,uncertain:false}:parsed.error.uncertain===true?{uncertain:true}:{}) })); return } } catch {} return fail() } try { const value = JSON.parse(output); settled = true; resolve(value) } catch { fail() } })
     child.stdin.on('error',() => {})
     child.stdin.end(canonical(body))
   })
