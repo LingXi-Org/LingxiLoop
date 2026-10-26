@@ -139,6 +139,41 @@ test('only committed explicit replacement replaces sources; failed replacement r
   }
 })
 
+test('protocol-failed drafts remain auditable without leaking full text into final, history or replay', t => {
+  const f = fixture('protocol-correction-515')
+  const failed = 'FAILED_SYNTHETIC_DRAFT_515 '.repeat(15)
+  f.segment('model:1', failed, 'append', [], false)
+  f.segment('model:2', failed + 'Second attempt.', 'append', [], false)
+  const final = f.segment('model:3', 'The corrected answer.')
+  const accepted = f.commit([final])
+  const page = f.projection.activityPage(0)
+  for (const message of [f.projection.snapshot.message, accepted.history.message, accepted.hydratedReplay.message, page.message]) {
+    assert.doesNotMatch(JSON.stringify(message.content), /FAILED_SYNTHETIC_DRAFT_515/)
+  }
+  assert.equal(nativeText(f.projection.snapshot.message), final.text)
+  assert.equal(page.message.content.filter(isAnswerRevision).length, 2)
+  assert.ok(page.message.content.filter(isAnswerRevision).every(part => part.type === 'text' && part.text === activityAnnotation(part)?.label))
+  assert.equal(f.items.filter(item => item.type === 'event' && item.event.kind === 'public.text.ended' && item.event.data.reason === 'failed').length, 2)
+  assert.ok(JSON.stringify(f.items).includes(failed), 'original event audit remains intact')
+  const beforeReplay = copy(f.projection.snapshot)
+  for (const item of f.items) f.projection.advance(item)
+  assert.deepEqual(f.projection.snapshot.message.content, beforeReplay.message.content)
+  t.diagnostic(JSON.stringify({ scenario: 'B-synthetic', attempts: ['model:1 failed', 'model:2 failed', 'model:3 completed'],
+    committedSources: accepted.message.publicTextSources, finalText: nativeText(f.projection.snapshot.message),
+    revisions: page.message.content.filter(isAnswerRevision).map(part => ({ id: activityAnnotation(part)?.id, label: activityAnnotation(part)?.label })), replayStable: true }))
+})
+
+test('explicit replacements expose lifecycle summaries while preserving the valid source until commit', () => {
+  const f = fixture('replacement-summary-515'), original = f.segment('original', A)
+  const replacement = f.segment('replacement', REPLACEMENT, 'replace', [original.segmentId])
+  assert.equal(nativeText(f.projection.snapshot.message), A)
+  const pending = f.projection.activityPage(0).message.content.filter(isAnswerRevision)
+  assert.ok(pending.every(part => part.type === 'text' && part.text === activityAnnotation(part)?.label))
+  f.commit([replacement])
+  assert.equal(nativeText(f.projection.snapshot.message), REPLACEMENT)
+  assert.doesNotMatch(JSON.stringify(f.projection.activityPage(0).message.content), /Gather collects the available inputs/)
+})
+
 test('cancellation retains shown answer and genuine incomplete status; equal text in other runs has distinct identity', () => {
   const ids = []
   for (const lifecycle of ['cancelled','failed'] as const) {
