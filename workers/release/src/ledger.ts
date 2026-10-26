@@ -4,6 +4,11 @@ import { forwardStages, recoveryStages, stageWorkflowId, STAGE_REQUEST_LIMIT, ve
 import type { Bootstrap, ReleaseEnv, ReleaseRecord, ReleaseStatus } from './types'
 
 const terminal = new Set(['accepted', 'failed', 'recovered', 'superseded'])
+const dispatchWindow = () => ({ queuedAt: Date.now(), deadline: Date.now() + 300_000, attempts: 0 })
+const dispatchDenied = (error: unknown) => {
+  const value = error as { status?: number; code?: string }
+  return value?.status === 401 || value?.status === 403 || /^(UNAUTHORIZED|FORBIDDEN|AUTHENTICATION_FAILED|WORKFLOW_SUBREQUEST_LIMIT)$/.test(value?.code ?? '') || error instanceof Error && error.message === 'Too many subrequests.'
+}
 type Row = { id: string; data: string; [key: string]: string }
 
 // A single SQLite DO owns the whole environment. Locks never expire on a timer:
@@ -50,8 +55,8 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
         const record = this.get(releaseId)
         requireThat(record, 'RELEASE_NOT_FOUND', 404)
         if (url.pathname === '/get') return record
-        if (['/claim', '/transition', '/authorize', '/note', '/initialize', '/network-permit', '/deadline', '/observe', '/mark-effect', '/advance', '/begin-recovery'].includes(url.pathname)) requireThat(body.workflowId === record.workflowId, 'STALE_WORKFLOW_ATTEMPT')
-        if (['/initialize', '/network-permit', '/deadline', '/observe', '/mark-effect', '/advance', '/begin-recovery'].includes(url.pathname)) return this.stage(record, url.pathname, body)
+        if (['/claim', '/transition', '/authorize', '/note', '/initialize', '/network-permit', '/retry-permit', '/deadline', '/observe', '/mark-effect', '/advance', '/begin-recovery'].includes(url.pathname)) requireThat(body.workflowId === record.workflowId, 'STALE_WORKFLOW_ATTEMPT')
+        if (['/initialize', '/network-permit', '/retry-permit', '/deadline', '/observe', '/mark-effect', '/advance', '/begin-recovery'].includes(url.pathname)) return this.stage(record, url.pathname, body)
         if (url.pathname === '/note') { record.errors.cleanup = String(body.cleanup); this.save(record); return record }
         if (url.pathname === '/authorize') { requireThat(!terminal.has(record.status), 'RELEASE_ALREADY_TERMINAL'); return { authorized: true, generation: record.generation } }
         if (url.pathname === '/claim') return this.claim(record)
@@ -64,6 +69,8 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
           // Restart only the durable Workflow; host operation keys remain stable.
           this.ctx.storage.sql.exec('INSERT OR REPLACE INTO outbox(id,attempt,started) VALUES (?,?,0)', releaseId, attempt)
           record.resumeMode = body.recover === true ? 'recover' : 'resume'
+          record.manualInterventions = (record.manualInterventions ?? 0) + 1
+          record.dispatch = dispatchWindow()
           if (record.checkpoint) {
             record.checkpoint.previousWorkflowId = record.workflowId
             record.checkpoint.serial++
@@ -84,9 +91,12 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
     requireThat(!terminal.has(record.status), 'RELEASE_ALREADY_TERMINAL')
     if (path === '/initialize') {
       if (record.checkpoint) {
+        const cp = record.checkpoint, key = cp.plan[cp.index].key
+        cp.timings ??= {}; cp.timings[key] ??= { queuedAt: record.dispatch?.queuedAt ?? record.updatedAt }
+        cp.timings[key].startedAt ??= Date.now()
         if (record.status === 'blocked') { requireThat(record.checkpoint.initializedWorkflowId !== record.workflowId, 'RECONCILIATION_REQUIRED'); record.status = record.checkpoint.direction === 'forward' ? (record.generation ? 'active' : 'preparing') : 'recovering'; this.save(record) }
         if (record.checkpoint.initializedWorkflowId !== record.workflowId) { record.checkpoint.initializedWorkflowId = record.workflowId; this.save(record) }
-        return record
+        this.save(record); return record
       }
       const legacy = record.generation > 0
       if (legacy) {
@@ -103,12 +113,24 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
       } else requireThat(!this.env.CONTROLLER_OPS_SHA || record.manifest.opsSha === this.env.CONTROLLER_OPS_SHA, 'CONTROLLER_VERSION_MISMATCH')
       record.checkpoint = { protocol: 2, plan: legacy ? verificationStages(record.manifest) : forwardStages(record.manifest), index: 0, serial: 0,
         changed: [], mutationSubmitted: false, direction: 'forward', requests: {}, deadlines: {}, completed: [], initializedWorkflowId: record.workflowId, ...(legacy ? { legacyVerificationOnly: true } : {}) }
+      const key = record.checkpoint.plan[0].key
+      record.checkpoint.timings = { [key]: { queuedAt: record.createdAt, startedAt: Date.now() } }
       record.status = legacy ? 'active' : 'preparing'; this.save(record); return record
     }
     const cp = record.checkpoint
     requireThat(cp?.protocol === 2, 'CHECKPOINT_REQUIRED')
     const current = cp.plan[cp.index]
     requireThat(current && body.stage === current.key, 'STALE_RELEASE_STAGE')
+    if (path === '/retry-permit') {
+      requireThat(record.status !== 'blocked', 'RECONCILIATION_REQUIRED')
+      const key = `${current.key}:${String(body.key)}`
+      cp.retries ??= {}
+      requireThat((cp.retries[key] ?? 0) < record.manifest.policy.retryLimit, 'RETRY_BUDGET_EXHAUSTED')
+      cp.retries[key] = (cp.retries[key] ?? 0) + 1
+      cp.timings ??= {}; cp.timings[current.key] ??= { queuedAt: record.updatedAt }
+      cp.timings[current.key].lastError = String(body.error)
+      this.save(record); return { used: cp.retries[key] }
+    }
     if (path === '/network-permit') {
       requireThat(record.status !== 'blocked', 'RECONCILIATION_REQUIRED')
       const used = cp.requests[current.key] ?? 0
@@ -121,7 +143,7 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
     }
     if (path === '/deadline') {
       const key = String(body.key)
-      const seconds = current.kind === 'prepare' ? 900 : record.manifest.policy.drainSeconds
+      const seconds = current.kind === 'prepare' ? 900 : current.kind === 'claim' ? 1800 : record.manifest.policy.drainSeconds
       cp.deadlines[key] ??= Date.now() + seconds * 1000
       this.save(record); return { deadline: cp.deadlines[key] }
     }
@@ -146,10 +168,13 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
       cp.completed.push({ key: current.key, workflowId: record.workflowId, requests: cp.requests[current.key] ?? 0 })
       cp.index++
     }
+    if (cp.timings?.[current.key]) cp.timings[current.key].completedAt = Date.now()
     requireThat(cp.plan[cp.index], 'INVALID_STAGE_ADVANCE')
     cp.previousWorkflowId = record.workflowId; cp.serial++
     record.workflowId = stageWorkflowId(record.manifestHash, cp.serial)
     record.phase = cp.plan[cp.index].key
+    record.dispatch = dispatchWindow()
+    cp.timings ??= {}; cp.timings[record.phase] ??= { queuedAt: record.dispatch.queuedAt }
     this.ctx.storage.sql.exec('INSERT OR REPLACE INTO outbox(id,attempt,started) VALUES (?,?,0)', record.releaseId, cp.serial)
     this.save(record); return record
   }
@@ -175,7 +200,7 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
       requireThat(!(record.manifest.sequence > manifest.sequence && canSupersede(manifest, record.manifest) && record.status !== 'failed'), 'LATE_OLD_BUILD')
     }
     const record: ReleaseRecord = { releaseId: manifest.releaseId, manifest, manifestHash, status: 'queued', phase: 'batch', generation: 0,
-      createdAt: Date.now(), updatedAt: Date.now(), error: null, supersededBy: null, workflowId: `${manifest.releaseId}-0`, targets: {}, errors: {} }
+      createdAt: Date.now(), updatedAt: Date.now(), error: null, supersededBy: null, workflowId: `${manifest.releaseId}-0`, targets: {}, errors: {}, dispatch: dispatchWindow(), manualInterventions: 0 }
     this.save(record)
     this.ctx.storage.sql.exec('INSERT INTO outbox(id) VALUES (?)', manifest.releaseId)
     this.putMeta('desired', manifest.releaseId)
@@ -215,6 +240,10 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
     }
     record.status = status; record.phase = String(body.phase ?? record.phase)
     record.error = typeof body.error === 'string' ? body.error : null
+    if (record.checkpoint) {
+      const cp = record.checkpoint, timing = cp.timings?.[cp.plan[cp.index]?.key]
+      if (timing && ['accepted','failed','recovered','blocked'].includes(status)) { timing.completedAt = Date.now(); if (record.error) timing.lastError = record.error }
+    }
     if (body.targets) record.targets = body.targets as Record<string, unknown>
     if (body.errors) record.errors = { ...record.errors, ...body.errors as object }
     this.save(record); return record
@@ -225,6 +254,16 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
     for (const row of pending) {
       const record = this.get(String(row.id))
       if (!record || terminal.has(record.status)) { this.ctx.storage.sql.exec('UPDATE outbox SET started=1 WHERE id=?', row.id); continue }
+      record.dispatch ??= dispatchWindow()
+      if (record.dispatch.attempts >= 20 || Date.now() >= record.dispatch.deadline) {
+        // A missing create response may have started a Workflow. Keep its exact
+        // identity and all locks; stopping dispatch never proves absence/effects.
+        record.status = 'blocked'; record.phase = 'dispatch'; record.error = 'WORKFLOW_DISPATCH_BUDGET_UNKNOWN'
+        record.errors.cleanup = record.error
+        this.ctx.storage.sql.exec('UPDATE outbox SET started=2 WHERE id=? AND attempt=?',row.id,row.attempt)
+        this.save(record); continue
+      }
+      record.dispatch.attempts++; this.save(record)
       try {
         const workflowId = record.workflowId
         if (record.checkpoint?.previousWorkflowId) {
@@ -232,14 +271,30 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
           requireThat(['complete', 'errored', 'terminated'].includes(previous.status), 'PREVIOUS_STAGE_NOT_TERMINAL')
         }
         try { await this.env.RELEASE_WORKFLOW.create({ id: workflowId, params: { releaseId: String(row.id), attempt: Number(row.attempt) } }) }
-        catch {
+        catch (error) {
+          if (dispatchDenied(error)) throw error
           // A create timeout may have succeeded. Only an observed existing
           // instance counts as delivered; otherwise retain the outbox item.
           const observed = await (await this.env.RELEASE_WORKFLOW.get(workflowId)).status()
           requireThat(observed.status !== 'unknown', 'WORKFLOW_START_UNCONFIRMED')
         }
-        if (this.get(String(row.id))?.workflowId === workflowId) this.ctx.storage.sql.exec('UPDATE outbox SET started=1 WHERE id=? AND attempt=?', row.id, row.attempt)
-      } catch { retry = true }
+        const latest = this.get(String(row.id))
+        if (latest?.workflowId === workflowId) {
+          this.ctx.storage.sql.exec('UPDATE outbox SET started=1 WHERE id=? AND attempt=?', row.id, row.attempt)
+          latest.dispatch!.deliveredAt = Date.now(); this.save(latest)
+        }
+      } catch (error) {
+        const latest = this.get(String(row.id))
+        if (latest?.workflowId === record.workflowId) {
+          latest.dispatch!.lastError = error instanceof ReleaseError ? error.code : 'WORKFLOW_PROVIDER_UNAVAILABLE'
+          if (dispatchDenied(error)) {
+            latest.status = 'blocked'; latest.phase = 'dispatch'; latest.error = 'WORKFLOW_DISPATCH_DENIED'
+            latest.errors.cleanup = latest.error
+            this.ctx.storage.sql.exec('UPDATE outbox SET started=2 WHERE id=? AND attempt=?',row.id,row.attempt)
+          } else retry = true
+          this.save(latest)
+        }
+      }
     }
     if (retry) await this.ctx.storage.setAlarm(Date.now() + 15_000)
   }

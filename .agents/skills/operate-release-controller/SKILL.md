@@ -12,6 +12,46 @@ green run or a queued request are not deployment authority or acceptance.
 
 ## Product entry and immutable evidence
 
+The single cloud operator is `scripts/release/run.sh`; do not assemble a second
+manual publication loop. Run from the repository root:
+
+```sh
+scripts/release/run.sh doctor
+scripts/release/run.sh preflight /absolute/qualified-manifest.json
+scripts/release/run.sh publish /absolute/qualified-manifest.json
+```
+
+The immutable manifest is the selected release input, not a credential/config
+template. Use the existing exact successful CI candidate artifacts and approved
+configuration/contract proof; never synthesize a manifest to avoid a blocked
+source or runtime schema check. `doctor` reuses the existing cloud provider and
+the reviewed custom domain from `workers/release/wrangler.jsonc`, then reads the
+accepted ledger. It does not probe or mutate GitHub Variables/Secrets. Missing
+provider configuration or denied authorization stops before business writes.
+
+`preflight` checks the existing environment, exact app CI, exact operations CI,
+existing release identity and controller plan. `publish` performs those same
+checks, looks up the immutable ID before submission, and observes the controller
+through automatic recovery to accepted/recovered/failed/blocked/superseded.
+Recovered is compatible-service restoration, never candidate acceptance.
+Each run persists a private atomic JSON receipt under `.release-runs/`, prints
+a JSON result and human summary, and has a 40-minute observation deadline that
+survives process restart. Reinvoke the identical command to resume that receipt;
+never delete it to reset a budget. Observation expiry does not cancel a remote
+Workflow or release its locks. Read the actual state before any next mutation.
+
+Explicit administrator actions use the same entry:
+`scripts/release/run.sh resume|recover /absolute/original-manifest.json`.
+They require existing admin authority and a terminal predecessor enforced by
+the controller. An uncertain admin response is reconciled by its changed
+Workflow identity, never blindly repeated. A different new command requires
+the designated operator's evidence and authority, not automatic quota reset.
+
+Use `node scripts/release/timing-report.mjs release receipt.json` for retained
+controller records and `... ci run.json attempt-jobs.json` for GitHub metadata.
+Keep execution, queue, unknown approval time and recovered/incomplete outcomes
+separate. See [issue #514 evidence](../../../docs/evidence/issue-514/README.md).
+
 Use the existing administrator `lingxiloop_release_plan/submit/get/watch/resume/recover`
 tools, or `scripts/release/cli.mjs` / `scripts/release/mcp.mjs` with credentials
 injected through the existing provider. Keep submit/read and admin credentials

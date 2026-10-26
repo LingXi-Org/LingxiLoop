@@ -8,6 +8,13 @@ export class Executor {
   constructor({ journal, adapter, afterSideEffect, log = () => {} }) {
     this.journal = journal; this.adapter = adapter; this.active = new Set(); this.afterSideEffect = afterSideEffect; this.log = log
     if(adapter.artifacts)adapter.artifacts.journal=journal
+    adapter.recordControlRead=(op,receipt)=>{
+      const key=`${op.releaseId}:${op.target}:${op.phase}`,current=journal.get(key)
+      if(!current || current.manifestHash!==op.manifestHash || current.generation!==op.generation)return
+      const reads=current.errors.controlReads??{},old=reads[receipt.action]
+      reads[receipt.action]={calls:(old?.calls??0)+1,attempts:(old?.attempts??0)+receipt.attempts,retries:(old?.retries??0)+receipt.retries,elapsedMs:(old?.elapsedMs??0)+receipt.elapsedMs,startedAt:old?.startedAt??receipt.startedAt,completedAt:receipt.completedAt,lastOutcome:receipt.outcome}
+      journal.patch(key,{errors:{...current.errors,controlReads:reads}})
+    }
   }
   register(manifest, manifestHash) {
     if (!manifest || manifest.version !== 1 || !identifier(manifest.releaseId) || !manifest.targets || !/^[a-f0-9]{40}$/.test(manifest.appSha ?? '') || !/^[a-f0-9]{40}$/.test(manifest.opsSha ?? '') || manifest.checks?.commit !== manifest.appSha || manifest.checks?.conclusion !== 'success' || !Number.isSafeInteger(manifest.sequence) || manifest.sequence < 1 || !Number.isFinite(Date.parse(manifest.createdAt)) || hash(manifest) !== manifestHash) throw fault('INVALID_MANIFEST', 'Manifest identity or canonical hash is invalid', 422)

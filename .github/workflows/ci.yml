@@ -694,7 +694,7 @@ jobs:
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
     needs: [changes, checks, integration]
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -737,7 +737,8 @@ jobs:
             npx --no-install wrangler versions upload --config workers/control-plane/wrangler.jsonc --tag "$GITHUB_SHA" --var "ORIGIN_BASE_URL:$BACKEND_ORIGIN_BASE_URL" --var "RELEASE_API_URL:$RELEASE_API_URL" --var "RELEASE_CONTROLLER_ENABLED:$RELEASE_CONTROLLER_ENABLED" 2>&1 | tee admin-version.log
             node scripts/release-static.mjs record admin-worker admin-version.log lingxiloop-control-plane
           fi
-      - uses: actions/upload-artifact@v4
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: release-component-static-${{ github.sha }}-${{ github.run_attempt }}
           path: release-artifacts/

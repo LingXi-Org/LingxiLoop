@@ -22,7 +22,11 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
           try { return JSON.stringify({ ok: true, value: await fn() }) }
           catch (error) {
             const code = codeOf(error)
-            if (/^(REMOTE_HTTP_(429|502|503|504)|EXECUTOR_QUERY_UNAVAILABLE|PROBE_QUERY_UNAVAILABLE|TRANSPORT_OUTCOME_UNKNOWN|OPERATION_OUTCOME_UNKNOWN)$/.test(code) && n < record.manifest.policy.retryLimit) { await new Promise(resolve => setTimeout(resolve, 500 * 2 ** n)); continue }
+            if (/^(REMOTE_HTTP_(429|502|503|504)|EXECUTOR_QUERY_UNAVAILABLE|PROBE_QUERY_UNAVAILABLE|TRANSPORT_OUTCOME_UNKNOWN|OPERATION_OUTCOME_UNKNOWN)$/.test(code) && n < record.manifest.policy.retryLimit) {
+              try { await call('/retry-permit', { stage: record.checkpoint!.plan[record.checkpoint!.index].key, key: name, error: code }) }
+              catch { return JSON.stringify({ ok: false, error: code }) }
+              await new Promise(resolve => setTimeout(resolve, 500 * 2 ** n + Math.floor(Math.random() * 250))); continue
+            }
             return JSON.stringify({ ok: false, error: code })
           }
         }
@@ -97,8 +101,10 @@ export class ReleaseWorkflow extends WorkflowEntrypoint<ReleaseEnv, { releaseId:
           break
         }
         case 'claim': {
+          const { deadline } = await durable('resource-deadline', () => stageCall<{ deadline: number }>('/deadline', { key: 'resource-claim' }))
           let claimed = false
           for (let n = 0; n < 120; n++) {
+            requireThat(Date.now() < deadline, 'RESOURCE_WAIT_BUDGET_EXCEEDED')
             const result = await durable(`claim-${n}`, async () => {
               try { return { record: await call('/claim'), busy: false } }
               catch (error) { if (codeOf(error) === 'RESOURCE_BUSY') return { record: null, busy: true }; throw error }

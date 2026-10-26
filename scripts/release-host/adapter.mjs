@@ -1,3 +1,4 @@
+import { controlRead } from './control-read.mjs'
 import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { readFile, mkdir, writeFile, rename, open } from 'node:fs/promises'
@@ -165,6 +166,7 @@ export class ComposeAdapter {
     if (endpoint.tokenFile) headers.authorization = `Bearer ${(await readFile(endpoint.tokenFile, 'utf8')).trim()}`
     if (endpoint.accessClientIdFile) headers['CF-Access-Client-Id'] = (await readFile(endpoint.accessClientIdFile,'utf8')).trim()
     if (endpoint.accessClientSecretFile) headers['CF-Access-Client-Secret'] = (await readFile(endpoint.accessClientSecretFile,'utf8')).trim()
+    if (method === 'GET') return controlRead(endpoint.url,headers,action,{fetcher:this.fetcher,wait:this.wait,timeoutMs:endpoint.timeoutMs ?? 10000,record:receipt=>this.recordControlRead?.(body,receipt)})
     const observeIngress = async error => {
       if (action !== 'ingress' || method !== 'POST') throw error
       // The POST is never repeated. Only its independently configured, same-auth

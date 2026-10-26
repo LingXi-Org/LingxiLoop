@@ -103,6 +103,65 @@ async function untilTerminal(state: Awaited<ReturnType<typeof setup>>, net: Retu
   throw new Error('unbounded stage chain')
 }
 describe('production staged Workflow with actual SQLite ledger', () => {
+  it('starts both independent preparations before either finishes, and drains only after both succeed',async()=>{
+    const state=await setup('parallel-prepare'),net=network(),original=globalThis.fetch
+    let prepared=0,release!:()=>void
+    const bothStarted=new Promise<void>(resolve=>{release=resolve})
+    vi.spyOn(globalThis,'fetch').mockImplementation(async(input,init)=>{
+      if(init?.method==='POST'&&new URL(String(input)).pathname==='/operations'){
+        const body=JSON.parse(init.body as string)
+        if(body.phase==='prepare'){prepared++;if(prepared===2)release();await bothStarted}
+        if(body.phase==='drain')expect(prepared).toBe(2)
+      }
+      return original(input,init)
+    })
+    expect((await untilTerminal(state,net)).status).toBe('accepted')
+    expect(net.writes.filter(key=>key.endsWith(':prepare'))).toHaveLength(2)
+    expect(Math.max(...net.counts)).toBeLessThanOrEqual(STAGE_REQUEST_LIMIT)
+  })
+  it('persists retry allowance and stage timing across replay and administrator resume', async () => {
+    const state = await setup('retry-timing'), first = await state.get(), owner = { releaseId: first.releaseId, workflowId: first.workflowId }
+    await state.call('/initialize', owner)
+    const body = { ...owner, stage: 'batch', key: 'read', error: 'EXECUTOR_QUERY_UNAVAILABLE' }
+    await state.call('/retry-permit', body)
+    await expect(state.call('/retry-permit', body)).rejects.toMatchObject({ code: 'RETRY_BUDGET_EXHAUSTED' })
+    const before = (await state.get()).checkpoint!
+    expect(before.timings!.batch.startedAt).toBeGreaterThanOrEqual(before.timings!.batch.queuedAt)
+    const resumed = await state.call('/resume', { releaseId: first.releaseId, expectedWorkflowId: first.workflowId })
+    await state.call('/initialize', { ...owner, workflowId: resumed.workflowId })
+    await expect(state.call('/retry-permit', { ...body, workflowId: resumed.workflowId })).rejects.toMatchObject({ code: 'RETRY_BUDGET_EXHAUSTED' })
+    expect((await state.get()).checkpoint!.timings!.batch.startedAt).toBe(before.timings!.batch.startedAt)
+    expect((await state.get()).manualInterventions).toBe(1)
+  })
+  it('stops a repeatedly unavailable provider with explicit unknown outcome and no replacement identity', async () => {
+    const state = await setup('bounded-outbox'), first = await state.get()
+    await runInDurableObject(state.stub, async (instance, storage) => {
+      const holder = instance as unknown as { env: ReleaseEnv }, original = holder.env
+      let creates = 0
+      holder.env = { ...original, RELEASE_WORKFLOW: { create: async () => { creates++; throw Error('unavailable') }, get: async () => { throw Error('unavailable') } } as unknown as ReleaseEnv['RELEASE_WORKFLOW'] }
+      try {
+        for (let n = 0; n < 25; n++) await Reflect.apply(ReleaseLedger.prototype.alarm, instance, [])
+        const record = JSON.parse(storage.storage.sql.exec('SELECT data FROM releases WHERE id=?',first.releaseId).toArray()[0].data as string) as ReleaseRecord
+        expect(creates).toBe(20); expect(record.status).toBe('blocked'); expect(record.error).toBe('WORKFLOW_DISPATCH_BUDGET_UNKNOWN')
+        expect(record.workflowId).toBe(first.workflowId); expect(record.dispatch!.attempts).toBe(20)
+      } finally { holder.env = original }
+    })
+  })
+  it('does not retry provider authorization denial or a quota exception', async () => {
+    for (const error of [Object.assign(Error('denied'), { status: 403 }), Error('Too many subrequests.')]) {
+      const state = await setup(`dispatch-denied-${error.message.startsWith('denied')}`)
+      await runInDurableObject(state.stub, async (instance) => {
+        const holder = instance as unknown as { env: ReleaseEnv }, original = holder.env
+        let calls = 0
+        holder.env = { ...original, RELEASE_WORKFLOW: { create: async () => { calls++; throw error }, get: async () => { throw Error('must not query after denial') } } as unknown as ReleaseEnv['RELEASE_WORKFLOW'] }
+        try {
+          for (let n = 0; n < 3; n++) await Reflect.apply(ReleaseLedger.prototype.alarm, instance, [])
+          expect(calls).toBe(1)
+        } finally { holder.env = original }
+      })
+      expect((await state.get()).error).toBe('WORKFLOW_DISPATCH_DENIED')
+    }
+  })
   it.each(['accepted', 'recovered'] as const)('reaches %s across semantic checkpoints under Free, without host replay', async mode => {
     const state = await setup(`staged-${mode}`), net = network(mode)
     const result = await untilTerminal(state, net)

@@ -20,7 +20,8 @@ function safeRecord(record: ReleaseRecord) {
     status: record.status, phase: record.phase, generation: record.generation, targets: record.targets,
     createdAt: record.createdAt, updatedAt: record.updatedAt, errors: record.errors, error: record.error,
     supersededBy: record.supersededBy, workflowId: record.workflowId,
-    progress: record.checkpoint && { protocol: 2, stage: record.checkpoint.plan[record.checkpoint.index]?.key, completed: record.checkpoint.completed, requests: record.checkpoint.requests },
+    dispatch: record.dispatch, manualInterventions: record.manualInterventions,
+    progress: record.checkpoint && { protocol: 2, stage: record.checkpoint.plan[record.checkpoint.index]?.key, completed: record.checkpoint.completed, requests: record.checkpoint.requests, timings: record.checkpoint.timings, retries: record.checkpoint.retries },
     needsAgent: record.status === 'blocked', receiptKey: `releases/${record.releaseId}/verified.json` }
 }
 export default {
