@@ -209,6 +209,43 @@ test('[integration] incomplete drafts persist and native content publishes witho
   assert.deepEqual(reader.editorDocument, input.editorDocument)
 })
 
+test('[integration] historical code repair persists on the same case while reader snapshots wait for publication', async () => {
+  const request = await api(teacher.userId), read = await api(student.userId)
+  const code = '\tprint("<script>literal</script> &lt; ``ticks``")  \n\n'
+  const body = `\`\`\`python\n${code}\n\`\`\``
+  const oldDocument = { format: 'blocknote', version: 1, projection: body, sections: [body], legacyMarkdown: body,
+    blocks: [{ id: 'historical-code', type: 'paragraph', props: {}, content: [{ type: 'text', text: body, styles: {} }], children: [] }] }
+  const createdResponse = await request('/cases', 'POST', { ...content('Historical code'), body, editorDocument: oldDocument })
+  assert.equal(createdResponse.status, 201)
+  const created = await caseJson<'detail'>(createdResponse)
+  const published = await caseJson<'detail'>(await request(`/cases/${created.id}/publish`, 'POST', { version: created.version }))
+  const before = await caseJson<'detail'>(await read(`/cases/${created.id}`))
+  assert.deepEqual(before.editorDocument, oldDocument)
+  // This structural/API test supplies the native import result; frontend parser
+  // and newline adaptation have separate focused unit coverage.
+  const repaired = { ...oldDocument, blocks: [{ id: 'historical-code', type: 'codeBlock', props: { language: 'python' },
+    content: [{ type: 'text', text: code, styles: {} }], children: [] }] }
+  const savedResponse = await request(`/cases/${created.id}`, 'PUT', { ...content('Historical code repaired'), body, editorDocument: repaired, version: published.version })
+  assert.equal(savedResponse.status, 200)
+  const saved = await caseJson<'detail'>(savedResponse)
+  const draft = await caseJson<'detail'>(await request(`/cases/${created.id}?view=manage`))
+  assert.equal(draft.id, created.id)
+  assert.equal(draft.hasUnpublishedChanges, true)
+  assert.deepEqual(draft.editorDocument, repaired)
+  const stillPublished = await caseJson<'detail'>(await read(`/cases/${created.id}`))
+  assert.equal(stillPublished.body, body)
+  assert.deepEqual(stillPublished.editorDocument, oldDocument)
+  assert.equal(stillPublished.version, before.version)
+  assert.equal((await request(`/cases/${created.id}`, 'PUT', { ...content(), body, editorDocument: repaired, version: published.version })).status, 409)
+  const next = await caseJson<'detail'>(await request(`/cases/${created.id}/publish`, 'POST', { version: saved.version }))
+  const reader = await caseJson<'detail'>(await read(`/cases/${created.id}`))
+  assert.deepEqual(reader.editorDocument, repaired)
+  assert.equal(reader.body, body)
+  const repeat = await caseJson<'detail'>(await request(`/cases/${created.id}`, 'PUT', { ...content('Historical code repaired'), body, editorDocument: repaired, version: next.version }))
+  assert.deepEqual(repeat.editorDocument, repaired)
+  assert.equal(repeat.hasUnpublishedChanges, false)
+})
+
 test('[integration] cases enforce organization teacher writes and published-only student reads at HTTP boundaries', async () => {
   // Attribution must remain the creator when another teacher edits/publishes.
   await pool.query('UPDATE users SET display_name=$2,avatar_url=$3 WHERE id=$1', [teacher.userId,'案例作者','https://example.com/author.png'])
