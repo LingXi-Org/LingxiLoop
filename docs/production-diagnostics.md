@@ -16,7 +16,8 @@ Supported queries:
 | `?view=delivery-failures` | Delivery failures |
 
 List queries also accept `limit`, `search`, `companyId` and `cursor`, subject to
-the existing resource validation. Detail queries accept only `view` and `id`.
+the existing resource validation. Detail queries accept `view` and `id`;
+operations also accepts `afterSeq` to continue from a returned event cursor.
 Responses redact sensitive fields and configured credentials, have a bounded
 size and are not cached. Reads record the diagnostic credential ID in the
 existing control audit. The underlying active administrator and product

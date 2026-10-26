@@ -14,6 +14,7 @@ const querySchema = z.object({
   search: z.string().max(200).optional(),
   companyId: z.string().max(200).optional(),
   cursor: z.string().max(5000).optional(),
+  afterSeq: z.coerce.number().int().nonnegative().safe().optional(),
 }).strict()
 
 export async function diagnosticCredential(request: Request, configured?: string): Promise<string | null> {
@@ -33,12 +34,12 @@ export function diagnosticPath(request: Request): string | null {
   if (url.pathname !== '/api/diagnostics' || url.search.length > 6000) return null
   const parsed = querySchema.safeParse(Object.fromEntries(url.searchParams))
   if (!parsed.success) return null
-  const { view, id, ...filters } = parsed.data
+  const { view, id, afterSeq, ...filters } = parsed.data
   if (view === 'run' || view === 'operations') {
-    if (!id || [...url.searchParams.keys()].some(key => key !== 'view' && key !== 'id')) return null
-    return view === 'run' ? `/api/admin/resources/agent-runs/${id}` : `/api/admin/agent-runs/${id}/operations`
+    if (!id || [...url.searchParams.keys()].some(key => key !== 'view' && key !== 'id' && !(view === 'operations' && key === 'afterSeq'))) return null
+    return view === 'run' ? `/api/admin/resources/agent-runs/${id}` : `/api/admin/agent-runs/${id}/operations${afterSeq === undefined ? '' : `?afterSeq=${afterSeq}`}`
   }
-  if (id) return null
+  if (id || afterSeq !== undefined) return null
   const resource = view === 'runs' ? 'agent-runs' : view === 'llm-calls' ? 'llm-calls' : 'agent-deliveries'
   const query = new URLSearchParams()
   for (const [key, value] of Object.entries(filters)) if (value !== undefined) query.set(key, String(value))

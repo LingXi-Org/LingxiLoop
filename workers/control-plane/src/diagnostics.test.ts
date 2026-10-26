@@ -46,6 +46,10 @@ it('diagnostics reads bounded run failures with redaction and rejects unavailabl
     expect(await request('?view=runs&status=failed')).toEqual({ status: 200, body: {
       data: [{ id: 'run-1', error: 'provider unavailable', prompt: '[REDACTED]', token: '[REDACTED]', nested: { password: '[REDACTED]' } }],
     } })
+    origin.intercept({ path: '/api/admin/agent-runs/run-1/operations?afterSeq=100', method: 'GET' })
+      .reply(200, { events: [{ seq: 101, error: 'late failure' }], nextSeq: 101 })
+    expect(await request('?view=operations&id=run-1&afterSeq=100')).toEqual({ status: 200,
+      body: { events: [{ seq: 101, error: 'late failure' }], nextSeq: 101 } })
     origin.intercept({ path: '/api/admin/resources/agent-runs/run-1', method: 'GET' }).reply(302, '', { headers: { location: 'https://attacker.example/' } })
     expect((await request('?view=run&id=run-1')).status).toBe(502)
     origin.intercept({ path: '/api/admin/resources/agent-runs/run-2', method: 'GET' }).reply(200, { data: 'x'.repeat(300_000) })
