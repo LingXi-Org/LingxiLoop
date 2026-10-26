@@ -127,6 +127,9 @@ if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
     if(args[0]==='--help'){console.log('scripts/release/run.sh <preflight|publish|resume|recover> <qualified-manifest.json> [receipt.json]\nReuses the existing provider. No configuration or credential mutation. Same receipt resumes its original deadline.');process.exit(0)}
     existingConfiguration()
     if(args[0]==='route-check'){
+      const {inspectUploadPaths}=await import('../mihomo/host-status.mjs')
+      console.log(JSON.stringify(await inspectUploadPaths()))
+    }else if(args[0]==='subscription-check'){
       const {probeSubscription}=await import('../mihomo/probe.mjs')
       const result=await probeSubscription();console.log(JSON.stringify(result));process.exitCode=result.status==='subscription-validated'?0:1
     }else

@@ -29,9 +29,14 @@ source or runtime schema check. `doctor` reuses the existing cloud provider and
 the reviewed custom domain from `workers/release/wrangler.jsonc`, then reads the
 accepted ledger. It does not probe or mutate GitHub Variables/Secrets. Missing
 provider configuration or denied authorization stops before business writes.
-`route-check` reads the existing approved Mihomo subscription into memory with
-normal TLS, fixed origin and a 20-second bound. It prints only HTTP/validation
-status, never saves nodes or activates a proxy. The user now requires choosing
+`route-check` reads A/B metadata for the approved provider path, fixed config,
+binary and service, without reading provider contents or changing a service.
+The user will upload YAML manually to both hosts at
+`/etc/lingxi-release/secrets/mihomo-provider.yaml`, root:root0600; the actual
+parent directories were confirmed root:root0700. Wait for upload-complete notice
+before validating content. Do not treat upload as network/Docker-change approval.
+Online subscription fetch is not a release prerequisite; `subscription-check`
+is an optional explicitly requested bounded read. The user now requires choosing
 the fastest reliable distribution from measured evidence; R2 is not mandatory.
 Do not switch to Clash until subscription plus authenticated registry/blob
 measurements qualify it. Follow the exact approved A/B loopback design; any new

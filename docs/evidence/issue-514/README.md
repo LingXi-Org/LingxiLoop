@@ -161,8 +161,18 @@ configuration obtained, no provider saved or proxy activated. Earlier handoff
 reported cloud503 and Cloudflare526. These are unavailable candidates, not speed
 samples. No TLS exception, identity switch or denied-action retry was attempted.
 Authenticated Clash registry/blob throughput, build/distribution/load/switch
-times and comparable end-to-end speed remain unmeasured. A working subscription
-is required before selecting/installing that path. The approved design is
+times and comparable end-to-end speed remain unmeasured. The user subsequently
+chose manual YAML upload; online retrieval is no longer a prerequisite. The approved design is
 `docs/release-mihomo-activation.md`; B's Docker live-restore is disabled, so a
 daemon proxy change has concrete shared-service impact and must be explicitly
 qualified/authorized before touching healthy production. No such change occurred.
+
+Actual read-only A/B metadata subsequently confirmed both `/etc/lingxi-release`
+and `/etc/lingxi-release/secrets` directories exist, root:root0700, no symlinks.
+The approved upload destination on each is
+`/etc/lingxi-release/secrets/mihomo-provider.yaml`, root:root0600. Both provider
+files, binaries, configs and systemd units were absent; service LoadState was
+not-found/inactive. No provider content was read. User upload completion is
+pending; it does not authorize a daemon proxy change. Canonical `run.sh route-check`
+now performs this metadata-only inventory; optional online checking is separately
+named `subscription-check` and is not a publish gate.
