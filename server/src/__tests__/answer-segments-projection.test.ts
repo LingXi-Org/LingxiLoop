@@ -62,19 +62,19 @@ function fixture(name: string) {
     push('public.text.delta', { ...id, chunkIndex: 0, text: COMMENTARY })
     push('public.text.ended', { ...id, chunkCount: 1, reason: 'tool' })
   }
-  function commit(sources: { segmentId: string; partId: string; bodyHash: string; text: string }[], checkpointName = 'final') {
+  function commit(sources: { segmentId: string; partId: string; bodyHash: string; text: string }[], checkpointName = 'final', outcome: 'satisfied'|'partial' = 'satisfied') {
     const raw = sources.map(source => source.text).join(''), body = raw.trim(), left = raw.length - raw.trimStart().length
     let offset = 0
     const publicTextSources = { version: 3 as const, messageId: `answer:${runId}:v1`, bodyHash: hash(body), segments: sources.map(source => {
       const start = Math.max(0, Math.min(body.length, offset - left)); offset += source.text.length
       return { segmentId: source.segmentId, partId: source.partId, bodyHash: source.bodyHash, start, end: Math.max(start, Math.min(body.length, offset - left)) }
     }) }
-    const goalOutcome = { status: 'satisfied' as const, verification: 'passed' as const, requestVersion: 1 }
+    const goalOutcome = { status: outcome, verification: outcome === 'satisfied' ? 'passed' as const : 'inconclusive' as const, requestVersion: 1 }
     const message = { version: 2 as const, runId, agentId: target(runId).agentId, sessionId: 'synthetic-session', body, publicTextSources,
       envelope: { version: 1 as const, requestVersion: 1, body, evidenceSnapshotId: 'synthetic-evidence', citations: [], artifacts: [], goalOutcome } }
     push('response.committed', { requestVersion: 1, resultId: 'synthetic-result', publicTextSources })
     checkpoint(checkpointName === 'replacement-committed' ? checkpointName : 'commit-pending')
-    const final: RunState = { ...state(runId, 'succeeded'), run: { ...state(runId, 'succeeded').run,
+    const final: RunState = { ...state(runId, outcome === 'satisfied' ? 'succeeded' : 'partial'), run: { ...state(runId, outcome === 'satisfied' ? 'succeeded' : 'partial').run,
       resultId: 'synthetic-result', resultFence: 1, goalOutcome }, message, delivery: 'delivered' }
     const item: RunStreamEvent = { type: 'state', state: final }
     items.push(item); projection.advance(item); checkpoint('final')
@@ -137,6 +137,54 @@ test('only committed explicit replacement replaces sources; failed replacement r
     assert.deepEqual(answers(accepted.history), answers(f.projection.snapshot))
     assert.equal(answers(f.projection.snapshot).length, 1)
   }
+})
+
+test('protocol-failed drafts remain auditable without leaking full text into final, history or replay', t => {
+  const f = fixture('protocol-correction-515')
+  const failed = 'FAILED_SYNTHETIC_DRAFT_515 '.repeat(15)
+  f.segment('model:1', failed, 'append', [], false)
+  f.segment('model:2', failed + 'Second attempt.', 'append', [], false)
+  const final = f.segment('model:3', 'The corrected answer.')
+  const accepted = f.commit([final])
+  const page = f.projection.activityPage(0)
+  for (const message of [f.projection.snapshot.message, accepted.history.message, accepted.hydratedReplay.message, page.message]) {
+    assert.doesNotMatch(JSON.stringify(message.content), /FAILED_SYNTHETIC_DRAFT_515/)
+  }
+  assert.equal(nativeText(f.projection.snapshot.message), final.text)
+  assert.equal(page.message.content.filter(isAnswerRevision).length, 2)
+  assert.ok(page.message.content.filter(isAnswerRevision).every(part => part.type === 'text' && part.text === activityAnnotation(part)?.label))
+  assert.equal(f.items.filter(item => item.type === 'event' && item.event.kind === 'public.text.ended' && item.event.data.reason === 'failed').length, 2)
+  assert.ok(JSON.stringify(f.items).includes(failed), 'original event audit remains intact')
+  const beforeReplay = copy(f.projection.snapshot)
+  for (const item of f.items) f.projection.advance(item)
+  assert.deepEqual(f.projection.snapshot.message.content, beforeReplay.message.content)
+  t.diagnostic(JSON.stringify({ scenario: 'B-synthetic', attempts: ['model:1 failed', 'model:2 failed', 'model:3 completed'],
+    committedSources: accepted.message.publicTextSources, finalText: nativeText(f.projection.snapshot.message),
+    revisions: page.message.content.filter(isAnswerRevision).map(part => ({ id: activityAnnotation(part)?.id, label: activityAnnotation(part)?.label })), replayStable: true }))
+})
+
+test('explicit replacements expose lifecycle summaries while preserving the valid source until commit', () => {
+  const f = fixture('replacement-summary-515'), original = f.segment('original', A)
+  const replacement = f.segment('replacement', REPLACEMENT, 'replace', [original.segmentId])
+  assert.equal(nativeText(f.projection.snapshot.message), A)
+  const pending = f.projection.activityPage(0).message.content.filter(isAnswerRevision)
+  assert.ok(pending.every(part => part.type === 'text' && part.text === activityAnnotation(part)?.label))
+  f.commit([replacement])
+  assert.equal(nativeText(f.projection.snapshot.message), REPLACEMENT)
+  assert.doesNotMatch(JSON.stringify(f.projection.activityPage(0).message.content), /Gather collects the available inputs/)
+})
+
+test('a partial committed answer keeps truthful status and useful text without its failed draft', () => {
+  const f = fixture('partial-after-save-518')
+  f.segment('failed-explanation', 'FAILED_EXPLANATION_518', 'append', [], false)
+  const answer = f.segment('saved-explanation', 'The saved result remains available; final verification is incomplete.')
+  const accepted = f.commit([answer], 'final', 'partial')
+  for (const snapshot of [f.projection.snapshot, accepted.history, accepted.hydratedReplay]) {
+    assert.equal(nativeText(snapshot.message), answer.text)
+    assert.deepEqual(snapshot.message.status, { type: 'incomplete', reason: 'other' })
+    assert.doesNotMatch(JSON.stringify(snapshot.message.content), /FAILED_EXPLANATION_518/)
+  }
+  assert.equal(accepted.message.envelope.goalOutcome.status, 'partial')
 })
 
 test('cancellation retains shown answer and genuine incomplete status; equal text in other runs has distinct identity', () => {
