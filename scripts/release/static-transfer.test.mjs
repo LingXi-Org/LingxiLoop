@@ -51,3 +51,8 @@ test('warm rerun checks bytes, preserves completed objects and issues no PUT', a
   const receipt = await putImmutableObject('chunks/a.js', Buffer.from('exact'), { ...options, fetcher: async (_url, init) => { methods.push(init.method); return new Response('exact') } })
   assert.equal(receipt.reused, true); assert.deepEqual(methods, ['GET'])
 })
+test('failed group lookup retains actual request and retry counts',async()=>{
+  const bytes=Buffer.from('exact'),sha256=`sha256:${createHash('sha256').update(bytes).digest('hex')}`
+  const result=await retainGroups([{key:'chunks/a.js',bytes,size:bytes.length,sha256}],{...options,fetcher:async()=>new Response(null,{status:503})})
+  assert.equal(result.status,'failed');assert.equal(result.requests,3);assert.equal(result.retries,2);assert.equal(result.completed,0)
+})

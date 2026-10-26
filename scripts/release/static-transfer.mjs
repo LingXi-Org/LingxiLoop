@@ -105,7 +105,7 @@ export async function retainGroups(objects,options={}){
       results.push({group,reusedGroup:false,...transferred})
       if(transferred.status!=='complete')throw fault('STATIC_TRANSFER_INCOMPLETE')
       const committed=await putImmutableObject(key,proof,{...requestOptions,deadline:Math.min(deadline,now()+60000)});requests+=committed.requests;retries+=committed.retries
-    }catch(error){return{version:1,status:'failed',error:safeCode(error),startedAt,completedAt:now(),elapsedMs:now()-startedAt,total:objects.length,completed,requests,retries,results}}
+    }catch(error){requests+=error.requests??0;retries+=error.retries??0;return{version:1,status:'failed',error:safeCode(error),startedAt,completedAt:now(),elapsedMs:now()-startedAt,total:objects.length,completed,requests,retries,results}}
   }
   return{version:1,status:'complete',startedAt,completedAt:now(),elapsedMs:now()-startedAt,total:objects.length,completed,requests,retries,results}
 }
