@@ -179,8 +179,11 @@ The observed original inline source is exactly this immutable repository templat
 SHA256 5e2fa5e7ec7fb401ae4021a8b8730ecd127a77bf5f73be0b4c49bb9d8ba987e9
 ```
 
-Retrieve it through `git show` and require the byte hash before using it. It
-matches the recorded legacy source exactly, so no full secret-bearing config
+The exact historical bytes are bundled in
+`scripts/release/fixtures/legacy-resources-33e97c9f.toml`; the operator requires
+the byte hash before using them, including in shallow checkouts. They can be
+independently compared with `git show` when the old Git object is available. The
+template matches the recorded legacy source exactly, so no full secret-bearing config
 backup is needed. A publisher-ownership rollback must retain the approved
 backend route and immutable ingress pin: insert only
 `commit = "816433430c71887905bf277d6ced523cc92f6674"` after `branch = "main"`

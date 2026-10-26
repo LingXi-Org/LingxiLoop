@@ -136,6 +136,10 @@ The journal retains nonsecret original changed fields and exact source hashes.
 only in memory, without submitting or logging them. The original template must
 come from Git `33e97c9f98606f22f2762e5cab2bc66ccd2291ff` and match SHA-256
 `5e2fa5e7ec7fb401ae4021a8b8730ecd127a77bf5f73be0b4c49bb9d8ba987e9`.
+The exact non-secret historical bytes are bundled at
+`fixtures/legacy-resources-33e97c9f.toml`, retaining variable references. The
+operator reads this fixed, hash-checked template without requiring Git history
+in a shallow checkout. It never substitutes the changed current resources file.
 Restoration preserves ingress pin 816; that source has SHA-256
 `f92e316937d35ca93ae3c26cbccc7789492f37085731f789f17b9e2596b0e024`.
 The root must separately establish exclusive rollback ownership before using

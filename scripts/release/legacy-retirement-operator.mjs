@@ -4,7 +4,6 @@ import{createHash}from'node:crypto'
 import{readFile,mkdir,open,rename,lstat}from'node:fs/promises'
 import{dirname,resolve}from'node:path'
 import{pathToFileURL}from'node:url'
-import{execFileSync}from'node:child_process'
 import{isDeepStrictEqual as equal}from'node:util'
 import{claimProcessLock}from'../release-host/server.mjs'
 
@@ -130,7 +129,7 @@ export function productionClients(env=process.env){
 }
 async function main(){
  const[action,evidencePath,expectedHash,snapshotPath,journalPath]=process.argv.slice(2);check(['plan','apply'].includes(action)&&evidencePath&&snapshotPath&&/^sha256:[a-f0-9]{64}$/.test(expectedHash??'')&&(action!=='apply'||journalPath),'FIXED_OPERATOR_ARGUMENTS_REQUIRED')
- const bytes=await readFile(evidencePath);check(bytes.length<=8*1024*1024&&`sha256:${rawHash(bytes)}`===expectedHash,'EVIDENCE_FILE_HASH_MISMATCH');const evidence=JSON.parse(bytes),snapshot=JSON.parse(await readFile(snapshotPath));check(rawHash(canonical(snapshot))===SNAPSHOT_SHA,'LEGACY_SNAPSHOT_HASH_MISMATCH');const sharedSource=await readFile(new URL('../../deploy/komodo/shared-resources.toml',import.meta.url),'utf8'),oldSource=execFileSync('git',['show','33e97c9f98606f22f2762e5cab2bc66ccd2291ff:deploy/komodo/resources.toml'],{cwd:new URL('../../',import.meta.url),encoding:'utf8',maxBuffer:1024*1024}),plan=buildPlan(evidence,snapshot,sharedSource,oldSource)
+ const bytes=await readFile(evidencePath);check(bytes.length<=8*1024*1024&&`sha256:${rawHash(bytes)}`===expectedHash,'EVIDENCE_FILE_HASH_MISMATCH');const evidence=JSON.parse(bytes),snapshot=JSON.parse(await readFile(snapshotPath));check(rawHash(canonical(snapshot))===SNAPSHOT_SHA,'LEGACY_SNAPSHOT_HASH_MISMATCH');const sharedSource=await readFile(new URL('../../deploy/komodo/shared-resources.toml',import.meta.url),'utf8'),oldSource=await readFile(new URL('./fixtures/legacy-resources-33e97c9f.toml',import.meta.url),'utf8'),plan=buildPlan(evidence,snapshot,sharedSource,oldSource)
  if(action==='plan')return console.log(JSON.stringify({ready:true,identity:plan.identity,stepIds:plan.steps.map(s=>s.id),rollback:plan.rollback}))
  const path=resolve(journalPath),unlock=await claimProcessLock(`${path}.lock`);try{console.log(JSON.stringify(await operate({evidence,snapshot,sharedSource,oldSource,journalPath:path,clients:productionClients()})))}finally{await unlock()}
 }
