@@ -14,10 +14,10 @@ test('lost pull response resumes from immutable cache identity, never falls back
  const identity={localImageId:newImage.indexDigest,localIdKind:'index'}
  const adapter={policy:{artifactTransport:'registry'},inspectImage:async()=>complete?identity:null,run:async(args,options)=>{
   if(args[0]==='info')return JSON.stringify({HttpProxy:'http://127.0.0.1:17890',HttpsProxy:'http://127.0.0.1:17890'})
-  assert.deepEqual(args,['image','pull','--platform','linux/amd64',newImage.ref]);assert.equal(options.timeout,180000);pulls++;complete=true;throw Error('lost CLI response')
+  assert.deepEqual(args,['image','pull','--quiet','--platform','linux/amd64',newImage.ref]);assert.equal(options.timeout,300000);pulls++;complete=true;throw Error('lost CLI response')
  }}
  const prepare=direction=>ComposeAdapter.prototype.prepareImage.call(adapter,{},newImage,{}, {step:(_key,fn)=>fn()},direction)
  await assert.rejects(prepare('source'),{code:'OFFLINE_IMAGE_MISSING'});assert.equal(pulls,0)
- await assert.rejects(prepare('forward'),/lost CLI response/)
+ assert.equal((await prepare('forward')).reused,false)
  assert.equal((await prepare('forward')).reused,true);assert.equal(pulls,1)
 })

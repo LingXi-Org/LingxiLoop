@@ -51,7 +51,7 @@ export async function runRelease({manifest,mode='publish',budgetMs=2_400_000,pre
         // A changed durable Workflow ID proves that this command was accepted.
         if(record.workflowId===receipt.commandIntent.workflowId)throw fail('ADMIN_COMMAND_OUTCOME_UNKNOWN')
       }else{
-        receipt.commandIntent={method:mode,workflowId:record.workflowId};checkpoint()
+        receipt.commandIntent={method:mode,workflowId:record.workflowId};receipt.commandObservationDeadline=Math.min(receipt.deadline,now()+30_000);checkpoint()
         await stage(mode,async()=>{
           try{record=identify(await request(mode,{releaseId:manifest.releaseId}))}
           catch(error){if(!transient(error))throw error;const observed=await read(lookup);if(!observed||observed.workflowId===receipt.commandIntent.workflowId)throw fail('ADMIN_COMMAND_OUTCOME_UNKNOWN');record=observed}
@@ -69,7 +69,10 @@ export async function runRelease({manifest,mode='publish',budgetMs=2_400_000,pre
       })
     }
     await stage('observe-terminal',async()=>{
-      while(record&&!terminal.has(record.status)){
+      // A resumed Workflow is dispatched asynchronously: its accepted command may
+      // still return the predecessor's blocked state. Observe within one persisted
+      // grace window; never repeat the command or reset either budget on restart.
+      while(record&&(!terminal.has(record.status)||(record.status==='blocked'&&receipt.commandIntent&&record.workflowId!==receipt.commandIntent.workflowId&&now()<receipt.commandObservationDeadline))){
         receipt.controller=record;receipt.status=record.status;checkpoint();progress({releaseId:manifest.releaseId,status:record.status,phase:record.phase})
         const remaining=receipt.deadline-now();if(remaining<=0)throw fail('RUN_DEADLINE_EXCEEDED')
         await wait(Math.min(3000,remaining));record=await read(lookup);if(!record)throw fail('RELEASE_DISAPPEARED')

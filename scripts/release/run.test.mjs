@@ -40,3 +40,25 @@ test('uncertain admin response is never replayed without a changed durable Workf
   assert.equal((await runRelease({manifest,mode:'recover'},deps)).error,'ADMIN_COMMAND_OUTCOME_UNKNOWN')
   assert.equal((await runRelease({manifest,mode:'recover',previous:saved},deps)).error,'ADMIN_COMMAND_OUTCOME_UNKNOWN');assert.equal(writes,1)
 })
+test('resume observes the new Workflow initialization instead of returning its stale blocked status',async()=>{
+ let clock=0,writes=0,reads=0,saved
+ const before={...record('blocked'),workflowId:'old'}
+ const after={...record('blocked'),workflowId:'new'}
+ const deps={now:()=>clock,wait:async ms=>{clock+=ms},save:r=>saved=structuredClone(r),call:async method=>{
+  if(method==='get')return ++reads===1?before:reads===2?after:{...record('accepted'),workflowId:'new'}
+  if(method==='resume'){writes++;return after}throw Error('unexpected')
+ }}
+ const result=await runRelease({manifest,mode:'resume'},deps)
+ assert.equal(result.status,'accepted');assert.equal(writes,1);assert.equal(saved.commandObservationDeadline,30000)
+})
+test('resume initialization wait is bounded and process restart preserves its deadline',async()=>{
+ let clock=0,writes=0,saved,current={...record('blocked'),workflowId:'old'}
+ const deps={now:()=>clock,wait:async ms=>{clock+=ms},save:r=>saved=structuredClone(r),call:async method=>{
+  if(method==='get')return current
+  if(method==='resume'){writes++;return current={...current,workflowId:'new'}}throw Error('unexpected')
+ }}
+ const result=await runRelease({manifest,mode:'resume'},deps)
+ assert.equal(result.status,'blocked');assert.equal(clock,30000);assert.equal(writes,1)
+ await runRelease({manifest,mode:'resume',previous:saved},deps)
+ assert.equal(clock,30000);assert.equal(writes,1)
+})
