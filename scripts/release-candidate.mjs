@@ -6,6 +6,7 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { isDeepStrictEqual } from 'node:util'
 import { readAccepted, releaseApiUrl } from './ci-scope-cumulative.mjs'
+import { validateRuntimePatch } from './release-host/runtime-patch.mjs'
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
 const exactSha = value => /^[a-f0-9]{40}$/.test(value || '')
 const adapters = { 'main-frontend': 'web-static', 'main-runtime-a': 'main-runtime', 'main-runtime-b': 'main-runtime', notebook: 'open-notebook', wukongim: 'wukongim', 'admin-worker': 'admin-worker', gateway: 'gateway' }
@@ -64,6 +65,17 @@ function checkedRuntimeOverride(id, current, artifact, before, after, { attestat
   requireProof(isDeepStrictEqual(db.migrations, after.migrations) && before.migrations.every(row => after.migrations.some(next => isDeepStrictEqual(next, row))), 'complete named migration inventory must preserve every accepted checksum')
   requireProof(profileKeys.target === `${contract.nativeSchema}:${contract.productSchema}:${publicPackage.schemaHash}` && typeof profileKeys.source === 'string' && new RegExp(`^${current.contract.nativeSchema}:${current.contract.productSchema}:[a-f0-9]{64}$`).test(profileKeys.source), 'concrete trusted source/target profile keys required')
   if (before.lingxios === after.lingxios) requireProof(profileKeys.source.endsWith(`:${publicPackage.schemaHash}`), 'same package source profile schema hash differs')
+  else {
+    let patch
+    try { patch = validateRuntimePatch(db) } catch { requireProof(false, 'runtime package transition requires the fixed complete CAS57 plan') }
+    requireProof(patch && patch.source.runtime === before.lingxios && patch.target.runtime === after.lingxios &&
+      patch.source.schema === current.contract.nativeSchema && patch.target.schema === contract.nativeSchema &&
+      patch.source.schemaHash === profileKeys.source.split(':').at(-1) && patch.target.schemaHash === publicPackage.schemaHash &&
+      patch.source.protocol === publicPackage.controlPlane && patch.target.protocol === publicPackage.controlPlane &&
+      isDeepStrictEqual(patch.source.migrations, before.migrations) && isDeepStrictEqual(patch.target.migrations, after.migrations) &&
+      patch.target.integrity === after.integrity && patch.target.tarball === after.resolved,
+    'runtime patch must bind the exact source/target package, native profile and complete named inventory')
+  }
   requireProof(recovery && recovery.configurationHash === current.hostPlan?.configurationHash && exactSha(recovery.appSha) && validImage(recovery.artifact) && sha256(recovery.configurationHash), 'prequalified immutable schema-compatible recovery required')
   const recoverySource = contractIdentity(recovery.appSha), recoveryContract = recovery.contract
   requireProof(recoverySource.lingxios === after.lingxios && recoverySource.integrity === after.integrity && recoverySource.resolved === after.resolved && isDeepStrictEqual(recoverySource.migrations, after.migrations), 'recovery source/package/migrations must support the target installed schema')

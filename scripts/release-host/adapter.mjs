@@ -11,6 +11,7 @@ import { componentControl,componentDrain,componentProfile,validateComponentPlan,
 import {ArtifactCache} from './artifact-cache.mjs'
 import {validateArchive} from './artifact-tar.mjs'
 import {configurationFiles,validateConfigurationPolicy} from './configuration-files.mjs'
+import {validateRuntimePatch} from './runtime-patch.mjs'
 
 const exec = promisify(execFile)
 const digest = value => /^sha256:[a-f0-9]{64}$/.test(value ?? '')
@@ -106,6 +107,7 @@ export function validateHostPlan(manifest, target, policy) {
     if (local.databaseOwner) requireValue(policy.archive && typeof policy.archive.baseUrl === 'string' && policy.archive.baseUrl.startsWith('https://') && isAbsolute(policy.archive.tokenFile ?? ''), 'ARCHIVE_POLICY_REQUIRED', 'Database preparation requires a trusted immutable archive endpoint and local credential reference')
     requireValue(plan.source, 'SOURCE_REQUIRED', 'Schema-changing plans must distinguish the actual source from compatible recovery')
     const db = plan.database
+    validateRuntimePatch(db)
     requireValue(plan.mode === 'maintenance' && db.strategy === 'maintenance' && db.rpo === 'zero-committed-writes' && [db.from?.nativeSchema,db.from?.productSchema,db.to?.nativeSchema,db.to?.productSchema].every(Number.isSafeInteger) && Array.isArray(db.migrations) && db.migrations.length === db.to.productSchema && db.migrations.every((item,index) => item.version === index + 1 && /^[a-f0-9]{64}$/.test(item.checksum)), 'INVALID_DATABASE_PLAN', 'Database plan requires maintenance, zero-write-loss and a complete ordered checksum inventory')
     requireValue(db.to.nativeSchema === plan.contract.nativeSchema && db.to.productSchema === plan.contract.productSchema, 'INVALID_DATABASE_PLAN', 'Database target schema must equal the target artifact contract')
   }
@@ -160,7 +162,7 @@ export class ComposeAdapter {
     requireValue(endpoint, 'CONTROL_NOT_CONFIGURED', `Independent ${action} control endpoint is required`)
     if (endpoint.argv) {
       try { return await runFixedHelper(endpoint.argv,body,endpoint.timeoutMs ?? 30000) }
-      catch (error) { error.uncertain = method !== 'GET'; throw error }
+      catch (error) { if(!(error.outcomeKnown===true && error.uncertain===false))error.uncertain = method !== 'GET'; throw error }
     }
     const headers = { 'content-type': 'application/json' }
     if (endpoint.tokenFile) headers.authorization = `Bearer ${(await readFile(endpoint.tokenFile, 'utf8')).trim()}`

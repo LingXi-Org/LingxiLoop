@@ -192,3 +192,24 @@ test('GHCR rejects an untrusted blob redirect before sending any request or cred
   await assert.rejects(ghcrConfigBlob('ghcr.io/lingxi-org/runtime',fixture.configHash,{env:{GITHUB_ACTOR:'ci-user',GITHUB_TOKEN:'fixture-password'},read:()=>{throw new Error('missing')},fetcher:async()=>{calls++;if(calls===1)return Response.json({token:'fixture-pull-token'});return new Response(null,{status:307,headers:{location:'https://untrusted.example/config'}})}}),/GHCR_BLOB_REDIRECT_UNTRUSTED/)
   assert.equal(calls,2)
 })
+function runtimePatch57Fixture(){
+ const f=migrationFixture(),old=f.accepted.components['main-runtime-a'].appSha,recoverySha=f.attestation.targets['main-runtime-a'].hostPlan.recovery.appSha
+ const rows=Array.from({length:57},(_,i)=>({version:i+1,name:`migration_${i+1}`,checksum:String(i%10).repeat(64)})),before={...f.contractIdentity(old),migrations:rows},after={...before,lingxios:'3.8.13',integrity:`sha512-${'A'.repeat(86)}==`,resolved:`https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.13/${'b'.repeat(40)}`}
+ f.publicPackage={...f.publicPackage,lingxios:'3.8.13'};f.contractIdentity=commit=>commit===old?before:after
+ for(const id of ['main-runtime-a','main-runtime-b']){
+  const current=f.accepted.components[id],override=f.attestation.targets[id],source={...current.contract,lingxios:'3.8.12',productSchema:57,migrations:inventory(rows)}
+  current.contract=source;current.hostPlan.contract=source
+  override.contract={...source,lingxios:'3.8.13'};override.publicPackage=f.publicPackage;override.profileKeys={source:`14:57:${f.publicPackage.schemaHash}`,target:`14:57:${f.publicPackage.schemaHash}`,recovery:`14:57:${f.publicPackage.schemaHash}`}
+  const descriptor={runtime:'3.8.12',schema:14,protocol:11,schemaHash:f.publicPackage.schemaHash,productVersion:57,migrations:rows}
+  override.hostPlan.database={...override.hostPlan.database,from:{nativeSchema:14,productSchema:57},to:{nativeSchema:14,productSchema:57},migrations:structuredClone(rows),runtimePatch:{source:descriptor,target:{...structuredClone(descriptor),runtime:'3.8.13',integrity:after.integrity,tarball:after.resolved}}}
+  override.hostPlan.recovery.contract=override.contract;override.hostPlan.recovery.appSha=recoverySha
+ }
+ return f
+}
+const inventory=rows=>rows.map(({version,checksum})=>({version,checksum}))
+test('SDK12 to SDK13 attestation must bind the exact fixed CAS57 package and unchanged named inventory',()=>{
+ assert.equal(buildManifest(runtimePatch57Fixture()).targets['main-runtime-a'].hostPlan.database.runtimePatch.target.runtime,'3.8.13')
+ for(const mutate of [o=>{delete o.hostPlan.database.runtimePatch},o=>{o.hostPlan.database.runtimePatch.target.integrity=`sha512-${'B'.repeat(86)}==`},o=>{o.hostPlan.database.runtimePatch.source.runtime='3.8.11'},o=>{o.hostPlan.database.runtimePatch.target.tarball=`https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.13/${'c'.repeat(40)}`}]){
+  const f=runtimePatch57Fixture();for(const o of Object.values(f.attestation.targets))mutate(o);assert.throws(()=>buildManifest(f),/CONTRACT_CHANGE_REQUIRES_ATTESTATION/)
+ }
+})
