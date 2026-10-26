@@ -62,19 +62,19 @@ function fixture(name: string) {
     push('public.text.delta', { ...id, chunkIndex: 0, text: COMMENTARY })
     push('public.text.ended', { ...id, chunkCount: 1, reason: 'tool' })
   }
-  function commit(sources: { segmentId: string; partId: string; bodyHash: string; text: string }[], checkpointName = 'final') {
+  function commit(sources: { segmentId: string; partId: string; bodyHash: string; text: string }[], checkpointName = 'final', outcome: 'satisfied'|'partial' = 'satisfied') {
     const raw = sources.map(source => source.text).join(''), body = raw.trim(), left = raw.length - raw.trimStart().length
     let offset = 0
     const publicTextSources = { version: 3 as const, messageId: `answer:${runId}:v1`, bodyHash: hash(body), segments: sources.map(source => {
       const start = Math.max(0, Math.min(body.length, offset - left)); offset += source.text.length
       return { segmentId: source.segmentId, partId: source.partId, bodyHash: source.bodyHash, start, end: Math.max(start, Math.min(body.length, offset - left)) }
     }) }
-    const goalOutcome = { status: 'satisfied' as const, verification: 'passed' as const, requestVersion: 1 }
+    const goalOutcome = { status: outcome, verification: outcome === 'satisfied' ? 'passed' as const : 'inconclusive' as const, requestVersion: 1 }
     const message = { version: 2 as const, runId, agentId: target(runId).agentId, sessionId: 'synthetic-session', body, publicTextSources,
       envelope: { version: 1 as const, requestVersion: 1, body, evidenceSnapshotId: 'synthetic-evidence', citations: [], artifacts: [], goalOutcome } }
     push('response.committed', { requestVersion: 1, resultId: 'synthetic-result', publicTextSources })
     checkpoint(checkpointName === 'replacement-committed' ? checkpointName : 'commit-pending')
-    const final: RunState = { ...state(runId, 'succeeded'), run: { ...state(runId, 'succeeded').run,
+    const final: RunState = { ...state(runId, outcome === 'satisfied' ? 'succeeded' : 'partial'), run: { ...state(runId, outcome === 'satisfied' ? 'succeeded' : 'partial').run,
       resultId: 'synthetic-result', resultFence: 1, goalOutcome }, message, delivery: 'delivered' }
     const item: RunStreamEvent = { type: 'state', state: final }
     items.push(item); projection.advance(item); checkpoint('final')
@@ -172,6 +172,19 @@ test('explicit replacements expose lifecycle summaries while preserving the vali
   f.commit([replacement])
   assert.equal(nativeText(f.projection.snapshot.message), REPLACEMENT)
   assert.doesNotMatch(JSON.stringify(f.projection.activityPage(0).message.content), /Gather collects the available inputs/)
+})
+
+test('a partial committed answer keeps truthful status and useful text without its failed draft', () => {
+  const f = fixture('partial-after-save-518')
+  f.segment('failed-explanation', 'FAILED_EXPLANATION_518', 'append', [], false)
+  const answer = f.segment('saved-explanation', 'The saved result remains available; final verification is incomplete.')
+  const accepted = f.commit([answer], 'final', 'partial')
+  for (const snapshot of [f.projection.snapshot, accepted.history, accepted.hydratedReplay]) {
+    assert.equal(nativeText(snapshot.message), answer.text)
+    assert.deepEqual(snapshot.message.status, { type: 'incomplete', reason: 'other' })
+    assert.doesNotMatch(JSON.stringify(snapshot.message.content), /FAILED_EXPLANATION_518/)
+  }
+  assert.equal(accepted.message.envelope.goalOutcome.status, 'partial')
 })
 
 test('cancellation retains shown answer and genuine incomplete status; equal text in other runs has distinct identity', () => {

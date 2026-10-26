@@ -1,4 +1,4 @@
-# #515: protocol correction and v3 draft projection
+# #515 / #518: protocol correction and v3 draft projection
 
 The product regression reproduced the reported B shape against the **formally
 published, locked LingxiOS 3.8.12**: two unsealed failed append attempts followed
@@ -16,7 +16,7 @@ Already persisted old IM payloads are not rewritten.
 
 ## Evidence
 
-- [Projection results](projection.tap): 12/12 passing, zero skips. Includes
+- [Projection results](projection.tap): 13/13 passing, zero skips. Includes
   synthetic attempts/source IDs/final body, final delivery projection,
   message-first hydration, activity pagination, duplicate replay, explicit
   replacement, cancellation and the actual assistant transport encoder/decoder.
@@ -54,7 +54,7 @@ answer. This does not prove the actual historical field, deployed runtime, or
 that a natural-language model will always follow the completion guidance.
 
 Only de-identified issue evidence was available: no original restricted run IDs,
-wire payloads or verified runtime/deployment identity were supplied, and this
+wire payloads or independently verified runtime/deployment identity were supplied, and this
 environment exposes no LingxiLoop production reader. No production query,
 message, retry, credential mutation, merge, package publication or deployment
 was performed. Keep #515 open for actual sample/version attribution.
@@ -63,3 +63,23 @@ The parent hands PR/SHA to the sole #514 release coordinator. This product
 projection can ship independently with its exact CI; adoption of upstream code
 requires a normally published runtime and coordinator-owned exact pins/locks,
 coordinated with #491's 3.8.13 integration. No lock or version was changed here.
+
+## #518 added evidence and scope
+
+Read #518 and its sole notification comment. Its 1122-character committed
+answer plus 898-character failed commentary uses the same v3 projection defect;
+no second implementation is needed. The additional partial/history fixture
+retains useful final text and `incomplete/other` status while excluding the failed
+draft. The separate first-success → protocol failure → model-success but
+publication-failure branch is covered in OS PR69, with bounded internal
+continuation/publication diagnostics and a verified-save → protocol-exhaustion
+partial regression.
+
+#518 supplies deployed-service metadata naming tag `197e2568d46de349bb3ce0a26aefbadaae8f4723`
+and source-pinned OS 3.8.12. This is stronger metadata than #515, not an independent
+container/digest or original wire inspection by this task. Do not assert that
+its intermediate outcome or publication rejection matches the synthetic fault.
+No timeout, correction-count, context-size or model-setting change is justified
+by this evidence. No performance improvement or browser TTFT is claimed; the
+issue's observed >44-second pre-body path remains a production measurement,
+not a locally reproduced latency. Both issues remain open for that attribution.
