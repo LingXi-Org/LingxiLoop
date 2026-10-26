@@ -92,6 +92,7 @@ export class Executor {
         this.journal.patch(op.key,{ steps: [...current.steps,step] })
         let result
         try { result = await fn() } catch (error) {
+          if(!sideEffect&&name.startsWith('pull:')){const latest=this.journal.get(op.key);const observedErrorCode=/^[A-Z_]{1,64}$/.test(error.code??'')?error.code:'PULL_COMMAND_FAILED';this.journal.patch(op.key,{steps:latest.steps.map(item=>item.name===name?{...item,observedErrorCode,errorObservedAt:new Date().toISOString()}:item)})}
           if(sideEffect&&error.outcomeKnown===true&&error.uncertain===false){const latest=this.journal.get(op.key);this.journal.patch(op.key,{steps:latest.steps.map(item=>item.name===name?{...item,status:'failed-known',completedAt:new Date().toISOString()}:item)})}
           else if(sideEffect)error.uncertain=true
           throw error
@@ -248,6 +249,15 @@ export class Executor {
       for (const error of result.cleanupErrors ?? []) this.recordCleanupError(op.key,error)
       return this.journal.finish(op.key,'succeeded',{ ...result, observedAfterInterruption: true })
     } catch (error) {
+      // An exited archive uploader can leave an unknown remote cache write, but
+      // cannot justify keeping an unchanged business source offline indefinitely.
+      // This is failure, never backup qualification: migration remains forbidden.
+      if(op.phase==='backup'&&op.status==='uncertain'&&op.errors?.forward?.code==='ARCHIVE_UPLOAD_UNCONFIRMED'){
+        try{
+          await this.assertSourceRestoreAllowed(op)
+          return this.journal.finish(op.key,'failed',{sourceRestorationOnly:true,backupUnconfirmed:true,observationError:safeError(error)},op.errors)
+        }catch(sourceError){return this.journal.finish(op.key,'uncertain',{needsIntervention:true,observationRequired:true,observationError:safeError(sourceError)})}
+      }
       return this.journal.finish(op.key,'uncertain',{ needsIntervention: true, observationRequired: true, observationError: safeError(error) })
     }
   }

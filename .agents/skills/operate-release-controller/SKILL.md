@@ -171,3 +171,9 @@ actual config/rootfs/platform/repository identity. Append `query` to inspect an
 uncertain outcome without another pull. A missing local image does not prove
 absence of cached layers: report cache state and do not claim a cold speedup.
 The command never switches an application or changes a container.
+
+## Bounded preparation and source restoration
+
+The same entry waits up to 30 seconds for an acknowledged resume Workflow to initialize, within its persisted operator deadline. Registry cache preparation uses quiet output, reads immutable image identity after an uncertain response, and permits only one transient retry (at most 300 seconds per attempt within the original 900-second prepare window). Authentication, TLS and identity failures never retry. Failed pull evidence remains in the host steps.
+
+An exited backup uploader with `ARCHIVE_UPLOAD_UNCONFIRMED` may settle as a failed backup only after exact original schema/runtime/migration identity and absence of all migration/application/recovery intents prove source restoration safe. This never qualifies a backup or permits migration. The existing controller recovery restores the exact source and preserves the original failure and local backup.
