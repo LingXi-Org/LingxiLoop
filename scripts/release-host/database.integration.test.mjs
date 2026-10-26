@@ -26,7 +26,8 @@ test('isolated real PostgreSQL snapshot/restore verifies all-table counts and se
     CREATE TABLE lingxios.schema_version(singleton boolean PRIMARY KEY,version integer); INSERT INTO lingxios.schema_version VALUES(true,14);
     CREATE TABLE public.lingxios_installation(singleton boolean PRIMARY KEY,schema_version integer,runtime_version text,protocol_version integer,schema_sha256 text); INSERT INTO public.lingxios_installation VALUES(true,14,'fixture',11,'${schemaHash}');
     CREATE TABLE public.schema_migrations(version integer,name text,checksum text); INSERT INTO public.schema_migrations VALUES(1,'fixture','${checksum}');
-    CREATE TABLE lingxios.agent_work_items(status text,lease_expires_at timestamptz);
+    CREATE TABLE lingxios.agent_work_items(id text,kind text,status text,lease_expires_at timestamptz);
+    CREATE TABLE lingxios.agent_steps(work_id text,kind text);
     CREATE TABLE lingxios.agent_os_session_leases(expires_at timestamptz);
     CREATE TABLE lingxios.agent_attempts(ended_at timestamptz,lease_expires_at timestamptz);
     CREATE TABLE lingxios.agent_memory_capture(completed_at timestamptz,claim_token text,claim_until timestamptz);
@@ -44,6 +45,11 @@ test('isolated real PostgreSQL snapshot/restore verifies all-table counts and se
   const executor=new Executor({ journal,adapter:new ComposeAdapter(local) }),manifestHash=hash(release);executor.register(release,manifestHash)
   const op={ releaseId:release.releaseId,target:'main-runtime-a',phase:'backup',generation:1,manifestHash,parameters:{} }
   const actual=await databaseEvidence(local,run);assert.equal(actual.verified,true);assert.equal(actual.otherClients,0)
+  await run(['exec','--user','postgres',container,'psql','-X','-q','-v','ON_ERROR_STOP=1','-c',`INSERT INTO lingxios.agent_work_items(id,kind,status) VALUES ('waiting-turn','turn','waiting'),('unbound','turn','waiting'),('completed','turn','completed'),('waiting-job','job','waiting');
+    INSERT INTO lingxios.agent_steps VALUES ('waiting-turn','runtime.binding'),('waiting-turn','runtime.checkpoint'),('completed','runtime.checkpoint'),('waiting-job','runtime.binding');`])
+  const blocked=await databaseEvidence(local,run);assert.equal(blocked.incompatibleRuns,2);assert.equal(blocked.liveWork,0)
+  await run(['exec','--user','postgres',container,'psql','-X','-q','-v','ON_ERROR_STOP=1','-c',"UPDATE lingxios.agent_work_items SET status='completed' WHERE id IN ('waiting-turn','waiting-job')"])
+  assert.equal((await databaseEvidence(local,run)).incompatibleRuns,0)
   await assert.rejects(databaseTool(local,'backup',op,{run,archiveUpload:async()=>{throw Object.assign(Error('Injected lost archive response'),{code:'ARCHIVE_UPLOAD_UNCONFIRMED',uncertain:true})},archiveObserve:archiveProbe}),{code:'ARCHIVE_UPLOAD_UNCONFIRMED'})
   // The real local dump remains; GET-only archive observation can complete the interrupted backup without redumping/reuploading.
   const backup=await databaseTool(local,'backupObserve',op,{run,archiveObserve:archiveProbe});assert.equal(backup.complete,true);assert.equal(backup.rpo,'zero-committed-writes');assert.equal(backup.archive.dumpHash,backup.dumpHash)

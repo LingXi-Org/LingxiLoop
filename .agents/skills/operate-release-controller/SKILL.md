@@ -180,6 +180,15 @@ An exited backup uploader with `ARCHIVE_UPLOAD_UNCONFIRMED` may settle as a fail
 
 Database phases receive a persisted minimum 600-second stage budget (service-drain budgets stay unchanged). Archive metadata retains its existing 60-second default; a dump upload has a separate bounded 300-second default. This covers the measured 72 MB final snapshot without extending a completed or expired stage on resume, raising Cloudflare limits, or omitting remote-backup verification.
 
+For the SDK12 to SDK14 product57 patch, the same entry refuses prepare/drain
+before stopping writers when the read-only state reports unfinished work with a
+retained runtime binding/checkpoint. `RUNTIME_PATCH_CHECKPOINTS_PRESENT` is a
+data-state blocker, even with zero live leases; missing visibility also refuses.
+Resolve that work through the source runtime's supported lifecycle under its
+specific authority before another publication. Do not delete checkpoint rows,
+broaden the SDK barrier or restart publication to evade it. The final drained
+SDK preflight/CAS guard remains mandatory, and source recovery stays available.
+
 Archive helpers release unused metadata/error response bodies. A transport timeout,
 reset/closed connection or temporary DNS error permits at most one additional POST,
 only after fresh metadata confirms absence, a 500 ms backoff, and remaining time

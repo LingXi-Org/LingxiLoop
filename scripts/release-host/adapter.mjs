@@ -325,6 +325,13 @@ export class ComposeAdapter {
     }
     const state=await this.state(op),descriptor=direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:plan
     assertCompatible(descriptor.contract,state)
+    // Same predicate as the final SDK57 CAS barrier. Fail before any writer stop
+    // or backup; keep the final drained check because active work can still change.
+    // Source recovery must remain available when the patch itself was refused.
+    if(plan.database?.runtimePatch && ['prepare','drain'].includes(op.phase)){
+      requireValue(Number.isSafeInteger(state.incompatibleRuns)&&state.incompatibleRuns>=0,'RUNTIME_PATCH_BARRIER_UNAVAILABLE','Read-only retained runtime checkpoint count is unavailable')
+      requireValue(state.incompatibleRuns===0,'RUNTIME_PATCH_CHECKPOINTS_PRESENT',`Runtime patch blocked by ${state.incompatibleRuns} unfinished work item(s) with retained runtime binding/checkpoint; resolve through the current runtime before maintenance`)
+    }
     const barrier=await this.control(local,'barrier',op,'GET'),ingress=await this.control(local,'ingressState',op,'GET')
     requireValue(barrier?.fullVisibility===true&&['liveWork','liveSession','liveAttempts','liveCapture','liveOutbox','prepared'].every(key=>Number.isSafeInteger(barrier[key])&&barrier[key]>=0),'CONTROL_PREFLIGHT_UNAVAILABLE','Independent task/checkpoint visibility is unavailable')
     requireValue(typeof ingress?.enabled==='boolean'&&Number.isSafeInteger(ingress.generation),'CONTROL_PREFLIGHT_UNAVAILABLE','Stable ingress state is not observable')

@@ -26,6 +26,8 @@ SELECT jsonb_build_object(
   (SELECT count(*) FROM lingxios.agent_model_budget_calls WHERE delivered_at IS NULL AND claim_token IS NOT NULL AND available_at>NOW())+
   (SELECT count(*) FROM lingxios.agent_terminal_outbox WHERE delivered_at IS NULL AND claim_token IS NOT NULL AND available_at>NOW())),
  'otherClients',(SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND backend_type='client backend' AND pid<>pg_backend_pid()),
+ 'incompatibleRuns',(SELECT count(*) FROM lingxios.agent_work_items w WHERE w.status IN ('queued','leased','waiting')
+  AND EXISTS(SELECT 1 FROM lingxios.agent_steps s WHERE s.work_id=w.id AND s.kind IN ('runtime.binding','runtime.checkpoint'))),
  'prepared',(SELECT count(*) FROM pg_prepared_xacts WHERE database=current_database())
 )::text AS state;
 COMMIT;`

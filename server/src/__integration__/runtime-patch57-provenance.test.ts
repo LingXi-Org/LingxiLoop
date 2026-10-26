@@ -88,6 +88,10 @@ test('product57 CAS blocks retained checkpoints, concurrent clients and complete
   await db.query(`INSERT INTO lingxios.agent_steps(work_id,step_id,request_version,kind,input_hash,input)
    VALUES('private-work','step',1,'runtime.checkpoint','hash','{}')`)
   await assert.rejects(applyPublishedRuntimePatch(db,source,target),/zero live leases/)
+  // Production gen13 retained one waiting turn with a runtime checkpoint but
+  // zero live leases. The read-only preflight must refuse that same data shape.
+  await assert.rejects(observePublishedRuntimePatch(db,source,target),/complete maintenance barrier/)
+  assert.deepEqual(await snapshot(db),before)
   await db.query("DELETE FROM lingxios.agent_work_items WHERE id='private-work'")
  }
  const other=new Pool({connectionString:(db as unknown as {options:{connectionString:string}}).options.connectionString,max:1})

@@ -1,0 +1,114 @@
+{
+  "observedAt": "2026-10-26T14:28:31.585563+00:00",
+  "readOnly": true,
+  "productionDatabaseConnectionOpened": false,
+  "releaseId": "gh-40294374039-a1-80b5bcb32f1c-ops036-business",
+  "migrationContextPredicates": {
+    "imageMatches": true,
+    "noBuild": true,
+    "pullNever": true,
+    "restartNo": true,
+    "noPrivileged": true,
+    "noVolumes": true,
+    "fixedCommand": true,
+    "destinationMatches": true
+  },
+  "backupDumpHashVerified": true,
+  "backupSize": 73238793,
+  "sourceReceipt": {
+    "api": "public-text-3-assistant-2-trace-1",
+    "capabilities": [
+      "native-schema-c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f",
+      "product-ledger-0ffb56ba9b503a462c285fcdc5c3cd321cf937c8c029155de63fdfe2f4a9c88d",
+      "case-soft-delete-f42124684d66f1387267f6da653ec2b255c2fa4a9f6dccd6179a3a5fbb4607a0"
+    ],
+    "checkpoint": "kernel-2-schema-14",
+    "control": "control-plane-11",
+    "fullVisibility": true,
+    "installedSchema": 14,
+    "lingxios": "3.8.12",
+    "liveAttempts": 0,
+    "liveCapture": 0,
+    "liveOutbox": 0,
+    "liveSession": 0,
+    "liveWork": 0,
+    "migrationCount": 57,
+    "nativeSchema": 14,
+    "otherClients": 0,
+    "prepared": 0,
+    "productSchema": 57,
+    "protocolVersion": 11,
+    "readOnly": true,
+    "requiredCapabilities": [
+      "native-schema-c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f",
+      "product-ledger-0ffb56ba9b503a462c285fcdc5c3cd321cf937c8c029155de63fdfe2f4a9c88d",
+      "case-soft-delete-f42124684d66f1387267f6da653ec2b255c2fa4a9f6dccd6179a3a5fbb4607a0"
+    ],
+    "runtime": "3.8.12",
+    "schemaHash": "c56818613b8c1c03a525334bc66f2a5f1534f1dad3b80bbe46f76ffc4bd7b50f",
+    "verified": true,
+    "worker": "lingxios-3.8.12"
+  },
+  "restoreCleanup": {
+    "complete": true,
+    "error": null
+  },
+  "patchIntentExists": false,
+  "migrationIntentExists": false,
+  "retainedCheckpointBarrier": {
+    "workRows": 864,
+    "boundWorkRows": 349,
+    "incompatibleRuns": 1,
+    "byKindAndStatus": {
+      "turn:waiting": 1
+    }
+  },
+  "singleCommandSeconds": 524.998,
+  "stageExecutionSeconds": 479.049,
+  "stageQueueSeconds": 41.709,
+  "backup": {
+    "dumpHash": "sha256:89e9911e0fbe27a07c75d49d9ccd36d5a00bc114053c6474628b462712381e0c",
+    "size": 73238793,
+    "uploadAttempts": 1,
+    "archiveDiagnostics": {
+      "events": [
+        {
+          "elapsedMs": 1583,
+          "httpStatus": 404,
+          "outcome": "absent",
+          "phase": "metadata-before"
+        },
+        {
+          "elapsedMs": 214918,
+          "httpStatus": 201,
+          "outcome": "verified",
+          "phase": "upload"
+        }
+      ],
+      "readAfter": "not-attempted",
+      "version": 1
+    }
+  },
+  "outcome": {
+    "status": "recovered",
+    "accepted": false,
+    "submissions": 1,
+    "clientRetries": 0,
+    "automaticSourceRecoveries": 1,
+    "manualControllerInterventions": 0,
+    "runtime": "3.8.12",
+    "productSchema": 57
+  },
+  "recoveryProof": {
+    "observedAt": "2026-10-26T14:25:48.314Z",
+    "releaseId": "gh-40294374039-a1-80b5bcb32f1c-ops036-business",
+    "generation": 13,
+    "key": "releases/gh-40294374039-a1-80b5bcb32f1c-ops036-business/recovered.json",
+    "size": 28032,
+    "sha256": "sha256:65635dc7bdedb03e1c39f6674bb7fee26409597b4bb4c404ddcf387a58c71072",
+    "direction": "source",
+    "verifiedAt": "2026-10-26T14:25:13.842Z"
+  },
+  "classification": "data-state: one unfinished waiting turn retains a runtime binding/checkpoint; SDK57 immutable source preflight correctly refuses it",
+  "limitations": "Original inner exception was discarded. Offline backup proves a sufficient rejecting SDK predicate; early gate prevents repeating this maintenance outage but does not resolve the task or prove that no other future blocker exists."
+}

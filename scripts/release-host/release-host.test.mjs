@@ -10,6 +10,7 @@ import { hash, fault, Journal } from './journal.mjs'
 import { configurationFingerprint, assertCompatible, validatePolicy } from './adapter.mjs'
 import { qualifyDatabaseEvidence } from './local-control.mjs'
 import { fixture, baseConfig, policy, contract, newImage, oldImage } from './fixtures/fake-host.mjs'
+import {databaseFixture} from './fixtures/runtime-patch.mjs'
 
 async function setup(t,options = {}) { const directory = await mkdtemp(join(tmpdir(),'release-host-test-')); const f = fixture(directory,options); t.after(async()=>{ try { f.journal.close() } catch {} await rm(directory,{ recursive:true,force:true }) }); return { ...f,directory } }
 async function prepared(f) { assert.equal((await f.run('prepare')).status,'succeeded'); assert.equal((await f.run('drain')).status,'succeeded') }
@@ -178,6 +179,23 @@ test('prepare and drain preflight reject missing/unavailable ingress or source r
   }
   const f=await setup(t);assert.equal((await f.run('prepare')).status,'succeeded');delete f.local.targets['main-runtime-a'].controls.ingressState
   assert.equal((await f.run('drain')).status,'failed');assert.equal(f.host.data.calls.some(args=>args.includes('stop')),false)
+})
+test('runtime patch refuses retained checkpoints before preparation or drain, without blocking source recovery',async t=>{
+ const f=await setup(t),plan={...f.release.targets['main-runtime-a'].hostPlan,database:databaseFixture()},readState=f.adapter.state.bind(f.adapter)
+ for(const count of [1,undefined,-1]){
+  f.adapter.state=async op=>({...await readState(op),incompatibleRuns:count})
+  for(const phase of ['prepare','drain']){
+   const before=f.host.data.calls.length
+   await assert.rejects(f.adapter[phase](f.request(phase),plan,{}),{code:count===1?'RUNTIME_PATCH_CHECKPOINTS_PRESENT':'RUNTIME_PATCH_BARRIER_UNAVAILABLE'})
+   assert.equal(f.host.data.calls.slice(before).some(args=>args.includes('stop')||args.includes('up')||args.includes('pull')),false)
+   assert.equal(f.host.data.ingress.enabled,true)
+  }
+ }
+ f.adapter.state=async op=>({...await readState(op),incompatibleRuns:0})
+ assert.equal((await f.adapter.preflight(f.request('prepare'),plan,{direction:'source'})).verified,true)
+ f.adapter.state=async op=>({...await readState(op),incompatibleRuns:1})
+ assert.equal((await f.adapter.preflight(f.request('source-drain'),plan,{direction:'source'})).verified,true)
+ assert.equal((await f.adapter.preflight(f.request('prepare'),f.release.targets['main-runtime-a'].hostPlan,{direction:'source'})).verified,true)
 })
 test('known pre-migration archive failure restores exact source even when recovery is target-schema-only',async t=>{
   const f=await setup(t),release=structuredClone(f.release),target=release.targets['main-runtime-a'];target.hostPlan.source=structuredClone(target.hostPlan.recovery);target.hostPlan.recovery.contract={...target.hostPlan.recovery.contract,productSchema:58};release.releaseId='known-backup-failure'

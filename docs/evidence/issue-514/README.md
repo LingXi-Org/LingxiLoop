@@ -307,3 +307,30 @@ transport retry after an absent readback, releases unused error response bodies,
 and retains both attempts and allowlisted transport codes. Authentication,
 quota, TLS, identity and permanent DNS errors do not retry. Local fault tests are
 qualification evidence; production success is still required.
+# Ops036: confirmed archive, retained-checkpoint refusal
+
+The single-command attempt `gh-40294374039-a1-80b5bcb32f1c-ops036-business`
+recovered its source in 524.998 seconds: 479.049 seconds summed stage execution,
+41.709 seconds stage queue, one submit, zero client retries, one automatic source
+recovery and zero manual controller interventions. Approval waiting is excluded.
+The 73,238,793-byte backup uploaded with HTTP201 in 214.918 seconds on its first
+attempt. Isolated restore/schema/count verification and cleanup completed, then
+the read-only SDK source preflight refused before any migration/CAS intent.
+
+[The read-only diagnosis](ops036-checkpoint-barrier.json) checks the exact retained
+dump hash, fixed migration/image/destination predicates and source receipt. Offline
+archive decoding found 864 work items, 349 bound work items, and exactly one
+unfinished `turn:waiting` with `runtime.binding`/`runtime.checkpoint`. The SDK57
+predicate counts this as `incompatibleRuns=1`, despite all live-lease counters
+being zero. No production database connection was opened for this diagnosis;
+no task IDs, prompts, bodies or credentials were exported.
+
+The old outer handler discarded the inner exception, so this proves a sufficient
+data-state rejection rather than reconstructing a lost exception. The fix checks
+the same predicate in prepare/drain before writer stop, retains the final SDK
+guard, and does not block source recovery. It does not cancel the retained task
+or authorize a runtime upgrade. The task must reach a supported terminal state
+under the source runtime before a new attempt; no checkpoint deletion is implied.
+Production remained SDK3.8.12/product57 with five HTTP200 probes, zero host inflight,
+and a verified durable recovery receipt. Successful production samples remain zero;
+this recovered run is not an accepted-release speedup.
