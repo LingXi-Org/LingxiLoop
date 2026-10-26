@@ -40,7 +40,6 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
     files.push({ path: '@effective-vars', hash: hash(JSON.stringify(effectiveVars)), bytes: Buffer.byteLength(JSON.stringify(effectiveVars)) })
     writeFileSync(`${output}/inventory.json`, JSON.stringify({ files, hash: hash(JSON.stringify(files)), configurationVersion: `cfg-${hash(JSON.stringify({ config: hash(readFileSync(config)), effectiveVars })).slice(7, 31)}` }, null, 2))
     if (id === 'main-frontend') {
-      if(!process.env.RELEASE_API_URL||!process.env.RELEASE_API_TOKEN)throw new Error('EXISTING_RETAINED_API_CONFIGURATION_REQUIRED')
       const options = { account: process.env.CLOUDFLARE_ACCOUNT_ID, bucket: process.env.RELEASE_ARTIFACT_BUCKET || 'lingxiloop-releases', token: process.env.CLOUDFLARE_API_TOKEN,retainedApiBase:process.env.RELEASE_API_URL,retainedApiToken:process.env.RELEASE_API_TOKEN }
       // Never prune old chunks during release. Retirement requires an explicit
       // controller GC after both accepted and recovery windows expire.
@@ -49,6 +48,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
         const contentType = { js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml', json: 'application/json', woff2: 'font/woff2' }[extension] || 'application/octet-stream'
         return { key: `chunks/${file.path}`, sha256:file.hash, size:file.bytes, bytes: () => readFileSync(resolve(directory, file.path)), contentType }
       })
+      if(objects.length&&(!process.env.RELEASE_API_URL||!process.env.RELEASE_API_TOKEN))throw new Error('EXISTING_RETAINED_API_CONFIGURATION_REQUIRED')
       const receipt = await retainGroups(objects, options)
       writeFileSync(`${output}/transfer.json`, JSON.stringify(receipt, null, 2))
       console.log(JSON.stringify({ stage: 'retained-chunks', ...receipt, results: undefined }))
