@@ -15,7 +15,7 @@ export function MemoDetail({space,item,from,onBack,onChanged,actions,editor}:{sp
   const workflow=useRef<HTMLDivElement>(null)
   const workflowId=useId()
   const assignment=item.kind==='assignment'
-  const workflowLabel=space.canReview ? item.targetType==='homework' ? '查看进度与验收' : '查看提交' : item.status==='CLOSED' ? '查看提交记录' : '提交作业'
+  const workflowLabel=space.canReview ? item.targetType==='homework' ? '查看进度与验收' : '查看提交' : item.status==='CLOSED' ? '查看提交记录' : '前往提交区'
   useEffect(()=>{title.current?.focus({preventScroll:true})},[item.id])
   return <section data-memo-detail>
     <header className="forum-detail-toolbar">

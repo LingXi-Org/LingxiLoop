@@ -2,7 +2,7 @@ import { equalContent } from '@/features/content-editor/document'
 import { ForumBody } from '../forum/ForumBody'
 import { ConversationReferencePicker } from '../forum/ConversationReferences'
 import type { ConversationReference } from '../forum/contracts'
-import { useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useConversations } from '@/features/conversations/store'
 import { userFacingError } from '@/lib/userFacingError'
@@ -11,6 +11,7 @@ import type { LearningSpace } from '../contracts'
 import { contentLinks, ForumContentFields, ForumFiles } from '../forum/ForumContentFields'
 import { contentDraftSchema, useForumDraft } from '../forum/useForumDraft'
 import { homeworkApi } from './api'
+import { homeworkSubmissionAttempt, homeworkSubmissionBlocker, type HomeworkSubmissionAttempt } from './submission'
 import { type Homework, homeworkStatus, type HomeworkStudent as StudentState } from './contracts'
 import { HomeworkCriteria, HomeworkReport, HomeworkSubmissionView } from './HomeworkReport'
 
@@ -23,14 +24,21 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
   const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false), [error, setError] = useState(''), [notice, setNotice] = useState('')
   const [references,setReferences]=useState<ConversationReference[]>([])
   const [preview, setPreview] = useState(false)
-  const pending = useRef<{ reportId: string; key: string } | null>(null)
+  const blockerId = useId()
+  const referenceArea = useRef<HTMLDivElement>(null)
+  const pending = useRef<HomeworkSubmissionAttempt | null>(null)
   const inFlight = useRef(false)
   const answer = { text: draft.body, editorDocument:draft.editorDocument, links: contentLinks(draft.links), attachments: draft.attachments }
   const dirty = !equalContent(answer, student.answer)
   const disabled = busy || uploading || !space.canSubmit
   const report = !dirty && student.reportStatus === 'READY' && student.report?.answerRevision === student.answerRevision ? student.report : null
   const editable = student.status !== 'PASSED'
-  const canSubmit = student.canSubmit && Boolean(report) && !dirty && editable && references.length>0
+  const blocker = homeworkSubmissionBlocker({ student, answer, dirty, uploading, references, canSubmit: space.canSubmit })
+  const canSubmit = editable && !blocker
+  const submissionGuidance = blocker && <div id={blockerId} role="status" className="space-y-2 text-sm text-muted-foreground">
+    <p>{blocker}</p>
+    {report && (!references.length || student.report?.evidenceSources?.some(source => !references.some(ref => ref.messageIds.includes(source.messageId)))) && <Button type="button" variant="link" size="sm" disabled={disabled} onClick={() => { referenceArea.current?.scrollIntoView({ block: 'nearest' }); referenceArea.current?.focus({ preventScroll: true }) }}>选择引用片段</Button>}
+  </div>
   const act = async (work: () => Promise<void>) => {
     if (inFlight.current || disabled) return
     inFlight.current = true; setBusy(true); setError(''); setNotice('')
@@ -59,15 +67,16 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
     {error && <p role="alert" className="text-sm text-destructive">{error}<Button variant="link" disabled={disabled} onClick={() => void act(onRefresh)}>刷新进度</Button></p>}
     {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
     {editable && <p className="text-xs text-muted-foreground">提交时请引用学习报告中作为依据的对话片段，便于教师核对。</p>}
-    {editable && <ConversationReferencePicker courseId={homework.courseId} channelId={student.channelId} value={references} onChange={setReferences} disabled={disabled}/>}
+    {editable && <div ref={referenceArea} tabIndex={-1} aria-label="选择学习对话引用" className="rounded-sm focus-visible:outline-2 focus-visible:outline-ring"><ConversationReferencePicker courseId={homework.courseId} channelId={student.channelId} value={references} onChange={setReferences} disabled={disabled}/></div>}
     {editable && (preview && report ? <section aria-label="提交预览" className="space-y-5 rounded-xl border p-4">
       <h3 className="font-semibold">提交预览</h3><p className="text-sm text-muted-foreground">以下作答和学习报告将一起提交，仅你和本课程教师可见。</p>
       <ForumBody content={answer.text} document={answer.editorDocument} /><ForumFiles links={answer.links} attachments={answer.attachments} /><HomeworkReport report={report} />
+      {submissionGuidance}
       <div className="sticky bottom-0 flex flex-wrap gap-2 border-t bg-popover py-3">
         <Button variant="outline" disabled={disabled} onClick={() => setPreview(false)}>返回修改</Button>
-        <Button disabled={disabled || !canSubmit} onClick={() => void act(async () => {
+        <Button aria-describedby={blocker ? blockerId : undefined} disabled={disabled || !canSubmit} onClick={() => void act(async () => {
           if (!report || !canSubmit) return
-          if (pending.current?.reportId !== report.id) pending.current = { reportId: report.id, key: crypto.randomUUID() }
+          pending.current = homeworkSubmissionAttempt(pending.current, report.id, student.answerRevision, references)
           await homeworkApi.submit(homework.courseId, homework.id, { expectedAnswerRevision: student.answerRevision, reportId: report.id, idempotencyKey: pending.current.key, conversationReferences:references })
           setPreview(false); discard(); setNotice('作答和报告已一起提交，等待教师验收。'); await onSubmitted()
         })}>{busy ? '提交中…' : '提交作业'}</Button>
@@ -77,6 +86,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
       <ForumContentFields label="我的作答" body={draft.body} editorDocument={draft.editorDocument} setBody={(body,editorDocument) => setDraft(previous => ({ ...previous, body,editorDocument }))} links={draft.links} setLinks={links => setDraft(previous => ({ ...previous, links }))} attachments={draft.attachments} setAttachments={attachments => setDraft(previous => ({ ...previous, attachments }))} disabled={disabled} onUploading={value => { setUploading(value); onUploading(value) }} />
       <p className="text-xs text-muted-foreground">可核对文字、公开网页、含可提取文字的 PDF 和 Word 文档（.docx）。图片、扫描件、音视频需要补充文字说明；上传完成不代表已被阅读。</p>
       {storageError && <p role="alert" className="text-sm text-destructive">本地草稿无法保存，请先保存到课程或复制内容。</p>}
+      {submissionGuidance}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" disabled={disabled || !dirty} onClick={() => void act(async () => {
           const next = await homeworkApi.saveAnswer(homework.courseId, homework.id, { ...answer, expectedRevision: student.answerRevision })
@@ -85,7 +95,7 @@ export function HomeworkStudent({ homework, student, space, onUpdated, onSubmitt
         <Button variant="outline" disabled={disabled || dirty || !student.hasLearningRecord || !student.canSubmit || student.reportStatus === 'PENDING' || !answer.text.trim() && !answer.links.length && !answer.attachments.length} onClick={() => void act(async () => {
           onUpdated(await homeworkApi.report(homework.courseId, homework.id, student.answerRevision)); setNotice('正在更新学习报告。')
         })}>{student.reportStatus === 'PENDING' ? '报告更新中…' : '更新报告'}</Button>
-        <Button disabled={disabled || !canSubmit} onClick={() => setPreview(true)}>预览并提交</Button>
+        <Button aria-describedby={blocker ? blockerId : undefined} disabled={disabled || !canSubmit} onClick={() => setPreview(true)}>预览并提交</Button>
       </div>
       {dirty && <div className="space-y-1"><p role="status" className="text-sm text-muted-foreground">本地作答与已保存的草稿不同，请保存并更新报告后再提交。</p><Button variant="link" size="sm" disabled={disabled} onClick={() => { setDraft({ body: student.answer.text, editorDocument:student.answer.editorDocument, links: student.answer.links.join('\n'), attachments: student.answer.attachments }); discard() }}>放弃本地修改，恢复已保存的草稿</Button></div>}
       {student.reportStatus === 'INVALID' && !dirty && <p role="status" className="text-sm text-muted-foreground">{student.reportFeedback || '报告暂未生成，请重试。已保存的作答和学习记录仍会保留。'}</p>}
