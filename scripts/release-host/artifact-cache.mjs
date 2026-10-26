@@ -1,7 +1,7 @@
 import {createHash,randomUUID} from 'node:crypto'
 import {createReadStream} from 'node:fs'
 import {open,mkdir,lstat,readFile,rename,unlink,statfs} from 'node:fs/promises'
-import {join} from 'node:path'
+import {join,isAbsolute} from 'node:path'
 import {isDeepStrictEqual as equal} from 'node:util'
 import {canonical,fault,hash,identifier} from './journal.mjs'
 import {validateArchive,verifyArchiveTar} from './artifact-tar.mjs'
@@ -25,7 +25,7 @@ async function consumePart(stream,expected,write=async()=>{}){
 const imageMissing=error=>error.code==='IMAGE_NOT_FOUND'||error.cause?.code===1&&/No such image/.test(error.cause.stderr??'')
 
 export class ArtifactCache{
-  constructor(policy,{journal,run,afterLoad}={}){this.policy=policy;this.journal=journal;this.run=run;this.afterLoad=afterLoad;this.busy=new Set();this.loading=new Set()}
+  constructor(policy,{journal,run,afterLoad,fetcher=fetch,wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}={}){this.policy=policy;this.journal=journal;this.run=run;this.afterLoad=afterLoad;this.fetcher=fetcher;this.wait=wait;this.downloading=false;this.busy=new Set();this.loading=new Set()}
   resolve(request){
     check(request&&Object.keys(request).length===4&&Object.keys(request).every(k=>['releaseId','target','manifestHash','configDigest'].includes(k))&&identifier(request.releaseId)&&identifier(request.target)&&digest(request.manifestHash)&&digest(request.configDigest),'INVALID_ARTIFACT_REQUEST')
     check(this.policy.targets[request.target],'UNKNOWN_TARGET')
@@ -72,6 +72,54 @@ export class ArtifactCache{
         return{archiveSha256:image.archive.sha256,configDigest:image.configDigest,partIndex:index,received:true,reused:false}
       }finally{if(!committed){await handle.close().catch(()=>{});await unlink(temporary).catch(()=>{})}}
     })
+  }
+  async downloadPolicy(){
+    const archive=this.policy.archive;let base
+    try{base=new URL(archive?.baseUrl)}catch{throw fault('ARTIFACT_DOWNLOAD_POLICY_INVALID','A trusted fixed HTTPS artifact root is required',422)}
+    check(this.policy.artifactTransport==='r2'&&base.protocol==='https:'&&!base.username&&!base.password&&base.pathname==='/'&&!base.search&&!base.hash&&typeof archive.tokenFile==='string'&&isAbsolute(archive.tokenFile),'ARTIFACT_DOWNLOAD_POLICY_INVALID')
+    const timeoutMs=archive.timeoutMs??60000
+    check(Number.isInteger(timeoutMs)&&timeoutMs>=100&&timeoutMs<=300000,'ARTIFACT_DOWNLOAD_POLICY_INVALID')
+    let token;try{token=(await readFile(archive.tokenFile,'utf8')).trim()}catch{throw fault('ARTIFACT_DOWNLOAD_CREDENTIAL_UNAVAILABLE','Existing local artifact credential is unavailable',503)}
+    check(token.length>=32&&!/\s/.test(token),'ARTIFACT_DOWNLOAD_CREDENTIAL_INVALID')
+    return{base,timeoutMs,headers:{authorization:`Bearer ${token}`}}
+  }
+  async downloadPart(request,image,index,transport){
+    const expected=image.archive.parts[index],url=new URL(`/v1/artifact-blobs/${expected.sha256.slice(7)}`,transport.base)
+    for(let attempt=0;attempt<3;attempt++){
+      if(await this.partReceived(image,index))return
+      const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),transport.timeoutMs);let response
+      try{
+        try{response=await this.fetcher(url,{method:'GET',headers:transport.headers,redirect:'manual',signal:abort.signal})}
+        catch{throw Object.assign(fault('ARTIFACT_DOWNLOAD_UNAVAILABLE','Fixed artifact data GET did not complete',502),{retryable:true})}
+        if([401,403].includes(response.status))throw fault('ARTIFACT_DOWNLOAD_AUTHENTICATION_FAILED','Fixed artifact data endpoint denied executor authentication',response.status)
+        if(response.status>=500&&response.status<=599)throw Object.assign(fault('ARTIFACT_DOWNLOAD_UNAVAILABLE',`Fixed artifact data GET failed (HTTP ${response.status})`,502),{retryable:true})
+        check(response.status===200,'ARTIFACT_DOWNLOAD_REJECTED','Fixed artifact data endpoint rejected the immutable GET')
+        const length=response.headers.get('content-length')??'',encoding=response.headers.get('content-encoding')
+        check(/^[1-9]\d*$/.test(length)&&Number(length)===expected.size&&response.headers.get('x-lingxi-artifact-sha256')===expected.sha256&&
+          response.headers.get('content-type')?.split(';')[0].trim()==='application/octet-stream'&&(!encoding||encoding==='identity')&&response.body,'ARTIFACT_DOWNLOAD_METADATA_MISMATCH')
+        try{await this.put(request,index,response.body)}catch(error){
+          if(error.code==='ARTIFACT_UPLOAD_TIMEOUT'||error.name==='AbortError'||!error.code)throw Object.assign(fault('ARTIFACT_DOWNLOAD_UNAVAILABLE','Fixed artifact data stream did not complete',502),{retryable:true})
+          throw error
+        }
+        return
+      }catch(error){if(!error.retryable||attempt===2)throw error}
+      finally{clearTimeout(timer);abort.abort();if(response?.body&&!response.body.locked)await response.body.cancel().catch(()=>{})}
+      await this.wait(250*(attempt+1))
+    }
+  }
+  async prepare(request){
+    const image=this.resolve(request),state=await this.status(request)
+    if(state.imageReady)return state.identity
+    // A prior daemon intent is observed only. Fetching more bytes never grants
+    // permission to replay an unknown load or replace its durable evidence.
+    if(state.loadState!=='absent'||!state.missingParts.length)return this.ensure(image)
+    check(!this.downloading,'ARTIFACT_DOWNLOAD_BUSY','Another fixed artifact download is active')
+    this.downloading=true
+    try{
+      const transport=await this.downloadPolicy();await this.space(image)
+      for(const index of state.missingParts)await this.downloadPart(request,image,index,transport)
+    }finally{this.downloading=false}
+    return this.ensure(image)
   }
   assertIntent(image,intent){check(intent.version===1&&intent.artifactHash===archiveIdentityHash(image)&&intent.archiveSha256===image.archive.sha256&&['loading','uncertain','verified'].includes(intent.state),'ARTIFACT_RECEIPT_INVALID')}
   async inspectTag(image){let rows;try{rows=JSON.parse(await this.run(['image','inspect',image.archive.tag]))}catch(error){if(imageMissing(error))return null;throw error}check(rows?.length===1,'ARTIFACT_LOADED_IDENTITY_MISMATCH');return rows[0]}

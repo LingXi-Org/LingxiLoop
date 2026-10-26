@@ -1,9 +1,9 @@
 import { env, runInDurableObject, runDurableObjectAlarm, introspectWorkflowInstance, fetchMock } from 'cloudflare:test'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { assertSource, canRecover, canSupersede, hash, validateManifest, type Accepted, type Manifest, type Target } from '../../../shared/release/protocol'
 import type { ReleaseEnv, ReleaseRecord } from './types'
 import api from './index'
-import { ReleaseWorkflow } from './workflow'
+import { ReleaseWorkflow } from './legacy-workflow.fixture'
 import { ReleaseLedger } from './ledger'
 import { prepareWorker } from './adapters'
 import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers'
@@ -193,7 +193,7 @@ it('rejects a credential-bearing upstream redirect instead of following it', asy
   } finally { fetchMock.deactivate() }
 })
 
-// Exercise the actual Workflow control code with real DO persistence while
+// Exercise the frozen v1 compatibility runner with real DO persistence while
 // making waits immediate. Remote responses are fault-injected, not claimed as
 // live Cloudflare or host qualification.
 const immediateSteps = {
@@ -255,7 +255,7 @@ it.each(['drain', 'apply'] as const)('uses exact-source recovery only before a %
     const phase = /^main-runtime-[ab]-[ab]-(.+)-submit$/.exec(stepName)?.[1]
     if (phase) {
       phases.push(phase)
-      return JSON.stringify({ ok: true, value: { status: phase === failure ? 'failed' : 'succeeded' } })
+      return JSON.stringify({ ok: true, value: { operation: { status: phase === failure ? 'failed' : 'succeeded' }, deadline: Date.now() + 30_000 } })
     }
     return callback()
   } } as unknown as WorkflowStep
@@ -267,4 +267,85 @@ it.each(['drain', 'apply'] as const)('uses exact-source recovery only before a %
   expect(phases).not.toContain(source ? 'recover' : 'restore-source')
   if (source) expect(phases).not.toContain('apply')
   expect((await call(`/get?id=${m.releaseId}`)).targets.recovery).toEqual({ direction: source ? 'source' : 'compatible-recovery' })
+})
+
+it('retries a sanitized read-only probe body failure within its fixed budget without repeating completed host mutations', async () => {
+  const name = 'readonly-probe-retry', stub = await controlledLedger(name)
+  const call = async (path: string, body?: unknown) => {
+    const response = await stub.fetch(new Request(`https://ledger${path}`, body === undefined ? undefined : { method: 'POST', body: JSON.stringify(body) }))
+    expect(response.ok).toBe(true); return response.json() as Promise<ReleaseRecord>
+  }
+  const runtime = { ...target(), adapter: 'main-runtime' as const, resources: ['main-runtime', 'main-db'], artifact: { kind: 'image' as const, digest: `sha256:${'a'.repeat(64)}` }, hostPlan: { mode: 'maintenance' } }
+  const m = manifest('readonly-probe-retry'); m.targets = { 'main-runtime-a': { ...runtime, hosts: ['a'] }, 'main-runtime-b': { ...runtime, hosts: ['b'] } }
+  await call('/bootstrap', { accepted: { releaseId: 'baseline', components: Object.fromEntries(Object.entries(m.targets).map(([id, t]) => [id, { ...t, releaseId: 'baseline', appSha: '0'.repeat(40), sequence: 1 }])) }, evidence: { zeroInFlight: true, receiptKey: 'handoff/verified.json', handoffId: 'handoff-495', observedAt: new Date().toISOString() } })
+  await call('/register', { manifest: m, manifestHash: await hash(m) })
+  const phases: string[] = [], steps = { ...immediateSteps, do: async (stepName: string, _config: unknown, callback: () => Promise<string>) => {
+    if (/^manifest-/.test(stepName)) return JSON.stringify({ ok: true, value: {} })
+    if (/^main-runtime-[ab]-[ab]-.+-submit$/.test(stepName)) { phases.push(stepName); return JSON.stringify({ ok: true, value: { operation: { status: 'succeeded' }, deadline: Date.now() + 30_000 } }) }
+    return callback()
+  } } as unknown as WorkflowStep
+  fetchMock.activate(); fetchMock.disableNetConnect()
+  const probes = fetchMock.get('https://readonly-probe.example')
+  probes.intercept({ path: '/ready', method: 'GET' }).reply(200, 'lost/truncated JSON')
+  probes.intercept({ path: '/ready', method: 'GET' }).reply(200, { ready: true }).times(2)
+  probes.intercept({ path: '/business', method: 'GET' }).reply(200, '{}').times(2)
+  try {
+    const result = await execute(name, m.releaseId, 0, { PROBES_JSON: JSON.stringify({ ready: { url: 'https://readonly-probe.example/ready', status: 200, json: { ready: true } }, login: { url: 'https://readonly-probe.example/business', status: 200 } }) }, steps)
+    expect(result).toMatchObject({ status: 'accepted' }); expect(phases).toHaveLength(10); expect(new Set(phases).size).toBe(10)
+    fetchMock.assertNoPendingInterceptors()
+  } finally { fetchMock.deactivate() }
+})
+
+it.each(['accepted', 'recovered', 'capacity', 'pending', 'expired'] as const)('bounded host waiting preserves %s execution and the existing lock/mutation rules', async mode => {
+  const name = `host-wait-${mode}`, stub = await controlledLedger(name)
+  const call = async (path: string, body?: unknown) => {
+    const response = await stub.fetch(new Request(`https://ledger${path}`, body === undefined ? undefined : { method: 'POST', body: JSON.stringify(body) }))
+    expect(response.ok).toBe(true); return response.json() as Promise<ReleaseRecord>
+  }
+  const runtime = { ...target(), adapter: 'main-runtime' as const, resources: ['main-runtime', 'main-db'], artifact: { kind: 'image' as const, digest: `sha256:${'a'.repeat(64)}` }, hostPlan: { mode: 'maintenance' } }
+  const m = manifest(name); m.policy = { drainSeconds: 90, retryLimit: 2 }; m.targets = { 'main-runtime-a': { ...runtime, hosts: ['a'] }, 'main-runtime-b': { ...runtime, hosts: ['b'] } }
+  await call('/bootstrap', { accepted: { releaseId: 'baseline', components: Object.fromEntries(Object.entries(m.targets).map(([id, t]) => [id, { ...t, releaseId: 'baseline', appSha: '0'.repeat(40), sequence: 1 }])) }, evidence: { zeroInFlight: true, receiptKey: 'handoff/verified.json', handoffId: 'handoff-495', observedAt: new Date().toISOString() } })
+  await call('/register', { manifest: m, manifestHash: await hash(m) })
+  const operations = new Map<string, { key: string; status: string }>(), writes: string[] = [], waits: { key: string; seconds: number }[] = [], sleeps: string[] = []
+  let recovering = false, capacityAttempts = 0
+  const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+    const url = new URL(String(input))
+    if (url.hostname === 'probe.test') {
+      if (mode === 'capacity') { capacityAttempts++; throw Error('Too many subrequests.') }
+      if (mode === 'recovered' && !recovering && url.pathname === '/business') return new Response(null, { status: 500 })
+      return Response.json({ ready: true })
+    }
+    if (url.pathname === '/manifests') return Response.json({ registered: true })
+    expect(url.pathname).toBe('/operations')
+    if (init?.method === 'POST') {
+      const body = JSON.parse(String(init.body)), key = `${body.releaseId}:${body.target}:${body.phase}`
+      expect(operations.has(key)).toBe(false); expect(body.generation).toBe(body.phase === 'prepare' ? 0 : 1)
+      writes.push(key); recovering ||= body.phase === 'recovery-drain'; const op = { key, status: 'running' }; operations.set(key, op); return Response.json(op)
+    }
+    const key = url.searchParams.get('key')!, op = operations.get(key)
+    if (!op) return new Response(null, { status: 404 })
+    if (url.searchParams.has('waitSeconds')) {
+      const seconds = Number(url.searchParams.get('waitSeconds')); expect(seconds).toBeGreaterThan(0); expect(seconds).toBeLessThanOrEqual(45); waits.push({ key, seconds })
+      if (!(mode === 'pending' && key.endsWith(':apply'))) op.status = 'succeeded'
+    }
+    return Response.json(op)
+  })
+  const steps = { ...immediateSteps, sleep: async (stepName: string) => { sleeps.push(stepName) }, do: async (stepName: string, _config: unknown, callback: () => Promise<string>) => {
+    const output = await callback()
+    if (mode === 'expired' && stepName.endsWith('-apply-submit')) { const body = JSON.parse(output); body.value.deadline = Date.now() - 1; return JSON.stringify(body) }
+    return output
+  } } as unknown as WorkflowStep
+  try {
+    const result = await execute(name, m.releaseId, 0, { EXECUTORS_JSON: JSON.stringify({ a: 'https://host-a.test', b: 'https://host-b.test' }), PROBES_JSON: JSON.stringify({ ready: { url: 'https://probe.test/ready', status: 200 }, login: { url: 'https://probe.test/business', status: 200 } }) }, steps)
+    expect(result).toMatchObject({ status: mode === 'accepted' || mode === 'recovered' ? mode : 'blocked' })
+    expect(new Set(writes).size).toBe(writes.length); expect(sleeps).toEqual(['bounded-candidate-batch'])
+    if (mode === 'accepted' || mode === 'recovered' || mode === 'capacity') { expect(writes).toHaveLength(mode === 'recovered' ? 16 : 10); expect(waits).toHaveLength(writes.length) }
+    if (mode === 'capacity') { expect(result).toMatchObject({ error: 'WORKFLOW_SUBREQUEST_LIMIT' }); expect(capacityAttempts).toBe(1); expect(recovering).toBe(false) }
+    if (mode === 'pending') expect(waits.filter(w => w.key.endsWith(':apply'))).toHaveLength(2)
+    if (mode === 'expired') { expect(waits.some(w => w.key.endsWith(':apply'))).toBe(false); expect(result).toMatchObject({ error: 'OPERATION_WAIT_BUDGET_UNKNOWN' }) }
+    if (['capacity', 'pending', 'expired'].includes(mode)) {
+      const record = await call(`/get?id=${m.releaseId}`); expect(record.generation).toBe(1); expect(record.status).toBe('blocked'); expect(recovering).toBe(false)
+      await runInDurableObject(stub, async (_instance, state) => { expect(state.storage.sql.exec('SELECT * FROM locks').toArray().length).toBeGreaterThan(0) })
+    }
+  } finally { spy.mockRestore() }
 })
