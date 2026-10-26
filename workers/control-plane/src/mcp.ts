@@ -32,7 +32,7 @@ const mutating = { readOnlyHint: false, destructiveHint: true, idempotentHint: t
 const sensitiveKey = /(?:authorization|cookie|password|secret|credential|api.?key|prompt|envContent|composeContent|overrideContent|includeFiles|environment$|token(?:Hash|Value)?$)/i
 const maxOutput = 250_000
 
-function redact(value: unknown, secrets: string[]): unknown {
+export function redact(value: unknown, secrets: string[]): unknown {
   if (typeof value === 'string') {
     let text = value
       .replace(/Bearer\s+[A-Za-z0-9._~+/-]+=*/gi, 'Bearer [REDACTED]')
@@ -53,7 +53,7 @@ function result(value: unknown, secrets: string[], isError = false) {
   return { content: [{ type: 'text' as const, text: text.length <= maxOutput ? text : `${text.slice(0, maxOutput)}\n[output truncated]` }], ...(isError ? { isError: true } : {}) }
 }
 
-async function boundedResponseText(response: Response): Promise<string> {
+export async function boundedResponseText(response: Response): Promise<string> {
   const reader = response.body?.getReader()
   if (!reader) return ''
   const decoder = new TextDecoder()
