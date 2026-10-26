@@ -19,7 +19,8 @@ export async function inspectPlatformAgentRun(runtime: PlatformAgentRuntime, run
     runtime.readEvents(run.identity, afterSeq),
     runtime.readUsage(run.identity),
   ])
-  return { run, state: state ? { run: state.run, delivery: state.delivery } : null, diagnostics, ...events, usage }
+  return { run, state: state ? { run: state.run, delivery: state.delivery } : null, diagnostics,
+    workerFailure: diagnostics?.runtimeFailure ?? null, ...events, usage }
 }
 
 export async function revisePlatformAgentRun(runtime: PlatformAgentRuntime, runId: string, text: string) {
