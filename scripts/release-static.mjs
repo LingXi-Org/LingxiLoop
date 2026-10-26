@@ -13,6 +13,18 @@ export function parseVersion(log) {
   if (new Set(matches).size !== 1) throw new Error('Expected one uploaded Worker version identity')
   return matches[0]
 }
+export function effectiveWorkerVariables(id, env = process.env) {
+  const values = { BACKEND_ORIGIN_BASE_URL: env.BACKEND_ORIGIN_BASE_URL, AUTH_ORIGIN_BASE_URL: env.AUTH_ORIGIN_BASE_URL }
+  const httpsRoot = value => {
+    try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password && url.pathname === '/' && !url.search && !url.hash } catch { return false }
+  }
+  if (!Object.values(values).every(httpsRoot)) throw new Error('independent HTTPS origins are required')
+  if (id === 'admin-worker') {
+    if (env.RELEASE_CONTROLLER_ENABLED !== 'true' || !httpsRoot(env.RELEASE_API_URL)) throw new Error('release controller configuration requires an enabled guard and HTTPS API origin')
+    Object.assign(values, { RELEASE_API_URL: env.RELEASE_API_URL, RELEASE_CONTROLLER_ENABLED: env.RELEASE_CONTROLLER_ENABLED })
+  }
+  return values
+}
 export async function putImmutableObject(key, bytes, { account, bucket, token, contentType = 'application/octet-stream', fetcher = fetch }) {
   if (!account || !bucket || !token) throw new Error('R2 artifact storage credentials/configuration missing')
   const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/r2/buckets/${encodeURIComponent(bucket)}/objects/${key.split('/').map(encodeURIComponent).join('/')}`
@@ -35,8 +47,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
     for (const [source, name] of [['third_party/assistant-ui/streaming-text/LICENSE', 'assistant-ui-streaming-text.txt'], ['third_party/assistant-ui-elements/LICENSE', 'assistant-ui-elements.txt'], ['third_party/react-chat-elements/reply-message/LICENSE', 'react-chat-elements-reply-message.txt']]) copyFileSync(source, `${directory}/licenses/${name}`)
     const workerFiles = walk(resolve(config, '..', 'src')).filter(file => !file.includes('.test.'))
     const files = inventory(directory, [config, 'server/build/admin-control/package-lock.json', ...workerFiles])
-    const effectiveVars = { BACKEND_ORIGIN_BASE_URL: process.env.BACKEND_ORIGIN_BASE_URL, AUTH_ORIGIN_BASE_URL: process.env.AUTH_ORIGIN_BASE_URL }
-    if (Object.values(effectiveVars).some(value => !value || new URL(value).protocol !== 'https:')) throw new Error('independent HTTPS origins are required')
+    const effectiveVars = effectiveWorkerVariables(id)
     files.push({ path: '@effective-vars', hash: hash(JSON.stringify(effectiveVars)), bytes: Buffer.byteLength(JSON.stringify(effectiveVars)) })
     writeFileSync(`${output}/inventory.json`, JSON.stringify({ files, hash: hash(JSON.stringify(files)), configurationVersion: `cfg-${hash(JSON.stringify({ config: hash(readFileSync(config)), effectiveVars })).slice(7, 31)}` }, null, 2))
     if (id === 'main-frontend') {

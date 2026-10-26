@@ -414,7 +414,7 @@ jobs:
       - if: always() && matrix.component == 'open-notebook'
         run: docker rm -f rag-shadow-ci
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/ci-scope.test.mjs scripts/release-candidate.test.mjs scripts/release/image-archive.test.mjs workers/web-static/src/index.test.mjs
+        run: node --test scripts/ci-scope.test.mjs scripts/release-candidate.test.mjs scripts/release/static-config.test.mjs scripts/release/image-archive.test.mjs workers/web-static/src/index.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test scripts/checkout-bytes.test.mjs
       - if: matrix.component == 'deploy-contract'
@@ -717,6 +717,8 @@ jobs:
           RELEASE_ARTIFACT_BUCKET: ${{ vars.RELEASE_ARTIFACT_BUCKET }}
           BACKEND_ORIGIN_BASE_URL: ${{ vars.RELEASE_BACKEND_ORIGIN }}
           AUTH_ORIGIN_BASE_URL: ${{ vars.AUTH_ORIGIN_BASE_URL }}
+          RELEASE_API_URL: ${{ vars.RELEASE_API_URL }}
+          RELEASE_CONTROLLER_ENABLED: ${{ vars.RELEASE_CONTROLLER_ENABLED }}
         run: |
           set -euo pipefail
           test -n "$BACKEND_ORIGIN_BASE_URL"
@@ -728,7 +730,7 @@ jobs:
           fi
           if [ "${{ needs.changes.outputs.control_deploy }}" = "true" ]; then
             node scripts/release-static.mjs inventory admin-worker dist-admin workers/control-plane/wrangler.jsonc
-            npx --no-install wrangler versions upload --config workers/control-plane/wrangler.jsonc --tag "$GITHUB_SHA" --var "ORIGIN_BASE_URL:$BACKEND_ORIGIN_BASE_URL" 2>&1 | tee admin-version.log
+            npx --no-install wrangler versions upload --config workers/control-plane/wrangler.jsonc --tag "$GITHUB_SHA" --var "ORIGIN_BASE_URL:$BACKEND_ORIGIN_BASE_URL" --var "RELEASE_API_URL:$RELEASE_API_URL" --var "RELEASE_CONTROLLER_ENABLED:$RELEASE_CONTROLLER_ENABLED" 2>&1 | tee admin-version.log
             node scripts/release-static.mjs record admin-worker admin-version.log lingxiloop-control-plane
           fi
       - uses: actions/upload-artifact@v4
