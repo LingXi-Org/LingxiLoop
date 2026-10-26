@@ -1,4 +1,5 @@
 import { dirname, resolve } from 'node:path'
+import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { defineWorkersConfig, readD1Migrations } from '@cloudflare/vitest-pool-workers/config'
 
@@ -26,6 +27,10 @@ export default defineWorkersConfig(async () => ({
             SIGILLO_SSO_SECRET: 'test-sigillo-sso-secret',
             SIGILLO_PROVIDER_URL: 'https://sigillo-provider.example',
             MCP_SERVICE_TOKEN: 'test-mcp-service-token',
+            DIAGNOSTIC_KEYS_JSON: JSON.stringify(['tester', 'expired'].map(id => ({ id,
+              sha256: createHash('sha256').update(`diag.${id}.abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG`).digest('hex'),
+              expiresAt: id === 'tester' ? '2099-01-01T00:00:00Z' : '2000-01-01T00:00:00Z',
+            }))),
             KOMODO_API_KEY: 'test-komodo-api-key',
             KOMODO_API_SECRET: 'test-komodo-api-secret',
           },
