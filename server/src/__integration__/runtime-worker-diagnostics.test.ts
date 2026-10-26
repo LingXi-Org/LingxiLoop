@@ -30,7 +30,7 @@ let homesRoot: string | undefined
 const originalFetch = globalThis.fetch
 const priorHomesRoot = process.env.AGENT_OS_HOMES_ROOT
 before(async () => {
-  assert.equal(releaseVersions.runtime, '3.8.13', 'install the formally published, locked diagnostic runtime')
+  assert.equal(releaseVersions.runtime, '3.8.14', 'install the formally published, locked diagnostic runtime')
   // The fixture can only use its own loopback HTTP authorization boundary.
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input))

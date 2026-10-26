@@ -44,17 +44,17 @@ export async function qualifyWorkerFailure(argv = process.argv.slice(2), env = p
   qualificationTargets(env)
   if (argv[0] === '--dry-run') {
     console.log(`Validated loopback *_test PostgreSQL and explicit test Redis; would run only ${testFile}.`)
-    console.log('Dry run: no connections or writes. The real run truncates fixture tables and requires installed schema plus formal LingxiOS 3.8.13. This proves the diagnostic chain, not the original #439 business root cause; historical failures cannot be backfilled.')
+    console.log('Dry run: no connections or writes. The real run truncates fixture tables and requires installed schema plus formal LingxiOS 3.8.14. This proves the diagnostic chain, not the original #439 business root cause; historical failures cannot be backfilled.')
     return 0
   }
   // Do not silently execute against an older native runtime or a local package
   // build. The existing migration check also verifies the formal schema pin.
   const lock = JSON.parse(readFileSync(resolve(root, 'package-lock.json'), 'utf8'))
     .packages?.['node_modules/@lyyzka/lingxios']
-  if (lock?.version !== '3.8.13'
-    || !lock.resolved?.startsWith('https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.13/')
+  if (lock?.version !== '3.8.14'
+    || !lock.resolved?.startsWith('https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.14/')
     || !/^sha512-[A-Za-z0-9+/]{86}==$/.test(lock.integrity ?? '')) {
-    throw new Error('install the exact formally published LingxiOS 3.8.13 lock before qualification')
+    throw new Error('install the exact formally published LingxiOS 3.8.14 lock before qualification')
   }
   const childEnv = { ...env,
     DATABASE_URL: env.INTEGRATION_DATABASE_URL,
