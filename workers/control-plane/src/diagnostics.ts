@@ -10,7 +10,7 @@ const keysSchema = z.array(z.object({
 }).strict()).max(100)
 const querySchema = z.object({
   view: z.enum(['runs', 'run', 'operations', 'llm-calls', 'delivery-failures']).default('runs'),
-  id: z.string().regex(/^[a-zA-Z0-9_-]{1,200}$/).optional(),
+  id: z.string().regex(/^[a-zA-Z0-9_:-]{1,200}$/).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   status: z.string().max(100).optional(),
   search: z.string().max(200).optional(),
@@ -37,7 +37,7 @@ function diagnosticPath(input: unknown): string | null {
   const { view, id, afterSeq, ...filters } = parsed.data
   if (view === 'run' || view === 'operations') {
     if (!id || (view === 'run' && afterSeq !== undefined)) return null
-    return view === 'run' ? `/api/admin/resources/agent-runs/${id}` : `/api/admin/agent-runs/${id}/operations${afterSeq === undefined ? '' : `?afterSeq=${afterSeq}`}`
+    return view === 'run' ? `/api/admin/resources/agent-runs/${encodeURIComponent(id)}` : `/api/admin/agent-runs/${encodeURIComponent(id)}/operations${afterSeq === undefined ? '' : `?afterSeq=${afterSeq}`}`
   }
   if (id || afterSeq !== undefined) return null
   const resource = view === 'runs' ? 'agent-runs' : view === 'llm-calls' ? 'llm-calls' : 'agent-deliveries'

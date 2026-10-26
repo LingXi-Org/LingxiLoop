@@ -55,9 +55,13 @@ it('diagnostic MCP reads redacted paginated failures and rejects unavailable adm
     expect(JSON.parse((await read({ view: 'runs', status: 'failed' })).body.result!.content[0]!.text)).toEqual({
       data: [{ id: 'run-1', error: 'provider unavailable', prompt: '[REDACTED]', token: '[REDACTED]', nested: { password: '[REDACTED]' } }],
     })
-    origin.intercept({ path: '/api/admin/agent-runs/run-1/operations?afterSeq=100', method: 'GET' })
+    origin.intercept({ path: '/api/admin/resources/agent-runs/run%3Atenant%3A1', method: 'GET' })
+      .reply(200, { data: { id: 'run:tenant:1', error: 'provider unavailable' } })
+    expect(JSON.parse((await read({ view: 'run', id: 'run:tenant:1' })).body.result!.content[0]!.text))
+      .toEqual({ data: { id: 'run:tenant:1', error: 'provider unavailable' } })
+    origin.intercept({ path: '/api/admin/agent-runs/run%3Atenant%3A1/operations?afterSeq=100', method: 'GET' })
       .reply(200, { events: [{ seq: 101, error: 'late failure' }], nextSeq: 101 })
-    expect(JSON.parse((await read({ view: 'operations', id: 'run-1', afterSeq: 100 })).body.result!.content[0]!.text))
+    expect(JSON.parse((await read({ view: 'operations', id: 'run:tenant:1', afterSeq: 100 })).body.result!.content[0]!.text))
       .toEqual({ events: [{ seq: 101, error: 'late failure' }], nextSeq: 101 })
     origin.intercept({ path: '/api/admin/resources/agent-runs/run-1', method: 'GET' }).reply(302, '', { headers: { location: 'https://attacker.example/' } })
     expect((await read({ view: 'run', id: 'run-1' })).body.result?.isError).toBe(true)
