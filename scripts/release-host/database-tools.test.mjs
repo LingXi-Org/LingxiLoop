@@ -24,7 +24,7 @@ async function setup(t) {
   await writeFile(join(output,'backup.dump'),dump);await writeFile(join(output,'backup.json'),JSON.stringify({complete:true,manifestHash,dumpHash}));await writeFile(join(output,'restore-verified.json'),JSON.stringify({complete:true,manifestHash,dumpHash,cleanupErrors:[]}))
   let version=1,exitCode=0,hostname='postgres';const calls=[]
   const run=async args=>{calls.push(args);if(args[0]==='image')return JSON.stringify([{Id:newImage.configDigest,RepoDigests:[newImage.ref],Os:'linux',Architecture:'amd64',RootFS:{Type:'layers',Layers:newImage.diffIds}}]);if(args[0]==='container')return JSON.stringify([{Image:newImage.configDigest,State:{Status:'exited',Running:false,ExitCode:exitCode}}]);if(args.includes('psql'))return JSON.stringify({nativeSchema:14,installedSchema:14,productSchema:version,migrationCount:version,schemaHash,protocolVersion:11,migrations:migrations.slice(0,version),readOnly:true,fullVisibility:true,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,prepared:0,otherClients:0});if(args.includes('config'))return JSON.stringify({services:{'db-migrate':{image:newImage.configDigest,pull_policy:'never',restart:'no',command:['npm','run','db:migrate'],environment:{DATABASE_URL:`postgresql://postgres@${hostname}/fixture`}}}});if(args.includes('run')){version=2;return ''}throw Error('Unexpected fixed test argv')}
-  return {local,run,calls,op:{releaseId:release.releaseId,target:'main-runtime-a',phase:'migrate',generation:1,manifestHash,parameters:{}},setExitCode:value=>exitCode=value,setHostname:value=>hostname=value}
+  return {local,run,calls,configurationHash:target.hostPlan.configurationHash,op:{releaseId:release.releaseId,target:'main-runtime-a',phase:'migrate',generation:1,manifestHash,parameters:{}},setExitCode:value=>exitCode=value,setHostname:value=>hostname=value}
 }
 test('fixed offline migration checks exact source prefix and destination, then final container exit and target ledger',async t=>{
   const f=await setup(t),receipt=await databaseTool(f.local,'migrate',f.op,{run:f.run,archiveUpload:archiveProbe,archiveObserve:archiveProbe})
@@ -46,4 +46,10 @@ test('migration cannot progress when the archived exact dump is no longer confir
   const f=await setup(t)
   await assert.rejects(databaseTool(f.local,'migrate',f.op,{run:f.run,archiveUpload:archiveProbe,archiveObserve:async()=>{throw Object.assign(Error('Unconfirmed'),{code:'ARCHIVE_NOT_CONFIRMED',uncertain:true})}}),{code:'ARCHIVE_NOT_CONFIRMED'})
   assert.equal(f.calls.some(args=>args.includes('run')),false)
+})
+test('fixed migration config and one-off both select the approved forward configuration snapshot',async t=>{
+ const f=await setup(t),snapshot='/fixed/.env.approved-forward',compose='/fixed/compose.approved-forward.yml';f.local.targets['main-runtime-a'].configurationFiles={[f.configurationHash]:{envFile:snapshot,composeFile:compose}}
+ assert.equal((await databaseTool(f.local,'migrate',f.op,{run:f.run,archiveUpload:archiveProbe,archiveObserve:archiveProbe})).complete,true)
+ const commands=f.calls.filter(args=>args[0]==='compose');assert.equal(commands.length,2)
+ for(const args of commands){assert.equal(args[args.indexOf('--env-file')+1],snapshot);assert.equal(args[args.indexOf('--file')+1],compose)}
 })

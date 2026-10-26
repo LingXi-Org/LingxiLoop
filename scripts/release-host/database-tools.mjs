@@ -10,6 +10,7 @@ import { pathToFileURL } from 'node:url'
 import {inspectQualifiedImage} from './image-identity.mjs'
 import { uploadArchive,observeArchive } from './archive.mjs'
 import { databaseEvidence } from './local-control.mjs'
+import {configurationFiles} from './configuration-files.mjs'
 import { runDocker } from './adapter.mjs'
 import { canonical, hash, fault } from './journal.mjs'
 
@@ -135,7 +136,8 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     requireThat(source.migrations.every((row,index) => row.version === plan.database.migrations[index]?.version && row.checksum === plan.database.migrations[index]?.checksum),'MIGRATION_CHECKSUM_CHANGED','The installed ledger is not an exact prefix of the requested target')
     const migration = local.migration
     requireThat(migration && /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/.test(migration.service) && plan.images[migration.imageService],'MIGRATION_NOT_CONFIGURED','A fixed one-off migration service and qualified image are required')
-    const compose = ['compose','--project-name',local.project,'--env-file',local.envFile,'--file',local.composeFile,'--file',join(policy.stateDirectory,op.releaseId,`${op.target}-forward.json`)]
+    const files=configurationFiles(local,plan.configurationHash)
+    const compose = ['compose','--project-name',local.project,'--env-file',files.envFile,'--file',files.composeFile,'--file',join(policy.stateDirectory,op.releaseId,`${op.target}-forward.json`)]
     const config = JSON.parse(await run([...compose,'config','--format','json'])), spec = config.services?.[migration.service]
     const identity=await inspectQualifiedImage(run,plan.images[migration.imageService],undefined,{stateDirectory:policy.stateDirectory})
     requireThat(identity&&spec && !spec.build && spec.image === identity.localImageId && spec.pull_policy === 'never' && spec.restart === 'no' && !spec.privileged && !(spec.volumes?.length) && canonical(spec.command) === canonical(['npm','run','db:migrate']),'MIGRATION_NOT_CONFIGURED','Migration service must be the fixed offline packaged migration command')
