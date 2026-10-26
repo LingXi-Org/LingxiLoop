@@ -227,7 +227,7 @@ for(const unsafe of ['active','schema','mutation'])test(`unconfirmed backup keep
  f.adapter.observe=async()=>{throw fault('ARCHIVE_NOT_CONFIRMED','absent')}
  if(unsafe==='active')f.executor.active.add(backup.key)
  if(unsafe==='schema')f.adapter.state=async()=>({...contract,productSchema:58})
- if(unsafe==='mutation')f.journal.db.prepare('INSERT INTO operations SELECT ?,'new-id',request_hash,?,?,result,errors,steps,created_at,updated_at FROM operations WHERE key=?').run('forbidden',JSON.stringify({...backup,phase:'migrate'}),'uncertain',backup.key)
+ if(unsafe==='mutation')f.journal.db.prepare('INSERT INTO operations SELECT ?,?,request_hash,?,?,result,errors,steps,created_at,updated_at FROM operations WHERE key=?').run('forbidden','new-id',JSON.stringify({...backup,phase:'migrate'}),'uncertain',backup.key)
  const result=await f.executor.reconcile(f.journal.get(backup.key));assert.equal(result.status,'uncertain')
  assert.ok(f.journal.db.prepare('SELECT count(*) AS n FROM reservations WHERE operation_key=?').get(backup.key).n>0)
 })
