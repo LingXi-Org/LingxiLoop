@@ -45,6 +45,16 @@ R2 distribution, remove its old publishing path while preserving business assets
 bucket data and recovery receipts. Do not maintain automatic parallel fallback
 publishers or infer a speed win from subscription reachability.
 
+After concrete native-proxy approval, the same entry performs finite maintenance:
+`scripts/release/run.sh route-native a|b query|install|validate|start|probe`.
+Execute A/B serially, query uncertain results before retry, and never infer
+authorization from the command's existence. This reuses the pinned inactive
+installer, validates the existing private provider and fixed policy, verifies
+systemd actually loaded the provider and a loopback-only listener, and performs
+bounded TLS/HTTP probes. It neither configures nor restarts Docker, does not
+enable boot-time service startup, and reachability is not authenticated image
+pull qualification. An uploaded TLS-bypass option is rejected, not activated.
+
 `preflight` checks the existing environment, exact app CI, exact operations CI,
 existing release identity and controller plan. `publish` performs those same
 checks, looks up the immutable ID before submission, and observes the controller

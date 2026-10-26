@@ -126,7 +126,11 @@ if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
   try{
     if(args[0]==='--help'){console.log('scripts/release/run.sh <preflight|publish|resume|recover> <qualified-manifest.json> [receipt.json]\nReuses the existing provider. No configuration or credential mutation. Same receipt resumes its original deadline.');process.exit(0)}
     existingConfiguration()
-    if(args[0]==='route-check'){
+    if(args[0]==='route-native'){
+      if(args.length!==3)throw fail('INVALID_RUN_ARGUMENTS')
+      const {nativeOperation}=await import('../mihomo/native-operator.mjs')
+      const result=await nativeOperation(args[1],args[2]);console.log(JSON.stringify(result));process.exitCode=result.receipt.error?1:0
+    }else if(args[0]==='route-check'){
       const {inspectUploadPaths}=await import('../mihomo/host-status.mjs')
       console.log(JSON.stringify(await inspectUploadPaths()))
     }else if(args[0]==='subscription-check'){
