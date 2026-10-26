@@ -143,7 +143,10 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
     }
     if (path === '/deadline') {
       const key = String(body.key)
-      const seconds = current.kind === 'prepare' ? 900 : current.kind === 'claim' ? 1800 : record.manifest.policy.drainSeconds
+      // Database backup includes a final dump plus a bounded 300s upload and short metadata reads.
+      // Do not truncate it with the unrelated service-drain budget. Preserve the persisted deadline.
+      const databasePhase = current.kind === 'host' && ['backup','restore-verify','migrate'].includes(current.phase ?? '')
+      const seconds = current.kind === 'prepare' ? 900 : current.kind === 'claim' ? 1800 : databasePhase ? Math.max(600,record.manifest.policy.drainSeconds) : record.manifest.policy.drainSeconds
       cp.deadlines[key] ??= Date.now() + seconds * 1000
       this.save(record); return { deadline: cp.deadlines[key] }
     }

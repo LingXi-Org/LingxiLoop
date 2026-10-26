@@ -67,3 +67,16 @@ test('observeArchive is read-only: missing receipt fails without POST and matchi
   assert.deepEqual(calls, ['GET'])
   assert.equal((await observeArchive(f.policy, f.op, { ...f, fetcher: async (_url, init) => { assert.equal(init.method, undefined); return Response.json(f.receipt) } })).reused, true)
 })
+test('large archive upload has a separate bounded budget while metadata keeps its short deadline',async()=>{
+ const f=await fixture(), original=AbortSignal.timeout,deadlines=[]
+ AbortSignal.timeout=ms=>{deadlines.push(ms);return original(ms)}
+ try{
+  await uploadArchive(f.policy,f.op,{...f,fetcher:async(_url,init)=>{
+   if(!init.method)return new Response('',{status:404})
+   for await(const _ of init.body){}
+   return Response.json(f.receipt,{status:201})
+  }})
+  assert.deepEqual(deadlines,[60000,300000])
+  await assert.rejects(uploadArchive({...f.policy,archive:{...f.policy.archive,uploadTimeoutMs:300001}},f.op,{...f,fetcher:async()=>{throw Error('must not fetch')}}),{code:'ARCHIVE_TIMEOUT_INVALID'})
+ }finally{AbortSignal.timeout=original}
+})
