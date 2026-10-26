@@ -45,10 +45,10 @@ test('isolated real PostgreSQL snapshot/restore verifies all-table counts and se
   const executor=new Executor({ journal,adapter:new ComposeAdapter(local) }),manifestHash=hash(release);executor.register(release,manifestHash)
   const op={ releaseId:release.releaseId,target:'main-runtime-a',phase:'backup',generation:1,manifestHash,parameters:{} }
   const actual=await databaseEvidence(local,run);assert.equal(actual.verified,true);assert.equal(actual.otherClients,0)
-  await run(['exec','--user','postgres',container,'psql','-X','-q','-v','ON_ERROR_STOP=1','-c',`INSERT INTO lingxios.agent_work_items(id,kind,status) VALUES ('waiting-turn','turn','waiting'),('unbound','turn','waiting'),('completed','turn','completed'),('waiting-job','job','waiting');
+  await run(['exec','--user','postgres',container,'psql','-X','-q','-v','ON_ERROR_STOP=1','-c',`INSERT INTO lingxios.agent_work_items(id,kind,status) VALUES ('waiting-turn','turn','waiting'),('unbound','turn','waiting'),('completed','turn','succeeded'),('waiting-job','job','waiting');
     INSERT INTO lingxios.agent_steps VALUES ('waiting-turn','runtime.binding'),('waiting-turn','runtime.checkpoint'),('completed','runtime.checkpoint'),('waiting-job','runtime.binding');`])
   const blocked=await databaseEvidence(local,run);assert.equal(blocked.incompatibleRuns,2);assert.equal(blocked.liveWork,0)
-  await run(['exec','--user','postgres',container,'psql','-X','-q','-v','ON_ERROR_STOP=1','-c',"UPDATE lingxios.agent_work_items SET status='completed' WHERE id IN ('waiting-turn','waiting-job')"])
+  await run(['exec','--user','postgres',container,'psql','-X','-q','-v','ON_ERROR_STOP=1','-c',"UPDATE lingxios.agent_work_items SET status='succeeded' WHERE id IN ('waiting-turn','waiting-job')"])
   assert.equal((await databaseEvidence(local,run)).incompatibleRuns,0)
   await assert.rejects(databaseTool(local,'backup',op,{run,archiveUpload:async()=>{throw Object.assign(Error('Injected lost archive response'),{code:'ARCHIVE_UPLOAD_UNCONFIRMED',uncertain:true})},archiveObserve:archiveProbe}),{code:'ARCHIVE_UPLOAD_UNCONFIRMED'})
   // The real local dump remains; GET-only archive observation can complete the interrupted backup without redumping/reuploading.
