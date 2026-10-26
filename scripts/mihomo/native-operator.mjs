@@ -84,9 +84,24 @@ def execute(args,timeout=25,stage='COMMAND',safe_path=None):
   category='SAFE_PATH' if any(s in diagnostic for s in ['safe_paths','not a subpath','not allowed paths']) else 'CONFIG' if 'config' in diagnostic else 'UNCONFIRMED'
   raise RuntimeError('MIHOMO_'+stage+'_'+category)
  return r.stdout
+def docker_plan():
+ path=pathlib.Path('/etc/docker/daemon.json');raw=regular(path,1048576);current=json.loads(raw)
+ pid=execute(['systemctl','show','docker','--property=MainPID','--value'],10).decode().strip()
+ check(pid.isdigit() and int(pid)>0,'DOCKER_PID_UNCONFIRMED')
+ argv=pathlib.Path('/proc/'+pid+'/cmdline').read_bytes().decode().split('\\0')
+ configured=next((v.split('=',1)[1] for v in argv if v.startswith('--config-file=')),argv[argv.index('--config-file')+1] if '--config-file' in argv else str(path))
+ check(configured==str(path) and not any(v.startswith(('--http-proxy','--https-proxy','--no-proxy')) for v in argv),'DOCKER_CONFIG_SOURCE_CONFLICT')
+ proposed={**current,'live-restore':True,'proxies':{**current.get('proxies',{}),'http-proxy':'http://127.0.0.1:17890','https-proxy':'http://127.0.0.1:17890','no-proxy':'localhost,127.0.0.1,::1,10.20.0.0/24,postgres,redis,lingxiloop,worker,wukongim,open-notebook'}}
+ candidate=(json.dumps(proposed,indent=2,sort_keys=True)+'\\n').encode()
+ with tempfile.TemporaryDirectory(prefix='lingxi-docker-validate-',dir='/run') as directory:
+  staged=pathlib.Path(directory)/'daemon.json';staged.write_bytes(candidate);staged.chmod(0o600)
+  execute(['/usr/bin/dockerd','--validate','--config-file',str(staged)],15,'DOCKER_VALIDATE')
+ info=json.loads(execute(['docker','info','--format','{{json .}}'],15))
+ rows=execute(['docker','ps','--format','{{json .}}'],15).decode().splitlines()
+ return {'configurationPath':str(path),'currentSha256':digest(raw),'proposedSha256':digest(candidate),'candidateValid':True,'changedFields':['proxies.http-proxy','proxies.https-proxy','proxies.no-proxy']+([] if info.get('LiveRestoreEnabled') else ['live-restore']),'proxy':'http://127.0.0.1:17890','liveRestoreEnabled':info.get('LiveRestoreEnabled'),'restartRequired':True,'dockerChanged':False,'affectedContainers':[{'name':json.loads(row)['Names'],'state':json.loads(row)['State'],'status':json.loads(row)['Status']} for row in rows]}
 def native_action(data):
  side=data['host'];action=data['action'];p=Paths()
- check(side in ('a','b') and action in ('query','filter-provider','install','validate','start','probe'),'INVALID_NATIVE_ACTION')
+ check(side in ('a','b') and action in ('query','filter-provider','install','validate','start','probe','docker-plan'),'INVALID_NATIVE_ACTION')
  original={'action':'query','host':side}
  idle=release_idle()
  if action=='query':return {**query(original),'releaseIdle':idle}
@@ -131,6 +146,7 @@ def native_action(data):
   if listeners:break
   if attempt<10:time.sleep(0.5)
  check(len(listeners)==1 and '127.0.0.1:17890 ' in listeners[0] and 'mihomo' in listeners[0],'MIHOMO_LOOPBACK_UNPROVEN')
+ if action=='docker-plan':return docker_plan()
  result={'active':True,'providerLoaded':True,'loopbackOnly':True,'provider':provider,'dockerChanged':False,'enabledByModule':False}
  if action=='probe':
   measurements=[]
@@ -147,8 +163,12 @@ except Exception as error:
  known=str(error) if isinstance(error,RuntimeError) and re.fullmatch('[A-Z0-9_]+',str(error)) else 'NATIVE_OPERATION_UNCONFIRMED'
  print(json.dumps({'error':known,'queryBeforeRetry':True}));sys.exit(1)
 `
+export function nativeSource() {
+ const installer=readFileSync(new URL('../release/bootstrap-host/mihomo.py', import.meta.url),'utf8').split("if __name__=='__main__':")[0]
+ return installer+maintenance.split('try:\n with deadline():print')[0]
+}
 export function nativeCommand(side, action, expectedProviderHash) {
- if (!['a','b'].includes(side) || !['query','filter-provider','install','validate','start','probe'].includes(action)) throw Error('INVALID_NATIVE_ACTION')
+ if (!['a','b'].includes(side) || !['query','filter-provider','install','validate','start','probe','docker-plan'].includes(action)) throw Error('INVALID_NATIVE_ACTION')
  if(action==='filter-provider'?!/^[a-f0-9]{64}$/.test(expectedProviderHash??''):expectedProviderHash!==undefined)throw Error('INVALID_PROVIDER_HASH_ARGUMENT')
  const installer = readFileSync(new URL('../release/bootstrap-host/mihomo.py', import.meta.url),'utf8').split("if __name__=='__main__':")[0]
  return `python3 -c ${quote(installer + maintenance)} ${quote(JSON.stringify({host:side,action,...(expectedProviderHash?{expectedProviderHash}:{})}))}`

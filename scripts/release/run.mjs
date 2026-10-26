@@ -131,6 +131,10 @@ if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
       const {transferBenchmark}=await import('../mihomo/transfer-benchmark.mjs')
       const result=await transferBenchmark(args[1],args[2],JSON.parse(readFileSync(resolve(args[3]),'utf8')),{concurrency:args[4]===undefined?1:Number(args[4])})
       console.log(JSON.stringify(result));process.exitCode=result.status==='download-verified'?0:1
+    }else if(args[0]==='route-docker'){
+      if(![3,4].includes(args.length))throw fail('INVALID_RUN_ARGUMENTS')
+      const {dockerOperation}=await import('../mihomo/docker-proxy.mjs')
+      const result=await dockerOperation(args[1],args[2],{expectedHash:args[3]});console.log(JSON.stringify(result));process.exitCode=result.receipt.error?1:0
     }else if(args[0]==='route-native'){
       if(args.length!==3&&!(args.length===4&&args[2]==='filter-provider'))throw fail('INVALID_RUN_ARGUMENTS')
       const {nativeOperation}=await import('../mihomo/native-operator.mjs')
