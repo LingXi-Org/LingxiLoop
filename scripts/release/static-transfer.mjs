@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { createR2RequestPacer, RETENTION_CONCURRENCY } from './r2-pacer.mjs'
+import { transferRetainedBatches } from './retained-batch.mjs'
 const processPacer=createR2RequestPacer()
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -101,7 +102,7 @@ export async function retainGroups(objects,options={}){
         if(bytes.length!==item.size||`sha256:${digest(bytes)}`!==item.sha256)throw fault('RETENTION_SOURCE_CHANGED')
         return bytes
       }}))
-      const transferred=await transferObjects(checked,{...options,maxMs:deadline-now()});requests+=transferred.requests;retries+=transferred.retries;completed+=transferred.completed
+      const transferred=options.retainedApiBase?await transferRetainedBatches(checked,{...options,upload:putImmutableObject,requestPacer:options.requestPacer??processPacer,maxMs:deadline-now()}):await transferObjects(checked,{...options,maxMs:deadline-now()});requests+=transferred.requests;retries+=transferred.retries;completed+=transferred.completed
       results.push({group,reusedGroup:false,...transferred})
       if(transferred.status!=='complete')throw fault('STATIC_TRANSFER_INCOMPLETE')
       const committed=await putImmutableObject(key,proof,{...requestOptions,deadline:Math.min(deadline,now()+60000)});requests+=committed.requests;retries+=committed.retries
