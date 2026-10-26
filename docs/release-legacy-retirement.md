@@ -119,10 +119,16 @@ by this preparation.
 
 The published 816 object remains the qualified ingress source independently of
 the runtime operations version. The fixed retirement operator now requires
-runtime/recovery and trusted `RELEASE_OPS_SHA` readback to match reviewed PR #507
-head `d378bcda174783da88b5e42b93e05e97afb4b68b`; required controller enablement is
+runtime/controller operations and trusted `RELEASE_OPS_SHA` readback to match
+reviewed protocol-2 head `4de017e61253f39931c4b861d121f1508369de53`; required controller enablement is
 `RELEASE_CONTROLLER_ENABLED=true`. These are execution prerequisites, not claims
-that this new Ops version has already been deployed or automatically qualified.
+that the operator may execute before every required receipt is supplied. The
+fixed already-admitted d378/gen6 source may use its exact read-only final
+verification receipt with the new 4de automatic recovery proof. Its manifest,
+original ten host receipts and R2 verified-body hashes are pinned in the actor;
+the complete recovery checkpoint retains the semantic stages, request budgets,
+single known-failure transition and original volumes. No repeated host
+publication is required merely to make both manifest Ops fields equal.
 Do not change the existing ingress pin/source hashes merely because runtime Ops
 changes, or float back to `main` as a fallback. See the exact
 [operator inputs](../scripts/release/LEGACY-RETIREMENT-OPERATOR.md).

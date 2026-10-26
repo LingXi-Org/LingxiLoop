@@ -7,7 +7,12 @@ import{pathToFileURL}from'node:url'
 import{isDeepStrictEqual as equal}from'node:util'
 import{claimProcessLock}from'../release-host/server.mjs'
 
-export const OPS_SHA='d378bcda174783da88b5e42b93e05e97afb4b68b'
+export const OPS_SHA='4de017e61253f39931c4b861d121f1508369de53'
+export const LEGACY_OPS_SHA='d378bcda174783da88b5e42b93e05e97afb4b68b'
+export const LEGACY_RELEASE_ID='accept-495-runtime-mcp-197e-d378'
+const LEGACY_MANIFEST_HASH='sha256:c1f09a9ebbf4e8a63c1eb58cd3120f3f6048814756902c0094bf9926c98ec9e0'
+const LEGACY_HOST_HASH='sha256:e1a4d21f51849431264599922947622a28b569d99c78fce708dfeb31f5ba3b9c'
+const LEGACY_VERIFIED_HASH='sha256:7a0a22bc1af9569de886145cd39e720f0d44c792aac80e18aa8c5d4b0f6c7198'
 export const INGRESS_SOURCE_SHA='816433430c71887905bf277d6ced523cc92f6674'
 export const SHARED_SHA='cca6816135ad1781c342493f3dbde3148728aff1ea20519a1e2a9799ee14ba69'
 export const OLD_SOURCE_SHA='5e2fa5e7ec7fb401ae4021a8b8730ecd127a77bf5f73be0b4c49bb9d8ba987e9'
@@ -25,27 +30,62 @@ function operation(cohort,target,side,phase){
  check(op&&op.status==='succeeded'&&op.releaseId===m.releaseId&&op.target===target&&op.phase===phase&&op.key===`${m.releaseId}:${target}:${phase}`&&op.manifestHash===evidenceHash(m)&&op.generation===(phase==='prepare'?0:cohort.record.generation)&&typeof op.operationId==='string','HOST_PHASE_RECEIPT_REQUIRED')
  return op
 }
-function cohort(c,status){check(c?.manifest?.version===1&&c.manifest.opsSha===OPS_SHA&&c.record?.opsSha===OPS_SHA&&c.record.releaseId===c.manifest.releaseId&&c.record.appSha===c.manifest.appSha&&c.record.status===status&&c.record.generation>=1&&c.record.needsAgent===false&&typeof c.record.workflowId==='string','COMPLETE_RUNTIME_RECEIPTS_REQUIRED')}
+const runtimeIds=['main-runtime-a','main-runtime-b']
+const probeStage=(id,recovery=false)=>({key:`${recovery?'recovery-':''}probe-${id}`,kind:'probe',targets:[id],recovery})
+const hostStage=(ids,phase)=>({key:`${phase}-${ids.join('-')}`,kind:'host',targets:ids,phase})
+export function qualificationPlan(frontend=false,recovery=false){
+ const ids=frontend?['main-frontend',...runtimeIds]:runtimeIds
+ const forward=[{key:'batch',kind:'batch'},...['a','b'].map(host=>({key:`manifest-${host}`,kind:'manifest',host})),...ids.map(id=>({key:`prepare-${id}`,kind:'prepare',targets:[id]})),{key:'claim',kind:'claim'},...(frontend?[{key:'activate-main-frontend',kind:'worker',targets:['main-frontend']}]:[]),hostStage(runtimeIds,'drain'),...runtimeIds.flatMap(id=>[hostStage([id],'apply'),hostStage([id],'verify')]),hostStage(runtimeIds,'undrain'),...ids.map(id=>probeStage(id)),{key:'accepted',kind:'finish',recovery:false}]
+ if(!recovery)return forward
+ return[...forward.slice(0,-3),{key:'recovery-isolate',kind:'host',targets:runtimeIds,phase:'recovery-drain'},...['main-runtime-b','main-runtime-a'].map(id=>({key:`recover-${id}`,kind:'host',targets:[id],phase:'recover',recovery:true})),{key:'recover-main-frontend',kind:'worker',targets:['main-frontend'],recovery:true},{key:'recovery-admit',kind:'host',targets:runtimeIds,phase:'recovery-undrain'},...ids.map(id=>probeStage(id,true)),{key:'recovered',kind:'finish',recovery:true}]
+}
+function checkpoint(record,body,plan,{legacy=false,recovery=false}={}){
+ const cp=body?.checkpoint
+ check(body?.releaseId===record.releaseId&&body.generation===record.generation&&equal(body.observations,record.targets)&&iso(body.verifiedAt)&&cp?.protocol===2&&equal(cp.plan,plan)&&cp.index===plan.length-1&&cp.completed?.length===cp.index,'SEMANTIC_CHECKPOINT_REQUIRED')
+ check(cp.direction===(recovery?'compatible-recovery':'forward')&&cp.legacyVerificationOnly===(legacy?true:undefined)&&cp.mutationSubmitted===(recovery||!legacy)&&equal(cp.changed,legacy?[]:recovery?['main-frontend',...runtimeIds]:runtimeIds),'CHECKPOINT_DIRECTION_MISMATCH')
+ check(cp.serial===cp.completed.length+(recovery?1:0)&&cp.initializedWorkflowId===record.workflowId&&cp.previousWorkflowId===cp.completed.at(-1)?.workflowId&&new Set(cp.completed.map(row=>row.workflowId)).size===cp.completed.length,'CHECKPOINT_RESUME_OR_OWNER_MISMATCH')
+ const allowed=new Set(plan.map(s=>s.key));if(recovery)allowed.add('probe-main-runtime-a')
+ check(cp.requests&&Object.entries(cp.requests).every(([key,n])=>allowed.has(key)&&Number.isSafeInteger(n)&&n>=0&&n<=32),'STAGE_REQUEST_BUDGET_INVALID')
+ for(const[rowIndex,row]of cp.completed.entries())check(row.key===plan[rowIndex].key&&typeof row.workflowId==='string'&&row.workflowId.length>0&&row.requests===(cp.requests[row.key]??0)&&(['batch','claim'].includes(plan[rowIndex].kind)?row.requests===0:row.requests>0),'STAGE_REQUEST_BUDGET_NOT_PRESERVED')
+ if(recovery)check(Number.isSafeInteger(cp.requests['probe-main-runtime-a'])&&cp.requests['probe-main-runtime-a']>0&&record.errors?.forward==='BUSINESS_PROBE_FAILED','AUTOMATIC_RECOVERY_FAILURE_REQUIRED')
+ check(record.progress?.protocol===2&&record.progress.stage===plan.at(-1).key&&equal(record.progress.completed,cp.completed)&&equal(record.progress.requests,cp.requests),'LIVE_CHECKPOINT_MISMATCH')
+ check(cp.deadlines&&Object.values(cp.deadlines).every(n=>Number.isSafeInteger(n)&&n>0),'STAGE_DEADLINE_REQUIRED')
+ for(const stage of plan)for(const id of stage.targets??[]){const phase=stage.kind==='prepare'?'prepare':stage.kind==='host'?stage.phase:null;if(phase&&runtimeIds.includes(id))check(Number.isSafeInteger(cp.deadlines[`${id.at(-1)}:${record.releaseId}:${id}:${phase}`]),'STAGE_DEADLINE_REQUIRED')}
+ return cp
+}
+export function validateLegacyRuntime(record,verified){
+ check(record?.releaseId===LEGACY_RELEASE_ID&&record.generation===6&&record.opsSha===LEGACY_OPS_SHA&&record.appSha==='197e2568d46de349bb3ce0a26aefbadaae8f4723'&&record.status==='accepted'&&record.needsAgent===false,'LEGACY_ACCEPTANCE_NOT_QUALIFIED')
+ const ops=Object.fromEntries(Object.entries(record.targets??{}).filter(([key])=>/^main-runtime-[ab]:[ab]:(prepare|drain|apply|verify|undrain)$/.test(key)))
+ check(Object.keys(ops).length===10&&evidenceHash(ops)===LEGACY_HOST_HASH&&evidenceHash(verified)===LEGACY_VERIFIED_HASH,'LEGACY_RECEIPTS_CHANGED')
+ return checkpoint(record,verified,[...runtimeIds.map(id=>probeStage(id)),{key:'accepted',kind:'finish',recovery:false}],{legacy:true})
+}
+function cohort(c,status,ops=OPS_SHA){check(c?.manifest?.version===1&&c.manifest.opsSha===ops&&c.record?.opsSha===ops&&c.record.releaseId===c.manifest.releaseId&&c.record.appSha===c.manifest.appSha&&c.record.status===status&&c.record.generation>=1&&c.record.needsAgent===false&&typeof c.record.workflowId==='string','COMPLETE_RUNTIME_RECEIPTS_REQUIRED')}
+function immutableBody(body,text,archive,key){check(typeof text==='string'&&equal(JSON.parse(text),body)&&archive?.sha256===`sha256:${rawHash(text)}`&&archive.size===Buffer.byteLength(text)&&archive.key===key&&typeof archive.etag==='string'&&archive.etag.length>0,'IMMUTABLE_RECOVERY_ARCHIVE_REQUIRED')}
 export function validateEvidence(e,{now=Date.now()}={}){
  check(e?.version===1&&e.opsSha===OPS_SHA,'QUALIFICATION_EVIDENCE_REQUIRED')
- const accepted=e.runtime,recovered=e.recovery;cohort(accepted,'accepted');cohort(recovered,'recovered')
+ const accepted=e.runtime,recovered=e.recovery,legacy=accepted?.manifest?.opsSha===LEGACY_OPS_SHA;cohort(accepted,'accepted',legacy?LEGACY_OPS_SHA:OPS_SHA);cohort(recovered,'recovered')
+ if(legacy){check(evidenceHash(accepted.manifest)===LEGACY_MANIFEST_HASH,'LEGACY_MANIFEST_CHANGED');validateLegacyRuntime(accepted.record,accepted.verified)}
+ else checkpoint(accepted.record,accepted.verified,qualificationPlan())
  check(accepted.record.releaseId!==recovered.record.releaseId&&recovered.manifest.sourceReleaseId===accepted.record.releaseId&&recovered.manifest.appSha===accepted.manifest.appSha,'SEPARATE_RECOVERY_QUALIFICATION_REQUIRED')
- check(recovered.record.targets?.recovery?.direction==='compatible-recovery','COMPATIBLE_RECOVERY_EXERCISE_REQUIRED')
  check(accepted.verified?.releaseId===accepted.record.releaseId&&accepted.verified.generation===accepted.record.generation&&equal(accepted.verified.observations,accepted.record.targets)&&iso(accepted.verified.verifiedAt),'ACCEPTED_R2_RECEIPT_REQUIRED')
  const receipt=recovered.receipt
  check(receipt?.releaseId===recovered.record.releaseId&&receipt.opsSha===OPS_SHA&&receipt.manifestHash===evidenceHash(recovered.manifest)&&receipt.generation===recovered.record.generation&&receipt.recordHash===evidenceHash(recovered.record)&&iso(receipt.observedAt)&&receipt.postRecovery?.probes?.['recovery-495-absence']?.status===404,'RECOVERY_ARCHIVE_RECEIPT_REQUIRED')
- check(typeof recovered.receiptText==='string'&&equal(JSON.parse(recovered.receiptText),receipt)&&recovered.archive?.sha256===`sha256:${rawHash(recovered.receiptText)}`&&recovered.archive.size===Buffer.byteLength(recovered.receiptText)&&typeof recovered.archive.key==='string'&&recovered.archive.key.includes(recovered.record.releaseId)&&typeof recovered.archive.etag==='string'&&recovered.archive.etag.length>0,'IMMUTABLE_RECOVERY_ARCHIVE_REQUIRED')
+ check(typeof recovered.archive?.key==='string'&&recovered.archive.key.includes(recovered.record.releaseId),'IMMUTABLE_RECOVERY_ARCHIVE_REQUIRED')
+ immutableBody(receipt,recovered.receiptText,recovered.archive,recovered.archive.key)
+ const published=receipt.recovered;immutableBody(published?.body,published?.text,published?.archive,`releases/${recovered.record.releaseId}/recovered.json`)
+ checkpoint(recovered.record,published.body,qualificationPlan(true,true),{recovery:true})
  for(const side of ['a','b']){
   const target=`main-runtime-${side}`,a=accepted.manifest.targets?.[target],r=recovered.manifest.targets?.[target]
   check(a?.adapter==='main-runtime'&&r?.adapter==='main-runtime'&&equal(a.hosts,[side])&&equal(r.hosts,[side])&&a.hostPlan?.mode==='maintenance'&&r.hostPlan?.mode==='maintenance'&&a.contract.nativeSchema===14&&a.contract.productSchema===57&&equal(a.contract,r.contract)&&equal(a.contract,r.hostPlan.contract)&&equal(a.contract,r.hostPlan.recovery?.contract)&&equal(a.contract,(r.hostPlan.source??r.hostPlan.recovery).contract),'RUNTIME_CONTRACT_MISMATCH')
   for(const [service,image]of Object.entries(a.hostPlan.images??{}))check(sameImage(image,r.hostPlan.images?.[service])&&sameImage(image,(r.hostPlan.source??r.hostPlan.recovery).images?.[service])&&sameImage(image,r.hostPlan.recovery.images?.[service]),'RECOVERY_IMAGE_MISMATCH')
   check(Object.keys(a.hostPlan.images??{}).length>=2&&equal(Object.keys(a.hostPlan.images).sort(),Object.keys(r.hostPlan.images??{}).sort()),'COMPLETE_RUNTIME_IMAGES_REQUIRED')
+  check(equal(a.configuration,r.configuration)&&r.fromReleaseId===accepted.record.releaseId&&[r.hostPlan.configurationHash,r.hostPlan.source?.configurationHash,r.hostPlan.recovery.configurationHash].every(value=>value===a.hostPlan.configurationHash)&&/^sha256:[a-f0-9]{64}$/.test(a.hostPlan.configurationHash??''),'RUNTIME_CONFIGURATION_CHANGED')
   for(const phase of ['prepare','drain','apply','verify','undrain'])operation(accepted,target,side,phase)
   const probes=accepted.record.targets?.[`${target}:verification`],names=a.verification
   check(operation(accepted,target,side,'verify').result?.verified===true&&probes&&Array.isArray(names?.readiness)&&names.readiness.length>0&&typeof names.businessProbe==='string'&&[...names.readiness,names.businessProbe].every(id=>Number.isInteger(probes[id]?.status)&&probes[id].status>=200&&probes[id].status<400),'RUNTIME_BUSINESS_RECEIPT_REQUIRED')
   for(const phase of ['prepare','drain','apply','verify','undrain','recovery-drain','recover','recovery-undrain'])operation(recovered,target,side,phase)
   const restore=operation(recovered,target,side,'recover'),post=receipt.postRecovery.hosts?.[side]
-  check(restore.result?.applied===true&&restore.result.direction==='recovery'&&equal(restore.result.images,post?.images)&&post.nativeSchema===14&&post.productSchema===57,'RECOVERY_ACTUAL_VERSIONS_REQUIRED')
+  check(restore.result?.applied===true&&restore.result.direction==='recovery'&&equal(restore.result.images,post?.images)&&equal(post?.volumes,a.configuration.volumes)&&equal(operation(accepted,target,side,'verify').result.images,post.images)&&post.nativeSchema===14&&post.productSchema===57,'RECOVERY_ACTUAL_VERSIONS_REQUIRED')
  }
  const frontend=recovered.manifest.targets?.['main-frontend']?.recovery?.artifact
  check(frontend?.versionId&&receipt.postRecovery.frontend?.versionId===frontend.versionId&&receipt.postRecovery.frontend.percentage===100,'FRONTEND_RECOVERY_RECEIPT_REQUIRED')
@@ -62,7 +102,7 @@ export function validateEvidence(e,{now=Date.now()}={}){
  for(const c of [accepted,recovered])check(zero.submissions.some(s=>s.releaseId===c.record.releaseId&&s.manifestHash===evidenceHash(c.manifest)),'UNACCOUNTED_SUBMIT_INTENT')
  for(const s of zero.submissions)check(typeof s.intentSha256==='string'&&/^sha256:[a-f0-9]{64}$/.test(s.intentSha256)&&s.record?.releaseId===s.releaseId&&terminal.has(s.record.status),'UNRESOLVED_SUBMIT_INTENT')
  const instances=zero.workflows?.result;check(zero.workflows?.success===true&&Array.isArray(instances)&&instances.every(i=>workflowTerminal.has(i.status))&&(!zero.workflows.result_info||zero.workflows.result_info.total_count<=instances.length),'WORKFLOW_INFLIGHT')
- for(const c of [accepted,recovered])check(instances.some(i=>i.id===c.record.workflowId&&['complete','completed'].includes(i.status)),'QUALIFICATION_WORKFLOW_NOT_COMPLETE')
+ for(const c of [accepted,recovered])for(const id of [c.record.workflowId,...(c===accepted?c.verified.checkpoint:receipt.recovered.body.checkpoint).completed.map(row=>row.workflowId)])check(instances.some(i=>i.id===id&&['complete','completed'].includes(i.status)),'QUALIFICATION_WORKFLOW_NOT_COMPLETE')
  for(const side of ['a','b']){const host=zero.hosts?.[side];check(host?.readOnly===true&&Array.isArray(host.pending)&&host.pending.length===0&&Array.isArray(host.reservations)&&host.reservations.length===0&&host.ingress?.enabled===true&&host.ingress.generation>=recovered.record.generation,'HOST_INFLIGHT_OR_DRAINED')}
  check(zero.legacyActions?.total_count===0&&Array.isArray(zero.legacyActions.workflow_runs)&&zero.legacyActions.workflow_runs.length===0,'LEGACY_ACTIONS_INFLIGHT')
  check(e.merge?.number===506&&e.merge.merged===true&&e.merge.base?.ref==='main'&&/^[a-f0-9]{40}$/.test(e.merge.merge_commit_sha),'MERGED_RETIREMENT_REQUIRED')
@@ -98,9 +138,9 @@ export async function operate({evidence,snapshot,sharedSource,oldSource,journalP
  const state=saved??{version:1,planHash,identity:plan.identity,rollback:plan.rollback,baselines:{},steps:{}}
  // These existing read endpoints independently cross-check the supplied provider exports.
  for(const s of evidence.zero.submissions){const live=await clients.release(`/v1/releases/${encodeURIComponent(s.releaseId)}`);check(terminal.has(live.status)&&live.status===s.record.status&&live.workflowId===s.record.workflowId,'LIVE_SUBMISSION_NOT_TERMINAL')}
- for(const c of [evidence.runtime,evidence.recovery]){const live=await clients.release(`/v1/releases/${encodeURIComponent(c.record.releaseId)}`);check(live.opsSha===OPS_SHA&&live.status===c.record.status&&live.generation===c.record.generation&&equal(live.targets,c.record.targets),'LIVE_RELEASE_RECEIPT_MISMATCH')}
+ for(const c of [evidence.runtime,evidence.recovery]){const live=await clients.release(`/v1/releases/${encodeURIComponent(c.record.releaseId)}`);check(equal(live,c.record),'LIVE_RELEASE_RECEIPT_MISMATCH')}
  const accepted=await clients.release('/v1/accepted');check(accepted.releaseId===evidence.controller.ci.baseline.releaseId,'LATEST_ACCEPTED_RELEASE_MOVED')
- for(const c of [evidence.runtime,evidence.recovery])for(const side of ['a','b'])for(const [key,op]of Object.entries(c.record.targets)){if(!key.startsWith(`main-runtime-${side}:${side}:`))continue;const live=await clients.host(side,op.key);check(live.operationId===op.operationId&&live.status==='succeeded'&&equal(live.result,op.result),'LIVE_HOST_RECEIPT_MISMATCH')}
+ for(const c of [evidence.runtime,evidence.recovery])for(const side of ['a','b'])for(const [key,op]of Object.entries(c.record.targets)){if(!key.startsWith(`main-runtime-${side}:${side}:`))continue;const live=await clients.host(side,op.key);check(equal(live,op),'LIVE_HOST_RECEIPT_MISMATCH')}
  const version=await clients.read('GetVersion',{});check(version.version==='2.3.3','KOMODO_VERSION_MISMATCH')
  const current=new Map()
  for(const object of plan.objects){const live=await clients.read(getOp(object),param(object));check(idOf(live)===object.id&&live.name===object.name&&live.config,'LEGACY_OBJECT_ID_MISMATCH');const action=await clients.read(`Get${object.kind}ActionState`,param(object));check(Object.keys(action).length>0&&Object.values(action).every(v=>v===false),'LEGACY_ACTION_INFLIGHT');current.set(object.id,live)}

@@ -31,40 +31,64 @@ The shared source is bound to SHA-256
 `cca6816135ad1781c342493f3dbde3148728aff1ea20519a1e2a9799ee14ba69`,
 including ingress pin `816433430c71887905bf277d6ced523cc92f6674`.
 
-Runtime qualification is independently bound to reviewed PR #507 exact head
-`d378bcda174783da88b5e42b93e05e97afb4b68b` (`OPS_SHA`), whose two CI runs
-40246725054/40246725060 succeeded. Its merge commit is not the runtime Ops pin.
+Runtime/controller operations are bound to reviewed stage-protocol head
+`4de017e61253f39931c4b861d121f1508369de53` (`OPS_SHA`). The sole legacy accepted
+exception is the already-admitted gen6 manifest with Ops d378, completed only by
+the explicitly qualified read-only protocol-2 verification described below.
 The retained ingress route bytes are unchanged, so `INGRESS_SOURCE_SHA` remains
 the previously qualified 816 commit. Shared source/rollback hashes and the seven
 approved metadata updates therefore remain unchanged. This is a required version
-binding, not evidence that d378 has been deployed or automatically qualified.
+binding; execution still requires the actual acceptance/recovery, variable, CI
+and zero-inflight inputs. A successful production qualification is not itself
+permission to skip the remaining retirement gates.
 
 ## Root-supplied evidence bundle, version 1
 
-The owning test constructs a **synthetic, network-free test fixture**, not a
-production qualification file. Assemble the real bundle from the original
+The owning tests use synthetic network-free operation fixtures plus one fixed
+nonsecret real legacy verified receipt (identities only, no host policy,
+environment/credentials or business rows). Neither is an execution bundle.
+Assemble the real bundle from the original
 receipts below; do not replace them with `accepted:true` or `zeroInFlight:true`.
 The `evidenceHash` export hashes recursively sorted JSON, prefixed `sha256:`.
 `receiptText` and the CLI evidence-file hash use their exact original bytes.
 
-* `opsSha`: the exact `d378bcda174783da88b5e42b93e05e97afb4b68b`.
+* `opsSha`: the exact `4de017e61253f39931c4b861d121f1508369de53`.
 * `runtime`: `{manifest, record, verified}`. `manifest` is the actual registered
   complete A/B runtime manifest; `record` is its current authenticated
   `/v1/releases/<id>` response with status `accepted`; `verified` is the actual
   `releases/<id>/verified.json` body. Its observations must equal the record's
   complete target observations. Both hosts need successful prepare, drain,
-  apply, verify, undrain and named readiness/business probe receipts.
+  apply, verify, undrain and named readiness/business probe receipts. A new Ops
+  acceptance needs its complete forward protocol-2 checkpoint. The already
+  accepted legacy case is restricted to release
+  `accept-495-runtime-mcp-197e-d378`, generation **6**, app
+  `197e2568d46de349bb3ce0a26aefbadaae8f4723`, manifest Ops
+  `d378bcda174783da88b5e42b93e05e97afb4b68b`, canonical manifest hash
+  `sha256:c1f09a9ebbf4e8a63c1eb58cd3120f3f6048814756902c0094bf9926c98ec9e0`.
+  Its original ten complete host receipts must have canonical hash
+  `sha256:e1a4d21f51849431264599922947622a28b569d99c78fce708dfeb31f5ba3b9c`.
+  Its exact R2 verified body has canonical hash
+  `sha256:7a0a22bc1af9569de886145cd39e720f0d44c792aac80e18aa8c5d4b0f6c7198`;
+  its checkpoint has `legacyVerificationOnly:true`, no changed targets or
+  submitted mutations, and only the two completed runtime probes followed by
+  acceptance. This does not authorize another host publication or other old
+  Ops manifests. The live full records and host receipts are read back exactly.
 * `recovery`: `{manifest, record, receipt, receiptText, archive}`. This is a
   different real qualification release, with status `recovered` and source ID
   equal to the accepted runtime release. Runtime contracts, source/forward/
-  recovery image identities and Ops must agree (native/product schema 14/57).
+  recovery image identities, installed versions, configuration hashes and
+  durable volume mappings must agree (native/product schema 14/57). Recovery
+  uses the current 4de Ops; the fixed legacy exception above permits the
+  already-proven d378 source without repeating its host mutations.
   Both hosts need all forward phases plus `recovery-drain`, `recover`, and
-  `recovery-undrain` receipts; recovery direction must be compatible recovery.
+  `recovery-undrain` receipts; direction comes from the real R2 protocol-2
+  checkpoint, not the former `targets.recovery.direction` field.
   The deliberate frontend fault does not change business code or data.
 * `recovery.receipt`: the private immutable R2 recovery evidence JSON body with
   `releaseId`, `opsSha`, `manifestHash`, `generation`, `recordHash` (canonical
   hash of the real recovered safeRecord), and ISO `observedAt`. It also contains
-  `postRecovery.hosts.a/b = {nativeSchema:14,productSchema:57,images:<actual-map>}`,
+  `postRecovery.hosts.a/b = {nativeSchema:14,productSchema:57,images:<actual-map>,
+  volumes:<actual-service:target-to-source-map>}`,
   `postRecovery.probes["recovery-495-absence"] = {status:404}`, and
   `postRecovery.frontend = {versionId:<actual-restored-version>,percentage:100}`.
   Images must equal each real recover operation result, and frontend version
@@ -72,14 +96,29 @@ The `evidenceHash` export hashes recursively sorted JSON, prefixed `sha256:`.
   object's JSON text. `archive` contains its original `{key,sha256,size,etag}`;
   the key must include the recovery release ID. No nonexistent recovered
   `verified.json` is required.
+  The qualification body also includes `recovered:{body,text,archive}`: the
+  complete actual `releases/<id>/recovered.json` JSON, original bytes and
+  `{key,sha256,size,etag}` readback. This inner body must match the live
+  observations and `progress`, with the exact finite forward/recovery plan,
+  23 completed business stages, original per-host phase deadlines and retained
+  request counts (each integer at most 32). `serial=completed.length+1` proves
+  one known failed forward probe/recovery transition without additional admin
+  resumes; the original `BUSINESS_PROBE_FAILED` and its request count remain.
+  Changed targets must be frontend and both runtime nodes, direction
+  `compatible-recovery`; all completed provider instance IDs and the final ID
+  must be complete. IDs are read from receipts, not reconstructed from the
+  release name. This validates the current three-target same-schema exercise,
+  not an arbitrary different or schema-changing recovery plan.
 * `controller.userReadback`: `{source:"parent-trusted-user-readback",messageId,
   observedAt,text,sha256,values:{RELEASE_CONTROLLER_ENABLED:"true",
-  RELEASE_OPS_SHA:"d378bcda174783da88b5e42b93e05e97afb4b68b"}}`. `sha256` binds the trusted user's original
+  RELEASE_OPS_SHA:"4de017e61253f39931c4b861d121f1508369de53"}}`. `sha256` binds the trusted user's original
   text. The current known false receipt cannot pass this check. The actor does
   not retry the already denied Variables/Secrets API or switch identities.
   These are the required final Variables values, not a claim that a user has
   already supplied this readback. The earlier 816 acceptance and manually
-  continued gen5 recovery cannot satisfy the new d378 qualification gate.
+  continued gen5 recovery cannot replace the current qualification. The fixed
+  read-only gen6 acceptance is allowed only with the complete new 4de automatic
+  recovery proof; there is no generic old-Ops bypass.
 * `controller.ci`: actual provider exports `{run,dispatch,baseline,jobs,artifacts}`
   for a successful **main publish_only=true** workflow dispatch. `dispatch` is
   the original request with `{ref:"main",inputs:{publish_only:true}}`. `run` is
