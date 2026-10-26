@@ -25,6 +25,15 @@ the same commit in each host policy's `acceptedOpsShas`. Candidates with a
 different operations revision are rejected. Restoring a prior controller
 version must preserve its protocol and the existing DO/journal data.
 
+For a qualified configuration change, dispatch scoped CI on the exact main
+commit with `stage_only=true` and `publish_only=false`. This runs the owning
+checks and prepares immutable image archives and unrouted Worker versions;
+candidate registration, production deployment and legacy write jobs stay
+skipped. Verify that terminal run and its artifacts before planning the single
+controller release with the approved configuration fingerprints and retained
+source/recovery identities. Staging is not production acceptance. Ordinary
+automatic releases retain the current accepted configuration.
+
 The API accepts only authenticated version-1 manifests. Targets have fixed
 adapters, immutable artifact identities, component-specific accepted sources,
 required conflict resources, exact contracts, named probes and volume bindings.
