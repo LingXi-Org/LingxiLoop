@@ -209,3 +209,64 @@ test('authenticated GET observes a completed-stop DRAIN_TIMEOUT without replay; 
  assert.equal(result.status,'succeeded');assert.equal(result.operationId,op.operationId);assert.equal(result.generation,op.generation);assert.equal(result.errors.forward.code,'DRAIN_TIMEOUT')
  assert.deepEqual(result.steps,steps);assert.equal(f.host.data.calls.filter(a=>a.includes('up')||a.includes('stop')).length,before)
 })
+async function failedIngressReadRecover(t){
+ const f=await setup(t);for(const phase of ['prepare','drain','recovery-drain'])assert.equal((await f.run(phase)).status,'succeeded')
+ const control=f.adapter.control.bind(f.adapter);let unavailable=true
+ f.adapter.control=async(local,action,body,method)=>{if(unavailable&&action==='ingressState'&&body.phase==='recover')throw Object.assign(fault('CONTROL_UNAVAILABLE','Independent ingressState control is unavailable'),{uncertain:false});return control(local,action,body,method)}
+ const failed=await f.run('recover');assert.equal(failed.status,'failed');assert.equal(failed.errors.recovery.code,'CONTROL_UNAVAILABLE');assert.deepEqual(failed.steps,[]);assert.equal(f.journal.db.prepare('SELECT count(*) AS n FROM reservations').get().n,0)
+ unavailable=false;return {...f,failed}
+}
+test('same-body recover POST atomically reclaims only its original free resources after a zero-effect ingress read failure',async t=>{
+ const f=await failedIngressReadRecover(t),before=f.host.data.calls.filter(a=>a.includes('stop')||a.includes('up')).length
+ const submission=f.executor.submit(f.request('recover'))
+ assert.equal(submission.resumed,true);assert.equal(submission.created,false);assert.equal(submission.operation.status,'intent');assert.equal(submission.operation.operationId,f.failed.operationId);assert.equal(submission.operation.generation,f.failed.generation)
+ assert.equal(f.journal.db.prepare('SELECT count(*) AS n FROM reservations WHERE operation_key=?').get(f.failed.key).n,2)
+ const duplicate=f.executor.submit(f.request('recover'));assert.notEqual(duplicate.resumed,true)
+ const result=await f.executor.run(f.failed.key);assert.equal(result.status,'succeeded');assert.equal(result.errors.recovery.code,'CONTROL_UNAVAILABLE')
+ assert.equal(f.host.data.calls.filter(a=>a.includes('stop')||a.includes('up')).length,before+2)
+})
+test('authenticated GET never resumes failed recover; duplicate POST dispatches one original recovery after reacquisition',async t=>{
+ const f=await failedIngressReadRecover(t),before=f.host.data.calls.filter(a=>a.includes('stop')||a.includes('up')).length,token='fixed-recover-fixture-long-token-value',server=createExecutorServer({executor:f.executor,token})
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>{server.close(resolve);server.closeAllConnections()}))
+ const base=`http://127.0.0.1:${server.address().port}`,headers={authorization:`Bearer ${token}`,'content-type':'application/json'}
+ const read=await fetch(base+'/operations?key='+encodeURIComponent(f.failed.key),{headers});assert.equal((await read.json()).status,'failed');await f.executor.reconcileStartup()
+ assert.equal(f.host.data.calls.filter(a=>a.includes('stop')||a.includes('up')).length,before)
+ const replies=await Promise.all([1,2,3].map(()=>fetch(base+'/operations',{method:'POST',headers,body:JSON.stringify(f.request('recover'))})))
+ for(const response of replies){assert.equal(response.status,202);assert.equal((await response.json()).operationId,f.failed.operationId)}
+ await server.waitForDispatch();assert.equal(f.journal.get(f.failed.key).status,'succeeded');assert.equal(f.host.data.calls.filter(a=>a.includes('stop')||a.includes('up')).length,before+2)
+})
+test('zero-effect recover cannot reclaim another owner or stale fence and leaves every reservation unchanged',async t=>{
+ for(const stale of [false,true]){
+  const f=await failedIngressReadRecover(t),resources=f.adapter.resources(f.failed.target,'recover'),generation=stale?f.failed.generation+1:f.failed.generation
+  const owner=f.journal.accept(f.request('verify',{generation}),[resources.at(-1)]).operation,before=f.host.data.calls.length
+  assert.throws(()=>f.executor.submit(f.request('recover')),{code:stale?'STALE_GENERATION':'RESOURCE_BUSY'})
+  assert.equal(f.journal.get(f.failed.key).status,'failed');assert.equal(f.journal.db.prepare('SELECT count(*) AS n FROM reservations').get().n,1);assert.equal(f.journal.db.prepare('SELECT operation_key FROM reservations').get().operation_key,owner.key)
+  assert.equal(f.host.data.calls.length,before)
+ }
+})
+test('started steps, unknown outcomes, other errors and changed request identity never reopen failed recover',async t=>{
+ for(const failure of ['intent','completed','uncertain','authorization','body']){
+  const f=await failedIngressReadRecover(t)
+  if(['intent','completed'].includes(failure))f.journal.patch(f.failed.key,{steps:[{name:'recovery:up:web',sideEffect:true,status:failure}]})
+  if(failure==='uncertain')f.journal.patch(f.failed.key,{status:'uncertain'})
+  if(failure==='authorization')f.journal.patch(f.failed.key,{errors:{forward:null,recovery:{code:'CONTROL_REJECTED'},cleanup:[]}})
+  if(failure==='body')assert.throws(()=>f.executor.submit(f.request('recover',{generation:f.failed.generation+1})),{code:'OPERATION_CONFLICT'})
+  else assert.notEqual(f.executor.submit(f.request('recover')).resumed,true)
+  assert.equal(f.journal.db.prepare('SELECT count(*) AS n FROM reservations').get().n,0)
+ }
+})
+test('recovery continuation keeps the original control failure even if a later read is explicitly rejected',async t=>{
+ const f=await failedIngressReadRecover(t),original=structuredClone(f.failed.errors.recovery),control=f.adapter.control.bind(f.adapter)
+ f.executor.submit(f.request('recover'))
+ f.adapter.control=async(local,action,body,method)=>{if(action==='ingressState'&&body.phase==='recover')throw Object.assign(fault('CONTROL_REJECTED','Independent ingressState rejected the request'),{uncertain:false});return control(local,action,body,method)}
+ const result=await f.executor.run(f.failed.key)
+ assert.equal(result.status,'failed');assert.equal(result.errors.recovery.code,'CONTROL_REJECTED');assert.deepEqual(result.errors.originalRecoveryFailure,original);assert.deepEqual(result.steps,[])
+ assert.notEqual(f.executor.submit(f.request('recover')).resumed,true)
+})
+test('lost prepared/drain evidence cannot reacquire zero-effect recovery resources',async t=>{
+ for(const change of [{drainedHash:hash('other-manifest')},{drainedGeneration:2},{preparedHashes:{}}]){
+  const f=await failedIngressReadRecover(t);f.journal.setState(f.failed.target,{...f.journal.state(f.failed.target),...change})
+  assert.throws(()=>f.executor.submit(f.request('recover')),{code:'DRAIN_REQUIRED'})
+  assert.equal(f.journal.get(f.failed.key).status,'failed');assert.equal(f.journal.db.prepare('SELECT count(*) AS n FROM reservations').get().n,0)
+ }
+})

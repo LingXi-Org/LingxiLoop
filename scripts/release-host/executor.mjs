@@ -20,8 +20,8 @@ export class Executor {
   submit(request) {
     validateRequest(request)
     const manifest = this.journal.manifest(request.releaseId,request.manifestHash)
-    validateHostPlan(manifest,request.target,this.adapter.policy)
-    return this.journal.accept(request,this.adapter.resources(request.target,request.phase))
+    const plan=validateHostPlan(manifest,request.target,this.adapter.policy),local=this.adapter.policy.targets[request.target]
+    return this.journal.accept(request,this.adapter.resources(request.target,request.phase),{resumeUnstartedRecover:local.adapter==='main-runtime' && plan.mode==='maintenance' && !this.active.has(`${request.releaseId}:${request.target}:${request.phase}`)})
   }
   canResumeUnstartedRecoveryDrain(op) {
     return op?.phase==='recovery-drain' && op.status==='uncertain' && op.steps?.length===0 &&
