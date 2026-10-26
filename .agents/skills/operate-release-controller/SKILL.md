@@ -164,3 +164,10 @@ without restarting Docker. Corrected maintenance uses explicit
 receipt proves restoration; it preserves the original record. A failed attempt
 that consumed an approved restart requires concrete additional restart authority.
 The proxy service remains disabled at boot; boot enablement was not approved.
+
+After the separately approved daemon proxy is active, `route-pull a|b
+<qualified-manifest.json>` performs one bounded immutable Docker pull and verifies
+actual config/rootfs/platform/repository identity. Append `query` to inspect an
+uncertain outcome without another pull. A missing local image does not prove
+absence of cached layers: report cache state and do not claim a cold speedup.
+The command never switches an application or changes a container.

@@ -53,3 +53,23 @@ test('Docker maintenance rejects arbitrary targets/commands and never retries a 
  await assert.rejects(dockerOperation('a','query',{env:{KOMODO_API_KEY:'private',KOMODO_API_SECRET:'private'},fetcher:async()=>{calls++;return new Response('',{status:403})}}),/HTTP_403/)
  assert.equal(calls,1)
 })
+test('actual Docker Info field casing and unordered mount snapshots remain verifiable',()=>{
+ const script=`import shlex,sys,json,copy
+source=shlex.split(sys.argv[1])[2].rsplit('try:\\n with deadline():print',1)[0]
+scope={};exec(source,scope)
+mounts=[{'Type':'volume','Name':'b','Source':'/b','Destination':'/b','RW':True},{'Type':'volume','Name':'a','Source':'/a','Destination':'/a','RW':True}]
+rows=[{'Id':'fixed','Name':'app','Image':'sha256:fixed','State':{'Running':True,'StartedAt':'same','Health':{'Status':'healthy'}},'Mounts':mounts}]
+def execute(args,*unused):
+ if args[1]=='info':return json.dumps({'LiveRestoreEnabled':True,'HttpProxy':scope['PROXY'],'HttpsProxy':scope['PROXY'],'NoProxy':scope['NO_PROXY']}).encode()
+ if args[1]=='ps':return b'fixed'
+ return json.dumps(rows).encode()
+scope['execute']=execute
+assert scope['docker_info']()=={'liveRestore':True,'httpProxy':scope['PROXY'],'httpsProxy':scope['PROXY'],'noProxy':scope['NO_PROXY']}
+first=scope['inventory']();rows[0]['Mounts'].reverse();assert scope['inventory']()==first
+legacy=copy.deepcopy(first);legacy[0]['mountsHash']=scope['digest'](scope['encoded'](mounts));rows[0]['Mounts'].reverse();assert scope['inventory'](legacy)==legacy
+rows[0]['Mounts'][0]['RW']=False
+assert scope['inventory'](legacy)!=legacy
+`
+ const result=spawnSync('python3',['-c',script,dockerCommand('a','query')],{encoding:'utf8'})
+ assert.equal(result.status,0,result.stderr)
+})

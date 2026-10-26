@@ -14,7 +14,7 @@ def replacement(path,raw):
   if os.path.exists(tmp):os.unlink(tmp)
 def docker_info():
  info=json.loads(execute(['docker','info','--format','{{json .}}'],15,'DOCKER_INFO'))
- return {'liveRestore':info.get('LiveRestoreEnabled'),'httpProxy':info.get('HTTPProxy',''),'httpsProxy':info.get('HTTPSProxy',''),'noProxy':info.get('NoProxy','')}
+ return {'liveRestore':info.get('LiveRestoreEnabled'),'httpProxy':info.get('HttpProxy',info.get('HTTPProxy','')),'httpsProxy':info.get('HttpsProxy',info.get('HTTPSProxy','')),'noProxy':info.get('NoProxy','')}
 def inventory(reference=None,attempt=0):
  ids=execute(['docker','ps','-q'],10,'DOCKER_LIST').decode().split()
  check(ids,'DOCKER_INVENTORY_EMPTY')
