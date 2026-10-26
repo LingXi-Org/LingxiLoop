@@ -31,13 +31,13 @@ async function main(){
  check(connection&&['postgres:','postgresql:'].includes(new URL(connection).protocol))
  const {Pool}=await import('pg')
  const database=new Pool({connectionString:connection,max:1,application_name:'lingxi-release-runtime-patch57',connectionTimeoutMillis:5000,idleTimeoutMillis:1000})
- let result
+ let result,failure:unknown,failed=false
  try{
   result=action==='observe'?await observePublishedRuntimePatch(database,source,target):
    {complete:true,...await applyPublishedRuntimePatch(database,source,target),planHash:runtimePatchPlanHash(source,target)}
- }finally{
-  try{await database.end()}catch{throw Object.assign(Error('Runtime patch connection close unconfirmed'),{uncertain:action==='apply'})}
- }
+ }catch(error){failed=true;failure=error}
+ try{await database.end()}catch{failed=true;failure=Object.assign(Error('Runtime patch connection close unconfirmed'),{uncertain:action==='apply'})}
+ if(failed)throw failure
  process.stdout.write(JSON.stringify({action,...result})+'\n')
 }
 if(process.argv[1]&&pathToFileURL(resolve(process.argv[1])).href===import.meta.url)void main().catch((error:unknown)=>{
