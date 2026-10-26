@@ -17,6 +17,7 @@ manual publication loop. Run from the repository root:
 
 ```sh
 scripts/release/run.sh doctor
+scripts/release/run.sh route-check
 scripts/release/run.sh preflight /absolute/qualified-manifest.json
 scripts/release/run.sh publish /absolute/qualified-manifest.json
 ```
@@ -28,6 +29,16 @@ source or runtime schema check. `doctor` reuses the existing cloud provider and
 the reviewed custom domain from `workers/release/wrangler.jsonc`, then reads the
 accepted ledger. It does not probe or mutate GitHub Variables/Secrets. Missing
 provider configuration or denied authorization stops before business writes.
+`route-check` reads the existing approved Mihomo subscription into memory with
+normal TLS, fixed origin and a 20-second bound. It prints only HTTP/validation
+status, never saves nodes or activates a proxy. The user now requires choosing
+the fastest reliable distribution from measured evidence; R2 is not mandatory.
+Do not switch to Clash until subscription plus authenticated registry/blob
+measurements qualify it. Follow the exact approved A/B loopback design; any new
+credential/security/daemon-proxy change needs its concrete authority. If replacing
+R2 distribution, remove its old publishing path while preserving business assets,
+bucket data and recovery receipts. Do not maintain automatic parallel fallback
+publishers or infer a speed win from subscription reachability.
 
 `preflight` checks the existing environment, exact app CI, exact operations CI,
 existing release identity and controller plan. `publish` performs those same

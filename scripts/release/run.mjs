@@ -111,7 +111,10 @@ function existingConfiguration(){
 function qualifySource(manifest,mode){
   environmentCheck()
   if(['recover','resume'].includes(mode)&&!process.env.RELEASE_ADMIN_TOKEN)throw fail('EXISTING_ADMIN_CREDENTIAL_REQUIRED')
-  const api=path=>JSON.parse(execFileSync('gh',['api',`repos/LingXi-Org/LingxiLoop/${path}`],{encoding:'utf8',timeout:20_000,stdio:['ignore','pipe','pipe']}))
+  const api=path=>{
+    try{return JSON.parse(execFileSync('gh',['api',`repos/LingXi-Org/LingxiLoop/${path}`],{encoding:'utf8',timeout:20_000,stdio:['ignore','pipe','pipe']}))}
+    catch(error){if(error.code==='ENOENT')throw fail('GITHUB_CLI_REQUIRED');if(/HTTP (401|403)/.test(String(error.stderr??'')))throw fail('GITHUB_CI_READ_DENIED');throw fail('GITHUB_CI_READ_UNAVAILABLE')}
+  }
   if(!/^[a-f0-9]{40}$/.test(manifest.appSha)||!/^[a-f0-9]{40}$/.test(manifest.opsSha)||!/^\d+$/.test(manifest.checks.runId))throw fail('EXACT_SOURCE_REQUIRED')
   const run=api(`actions/runs/${manifest.checks.runId}`)
   if(run.head_sha!==manifest.appSha||run.conclusion!=='success'||run.status!=='completed')throw fail('EXACT_APP_CI_REQUIRED')
@@ -123,9 +126,14 @@ if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
   try{
     if(args[0]==='--help'){console.log('scripts/release/run.sh <preflight|publish|resume|recover> <qualified-manifest.json> [receipt.json]\nReuses the existing provider. No configuration or credential mutation. Same receipt resumes its original deadline.');process.exit(0)}
     existingConfiguration()
+    if(args[0]==='route-check'){
+      const {probeSubscription}=await import('../mihomo/probe.mjs')
+      const result=await probeSubscription();console.log(JSON.stringify(result));process.exitCode=result.status==='subscription-validated'?0:1
+    }else
     if(args[0]==='doctor'){
       const accepted=await callRelease('accepted');console.log(JSON.stringify({status:'read-only-preflight-passed',node:process.version,acceptedReleaseId:accepted.releaseId,productionWrites:0}));process.exit(0)
     }
+    else {
     const [mode,input,output]=args
     if(args.length<2||args.length>3)throw fail('INVALID_RUN_ARGUMENTS')
     const manifest=JSON.parse(readFileSync(resolve(input),'utf8')),path=resolve(output??`.release-runs/${manifest.releaseId}-${mode}.json`)
@@ -136,5 +144,6 @@ if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
     console.log(JSON.stringify({releaseId:result.releaseId,status:result.status,error:result.error??null,receipt:path,elapsedSeconds:((result.completedAt??result.observedAt)-result.startedAt)/1000,retries:result.retries,productionAccepted:result.status==='accepted'}))
     console.error(`Release ${result.releaseId}: ${result.status}. Receipt: ${path}. ${result.status==='accepted'?'Controller accepted this candidate.':result.status==='recovered'?'Controller restored the compatible release; candidate not accepted.':'Production acceptance is not established.'}`)
     process.exitCode=['accepted','preflight-passed'].includes(result.status)?0:result.status==='recovered'?2:1
+    }
   }catch(error){console.error(JSON.stringify({status:'preflight-failed',error:safe(error),productionAccepted:false}));process.exitCode=1}
 }

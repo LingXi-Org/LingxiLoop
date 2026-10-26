@@ -147,3 +147,22 @@ passed/4optional skipped; Worker78passed/2optional skipped. Actual one-command
 `preflight` of the handoff manifest completed in1.693s, no retries or production
 writes, and read back gen8 recovered with the original final Workflow identity.
 This is preflight evidence, not a new release or normal/recovery qualification.
+
+## Latest distribution decision and actual blocker
+
+The user's later instruction removes any requirement to retain R2 publication:
+choose the fastest reliable measured route; replace R2 distribution with Clash
+if needed, retaining business data/assets and historical recovery evidence.
+Do not claim the R2 candidate is the final selected route before that comparison.
+
+Current-cloud `scripts/release/run.sh route-check` used the existing injected
+subscription and normal TLS, returned **HTTP503 in1083ms**, one request, no node
+configuration obtained, no provider saved or proxy activated. Earlier handoff
+reported cloud503 and Cloudflare526. These are unavailable candidates, not speed
+samples. No TLS exception, identity switch or denied-action retry was attempted.
+Authenticated Clash registry/blob throughput, build/distribution/load/switch
+times and comparable end-to-end speed remain unmeasured. A working subscription
+is required before selecting/installing that path. The approved design is
+`docs/release-mihomo-activation.md`; B's Docker live-restore is disabled, so a
+daemon proxy change has concrete shared-service impact and must be explicitly
+qualified/authorized before touching healthy production. No such change occurred.
