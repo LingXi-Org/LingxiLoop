@@ -66,7 +66,7 @@ export class HomeworkApplication {
       await assertOwnedLearningAttachments(db,scope,data.attachments)
       assertDocumentAttachments(data.attachments, data.editorDocument, data.criteriaDocument)
       await db.query(`UPDATE homeworks SET title=$3,instructions=$4,criteria=$5::jsonb,links=$6::jsonb,attachments=$7::jsonb,due_at=$8,
-        visible_hash=$9,editor_document=$10::jsonb,criteria_document=$11::jsonb,revision=revision+1,validation_status='PENDING',validated_revision=NULL,validation_feedback='',materials='[]',updated_at=NOW()
+        visible_hash=$9,editor_document=$10::jsonb,criteria_document=$11::jsonb,revision=revision+1,validation_status='PENDING',validated_revision=NULL,validation_feedback='',validation_findings='[]',materials='[]',updated_at=NOW()
         WHERE company_id=$1 AND id=$2`,[scope.companyId,id,data.title,data.instructions,JSON.stringify(data.criteria),JSON.stringify(data.links),JSON.stringify(data.attachments),data.dueAt,homeworkHash(data),JSON.stringify(data.editorDocument ?? null),JSON.stringify(data.criteriaDocument ?? null)])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.validate',effectKey:id,payload:{homeworkId:id,revision:hw.revision+1,userId:scope.userId}})
     })
@@ -82,7 +82,7 @@ export class HomeworkApplication {
       if(hw.status!=='DRAFT') throw new LearningApplicationError('conflict','已发布的作业不能重新检查草稿')
       assertHomeworkRevision(hw.revision,expectedRevision)
       if(hw.validation_status==='PENDING'||hw.validation_status==='READY') return
-      await db.query(`UPDATE homeworks SET validation_status='PENDING',validated_revision=NULL,validation_feedback='',materials='[]',updated_at=NOW()
+      await db.query(`UPDATE homeworks SET validation_status='PENDING',validated_revision=NULL,validation_feedback='',validation_findings='[]',materials='[]',updated_at=NOW()
         WHERE company_id=$1 AND id=$2`,[scope.companyId,id])
       await enqueueLearningEffect(db,{companyId:scope.companyId,courseId,kind:'homework.validate',effectKey:id,
         payload:{homeworkId:id,revision:hw.revision,userId:scope.userId}})
@@ -100,6 +100,7 @@ export class HomeworkApplication {
       if(hw.visible_hash!==data.visibleHash) throw new LearningApplicationError('conflict','草稿内容已变化，请重新确认')
       if(hw.status==='PUBLISHED'&&hw.publish_key===data.idempotencyKey) return
       if(hw.status!=='DRAFT'||hw.validated_revision!==hw.revision||hw.validation_status!=='READY') throw new LearningApplicationError('conflict','请等待最新内容验证通过后再发布')
+      if(hw.validation_findings?.some(item=>item.severity==='teacher_review')&&!data.teacherReviewConfirmed) throw new LearningApplicationError('conflict','请确认保留的标准需要由教师复核后再发布')
       await assertOwnedLearningAttachments(db,scope,hw.attachments)
       await db.query(`UPDATE homeworks SET status='PUBLISHED',published_at=NOW(),publish_key=$3,updated_at=NOW() WHERE company_id=$1 AND id=$2`,[scope.companyId,id,data.idempotencyKey])
     })

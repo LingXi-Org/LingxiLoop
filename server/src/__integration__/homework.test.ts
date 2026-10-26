@@ -1770,3 +1770,61 @@ test('381 direct draft rejects student, unrelated course and revoked teacher wit
   assert.ok([403,404].includes((await call(teacher,path(randomUUID(),'/draft'),'PUT',visible)).status))
   assert.equal((await pool.query('SELECT count(*)::int n FROM homeworks')).rows[0].n,0)
 })
+
+// #519: generated and handwritten standards enter the same saved-draft pipeline.
+test('[integration] 519 per-criterion alternatives preserve the draft until teacher saves, then publish only the checked revision', async () => {
+  for (const source of ['handwritten', 'generated']) {
+    const original = { ...visible, title: `519 ${source}`, instructions: '6 个小问共 7 个空，计算 /22 子网可分配主机地址数并说明计算。', criteria: ['请把每个空逐条写出。', '可分配主机数为 1022，即 2^(32-22)-2。'] }
+    const proposal = '按题目中的 7 个空顺序标注 1—7，分别写出对应结果和计算过程。'
+    const draft = (await homework.draft(teacher, courseId, original)).homework
+    modelReplies.push({ valid: false, issues: [{ field: 'criteria', excerpt: original.criteria[0], severity: 'suggestion', reason: '6 小问可有 7 空；建议明确答题顺序。', suggestion: '按空的顺序编号。', replacement: proposal, observableEvidence: '编号、结果和计算过程', teacherReview: '无', instructionChange: '' }] })
+    await runLearningEffects()
+    const checked = (await homework.detail(teacher, courseId, draft.id)).homework
+    assert.equal(checked.validation.status, 'READY')
+    assert.deepEqual(checked.criteria, original.criteria)
+    assert.equal(checked.validation.findings[0].replacement, proposal)
+    const edited = (await homework.updateDraft(teacher, courseId, draft.id, { ...original, criteria: [proposal, original.criteria[1]!], expectedRevision: checked.revision })).homework
+    assert.equal(edited.validation.status, 'PENDING')
+    assert.deepEqual(edited.validation.findings, [])
+    await assert.rejects(homework.publish(teacher, courseId, draft.id, { expectedRevision: edited.revision, visibleHash: edited.visibleHash, idempotencyKey: `519-stale-${source}` }))
+    modelReplies.push({ valid: true, feedback: '7 空映射明确；1022 与可分配主机数及公式一致。' })
+    await runLearningEffects()
+    const ready = (await homework.detail(teacher, courseId, draft.id)).homework
+    assert.equal(ready.validation.status, 'READY')
+    assert.match(JSON.stringify(lastModelRequest), /按题目中的 7 个空顺序/)
+    const response = await call(teacher, path(draft.id, '/publish'), 'POST', { expectedRevision: ready.revision, visibleHash: ready.visibleHash, idempotencyKey: `519-publish-${source}` })
+    assert.equal(response.status, 200)
+    assert.deepEqual(((await response.json()) as { homework: { criteria: string[] } }).homework.criteria, [proposal, original.criteria[1]])
+    const evidence = await assess(draft.id, true, student, '1—7 各空按题目顺序填写，/22 主机位为 10，2^10-2=1022，扣除网络地址与广播地址。')
+    await homework.saveAnswer(student, courseId, draft.id, { expectedRevision: 0, text: evidence.judgment.evidence[0]!.excerpt, links: [], attachments: [] })
+    const studentReport = await report(draft.id, evidence.judgment)
+    assert.deepEqual(studentReport.report!.criteria.map(item => item.criterion), [proposal, original.criteria[1]])
+    assert.match(JSON.stringify(lastModelRequest), /按题目中的 7 个空顺序/)
+  }
+})
+
+test('[integration] 519 retaining manual criteria requires owner confirmation and cannot fabricate student mastery', async () => {
+  const original = { ...visible, criteria: ['解释设计方案的取舍。', visible.criteria[1]!] }
+  const draft = (await homework.draft(teacher, courseId, original)).homework
+  modelReplies.push({ valid: false, issues: [{ field: 'criteria', excerpt: original.criteria[0], severity: 'teacher_review', reason: '方案取舍需教师判断。', suggestion: '教师结合解释与计算复核。' }] })
+  await runLearningEffects()
+  const ready = (await homework.detail(teacher, courseId, draft.id)).homework
+  assert.equal(ready.validation.status, 'READY')
+  const publish = { expectedRevision: ready.revision, visibleHash: ready.visibleHash, idempotencyKey: '519-manual-publish' }
+  assert.equal((await call(teacher, path(draft.id, '/publish'), 'POST', publish)).status, 409)
+  assert.equal((await call(colleague, path(draft.id, '/publish'), 'POST', { ...publish, teacherReviewConfirmed: true })).status, 403)
+  assert.equal((await call(teacher, path(draft.id, '/publish'), 'POST', { ...publish, teacherReviewConfirmed: true })).status, 200)
+  assert.deepEqual((await homework.detail(teacher, courseId, draft.id)).homework.criteria, original.criteria)
+  const evidence = await assess(draft.id, true)
+  await homework.saveAnswer(student, courseId, draft.id, { expectedRevision: 0, text: evidence.judgment.evidence[0]!.excerpt, links: [], attachments: [] })
+  const studentReport = await report(draft.id, evidence.judgment)
+  assert.equal(studentReport.report!.criteria[0]!.met, false)
+  assert.equal(studentReport.report!.criteria[0]!.independent, false)
+  assert.match(studentReport.report!.criteria[0]!.feedback, /需要教师复核/)
+  assert.equal(studentReport.report!.criteria[1]!.met, true)
+  assert.match(JSON.stringify(lastModelRequest), /teacherReviewCriteria/)
+  assert.equal(studentReport.report!.criteria[0]!.reviewRequired, true)
+  assert.match(studentReport.report!.completion, /需要教师判断/)
+  const submitted = await homework.submit(student, courseId, draft.id, { expectedAnswerRevision: studentReport.answerRevision, reportId: studentReport.report!.id, conversationReferences: currentReferences(), idempotencyKey: '519-manual-submit' })
+  assert.equal(submitted.report.criteria[0]!.reviewRequired, true)
+})

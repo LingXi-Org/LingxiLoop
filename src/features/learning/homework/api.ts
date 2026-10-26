@@ -14,7 +14,7 @@ export const homeworkApi = {
     http<HomeworkDetail>(`${base(courseId, id)}/draft`, { method: 'PATCH', body: JSON.stringify(input) }),
   validate: (courseId: string, id: string, expectedRevision: number) =>
     http<HomeworkDetail>(`${base(courseId, id)}/validate`, { method: 'POST', body: JSON.stringify({ expectedRevision }) }),
-  publish: (courseId: string, id: string, input: { expectedRevision: number; visibleHash: string; idempotencyKey: string }) =>
+  publish: (courseId: string, id: string, input: { expectedRevision: number; visibleHash: string; idempotencyKey: string; teacherReviewConfirmed?: boolean }) =>
     http<HomeworkDetail>(`${base(courseId, id)}/publish`, { method: 'POST', body: JSON.stringify(input) }),
   close: (courseId: string, id: string, expectedRevision: number) =>
     http<HomeworkDetail>(`${base(courseId, id)}/close`, { method: 'POST', body: JSON.stringify({ expectedRevision }) }),
