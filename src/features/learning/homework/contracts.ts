@@ -37,6 +37,7 @@ export interface HomeworkReport {
   independence: string
   weaknesses: string[]
   evidence: string[]
+  evidenceSources?: Array<{ messageId: string; excerpt: string }>
   manualReview: { reason: string; remainingDoubts: string[] } | null
 }
 export interface HomeworkSubmission {
