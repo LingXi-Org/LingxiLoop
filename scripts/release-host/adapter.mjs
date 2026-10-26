@@ -161,7 +161,7 @@ export class ComposeAdapter {
     requireValue(endpoint, 'CONTROL_NOT_CONFIGURED', `Independent ${action} control endpoint is required`)
     if (endpoint.argv) {
       try { return await runFixedHelper(endpoint.argv,body,endpoint.timeoutMs ?? 30000) }
-      catch (error) { error.uncertain = method !== 'GET'; throw error }
+      catch (error) { if(!(error.outcomeKnown===true && error.uncertain===false))error.uncertain = method !== 'GET'; throw error }
     }
     const headers = { 'content-type': 'application/json' }
     if (endpoint.tokenFile) headers.authorization = `Bearer ${(await readFile(endpoint.tokenFile, 'utf8')).trim()}`

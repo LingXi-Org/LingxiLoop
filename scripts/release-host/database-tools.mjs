@@ -67,6 +67,7 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
   const dump = join(directory,'backup.dump'), backupFile = join(directory,'backup.json'), verifiedFile = join(directory,'restore-verified.json')
   const migrationContainer = `lingxi_migrate_${createHash('sha256').update(`${op.releaseId}:${op.manifestHash}`).digest('hex').slice(0,24)}`
   const isolated = `lingxi_verify_${createHash('sha256').update(`${op.releaseId}:${op.manifestHash}`).digest('hex').slice(0,24)}`
+  const patch=plan.database.runtimePatch,patchIntentFile=join(directory,'runtime-patch-intent.json'),migrationIntentFile=join(directory,'runtime-patch-migration-intent.json')
   const readBackup = async () => {
     let receipt
     try { receipt=JSON.parse(await readFile(backupFile,'utf8')) } catch(error) { if(error.code!=='ENOENT')throw error;receipt=JSON.parse(await readFile(join(directory,'local-backup.json'),'utf8')) }
@@ -118,16 +119,33 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     const countsHash = hash(await tableCounts(policy,isolated,run))
     requireThat(sameSchemas(restored,backup.source) && hash(restored.migrations) === backup.source.migrationsHash && countsHash === backup.countsHash,'RESTORE_VERIFY_MISMATCH','Isolated restore ledger or all-table counts differ from the source')
     const receipt = { complete:true,manifestHash:op.manifestHash,dumpHash:backup.dumpHash,countsHash,restoredSchema:{ nativeSchema:restored.nativeSchema,productSchema:restored.productSchema },cleanupErrors:[] }
-    // Persist completed verification before cleanup; cleanup failure cannot turn restore verification into a false failure.
-    await writeReceipt(verifiedFile,receipt)
+    // Other database plans retain independent cleanup errors; runtimePatch must
+    // additionally prove completed cleanup and the exact read-only source below.
+    if(!patch)await writeReceipt(verifiedFile,receipt)
     try { await run(['exec','--user','postgres',database.container,'dropdb','--username',database.user,isolated]) }
     catch { receipt.cleanupErrors.push({ code:'ISOLATED_DATABASE_CLEANUP_FAILED',message:'Verified temporary database remains for restricted deterministic GC' }) }
     await writeReceipt(join(directory,'restore-cleanup.json'),{ complete:receipt.cleanupErrors.length === 0,error:receipt.cleanupErrors[0] ?? null })
+    if(patch){
+      // An isolated restore/cleanup unknown must never be relabelled as a known
+      // read-only source refusal. Only this completed-cleanup branch can do so.
+      if(receipt.cleanupErrors.length)throw Object.assign(fault('ISOLATED_DATABASE_CLEANUP_OUTCOME_UNKNOWN','Isolated restore cleanup must be observed before runtime preflight'),{uncertain:true})
+      requireThat(op.phase==='restore-verify' && !await readOptional(patchIntentFile) && !await readOptional(migrationIntentFile),'RUNTIME_PATCH_OUTCOME_UNRESOLVED','Source preflight requires the restore verification phase before any runtime or migration intent')
+      try{
+        await assertDrained()
+        const proof=await patchCall(await migrationContext(),'observe')
+        requireThat(proof.state==='source' && proof.complete===false,'DATABASE_SOURCE_CHANGED','Restore verification runtime preflight must prove the exact source')
+        receipt.runtimePatchPreflight=proof
+      }catch{
+        // The qualified fixed observer is read-only. There has been no CAS or
+        // migration intent, and all isolated restore effects above are known.
+        throw Object.assign(fault('RUNTIME_PATCH_PREFLIGHT_REFUSED','Fixed read-only runtime source preflight refused before migration'),{outcomeKnown:true,uncertain:false})
+      }
+      await writeReceipt(verifiedFile,receipt)
+    }
     return receipt
   }
-  const patch=plan.database.runtimePatch,patchIntentFile=join(directory,'runtime-patch-intent.json'),migrationIntentFile=join(directory,'runtime-patch-migration-intent.json')
-  const readOptional=async path=>{try{return JSON.parse(await readFile(path,'utf8'))}catch(error){if(error.code==='ENOENT')return null;throw error}}
-  const migrationContext=async()=>{
+  async function readOptional(path){try{return JSON.parse(await readFile(path,'utf8'))}catch(error){if(error.code==='ENOENT')return null;throw error}}
+  async function migrationContext(){
     const migration=local.migration
     requireThat(migration && /^[a-zA-Z0-9][a-zA-Z0-9_.-]+$/.test(migration.service) && plan.images[migration.imageService],'MIGRATION_NOT_CONFIGURED','A fixed one-off migration service and qualified image are required')
     const files=configurationFiles(local,plan.configurationHash)
@@ -139,7 +157,7 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     requireThat(['postgres:','postgresql:'].includes(connection.protocol) && connection.hostname===database.migrationHostname && decodeURIComponent(connection.pathname.slice(1))===database.database && decodeURIComponent(connection.username)===database.user,'MIGRATION_DESTINATION_MISMATCH','The fixed migration environment does not address the independently verified database')
     return {migration,compose,identity}
   }
-  const patchCall=async(context,action)=>{
+  async function patchCall(context,action){
     const args=[...context.compose,'run','--rm','--no-deps','--pull','never','--no-TTY','--interactive','--entrypoint','node',...(action==='apply'?['--env','LINGXIOS_SCHEMA_UPGRADE_DRAINED=true']:[]),context.migration.service,'--import','tsx','server/src/runtime-patch-bin.ts',action]
     let result
     try{result=await helper([policy.dockerBinary??'/usr/bin/docker',...args],patch,1800000)}catch{throw Object.assign(fault('RUNTIME_PATCH_OUTCOME_UNRESOLVED','Fixed runtime patch helper did not confirm the immutable provenance outcome'),{uncertain:true})}
@@ -200,7 +218,7 @@ async function main() {
   for await (const chunk of process.stdin) { input += chunk; if (input.length > 1024*1024) throw Error('Input exceeds limit') }
   process.stdout.write(JSON.stringify(await databaseTool(JSON.parse(await readFile(policyPath,'utf8')),action,JSON.parse(input))))
 }
-const knownReadOnlyFailures=new Set(['DATABASE_SOURCE_CHANGED','DATABASE_WRITERS_ACTIVE','BACKUP_INVALID','BACKUP_SOURCE_CHANGED','RESTORE_VERIFY_MISMATCH','ARCHIVE_POLICY_REQUIRED','ARCHIVE_ENDPOINT_INVALID','ARCHIVE_TIMEOUT_INVALID','ARCHIVE_TOO_LARGE','LOCAL_BACKUP_HASH_MISMATCH','ARCHIVE_TOKEN_INVALID','ARCHIVE_IDENTITY_CONFLICT','ARCHIVE_UPLOAD_REJECTED','ARCHIVE_METADATA_REJECTED'])
+const knownReadOnlyFailures=new Set(['DATABASE_SOURCE_CHANGED','DATABASE_WRITERS_ACTIVE','BACKUP_INVALID','BACKUP_SOURCE_CHANGED','RESTORE_VERIFY_MISMATCH','RUNTIME_PATCH_PREFLIGHT_REFUSED','ARCHIVE_POLICY_REQUIRED','ARCHIVE_ENDPOINT_INVALID','ARCHIVE_TIMEOUT_INVALID','ARCHIVE_TOO_LARGE','LOCAL_BACKUP_HASH_MISMATCH','ARCHIVE_TOKEN_INVALID','ARCHIVE_IDENTITY_CONFLICT','ARCHIVE_UPLOAD_REJECTED','ARCHIVE_METADATA_REJECTED'])
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) main().catch(error => {
   const known=['backup','restoreVerify'].includes(process.argv[3])&&knownReadOnlyFailures.has(error.code)&&error.uncertain!==true
   process.stdout.write(JSON.stringify({error:{code:error.code??'DATABASE_TOOL_FAILED',message:error.code?error.message:'Trusted database helper failed',...(error.sqlState?{sqlState:error.sqlState}:{}),...(known?{outcomeKnown:true,uncertain:false}:error.uncertain===true?{uncertain:true}:{})}}));process.exitCode=1
