@@ -15,6 +15,7 @@ import { preserveCodeNewlines, usableDocument, type ContentDocument } from './do
 export interface ContentEditorHandle {
   insertImage(url: string, name: string): void
   removeFile(url: string): void
+  replaceSection(index: number, original: string, replacement: string): boolean
   focus(): void
 }
 
@@ -73,6 +74,17 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
   }, [editor, value, document, legacyFormat, legacyParagraphs, legacyParagraphKey])
   useImperativeHandle(ref, () => ({
     focus: () => editor.focus(),
+    replaceSection: (index, originalText, replacement) => {
+      if (disabled || !replacement.trim()) return false
+      const blocks = editor.document.filter(block => editor.blocksToMarkdownLossy([block]).trim())
+      const block = blocks[index]
+      // Match exactly what the teacher reviewed; preserve every unselected native block.
+      if (!block) return false
+      const section = usableDocument(document, value) ? editor.blocksToMarkdownLossy([block]).trim() : legacyParagraphs?.[index] ?? editor.blocksToMarkdownLossy([block]).trim()
+      if (section !== originalText) return false
+      editor.replaceBlocks([block], [{ type: 'paragraph', content: replacement.trim() }])
+      return true
+    },
     insertImage: (url, name) => {
       editor.insertBlocks([{ type: 'image', props: { url, name } }], editor.getTextCursorPosition().block, 'after')
       editor.focus()
@@ -82,7 +94,7 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
       editor.forEachBlock(block => { if ('url' in block.props && block.props.url === url) ids.push(block.id); return true })
       if (ids.length) editor.removeBlocks(ids)
     },
-  }), [editor])
+  }), [editor, disabled, document, value, legacyParagraphs])
   return <div data-content-editor className={`content-editor ${compact ? 'content-editor-compact' : ''}`} onFocusCapture={onFocus}
     onSubmit={event => event.stopPropagation()}>
     <NativeView editor={editor} editable={!disabled} theme={resolvedTheme === 'dark' ? 'dark' : 'light'} onChange={() => {

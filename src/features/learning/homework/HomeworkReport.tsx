@@ -6,7 +6,7 @@ import { type HomeworkCriterion, type HomeworkSubmission, homeworkStatus, type H
 
 export function HomeworkCriteria({ criteria, unverified = false }: { criteria: HomeworkCriterion[]; unverified?: boolean }) {
   return <ul className="space-y-3">{criteria.map((item, index) => <li key={index} className="space-y-1 border-s-2 ps-3 text-sm">
-    <div className="flex flex-wrap items-start gap-2"><span className="min-w-0 flex-1 font-medium">{item.criterion}</span><span className="text-xs text-muted-foreground">{unverified ? '未核实' : item.met && item.independent ? '已达成' : '待验证'}</span></div>
+    <div className="flex flex-wrap items-start gap-2"><span className="min-w-0 flex-1 font-medium">{item.criterion}</span><span className="text-xs text-muted-foreground">{item.reviewRequired ? '待教师判断' : unverified ? '未核实' : item.met && item.independent ? '已达成' : '待验证'}</span></div>
     {item.feedback && <p className="text-muted-foreground">{item.feedback}</p>}
   </li>)}</ul>
 }

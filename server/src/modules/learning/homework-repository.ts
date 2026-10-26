@@ -1,3 +1,4 @@
+import type { HomeworkValidationFinding } from './homework-validation.js'
 import type { ContentDocument } from '../content-editor/contracts.js'
 import { createHash } from 'node:crypto'
 import type { Queryable } from '../../db/queryable.js'
@@ -16,7 +17,7 @@ export interface HomeworkRow {
   id: string; company_id: string; project_id: string; course_id: string; created_by: string; status: 'DRAFT'|'PUBLISHED'|'CLOSED';
   editor_document?: ContentDocument | null; criteria_document?: ContentDocument | null; revision: number; title: string; instructions: string; criteria: string[]; links: string[]; attachments: LearningAttachment[];
   due_at: Date|null; visible_hash: string; validated_revision: number|null; validation_status: 'PENDING'|'READY'|'INVALID'|'MATERIAL_ERROR'|'ERROR';
-  validation_feedback: string; materials: HomeworkMaterial[]; publish_key: string|null
+  validation_findings?: HomeworkValidationFinding[]; validation_feedback: string; materials: HomeworkMaterial[]; publish_key: string|null
 }
 export interface HomeworkStateRow {
   company_id: string; project_id: string; homework_id: string; learner_id: string; agent_id: string|null; channel_id: string|null;
@@ -91,7 +92,7 @@ export async function studentHomeworkView(db:Queryable,hw:HomeworkRow,state:Home
 export function homeworkView(hw:HomeworkRow,userId:string) {
   return {id:hw.id,courseId:hw.course_id,title:hw.title,instructions:hw.instructions,editorDocument:hw.editor_document,criteria:hw.criteria,criteriaDocument:hw.criteria_document,links:hw.links,attachments:hw.attachments,
     dueAt:hw.due_at,status:hw.status,revision:hw.revision,visibleHash:hw.visible_hash,createdBy:hw.created_by,
-    validation:{status:hw.validation_status,revision:hw.validated_revision,feedback:hw.validation_feedback},
+    validation:{status:hw.validation_status,revision:hw.validated_revision,feedback:hw.validation_feedback,findings:hw.validation_findings ?? []},
     canEditDraft:hw.created_by===userId&&hw.status==='DRAFT',
     canPublish:hw.created_by===userId&&hw.status==='DRAFT'&&hw.validation_status==='READY'&&hw.validated_revision===hw.revision}
 }

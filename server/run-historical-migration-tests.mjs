@@ -8,6 +8,7 @@ import {execFile,spawn} from 'node:child_process'
 import {promisify} from 'node:util'
 const execute=promisify(execFile)
 const PATCH54=new Set(['runtime-patch-provenance.test.ts'])
+const PATCH57=new Set(['runtime-patch57-provenance.test.ts'])
 const HISTORICAL=new Set(['migration.test.ts','conversation-repair-provenance-migration.test.ts',
  'public-purpose-reader-migration.test.ts','run-trace-provenance-migration.test.ts','run-presentation-contract.test.ts'])
 // Historical presentation coverage needs the pre-v3 display leaves, not today's
@@ -18,21 +19,23 @@ const PROJECTION_FILES=[
  {path:'server/src/agent-runtime/message-projection.ts',sha256:'80f0e203665a6992e9017ff424aca79b361804d8406de7ea5579020afa15aac2'},
  {path:'src/lib/nativeMessage.ts',sha256:'2e845e9763b1a1bccafc345f91a7c172cf25391f86a40d215dfed1c57b836178'},
 ]
-// Freeze only the test fixture's real product54 prefix. Current production
+// Freeze only the test fixture's real product54/57 prefix. Current production
 // migrations, package manifests/locks and the strict CAS inventory stay intact.
-export async function copyProduct54FixtureSource(root,fixture){
+export const copyProduct54FixtureSource=(root,fixture)=>copyProductFixtureSource(root,fixture,54)
+export const copyProduct57FixtureSource=(root,fixture)=>copyProductFixtureSource(root,fixture,57)
+async function copyProductFixtureSource(root,fixture,productVersion){
  const directory=join(root,'server/src/db/migrations'),names=(await readdir(directory)).sort()
- assert.ok(names.length>=54&&names.every((name,index)=>new RegExp('^'+String(index+1).padStart(4,'0')+'_[a-z0-9_]+\\.sql$').test(name)),'Product54 fixture requires a complete contiguous source inventory')
- const prefix=names.slice(0,54),allowed=new Set(prefix)
+ assert.ok(names.length>=productVersion&&names.every((name,index)=>new RegExp('^'+String(index+1).padStart(4,'0')+'_[a-z0-9_]+\\.sql$').test(name)),'Product fixture requires a complete contiguous source inventory')
+ const prefix=names.slice(0,productVersion),allowed=new Set(prefix)
  await cp(join(root,'server/src'),join(fixture,'server/src'),{recursive:true,filter:path=>!path.startsWith(directory+'/')||allowed.has(basename(path))})
  await cp(join(root,'src'),join(fixture,'src'),{recursive:true})
  for(const path of ['package.json','package-lock.json','server/package.json','server/package-lock.json'])await cp(join(root,path),join(fixture,path))
- assert.deepEqual((await readdir(join(fixture,'server/src/db/migrations'))).sort(),prefix,'Fixture must contain exactly product54')
+ assert.deepEqual((await readdir(join(fixture,'server/src/db/migrations'))).sort(),prefix,`Fixture must contain exactly product${productVersion}`)
  const migrations=await Promise.all(prefix.map(async(name,index)=>{
-  const bytes=await readFile(join(directory,name));assert.deepEqual(await readFile(join(fixture,'server/src/db/migrations',name)),bytes,'Product54 migration bytes changed')
+  const bytes=await readFile(join(directory,name));assert.deepEqual(await readFile(join(fixture,'server/src/db/migrations',name)),bytes,'Product fixture migration bytes changed')
   return {version:index+1,name:name.slice(5,-4),checksum:createHash('sha256').update(bytes).digest('hex')}
  }))
- return {productVersion:54,migrations,sourceProductVersion:names.length}
+ return {productVersion,migrations,sourceProductVersion:names.length}
 }
 export async function copyHistoricalFixtureSource(root,fixture){
  const snapshots=await Promise.all(PROJECTION_FILES.map(async row=>{
@@ -45,9 +48,9 @@ export async function copyHistoricalFixtureSource(root,fixture){
  return {sourceCommit:PROJECTION_SOURCE,files:PROJECTION_FILES.map(row=>({...row})),product54}
 }
 export function partitionMigrationTests(files){
- const historical=files.filter(f=>HISTORICAL.has(f)),patch54=files.filter(f=>PATCH54.has(f)),current=files.filter(f=>!HISTORICAL.has(f)&&!PATCH54.has(f))
+ const historical=files.filter(f=>HISTORICAL.has(f)),patch54=files.filter(f=>PATCH54.has(f)),patch57=files.filter(f=>PATCH57.has(f)),current=files.filter(f=>!HISTORICAL.has(f)&&!PATCH54.has(f)&&!PATCH57.has(f))
  if(historical.length&&!patch54.length)patch54.push('runtime-patch-provenance.test.ts')
- return {current,patch54,historical}
+ return {current,patch54,patch57,historical}
 }
 function assertFixtureTarget(files,env,allowed){
  let url;try{url=new URL(env.INTEGRATION_DATABASE_URL)}catch{throw Error('Historical fixtures require a dedicated local test database')}
@@ -74,21 +77,23 @@ export function runTestChild(args,{cwd,env=process.env,timeout=600_000}={}){
   child.once('error',()=>resolve(1));child.once('exit',code=>resolve(code??1))
  })
 }
-export async function runProduct54MigrationTests(root,files,env=process.env){
- assertProduct54FixtureTarget(files,env)
- const fixture=await mkdtemp(join(tmpdir(),'lingxiloop-current-product54-'))
+export const runProduct54MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,54)
+export const runProduct57MigrationTests=(root,files,env=process.env)=>runProductMigrationTests(root,files,env,57)
+async function runProductMigrationTests(root,files,env,productVersion){
+ assertFixtureTarget(files,env,productVersion===54?PATCH54:PATCH57)
+ const fixture=await mkdtemp(join(tmpdir(),`lingxiloop-current-product${productVersion}-`))
  try{
   env={...env,DATABASE_URL:env.INTEGRATION_DATABASE_URL,DOTENV_CONFIG_PATH:join(fixture,'.no-fixture-env')}
-  const profile=await copyProduct54FixtureSource(root,fixture)
+  const profile=await copyProductFixtureSource(root,fixture,productVersion)
   await symlink(join(root,'node_modules'),join(fixture,'node_modules'),'junction')
   // Four actual current manifests/locks are copied verbatim; borrow the exact
   // installed formal package and dependencies read-only, without version edits.
   const lock=JSON.parse(await readFile(join(root,'server/package-lock.json'),'utf8')).packages['node_modules/@lyyzka/lingxios']
   assert.ok(lock?.version&&lock.integrity&&lock.resolved,'Current formal runtime lock required')
-  const prove=`import assert from 'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';import{loadRuntimePatchInventory}from'./server/src/db/runtime-patch.ts';const locked=await loadLockedRuntimePackage();assert.equal(releaseVersions.runtime,${JSON.stringify(lock.version)});assert.equal(locked.runtime,${JSON.stringify(lock.version)});assert.equal(locked.integrity,${JSON.stringify(lock.integrity)});assert.equal(locked.tarball,${JSON.stringify(lock.resolved)});assert.equal((await loadRuntimePatchInventory()).length,54);console.log('[integration product54] actual formal runtime '+releaseVersions.runtime+'; exact current four manifests/locks; frozen54 migrations');`
+  const prove=`import assert from 'node:assert/strict';import{releaseVersions}from'@lyyzka/lingxios';import{loadLockedRuntimePackage}from'./server/src/db/runtime-profile.ts';import{loadRuntimePatchInventory}from'./server/src/db/runtime-patch.ts';const locked=await loadLockedRuntimePackage();assert.equal(releaseVersions.runtime,${JSON.stringify(lock.version)});assert.equal(locked.runtime,${JSON.stringify(lock.version)});assert.equal(locked.integrity,${JSON.stringify(lock.integrity)});assert.equal(locked.tarball,${JSON.stringify(lock.resolved)});assert.equal((await loadRuntimePatchInventory(${productVersion})).length,${productVersion});console.log('[integration product${productVersion}] actual formal runtime '+releaseVersions.runtime+'; exact current four manifests/locks; frozen${productVersion} migrations');`
   if(await runTestChild(['--import','tsx','--input-type=module','-e',prove],{cwd:fixture,env,timeout:30_000}))return 1
-  if(profile.sourceProductVersion>54){
-   const reject=`import assert from 'node:assert/strict';import{loadRuntimePatchInventory}from'./server/src/db/runtime-patch.ts';await assert.rejects(loadRuntimePatchInventory(),/Runtime patch requires complete product54 inventory/);console.log('[integration product54] current product${profile.sourceProductVersion} checkout correctly rejects strict production CAS inventory');`
+  if(profile.sourceProductVersion>productVersion){
+   const reject=`import assert from 'node:assert/strict';import{loadRuntimePatchInventory}from'./server/src/db/runtime-patch.ts';await assert.rejects(loadRuntimePatchInventory(${productVersion}),/Runtime patch requires complete product${productVersion} inventory/);console.log('[integration product${productVersion}] current product${profile.sourceProductVersion} checkout correctly rejects strict production CAS inventory');`
    if(await runTestChild(['--import','tsx','--input-type=module','-e',reject],{cwd:root,env,timeout:30_000}))return 1
   }
   return await runTestChild(['--import','tsx','--experimental-test-module-mocks','--test','--test-reporter=tap','--test-concurrency=1','--test-force-exit',

@@ -85,7 +85,7 @@ function Learner({ learner, homework, canReview, onChanged }: { learner: Homewor
   return <MemoCard label={learner.learnerName} author={learner.learnerName} authorId={learner.learnerId} authorAvatarUrl={learner.learnerAvatarUrl} authorDetail={learner.learnerId} createdAt={submission?.submittedAt}
     disclosure={{ref:trigger,expanded:open,controls:`${id}-answer`,onToggle:()=>open?collapse():expand()}} actions={<span className="text-xs text-muted-foreground">{submission?`第 ${submission.version} 版`:'尚未提交'}</span>}>
     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-    <span>{submission?(submission.report.verification==='unverified'?'证据不足 / 无法判断':submission.report.criteria.length>0&&submission.report.criteria.every(c=>c.met&&c.independent)?'已掌握':'尚需巩固'):homeworkStatus[learner.status]}</span>
+    <span>{submission?(submission.report.verification==='unverified'?'证据不足 / 无法判断':submission.report.criteria.some(c=>c.reviewRequired)?'待教师判断':submission.report.criteria.length>0&&submission.report.criteria.every(c=>c.met&&c.independent)?'已掌握':'尚需巩固'):homeworkStatus[learner.status]}</span>
     {submission?.conversationReferences?.length?<a className="underline focus-visible:outline-2" href={`#${submission.id}-reference-0`} onClick={event=>{event.preventDefault();expand();setReference(true)}}>引用对话</a>:<span>未关联对话</span>}</div>
     {open&&<div id={`${id}-answer`} className="w-full space-y-3 pt-2">
     {learner.missingCriteria.length > 0 && <div className="space-y-1 text-sm"><p className="font-medium">待核实或待巩固</p><ul className="list-disc space-y-1 ps-5 text-muted-foreground">{learner.missingCriteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul></div>}

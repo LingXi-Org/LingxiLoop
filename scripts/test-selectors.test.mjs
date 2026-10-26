@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import test from 'node:test'
 import { SMOKE_FILES, parseIntegrationArgs, selectIntegrationFiles } from '../server/integration-suite.mjs'
-import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact, copyProduct54FixtureSource, assertProduct54FixtureTarget } from '../server/run-historical-migration-tests.mjs'
+import { partitionMigrationTests, assertHistoricalFixtureTarget, assertHistoricalArtifact, copyProduct54FixtureSource, copyProduct57FixtureSource, assertProduct54FixtureTarget } from '../server/run-historical-migration-tests.mjs'
 import { createHash } from 'node:crypto'
 import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -52,7 +52,8 @@ test('historical migration routing retains every requested file and adds current
  assert.deepEqual(result.historical,historical)
  assert.deepEqual(result.current,['closed-education.test.ts'])
  assert.deepEqual(result.patch54,['runtime-patch-provenance.test.ts'])
- assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:[],patch54:['runtime-patch-provenance.test.ts'],historical:[]})
+ assert.deepEqual(partitionMigrationTests(['runtime-patch57-provenance.test.ts','homework-findings-migration.test.ts']),{current:['homework-findings-migration.test.ts'],patch54:[],patch57:['runtime-patch57-provenance.test.ts'],historical:[]})
+ assert.deepEqual(partitionMigrationTests(['runtime-patch-provenance.test.ts']),{current:[],patch54:['runtime-patch-provenance.test.ts'],patch57:[],historical:[]})
 })
 test('product54 fixture copies the exact contiguous prefix and four current manifests without mutating55 source',async()=>{
  const root=await mkdtemp(join(tmpdir(),'product54-source-owner-'))
@@ -69,6 +70,24 @@ test('product54 fixture copies the exact contiguous prefix and four current mani
   await assert.rejects(readFile(join(fixture,'server/src/db/migrations/0055_fixture.sql')),{code:'ENOENT'});assert.match(await readFile(join(migrations,'0055_fixture.sql'),'utf8'),/55/)
   for(const path of paths)assert.deepEqual(await readFile(join(fixture,path)),await readFile(join(source,path)))
   await rm(join(migrations,'0030_fixture.sql'));await assert.rejects(copyProduct54FixtureSource(source,join(root,'gap')),/contiguous/)
+ }finally{await rm(root,{recursive:true,force:true})}
+})
+
+test('product57 fixture keeps CAS57 exact without removing product58 from the real source',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'product57-source-owner-'))
+ try{
+  const source=join(root,'source'),fixture=join(root,'fixture')
+  const paths=['package.json','package-lock.json','server/package.json','server/package-lock.json','server/src/db/runtime-patch.ts','src/lib/nativeMessage.ts']
+  for(const path of paths){await mkdir(join(source,path,'..'),{recursive:true});await writeFile(join(source,path),'exact current bytes '+path)}
+  const migrations=join(source,'server/src/db/migrations');await mkdir(migrations,{recursive:true})
+  for(let i=1;i<=58;i++)await writeFile(join(migrations,String(i).padStart(4,'0')+'_fixture.sql'),'-- migration '+i+'\n')
+  const result=await copyProduct57FixtureSource(source,fixture);assert.equal(result.migrations.length,57)
+  for(const [i,row] of result.migrations.entries()){
+   const name=String(i+1).padStart(4,'0')+'_fixture.sql',bytes=await readFile(join(migrations,name));assert.deepEqual(await readFile(join(fixture,'server/src/db/migrations',name)),bytes);assert.equal(row.checksum,createHash('sha256').update(bytes).digest('hex'))
+  }
+  await assert.rejects(readFile(join(fixture,'server/src/db/migrations/0058_fixture.sql')),{code:'ENOENT'});assert.match(await readFile(join(migrations,'0058_fixture.sql'),'utf8'),/58/)
+  for(const path of paths)assert.deepEqual(await readFile(join(fixture,path)),await readFile(join(source,path)))
+  await rm(join(migrations,'0030_fixture.sql'));await assert.rejects(copyProduct57FixtureSource(source,join(root,'gap')),/contiguous/)
  }finally{await rm(root,{recursive:true,force:true})}
 })
 

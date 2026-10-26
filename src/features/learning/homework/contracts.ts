@@ -2,7 +2,12 @@ import type { ContentDocument } from '@/features/content-editor'
 import type { ConversationEvidence, ForumAttachment } from '../forum/contracts'
 
 export interface HomeworkAnswer { text: string; editorDocument?: ContentDocument | null; links: string[]; attachments: ForumAttachment[] }
-export interface HomeworkCriterion { criterion: string; met: boolean; independent: boolean; feedback: string }
+export interface HomeworkCriterion { reviewRequired?: boolean; criterion: string; met: boolean; independent: boolean; feedback: string }
+export interface HomeworkValidationFinding {
+  field: 'title' | 'instructions' | 'criteria'; severity: 'blocker' | 'suggestion' | 'teacher_review'
+  excerpt: string; original: string; criterionIndex: number | null; reason: string; suggestion: string
+  replacement?: string; observableEvidence?: string; teacherReview?: string; instructionChange?: string
+}
 export interface Homework {
   id: string
   courseId: string
@@ -18,7 +23,7 @@ export interface Homework {
   revision: number
   visibleHash: string
   createdBy: string
-  validation: { status: 'PENDING' | 'READY' | 'INVALID' | 'MATERIAL_ERROR' | 'ERROR'; revision: number | null; feedback: string }
+  validation: { status: 'PENDING' | 'READY' | 'INVALID' | 'MATERIAL_ERROR' | 'ERROR'; revision: number | null; feedback: string; findings?: HomeworkValidationFinding[] }
   canPublish: boolean
   canEditDraft: boolean
 }

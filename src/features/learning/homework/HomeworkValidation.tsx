@@ -10,6 +10,7 @@ export function HomeworkValidation({ validation, dirty, busy, onRetry }: {
 }) {
   if (dirty) return <p role="status" className="text-sm text-muted-foreground">请先保存修改，重新检查后再确认发布。</p>
   if (validation.status === 'PENDING') return <p role="status" className="text-sm text-muted-foreground">正在检查要求与资料，完成后可以确认发布。</p>
+  if (validation.status === 'READY' && validation.findings?.length) return <p role="status" className="text-sm text-muted-foreground">必要一致性检查已完成。建议可自行选择；需教师复核的项目请确认后发布。</p>
   if (validation.status === 'READY') return validation.feedback ? <p role="status" className="text-sm text-muted-foreground">{validation.feedback}</p> : null
   const serviceError = validation.status === 'ERROR'
   const materialError = validation.status === 'MATERIAL_ERROR'

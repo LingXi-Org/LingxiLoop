@@ -1,5 +1,5 @@
 import { criteriaSource } from '@/features/content-editor/document'
-import type { ContentDocument } from '@/features/content-editor'
+import type { ContentDocument, ContentEditorHandle } from '@/features/content-editor'
 import { type ToolCallMessagePartProps, useAuiState } from '@assistant-ui/react'
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { z } from 'zod'
@@ -15,6 +15,7 @@ import { contentLinks, ForumContentFields, ForumFiles } from '../forum/ForumCont
 import { ForumBody } from '../forum/ForumBody'
 import { homeworkApi } from './api'
 import { canPublishHomeworkDraft, localDeadline, type Homework } from './contracts'
+import { HomeworkSuggestions } from './HomeworkSuggestions'
 import { HomeworkValidation } from './HomeworkValidation'
 
 const resultSchema = z.object({ value: z.object({ result: z.object({ homeworkId: z.string().min(1), courseId: z.string().min(1) }) }) })
@@ -31,6 +32,8 @@ export function HomeworkDraftTool({ result, status, isError, readOnly = false }:
 
 export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, onViewForum }: { courseId: string; homeworkId: string; readOnly: boolean; preparing: boolean; onViewForum?(): void }) {
   const id = useId()
+  const criteriaEditor = useRef<ContentEditorHandle>(null)
+  const [teacherReviewConfirmed, setTeacherReviewConfirmed] = useState(false)
   const [editorDocument,setEditorDocument]=useState<ContentDocument | null>(null)
   const [criteriaItems,setCriteriaItems]=useState<string[]>([])
   const [criteriaDocument,setCriteriaDocument]=useState<ContentDocument | null>(null)
@@ -42,7 +45,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
   const rechecking = useRef(false)
   const epoch = useRef(0), dirtyRef = useRef(false)
   const install = useCallback((next: Homework) => {
-    epoch.current++; dirtyRef.current = false
+    epoch.current++; dirtyRef.current = false; setTeacherReviewConfirmed(false)
     setHomework(next); setTitle(next.title); setInstructions(next.instructions); setEditorDocument(next.editorDocument ?? null); setCriteria(criteriaSource(next.criteria,next.criteriaDocument)); setCriteriaItems(next.criteria); setCriteriaDocument(next.criteriaDocument ?? null); setDueAt(localDeadline(next.dueAt))
     setLinks(next.links.join('\n')); setAttachments(next.attachments); setDirty(false)
   }, [])
@@ -61,7 +64,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
     return () => clearInterval(timer)
   }, [dirty, busy, homework?.validation.status, load])
   const disabled = busy || uploading || preparing || readOnly || !homework?.canEditDraft
-  const edited = (change: () => void) => { epoch.current++; dirtyRef.current = true; change(); setDirty(true) }
+  const edited = (change: () => void) => { epoch.current++; dirtyRef.current = true; setTeacherReviewConfirmed(false); change(); setDirty(true) }
   return <Card aria-label="作业草稿" data-homework-id={homeworkId} className="w-full min-w-0 max-w-2xl [overflow-wrap:anywhere]">
     <CardHeader><CardTitle>作业草稿</CardTitle><CardDescription>确认下面的内容后，作业才会发布到课程论坛。</CardDescription></CardHeader>
     <CardContent className="space-y-4">
@@ -83,10 +86,15 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
         <div className="space-y-2"><Label htmlFor={`${id}-title`}>作业标题</Label><Input id={`${id}-title`} value={title} maxLength={200} required disabled={disabled} onChange={event => edited(() => setTitle(event.target.value))} /></div>
         <ForumContentFields label="作业要求" body={instructions} editorDocument={editorDocument} setBody={(value,document) => edited(() => {setInstructions(value);setEditorDocument(document ?? null)})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} />
         <section className="space-y-2"><h4 className="text-sm font-medium">验收标准</h4>
-          <ForumContentFields label="验收标准" body={criteria} editorDocument={criteriaDocument} legacyParagraphs={criteriaItems} setBody={(value,document,sections) => edited(() => {setCriteria(value);setCriteriaDocument(document ?? null);setCriteriaItems(sections ?? value.split('\n').filter(Boolean))})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} nativeOnly maxLength={10000}/>
+          <ForumContentFields editorRef={criteriaEditor} label="验收标准" body={criteria} editorDocument={criteriaDocument} legacyParagraphs={criteriaItems} setBody={(value,document,sections) => edited(() => {setCriteria(value);setCriteriaDocument(document ?? null);setCriteriaItems(sections ?? value.split('\n').filter(Boolean))})} links={links} setLinks={value => edited(() => setLinks(value))} attachments={attachments} setAttachments={value => edited(() => setAttachments(value))} disabled={disabled} onUploading={setUploading} nativeOnly maxLength={10000}/>
           <p className="text-xs text-muted-foreground">每段一条标准，最多 20 条；保存后按标准核验作答。</p>
         </section>
         <div className="space-y-2"><Label htmlFor={`${id}-due`}>截止时间</Label><Input id={`${id}-due`} className="max-w-xs" type="datetime-local" value={dueAt} disabled={disabled} onChange={event => edited(() => setDueAt(event.target.value))} /></div>
+        <HomeworkSuggestions key={homework.revision} findings={homework.validation.findings ?? []} criteria={criteriaItems} busy={disabled}
+          onApply={(finding, replacement) => {
+            if (disabled || finding.criterionIndex === null || criteriaItems[finding.criterionIndex] !== finding.original) return
+            if (!criteriaEditor.current?.replaceSection(finding.criterionIndex, finding.original, replacement)) setError('标准已变化，请核对编辑器中的最新内容后手动修改。')
+          }} />
         <HomeworkValidation validation={homework.validation} dirty={dirty} busy={disabled} onRetry={async () => {
           if (disabled || dirtyRef.current || rechecking.current || homework.validation.status === 'PENDING') return
           rechecking.current = true; epoch.current++; setBusy(true); setError('')
@@ -94,14 +102,18 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
           catch (reason) { setError(`${userFacingError(reason, '检查未能开始，请重试。')} 当前输入和附件已保留。`) }
           finally { rechecking.current = false; setBusy(false) }
         }} />
+        {!dirty && homework.validation.status === 'READY' && homework.validation.findings?.some(item => item.severity === 'teacher_review') && <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1 focus-visible:outline-2" checked={teacherReviewConfirmed} disabled={disabled} onChange={event => setTeacherReviewConfirmed(event.target.checked)} />
+          我保留上述需教师复核的标准，并确认由教师判断；AI 仅辅助整理证据。
+        </label>}
         {!homework.canEditDraft && <p className="text-sm text-muted-foreground">请由发起这份作业的教师确认发布。</p>}
         <div className="flex flex-wrap gap-2">
           <Button type="submit" variant="outline" disabled={disabled || !dirty || !title.trim() || !instructions.trim() || !criteria.trim()}>保存修改</Button>
-          <Button type="button" disabled={disabled || !canPublishHomeworkDraft(homework, dirty)} onClick={async () => {
-            if (disabled || !canPublishHomeworkDraft(homework, dirtyRef.current)) return
+          <Button type="button" disabled={disabled || !canPublishHomeworkDraft(homework, dirty) || Boolean(homework.validation.findings?.some(item => item.severity === 'teacher_review') && !teacherReviewConfirmed)} onClick={async () => {
+            if (disabled || !canPublishHomeworkDraft(homework, dirtyRef.current) || homework.validation.findings?.some(item => item.severity === 'teacher_review') && !teacherReviewConfirmed) return
             if (pending.current?.revision !== homework.revision) pending.current = { revision: homework.revision, key: crypto.randomUUID() }
             epoch.current++; setBusy(true); setError('')
-            try { install((await homeworkApi.publish(courseId, homeworkId, { expectedRevision: homework.revision, visibleHash: homework.visibleHash, idempotencyKey: pending.current.key })).homework) }
+            try { install((await homeworkApi.publish(courseId, homeworkId, { expectedRevision: homework.revision, visibleHash: homework.visibleHash, idempotencyKey: pending.current.key, teacherReviewConfirmed })).homework) }
             catch (reason) { setError(userFacingError(reason, '作业未能发布，请核对最新草稿后重试。')) }
             finally { setBusy(false) }
           }}>{busy ? '处理中…' : '确认发布'}</Button>

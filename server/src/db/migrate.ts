@@ -199,8 +199,9 @@ export async function migrateDatabase(
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
-  // Product55/56/57 change product state only, on the same formally locked runtime.
-  const full57=migrations.length===57&&migrations[56]?.name==='case_soft_delete'
+  // Product55/56/57/58 change product state only, on the same formally locked runtime.
+  const full58=migrations.length===58&&migrations[57]?.name==='homework_validation_findings'
+  const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'
   const full55=(migrations.length===55||full56)&&migrations[54]?.name==='case_covers'
   const full54=(migrations.length===54||full55)&&migrations[53]?.name==='run_presentation_contract'
@@ -230,7 +231,7 @@ export async function migrateDatabase(
 
     const applied = await appliedMigrations(client)
     validateApplied(migrations, applied)
-    if(full54)assertFull54InstallBoundary(applied.length,releaseVersions.runtime,full57?57:full56?56:full55?55:54)
+    if(full54)assertFull54InstallBoundary(applied.length,releaseVersions.runtime,full58?58:full57?57:full56?56:full55?55:54)
     const installsRuntime = migrations.some(migration => migration.version === NATIVE_INSTALL_VERSION && migration.name === 'lingxios_native_runtime')
     const hasReliabilityUpgrade = migrations.some(migration => migration.version === RELIABILITY_UPGRADE_VERSION && migration.name === 'lingxios_3_5_0')
     const hasContinuityUpgrade = migrations.some(migration=>migration.version===47 && migration.name==='memory_continuity')
@@ -261,7 +262,8 @@ export async function migrateDatabase(
         }
         if (migration.version===55 && migration.name==='case_covers'
           || migration.version===56 && migration.name==='homework_validation_status'
-          || migration.version===57 && migration.name==='case_soft_delete') {
+          || migration.version===57 && migration.name==='case_soft_delete'
+          || migration.version===58 && migration.name==='homework_validation_findings') {
           await assertRuntimeCurrent(client,14,releaseVersions.runtime)
         }
         await client.query(migration.sql)
@@ -347,8 +349,9 @@ export async function assertMigrationsCurrent(
   const hasPurposeReader = migrations.some(migration => migration.version===51 && migration.name==='public_text_reader')
   const hasRunTrace = migrations.some(migration => migration.version===52 && migration.name==='run_trace_provenance')
   const hasConversationRepair = migrations.some(migration => migration.version===53 && migration.name==='conversation_repair_provenance')
-  // Product55/56/57 change product state only, on the same formally locked runtime.
-  const full57=migrations.length===57&&migrations[56]?.name==='case_soft_delete'
+  // Product55/56/57/58 change product state only, on the same formally locked runtime.
+  const full58=migrations.length===58&&migrations[57]?.name==='homework_validation_findings'
+  const full57=(migrations.length===57||full58)&&migrations[56]?.name==='case_soft_delete'
   const full56=(migrations.length===56||full57)&&migrations[55]?.name==='homework_validation_status'
   const full55=(migrations.length===55||full56)&&migrations[54]?.name==='case_covers'
   const full54=(migrations.length===54||full55)&&migrations[53]?.name==='run_presentation_contract'

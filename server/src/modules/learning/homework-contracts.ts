@@ -11,7 +11,7 @@ export const homeworkDraftSchema = z.object({
   ...learningContentFields, criteriaDocument: optionalContentDocument, dueAt: z.string().datetime().nullable().default(null),
 }).strict().refine(value => matchesProjection(value.editorDocument, value.instructions) && (!value.criteriaDocument || JSON.stringify(value.criteriaDocument.sections) === JSON.stringify(value.criteria)), 'native requirements and criteria must match their text')
 export const homeworkEditSchema = homeworkDraftSchema.safeExtend({ expectedRevision: revision })
-export const homeworkPublishSchema = z.object({ expectedRevision: revision, visibleHash: z.string().length(64), idempotencyKey: id.min(8) }).strict()
+export const homeworkPublishSchema = z.object({ expectedRevision: revision, visibleHash: z.string().length(64), idempotencyKey: id.min(8), teacherReviewConfirmed: z.boolean().optional() }).strict()
 export const homeworkRevisionSchema = z.object({ expectedRevision: revision }).strict()
 export const homeworkDeadlineSchema = homeworkRevisionSchema.extend({ dueAt: z.string().datetime() })
 export const homeworkAnswerSchema = z.object({ text: z.string().max(20000).default(''), ...learningContentFields }).strict().refine(value => matchesProjection(value.editorDocument, value.text), 'native answer and text must be saved together')
@@ -30,7 +30,9 @@ export const homeworkJudgmentSchema = z.object({
 }).strict()
 export type HomeworkDraft = z.input<typeof homeworkDraftSchema>
 export type HomeworkAnswer = z.output<typeof homeworkAnswerSchema>
-export type HomeworkJudgment = z.output<typeof homeworkJudgmentSchema>
+export type HomeworkJudgment = Omit<z.output<typeof homeworkJudgmentSchema>, 'criteria'> & {
+  criteria: Array<z.output<typeof homeworkCriterionSchema> & { reviewRequired?: boolean }>
+}
 export type HomeworkReport = Omit<HomeworkJudgment,'evidence'> & {
   id: string; answerRevision: number; homeworkRevision: number; answerHash: string; evidenceRevision: number; returnEpoch: number;
   evidenceHash: string; conversationSequence: number; verification?: 'verified'|'unverified'; coverage?: { messageCount:number; truncated:boolean };

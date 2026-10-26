@@ -73,14 +73,20 @@ test('case deletion product57 accepts complete product upgrades without admittin
   assert.throws(()=>assertFull54InstallBoundary(57,'3.8.12',56),/historical package/)
 })
 
-const migrations57=readdirSync(new URL('../db/migrations/',import.meta.url)).sort().map(file=>({
+const currentMigrations=readdirSync(new URL('../db/migrations/',import.meta.url)).sort().map(file=>({
  version:Number(file.slice(0,4)),name:file.slice(5,-4),checksum:createHash('sha256').update(readFileSync(new URL('../db/migrations/'+file,import.meta.url))).digest('hex'),
 }))
+const migrations57=currentMigrations.slice(0,57)
 const source57={runtime:'3.8.12',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:57,migrations:migrations57}
 const target57={...source57,runtime:'3.8.14'}
-test('product57 exact12 to14 CAS qualifies the entire real named57 inventory without changing native schema',async()=>{
+test('product57 exact12 to14 descriptors retain the real named57 prefix while the production checkout must be exactly57',async()=>{
  assert.doesNotThrow(()=>assertRuntimePatchDescriptors(source57,target57))
- assert.deepEqual(await loadRuntimePatchInventory(57),migrations57)
+ assert.equal(migrations57.length,57)
+ if(currentMigrations.length===57)assert.deepEqual(await loadRuntimePatchInventory(57),migrations57)
+ else{
+  await assert.rejects(loadRuntimePatchInventory(57),/Runtime patch requires complete product57 inventory/)
+  assert.throws(()=>assertRuntimePatchDescriptors({...source57,migrations:currentMigrations},{...target57,migrations:currentMigrations}),/complete product57/)
+ }
 })
 test('product57 CAS refuses other runtime transitions, partial/renamed/rewritten inventory and schema drift',()=>{
  for(const mutate of [(d:typeof target57)=>{d.runtime='3.8.15'},(d:typeof target57)=>{d.productVersion=56},
@@ -137,4 +143,9 @@ test('formal package proof rejects a fixture lock/integrity before opening a dat
  const rejected=/Exact formal runtime patch package\/locks required|exact formal runtime package and matching root\/server manifests\/locks required/
  await assert.rejects(applyPublishedRuntimePatch(database,source57,published57),rejected)
  await assert.rejects(observePublishedRuntimePatch(database,source57,published57),rejected)
+})
+
+test('product58 upgrade accepts the complete SDK14 product57 predecessor and refuses partial or later history',()=>{
+ for(const count of [0,54,55,56,57,58])assert.doesNotThrow(()=>assertFull54InstallBoundary(count,'3.8.14',58))
+ for(const count of [1,49,53,59])assert.throws(()=>assertFull54InstallBoundary(count,'3.8.14',58),/historical package/)
 })
