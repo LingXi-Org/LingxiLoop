@@ -180,4 +180,17 @@ An exited backup uploader with `ARCHIVE_UPLOAD_UNCONFIRMED` may settle as a fail
 
 Database phases receive a persisted minimum 600-second stage budget (service-drain budgets stay unchanged). Archive metadata retains its existing 60-second default; a dump upload has a separate bounded 300-second default. This covers the measured 72 MB final snapshot without extending a completed or expired stage on resume, raising Cloudflare limits, or omitting remote-backup verification.
 
-Archive helper failures retain `archiveDiagnostics` in the host operation's error receipt. It contains at most three fixed-phase events with an allowlisted outcome, observed HTTP status and elapsed milliseconds, plus the read-after result. A missing HTTP status means no status was observed, not an inferred refusal. A reconciled successful upload also retains its original failed-response event. No token, URL, headers, response body or raw exception text enters these diagnostics; failure/recovery classifications and retry counts are unchanged.
+Archive helpers release unused metadata/error response bodies. A transport timeout,
+reset/closed connection or temporary DNS error permits at most one additional POST,
+only after fresh metadata confirms absence, a 500 ms backoff, and remaining time
+in the original upload deadline. Both POSTs use the same generation, manifest,
+content hash and immutable conditional object key. A verified readback succeeds
+without replay. HTTP denials/quotas, TLS, permanent DNS, identity errors and an
+expired upload budget never retry; no timeout or stage budget is increased.
+
+Archive helper failures retain `archiveDiagnostics` in the host operation's error
+receipt: at most five fixed-phase events, allowlisted transport code/outcome,
+observed HTTP status, elapsed milliseconds and whether the upload budget expired.
+The read-after summary reflects the last observation; successful receipts include
+`uploadAttempts` and retain the first failed response. A missing HTTP status means
+none was observed. Tokens, URLs, headers, bodies and raw exception text are excluded.

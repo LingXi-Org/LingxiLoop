@@ -71,7 +71,7 @@ test('large archive upload has a separate bounded budget while metadata keeps it
  const f=await fixture(), original=AbortSignal.timeout,deadlines=[]
  AbortSignal.timeout=ms=>{deadlines.push(ms);return original(ms)}
  try{
-  await uploadArchive(f.policy,f.op,{...f,fetcher:async(_url,init)=>{
+  await uploadArchive(f.policy,f.op,{...f,now:()=>0,fetcher:async(_url,init)=>{
    if(!init.method)return new Response('',{status:404})
    for await(const _ of init.body){}
    return Response.json(f.receipt,{status:201})
@@ -137,4 +137,43 @@ test('pre-upload TLS failure records a safe class and never starts a POST',async
  await assert.rejects(uploadArchive(f.policy,f.op,{...f,fetcher:async(_url,init)=>{calls++;assert.equal(init.method,undefined);throw Object.assign(Error('private certificate and URL'),{cause:{code:'CERT_HAS_EXPIRED'}})}}),error=>{
   assert.equal(error.code,'ARCHIVE_METADATA_UNAVAILABLE');assert.equal(error.archiveDiagnostics.events.length,1);assert.equal(error.archiveDiagnostics.events[0].outcome,'tls-error');assert.equal(error.archiveDiagnostics.events[0].httpStatus,undefined);assert.equal(JSON.stringify(error.archiveDiagnostics).includes('private'),false);return true
  });assert.equal(calls,1)
+})
+
+test('transient upload timeout retries the identical archive once only after absent readback within the original budget',async()=>{
+ const f=await fixture(),calls=[],waits=[];let clock=0,posts=0
+ const result=await uploadArchive(f.policy,f.op,{...f,now:()=>clock,wait:async ms=>{waits.push(ms);clock+=ms},fetcher:async(url,init)=>{
+  calls.push(init.method??'GET');clock+=20
+  if(!init.method)return new Response('',{status:404})
+  assert.equal(url.href,'https://release.test/v1/releases/release-1/backups/main-runtime-a');assert.equal(init.headers['x-lingxi-dump-sha256'],f.dumpHash)
+  const parts=[];for await(const part of init.body)parts.push(part);assert.deepEqual(Buffer.concat(parts),f.dump)
+  if(++posts===1)throw Object.assign(Error('private'),{cause:{code:'ETIMEDOUT'}})
+  return Response.json(f.receipt,{status:201})
+ }})
+ assert.equal(result.complete,true);assert.equal(result.uploadAttempts,2);assert.deepEqual(calls,['GET','POST','GET','POST']);assert.deepEqual(waits,[500]);assert.equal(result.archiveDiagnostics.events[1].transportCode,'ETIMEDOUT')
+})
+test('two transient failures stop without resetting the upload budget and preserve both failures',async()=>{
+ const f=await fixture(),calls=[];let clock=0
+ await assert.rejects(uploadArchive(f.policy,f.op,{...f,now:()=>clock,wait:async ms=>{clock+=ms},fetcher:async(_url,init)=>{
+  calls.push(init.method??'GET');clock+=10
+  if(!init.method)return new Response('',{status:404})
+  for await(const _ of init.body){};throw Object.assign(Error('private'),{cause:{code:'ECONNRESET'}})
+ }}),error=>{assert.equal(error.code,'ARCHIVE_UPLOAD_UNCONFIRMED');assert.equal(error.archiveDiagnostics.events.length,5);assert.equal(error.archiveDiagnostics.events.filter(e=>e.phase==='upload').length,2);return true})
+ assert.deepEqual(calls,['GET','POST','GET','POST','GET'])
+})
+test('expired original upload budget prevents another POST even when readback says absent',async()=>{
+ const f=await fixture(),calls=[];let clock=0
+ await assert.rejects(uploadArchive(f.policy,f.op,{...f,now:()=>clock,wait:async()=>{assert.fail('must not wait')},fetcher:async(_url,init)=>{
+  calls.push(init.method??'GET');if(!init.method)return new Response('',{status:404})
+  for await(const _ of init.body){};clock+=300000;throw Object.assign(Error('private'),{cause:{code:'ETIMEDOUT'}})
+ }}),{code:'ARCHIVE_UPLOAD_UNCONFIRMED'});assert.deepEqual(calls,['GET','POST','GET'])
+})
+test('TLS and permanent DNS upload errors never retry; metadata error bodies are released',async()=>{
+ for(const code of ['CERT_HAS_EXPIRED','ENOTFOUND']){
+  const f=await fixture(),calls=[];let cancelled=false
+  await assert.rejects(uploadArchive(f.policy,f.op,{...f,fetcher:async(_url,init)=>{
+   calls.push(init.method??'GET')
+   if(!init.method)return new Response(new ReadableStream({cancel(){cancelled=true}}),{status:404})
+   assert.equal(cancelled,true);for await(const _ of init.body){};throw Object.assign(Error('private'),{cause:{code}})
+  }}),{code:'ARCHIVE_UPLOAD_UNCONFIRMED'});assert.deepEqual(calls,['GET','POST','GET'])
+ }
 })

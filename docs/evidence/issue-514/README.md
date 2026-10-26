@@ -286,3 +286,24 @@ actual daemon proxy before bounded pulls. Historical source image receipts and
 all database/business R2 data remain. Legacy relay code is a test fixture only.
 Installed executors/policies still require the final exact qualified rollout;
 repository cleanup alone does not claim the production publishing path changed.
+
+## Ops288 single-command recovery (2026-10-26 13:10 UTC)
+
+[Retained measured receipt](ops288-recovered.json): one invocation, one submission,
+292.655 seconds to `recovered`, zero client retries and zero manual controller
+interventions. The controller automatically restored the exact source after the
+final archive upload failed; no target migration/application was performed. The
+new diagnostic observed a 576 ms transport timeout without an HTTP response,
+then metadata404. Its lower-level code was not retained by Ops288, so neither a
+300-second budget exhaustion nor a specific network root cause is established.
+The immutable R2 recovery receipt and five HTTP200 probes were verified;106
+Workflow instances were all terminal and both host operation/reservation counts
+were zero. Production remains197e2568/SDK3.8.12/product57. This is not an accepted
+sample or an end-to-end speedup claim. Cached image preparation is not comparable
+to the historical cold distribution samples.
+
+The follow-up keeps the existing upload deadline, permits at most one transient
+transport retry after an absent readback, releases unused error response bodies,
+and retains both attempts and allowlisted transport codes. Authentication,
+quota, TLS, identity and permanent DNS errors do not retry. Local fault tests are
+qualification evidence; production success is still required.

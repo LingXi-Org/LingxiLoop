@@ -199,10 +199,12 @@ test('restore runtime preflight refuses target or malformed proof instead of acc
 test('archive diagnostics survive the actual helper process and journal while secret-bearing extra fields are dropped',async t=>{
  const f=await setup(t),secret='private-token-and-signed-url',events=[
   {phase:'metadata-before',outcome:'absent',httpStatus:404,elapsedMs:3},
-  {phase:'upload',outcome:'timeout',elapsedMs:60001},
+  {phase:'upload',outcome:'timeout',elapsedMs:576,transportCode:'ETIMEDOUT'},
   {phase:'metadata-after',outcome:'absent',httpStatus:404,elapsedMs:4},
+  {phase:'upload',outcome:'connection-reset',elapsedMs:5,transportCode:'ECONNRESET'},
+  {phase:'metadata-after',outcome:'absent',httpStatus:404,elapsedMs:6},
  ],expected={version:1,readAfter:'absent',events}
- const error=Object.assign(Error('ARCHIVE_UPLOAD_UNCONFIRMED'),{code:'ARCHIVE_UPLOAD_UNCONFIRMED',uncertain:true,archiveDiagnostics:{version:1,token:secret,readAfter:secret,events:events.map(row=>({...row,url:secret,headers:{authorization:secret},message:secret}))}})
+ const error=Object.assign(Error('ARCHIVE_UPLOAD_UNCONFIRMED'),{code:'ARCHIVE_UPLOAD_UNCONFIRMED',uncertain:true,archiveDiagnostics:{version:1,token:secret,readAfter:secret,events:events.map(row=>({...row,transportCode:row.transportCode??secret,budgetExpired:secret,url:secret,headers:{authorization:secret},message:secret}))}})
  const wire=databaseToolFailure(error,'backup');assert.deepEqual(wire.error.archiveDiagnostics,expected);assert.equal(JSON.stringify(wire).includes(secret),false)
  // The adapter and journal independently project the safe schema at their boundaries.
  wire.error.archiveDiagnostics.url=secret;wire.error.archiveDiagnostics.events[1].headers={authorization:secret}
@@ -214,7 +216,7 @@ test('archive diagnostics survive the actual helper process and journal while se
  assert.deepEqual(f.journal.get(op.key).errors.forward.archiveDiagnostics,expected)
 })
 test('malformed archive diagnostics do not change helper failure classification or enter the wire',()=>{
- for(const diagnostics of [{version:1,events:[{phase:'upload',outcome:'secret',elapsedMs:1}]},{version:1,events:Array(4).fill({phase:'upload',outcome:'timeout',elapsedMs:1})},{version:1,events:[{phase:'upload',outcome:'timeout',elapsedMs:Infinity}]}]){
+ for(const diagnostics of [{version:1,events:[{phase:'upload',outcome:'secret',elapsedMs:1}]},{version:1,events:Array(6).fill({phase:'upload',outcome:'timeout',elapsedMs:1})},{version:1,events:[{phase:'upload',outcome:'timeout',elapsedMs:Infinity}]}]){
   const wire=databaseToolFailure(Object.assign(Error('ARCHIVE_UPLOAD_REJECTED'),{code:'ARCHIVE_UPLOAD_REJECTED',archiveDiagnostics:diagnostics}),'backup')
   assert.equal(wire.error.archiveDiagnostics,undefined);assert.equal(wire.error.outcomeKnown,true);assert.equal(wire.error.uncertain,false)
  }
