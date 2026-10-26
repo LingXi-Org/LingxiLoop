@@ -209,3 +209,25 @@ test('trusted helper known failure is terminal without hiding unknown side-effec
   await assert.rejects(context.step('known-read-only-backup',async()=>{throw Object.assign(fault('ARCHIVE_TOO_LARGE','Verified dump retained'),{outcomeKnown:true,uncertain:false})},{sideEffect:true}))
   assert.equal(f.journal.get(op.key).steps.at(-1).status,'failed-known')
 })
+test('unconfirmed backup upload settles as failed only for proven unchanged source restoration',async t=>{
+ const f=await setup(t);await prepared(f)
+ const backup=f.journal.accept(f.request('backup'),f.adapter.resources('main-runtime-a','backup')).operation
+ f.journal.patch(backup.key,{status:'uncertain',steps:[{name:'database:backup',sideEffect:true,status:'intent'}],errors:{forward:{code:'ARCHIVE_UPLOAD_UNCONFIRMED',uncertain:true},recovery:null,cleanup:[]}})
+ f.adapter.observe=async()=>{throw fault('ARCHIVE_METADATA_REJECTED','blocked release')}
+ const settled=await f.executor.reconcile(f.journal.get(backup.key))
+ assert.equal(settled.status,'failed');assert.equal(settled.result.sourceRestorationOnly,true)
+ assert.equal(settled.errors.forward.code,'ARCHIVE_UPLOAD_UNCONFIRMED');assert.equal(f.journal.state('main-runtime-a').backupHash?.[backup.manifestHash],undefined)
+ for(const phase of ['source-drain','restore-source','source-undrain'])assert.equal((await f.run(phase)).status,'succeeded')
+ assert.equal(f.host.data.ingress.enabled,true);assert.equal(f.host.data.containers.web.Image,oldImage.configDigest)
+})
+for(const unsafe of ['active','schema','mutation'])test(`unconfirmed backup keeps ownership when ${unsafe} prevents source proof`,async t=>{
+ const f=await setup(t);await prepared(f)
+ const backup=f.journal.accept(f.request('backup'),f.adapter.resources('main-runtime-a','backup')).operation
+ f.journal.patch(backup.key,{status:'uncertain',errors:{forward:{code:'ARCHIVE_UPLOAD_UNCONFIRMED'},recovery:null,cleanup:[]}})
+ f.adapter.observe=async()=>{throw fault('ARCHIVE_NOT_CONFIRMED','absent')}
+ if(unsafe==='active')f.executor.active.add(backup.key)
+ if(unsafe==='schema')f.adapter.state=async()=>({...contract,productSchema:58})
+ if(unsafe==='mutation')f.journal.db.prepare('INSERT INTO operations SELECT ?,?,request_hash,?,?,result,errors,steps,created_at,updated_at FROM operations WHERE key=?').run('forbidden','new-id',JSON.stringify({...backup,phase:'migrate'}),'uncertain',backup.key)
+ const result=await f.executor.reconcile(f.journal.get(backup.key));assert.equal(result.status,'uncertain')
+ assert.ok(f.journal.db.prepare('SELECT count(*) AS n FROM reservations WHERE operation_key=?').get(backup.key).n>0)
+})

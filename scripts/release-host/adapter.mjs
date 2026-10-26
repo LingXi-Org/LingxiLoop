@@ -1,3 +1,4 @@
+import {prepareCache} from './cache-pull.mjs'
 import { controlRead } from './control-read.mjs'
 import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -229,8 +230,7 @@ export class ComposeAdapter {
       const info=JSON.parse(await this.run(['info','--format','{{json .}}']))
       requireValue(info.HttpProxy==='http://127.0.0.1:17890'&&info.HttpsProxy==='http://127.0.0.1:17890','REGISTRY_PROXY_UNQUALIFIED','The approved loopback daemon proxy must be active before pulling')
     }
-    await context.step(`pull:${direction}:${image.configDigest??image.localImageId}`,()=>this.run(['image','pull','--platform',`${image.os}/${image.architecture}`,image.ref],{timeout:180000}),{sideEffect:false})
-    identity=await this.inspectImage(image,local)
+    identity=await prepareCache({op,image,direction,context,run:(args,options)=>this.run(args,options),inspect:()=>this.inspectImage(image,local)})
     requireValue(identity,'IMAGE_MISSING','Downloaded artifact is not present after preparation')
     return{...identity,reused:false,direction}
   }
