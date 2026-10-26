@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {authorizedTestDataMode} from './data-protection.mjs'
 import {archiveDiagnosticFields} from './archive-diagnostics.mjs'
 import { spawn } from 'node:child_process'
 import { createReadStream, createWriteStream } from 'node:fs'
@@ -47,6 +48,7 @@ function registeredPlan(policy,op) {
     requireThat(row?.hash === op.manifestHash,'MANIFEST_REQUIRED','Database action requires the registered immutable manifest')
     const plan = JSON.parse(row.body).targets?.[op.target]?.hostPlan
     requireThat(plan?.database && plan.mode === 'maintenance','DATABASE_PLAN_REQUIRED','Database action needs an explicit maintenance plan')
+    authorizedTestDataMode(plan,policy)
     validateRuntimePatch(plan.database)
     if(plan.database.runtimePatch)requireThat(op.target==='main-runtime-a','DATABASE_OWNER_REQUIRED','Runtime provenance CAS is restricted to the fixed main runtime A database owner')
     requireThat(canonical(op.parameters??{})==='{}','INVALID_DATABASE_PARAMETERS','Database actions accept no remote parameters')
@@ -63,6 +65,8 @@ function inventoryMatches(actual,migrations) { return actual.migrations?.length 
 /** All database destinations and argv come from trusted local policy. In particular stdin cannot select a dump path or database name. */
 export async function databaseTool(policy,action,op,{ run = (args,options = {}) => runDocker(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' }),stream = (args,options) => dockerStream(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' }),archiveUpload = uploadArchive,archiveObserve = observeArchive,helper = runFixedHelper } = {}) {
   const plan = registeredPlan(policy,op), database = policy.database, local = policy.targets[op.target]
+  const testData = authorizedTestDataMode(plan,policy)
+  const dataProtection = testData ? {mode:'test-data-no-backup',backup:'not-created',restoreVerification:'not-run'} : undefined
   const directory = join(policy.stateDirectory,op.releaseId,'database')
   await mkdir(directory,{ recursive:true,mode:0o700 })
   const dump = join(directory,'backup.dump'), backupFile = join(directory,'backup.json'), verifiedFile = join(directory,'restore-verified.json')
@@ -168,7 +172,7 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     requireThat(actual.runtime===patch.target.runtime && actual.schemaHash===patch.target.schemaHash && actual.protocolVersion===patch.target.protocol && sameSchemas(actual,plan.database.to) && canonical(actual.migrations)===canonical(patch.target.migrations),'RUNTIME_PATCH_OUTCOME_UNRESOLVED','Independent database evidence does not prove exact target runtime provenance')
   }
   if (action === 'migrateObserve') {
-    await readBackup()
+    if (!testData) await readBackup()
     let patchProof
     if(patch){
       const context=await migrationContext(),intent=await readOptional(patchIntentFile)
@@ -189,12 +193,18 @@ export async function databaseTool(policy,action,op,{ run = (args,options = {}) 
     const actual = await databaseEvidence(policy,run)
     requireThat(sameSchemas(actual,plan.database.to) && inventoryMatches(actual,plan.database.migrations),'MIGRATION_OUTCOME_UNRESOLVED','Installed schema/checksum ledger does not prove complete target migration')
     if(patch)await assertPatchTarget(actual)
-    return { complete:true,nativeSchema:actual.nativeSchema,productSchema:actual.productSchema,migrationsHash:hash(actual.migrations),...(patch?{runtimePatch:patchProof,migrationExecution:'retained-oneoff-exit-zero'}:{}) }
+    if(testData)requireThat(actual.runtime===plan.contract.lingxios,'MIGRATION_OUTCOME_UNRESOLVED','Test migration must retain the exact SDK provenance')
+    return { ...(testData?{dataProtection}:{}),complete:true,nativeSchema:actual.nativeSchema,productSchema:actual.productSchema,migrationsHash:hash(actual.migrations),...(patch?{runtimePatch:patchProof,migrationExecution:'retained-oneoff-exit-zero'}:{}) }
   }
   if (action === 'migrate') {
     if(patch && await readOptional(patchIntentFile))return databaseTool(policy,'migrateObserve',op,{run,stream,archiveUpload,archiveObserve,helper})
-    const source = await assertDrained(), backup = await readBackup(), verified = JSON.parse(await readFile(verifiedFile,'utf8'))
-    requireThat(sameSchemas(source,plan.database.from) && verified.complete === true && (!patch || verified.manifestHash===op.manifestHash) && verified.dumpHash === backup.dumpHash,'MIGRATION_BOUNDARY_INVALID','Migration requires the exact drained source and verified final backup')
+    const source = await assertDrained()
+    requireThat(sameSchemas(source,plan.database.from),'MIGRATION_BOUNDARY_INVALID','Migration requires the exact drained source')
+    if(testData)requireThat(source.runtime===plan.source.contract.lingxios,'DATABASE_SOURCE_CHANGED','Test migration must retain the exact SDK provenance')
+    else {
+      const backup = await readBackup(), verified = JSON.parse(await readFile(verifiedFile,'utf8'))
+      requireThat(verified.complete === true && (!patch || verified.manifestHash===op.manifestHash) && verified.dumpHash === backup.dumpHash,'MIGRATION_BOUNDARY_INVALID','Migration requires the verified final backup')
+    }
     requireThat(source.migrations.every((row,index) => row.version === plan.database.migrations[index]?.version && row.checksum === plan.database.migrations[index]?.checksum),'MIGRATION_CHECKSUM_CHANGED','The installed ledger is not an exact prefix of the requested target')
     const context=await migrationContext(),{migration,compose}=context
     if(patch){

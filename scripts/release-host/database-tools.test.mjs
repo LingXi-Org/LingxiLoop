@@ -5,14 +5,14 @@ import { createHash } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { Executor,Journal } from './executor.mjs'
-import { ComposeAdapter } from './adapter.mjs'
+import { ComposeAdapter,validateHostPlan } from './adapter.mjs'
 import { databaseTool,databaseToolFailure } from './database-tools.mjs'
 import {databaseFixture} from './fixtures/runtime-patch.mjs'
 import {runtimePatchPlanHash} from './runtime-patch.mjs'
 import { hash } from './journal.mjs'
 import { policy,manifest,contract,newImage } from './fixtures/fake-host.mjs'
 const archiveProbe=async(policy,op,{dumpHash})=>({complete:true,dumpHash,manifestHash:op.manifestHash,generation:op.generation})
-async function setup(t,{patch=false}={}) {
+async function setup(t,{patch=false,testData=false}={}) {
   const directory=await mkdtemp(join(tmpdir(),'release-migrate-')),local=policy(directory),release=manifest(directory),target=release.targets['main-runtime-a'],schemaHash=(patch?'a':'d').repeat(64)
   let migrations=[{version:1,name:'first',checksum:'a'.repeat(64)},{version:2,name:'second',checksum:'b'.repeat(64)}]
   target.hostPlan.source=structuredClone(target.hostPlan.recovery);target.hostPlan.source.contract={...contract,productSchema:1}
@@ -21,6 +21,11 @@ async function setup(t,{patch=false}={}) {
   if(patch){target.hostPlan.database={...target.hostPlan.database,...databaseFixture()};migrations=target.hostPlan.database.runtimePatch.source.migrations;for(const descriptor of [target.hostPlan.source,target.hostPlan,target.hostPlan.recovery])descriptor.contract={...contract,productSchema:57};target.contract=target.hostPlan.contract}
   local.targets['main-runtime-a'].migration={service:'db-migrate',imageService:'web'}
   local.archive={baseUrl:'https://archive.fixture.invalid',tokenFile:'/fixed/test-token'};local.database={container:'postgres-fixed',user:'postgres',database:'fixture',migrationHostname:'postgres',profiles:Object.fromEntries((patch?[57]:[1,2]).map(version=>[`14:${version}:${schemaHash}`,{contract:{...contract,productSchema:version},migrationsHash:hash(migrations.slice(0,version)),protocolVersion:11,requiredCapabilities:contract.capabilities}]))}
+  if(testData){
+    target.hostPlan.database.rpo='test-data-no-backup';local.allowTestDataNoBackup=true
+    for(const descriptor of [target.hostPlan.source,target.hostPlan,target.hostPlan.recovery])descriptor.contract.lingxios='3.8.12'
+    delete local.archive
+  }
   const journal=new Journal(join(directory,'journal.sqlite')),executor=new Executor({journal,adapter:new ComposeAdapter(local)}),manifestHash=hash(release);executor.register(release,manifestHash)
   t.after(async()=>{journal.close();await rm(directory,{recursive:true,force:true})})
   const output=join(directory,release.releaseId,'database');await mkdir(output,{recursive:true});const dump=Buffer.from('synthetic qualified backup'),dumpHash=`sha256:${createHash('sha256').update(dump).digest('hex')}`
@@ -220,4 +225,63 @@ test('malformed archive diagnostics do not change helper failure classification 
   const wire=databaseToolFailure(Object.assign(Error('ARCHIVE_UPLOAD_REJECTED'),{code:'ARCHIVE_UPLOAD_REJECTED',archiveDiagnostics:diagnostics}),'backup')
   assert.equal(wire.error.archiveDiagnostics,undefined);assert.equal(wire.error.outcomeKnown,true);assert.equal(wire.error.uncertain,false)
  }
+})
+
+test('test-data migration has no backup/archive/restore dependency and retains exact completion observation',async t=>{
+  const f=await setup(t,{testData:true});await rm(join(f.directory,f.release.releaseId,'database'),{recursive:true})
+  const rejectArchive=async()=>{throw Error('test mode must not access backup storage')}
+  const options={run:f.run,archiveUpload:rejectArchive,archiveObserve:rejectArchive}
+  const result=await databaseTool(f.local,'migrate',f.op,options)
+  assert.equal(result.productSchema,2);assert.deepEqual(result.dataProtection,{mode:'test-data-no-backup',backup:'not-created',restoreVerification:'not-run'})
+  assert.equal((await databaseTool(f.local,'migrateObserve',f.op,options)).complete,true)
+  assert.equal(f.calls.filter(a=>a.includes('run')).length,1)
+  f.setExitCode(1)
+  await assert.rejects(databaseTool(f.local,'migrateObserve',f.op,options),{code:'MIGRATION_OUTCOME_UNRESOLVED'})
+})
+test('test-data mode refuses missing trusted opt-in or SDK/native changes before effects',async t=>{
+  const f=await setup(t,{testData:true}),plan=f.release.targets['main-runtime-a'].hostPlan
+  delete f.local.allowTestDataNoBackup
+  assert.throws(()=>validateHostPlan(f.release,'main-runtime-a',f.local),{code:'TEST_DATA_MODE_NOT_AUTHORIZED'})
+  await assert.rejects(databaseTool(f.local,'migrate',f.op,{run:f.run}),{code:'TEST_DATA_MODE_NOT_AUTHORIZED'})
+  assert.equal(f.calls.length,0)
+  f.local.allowTestDataNoBackup=true
+  for(const change of [()=>plan.source.contract.lingxios='3.8.11',()=>{plan.source.contract.lingxios='3.8.12';plan.database.from.nativeSchema=13}]){
+    change();assert.throws(()=>validateHostPlan(f.release,'main-runtime-a',f.local),{code:'TEST_DATA_MODE_INCOMPATIBLE'})
+  }
+})
+test('test-data mode still rejects a changed source ledger before launching migration',async t=>{
+  const f=await setup(t,{testData:true})
+  const run=async args=>{const value=await f.run(args);if(!args.includes('psql'))return value;const actual=JSON.parse(value);actual.migrations[0].checksum='f'.repeat(64);return JSON.stringify(actual)}
+  await assert.rejects(databaseTool(f.local,'migrate',f.op,{run}))
+  assert.equal(f.calls.filter(a=>a.includes('run')).length,0)
+})
+
+for(const testData of [false,true])test(`executor migration gate preserves strict default and test-data idempotency (testData=${testData})`,async t=>{
+  const f=await setup(t,{testData})
+  f.journal.setState(f.op.target,{preparedHashes:{[f.op.manifestHash]:true},drainedHash:f.op.manifestHash,drainedGeneration:1})
+  f.executor.adapter.control=async(_local,action,op)=>databaseTool(f.local,action,op,{run:f.run,archiveObserve:archiveProbe})
+  const {operation}=f.executor.submit(f.op)
+  const result=await f.executor.run(operation.key)
+  assert.equal(result.status,testData?'succeeded':'failed')
+  if(testData){
+    assert.equal(result.result.dataProtection.backup,'not-created')
+    assert.equal(f.journal.state(f.op.target).backupHash,undefined)
+    assert.equal(f.journal.state(f.op.target).restoreVerifiedHash,undefined)
+    await f.executor.run(operation.key)
+    assert.equal(f.calls.filter(a=>a.includes('run')).length,1)
+  }else{
+    assert.equal(result.errors.forward.code,'BACKUP_REQUIRED')
+    assert.equal(f.calls.filter(a=>a.includes('run')).length,0)
+  }
+})
+test('uncertain test-data migration retains ownership and cannot be replayed or restore an incompatible source',async t=>{
+  const f=await setup(t,{testData:true})
+  f.journal.setState(f.op.target,{preparedHashes:{[f.op.manifestHash]:true},drainedHash:f.op.manifestHash,drainedGeneration:1})
+  f.executor.adapter.control=async(_local,action,op)=>{await databaseTool(f.local,action,op,{run:f.run});throw Error('Injected lost completion')}
+  const {operation}=f.executor.submit(f.op)
+  assert.equal((await f.executor.run(operation.key)).status,'uncertain')
+  assert.equal((await f.executor.run(operation.key)).status,'uncertain')
+  assert.equal(f.calls.filter(a=>a.includes('run')).length,1)
+  assert.ok(f.journal.db.prepare('SELECT count(*) AS n FROM reservations WHERE operation_key=?').get(operation.key).n>0)
+  await assert.rejects(f.executor.assertSourceRestoreAllowed(f.op),{code:'SOURCE_RESTORE_FORBIDDEN'})
 })

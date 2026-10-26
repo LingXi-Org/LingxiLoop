@@ -73,6 +73,14 @@ describe('release protocol', () => {
     expect(() => assertSource(m, baseline)).toThrow('SCHEMA_CHANGE_REQUIRES_MAINTENANCE_ADAPTER')
     runtime.hostPlan = { mode: 'maintenance', database: { from: { nativeSchema: 14, productSchema: 57 }, to: { nativeSchema: 14, productSchema: 58 }, strategy: 'maintenance', rpo: 'zero-committed-writes', migrations } }
     expect(() => assertSource(m, baseline)).not.toThrow()
+    const db = runtime.hostPlan!.database as { rpo: string }
+    db.rpo = 'test-data-no-backup'
+    expect(() => assertSource(m, baseline)).toThrow('SCHEMA_CHANGE_REQUIRES_MAINTENANCE_ADAPTER')
+    Object.assign(current,{lingxios:'3.8.14'});Object.assign(next,{lingxios:'3.8.14'})
+    expect(() => assertSource(m, baseline)).not.toThrow()
+    Object.assign(next,{lingxios:'3.8.15'})
+    expect(() => assertSource(m, baseline)).toThrow('SCHEMA_CHANGE_REQUIRES_MAINTENANCE_ADAPTER')
+    Object.assign(next,{lingxios:'3.8.14'})
     const database = runtime.hostPlan!.database as { migrations: unknown[] }
     database.migrations = migrations.slice(1)
     expect(() => assertSource(m, baseline)).toThrow('SCHEMA_CHANGE_REQUIRES_MAINTENANCE_ADAPTER')

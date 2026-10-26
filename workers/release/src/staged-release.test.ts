@@ -4,7 +4,7 @@ import type { WorkflowEvent, WorkflowStep } from 'cloudflare:workers'
 import { hash, type Accepted, type Manifest, type Target } from '../../../shared/release/protocol'
 import { ReleaseWorkflow } from './workflow'
 import { ReleaseLedger } from './ledger'
-import { STAGE_REQUEST_LIMIT } from './stages'
+import { STAGE_REQUEST_LIMIT, forwardStages } from './stages'
 import type { ReleaseEnv, ReleaseRecord } from './types'
 
 const bindings = env as unknown as ReleaseEnv
@@ -306,4 +306,15 @@ describe('production staged Workflow with actual SQLite ledger', () => {
     expect(await state.execute()).toMatchObject({ status: 'blocked', error: 'LEGACY_RECONCILIATION_REQUIRED' })
     expect(net.writes).toEqual([])
   })
+})
+
+it('explicit test-data plans skip only backup and isolated restore, keeping drain, migration and verification',()=>{
+  const m=fixture('test-data-stage-plan')
+  m.targets['main-runtime-a']!.hostPlan!.database={rpo:'test-data-no-backup'}
+  const phases=forwardStages(m).map(stage=>stage.phase).filter(Boolean)
+  expect(phases).toContain('drain');expect(phases).toContain('migrate');expect(phases).toContain('verify');expect(phases).toContain('undrain')
+  expect(phases).not.toContain('backup');expect(phases).not.toContain('restore-verify')
+  m.targets['main-runtime-a']!.hostPlan!.database={rpo:'zero-committed-writes'}
+  const strict=forwardStages(m).map(stage=>stage.phase)
+  expect(strict).toContain('backup');expect(strict).toContain('restore-verify')
 })

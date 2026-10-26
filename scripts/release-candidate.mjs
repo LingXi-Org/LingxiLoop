@@ -6,6 +6,7 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { isDeepStrictEqual } from 'node:util'
 import { readAccepted, releaseApiUrl } from './ci-scope-cumulative.mjs'
+import { testDataNoBackup } from './release-host/data-protection.mjs'
 import { validateRuntimePatch } from './release-host/runtime-patch.mjs'
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
 const exactSha = value => /^[a-f0-9]{40}$/.test(value || '')
@@ -59,7 +60,8 @@ function checkedRuntimeOverride(id, current, artifact, before, after, { attestat
   requireProof(contract.lingxios === after.lingxios && contract.productSchema === after.migrations.length && isDeepStrictEqual(contract.migrations, inventoryContract(after)), 'contract must bind the complete source-derived target package and migration inventory')
   for (const field of ['api','worker','checkpoint','control']) requireProof(typeof contract[field] === 'string' && contract[field].length > 0, `missing concrete ${field} contract`)
   requireProof(Array.isArray(contract.capabilities) && current.contract.capabilities.every(capability => contract.capabilities.includes(capability)), 'required data capabilities must be retained')
-  requireProof(hostPlan.mode === 'maintenance' && db.strategy === 'maintenance' && db.rpo === 'zero-committed-writes', 'schema transitions require maintenance and zero committed write loss')
+  testDataNoBackup(db,current.contract,contract)
+  requireProof(hostPlan.mode === 'maintenance' && db.strategy === 'maintenance', 'schema transitions require maintenance and explicit data protection')
   requireProof(isDeepStrictEqual(db.from, { nativeSchema: current.contract.nativeSchema, productSchema: current.contract.productSchema }) && isDeepStrictEqual(db.to, { nativeSchema: contract.nativeSchema, productSchema: contract.productSchema }), 'database source/target must match accepted and target contracts')
   requireProof(db.to.nativeSchema >= db.from.nativeSchema && db.to.productSchema >= db.from.productSchema && before.migrations.length === current.contract.productSchema, 'forward-only schema and accepted source inventory required')
   requireProof(isDeepStrictEqual(db.migrations, after.migrations) && before.migrations.every(row => after.migrations.some(next => isDeepStrictEqual(next, row))), 'complete named migration inventory must preserve every accepted checksum')
