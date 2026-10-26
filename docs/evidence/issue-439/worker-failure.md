@@ -104,6 +104,10 @@ Completed owning checks:
   assignment submissions. See [TAP](worker-failure.tap) and
   [runner receipt](worker-failure-timings.json).
 - Focused server lint, CLI syntax and whitespace checks passed.
+- Initial candidate CI stopped at scoped dependency drift. Regenerated the
+  seven affected build profiles through the existing official generator;
+  `node server/scripts/scoped-dependencies.mjs` now matches the root lock.
+  This changes only LingxiOS package/version/integrity entries, not CI policy.
 
 The updated candidate is based on current main after the release-controller
 cutover. This PR no longer modifies any legacy host-release/runtime-patch
