@@ -1,0 +1,20 @@
+✔ legacy import keeps code text and intentional trailing blanks without the formatter newline (12.613725ms)
+✔ case Markdown keeps inline code, unknown fences and HTML as text with a copy control (8.539411ms)
+✔ external code fences resolve aliases and unsupported languages at the schema boundary (1.059002ms)
+✔ VS Code input is serialized as literal text, including malformed metadata and code selections (1.291062ms)
+✔ restores the upstream exporter terminal LF loss without altering code or fence language (34.615688ms)
+✔ retains already-correct exports, plain code and unmatched mixed native exports (0.911982ms)
+✔ repairs only exact fenced source in plain paragraph runs and retains other native blocks (14.247407ms)
+✔ does not reinterpret escaped prose, stale original Markdown, styled text or incomplete fences (8.644992ms)
+✔ refuses an import that changes code text, and preserves unrelated fenced native blocks (1.520216ms)
+✔ forum Markdown paste uses the existing currency-safe math import and keeps code literal (30.044355ms)
+✔ native, rich HTML, file, code and case clipboard paths retain their existing handling (1.337971ms)
+✔ case Markdown code paste reuses legacy import and preserves terminal blanks and literal HTML (2.943648ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4107.203911

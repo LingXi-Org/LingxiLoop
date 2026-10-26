@@ -8,6 +8,8 @@ export type StageCheckpoint = {
   changed: TargetId[]; mutationSubmitted: boolean
   direction: 'forward' | 'source' | 'compatible-recovery'
   requests: Record<string, number>; deadlines: Record<string, number>
+  retries?: Record<string, number>
+  timings?: Record<string, { queuedAt: number; startedAt?: number; completedAt?: number; lastError?: string }>
   completed: { key: string; workflowId: string; requests: number }[]
   previousWorkflowId?: string; initializedWorkflowId?: string; legacyVerificationOnly?: boolean
 }
@@ -20,9 +22,17 @@ export function forwardStages(manifest: Manifest): ReleaseStage[] {
   const targets = orderedTargets(manifest)
   const plan: ReleaseStage[] = [{ key: 'batch', kind: 'batch' }]
   for (const host of [...new Set(targets.flatMap(id => manifest.targets[id]!.hosts))]) plan.push({ key: `manifest-${host}`, kind: 'manifest', host })
-  for (const target of targets) plan.push({ key: `prepare-${target}`, kind: 'prepare', targets: [target] })
-  plan.push({ key: 'claim', kind: 'claim' })
   const runtime = targets.filter(id => manifest.targets[id]!.adapter === 'main-runtime')
+  let preparedRuntime = false
+  for (const target of targets) {
+    if(runtime.includes(target)) {
+      if(preparedRuntime)continue
+      // Independent generation-zero cache work can overlap; the existing
+      // all-host settle barrier still precedes claim/drain and every DB write.
+      plan.push({key:`prepare-${runtime.join('-')}`,kind:'prepare',targets:runtime});preparedRuntime=true
+    }else plan.push({ key: `prepare-${target}`, kind: 'prepare', targets: [target] })
+  }
+  plan.push({ key: 'claim', kind: 'claim' })
   const maintenance = runtime.some(id => manifest.targets[id]!.hostPlan?.mode !== 'rolling')
   let runtimeDone = false
   const host = (ids: TargetId[], phase: string) => plan.push({ key: `${phase}-${ids.join('-')}`, kind: 'host', targets: ids, phase })

@@ -1,0 +1,14 @@
+{
+  "id": 40268735816,
+  "head_sha": "d806c0816cb9ae6c616ebd2ad98a9715ba0de86a",
+  "run_attempt": 1,
+  "event": "workflow_dispatch",
+  "status": "completed",
+  "conclusion": "cancelled",
+  "created_at": "2026-10-26T04:22:24Z",
+  "run_started_at": "2026-10-26T04:22:24Z",
+  "updated_at": "2026-10-26T04:38:58Z",
+  "html_url": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/40268735816",
+  "actor": "lyyzka",
+  "triggering_actor": "lyyzka"
+}

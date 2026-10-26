@@ -17,7 +17,7 @@ export const homeworkDeadlineSchema = homeworkRevisionSchema.extend({ dueAt: z.s
 export const homeworkAnswerSchema = z.object({ text: z.string().max(20000).default(''), ...learningContentFields }).strict().refine(value => matchesProjection(value.editorDocument, value.text), 'native answer and text must be saved together')
 export const homeworkSaveAnswerSchema = homeworkAnswerSchema.safeExtend({ expectedRevision: revision })
 export const homeworkReportSchema = z.object({ expectedAnswerRevision: revision }).strict()
-export const homeworkSubmitSchema = homeworkReportSchema.extend({ reportId: id, idempotencyKey: id.min(8), conversationReferences: conversationReferencesSchema })
+export const homeworkSubmitSchema = homeworkReportSchema.extend({ reportId: id, idempotencyKey: id.min(8), conversationReferences: conversationReferencesSchema.prefault([]) })
 export const homeworkShareSchema = z.object({ expectedEvidenceRevision: revision }).strict()
 export const homeworkUnlockSchema = homeworkShareSchema.extend({ learnerId: id, reason: z.string().trim().min(1).max(4000) })
 export const homeworkReviewSchema = z.object({ ...learningContentFields, learnerId: id, expectedSubmissionId: id, decision: z.enum(['PASSED','RETURNED']), reason: z.string().trim().min(1).max(4000) }).strict().refine(value => matchesProjection(value.editorDocument, value.reason), 'native reason and text must be saved together')

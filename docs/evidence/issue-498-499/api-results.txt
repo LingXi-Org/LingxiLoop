@@ -1,0 +1,13 @@
+✔ [integration] historical code repair persists on the same case while reader snapshots wait for publication (1661.27887ms)
+[platform-operations] command audit failed Error: Cannot use a pool after calling end on the pool
+    at /workspace/LingxiLoop/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async insertAuditEvent (/workspace/LingxiLoop/server/src/modules/identity/session-repository.ts:14:3)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5150.526473

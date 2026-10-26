@@ -4,6 +4,7 @@ import { handleArchive } from './archive'
 import { BOOTSTRAP_PATHS, handleBootstrapArtifact } from './bootstrap-artifact'
 import { PROVIDER_FETCH_PATH, handleProviderFetch } from './provider-fetch'
 import { ARTIFACT_BLOB_PREFIX, handleArtifactBlob } from './artifact-blobs'
+import { RETAINED_ASSETS_PATH, handleRetainedAssets } from './retained-assets'
 export { ReleaseLedger } from './ledger'
 export { ReleaseWorkflow } from './workflow'
 
@@ -20,7 +21,8 @@ function safeRecord(record: ReleaseRecord) {
     status: record.status, phase: record.phase, generation: record.generation, targets: record.targets,
     createdAt: record.createdAt, updatedAt: record.updatedAt, errors: record.errors, error: record.error,
     supersededBy: record.supersededBy, workflowId: record.workflowId,
-    progress: record.checkpoint && { protocol: 2, stage: record.checkpoint.plan[record.checkpoint.index]?.key, completed: record.checkpoint.completed, requests: record.checkpoint.requests },
+    dispatch: record.dispatch, manualInterventions: record.manualInterventions,
+    progress: record.checkpoint && { protocol: 2, stage: record.checkpoint.plan[record.checkpoint.index]?.key, completed: record.checkpoint.completed, requests: record.checkpoint.requests, timings: record.checkpoint.timings, retries: record.checkpoint.retries },
     needsAgent: record.status === 'blocked', receiptKey: `releases/${record.releaseId}/verified.json` }
 }
 export default {
@@ -30,6 +32,10 @@ export default {
       if (url.pathname === '/healthz') return Response.json({ service: 'lingxiloop-release', protocol: 1 })
       const token = request.headers.get('authorization')?.replace(/^Bearer /, '') ?? ''
       const admin = await matches(env.RELEASE_ADMIN_TOKEN, token)
+      if(url.pathname===RETAINED_ASSETS_PATH){
+        requireThat(admin||await matches(env.RELEASE_API_TOKEN,token),'UNAUTHORIZED',401)
+        return await handleRetainedAssets(request,env)
+      }
       if (url.pathname.startsWith(ARTIFACT_BLOB_PREFIX)) {
         const submit = await matches(env.RELEASE_API_TOKEN, token), exec = await matches(env.EXECUTOR_TOKEN, token)
         requireThat(admin || submit || exec, 'UNAUTHORIZED', 401)

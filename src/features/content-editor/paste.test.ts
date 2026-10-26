@@ -31,3 +31,13 @@ test('native, rich HTML, file, code and case clipboard paths retain their existi
     assert.equal(delegated,1)
   }
 })
+
+test('case Markdown code paste reuses legacy import and preserves terminal blanks and literal HTML', () => {
+  let html = ''
+  const editor = { transact: () => false, pasteHTML: (value: string, raw: boolean) => { html = value; assert.equal(raw, true) } } as unknown as NativeEditor
+  const source = 'Before `inline`\n\n````unknown\n<script>literal</script> &lt;\n\t  tail  \n\n\n````'
+  assert.equal(pasteContent({ event: event({ 'text/plain': source }), editor, defaultPasteHandler: () => assert.fail('code must use common import') }, 'markdown'), true)
+  assert.match(html, /<p>Before <code>inline<\/code><\/p>/)
+  assert.match(html, /<code class="language-unknown">&lt;script&gt;literal&lt;\/script&gt; &amp;lt;\n\t  tail  \n\n<\/code>/)
+  assert.doesNotMatch(html, /<script>/)
+})

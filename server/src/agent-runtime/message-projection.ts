@@ -146,11 +146,14 @@ function activityParts(view: RunView, tools: readonly HarnessToolPart[], include
     if (segment.status !== 'pending-replacement' && segment.status !== 'replaced') continue
     const source = view.publicTextParts?.find(part=>part.partId===segment.partId)
     const id = stableId('public-text',[view.runId,segment.requestVersion,segment.partId])
-    const label = segment.status === 'replaced' ? answerRevisionLabels.superseded
-      : source?.reason === 'failed' ? answerRevisionLabels.failed
-      : source?.reason === 'cancelled' ? answerRevisionLabels.cancelled : answerRevisionLabels.pending
-    for (const text of projectVisualizeText(segment.text,true)) put(id,source?.firstSeq ?? view.lastSeq,
-      annotated(text,{id,kind:'commentary',label,purpose:'process'}),source?.lastSeq,segment.requestVersion)
+    const label = source?.reason === 'failed' ? answerRevisionLabels.failed
+      : source?.reason === 'cancelled' ? answerRevisionLabels.cancelled
+      : segment.status === 'replaced' ? answerRevisionLabels.superseded : answerRevisionLabels.pending
+    // Keep lifecycle/source identity for replay reconciliation. Full failed or
+    // superseded candidates remain in native events, not in delivered process
+    // text. The native reader alone selects the effective answer sources.
+    put(id,source?.firstSeq ?? view.lastSeq,
+      annotated({type:'text',text:label},{id,kind:'commentary',label,purpose:'process'}),source?.lastSeq,segment.requestVersion)
   }
   const planVersions = new Map<string, { fence: number; revision: number }>()
   // Completion order may differ from start order; retain the original public

@@ -5,11 +5,12 @@ import { syntaxHighlighter } from '@blocknote/code-block'
 import { NativeView } from './NativeView'
 import { contentSchema, contentDictionary } from './schema'
 import { importLegacy } from './legacy'
+import { recoverFencedCode } from './fenced-code'
 import { pasteContent } from './paste'
 import { useCreateBlockNote } from '@blocknote/react'
 import { forwardRef, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
-import { usableDocument, type ContentDocument } from './document'
+import { preserveCodeNewlines, usableDocument, type ContentDocument } from './document'
 
 export interface ContentEditorHandle {
   insertImage(url: string, name: string): void
@@ -42,10 +43,16 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
       return current.current.uploadFile(file)
     },
   })
+  const project = (blocks = editor.document) => {
+    const markdown = editor.blocksToMarkdownLossy(blocks)
+    return legacyFormat === 'markdown' ? preserveCodeNewlines(markdown, blocks) : markdown
+  }
   useLayoutEffect(() => {
     if (last.current?.value === value && last.current.document === document && last.current.legacyParagraphKey === legacyParagraphKey) return
     syncing.current = true
-    const blocks = usableDocument(document, value) ? document.blocks
+    const recovered = legacyFormat === 'markdown' && usableDocument(document, value)
+      ? recoverFencedCode(document, value, source => importLegacy(editor, source, 'markdown')) : document
+    const blocks = usableDocument(recovered, value) ? recovered.blocks
       : legacyParagraphs ? legacyParagraphs.map(content => ({ type: 'paragraph' as const, content }))
         : importLegacy(editor, value, legacyFormat)
     editor.transact(transaction => {
@@ -55,6 +62,15 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
     original.current = usableDocument(document, value) ? document.legacyMarkdown ?? value : value
     last.current = { value, document, legacyParagraphKey }
     syncing.current = false
+    // Loading a verified repair must reach the form even if the user only saves
+    // or changes the title. Reading never writes; persistence remains explicit.
+    if (legacyFormat === 'markdown' && value.trim() && (!usableDocument(document, value) || recovered !== document)) {
+      const markdown = project()
+      const sections = editor.document.map(block => project([block]).trim()).filter(Boolean)
+      const next: ContentDocument = { format: 'blocknote', version: 1, blocks: editor.document, projection: markdown, sections, ...(original.current ? { legacyMarkdown: original.current } : {}) }
+      last.current = { value: markdown, document: next }
+      current.current.onChange(markdown, next, sections)
+    }
   }, [editor, value, document, legacyFormat, legacyParagraphs, legacyParagraphKey])
   useImperativeHandle(ref, () => ({
     focus: () => editor.focus(),
@@ -83,8 +99,8 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
     onSubmit={event => event.stopPropagation()}>
     <NativeView editor={editor} editable={!disabled} theme={resolvedTheme === 'dark' ? 'dark' : 'light'} onChange={() => {
       if (syncing.current) return
-      const markdown = editor.blocksToMarkdownLossy()
-      const sections = editor.document.map(block => editor.blocksToMarkdownLossy([block]).trim()).filter(Boolean)
+      const markdown = project()
+      const sections = editor.document.map(block => project([block]).trim()).filter(Boolean)
       const next: ContentDocument = { format: 'blocknote', version: 1, blocks: editor.document, projection: markdown, sections, ...(original.current ? { legacyMarkdown: original.current } : {}) }
       last.current = { value: markdown, document: next }
       current.current.onChange(markdown, next, sections)
@@ -96,8 +112,13 @@ export const ContentEditor = forwardRef<ContentEditorHandle, {
 })
 ContentEditor.displayName = 'ContentEditor'
 
-export function ContentDocumentView({ document }: { document: ContentDocument }) {
+export function ContentDocumentView({ document, legacyFormat }: { document: ContentDocument; legacyFormat?: 'forum' | 'markdown' }) {
   const { resolvedTheme } = useTheme()
   const editor = useCreateBlockNote({ initialContent: document.blocks, schema: contentSchema, dictionary: contentDictionary, extensions: [syntaxHighlighter] }, [document])
+  useLayoutEffect(() => {
+    if (legacyFormat !== 'markdown') return
+    const recovered = recoverFencedCode(document, document.projection, source => importLegacy(editor, source, 'markdown'))
+    if (recovered !== document) editor.replaceBlocks(editor.document, recovered.blocks)
+  }, [document, editor, legacyFormat])
   return <div className="content-document"><NativeView editor={editor} editable={false} theme={resolvedTheme === 'dark' ? 'dark' : 'light'} /></div>
 }

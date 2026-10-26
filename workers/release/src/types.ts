@@ -6,6 +6,8 @@ export type ReleaseRecord = {
   releaseId: string; manifest: Manifest; manifestHash: string; status: ReleaseStatus
   generation: number; phase: string; createdAt: number; updatedAt: number
   error: string | null; supersededBy: string | null; workflowId: string
+  dispatch?: { queuedAt: number; deadline: number; attempts: number; deliveredAt?: number; lastError?: string }
+  manualInterventions?: number
   checkpoint?: StageCheckpoint; resumeMode?: 'resume' | 'recover'; targets: Record<string, unknown>; errors: { forward?: string; recovery?: string; cleanup?: string }
 }
 export interface ReleaseEnv {

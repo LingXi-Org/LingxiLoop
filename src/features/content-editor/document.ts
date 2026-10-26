@@ -54,6 +54,35 @@ export function usableDocument(document: ContentDocument | null | undefined, tex
   return Boolean(document && document.projection?.trim() === text.trim())
 }
 
+export function hasCodeSyntax(markdown: string): boolean {
+  let found = false
+  visit(fromMarkdown(markdown, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] }), 'code', () => { found = true })
+  return found
+}
+
+/** BlockNote 0.56's Markdown exporter removes one terminal LF from code. Restore
+ * only that verified difference using the existing Markdown AST; never trim code
+ * or reinterpret an export whose code nodes do not match the native sequence. */
+export function preserveCodeNewlines(markdown: string, blocks: Block[]): string {
+  const native: string[] = []
+  const collect = (items: Block[]) => items.forEach(block => {
+    if (block.type === 'codeBlock') native.push(block.content.map(part => part.type === 'text' ? part.text : '').join(''))
+    collect(block.children)
+  })
+  collect(blocks)
+  if (!native.some(code => code.endsWith('\n'))) return markdown
+  const nodes: Extract<Nodes, { type: 'code' }>[] = []
+  visit(fromMarkdown(markdown, { extensions: [gfm()], mdastExtensions: [gfmFromMarkdown()] }), 'code', node => { nodes.push(node) })
+  if (nodes.length !== native.length || nodes.some((node, index) => node.value !== native[index] && `${node.value}\n` !== native[index])) return markdown
+  for (let index = nodes.length - 1; index >= 0; index--) {
+    const node = nodes[index], end = node.position?.end.offset
+    if (node.value === native[index] || end === undefined) continue
+    const closingStart = markdown.lastIndexOf('\n', end - 1) + 1
+    markdown = `${markdown.slice(0, closingStart)}\n${markdown.slice(closingStart)}`
+  }
+  return markdown
+}
+
 export function criteriaSource(criteria: string[], document: ContentDocument | null | undefined): string {
   return document && JSON.stringify(document.sections) === JSON.stringify(criteria) ? document.projection : criteria.join('\n\n')
 }

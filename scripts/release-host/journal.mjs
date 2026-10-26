@@ -124,6 +124,10 @@ export class Journal {
   }
   finish(key, status, result, errors = this.get(key).errors) {
     return this.tx(() => {
+      // Recovery can perform additional reads after its caller captured the
+      // forward error. Preserve the latest counters alongside that error.
+      const controlReads=this.get(key).errors.controlReads
+      if(controlReads)errors={...errors,controlReads}
       this.db.prepare('UPDATE operations SET status=?,result=?,errors=?,updated_at=? WHERE key=?')
         .run(status, canonical(result), canonical(errors), new Date().toISOString(), key)
       if (['succeeded','failed'].includes(status)) this.db.prepare('DELETE FROM reservations WHERE operation_key=?').run(key)

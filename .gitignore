@@ -85,6 +85,7 @@ server/uploads/
 .release.previous.env
 .openlit_apikey
 .codex-tmp/
+.release-runs/
 *.tsbuildinfo
 
 docs/HANDOFF.md
