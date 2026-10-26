@@ -25,9 +25,23 @@ export class Executor {
   }
   async context(op) {
     const resources = this.adapter.resources(op.target,op.phase)
+    const state=this.journal.state(op.target),local=this.adapter.policy.targets[op.target],plan=this.journal.manifest(op.releaseId,op.manifestHash).targets[op.target].hostPlan
+    let currentDirection=state.appliedHash===op.manifestHash?state.appliedDirection:'source'
+    if(local.configurationFiles&&op.phase!=='prepare'){
+      const mutationPhases=['apply','recover','restore-source'],unproven=()=>Object.assign(fault('CONFIGURATION_DIRECTION_UNPROVEN','Current configuration cannot be inferred while a service update is unproven'),{uncertain:true})
+      for(const pending of this.journal.unresolved())if(pending.target===op.target&&mutationPhases.includes(pending.phase)&&(pending.key!==op.key||pending.status==='uncertain'||pending.steps.some(s=>s.sideEffect&&/:up:/.test(s.name))))throw unproven()
+      const applied=result=>result?.applied===true||result?.verified===true&&result.observedAfterInterruption===true
+      const configuration=direction=>direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:direction==='forward'?plan:null
+      const performed=mutationPhases.map(phase=>this.journal.get(`${op.releaseId}:${op.target}:${phase}`)).filter(row=>row?.manifestHash===op.manifestHash&&(applied(row.result)||row.steps.some(s=>s.sideEffect&&/:up:/.test(s.name)))).sort((a,b)=>a.createdAt.localeCompare(b.createdAt)),latest=performed.at(-1)
+      if(latest?.status==='succeeded'&&applied(latest.result)&&configuration(latest.result.direction)&&configuration(latest.result.direction).configurationHash===latest.result.configurationHash)currentDirection=latest.result.direction
+      else if(latest?.status==='failed'&&latest.result?.recovered===true&&latest.result.recovery?.applied===true&&latest.result.recovery.direction==='recovery'&&latest.result.recovery.configurationHash===plan.recovery.configurationHash)currentDirection='recovery'
+      else if(latest||state.appliedHash===op.manifestHash)throw unproven()
+      else currentDirection='source'
+    }
+    const direction=local.configurationFiles?(op.phase==='prepare'?'source':currentDirection):'forward',descriptor=direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:plan
     return {
-      compose: await this.adapter.composeArgs(op,'forward'),
-      currentDirection:this.journal.state(op.target).appliedHash===op.manifestHash?this.journal.state(op.target).appliedDirection:'source',
+      compose: await this.adapter.composeArgs(op,direction,descriptor),
+      currentDirection,
       step: async (name, fn, { sideEffect = false } = {}) => {
         this.journal.assertFence(op.key,resources)
         if(['source-drain','restore-source','source-undrain'].includes(op.phase))await this.assertSourceRestoreAllowed(op)
@@ -64,6 +78,7 @@ export class Executor {
     if (!op || op.status !== 'intent') return op
     this.active.add(key)
     this.journal.patch(key,{ status: 'running' })
+    let context
     try {
       const manifest = this.journal.manifest(op.releaseId,op.manifestHash), plan = validateHostPlan(manifest,op.target,this.adapter.policy)
       if (op.phase === 'observe') {
@@ -74,7 +89,7 @@ export class Executor {
         return this.journal.finish(key,'succeeded',{ operations: observed, needsIntervention: observed.some(row => row.status === 'uncertain') })
       }
       if(['source-drain','restore-source','source-undrain'].includes(op.phase))await this.assertSourceRestoreAllowed(op)
-      const context = await this.context(op), state = this.journal.state(op.target)
+      context = await this.context(op);const state = this.journal.state(op.target)
       let result
       switch (op.phase) {
         case 'prepare':
@@ -124,7 +139,24 @@ export class Executor {
       if (error.uncertain || current.steps.some(step => step.sideEffect && step.status === 'intent')) return this.journal.finish(key,'uncertain',{ needsIntervention: true, observationRequired: true },errors)
       if (op.phase === 'apply' && error.knownApplied) {
         try {
-          const plan = validateHostPlan(this.journal.manifest(op.releaseId,op.manifestHash),op.target,this.adapter.policy), context = await this.context(op)
+          const plan = validateHostPlan(this.journal.manifest(op.releaseId,op.manifestHash),op.target,this.adapter.policy)
+          if(this.adapter.policy.targets[op.target].configurationFiles){
+            // Health failure is not sufficient proof of configuration. Verify
+            // each completed up against forward; untouched services must still
+            // match source. Any unknown step or private metadata mismatch keeps
+            // ownership instead of authorizing another up.
+            try{
+              const current=this.journal.get(op.key),actual=await this.adapter.containers(op),groups={source:[],forward:[]}
+              for(const service of Object.keys(this.adapter.policy.targets[op.target].services)){
+                const steps=current.steps.filter(s=>s.name===`forward:up:${service}`&&s.sideEffect)
+                if(steps.some(s=>s.status!=='completed'))throw fault('CONFIGURATION_DIRECTION_UNPROVEN','A service up remains unproven')
+                groups[steps.length?'forward':'source'].push(service)
+              }
+              if(!groups.forward.length)throw fault('CONFIGURATION_DIRECTION_UNPROVEN','No completed forward up proves a configuration change')
+              for(const direction of ['source','forward'])if(groups[direction].length){const descriptor=direction==='source'?(plan.source??plan.recovery):plan;await this.adapter.configurationEvidence(op,descriptor,direction,actual,await this.adapter.resolveImages(descriptor.images,this.adapter.policy.targets[op.target]),groups[direction])}
+            }catch(proofError){proofError.uncertain=true;throw proofError}
+          }
+          if(!context)throw Object.assign(fault('CONFIGURATION_DIRECTION_UNPROVEN','Original execution context is unavailable'),{uncertain:true})
           await this.stopRecoveryWorkers(op,context)
           const recovery = await this.adapter.apply(op,plan,context,'recovery')
           this.journal.setState(op.target,{ ...this.journal.state(op.target), appliedDirection: 'recovery', appliedHash: op.manifestHash })
@@ -153,7 +185,7 @@ export class Executor {
     const { assertCompatible } = await import('./adapter.mjs')
     assertCompatible(plan.recovery.contract,await this.adapter.state(op))
     const local = this.adapter.policy.targets[op.target], actual = await this.adapter.containers(op)
-    const compose = await this.adapter.composeArgs(op,'recovery')
+    const compose = await this.adapter.composeArgs(op,'recovery',plan.recovery)
     for (const [service,spec] of Object.entries(local.services)) if (spec.role === 'worker' && actual[service].State.Running) {
       await context.step(`recovery:stop:${service}`, () => this.adapter.run([...compose,'stop','--timeout',String(this.adapter.policy.stopTimeoutSeconds ?? 150),service]), { sideEffect: true })
     }

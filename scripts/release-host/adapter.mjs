@@ -9,6 +9,7 @@ import {gatewayControl,gatewayDrain,gatewayPrepare,validateGatewayPlan} from './
 import { componentControl,componentDrain,componentProfile,validateComponentPlan,assertComponentMounts } from './component-control.mjs'
 import {ArtifactCache} from './artifact-cache.mjs'
 import {validateArchive} from './artifact-tar.mjs'
+import {configurationFiles,validateConfigurationPolicy} from './configuration-files.mjs'
 
 const exec = promisify(execFile)
 const digest = value => /^sha256:[a-f0-9]{64}$/.test(value ?? '')
@@ -66,6 +67,7 @@ export function validatePolicy(policy) {
   for (const [target, value] of Object.entries(policy.targets)) {
     requireValue(identifier(target) && adapters.has(value.adapter) && identifier(value.project) && isAbsolute(value.composeFile) && isAbsolute(value.envFile) &&
       value.services && Object.keys(value.services).length > 0, 'INVALID_POLICY', 'Target must name a fixed Compose project, file, environment and services')
+    validateConfigurationPolicy(value)
     for (const [service, spec] of Object.entries(value.services)) requireValue(identifier(service) && roles.has(spec.role) && Array.isArray(spec.mounts), 'INVALID_POLICY', 'Service role and explicit durable mounts are required')
     for (const endpoint of Object.values(value.controls ?? {})) {
       if (endpoint.argv) {
@@ -97,6 +99,7 @@ export function validateHostPlan(manifest, target, policy) {
     validateContract(plan.source.contract)
     for (const image of Object.values(plan.source.images)) validateImage(image,componentProfile(local,image))
   }
+  for(const descriptor of [plan,plan.source??plan.recovery,plan.recovery])configurationFiles(local,descriptor.configurationHash)
   for(const descriptor of [plan,plan.source,plan.recovery])for(const image of Object.values(descriptor?.images??{}))if(image.archive)validateArchive(image)
   if (plan.database) {
     if (local.databaseOwner) requireValue(policy.archive && typeof policy.archive.baseUrl === 'string' && policy.archive.baseUrl.startsWith('https://') && isAbsolute(policy.archive.tokenFile ?? ''), 'ARCHIVE_POLICY_REQUIRED', 'Database preparation requires a trusted immutable archive endpoint and local credential reference')
@@ -192,10 +195,11 @@ export class ComposeAdapter {
     }
     try { return await response.json() } catch { throw Object.assign(fault('CONTROL_INVALID_RESPONSE', `Independent ${action} control returned invalid evidence`, 502), { uncertain: method !== 'GET' }) }
   }
-  async composeArgs(op, direction) {
+  async composeArgs(op, direction, descriptor) {
     const local = this.policy.targets[op.target]
     const path = join(this.policy.stateDirectory, op.releaseId, `${op.target}-${direction}.json`)
-    return ['compose','--project-name',local.project,'--env-file',local.envFile,'--file',local.composeFile,'--file',path]
+    const files=configurationFiles(local,descriptor?.configurationHash)
+    return ['compose','--project-name',local.project,'--env-file',files.envFile,'--file',files.composeFile,'--file',path]
   }
   async overlay(op, images, direction, identities) {
     const directory = join(this.policy.stateDirectory, op.releaseId)
@@ -236,7 +240,8 @@ export class ComposeAdapter {
     for(const[service,image]of Object.entries(source.images)){sourceIds[service]=await this.prepareImage(op,image,local,context,'source');prepared.push(sourceIds[service])}
     requireValue(Object.entries(original).every(([service,container]) => container.Image === sourceIds[service].localImageId), 'SOURCE_IMAGE_CHANGED', 'Actual source containers do not match the qualified recovery identity')
     await this.overlay(op,source.images,'source',sourceIds)
-    this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,'source')),'config','--format','json'])),local,source,sourceIds)
+    if(local.configurationFiles)await this.configurationEvidence(op,source,'source',original,sourceIds)
+    else this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,'source',source)),'config','--format','json'])),local,source,sourceIds)
     for (const [direction, descriptor] of [['forward',plan],['recovery',plan.recovery]]) {
       const identities={}
       for (const [service,image] of Object.entries(descriptor.images)) {
@@ -244,7 +249,7 @@ export class ComposeAdapter {
         identities[service]=identity
       }
       await this.overlay(op, descriptor.images, direction,identities)
-      const config = JSON.parse(await this.run([...(await this.composeArgs(op,direction)),'config','--format','json']))
+      const config = JSON.parse(await this.run([...(await this.composeArgs(op,direction,descriptor)),'config','--format','json']))
       this.validateConfig(config, local, descriptor,identities)
     }
     if(local.adapter==='gateway')await gatewayPrepare(this,op,plan)
@@ -262,6 +267,24 @@ export class ComposeAdapter {
         requireValue(actual?.type === mount.type && source === mount.source && Boolean(actual.read_only) === Boolean(mount.readOnly), 'VOLUME_BINDING_CHANGED', 'Durable volume binding differs from the original trusted binding')
       }
       requireValue(!(serviceConfig.volumes ?? []).some(mount => mount.target === '/var/run/docker.sock'), 'UNSAFE_COMPOSE', 'Business containers may not mount the Docker socket')
+    }
+  }
+  async configurationEvidence(op,descriptor,direction,actual,identities,services){
+    const local=this.policy.targets[op.target],config=JSON.parse(await this.run([...(await this.composeArgs(op,direction,descriptor)),'config','--format','json']))
+    this.validateConfig(config,local,descriptor,identities)
+    const environment=items=>{
+      requireValue(Array.isArray(items),'CONFIGURATION_ENV_UNPROVEN','Actual environment metadata is not available')
+      const result=Object.create(null)
+      for(const item of items){const at=typeof item==='string'?item.indexOf('='):-1;requireValue(at>0&&!Object.hasOwn(result,item.slice(0,at)),'CONFIGURATION_ENV_UNPROVEN','Environment metadata is ambiguous');result[item.slice(0,at)]=item.slice(at+1)}
+      return result
+    }
+    for(const service of services??Object.keys(local.services)){
+      requireValue(actual[service]?.Image===identities[service].localImageId,'CONFIGURATION_ENV_UNPROVEN','Actual image is not qualified for this configuration')
+      const rows=JSON.parse(await this.run(['image','inspect',identities[service].localImageId]));requireValue(rows.length===1,'CONFIGURATION_ENV_UNPROVEN','Image environment metadata is not available')
+      const expected=environment(rows[0].Config?.Env??[]),declared=config.services[service].environment??{}
+      requireValue(declared&&typeof declared==='object'&&!Array.isArray(declared),'CONFIGURATION_ENV_UNPROVEN','Resolved Compose environment must be explicit')
+      for(const[key,value]of Object.entries(declared)){requireValue(typeof value==='string','CONFIGURATION_ENV_UNPROVEN','Resolved Compose environment value is not explicit');expected[key]=value}
+      requireValue(isDeepStrictEqual(environment(actual[service].Config?.Env),expected),'CONFIGURATION_ENV_MISMATCH','Actual service environment does not match the approved configuration snapshot')
     }
   }
   async containers(op) {
@@ -310,6 +333,7 @@ export class ComposeAdapter {
   async drain(op, plan, context) {
     const local = this.policy.targets[op.target]
     if(local.adapter==='main-runtime')await this.preflight(op,plan,{direction:op.phase==='source-drain'?'source':op.phase==='recovery-drain'?'recovery':context.currentDirection??'source',requireReadiness:op.phase!=='recovery-drain',allowStopped:op.phase==='source-drain'})
+    if(local.configurationFiles){const direction=context.currentDirection,descriptor=direction==='source'?(plan.source??plan.recovery):direction==='recovery'?plan.recovery:plan;await this.configurationEvidence(op,descriptor,direction,await this.containers(op),await this.resolveImages(descriptor.images,local))}
     if (local.adapter === 'gateway') return gatewayDrain(this,op,plan,context)
     if (local.adapter !== 'main-runtime') return componentDrain(this,op,plan,context)
     if (plan.mode === 'maintenance') {
@@ -367,7 +391,7 @@ export class ComposeAdapter {
     for(const[service,container]of Object.entries(previous)){let qualified=false;for(const candidate of [plan,plan.recovery,plan.source??plan.recovery]){const identity=await this.inspectImage(candidate.images[service],local);if(identity?.localImageId===container.Image){qualified=true;break}}requireValue(qualified,'SOURCE_IMAGE_CHANGED','An unqualified image replaced a source service')}
     for (const [service, spec] of Object.entries(local.services)) if (spec.role === 'worker') requireValue(previous[service].State?.Running === false, 'WORKER_NOT_STOPPED', 'The local dependent Worker must be stopped before replacing Web')
     for (const image of Object.values(descriptor.images)) requireValue(await this.inspectImage(image,local), 'OFFLINE_IMAGE_MISSING', 'Switch/recovery cannot pull missing images')
-    const compose = await this.composeArgs(op, direction)
+    const compose = await this.composeArgs(op, direction,descriptor)
     this.validateConfig(JSON.parse(await this.run([...compose,'config','--format','json'])), local, descriptor,identities)
     // Validate original volumes are present before Compose can create a silently empty replacement.
     for (const mount of Object.values(local.services).flatMap(spec => spec.mounts)) if (mount.type === 'volume') await this.run(['volume','inspect',mount.source])
@@ -379,7 +403,7 @@ export class ComposeAdapter {
         requireValue(ready.ready === true && isDeepStrictEqual(ready.contract, descriptor.contract), 'CONTROL_NOT_READY', 'Web and the local Worker control contract are not ready')
       }
     }
-    return { applied: true, direction, images: Object.fromEntries(Object.entries(descriptor.images).map(([service,image]) => [service,identities[service].localImageId])),identities }
+    return { applied: true, direction, images: Object.fromEntries(Object.entries(descriptor.images).map(([service,image]) => [service,identities[service].localImageId])),identities,...(this.policy.targets[op.target].configurationFiles?{configurationHash:descriptor.configurationHash}:{}) }
   }
   async waitHealthy(op, service, image) {
     const deadline = Date.now() + (this.policy.startupTimeoutMs ?? 180000)
@@ -398,9 +422,10 @@ export class ComposeAdapter {
     for (const [service,image] of Object.entries(descriptor.images)) requireValue(actual[service].Image === identities[service].localImageId && actual[service].State?.Running === true &&
       !actual[service].State.Restarting && actual[service].State.Health?.Status === 'healthy', 'VERIFY_FAILED', 'Service identity or readiness does not match the target')
     const local = this.policy.targets[op.target]
+    if(local.configurationFiles)await this.configurationEvidence(op,descriptor,direction,actual,identities)
     const ready = await this.control(local,'readiness',{...op,direction},'GET')
     requireValue(ready.ready === true && isDeepStrictEqual(ready.contract, descriptor.contract), 'VERIFY_FAILED', 'Runtime readiness or actual protocol provenance differs')
-    return { verified: true, direction,identities,...(local.adapter !== 'main-runtime'?{versions:ready.versions,storageEvidence:ready.storageEvidence,sourceModeEvidence:ready.sourceModeEvidence}:{}), images: Object.fromEntries(Object.entries(actual).map(([service,container]) => [service,container.Image])) }
+    return { verified: true, direction,identities,...(local.configurationFiles?{configurationHash:descriptor.configurationHash}:{}),...(local.adapter !== 'main-runtime'?{versions:ready.versions,storageEvidence:ready.storageEvidence,sourceModeEvidence:ready.sourceModeEvidence}:{}), images: Object.fromEntries(Object.entries(actual).map(([service,container]) => [service,container.Image])) }
   }
   async undrain(op, plan, context, direction = 'forward') {
     await this.verify(op,plan,direction)
@@ -449,7 +474,7 @@ export class ComposeAdapter {
       else await this.control(local,'readiness',op,'GET')
       // These deterministic private configuration files are safe to reconstruct after a completed cache load.
       // No download, Docker load, business update or uncertain daemon command is replayed.
-      for (const [direction,descriptor] of [['source',source],['forward',plan],['recovery',plan.recovery]]) {const identities=await this.resolveImages(descriptor.images,local);await this.overlay(op,descriptor.images,direction,identities);this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,direction)),'config','--format','json'])),local,descriptor,identities)}
+      for (const [direction,descriptor] of [['source',source],['forward',plan],['recovery',plan.recovery]]) {const identities=await this.resolveImages(descriptor.images,local);await this.overlay(op,descriptor.images,direction,identities);this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,direction,descriptor)),'config','--format','json'])),local,descriptor,identities)}
       if(local.adapter==='gateway')await gatewayPrepare(this,op,plan)
       return { offlineReady: true, observed: true }
     }
