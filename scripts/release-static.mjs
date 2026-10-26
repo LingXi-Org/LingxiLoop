@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs'
 import { resolve, relative } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { putImmutableObject, retainGroups } from './release/static-transfer.mjs'
+export { putImmutableObject } from './release/static-transfer.mjs'
 import { immutable } from '../workers/web-static/src/index.mjs'
 const hash = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`
 function walk(dir) { return readdirSync(dir, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? walk(`${dir}/${entry.name}`) : [`${dir}/${entry.name}`]) }
@@ -25,19 +27,6 @@ export function effectiveWorkerVariables(id, env = process.env) {
   }
   return values
 }
-export async function putImmutableObject(key, bytes, { account, bucket, token, contentType = 'application/octet-stream', fetcher = fetch }) {
-  if (!account || !bucket || !token) throw new Error('R2 artifact storage credentials/configuration missing')
-  const url = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(account)}/r2/buckets/${encodeURIComponent(bucket)}/objects/${key.split('/').map(encodeURIComponent).join('/')}`
-  const headers = { authorization: `Bearer ${token}` }
-  const existing = await fetcher(url, { headers, redirect: 'error', signal: AbortSignal.timeout(20000) })
-  if (existing.ok) {
-    if (hash(new Uint8Array(await existing.arrayBuffer())) !== hash(bytes)) throw new Error(`IMMUTABLE_ARTIFACT_CONFLICT: ${key}`)
-    return
-  }
-  if (existing.status !== 404) throw new Error(`R2 lookup failed: HTTP ${existing.status}`)
-  const response = await fetcher(url, { method: 'PUT', redirect: 'error', signal: AbortSignal.timeout(20000), headers: { ...headers, 'content-type': contentType, 'cache-control': 'public, max-age=31536000, immutable' }, body: bytes })
-  if (!response.ok) throw new Error(`R2 upload failed: HTTP ${response.status}`)
-}
 if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   const [command, id, directory, config] = process.argv.slice(2)
   const output = `release-artifacts/${id}`
@@ -51,14 +40,19 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
     files.push({ path: '@effective-vars', hash: hash(JSON.stringify(effectiveVars)), bytes: Buffer.byteLength(JSON.stringify(effectiveVars)) })
     writeFileSync(`${output}/inventory.json`, JSON.stringify({ files, hash: hash(JSON.stringify(files)), configurationVersion: `cfg-${hash(JSON.stringify({ config: hash(readFileSync(config)), effectiveVars })).slice(7, 31)}` }, null, 2))
     if (id === 'main-frontend') {
-      const options = { account: process.env.CLOUDFLARE_ACCOUNT_ID, bucket: process.env.RELEASE_ARTIFACT_BUCKET || 'lingxiloop-releases', token: process.env.CLOUDFLARE_API_TOKEN }
+      const options = { account: process.env.CLOUDFLARE_ACCOUNT_ID, bucket: process.env.RELEASE_ARTIFACT_BUCKET || 'lingxiloop-releases', token: process.env.CLOUDFLARE_API_TOKEN,retainedApiBase:process.env.RELEASE_API_URL,retainedApiToken:process.env.RELEASE_API_TOKEN }
       // Never prune old chunks during release. Retirement requires an explicit
       // controller GC after both accepted and recovery windows expire.
-      for (const file of files.filter(file => immutable.test(`/${file.path}`))) {
+      const objects = files.filter(file => immutable.test(`/${file.path}`)).map(file => {
         const extension = file.path.split('.').at(-1)
         const contentType = { js: 'text/javascript', css: 'text/css', svg: 'image/svg+xml', json: 'application/json', woff2: 'font/woff2' }[extension] || 'application/octet-stream'
-        await putImmutableObject(`chunks/${file.path}`, readFileSync(resolve(directory, file.path)), { ...options, contentType })
-      }
+        return { key: `chunks/${file.path}`, sha256:file.hash, size:file.bytes, bytes: () => readFileSync(resolve(directory, file.path)), contentType }
+      })
+      if(objects.length&&(!process.env.RELEASE_API_URL||!process.env.RELEASE_API_TOKEN))throw new Error('EXISTING_RETAINED_API_CONFIGURATION_REQUIRED')
+      const receipt = await retainGroups(objects, options)
+      writeFileSync(`${output}/transfer.json`, JSON.stringify(receipt, null, 2))
+      console.log(JSON.stringify({ stage: 'retained-chunks', ...receipt, results: undefined }))
+      if (receipt.status !== 'complete') throw new Error('STATIC_TRANSFER_INCOMPLETE: inspect transfer.json')
     }
   } else if (command === 'record') {
     const { hash: artifactHash, configurationVersion } = JSON.parse(readFileSync(`${output}/inventory.json`, 'utf8'))

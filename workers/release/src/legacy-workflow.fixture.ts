@@ -2,7 +2,7 @@
 // existing persisted journals. Never imported by the deployed Worker entrypoint.
 import { WorkflowEntrypoint, type WorkflowEvent, type WorkflowStep } from 'cloudflare:workers'
 import { archivedImages, canonical, databasePlan, orderedTargets, ReleaseError, requireThat, type TargetId } from '../../../shared/release/protocol'
-import { hostArtifactStatus, relayArtifactPart } from './artifact-transfer'
+import { hostArtifactStatus, relayArtifactPart } from './artifact-transfer.fixture'
 import { activateWorker, hostOperation, installManifest, prepareWorker, settled, successful, verifyTarget } from './adapters'
 import { ledgerCall, type ReleaseEnv, type ReleaseRecord } from './types'
 

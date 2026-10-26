@@ -27,7 +27,7 @@ version must preserve its protocol and the existing DO/journal data.
 
 For a qualified configuration change, dispatch scoped CI on the exact main
 commit with `stage_only=true` and `publish_only=false`. This runs the owning
-checks and prepares immutable image archives and unrouted Worker versions;
+checks and publishes immutable registry images and unrouted Worker versions;
 candidate registration, production deployment and legacy write jobs stay
 skipped. Verify that terminal run and its artifacts before planning the single
 controller release with the approved configuration fingerprints and retained
@@ -112,13 +112,19 @@ treating this planning table as current status or new authorization:
 | Independent backend origin | Proposed `backend.lingxilearn.cn` to existing stable ingress; remove the SPA/auth proxy loop without changing user auth semantics; narrow origin access/HMAC remains mandatory | Restore the prior control Worker version and frontend pointer |
 | Mihomo optional activation | Native pinned binary on A/B; loopback `127.0.0.1:17890`; secret provider; Docker daemon proxy change impacts all local pulls and may require one daemon restart | Restore saved daemon configuration and previous provider; no Docker prune or data-volume changes |
 
-The approved private R2 image archive path replaces a subscription dependency.
-CI retains the OCI graph and streams bounded archive parts; hosts verify the
-complete archive, raw config and ordered layers, then prove offline Docker
-load/save identity. R2 mode does not pull a registry or install/change a proxy.
-Mihomo templates remain optional historical preparation, not a release
-prerequisite. Never guess or request a plaintext subscription to bypass a
-missing artifact. See `scripts/release-host/ARTIFACTS.md` for the fixed contract.
+The #514 candidate replaces R2 image distribution with immutable registry pulls
+through the explicitly approved A/B loopback Mihomo proxy. The host preflight
+requires the actual Docker proxy configuration before pulling; the image must
+match the full OCI index/platform/config/layer evidence. Existing accepted
+source images remain local recovery inputs. CI no longer publishes image
+archives and the host no longer downloads or loads them from R2. Historical
+archive receipts remain readable; R2 business assets, database backups and
+release evidence remain intact. See `scripts/release-host/ARTIFACTS.md` and
+`docs/evidence/issue-514/README.md` for contracts and measured route results.
+Proxy installation and Docker configuration are qualified separately from
+candidate deployment: upgrade the tested controller/executors and synchronize
+Ops identities before using the new release path. An active proxy alone is not
+a successful new business release.
 
 No irreversible deletion is proposed. After acceptance, disable only the
 LingxiLoop rollout procedure `6aa8a416b35d27bdd4e12af5` and remove LingxiLoop

@@ -13,7 +13,7 @@ export async function callRelease(method, { manifest, releaseId, after = 0 } = {
   const write = ['plan', 'submit', 'resume', 'recover'].includes(method)
   const response = await (options.fetch ?? fetch)(new URL(path, origin), {
     method: write ? 'POST' : 'GET', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    body: write ? JSON.stringify(manifest ?? {}) : undefined, redirect: 'error', signal: AbortSignal.timeout(30_000),
+    body: write ? JSON.stringify(manifest ?? {}) : undefined, redirect: 'error', signal: AbortSignal.timeout(Math.max(1,Math.min(30_000,options.timeoutMs ?? 30_000))),
   })
   const result = await response.json()
   if (!response.ok) throw Object.assign(new Error(result.error ?? 'RELEASE_REQUEST_FAILED'), { code: result.error, status: response.status })

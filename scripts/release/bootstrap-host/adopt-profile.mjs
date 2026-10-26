@@ -74,7 +74,7 @@ export function generateAdoption(evidence,{intendedOpsSha}={}){
   const host=evidence.hosts[side],inventory=host.inventory,targets=host.profile.receipt?.targets??host.profile.targets
   check(inventory?.version===1&&inventory.root===true&&inventory.architecture==='x86_64'&&targets&&(host.profile.receipt??host.profile).complete===true,'HOST_FACTS_UNQUALIFIED')
   preserved[side]=inventory.containers.map(c=>({container:c.name,project:c.labels['com.docker.compose.project'],service:c.labels['com.docker.compose.service'],mounts:normalizedMounts(c.mounts)}))
-  const policy={version:1,listen:{host:'127.0.0.1',port:17951},stateDirectory:'/var/lib/lingxi-release',tokenFile:'/run/credentials/lingxi-release-host.service/executor-token',dockerBinary:'/usr/bin/docker',artifactTransport:'r2',acceptedOpsShas:intendedOpsSha?[intendedOpsSha]:[],...(intendedOpsSha?{clientScript:`/opt/lingxi-release/versions/${intendedOpsSha}/scripts/release-host/pg-client.mjs`}:{}),archive:{baseUrl:'https://release.lingxilearn.cn',tokenFile:SECRET+'executor-token',timeoutMs:60000},targets:{}}
+  const policy={version:1,listen:{host:'127.0.0.1',port:17951},stateDirectory:'/var/lib/lingxi-release',tokenFile:'/run/credentials/lingxi-release-host.service/executor-token',dockerBinary:'/usr/bin/docker',artifactTransport:'registry',acceptedOpsShas:intendedOpsSha?[intendedOpsSha]:[],...(intendedOpsSha?{clientScript:`/opt/lingxi-release/versions/${intendedOpsSha}/scripts/release-host/pg-client.mjs`}:{}),archive:{baseUrl:'https://release.lingxilearn.cn',tokenFile:SECRET+'executor-token',timeoutMs:60000},targets:{}}
   policies[side]={readyForInstallation:false,installed:false,policy}
   for(const [id,[adapter,project,services]] of Object.entries(definitions[side])){
    const f=targets[id]

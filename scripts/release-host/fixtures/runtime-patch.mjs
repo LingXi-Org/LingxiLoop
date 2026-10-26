@@ -1,0 +1,3 @@
+const migrations=Array.from({length:57},(_,i)=>({version:i+1,name:`migration_${i+1}`,checksum:String(i%10).repeat(64)}))
+export function patchFixture(){const source={runtime:'3.8.12',schema:14,protocol:11,schemaHash:'a'.repeat(64),productVersion:57,migrations};return {source,target:{...structuredClone(source),runtime:'3.8.14',integrity:`sha512-${'A'.repeat(86)}==`,tarball:`https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.14/${'b'.repeat(40)}`}}}
+export function databaseFixture(){const runtimePatch=patchFixture();return {from:{nativeSchema:14,productSchema:57},to:{nativeSchema:14,productSchema:57},migrations:structuredClone(migrations),runtimePatch}}

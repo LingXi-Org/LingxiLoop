@@ -15,6 +15,28 @@ async function setup(t){
   assert.equal((await f.run('prepare')).status,'succeeded')
   return f
 }
+test('transient recovery ingress read retries inside one operation without replaying a mutation',async t=>{
+  const f=await setup(t),fetcher=f.adapter.fetcher;let failures=0,posts=0
+  f.adapter.wait=async()=>{}
+  f.adapter.fetcher=async(url,options)=>{
+    if(options.method==='POST')posts++
+    if(options.method==='GET'&&new URL(url).pathname==='/ingress'&&failures++===0)throw Error('private transport')
+    return fetcher(url,options)
+  }
+  const result=await f.run('recovery-drain')
+  assert.equal(result.status,'succeeded');assert.equal(posts,1)
+  assert.equal(result.errors.controlReads.ingressState.retries,1)
+  assert.equal(JSON.stringify(result).includes('private transport'),false)
+})
+test('read authorization is not retried and transient exhaustion records three attempts',async t=>{
+  const f=await setup(t),local=f.local.targets['main-runtime-a'];f.adapter.wait=async()=>{}
+  for(const status of [401,403,429,502]){
+    let calls=0
+    f.adapter.fetcher=async()=>{calls++;return new Response(null,{status})}
+    await assert.rejects(f.adapter.control(local,'ingressState',f.request('prepare'),'GET'))
+    assert.equal(calls,[429,502].includes(status)?3:1)
+  }
+})
 for(const failure of ['502','transport'])test(`ingress ${failure} after effect is read back with the same authentication and completes the remaining maintenance drain`,async t=>{
   const f=await setup(t),fetcher=f.adapter.fetcher,calls=[]
   f.adapter.fetcher=async(url,options)=>{

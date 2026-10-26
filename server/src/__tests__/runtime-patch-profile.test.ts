@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import {readFileSync,readdirSync} from 'node:fs'
+import {createHash} from 'node:crypto'
+import {execFileSync} from 'node:child_process'
+import {fileURLToPath} from 'node:url'
 import { assertCurrentRuntimeProfile, assertFull54InstallBoundary, assertLockedRuntimePackage, assertMigrationRuntime, PUBLIC_PURPOSE_SCHEMA_HASH } from '../db/runtime-profile.js'
-import { assertRuntimePatchDescriptors } from '../db/runtime-patch.js'
+import { assertRuntimePatchDescriptors,loadRuntimePatchInventory,runtimePatchPlanHash,readRuntimePatchBarrier,applyPublishedRuntimePatch,observePublishedRuntimePatch } from '../db/runtime-patch.js'
+import {parseRuntimePatchInput} from '../runtime-patch-bin.js'
 
 const current={runtime:'3.8.3',schema:14,controlPlane:11,publicText:2,runTrace:1}
 test('full54 runtime profile binds the exact current package and retains historical gates',()=>{
@@ -66,4 +71,70 @@ test('case deletion product57 accepts complete product upgrades without admittin
   for(const count of [0,54,55,56,57]) assert.doesNotThrow(()=>assertFull54InstallBoundary(count,'3.8.12',57))
   for(const count of [1,10,49,53,58]) assert.throws(()=>assertFull54InstallBoundary(count,'3.8.12',57),/historical package/)
   assert.throws(()=>assertFull54InstallBoundary(57,'3.8.12',56),/historical package/)
+})
+
+const migrations57=readdirSync(new URL('../db/migrations/',import.meta.url)).sort().map(file=>({
+ version:Number(file.slice(0,4)),name:file.slice(5,-4),checksum:createHash('sha256').update(readFileSync(new URL('../db/migrations/'+file,import.meta.url))).digest('hex'),
+}))
+const source57={runtime:'3.8.12',schema:14,protocol:11,schemaHash:PUBLIC_PURPOSE_SCHEMA_HASH,productVersion:57,migrations:migrations57}
+const target57={...source57,runtime:'3.8.14'}
+test('product57 exact12 to14 CAS qualifies the entire real named57 inventory without changing native schema',async()=>{
+ assert.doesNotThrow(()=>assertRuntimePatchDescriptors(source57,target57))
+ assert.deepEqual(await loadRuntimePatchInventory(57),migrations57)
+})
+test('product57 CAS refuses other runtime transitions, partial/renamed/rewritten inventory and schema drift',()=>{
+ for(const mutate of [(d:typeof target57)=>{d.runtime='3.8.15'},(d:typeof target57)=>{d.productVersion=56},
+  (d:typeof target57)=>{d.migrations.pop()},(d:typeof target57)=>{d.migrations[0].name='renamed'},
+  (d:typeof target57)=>{d.migrations[0].checksum='b'.repeat(64)},(d:typeof target57)=>{d.schema=15},
+  (d:typeof target57)=>{d.protocol=12},(d:typeof target57)=>{d.schemaHash='b'.repeat(64)}]){
+  const bad=structuredClone(target57);mutate(bad);assert.throws(()=>assertRuntimePatchDescriptors(source57,bad))
+ }
+ assert.throws(()=>assertRuntimePatchDescriptors({...source57,runtime:'3.8.11'},target57))
+ assert.throws(()=>assertRuntimePatchDescriptors(target57,source57))
+})
+const published57={...target57,integrity:'sha512-'+Buffer.alloc(64,1).toString('base64'),tarball:'https://npm.pkg.github.com/download/@lyyzka/lingxios/3.8.14/'+'a'.repeat(40)}
+test('fixed product57 CLI accepts only complete source/target descriptors, with no SQL, argv, URL or file inputs',()=>{
+ const input={source:source57,target:published57}
+ assert.deepEqual(parseRuntimePatchInput(JSON.stringify(input)),input)
+ for(const change of [(d:typeof input&{command?:string})=>{d.command='SQL'},
+  (d:typeof input)=>{d.target.tarball='https://other.invalid/package'},
+  (d:typeof input)=>{d.target.integrity='sha512-not-integrity'},
+  (d:typeof input)=>{d.target.migrations[0].name="x'; DROP TABLE"},
+  (d:typeof input)=>{d.source.runtime='3.8.14'}]){
+  const bad=structuredClone(input);change(bad);assert.throws(()=>parseRuntimePatchInput(JSON.stringify(bad)))
+ }
+ assert.throws(()=>parseRuntimePatchInput(' '.repeat(64*1024+1)))
+})
+test('runtime patch identity binds the same exact expected source/target independent of JSON key order',()=>{
+ const reversed=Object.fromEntries(Object.entries(published57).reverse()) as typeof published57
+ assert.equal(runtimePatchPlanHash(source57,published57),runtimePatchPlanHash(source57,reversed))
+ assert.notEqual(runtimePatchPlanHash(source57,published57),runtimePatchPlanHash(source57,{...published57,integrity:'sha512-different'}))
+})
+test('product57 barrier refuses hidden, absent or active lease/checkpoint/client evidence',async()=>{
+ const state={visible:true,prepared:0,liveWork:0,liveSession:0,liveAttempts:0,liveCapture:0,liveOutbox:0,incompatibleRuns:0,otherClients:0}
+ const client=(row:Record<string,unknown>)=>({query:async()=>({rows:[row]})}) as unknown as Parameters<typeof readRuntimePatchBarrier>[0]
+ await readRuntimePatchBarrier(client(state),true)
+ for(const change of [{visible:false},{otherClients:1},{otherClients:undefined},{prepared:undefined},{liveWork:-1}])await assert.rejects(readRuntimePatchBarrier(client({...state,...change}),true))
+ // Active counters are returned to the transaction, which requires all zero.
+ assert.equal((await readRuntimePatchBarrier(client({...state,incompatibleRuns:1}),true)).incompatibleRuns,1)
+})
+test('fixed CLI rejects extra actions and missing maintenance authorization before a database connection, without private output',()=>{
+ const script=fileURLToPath(new URL('../runtime-patch-bin.ts',import.meta.url))
+ for(const args of [['exec','private-marker'],['observe','--url','private-marker'],['apply']]){
+  try{
+   execFileSync(process.execPath,['--import','tsx',script,...args],{input:JSON.stringify({source:source57,target:published57}),encoding:'utf8',env:{...process.env,DATABASE_URL:'postgres://private-marker@127.0.0.1:1/runtime_patch_test',LINGXIOS_SCHEMA_UPGRADE_DRAINED:''},stdio:['pipe','pipe','pipe']})
+   assert.fail('CLI should refuse')
+  }catch(error){
+   const result=error as {status?:number;stdout?:string;stderr?:string}
+   assert.equal(result.status,1)
+   assert.deepEqual(JSON.parse(result.stdout??''),{error:{code:'RUNTIME_PATCH_REFUSED',uncertain:false,outcomeKnown:true,observationRequired:false}})
+   assert.doesNotMatch(String(result.stdout)+String(result.stderr),/private-marker|postgres:\/\//)
+  }
+ }
+})
+test('formal package proof rejects a fixture lock/integrity before opening a database for apply or observation',async()=>{
+ const database={connect:async()=>{assert.fail('unqualified package must never connect')}} as unknown as Parameters<typeof applyPublishedRuntimePatch>[0]
+ const rejected=/Exact formal runtime patch package\/locks required|exact formal runtime package and matching root\/server manifests\/locks required/
+ await assert.rejects(applyPublishedRuntimePatch(database,source57,published57),rejected)
+ await assert.rejects(observePublishedRuntimePatch(database,source57,published57),rejected)
 })

@@ -256,7 +256,7 @@ export function CasesPage() {
   const detail = Boolean(id || editing)
   const invalid = busy || !input.title.trim() || input.body.length > 200000 || input.summary.length > 2000
   const date = (value: CaseArticle) => new Date(value.publishedAt ?? value.createdAt ?? value.updatedAt).toLocaleDateString('zh-CN').replaceAll('/', '.')
-  const body = (value: CaseInput) => usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument}/> : <Markdown body={value.body}/>
+  const body = (value: CaseInput) => usableDocument(value.editorDocument, value.body) ? <ContentDocumentView document={value.editorDocument} legacyFormat="markdown"/> : <Markdown body={value.body}/>
   const hero = content && <div data-case-hero className="case-hero">
     <div className="case-cover">
       <CaseCover cover={article?.generatedCover} fallbackUrl={content.cover} title={content.title} scopeKey={`${coverScope}:${article?.id ?? 'new'}`}

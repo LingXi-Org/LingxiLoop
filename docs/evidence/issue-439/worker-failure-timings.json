@@ -1,0 +1,22 @@
+{
+  "mode": "selected",
+  "availableFiles": 130,
+  "selectedFiles": [
+    "runtime-worker-diagnostics.test.ts"
+  ],
+  "executedFiles": [
+    "runtime-worker-diagnostics.test.ts"
+  ],
+  "records": [
+    {
+      "files": [
+        "runtime-worker-diagnostics.test.ts"
+      ],
+      "runtime": "current",
+      "durationMs": 7065,
+      "exitCode": 0
+    }
+  ],
+  "durationMs": 7065,
+  "exitCode": 0
+}

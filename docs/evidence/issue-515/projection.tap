@@ -1,0 +1,89 @@
+TAP version 13
+# Subtest: replaced answer drafts have an explicit transcript identity; acceptance retains the current answer until commit
+ok 1 - replaced answer drafts have an explicit transcript identity; acceptance retains the current answer until commit
+  ---
+  duration_ms: 36.052781
+  type: 'test'
+  ...
+# Subtest: failure and cancellation retain the latest partial answer and factual status
+ok 2 - failure and cancellation retain the latest partial answer and factual status
+  ---
+  duration_ms: 4.280517
+  type: 'test'
+  ...
+# Subtest: v3 substantive segments survive tools and commentary, append once and hydrate with stable identities
+ok 3 - v3 substantive segments survive tools and commentary, append once and hydrate with stable identities
+  ---
+  duration_ms: 43.281368
+  type: 'test'
+  ...
+# Subtest: only committed explicit replacement replaces sources; failed replacement retains the original
+ok 4 - only committed explicit replacement replaces sources; failed replacement retains the original
+  ---
+  duration_ms: 8.486692
+  type: 'test'
+  ...
+# Subtest: protocol-failed drafts remain auditable without leaking full text into final, history or replay
+ok 5 - protocol-failed drafts remain auditable without leaking full text into final, history or replay
+  ---
+  duration_ms: 7.363501
+  type: 'test'
+  ...
+# {"scenario":"B-synthetic","attempts":["model:1 failed","model:2 failed","model:3 completed"],"committedSources":{"version":3,"messageId":"answer:synthetic-protocol-correction-515:v1","bodyHash":"6584291fe9faf2710ecbfeeef6b32456df5d39c056918abf97c18282268cc76e","segments":[{"segmentId":"model:3:answer","partId":"model:3:answer","bodyHash":"6584291fe9faf2710ecbfeeef6b32456df5d39c056918abf97c18282268cc76e","start":0,"end":21}]},"finalText":"The corrected answer.","revisions":[{"id":"public-text:d889985a0a85b4d872bf6b3df61e788618bb6c269e7e9df3dfd1ff19fac4eafb","label":"未完成的答复草稿（已替换）"},{"id":"public-text:fbc7e9d8715ff32d9e51e8e2c4ba2ad6e4f5729aa1c70745f7e1d92959bfb98a","label":"未完成的答复草稿（已替换）"}],"replayStable":true}
+# Subtest: explicit replacements expose lifecycle summaries while preserving the valid source until commit
+ok 6 - explicit replacements expose lifecycle summaries while preserving the valid source until commit
+  ---
+  duration_ms: 4.236711
+  type: 'test'
+  ...
+# Subtest: a partial committed answer keeps truthful status and useful text without its failed draft
+ok 7 - a partial committed answer keeps truthful status and useful text without its failed draft
+  ---
+  duration_ms: 2.425383
+  type: 'test'
+  ...
+# Subtest: cancellation retains shown answer and genuine incomplete status; equal text in other runs has distinct identity
+ok 8 - cancellation retains shown answer and genuine incomplete status; equal text in other runs has distinct identity
+  ---
+  duration_ms: 1.844649
+  type: 'test'
+  ...
+# Subtest: v3 events preserve only the public operation, source identity and seal allowlist
+ok 9 - v3 events preserve only the public operation, source identity and seal allowlist
+  ---
+  duration_ms: 0.518361
+  type: 'test'
+  ...
+# Subtest: real assistant transport preserves every segment checkpoint without native-event leakage
+ok 10 - real assistant transport preserves every segment checkpoint without native-event leakage
+  ---
+  duration_ms: 46.920189
+  type: 'test'
+  ...
+# Subtest: repair archives an abandoned candidate by identity and preserves new text immediately and exact history
+ok 11 - repair archives an abandoned candidate by identity and preserves new text immediately and exact history
+  ---
+  duration_ms: 9.452922
+  type: 'test'
+  ...
+# Subtest: distinct tool preambles with identical text survive; replayed native events do not duplicate them
+ok 12 - distinct tool preambles with identical text survive; replayed native events do not duplicate them
+  ---
+  duration_ms: 1.186878
+  type: 'test'
+  ...
+# Subtest: interrupted pre-tool public text stays visible and final model.delta is not a second foreground answer
+ok 13 - interrupted pre-tool public text stays visible and final model.delta is not a second foreground answer
+  ---
+  duration_ms: 2.566956
+  type: 'test'
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2063.88097

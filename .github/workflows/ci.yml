@@ -418,7 +418,7 @@ jobs:
       - if: always() && matrix.component == 'open-notebook'
         run: docker rm -f rag-shadow-ci
       - if: matrix.component == 'deploy-contract'
-        run: node --test scripts/ci-scope.test.mjs scripts/release-candidate.test.mjs scripts/release/static-config.test.mjs scripts/release/image-archive.test.mjs workers/web-static/src/index.test.mjs
+        run: node --test scripts/ci-scope.test.mjs scripts/release-candidate.test.mjs scripts/release/static-config.test.mjs workers/web-static/src/index.test.mjs
       - if: matrix.component == 'deploy-contract'
         run: node --test scripts/checkout-bytes.test.mjs
       - if: matrix.component == 'deploy-contract'
@@ -561,7 +561,6 @@ jobs:
         run: |
           mkdir -p "release-artifacts/$COMPONENT"
           node scripts/release-candidate.mjs image "$IMAGE_REFERENCE" "$IMAGE_DIGEST" "release-artifacts/$COMPONENT/artifact.json"
-          node scripts/release/image-archive.mjs "release-artifacts/$COMPONENT/artifact.json"
       - if: vars.RELEASE_CONTROLLER_ENABLED == 'true' || (github.ref == 'refs/heads/main' && inputs.publish_only && vars.RELEASE_API_URL != '')
         uses: actions/upload-artifact@v4
         with:
@@ -694,7 +693,7 @@ jobs:
       (needs.integration.result == 'success' || needs.integration.result == 'skipped')
     needs: [changes, checks, integration]
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -716,6 +715,7 @@ jobs:
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAAEsX5eyOl1nAe5i9' }}
       - name: Upload immutable Worker versions and retained chunks
         env:
+          RELEASE_API_TOKEN: ${{ secrets.RELEASE_API_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           RELEASE_ARTIFACT_BUCKET: ${{ vars.RELEASE_ARTIFACT_BUCKET }}
@@ -737,7 +737,8 @@ jobs:
             npx --no-install wrangler versions upload --config workers/control-plane/wrangler.jsonc --tag "$GITHUB_SHA" --var "ORIGIN_BASE_URL:$BACKEND_ORIGIN_BASE_URL" --var "RELEASE_API_URL:$RELEASE_API_URL" --var "RELEASE_CONTROLLER_ENABLED:$RELEASE_CONTROLLER_ENABLED" 2>&1 | tee admin-version.log
             node scripts/release-static.mjs record admin-worker admin-version.log lingxiloop-control-plane
           fi
-      - uses: actions/upload-artifact@v4
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: release-component-static-${{ github.sha }}-${{ github.run_attempt }}
           path: release-artifacts/
