@@ -58,6 +58,12 @@ This optimization cannot guarantee that prepare plus full compatible recovery
 fits a provider's complete request allowance. Even with one observation per
 phase, ten forward and six recovery host phases require 48 operation requests,
 plus two manifest uploads, before probes, frontend operations and other calls.
+The parent relayed the account owner's direct confirmation on 2026-10-26 that
+the current account uses Workers Free. Its 50-subrequest allowance is therefore
+insufficient for this full recovery path, even under the ideal count above.
+Long polling alone cannot qualify that path on the current plan. The original
+production exception text was not retained; injected classifier tests do not
+establish that a quota exception was captured from that production invocation.
 Uncached R2 archives retain their per-part relay traffic. A slow phase can need
 multiple bounded GETs. Tests verify forward and full recovery mechanics,
 preserved deadlines, unresolved ownership and no mutation replay; they do not
