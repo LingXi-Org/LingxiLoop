@@ -19,3 +19,28 @@ test('unconfirmed terminal output is never retried, and fixed host/action receip
  await assert.rejects(nativeOperation('b','query',{env,fetcher:async()=>{calls++;return new Response('incomplete')}}),/UNCONFIRMED/)
  assert.equal(calls,2)
 })
+test('provider filter preserves original, excludes TLS bypass, resumes atomically and refuses drift',()=>{
+ const script=`import shlex,sys,tempfile,pathlib,json,hashlib
+source=shlex.split(sys.argv[1])[2].split('try:\\n with deadline():print')[0]
+scope={};exec(source,scope)
+with tempfile.TemporaryDirectory() as directory:
+ p=pathlib.Path(directory)/'provider.yaml'
+ original=json.dumps({'proxies':[{'name':'safe','type':'ss','server':'example.test','port':443,'password':'fixture-private'},{'name':'unsafe','type':'vless','server':'example.test','port':443,'skip-cert-verify':True}],'rules':['MATCH,REJECT']}).encode()
+ p.write_bytes(original);expected=hashlib.sha256(original).hexdigest()
+ scope['PROVIDER']=p;scope['provider_read']=lambda path=None:(path or p).read_bytes();scope['system_state']=lambda:{'ActiveState':'inactive'}
+ result=scope['filter_provider'](expected)
+ assert result['nodeCount']==1 and result['excludedNodeCount']==1
+ assert json.loads(p.read_bytes())=={'proxies':[json.loads(original)['proxies'][0]]}
+ assert p.with_name('mihomo-provider.uploaded-'+expected+'.yaml').read_bytes()==original
+ assert scope['filter_provider'](expected)==result
+ p.write_text('{}')
+ try:scope['filter_provider'](expected);raise AssertionError('accepted drift')
+ except RuntimeError as error:assert str(error)=='PROVIDER_CHANGED_SINCE_APPROVAL'
+for raw in [b'proxies: []\\nproxies: []',b'proxies: &a [*a]']:
+ try:scope['provider_nodes'](raw);raise AssertionError('accepted duplicate/alias')
+ except RuntimeError:pass
+`
+ const result=spawnSync('python3',['-c',script,nativeCommand('a','filter-provider','a'.repeat(64))],{encoding:'utf8'})
+ assert.equal(result.status,0,result.stderr)
+ assert.equal(result.stdout,'')
+})

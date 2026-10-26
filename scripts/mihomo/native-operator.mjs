@@ -13,11 +13,8 @@ def release_idle():
  finally:db.close()
  check(pending==0 and reservations==0,'RELEASE_NOT_IDLE')
  return {'pending':pending,'reservations':reservations}
-def provider_check():
+def provider_nodes(raw):
  import yaml
- m=PROVIDER.lstat()
- check(stat.S_ISREG(m.st_mode) and m.st_uid==0 and m.st_gid==0 and stat.S_IMODE(m.st_mode)==0o600 and m.st_size<=2097152,'PROVIDER_METADATA_REJECTED')
- raw=PROVIDER.read_bytes()
  check(not any(isinstance(e,yaml.events.AliasEvent) for e in yaml.parse(raw)),'PROVIDER_ALIAS_REJECTED')
  class UniqueLoader(yaml.SafeLoader):pass
  def mapping(loader,node,deep=False):
@@ -32,26 +29,68 @@ def provider_check():
  nodes=document.get('proxies') if isinstance(document,dict) else None
  check(isinstance(nodes,list) and 0<len(nodes)<=1000,'PROVIDER_NODES_REQUIRED')
  names=set()
- def tls(value):
-  if isinstance(value,dict):
-   check(value.get('skip-cert-verify') not in (True,'true'),'PROVIDER_TLS_BYPASS_REJECTED')
-   for item in value.values():tls(item)
-  elif isinstance(value,list):
-   for item in value:tls(item)
  for node in nodes:
   check(isinstance(node,dict) and isinstance(node.get('name'),str) and node['name'] not in names and isinstance(node.get('server'),str) and type(node.get('port')) is int and 1<=node['port']<=65535,'PROVIDER_NODE_INVALID')
-  names.add(node['name']);tls(node)
+  names.add(node['name'])
+ return nodes
+def bypass(value):
+ if isinstance(value,dict):return value.get('skip-cert-verify') in (True,'true') or any(bypass(v) for v in value.values())
+ if isinstance(value,list):return any(bypass(v) for v in value)
+ return False
+def provider_read(path=PROVIDER):
+ m=path.lstat()
+ check(stat.S_ISREG(m.st_mode) and m.st_uid==0 and m.st_gid==0 and stat.S_IMODE(m.st_mode)==0o600 and m.st_size<=2097152,'PROVIDER_METADATA_REJECTED')
+ return path.read_bytes()
+def provider_check():
+ raw=provider_read();nodes=provider_nodes(raw)
+ check(not any(bypass(node) for node in nodes),'PROVIDER_TLS_BYPASS_REJECTED')
  return {'sha256':digest(raw),'nodeCount':len(nodes),'bytes':len(raw)}
-def execute(args,timeout=25):
- r=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=timeout)
- check(r.returncode==0,'MIHOMO_COMMAND_UNCONFIRMED')
+def filter_provider(expected):
+ check(isinstance(expected,str) and re.fullmatch('[a-f0-9]{64}',expected),'EXPECTED_PROVIDER_HASH_REQUIRED')
+ check(system_state()['ActiveState']=='inactive','MIHOMO_MUST_REMAIN_INACTIVE')
+ backup=PROVIDER.with_name('mihomo-provider.uploaded-'+expected+'.yaml')
+ receipt=PROVIDER.with_name('mihomo-provider.filtered-'+expected+'.json')
+ current=provider_read()
+ if present(backup):original=provider_read(backup)
+ else:
+  check(digest(current)==expected,'PROVIDER_SOURCE_HASH_MISMATCH');original=current
+ check(digest(original)==expected,'PROVIDER_BACKUP_HASH_MISMATCH')
+ nodes=provider_nodes(original);safe=[node for node in nodes if not bypass(node)]
+ check(0<len(safe)<len(nodes),'PROVIDER_FILTER_NOT_APPLICABLE')
+ candidate=json.dumps({'proxies':safe},ensure_ascii=False,separators=(',',':')).encode()
+ check(current in (original,candidate),'PROVIDER_CHANGED_SINCE_APPROVAL')
+ result={'sourceSha256':expected,'providerSha256':digest(candidate),'originalNodeCount':len(nodes),'nodeCount':len(safe),'excludedNodeCount':len(nodes)-len(safe),'originalPreserved':True,'serviceStarted':False}
+ if present(receipt):
+  check(readjson(receipt)==result and current==candidate,'PROVIDER_RECEIPT_CONFLICT');return result
+ if not present(backup):
+  fd=os.open(backup,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+  with os.fdopen(fd,'wb') as out:out.write(original);out.flush();os.fsync(out.fileno())
+  syncdir(PROVIDER.parent)
+ if current!=candidate:
+  fd,tmp=tempfile.mkstemp(prefix='.provider-',dir=PROVIDER.parent)
+  try:
+   with os.fdopen(fd,'wb') as out:out.write(candidate);out.flush();os.fchmod(out.fileno(),0o600);os.fsync(out.fileno())
+   check(provider_read()==original,'PROVIDER_CHANGED_DURING_FILTER')
+   os.replace(tmp,PROVIDER);syncdir(PROVIDER.parent)
+  finally:
+   if os.path.exists(tmp):os.unlink(tmp)
+ check(provider_check()['sha256']==result['providerSha256'],'PROVIDER_FILTER_UNCONFIRMED')
+ record(receipt,result);return result
+def execute(args,timeout=25,stage='COMMAND',safe_path=None):
+ env={'PATH':'/usr/sbin:/usr/bin:/sbin:/bin',**({'SAFE_PATHS':safe_path} if safe_path else {})}
+ r=subprocess.run(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=timeout,env=env)
+ if r.returncode!=0:
+  diagnostic=(r.stdout+r.stderr).decode(errors='replace').lower()
+  category='SAFE_PATH' if any(s in diagnostic for s in ['safe_paths','not a subpath','not allowed paths']) else 'CONFIG' if 'config' in diagnostic else 'UNCONFIRMED'
+  raise RuntimeError('MIHOMO_'+stage+'_'+category)
  return r.stdout
 def native_action(data):
  side=data['host'];action=data['action'];p=Paths()
- check(side in ('a','b') and action in ('query','install','validate','start','probe'),'INVALID_NATIVE_ACTION')
+ check(side in ('a','b') and action in ('query','filter-provider','install','validate','start','probe'),'INVALID_NATIVE_ACTION')
  original={'action':'query','host':side}
  idle=release_idle()
  if action=='query':return {**query(original),'releaseIdle':idle}
+ if action=='filter-provider':return filter_provider(data.get('expectedProviderHash'))
  provider=provider_check()
  if action=='install':
   result=main({'action':'install','host':side})
@@ -65,17 +104,32 @@ def native_action(data):
    config=pathlib.Path(directory)/'config.yaml'
    config.write_bytes(CONFIG_BYTES.replace(b'/run/credentials/lingxi-release-mihomo.service/provider.yaml',str(PROVIDER).encode()))
    config.chmod(0o600)
-   execute([str(p.binary),'-t','-d',directory,'-f',str(config)],30)
+   execute([str(p.binary),'-t','-d',directory,'-f',str(config)],30,'VALIDATE',str(PROVIDER))
   check(provider_check()==provider,'PROVIDER_CHANGED_DURING_VALIDATION')
   if action=='validate':return {'syntaxValid':True,'provider':provider,'serviceStarted':False}
   check(state['service']['ActiveState'] in ('inactive','active'),'MIHOMO_SERVICE_STATE_CONFLICT')
-  execute(['systemctl','daemon-reload'],20)
-  execute(['systemctl','start',SERVICE],30)
+  # Mihomo requires an explicit safe path for the already approved systemd
+  # credential, which is outside its state directory. Grant that exact file.
+  dropin=pathlib.Path('/etc/systemd/system/'+SERVICE+'.d/10-provider-path.conf')
+  contents=b'[Service]\\nEnvironment=SAFE_PATHS=/run/credentials/lingxi-release-mihomo.service/provider.yaml\\n'
+  if present(dropin):check(regular(dropin,4096)==contents,'MIHOMO_DROPIN_CONFLICT')
+  else:
+   check(state['service']['ActiveState']=='inactive','MIHOMO_MUST_REMAIN_INACTIVE')
+   dropin.parent.mkdir(mode=0o755,exist_ok=True)
+   fd=os.open(dropin,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o644)
+   with os.fdopen(fd,'wb') as out:out.write(contents);out.flush();os.fsync(out.fileno())
+   syncdir(dropin.parent)
+  execute(['systemctl','daemon-reload'],20,'UNIT_RELOAD')
+  execute(['systemctl','start',SERVICE],30,'START')
  active=system_state();check(active['ActiveState']=='active','MIHOMO_NOT_ACTIVE')
  loaded=pathlib.Path('/run/credentials/'+SERVICE+'/provider.yaml')
  check(digest(regular(loaded,2097152))==provider['sha256'],'PROVIDER_NOT_LOADED')
- ports=execute(['ss','-H','-lntp'],15).decode()
- listeners=[line for line in ports.splitlines() if ':17890 ' in line]
+ listeners=[]
+ for attempt in range(11):
+  ports=execute(['ss','-H','-lntp'],5).decode()
+  listeners=[line for line in ports.splitlines() if ':17890 ' in line]
+  if listeners:break
+  if attempt<10:time.sleep(0.5)
  check(len(listeners)==1 and '127.0.0.1:17890 ' in listeners[0] and 'mihomo' in listeners[0],'MIHOMO_LOOPBACK_UNPROVEN')
  result={'active':True,'providerLoaded':True,'loopbackOnly':True,'provider':provider,'dockerChanged':False,'enabledByModule':False}
  if action=='probe':
@@ -93,13 +147,14 @@ except Exception as error:
  known=str(error) if isinstance(error,RuntimeError) and re.fullmatch('[A-Z0-9_]+',str(error)) else 'NATIVE_OPERATION_UNCONFIRMED'
  print(json.dumps({'error':known,'queryBeforeRetry':True}));sys.exit(1)
 `
-export function nativeCommand(side, action) {
- if (!['a','b'].includes(side) || !['query','install','validate','start','probe'].includes(action)) throw Error('INVALID_NATIVE_ACTION')
+export function nativeCommand(side, action, expectedProviderHash) {
+ if (!['a','b'].includes(side) || !['query','filter-provider','install','validate','start','probe'].includes(action)) throw Error('INVALID_NATIVE_ACTION')
+ if(action==='filter-provider'?!/^[a-f0-9]{64}$/.test(expectedProviderHash??''):expectedProviderHash!==undefined)throw Error('INVALID_PROVIDER_HASH_ARGUMENT')
  const installer = readFileSync(new URL('../release/bootstrap-host/mihomo.py', import.meta.url),'utf8').split("if __name__=='__main__':")[0]
- return `python3 -c ${quote(installer + maintenance)} ${quote(JSON.stringify({host:side,action}))}`
+ return `python3 -c ${quote(installer + maintenance)} ${quote(JSON.stringify({host:side,action,...(expectedProviderHash?{expectedProviderHash}:{})}))}`
 }
-export async function nativeOperation(side, action, {env=process.env,fetcher=fetch}={}) {
- const command=nativeCommand(side,action)
+export async function nativeOperation(side, action, {env=process.env,fetcher=fetch,expectedProviderHash}={}) {
+ const command=nativeCommand(side,action,expectedProviderHash)
  if (!env.KOMODO_API_KEY || !env.KOMODO_API_SECRET) throw Error('EXISTING_OPERATOR_CREDENTIAL_REQUIRED')
  const response=await fetcher('https://ops.christmas1314.xyz/terminal/execute',{method:'POST',redirect:'error',signal:AbortSignal.timeout(150000),headers:{'content-type':'application/json','x-api-key':env.KOMODO_API_KEY,'x-api-secret':env.KOMODO_API_SECRET},body:JSON.stringify({target:{type:'Server',params:{server:side==='a'?'shanghai-a':'shanghai-b'}},terminal:`issue-514-native-${side}-${action}`,command,init:{command:'bash',recreate:'Never'}})})
  if(!response.ok)throw Error('NATIVE_HTTP_'+response.status)

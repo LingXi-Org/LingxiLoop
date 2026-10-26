@@ -54,6 +54,13 @@ systemd actually loaded the provider and a loopback-only listener, and performs
 bounded TLS/HTTP probes. It neither configures nor restarts Docker, does not
 enable boot-time service startup, and reachability is not authenticated image
 pull qualification. An uploaded TLS-bypass option is rejected, not activated.
+After separate approval to exclude such nodes, use
+`scripts/release/run.sh route-native a|b filter-provider <verified-upload-sha256>`.
+The fixed action preserves a private hash-named original, atomically writes only
+the safe nodes, records a resumable receipt, and refuses file drift or a running
+proxy. It never silently enables certificate bypass. Native validation grants
+Mihomo only the exact already-approved provider path through `SAFE_PATHS`; the
+service drop-in grants only its corresponding systemd credential file.
 
 `preflight` checks the existing environment, exact app CI, exact operations CI,
 existing release identity and controller plan. `publish` performs those same
