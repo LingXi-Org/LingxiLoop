@@ -12,3 +12,8 @@ test('runtime patch responses bind exact action, full plan hash and observed tar
  assert.equal(assertRuntimePatchResult({...base,state:'target',complete:true},patch,'observe').complete,true)
  for(const change of [{planHash:'sha256:'+'0'.repeat(64)},{state:'source',complete:true},{observationOnly:false},{action:'apply'},{unexpected:'untrusted diagnostic'}])assert.throws(()=>assertRuntimePatchResult({...base,state:'target',complete:true,...change},patch,'observe'),{code:'RUNTIME_PATCH_OUTCOME_UNRESOLVED'})
 })
+test('runtime patch accepts the CI builder full named database inventory and rejects omitted or drifted names',()=>{
+ const db=databaseFixture();db.migrations=structuredClone(db.runtimePatch.target.migrations)
+ assert.equal(validateRuntimePatch(db),db.runtimePatch)
+ for(const mutate of [d=>{delete d.migrations[0].name},d=>{d.migrations[0].name='wrong_name'}]){const bad=structuredClone(db);mutate(bad);assert.throws(()=>validateRuntimePatch(bad),{code:'INVALID_RUNTIME_PATCH'})}
+})
