@@ -91,14 +91,19 @@ def docker_plan():
  argv=pathlib.Path('/proc/'+pid+'/cmdline').read_bytes().decode().split('\\0')
  configured=next((v.split('=',1)[1] for v in argv if v.startswith('--config-file=')),argv[argv.index('--config-file')+1] if '--config-file' in argv else str(path))
  check(configured==str(path) and not any(v.startswith(('--http-proxy','--https-proxy','--no-proxy')) for v in argv),'DOCKER_CONFIG_SOURCE_CONFLICT')
- proposed={**current,'live-restore':True,'proxies':{**current.get('proxies',{}),'http-proxy':'http://127.0.0.1:17890','https-proxy':'http://127.0.0.1:17890','no-proxy':'localhost,127.0.0.1,::1,10.20.0.0/24,postgres,redis,lingxiloop,worker,wukongim,open-notebook'}}
+ info=json.loads(execute(['docker','info','--format','{{json .}}'],15))
+ proposed={**current,**({} if info.get('LiveRestoreEnabled') else {'live-restore':True}),'proxies':{**current.get('proxies',{}),'http-proxy':'http://127.0.0.1:17890','https-proxy':'http://127.0.0.1:17890','no-proxy':'localhost,127.0.0.1,::1,10.20.0.0/24,postgres,redis,lingxiloop,worker,wukongim,open-notebook'}}
  candidate=(json.dumps(proposed,indent=2,sort_keys=True)+'\\n').encode()
  with tempfile.TemporaryDirectory(prefix='lingxi-docker-validate-',dir='/run') as directory:
   staged=pathlib.Path(directory)/'daemon.json';staged.write_bytes(candidate);staged.chmod(0o600)
-  execute(['/usr/bin/dockerd','--validate','--config-file',str(staged)],15,'DOCKER_VALIDATE')
+  args=[v for v in argv[1:] if v]
+  if '--config-file' in args:args[args.index('--config-file')+1]=str(staged)
+  elif any(v.startswith('--config-file=') for v in args):args=[('--config-file='+str(staged)) if v.startswith('--config-file=') else v for v in args]
+  else:args+=['--config-file',str(staged)]
+  execute([argv[0],*args,'--validate'],15,'DOCKER_VALIDATE')
  info=json.loads(execute(['docker','info','--format','{{json .}}'],15))
  rows=execute(['docker','ps','--format','{{json .}}'],15).decode().splitlines()
- return {'configurationPath':str(path),'currentSha256':digest(raw),'proposedSha256':digest(candidate),'candidateValid':True,'changedFields':['proxies.http-proxy','proxies.https-proxy','proxies.no-proxy']+([] if info.get('LiveRestoreEnabled') else ['live-restore']),'proxy':'http://127.0.0.1:17890','liveRestoreEnabled':info.get('LiveRestoreEnabled'),'restartRequired':True,'dockerChanged':False,'affectedContainers':[{'name':json.loads(row)['Names'],'state':json.loads(row)['State'],'status':json.loads(row)['Status']} for row in rows]}
+ return {'configurationPath':str(path),'currentSha256':digest(raw),'proposedSha256':digest(candidate),'candidateValid':True,'changedFields':['proxies.http-proxy','proxies.https-proxy','proxies.no-proxy']+([] if info.get('LiveRestoreEnabled') else ['live-restore']),'proxy':'http://127.0.0.1:17890','liveRestoreEnabled':info.get('LiveRestoreEnabled'),'validatedWithCurrentDaemonArguments':True,'liveRestoreSource':'flag' if any(v.startswith('--live-restore') for v in argv) else 'configuration','restartRequired':True,'dockerChanged':False,'affectedContainers':[{'name':json.loads(row)['Names'],'state':json.loads(row)['State'],'status':json.loads(row)['Status']} for row in rows]}
 def native_action(data):
  side=data['host'];action=data['action'];p=Paths()
  check(side in ('a','b') and action in ('query','filter-provider','install','validate','start','probe','docker-plan'),'INVALID_NATIVE_ACTION')

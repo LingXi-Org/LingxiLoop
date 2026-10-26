@@ -6,22 +6,23 @@ test('fixed Docker maintenance preserves containers, resumes a lost restart with
  const script=`import shlex,sys,tempfile,pathlib,json,hashlib,copy
 source=shlex.split(sys.argv[1])[2].rsplit('try:\\n with deadline():print',1)[0]
 scope={};exec(source,scope)
-for initial_live in (True,False):
+for initial_live,live_flag in ((True,False),(False,False),(True,True)):
  with tempfile.TemporaryDirectory() as directory:
-  root=pathlib.Path(directory);config=root/'daemon.json';original=json.dumps({'live-restore':initial_live,'log-driver':'json-file'}).encode();config.write_bytes(original)
+  root=pathlib.Path(directory);config=root/'daemon.json';original=json.dumps({'log-driver':'json-file',**({} if live_flag else {'live-restore':initial_live})}).encode();config.write_bytes(original)
   state=root/'state';expected=hashlib.sha256(original).hexdigest()
   info={'liveRestore':initial_live,'httpProxy':'','httpsProxy':'','noProxy':''};calls=[];lost=[True]
   rows=[{'id':'fixed','name':'app','image':'sha256:fixed','startedAt':'unchanged','mountsHash':'fixed'}]
   def execute(args,*unused):
    calls.append(args)
+   if args[:2]==['systemctl','show']:return b'ActiveState=active\\nMainPID=1\\n'
    if args[:2]==['systemctl','reload']:
-    info['liveRestore']=json.loads(config.read_bytes()).get('live-restore',False)
+    info['liveRestore']=json.loads(config.read_bytes()).get('live-restore',live_flag)
    if args[:2]==['systemctl','restart']:
     parsed=json.loads(config.read_bytes());proxies=parsed.get('proxies',{})
-    info.update(liveRestore=parsed.get('live-restore',False),httpProxy=proxies.get('http-proxy',''),httpsProxy=proxies.get('https-proxy',''),noProxy=proxies.get('no-proxy',''))
+    info.update(liveRestore=parsed.get('live-restore',live_flag),httpProxy=proxies.get('http-proxy',''),httpsProxy=proxies.get('https-proxy',''),noProxy=proxies.get('no-proxy',''))
     if lost[0]:lost[0]=False;raise RuntimeError('SIMULATED_LOST_RESTART_RESPONSE')
    return b''
-  scope.update(state_permissions=lambda:None,DOCKER_CONFIG=config,DOCKER_STATE=state,execute=execute,validate_docker=lambda raw:json.loads(raw),docker_info=lambda:dict(info),inventory=lambda:copy.deepcopy(rows),release_idle=lambda:{'pending':0,'reservations':0},native_action=lambda data:{'currentSha256':expected})
+  scope.update(state_permissions=lambda:None,DOCKER_CONFIG=config,DOCKER_STATE=state,execute=execute,validate_docker=lambda raw:json.loads(raw),docker_info=lambda:dict(info),inventory=lambda *args:copy.deepcopy(rows),release_idle=lambda:{'pending':0,'reservations':0},native_action=lambda data:{'currentSha256':expected})
   data={'action':'apply','host':'a','expectedHash':expected}
   try:scope['docker_maintenance'](data);raise AssertionError('fault not injected')
   except RuntimeError as e:assert str(e)=='SIMULATED_LOST_RESTART_RESPONSE'
@@ -34,7 +35,7 @@ for initial_live in (True,False):
   config.write_text('{}')
   try:scope['docker_maintenance'](data);raise AssertionError('drift accepted')
   except RuntimeError as e:assert str(e)=='DOCKER_EXTERNAL_DRIFT'
-  candidate={**json.loads(original),'live-restore':True,'proxies':{'http-proxy':scope['PROXY'],'https-proxy':scope['PROXY'],'no-proxy':scope['NO_PROXY']}}
+  candidate={**json.loads(original),**({} if initial_live else {'live-restore':True}),'proxies':{'http-proxy':scope['PROXY'],'https-proxy':scope['PROXY'],'no-proxy':scope['NO_PROXY']}}
   config.write_bytes(scope['encoded'](candidate))
   restored=scope['docker_maintenance']({**data,'action':'restore'})
   assert restored['phase']=='restored' and config.read_bytes()==original and info['liveRestore']==initial_live

@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs'
 import {nativeSource} from './native-operator.mjs'
 const quote=s=>`'${s.replaceAll("'","'\\''")}'`
 export function dockerCommand(side,action,expectedHash){
- if(!['a','b'].includes(side)||!['query','apply','restore'].includes(action)||(action==='query'?expectedHash!==undefined:!(/^[a-f0-9]{64}$/).test(expectedHash??'')))throw Error('INVALID_DOCKER_MAINTENANCE_INPUT')
+ if(!['a','b'].includes(side)||!['query','apply','restore','query-corrected','apply-corrected','restore-corrected'].includes(action)||(action.startsWith('query')?expectedHash!==undefined:!(/^[a-f0-9]{64}$/).test(expectedHash??'')))throw Error('INVALID_DOCKER_MAINTENANCE_INPUT')
  return `python3 -c ${quote(nativeSource()+readFileSync(new URL('./docker-proxy.py',import.meta.url),'utf8'))} ${quote(JSON.stringify({host:side,action,expectedHash}))}`
 }
 export async function dockerOperation(side,action,{expectedHash,env=process.env,fetcher=fetch}={}){
