@@ -136,7 +136,7 @@ async function atomicJson(path, data) {
 export class ComposeAdapter {
   constructor(policy, { run, runGit, fetcher = fetch, wait = ms => new Promise(resolve => setTimeout(resolve, ms)) } = {}) {
     this.policy = validatePolicy(policy); this.run = run ?? ((args,options = {}) => runDocker(args,{ ...options,binary:policy.dockerBinary ?? '/usr/bin/docker' })); this.fetcher = fetcher; this.wait = wait; this.runGit = runGit
-    this.artifacts=new ArtifactCache(this.policy,{run:this.run})
+    this.artifacts=new ArtifactCache(this.policy,{run:this.run,fetcher:(...args)=>this.fetcher(...args)})
   }
   resources(target, phase) {
     const local = this.policy.targets[target]
@@ -214,30 +214,33 @@ export class ComposeAdapter {
     for(const[service,image]of Object.entries(images)){resolved[service]=await this.inspectImage(image,local);requireValue(resolved[service],'OFFLINE_IMAGE_MISSING','Qualified source/switch/recovery image is absent from the local cache')}
     return resolved
   }
+  async prepareImage(op,image,local,context,direction){
+    let identity=await this.inspectImage(image,local)
+    if(identity)return{...identity,reused:true,direction}
+    requireValue(direction!=='source'||this.policy.artifactTransport==='r2','OFFLINE_IMAGE_MISSING','Qualified source image is absent from the local cache')
+    requireValue(image.kind!=='local-qualified','OFFLINE_IMAGE_MISSING','A qualified local source cannot be fetched or rebuilt by the executor')
+    if(this.policy.artifactTransport==='r2'){
+      requireValue(image.archive,'OFFLINE_IMAGE_MISSING','R2 mode accepts only registered archive artifacts or strictly qualified existing local images')
+      await this.artifacts.prepare({releaseId:op.releaseId,target:op.target,manifestHash:op.manifestHash,configDigest:image.configDigest})
+    }else await context.step(`pull:${direction}:${image.configDigest??image.localImageId}`,()=>this.run(['image','pull','--platform',`${image.os}/${image.architecture}`,image.ref]),{sideEffect:false})
+    identity=await this.inspectImage(image,local)
+    requireValue(identity,'IMAGE_MISSING','Downloaded artifact is not present after preparation')
+    return{...identity,reused:false,direction}
+  }
 
   async prepare(op, plan, context) {
     const local = this.policy.targets[op.target]
     if(local.adapter==='main-runtime')await this.preflight(op,plan,{direction:'source',requireReadiness:true})
     const componentEvidence = local.adapter !== 'main-runtime' ? await this.control(local,'readiness',op,'GET') : null
-    const source = plan.source ?? plan.recovery, original = await this.containers(op),sourceIds=await this.resolveImages(source.images,local)
+    const source = plan.source ?? plan.recovery, original = await this.containers(op),sourceIds={},prepared=[]
+    for(const[service,image]of Object.entries(source.images)){sourceIds[service]=await this.prepareImage(op,image,local,context,'source');prepared.push(sourceIds[service])}
     requireValue(Object.entries(original).every(([service,container]) => container.Image === sourceIds[service].localImageId), 'SOURCE_IMAGE_CHANGED', 'Actual source containers do not match the qualified recovery identity')
     await this.overlay(op,source.images,'source',sourceIds)
     this.validateConfig(JSON.parse(await this.run([...(await this.composeArgs(op,'source')),'config','--format','json'])),local,source,sourceIds)
-    const prepared = []
     for (const [direction, descriptor] of [['forward',plan],['recovery',plan.recovery]]) {
       const identities={}
       for (const [service,image] of Object.entries(descriptor.images)) {
-        let identity=await this.inspectImage(image,local)
-        if (!identity) {
-          requireValue(image.kind !== 'local-qualified', 'OFFLINE_IMAGE_MISSING', 'A qualified local source cannot be fetched or rebuilt by the executor')
-          if(this.policy.artifactTransport==='r2'){
-            requireValue(image.archive,'OFFLINE_IMAGE_MISSING','R2 mode accepts only registered archive artifacts or strictly qualified existing local images')
-            await this.artifacts.ensure(image)
-          }else await context.step(`pull:${direction}:${image.configDigest ?? image.localImageId}`, () => this.run(['image','pull','--platform',`${image.os}/${image.architecture}`,image.ref]), { sideEffect: false })
-          identity=await this.inspectImage(image,local)
-          requireValue(identity, 'IMAGE_MISSING', 'Pulled artifact is not present after download')
-          prepared.push({...identity,reused:false})
-        } else prepared.push({...identity,reused:true})
+        const identity=await this.prepareImage(op,image,local,context,direction);prepared.push(identity)
         identities[service]=identity
       }
       await this.overlay(op, descriptor.images, direction,identities)

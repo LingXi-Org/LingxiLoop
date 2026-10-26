@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { verifyTarget } from './adapters'
-import type { Target } from '../../../shared/release/protocol'
+import { verifyTarget, hostOperation } from './adapters'
+import type { Target, Manifest } from '../../../shared/release/protocol'
 import type { ReleaseEnv } from './types'
 
 const target = { artifact: { kind: 'image' }, verification: { readiness: ['node'], businessProbe: 'business' } } as Target
@@ -22,5 +22,37 @@ describe('read-only named probe transport classification', () => {
       const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response)
       try { await expect(verifyTarget(env, target)).rejects.toMatchObject({ code }); expect(spy).toHaveBeenCalledTimes(1) } finally { spy.mockRestore() }
     }
+  })
+})
+
+describe('bounded read-only operation waiting', () => {
+  const settings = { EXECUTORS_JSON: JSON.stringify({ a: 'https://executor.example' }), EXECUTOR_TOKEN: 'private-executor', CF_ACCESS_CLIENT_ID: 'private-access-id', CF_ACCESS_CLIENT_SECRET: 'private-access-secret' } as ReleaseEnv
+  const manifest = { releaseId: 'bounded-wait' } as Manifest
+  it('uses one authenticated GET with a timeout covering its requested 45-second wait, without POST', async () => {
+    const timeout = vi.spyOn(AbortSignal, 'timeout'), spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ status: 'running' }))
+    try {
+      expect(await hostOperation(settings, 'a', manifest, 'hash', 'main-runtime-a', 'apply', 1, false, 45)).toEqual({ status: 'running' })
+      expect(spy).toHaveBeenCalledTimes(1)
+      const [input, init] = spy.mock.calls[0]!, url = new URL(String(input))
+      expect(url.searchParams.get('key')).toBe('bounded-wait:main-runtime-a:apply'); expect(url.searchParams.get('waitSeconds')).toBe('45')
+      expect(init?.method).toBe('GET'); expect(init?.body).toBeUndefined(); expect(init?.headers).toMatchObject({ authorization: 'Bearer private-executor', 'CF-Access-Client-Id': 'private-access-id' })
+      expect(timeout).toHaveBeenCalledWith(65_000)
+    } finally { spy.mockRestore(); timeout.mockRestore() }
+  })
+  it('rejects invalid wait budgets before fetch and preserves ordinary typed GET body errors as unknown queries', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('truncated private JSON'))
+    try {
+      for (const wait of [-1, 46, NaN, Infinity]) await expect(hostOperation(settings, 'a', manifest, 'hash', 'main-runtime-a', 'apply', 1, false, wait)).rejects.toMatchObject({ code: 'INVALID_OPERATION_WAIT' })
+      expect(spy).not.toHaveBeenCalled()
+      await expect(hostOperation(settings, 'a', manifest, 'hash', 'main-runtime-a', 'apply', 1, false, 0.5)).rejects.toMatchObject({ code: 'EXECUTOR_QUERY_UNAVAILABLE' })
+      expect(spy).toHaveBeenCalledTimes(1)
+    } finally { spy.mockRestore() }
+  })
+  it.each(['probe', 'operation'])('does not disguise the exact provider capacity exception as a transient %s query', async kind => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(Error('Too many subrequests.'))
+    try {
+      await expect(kind === 'probe' ? verifyTarget(env, target) : hostOperation(settings, 'a', manifest, 'hash', 'main-runtime-a', 'apply', 1, false, 45)).rejects.toMatchObject({ code: 'WORKFLOW_SUBREQUEST_LIMIT' })
+      expect(spy).toHaveBeenCalledTimes(1)
+    } finally { spy.mockRestore() }
   })
 })

@@ -1,3 +1,4 @@
+import type { StageCheckpoint } from './stages'
 import type { Accepted, Manifest } from '../../../shared/release/protocol'
 
 export type ReleaseStatus = 'queued' | 'preparing' | 'waiting' | 'active' | 'accepted' | 'failed' | 'recovering' | 'recovered' | 'blocked' | 'superseded'
@@ -5,9 +6,10 @@ export type ReleaseRecord = {
   releaseId: string; manifest: Manifest; manifestHash: string; status: ReleaseStatus
   generation: number; phase: string; createdAt: number; updatedAt: number
   error: string | null; supersededBy: string | null; workflowId: string
-  resumeMode?: 'resume' | 'recover'; targets: Record<string, unknown>; errors: { forward?: string; recovery?: string; cleanup?: string }
+  checkpoint?: StageCheckpoint; resumeMode?: 'resume' | 'recover'; targets: Record<string, unknown>; errors: { forward?: string; recovery?: string; cleanup?: string }
 }
 export interface ReleaseEnv {
+  externalFetch?: typeof fetch
   RELEASES: DurableObjectNamespace
   RELEASE_WORKFLOW: Workflow<{ releaseId: string; attempt: number }>
   ARTIFACTS: R2Bucket

@@ -1,5 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
 import { assertSource, canSupersede, canonical, ReleaseError, requireThat, validateManifest, type Accepted, type Component, type Manifest, type TargetId } from '../../../shared/release/protocol'
+import { forwardStages, recoveryStages, stageWorkflowId, STAGE_REQUEST_LIMIT, verificationStages } from './stages'
 import type { Bootstrap, ReleaseEnv, ReleaseRecord, ReleaseStatus } from './types'
 
 const terminal = new Set(['accepted', 'failed', 'recovered', 'superseded'])
@@ -37,7 +38,7 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
       const url = new URL(request.url); const body = request.method === 'POST' ? await request.json() as Record<string, unknown> : {}
       // Arm before committing the start intent: a crash after the SQLite
       // commit must not leave an outbox row with no future wake-up.
-      if (['/register', '/resume'].includes(url.pathname)) await this.ctx.storage.setAlarm(Date.now() + 1000)
+      if (['/register', '/resume', '/advance', '/begin-recovery'].includes(url.pathname)) await this.ctx.storage.setAlarm(Date.now() + 1000)
       let result: unknown
       // No external await is allowed inside this transaction.
       result = this.ctx.storage.transactionSync(() => {
@@ -49,7 +50,8 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
         const record = this.get(releaseId)
         requireThat(record, 'RELEASE_NOT_FOUND', 404)
         if (url.pathname === '/get') return record
-        if (['/claim', '/transition', '/authorize', '/note'].includes(url.pathname)) requireThat(body.workflowId === record.workflowId, 'STALE_WORKFLOW_ATTEMPT')
+        if (['/claim', '/transition', '/authorize', '/note', '/initialize', '/network-permit', '/deadline', '/observe', '/mark-effect', '/advance', '/begin-recovery'].includes(url.pathname)) requireThat(body.workflowId === record.workflowId, 'STALE_WORKFLOW_ATTEMPT')
+        if (['/initialize', '/network-permit', '/deadline', '/observe', '/mark-effect', '/advance', '/begin-recovery'].includes(url.pathname)) return this.stage(record, url.pathname, body)
         if (url.pathname === '/note') { record.errors.cleanup = String(body.cleanup); this.save(record); return record }
         if (url.pathname === '/authorize') { requireThat(!terminal.has(record.status), 'RELEASE_ALREADY_TERMINAL'); return { authorized: true, generation: record.generation } }
         if (url.pathname === '/claim') return this.claim(record)
@@ -62,16 +64,94 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
           // Restart only the durable Workflow; host operation keys remain stable.
           this.ctx.storage.sql.exec('INSERT OR REPLACE INTO outbox(id,attempt,started) VALUES (?,?,0)', releaseId, attempt)
           record.resumeMode = body.recover === true ? 'recover' : 'resume'
-          record.workflowId = `${releaseId}-${attempt}`; this.save(record)
+          if (record.checkpoint) {
+            record.checkpoint.previousWorkflowId = record.workflowId
+            record.checkpoint.serial++
+            record.workflowId = stageWorkflowId(record.manifestHash, record.checkpoint.serial)
+          } else record.workflowId = `${releaseId}-${attempt}`
+          this.save(record)
           return record
         }
         throw new ReleaseError('NOT_FOUND', 404)
       })
-      if (['/register', '/resume', '/transition'].includes(url.pathname)) await this.ctx.storage.setAlarm(Date.now() + 1000)
+      if (['/register', '/resume', '/transition', '/advance', '/begin-recovery'].includes(url.pathname)) await this.ctx.storage.setAlarm(Date.now() + 1000)
       return Response.json(result)
     } catch (error) {
       return Response.json({ error: error instanceof ReleaseError ? error.code : 'LEDGER_INTERNAL_ERROR' }, { status: error instanceof ReleaseError ? error.status : 500 })
     }
+  }
+  private stage(record: ReleaseRecord, path: string, body: Record<string, unknown>) {
+    requireThat(!terminal.has(record.status), 'RELEASE_ALREADY_TERMINAL')
+    if (path === '/initialize') {
+      if (record.checkpoint) {
+        if (record.status === 'blocked') { requireThat(record.checkpoint.initializedWorkflowId !== record.workflowId, 'RECONCILIATION_REQUIRED'); record.status = record.checkpoint.direction === 'forward' ? (record.generation ? 'active' : 'preparing') : 'recovering'; this.save(record) }
+        if (record.checkpoint.initializedWorkflowId !== record.workflowId) { record.checkpoint.initializedWorkflowId = record.workflowId; this.save(record) }
+        return record
+      }
+      const legacy = record.generation > 0
+      if (legacy) {
+        // A controller upgrade may finish ONLY the fresh verification of an
+        // already admitted release. Never infer host success from a timeout.
+        requireThat(['PROBE_QUERY_UNAVAILABLE', 'STEP_OUTCOME_UNKNOWN'].includes(record.error ?? ''), 'LEGACY_RECONCILIATION_REQUIRED')
+        for (const [id, target] of Object.entries(record.manifest.targets)) {
+          requireThat(target.artifact.kind === 'image', 'LEGACY_RECONCILIATION_REQUIRED')
+          for (const host of target.hosts) for (const phase of ['prepare', 'drain', 'apply', 'verify', 'undrain']) {
+            const op = record.targets[`${id}:${host}:${phase}`] as { key?: string; status?: string; operationId?: string; manifestHash?: string; generation?: number; releaseId?: string; target?: string; phase?: string } | undefined
+            requireThat(op && ['succeeded', 'complete', 'success'].includes(op.status ?? '') && op.key === `${record.releaseId}:${id}:${phase}` && !!op.operationId && op.manifestHash === record.manifestHash && op.generation === (phase === 'prepare' ? 0 : record.generation) && op.releaseId === record.releaseId && op.target === id && op.phase === phase, 'LEGACY_RECONCILIATION_REQUIRED')
+          }
+        }
+      } else requireThat(!this.env.CONTROLLER_OPS_SHA || record.manifest.opsSha === this.env.CONTROLLER_OPS_SHA, 'CONTROLLER_VERSION_MISMATCH')
+      record.checkpoint = { protocol: 2, plan: legacy ? verificationStages(record.manifest) : forwardStages(record.manifest), index: 0, serial: 0,
+        changed: [], mutationSubmitted: false, direction: 'forward', requests: {}, deadlines: {}, completed: [], initializedWorkflowId: record.workflowId, ...(legacy ? { legacyVerificationOnly: true } : {}) }
+      record.status = legacy ? 'active' : 'preparing'; this.save(record); return record
+    }
+    const cp = record.checkpoint
+    requireThat(cp?.protocol === 2, 'CHECKPOINT_REQUIRED')
+    const current = cp.plan[cp.index]
+    requireThat(current && body.stage === current.key, 'STALE_RELEASE_STAGE')
+    if (path === '/network-permit') {
+      requireThat(record.status !== 'blocked', 'RECONCILIATION_REQUIRED')
+      const used = cp.requests[current.key] ?? 0
+      requireThat(used < STAGE_REQUEST_LIMIT, 'STAGE_REQUEST_BUDGET_EXHAUSTED')
+      cp.requests[current.key] = used + 1
+      // The allowance survives resumes; do not emit the full record per GET.
+      record.updatedAt = Date.now()
+      this.ctx.storage.sql.exec('INSERT OR REPLACE INTO releases(id,data) VALUES (?,?)', record.releaseId, JSON.stringify(record))
+      return { used: used + 1, limit: STAGE_REQUEST_LIMIT }
+    }
+    if (path === '/deadline') {
+      const key = String(body.key)
+      const seconds = current.kind === 'prepare' ? 900 : record.manifest.policy.drainSeconds
+      cp.deadlines[key] ??= Date.now() + seconds * 1000
+      this.save(record); return { deadline: cp.deadlines[key] }
+    }
+    if (path === '/observe') {
+      record.targets[String(body.key)] = body.value
+      this.save(record); return record
+    }
+    if (path === '/mark-effect') {
+      requireThat(!cp.legacyVerificationOnly, 'LEGACY_VERIFICATION_ONLY')
+      for (const target of current.targets ?? []) if (!cp.changed.includes(target)) cp.changed.push(target)
+      cp.mutationSubmitted ||= body.mutation === true
+      this.save(record); return record
+    }
+    if (path === '/begin-recovery') {
+      requireThat(cp.direction === 'forward' && !cp.legacyVerificationOnly && cp.changed.length > 0, 'RECOVERY_NOT_AUTHORIZED')
+      const plan = recoveryStages(record.manifest, cp)
+      cp.direction = !cp.mutationSubmitted && cp.changed.every(id => record.manifest.targets[id]!.artifact.kind === 'image') ? 'source' : 'compatible-recovery'
+      cp.plan = [...cp.plan.slice(0, cp.index), ...plan]
+      record.status = 'recovering'; record.errors.forward = String(body.error); record.error = String(body.error)
+    } else {
+      requireThat(path === '/advance' && current.kind !== 'finish', 'INVALID_STAGE_ADVANCE')
+      cp.completed.push({ key: current.key, workflowId: record.workflowId, requests: cp.requests[current.key] ?? 0 })
+      cp.index++
+    }
+    requireThat(cp.plan[cp.index], 'INVALID_STAGE_ADVANCE')
+    cp.previousWorkflowId = record.workflowId; cp.serial++
+    record.workflowId = stageWorkflowId(record.manifestHash, cp.serial)
+    record.phase = cp.plan[cp.index].key
+    this.ctx.storage.sql.exec('INSERT OR REPLACE INTO outbox(id,attempt,started) VALUES (?,?,0)', record.releaseId, cp.serial)
+    this.save(record); return record
   }
   private bootstrap(data: Bootstrap) {
     requireThat(this.env.BOOTSTRAP_ENABLED === 'true' && !this.accepted().releaseId && this.all().length === 0, 'BOOTSTRAP_DISABLED')
@@ -146,7 +226,11 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
       const record = this.get(String(row.id))
       if (!record || terminal.has(record.status)) { this.ctx.storage.sql.exec('UPDATE outbox SET started=1 WHERE id=?', row.id); continue }
       try {
-        const workflowId = `${row.id}-${row.attempt}`
+        const workflowId = record.workflowId
+        if (record.checkpoint?.previousWorkflowId) {
+          const previous = await (await this.env.RELEASE_WORKFLOW.get(record.checkpoint.previousWorkflowId)).status()
+          requireThat(['complete', 'errored', 'terminated'].includes(previous.status), 'PREVIOUS_STAGE_NOT_TERMINAL')
+        }
         try { await this.env.RELEASE_WORKFLOW.create({ id: workflowId, params: { releaseId: String(row.id), attempt: Number(row.attempt) } }) }
         catch {
           // A create timeout may have succeeded. Only an observed existing
@@ -154,7 +238,7 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
           const observed = await (await this.env.RELEASE_WORKFLOW.get(workflowId)).status()
           requireThat(observed.status !== 'unknown', 'WORKFLOW_START_UNCONFIRMED')
         }
-        this.ctx.storage.sql.exec('UPDATE outbox SET started=1 WHERE id=? AND attempt=?', row.id, row.attempt)
+        if (this.get(String(row.id))?.workflowId === workflowId) this.ctx.storage.sql.exec('UPDATE outbox SET started=1 WHERE id=? AND attempt=?', row.id, row.attempt)
       } catch { retry = true }
     }
     if (retry) await this.ctx.storage.setAlarm(Date.now() + 15_000)
