@@ -1,10 +1,41 @@
 import { describe, expect, it, vi } from 'vitest'
-import { verifyTarget, hostOperation } from './adapters'
+import { verifyTarget, hostOperation, installManifest } from './adapters'
 import type { Target, Manifest } from '../../../shared/release/protocol'
 import type { ReleaseEnv } from './types'
 
 const target = { artifact: { kind: 'image' }, verification: { readiness: ['node'], businessProbe: 'business' } } as Target
 const env = { PROBES_JSON: JSON.stringify({ node: { url: 'https://trusted.example/ready?private=secret', status: 200, json: { ready: true } }, business: { url: 'https://trusted.example/business', status: 200 } }) } as ReleaseEnv
+describe('bounded immutable manifest transfer', () => {
+  const settings = { EXECUTORS_JSON: JSON.stringify({ b: 'https://executor.example' }), EXECUTOR_TOKEN: 'private-executor', CF_ACCESS_CLIENT_ID: 'private-access-id', CF_ACCESS_CLIENT_SECRET: 'private-access-secret' } as ReleaseEnv
+  const manifest = { releaseId: 'same-immutable-release' } as Manifest
+  it.each([28_489, 60_001])('settles a %i ms transfer within its fixed manifest allowance', async transferMs => {
+    vi.useFakeTimers()
+    const timeout = vi.spyOn(AbortSignal, 'timeout').mockImplementation(ms => {
+      const controller = new AbortController()
+      setTimeout(() => controller.abort(new DOMException('bounded transport timeout', 'TimeoutError')), ms)
+      return controller.signal
+    })
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation((_input, init) => new Promise((resolve, reject) => {
+      const signal = init!.signal!
+      const timer = setTimeout(() => resolve(Response.json({ releaseId: manifest.releaseId, manifestHash: 'exact-hash' }, { status: 201 })), transferMs)
+      signal.addEventListener('abort', () => { clearTimeout(timer); reject(signal.reason) }, { once: true })
+    }))
+    try {
+      const request = installManifest(settings, 'b', manifest, 'exact-hash').then(value => ({ ok: true, value }), error => ({ ok: false, error }))
+      await vi.advanceTimersByTimeAsync(Math.min(transferMs, 60_000))
+      if (transferMs < 60_000) expect(await request).toEqual({ ok: true, value: { releaseId: manifest.releaseId, manifestHash: 'exact-hash' } })
+      else expect(await request).toMatchObject({ ok: false, error: { code: 'TRANSPORT_OUTCOME_UNKNOWN' } })
+      expect(timeout).toHaveBeenCalledWith(60_000)
+      expect(spy).toHaveBeenCalledTimes(1)
+      expect(spy.mock.calls[0]).toMatchObject(['https://executor.example/manifests', { method: 'POST', redirect: 'manual', body: JSON.stringify({ manifest, manifestHash: 'exact-hash' }), headers: { authorization: 'Bearer private-executor', 'CF-Access-Client-Id': 'private-access-id' } }])
+    } finally { spy.mockRestore(); timeout.mockRestore(); vi.clearAllTimers(); vi.useRealTimers() }
+  })
+  it('keeps HTTP denials terminal without an internal replay', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 403 }))
+    try { await expect(installManifest(settings, 'b', manifest, 'exact-hash')).rejects.toMatchObject({ code: 'AUTHENTICATION_FAILED' }); expect(spy).toHaveBeenCalledTimes(1) }
+    finally { spy.mockRestore() }
+  })
+})
 describe('read-only named probe transport classification', () => {
   it.each(['fetch', 'body', 'json'])('sanitizes %s failure into a retryable query error without credentials or URLs', async failure => {
     const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {

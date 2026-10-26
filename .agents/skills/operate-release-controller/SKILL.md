@@ -127,6 +127,14 @@ An accepted terminal release cannot be recovered through that API; a deliberatel
 controlled separate qualification release is used to verify recovery behavior.
 Recovery must use prepared compatible artifacts and retain original volumes.
 
+Immutable manifest registration has a fixed 60-second transfer allowance:
+the measured 569,325-byte B request took 28.489 seconds and exceeded the former
+20-second query timeout. Ordinary JSON queries retain 20 seconds. This does not
+increase Workflow step/request limits, retries or the persisted operator deadline.
+After an unknown registration result, inspect the same release/hash in the host
+journal before an operator continuation; a registered manifest alone proves no
+business operation or acceptance. Keep the first failure and manual actions.
+
 ## CI and old-publisher boundary
 
 Actual user readback controls `RELEASE_OPS_SHA` and `RELEASE_CONTROLLER_ENABLED`;

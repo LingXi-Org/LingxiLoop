@@ -10,9 +10,9 @@ function queryFailure(error: unknown, fallback: string) {
   if (code && /STAGE_REQUEST|STALE_WORKFLOW|RELEASE_ALREADY|RECONCILIATION_REQUIRED/.test(code)) return new ReleaseError(code)
   return new ReleaseError(error instanceof Error && error.message === 'Too many subrequests.' ? 'WORKFLOW_SUBREQUEST_LIMIT' : fallback, 503)
 }
-async function jsonFetch<T>(env: ReleaseEnv, url: string, init?: RequestInit): Promise<T> {
+async function jsonFetch<T>(env: ReleaseEnv, url: string, init?: RequestInit, timeoutMs = 20_000): Promise<T> {
   let response: Response
-  try { response = await (env.externalFetch ?? fetch)(url, { ...init, redirect: 'manual', signal: AbortSignal.timeout(20_000) }) }
+  try { response = await (env.externalFetch ?? fetch)(url, { ...init, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) }) }
   catch (error) { throw queryFailure(error, 'TRANSPORT_OUTCOME_UNKNOWN') }
   if (!response.ok) throw new ReleaseError(response.status === 401 || response.status === 403 ? 'AUTHENTICATION_FAILED' : `REMOTE_HTTP_${response.status}`, response.status >= 500 ? 503 : 409)
   try { return await response.json() as T } catch (error) { throw queryFailure(error, 'TRANSPORT_OUTCOME_UNKNOWN') }
@@ -29,7 +29,10 @@ export function executor(env: ReleaseEnv, host: string) {
 }
 export async function installManifest(env: ReleaseEnv, host: string, manifest: Manifest, manifestHash: string) {
   const { endpoint, headers } = executor(env, host)
-  return jsonFetch(env, `${endpoint.replace(/\/$/, '')}/manifests`, { method: 'POST', headers, body: JSON.stringify({ manifest, manifestHash }) })
+  // A measured 569 KB immutable manifest took 28.489s to register on B.
+  // Keep ordinary queries at 20s; allow this body transfer up to 60s inside
+  // the existing five-minute Workflow step, retry count and operator deadline.
+  return jsonFetch(env, `${endpoint.replace(/\/$/, '')}/manifests`, { method: 'POST', headers, body: JSON.stringify({ manifest, manifestHash }) }, 60_000)
 }
 export async function hostOperation(env: ReleaseEnv, host: string, manifest: Manifest, manifestHash: string, target: TargetId, phase: string, generation: number, submit = true, waitSeconds = 0, deadline = Infinity): Promise<Operation> {
   requireThat(Number.isFinite(waitSeconds) && waitSeconds >= 0 && waitSeconds <= 45, 'INVALID_OPERATION_WAIT')
