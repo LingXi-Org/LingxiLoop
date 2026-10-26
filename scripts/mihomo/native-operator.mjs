@@ -4,6 +4,15 @@ import { readFileSync } from 'node:fs'
 const quote = s => `'${s.replaceAll("'", "'\\''")}'`
 const maintenance = `
 PROVIDER=pathlib.Path('/etc/lingxi-release/secrets/mihomo-provider.yaml')
+def release_idle():
+ import sqlite3
+ db=sqlite3.connect('file:/var/lib/lingxi-release/journal.sqlite?mode=ro',uri=True,timeout=2)
+ try:
+  pending=db.execute("SELECT count(*) FROM operations WHERE status IN ('intent','running','uncertain')").fetchone()[0]
+  reservations=db.execute('SELECT count(*) FROM reservations').fetchone()[0]
+ finally:db.close()
+ check(pending==0 and reservations==0,'RELEASE_NOT_IDLE')
+ return {'pending':pending,'reservations':reservations}
 def provider_check():
  import yaml
  m=PROVIDER.lstat()
@@ -41,7 +50,8 @@ def native_action(data):
  side=data['host'];action=data['action'];p=Paths()
  check(side in ('a','b') and action in ('query','install','validate','start','probe'),'INVALID_NATIVE_ACTION')
  original={'action':'query','host':side}
- if action=='query':return query(original)
+ idle=release_idle()
+ if action=='query':return {**query(original),'releaseIdle':idle}
  provider=provider_check()
  if action=='install':
   result=main({'action':'install','host':side})
