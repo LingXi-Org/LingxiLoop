@@ -145,3 +145,22 @@ publish LingxiLoop. Preserve old records/stages, private permissions, backups,
 all containers and volumes. [Operate Komodo Production](../operate-komodo-production/SKILL.md)
 covers only retained shared infrastructure/Core and explicitly authorized
 bootstrap transport; its existence does not reopen product publication.
+
+## Explicit Docker proxy maintenance
+
+After separate concrete daemon/restart approval, use the same entry:
+`route-native a|b docker-plan` reads the actual daemon command line and validates
+the candidate with those same flags. A CLI-provided live-restore value must not
+be duplicated in JSON. `route-docker a|b query|apply|restore <original-config-sha256>`
+performs a fixed bounded operation (omit the hash for query). It preserves the
+original private configuration, checks zero host inflight, verifies complete
+container/image/start-time/mount identity, and enables B live-restore via reload
+before the approved single restart. It never starts an ordinary product release.
+Unknown restart outcomes require query and effective proxy observation, never
+blind repetition. Readiness has a finite20-second grace inside the existing
+operation deadline. A prepared intent with unchanged configuration can be closed
+without restarting Docker. Corrected maintenance uses explicit
+`query-corrected|apply-corrected|restore-corrected` actions only after the original
+receipt proves restoration; it preserves the original record. A failed attempt
+that consumed an approved restart requires concrete additional restart authority.
+The proxy service remains disabled at boot; boot enablement was not approved.

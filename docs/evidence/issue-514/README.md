@@ -176,3 +176,71 @@ not-found/inactive. No provider content was read. User upload completion is
 pending; it does not authorize a daemon proxy change. Canonical `run.sh route-check`
 now performs this metadata-only inventory; optional online checking is separately
 named `subscription-check` and is not a publish gate.
+
+## Actual route qualification, 2026-10-26 06:56–07:08 UTC
+
+User-approved native Mihomo v1.19.33 is active on both hosts, only
+127.0.0.1:17890. The original uploaded provider remains root:root/0600;
+a separately approved atomic filter excluded its five TLS-bypass nodes and
+retained 40 unchanged nodes. Normal TLS verification remains on. These samples
+precede any Docker proxy change and never loaded or switched an image.
+
+Same immutable historical server image, config
+`sha256:a49c1c6925cbd4644e793785143b37e17b8257ae8c3393aa38dee606fd6d1739`,
+three concurrent transfers, no local download cache. Registry fetches verify
+31 OCI objects / 174106600 bytes; R2 fetches verify the 174221560-byte archive
+and 21 parts. Edge cache state is unknown. Full receipts: [route-benchmarks.json](route-benchmarks.json).
+
+| Host / route | Absolute duration | Outcome | Verified bytes | Automatic retries |
+| --- | ---: | --- | ---: | ---: |
+| A registry via loopback | 133.644s | Complete | 174106600 | 0 |
+| A R2 direct | 186.092s | Incomplete: original 180s work deadline plus bounded socket cleanup | 165832952 | 0 |
+| B registry via loopback | 119.465s | Complete | 174106600 | 0 |
+
+Registry complete samples **2**, comparable R2 complete samples **0**. The
+incomplete R2 sample is not a successful release and supplies no exact speedup
+factor. Preliminary concurrency-one samples also exceeded their budgets
+(A registry180.077s, R2 181.218s); do not compare them as concurrency-three
+speed improvements. Each sample was one deliberate operator invocation;
+zero automatic retries within the measurements does not imply zero manual
+interventions across proxy installation. Native A installation initially
+refused TLS bypass before writes, and start validation/readiness required
+explicit corrective work and readback; these are not a one-shot success claim.
+
+Measured route choice favors registry through the approved proxy. Remaining
+qualification: actual Docker pull/load, immutable new build distribution,
+application switch, accepted controller record, and controlled recovery.
+Accepted new production release sample count remains **0**. Production
+end-to-end improvement, reduction percentage and p95 remain unmeasured.
+
+Static retention now batches at most eight small business assets/256KiB per
+request, with SHA256 checks, at most32 R2 subrequests, publisher/admin auth,
+immutable conditional writes and a 16-minute overall budget. This retains
+business assets; it does not commit to retaining R2 image distribution.
+Local batch Worker regressions2/2 and TypeScript passed; local client regression
+includes lost write response, denied auth, source drift and excessive Retry-After.
+Actual Worker Free CPU and staging time still require production qualification.
+
+## Daemon maintenance qualification is not release acceptance
+
+The user approved the three daemon proxy fields on A/B, B live-restore via
+reload, one serial daemon restart per host, and controlled restoration. A's first
+attempt failed: live-restore already came from a CLI flag, and the initial helper
+incorrectly duplicated it in JSON. `dockerd --validate` without the real flags
+missed this conflict. A was restored to exact original configuration hash
+`0890389a57b59b790352edc9e982369e9e0433d3600c519bbf76165f1e6d24ce`;
+all six container IDs, image IDs, start times and mount identities were verified
+unchanged, healthy, zero operations/reservations. API meta/health returned200.
+Restoration's initial health lag required readback and continuation, not a second
+restoration restart. This is a real failed maintenance attempt with operator
+intervention, not automatic one-shot success.
+
+B stopped before daemon mutation when unordered Docker inspect mount arrays
+produced different hashes. Read-only evidence proved all ten original container
+identities and the complete unchanged mount sets; only array order differed.
+The prepared intent was explicitly closed with unchanged original configuration
+and no restart. The helper now canonicalizes mount order and validates existing
+legacy receipt hashes by bounded exact permutations, never ignores mount drift.
+A separate corrected attempt retains those prior records and its own deadline.
+The candidate now validates with actual daemon flags. Additional A restart
+permission was requested because its initial approved attempt was consumed.
