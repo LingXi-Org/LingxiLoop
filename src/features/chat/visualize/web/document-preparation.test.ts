@@ -79,3 +79,69 @@ for (const dependency of [
     assert.match(String(result), /fixture resource denied/)
   } finally { finishKit(kit); await pending.catch(() => undefined) }
 })
+
+// #536 failure: a static SVG waits for all unused vendors and executes the
+// screenshot library in every frame. Only the exact adapted kit may skip them.
+const optimizedHashes = { 'kit-tabs.js':'e'.repeat(64),'kit-icons.js':'f'.repeat(64),'kit.css':'0'.repeat(64), 'kit-tooltip.js': 'a'.repeat(64), 'kit-carousel.js': 'b'.repeat(64), 'capture.js': 'c'.repeat(64), 'vendor/lucide-1.17.0.js': 'd'.repeat(64) }
+test('static pinned content excludes unused vendors, carousel and capture execution', async () => {
+  const calls: string[] = []
+  const html = await buildWebDocument('<svg id="meaningful"/>', null, async name => { calls.push(name); return source(name) }, kitHash, optimizedHashes)
+  assert.deepEqual(calls.sort(), ['gen-ui.js', 'kit.css'])
+  assert.ok(html.includes('<svg id="meaningful"/>'))
+  assert.ok(!calls.includes('kit-tabs.js'))
+  assert.ok(!html.includes('/* capture fixture */'))
+  assert.ok(!html.includes('const tooltipPlacements'))
+  assert.ok(!html.includes('viz-carousel-options'))
+  assert.ok(html.includes("connect-src 'none'"))
+  assert.ok(!html.includes('allow-same-origin'))
+})
+test('explicit author Lucide API retains its synchronous library without unused Floating UI', async () => {
+  const calls: string[] = []
+  await buildWebDocument('<script>window.lucide.createIcons()</script>', null, async name => { calls.push(name); return source(name) }, kitHash, optimizedHashes)
+  assert.ok(calls.includes('vendor/lucide-1.17.0.js'))
+  assert.equal(calls.includes('vendor/floating-ui-core-1.7.3.min.js'),false)
+  assert.equal(calls.includes('visualize.html'),false)
+})
+
+test('optimized kit still waits for authored D3 and calendar, in document execution order', async () => {
+  const calls:string[]=[]
+  const html=await buildWebDocument('<viz-calendar/><script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script><script>/* author D3 consumer */</script>',null,
+    async name=>{calls.push(name);return source(name)},kitHash,optimizedHashes)
+  assert.ok(calls.includes('calendar.js'))
+  assert.ok(calls.includes('vendor/d3-7.9.0.min.js'))
+  assert.equal(calls.some(name=>required.includes(name)),false)
+  assert.ok(html.indexOf(source('vendor/d3-7.9.0.min.js'))<html.indexOf('/* author D3 consumer */'))
+})
+
+test('declared first-use tooltip waits only for its own module before mounting', async () => {
+  const calls:string[]=[]
+  const html=await buildWebDocument('<button data-tooltip="Help">?</button>',null,async name=>{calls.push(name);return source(name)},kitHash,optimizedHashes)
+  assert.ok(calls.includes('kit-tooltip.js'))
+  assert.equal(calls.some(name=>required.includes(name)),false,'tooltip does not require full Lucide')
+  assert.ok(html.includes(source('kit-tooltip.js')))
+})
+
+test('known icons and carousel use the tiny official subset; unknown names keep compatibility', async () => {
+  for(const [fragment,expected] of [['<i data-lucide="play"></i>','kit-icons.js'],['<div class="viz-carousel"></div>','kit-icons.js'],['<i data-lucide="cloud"></i>','vendor/lucide-1.17.0.js']]) {
+    const calls:string[]=[]
+    await buildWebDocument(fragment,null,async name=>{calls.push(name);return source(name)},kitHash,optimizedHashes)
+    assert.ok(calls.includes(expected))
+    if(expected==='kit-icons.js')assert.equal(calls.includes('vendor/lucide-1.17.0.js'),false)
+    assert.equal(calls.includes('visualize.html'),false)
+  }
+})
+test('only a declared tablist brings its independent tab controller into the initial document',async()=>{
+  const calls:string[]=[]
+  await buildWebDocument('<div class="nav" role="tablist"></div>',null,async name=>{calls.push(name);return source(name)},kitHash,optimizedHashes)
+  assert.ok(calls.includes('kit-tabs.js'))
+  assert.equal(calls.includes('kit-carousel.js'),false)
+})
+
+test('explicit Floating UI API keeps Core before DOM without bringing Lucide',async()=>{
+  const calls:string[]=[]
+  const html=await buildWebDocument('<script>addEventListener("load",()=>window.FloatingUIDOM.computePosition())</script>',null,async name=>{calls.push(name);return source(name)},kitHash,optimizedHashes)
+  assert.ok(calls.includes('vendor/floating-ui-core-1.7.3.min.js'))
+  assert.ok(calls.includes('vendor/floating-ui-dom-1.7.4.min.js'))
+  assert.equal(calls.includes('vendor/lucide-1.17.0.js'),false)
+  assert.ok(html.indexOf(source(required[0]))<html.indexOf(source(required[1])))
+})

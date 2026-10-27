@@ -1,6 +1,7 @@
-import { readFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { lstat, realpath, readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { isVisualizePublicResource, VISUALIZE_PUBLIC_RESOURCES } from '../../../shared/visualize-public-resources.js'
+import { isVisualizePublicResource, VISUALIZE_PUBLIC_RESOURCES, visualizeResourceFile } from '../../../shared/visualize-public-resources.js'
 
 const record = (value: unknown): Record<string, unknown> => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 /** Expose only fixed public asset hashes; no paths, capabilities or document metadata. */
@@ -15,7 +16,7 @@ export function publicVisualizeResourceHashes(runtime: unknown, vendor: unknown,
     const entry = record(value)
     if (typeof entry.file === 'string') put(`vendor/${entry.file}`, entry.sha256)
   }
-  put('gen-ui.js', record(record(record(bundle).files)['gen-ui.js']).sha256)
+  for (const [name, value] of Object.entries(record(record(bundle).files))) put(name, record(value).sha256)
   return Object.freeze(hashes)
 }
 
@@ -34,4 +35,36 @@ export function readPublicVisualizeResourceHashes(): Promise<Readonly<Record<str
     })
     .catch(error => { manifest = undefined; throw error })
   return manifest
+}
+
+/** Bounded by the fixed whitelist and 8 MiB; pending cold reads coalesce. */
+export function createVisualizeAssetCache(load: (name: string) => Promise<Buffer>, maxBytes = 8 * 1024 * 1024) {
+  const entries = new Map<string, Promise<Buffer>>()
+  let size = 0
+  return async (name: string, hash: string) => {
+    if (!isVisualizePublicResource(name) || !/^[a-f0-9]{64}$/.test(hash)) throw new Error('Unknown Visualize public resource')
+    const key = `${name}:${hash}`
+    let pending = entries.get(key)
+    if (!pending) {
+      pending = load(name).then(bytes => {
+        if (createHash('sha256').update(bytes).digest('hex') !== hash) throw new Error('Visualize resource integrity failed')
+        if (size + bytes.length > maxBytes) entries.delete(key)
+        else size += bytes.length
+        return bytes
+      }).catch(error => { entries.delete(key); throw error })
+      // One immutable manifest per process; the whitelist bounds entry count.
+      entries.set(key, pending)
+    }
+    return pending
+  }
+}
+const publicBytes = createVisualizeAssetCache(async name => {
+  const file = resolve(visualizeResourceFile(name)!)
+  if ((await lstat(file)).isSymbolicLink() || await realpath(file) !== file) throw new Error('Invalid Visualize public resource')
+  return readFile(file)
+})
+export async function readPublicVisualizeResource(name: string) {
+  const hash = (await readPublicVisualizeResourceHashes())[name]
+  if (!isVisualizePublicResource(name) || !hash) throw new Error('Unknown Visualize public resource')
+  return { bytes: await publicBytes(name, hash), mime: name.endsWith('.css') ? 'text/css' : name.endsWith('.js') ? 'text/javascript' : 'application/octet-stream' }
 }

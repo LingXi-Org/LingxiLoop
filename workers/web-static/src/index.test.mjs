@@ -51,3 +51,18 @@ test('auth service binding keeps the public request origin for password and sign
   assert.equal(observed.headers.get('cookie'), 'session=secret')
   assert.equal(await response.text(), 'auth')
 })
+
+test('fixed visualize assets are anonymous immutable CORS resources, including retained old hashes', async () => {
+  const path=`/assets/visualize-${'a'.repeat(64)}.js`
+  for (const retained of [false,true]) {
+    const fixture={...env,
+      ASSETS:{fetch:async()=>retained ? new Response('missing',{status:404}) : new Response('public renderer',{headers:{'content-type':'text/javascript'}})},
+      RETAINED_ASSETS:{get:async key=>{assert.equal(key,`chunks${path}`);return {body:'public renderer',httpEtag:'"hash"',writeHttpMetadata:headers=>headers.set('content-type','text/javascript')}}}}
+    const response=await handleRequest(new Request(`https://loop.example.com${path}`,{headers:{origin:'null'}}),fixture)
+    assert.equal(response.status,200)
+    assert.equal(response.headers.get('cache-control'),'public, max-age=31536000, immutable')
+    assert.equal(response.headers.get('access-control-allow-origin'),'*')
+    assert.equal(response.headers.get('x-content-type-options'),'nosniff')
+    assert.equal(await response.text(),'public renderer')
+  }
+})

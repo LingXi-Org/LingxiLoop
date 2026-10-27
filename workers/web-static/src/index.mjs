@@ -2,6 +2,7 @@
 // backend hostname; neither upstream may resolve back to the public SPA route.
 const dynamic = /^\/(?:api|uploads|runtime|ws|files|visualize|webhooks|readyz|healthz)(?:\/|$)/i
 const internal = /^\/(?:internal)(?:\/|$)/i
+const visualizeAsset = /^\/assets\/visualize-[a-f0-9]{64}\.(js|css|txt)$/
 const immutable = /^\/assets\/[\w./-]+-[\w-]{8,}\.[\w.]+$/
 export { immutable }
 export function route(path) {
@@ -47,12 +48,14 @@ export async function handleRequest(request, env, fetcher = fetch) {
     if (object) {
       const headers = new Headers({ 'cache-control': 'public, max-age=31536000, immutable', etag: object.httpEtag })
       object.writeHttpMetadata(headers)
+      if (visualizeAsset.test(url.pathname)) { headers.set('access-control-allow-origin', '*'); headers.set('x-content-type-options', 'nosniff') }
       return new Response(request.method === 'HEAD' ? null : object.body, { headers })
     }
     return response
   }
   if (response.status !== 404) {
     const headers = new Headers(response.headers)
+    if (visualizeAsset.test(url.pathname)) { headers.set('access-control-allow-origin', '*'); headers.set('x-content-type-options', 'nosniff') }
     if (immutable.test(url.pathname)) headers.set('cache-control', 'public, max-age=31536000, immutable')
     else if (headers.get('content-type')?.includes('text/html')) headers.set('cache-control', 'no-store')
     return new Response(response.body, { status: response.status, headers })

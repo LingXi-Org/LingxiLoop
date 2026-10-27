@@ -11,3 +11,24 @@ test('only exact public asset names and valid fixed hashes leave the server mani
   assert.equal(Object.isFrozen(hashes),true)
   assert.deepEqual(publicVisualizeResourceHashes(null,[],{files:{'gen-ui.js':{sha256:42}}}),{})
 })
+
+// Fixed bytes must be checked once, shared concurrently, and never cache a failure.
+test('public byte cache coalesces verified reads, retries failures and respects its memory limit', async () => {
+  const { createVisualizeAssetCache } = await import('../im/visualize-public-resources')
+  const { createHash } = await import('node:crypto')
+  const bytes=Buffer.from('fixed public bytes'), hash=createHash('sha256').update(bytes).digest('hex')
+  let reads=0, fail=true
+  const cached=createVisualizeAssetCache(async()=>{reads++;if(fail)throw new Error('fixture read failure');return bytes})
+  await assert.rejects(cached('gen-ui.js',hash),/fixture read failure/)
+  fail=false
+  const [a,b]=await Promise.all([cached('gen-ui.js',hash),cached('gen-ui.js',hash)])
+  assert.equal(a,b)
+  await cached('gen-ui.js',hash)
+  assert.equal(reads,2)
+  await assert.rejects(cached('document.html',hash),/Unknown/)
+  await assert.rejects(cached('visualize.css','0'.repeat(64)),/integrity/)
+  const uncached=createVisualizeAssetCache(async()=>{reads++;return bytes},1)
+  const before=reads
+  await uncached('gen-ui.js',hash); await uncached('gen-ui.js',hash)
+  assert.equal(reads-before,2)
+})

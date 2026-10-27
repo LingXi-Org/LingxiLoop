@@ -86,7 +86,7 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
         button:probe.button?{x:rectangle.x+probe.button.x,y:rectangle.y+probe.button.y}:null,
         serverRequests:server.requests.slice(requestStart),
         longtasks:events.slice(eventStart).filter(event=>event.event==='longtask').map(event=>({at:event.at,duration:event.duration??0})),
-        resources:performance.getEntriesByType('resource').filter(item=>item.startTime+performance.timeOrigin>=start && item.name.includes('/visualize/pages')).map(item=>{
+        resources:performance.getEntriesByType('resource').filter(item=>item.startTime+performance.timeOrigin>=start && (item.name.includes('/visualize/pages')||item.name.includes('/assets/visualize-'))).map(item=>{
           const value=item as PerformanceResourceTiming,url=new URL(value.name)
           const page=/\/pages\/([^/]+)/.exec(url.pathname)?.[1]
           if(page&&!pageLabels.has(page))pageLabels.set(page,pageLabels.size+1)
@@ -141,7 +141,7 @@ test('measure saved static, interactive, fresh-page, retained and first-visible-
     Object.assign(first,{settled:await browser.evaluate(async()=>{
       const evidence=await fetch('/__visualize_fixture/performance').then(response=>response.json())
       const events=(window as unknown as {visualizePerfEvents:{event:string}[]}).visualizePerfEvents
-      const resources=performance.getEntriesByType('resource').filter(item=>item.name.includes('/visualize/pages')&&new URL(item.name).searchParams.has('name')) as PerformanceResourceTiming[]
+      const resources=performance.getEntriesByType('resource').filter(item=>(item.name.includes('/visualize/pages')||item.name.includes('/assets/visualize-'))&&(item.name.includes('/assets/visualize-')||new URL(item.name).searchParams.has('name'))) as PerformanceResourceTiming[]
       return {initializations:events.filter(event=>event.event==='sdk-initialize').length,
         assetRequests:evidence.requests.filter((item:{stage:string})=>item.stage==='resources'),
         assetTransferredBytes:resources.reduce((sum,item)=>sum+item.transferSize,0)}

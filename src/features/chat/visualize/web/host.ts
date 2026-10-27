@@ -1,3 +1,4 @@
+import { visualizeResourceUrl } from '../../../../../shared/visualize-public-resources'
 import { http } from '@/api/core/http'
 import { getWorkspaceSession } from '@/lib/workspaceSession'
 import { getActiveCompanyId, useAuth } from '@/stores/auth'
@@ -239,15 +240,21 @@ export function createWebServices(target: GenUiCardTarget): {service: IGenUiServ
         const [html] = await Promise.all([buildWebDocument(result.html,result.state,async name => {
           pending.add(name);progress()
           try {
-            return await publicResources.read(name, result.resourceHashes?.[name], () => readWebResource(name, attemptSignal => {
+            return await publicResources.read(name, result.resourceHashes?.[name], () => readWebResource(name, async attemptSignal => {
               assertScope()
-              // Match the resource route's no-store policy even before headers
-              // arrive, so a recovery GET is not queued behind an idle GET of
-              // the same URL by the browser's HTTP cache lock.
+              const publicUrl = visualizeResourceUrl(name,result.resourceHashes?.[name])
+              if (publicUrl) {
+                const response = await lingxiApiFetch(publicUrl,{credentials:'omit',cache:'default',signal:attemptSignal})
+                if (response.status !== 404) return response
+                // The first rollout can meet an older server hash that was not
+                // yet emitted as a static asset. Keep its authorized read path.
+                assertScope()
+              }
+              // Old servers without hash metadata retain the page-authorized path.
               return lingxiApiFetch(`/api${path(target)}/pages/${encodeURIComponent(result.pageId)}/resources?name=${encodeURIComponent(name)}`, {credentials:'include',cache:'no-store',headers:headers(page),signal:attemptSignal})
             }, resourceSignal), resourceSignal)
           } finally { pending.delete(name);progress() }
-        }, result.resourceHashes?.['visualize.html']), refreshState(page,false,resourceSignal)])
+        }, result.resourceHashes?.['visualize.html'], result.resourceHashes), refreshState(page,false,resourceSignal)])
         assertScope()
         signal?.throwIfAborted()
         page.html = html

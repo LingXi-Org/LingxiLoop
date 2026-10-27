@@ -1,0 +1,148 @@
+{
+  "base": "40605b36690e911ef958a082286a0a78acaa2556",
+  "previous": "6448a9c6943033e1185cc050a28713185258b054",
+  "fixturePath": "e2e/visualize/fixtures/performance-static.html",
+  "measurement": "deterministic source bytes; local Node gzip/Brotli defaults, not HTTP transfer or browser paint/interaction timings",
+  "rows": [
+    {
+      "version": "original",
+      "ref": "40605b36690e911ef958a082286a0a78acaa2556",
+      "reads": [
+        {
+          "name": "gen-ui.js",
+          "bytes": 633011,
+          "gzipBytes": 139497,
+          "brotliBytes": 112994,
+          "sha256": "647af698d4339e59e96acb9b86d8a8ae28f9e1b7bac0b3c8742da4e4b6091492"
+        },
+        {
+          "name": "vendor/floating-ui-dom-1.7.4.min.js",
+          "bytes": 10251,
+          "gzipBytes": 4145,
+          "brotliBytes": 3723,
+          "sha256": "b8199f76adccb9b17b3ab57124c42585dc19197127d1a5d19307d1983f80bd89"
+        },
+        {
+          "name": "visualize.css",
+          "bytes": 30609,
+          "gzipBytes": 7086,
+          "brotliBytes": 5936,
+          "sha256": "f75125ca6efcf855d8f354984f603f81a4cfc758b476698be1cc665630c00a41"
+        },
+        {
+          "name": "visualize.html",
+          "bytes": 17507,
+          "gzipBytes": 4712,
+          "brotliBytes": 4012,
+          "sha256": "42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf"
+        },
+        {
+          "name": "vendor/floating-ui-core-1.7.3.min.js",
+          "bytes": 12529,
+          "gzipBytes": 4757,
+          "brotliBytes": 4296,
+          "sha256": "6985ce661153c01d97f6be9babb6a9566f923c716c2b7fbead48fbb09f419ba8"
+        },
+        {
+          "name": "vendor/lucide-1.17.0.js",
+          "bytes": 601680,
+          "gzipBytes": 110112,
+          "brotliBytes": 86484,
+          "sha256": "fde878a4f7aebe548b071eaaf343d898f66d275e93970abe95d8ca5fda290b51"
+        }
+      ],
+      "requiredResourceCount": 6,
+      "requiredResourceBytes": 1305587,
+      "requiredResourceGzipBytes": 270309,
+      "requiredResourceBrotliBytes": 217445,
+      "document": {
+        "bytes": 1330337,
+        "gzipBytes": 277000,
+        "brotliBytes": 223767
+      },
+      "inlineScripts": {
+        "bytes": 1297549,
+        "gzipBytes": 269671,
+        "brotliBytes": 217231
+      },
+      "externalScripts": []
+    },
+    {
+      "version": "previous",
+      "ref": "6448a9c6943033e1185cc050a28713185258b054",
+      "reads": [
+        {
+          "name": "gen-ui.js",
+          "bytes": 633011,
+          "gzipBytes": 139497,
+          "brotliBytes": 112994,
+          "sha256": "647af698d4339e59e96acb9b86d8a8ae28f9e1b7bac0b3c8742da4e4b6091492"
+        },
+        {
+          "name": "visualize.css",
+          "bytes": 30609,
+          "gzipBytes": 7086,
+          "brotliBytes": 5936,
+          "sha256": "f75125ca6efcf855d8f354984f603f81a4cfc758b476698be1cc665630c00a41"
+        },
+        {
+          "name": "visualize.html",
+          "bytes": 17507,
+          "gzipBytes": 4712,
+          "brotliBytes": 4012,
+          "sha256": "42d9c7d924174a23545ad2ffc31ec0692ca589b3999c2ffdc21c1d358f4185bf"
+        }
+      ],
+      "requiredResourceCount": 3,
+      "requiredResourceBytes": 681127,
+      "requiredResourceGzipBytes": 151295,
+      "requiredResourceBrotliBytes": 122942,
+      "document": {
+        "bytes": 675965,
+        "gzipBytes": 151041,
+        "brotliBytes": 122251
+      },
+      "inlineScripts": {
+        "bytes": 642856,
+        "gzipBytes": 142858,
+        "brotliBytes": 115679
+      },
+      "externalScripts": []
+    },
+    {
+      "version": "after",
+      "ref": null,
+      "reads": [
+        {
+          "name": "kit.css",
+          "bytes": 25224,
+          "gzipBytes": 5764,
+          "brotliBytes": 5059,
+          "sha256": "2186c178b4add6c5fa5a6af099be3029ef476c9a6a4ce130d90d472ee7c41240"
+        },
+        {
+          "name": "gen-ui.js",
+          "bytes": 282127,
+          "gzipBytes": 75906,
+          "brotliBytes": 62894,
+          "sha256": "2f88b77cddc3ebbcdd45afe9ac9fab5690eae832e2e5f3793d724011645af0b3"
+        }
+      ],
+      "requiredResourceCount": 2,
+      "requiredResourceBytes": 307351,
+      "requiredResourceGzipBytes": 81670,
+      "requiredResourceBrotliBytes": 67953,
+      "document": {
+        "bytes": 318633,
+        "gzipBytes": 86219,
+        "brotliBytes": 71180
+      },
+      "inlineScripts": {
+        "bytes": 290744,
+        "gzipBytes": 79077,
+        "brotliBytes": 65475
+      },
+      "externalScripts": []
+    }
+  ]
+}
