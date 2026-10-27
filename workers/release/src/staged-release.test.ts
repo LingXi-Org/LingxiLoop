@@ -318,3 +318,16 @@ it('explicit test-data plans skip only backup and isolated restore, keeping drai
   const strict=forwardStages(m).map(stage=>stage.phase)
   expect(strict).toContain('backup');expect(strict).toContain('restore-verify')
 })
+
+it('known pre-CAS refusal restores exact source only after the immutable failed host proof; unknown effects never qualify', async () => {
+  const {qualifyPreflightSourceRecovery,recoveryStages}=await import('./stages')
+  const manifest=fixture('exact-preflight-refusal'),manifestHash=`sha256:${'d'.repeat(64)}`,generation=7
+  const checkpoint={protocol:2 as const,plan:[{key:'migrate-main-runtime-a',kind:'host' as const,targets:['main-runtime-a' as const],phase:'migrate'}],index:0,serial:1,changed:['main-runtime-a' as const,'main-runtime-b' as const],mutationSubmitted:true,direction:'forward' as const,requests:{},deadlines:{},completed:[]}
+  const op={key:`${manifest.releaseId}:main-runtime-a:migrate`,releaseId:manifest.releaseId,target:'main-runtime-a',phase:'migrate',manifestHash,generation,status:'failed',errors:{forward:{code:'DATABASE_SOURCE_CHANGED'}},steps:[{name:'database:migrate',status:'failed-known'}],result:{complete:false,sourceRestorationOnly:true,migrationExecution:'not-attempted',manifestHash,generation,preflightRefusalObserved:true}}
+  const rows={'main-runtime-a:a:migrate':op}
+  expect(qualifyPreflightSourceRecovery(manifest,checkpoint,rows,manifestHash,generation)).toBe(true)
+  const phases=recoveryStages(manifest,{...checkpoint,sourceRecoveryQualified:true}).map(s=>s.phase)
+  expect(phases.filter(p=>p==='restore-source')).toHaveLength(2);expect(phases).not.toContain('recover')
+  for(const variant of [{...op,status:'uncertain'},{...op,manifestHash:'wrong'},{...op,steps:[{name:'database:migrate',status:'intent'}]},{...op,result:{...op.result,complete:true}},{...op,result:{...op.result,preflightRefusalObserved:false}},{...op,result:{...op.result,migrationExecution:'unknown'}}])expect(qualifyPreflightSourceRecovery(manifest,checkpoint,{'main-runtime-a:a:migrate':variant},manifestHash,generation)).toBe(false)
+  expect(qualifyPreflightSourceRecovery(manifest,{...checkpoint,index:1,plan:[{key:'apply',kind:'host',phase:'apply'},...checkpoint.plan]},rows,manifestHash,generation)).toBe(false)
+})

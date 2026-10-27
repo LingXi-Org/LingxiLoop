@@ -143,8 +143,9 @@ test('rolling and arbitrary local inline helpers are rejected until specifically
 })
 test('actual migration checksum ledger and required capabilities come from qualified local DB evidence',()=>{
   const migrations = [{ version:1,name:'initial',checksum:'a'.repeat(64) }], current = { ...contract,productSchema:1,installedSchema:14,readOnly:true,fullVisibility:true,schemaHash:'b'.repeat(64),protocolVersion:11,migrationCount:1,migrations }
-  const qualifiedContract = { ...contract,productSchema:1 },database = { profiles:{ [`14:1:${current.schemaHash}`]:{ contract:qualifiedContract,migrationsHash:hash(migrations),protocolVersion:11,requiredCapabilities:['case.soft-delete-filter'] } } }
+  const qualifiedContract = { ...contract,productSchema:1,migrations:migrations.map(({version,checksum})=>({version,checksum})) },database = { profiles:{ [`14:1:${current.schemaHash}`]:{ contract:qualifiedContract,migrationsHash:hash(migrations),protocolVersion:11,requiredCapabilities:['case.soft-delete-filter'] } } }
   assert.equal(qualifyDatabaseEvidence(current,database).verified,true)
+  assert.deepEqual(qualifyDatabaseEvidence(current,database).migrations,migrations)
   assert.throws(()=>qualifyDatabaseEvidence({ ...current,migrations:[{ ...migrations[0],checksum:'c'.repeat(64) }] },database),{ code:'DATABASE_PROVENANCE_UNQUALIFIED' })
   assert.throws(()=>assertCompatible({ ...qualifiedContract,capabilities:[] },qualifyDatabaseEvidence(current,database)),{ code:'INCOMPATIBLE_CAPABILITY' })
 })

@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
 import { assertSource, canSupersede, canonical, ReleaseError, requireThat, validateManifest, type Accepted, type Component, type Manifest, type TargetId } from '../../../shared/release/protocol'
-import { forwardStages, recoveryStages, stageWorkflowId, STAGE_REQUEST_LIMIT, verificationStages } from './stages'
+import { forwardStages, recoveryStages, qualifyPreflightSourceRecovery, stageWorkflowId, STAGE_REQUEST_LIMIT, verificationStages } from './stages'
 import type { Bootstrap, ReleaseEnv, ReleaseRecord, ReleaseStatus } from './types'
 
 const terminal = new Set(['accepted', 'failed', 'recovered', 'superseded'])
@@ -162,8 +162,9 @@ export class ReleaseLedger extends DurableObject<ReleaseEnv> {
     }
     if (path === '/begin-recovery') {
       requireThat(cp.direction === 'forward' && !cp.legacyVerificationOnly && cp.changed.length > 0, 'RECOVERY_NOT_AUTHORIZED')
+      cp.sourceRecoveryQualified=qualifyPreflightSourceRecovery(record.manifest,cp,record.targets,record.manifestHash,record.generation)
       const plan = recoveryStages(record.manifest, cp)
-      cp.direction = !cp.mutationSubmitted && cp.changed.every(id => record.manifest.targets[id]!.artifact.kind === 'image') ? 'source' : 'compatible-recovery'
+      cp.direction = (!cp.mutationSubmitted || cp.sourceRecoveryQualified===true) && cp.changed.every(id => record.manifest.targets[id]!.artifact.kind === 'image') ? 'source' : 'compatible-recovery'
       cp.plan = [...cp.plan.slice(0, cp.index), ...plan]
       record.status = 'recovering'; record.errors.forward = String(body.error); record.error = String(body.error)
     } else {

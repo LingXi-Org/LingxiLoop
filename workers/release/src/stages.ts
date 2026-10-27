@@ -5,7 +5,7 @@ import { databasePlan, orderedTargets, requireThat, type Manifest, type TargetId
 export type ReleaseStage = { key: string; kind: 'batch' | 'manifest' | 'prepare' | 'claim' | 'host' | 'worker' | 'probe' | 'finish'; targets?: TargetId[]; host?: string; phase?: string; recovery?: boolean }
 export type StageCheckpoint = {
   protocol: 2; plan: ReleaseStage[]; index: number; serial: number
-  changed: TargetId[]; mutationSubmitted: boolean
+  changed: TargetId[]; mutationSubmitted: boolean; sourceRecoveryQualified?: boolean
   direction: 'forward' | 'source' | 'compatible-recovery'
   requests: Record<string, number>; deadlines: Record<string, number>
   retries?: Record<string, number>
@@ -51,8 +51,17 @@ export function forwardStages(manifest: Manifest): ReleaseStage[] {
   }
   return [...plan, ...verificationStages(manifest)]
 }
+// A known failed source preflight is not a dispatched CAS. This proof can only
+// select restoration of the exact source; it cannot mark migration successful.
+export function qualifyPreflightSourceRecovery(manifest:Manifest,checkpoint:StageCheckpoint,targets:Record<string,unknown>,manifestHash:string,generation:number):boolean {
+ const current=checkpoint.plan[checkpoint.index]
+ if(current?.kind!=='host'||current.phase!=='migrate'||current.targets?.join(',')!=='main-runtime-a'||!checkpoint.changed.length||checkpoint.changed.some(id=>manifest.targets[id]?.artifact.kind!=='image')||checkpoint.plan.slice(0,checkpoint.index).some(s=>s.kind==='worker'||s.kind==='host'&&['migrate','apply','recover'].includes(s.phase??'')))return false
+ const op=targets['main-runtime-a:a:migrate'] as {key?:string;releaseId?:string;target?:string;phase?:string;manifestHash?:string;generation?:number;status?:string;errors?:{forward?:{code?:string}};result?:{complete?:boolean;sourceRestorationOnly?:boolean;migrationExecution?:string;manifestHash?:string;generation?:number;preflightRefusalObserved?:boolean};steps?:{name:string;status:string}[]}|undefined
+ const proof=op?.result
+ return op?.key===`${manifest.releaseId}:main-runtime-a:migrate`&&op.releaseId===manifest.releaseId&&op.target==='main-runtime-a'&&op.phase==='migrate'&&op.manifestHash===manifestHash&&op.generation===generation&&op.status==='failed'&&op.errors?.forward?.code==='DATABASE_SOURCE_CHANGED'&&op.steps?.length===1&&op.steps[0].name==='database:migrate'&&op.steps[0].status==='failed-known'&&proof?.complete===false&&proof.sourceRestorationOnly===true&&proof.migrationExecution==='not-attempted'&&proof.manifestHash===manifestHash&&proof.generation===generation&&proof.preflightRefusalObserved===true
+}
 export function recoveryStages(manifest: Manifest, checkpoint: StageCheckpoint): ReleaseStage[] {
-  const source = !checkpoint.mutationSubmitted && checkpoint.changed.length > 0 && checkpoint.changed.every(id => manifest.targets[id]!.artifact.kind === 'image')
+  const source = (!checkpoint.mutationSubmitted || checkpoint.sourceRecoveryQualified===true) && checkpoint.changed.length > 0 && checkpoint.changed.every(id => manifest.targets[id]!.artifact.kind === 'image')
   const images = checkpoint.changed.filter(id => manifest.targets[id]!.artifact.kind === 'image')
   const plan: ReleaseStage[] = []
   if (images.length) plan.push({ key: 'recovery-isolate', kind: 'host', targets: images, phase: source ? 'source-drain' : 'recovery-drain' })
