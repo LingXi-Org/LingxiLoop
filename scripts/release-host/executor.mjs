@@ -253,6 +253,13 @@ export class Executor {
     try {
       const plan = validateHostPlan(this.journal.manifest(op.releaseId,op.manifestHash),op.target,this.adapter.policy)
       const result = await this.adapter.observe(op,plan), state = this.journal.state(op.target)
+      if(result?.cachePreparationIncomplete===true){
+        const pulls=new Set([plan,plan.recovery].flatMap(descriptor=>Object.values(descriptor.images).flatMap(image=>['forward','recovery'].flatMap(direction=>[`pull:${direction}:${image.configDigest}`,`pull:${direction}:${image.configDigest}:retry:1`]))))
+        if(op.phase!=='prepare'||op.status!=='uncertain'||op.errors?.forward?.code!=='DOCKER_COMMAND_FAILED'||result.sourceUnchanged!==true||!op.steps.some(step=>step.status==='intent')||!op.steps.every(step=>step.sideEffect===false&&pulls.has(step.name)&&(step.status==='completed'||step.status==='intent'&&step.observedErrorCode==='DOCKER_COMMAND_FAILED'&&Number.isFinite(Date.parse(step.errorObservedAt)))))throw fault('OBSERVATION_UNRESOLVED','Only exited cache-only pull failures with an unchanged healthy source can settle')
+        // Cache writes cannot change business services; retain the failure, never qualify this preparation.
+        this.journal.patch(op.key,{steps:op.steps.map(step=>({...step,status:step.status==='intent'?'failed-known':step.status,completedAt:step.completedAt??new Date().toISOString()}))})
+        return this.journal.finish(op.key,'failed',result,op.errors)
+      }
       if(result?.sourceRestorationOnly===true){
         const patch=plan.database?.runtimePatch
         if(op.phase!=='migrate'||op.status!=='uncertain'||op.errors?.forward?.code!=='DATABASE_SOURCE_CHANGED'||op.steps.length!==1||op.steps[0].name!=='database:migrate'||op.steps[0].status!=='intent'||result.complete!==false||result.migrationExecution!=='not-attempted'||result.manifestHash!==op.manifestHash||result.generation!==op.generation||!patch||result.planHash!==runtimePatchPlanHash(patch))throw fault('OBSERVATION_UNRESOLVED','No qualified pre-dispatch refusal for this operation')
