@@ -54,7 +54,7 @@ No claim is made that loading time or its median fell by 50%.
 - `npm run server:typecheck`, `npm run lint`, `npm run server:lint`: passed;
   Web lint reports existing warnings.
 - 32 focused Node tests: passed. The command and raw output are in
-  [focused-tests.log](focused-tests.log). They cover conditional dependencies,
+  [focused-tests.txt](focused-tests.txt). They cover conditional dependencies,
   private lazy capture and hostile globals, retry/observer-loop boundaries,
   state/cancellation, immutable URL/header isolation, old-hash fallback, byte
   verification/cache bounds and current/retained static CORS responses.
